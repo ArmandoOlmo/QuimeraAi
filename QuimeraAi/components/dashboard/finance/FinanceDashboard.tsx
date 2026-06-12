@@ -17,7 +17,8 @@ import {
     isWithinInterval, parseISO, subDays, startOfDay, endOfDay
 } from 'date-fns';
 import DashboardSidebar from '../DashboardSidebar';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
+import HeaderBackButton from '../../ui/HeaderBackButton';
+import { useUI } from '../../../contexts/core/UIContext';
 import { extractExpenseFromReceipt } from '../../../utils/expenseExtractor';
 import { ExpenseRecord } from '../../../types/finance';
 import type { CashFlowSummary } from '../../../types/finance';
@@ -60,22 +61,23 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 // Local Helper Components
-const StatCard = ({ title, value, icon: Icon, trend, trendColor = "text-primary" }: any) => (
-    <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-5 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
-        <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-15 dark:opacity-10 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
-        <div className="relative z-10 flex justify-between items-start mb-3">
-            <div className="p-2 bg-primary/20 rounded-lg">
-                <Icon size={20} className="text-primary" />
+const StatCard = ({ title, value, icon: Icon, trend, trendColor = 'quimera-status-card-accent-text' }: any) => (
+    <div className="group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-2.5 md:p-4 hover:border-q-border transition-all duration-300 ease-out">
+        <div
+            className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 sm:w-32 sm:h-32 rounded-full blur-2xl group-hover:scale-110 transition-all duration-500"
+            aria-hidden="true"
+        />
+        <div className="relative z-10">
+            <div className="flex justify-between items-start mb-1 md:mb-2">
+                <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                {trend && (
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-secondary/30 ${trendColor}`}>
+                        {trend}
+                    </span>
+                )}
             </div>
-            {trend && (
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-secondary/30 ${trendColor}`}>
-                    {trend}
-                </span>
-            )}
-        </div>
-        <div className="relative z-10 space-y-1">
-            <p className="text-xs font-semibold text-q-text-muted uppercase tracking-wider">{title}</p>
-            <h3 className="text-2xl font-bold text-foreground">{value}</h3>
+            <div className="text-xl md:text-3xl font-extrabold text-foreground">{value}</div>
+            <p className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{title}</p>
         </div>
     </div>
 );
@@ -121,7 +123,7 @@ const AccountingTabContent: React.FC<{
     if (!['dashboard', 'transactions', 'invoices', 'reports'].includes(activeView)) return null;
 
     return (
-        <main className="flex-1 overflow-y-auto p-6 relative z-10">
+        <>
             {/* ACCOUNTING DASHBOARD */}
             {activeView === 'dashboard' && (
                 <div className="space-y-6 animate-in fade-in duration-500">
@@ -135,7 +137,7 @@ const AccountingTabContent: React.FC<{
 
                     {/* Cash Flow Chart */}
                     {cashFlow.length > 0 && (
-                        <div className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-5">
+                        <div className="quimera-dashboard-panel-card group p-5">
                             <h3 className="font-bold text-foreground mb-4">{t('accounting.cashFlowChart', 'Cash Flow')}</h3>
                             <ResponsiveContainer width="100%" height={280}>
                                 <AreaChart data={cashFlow}>
@@ -160,7 +162,7 @@ const AccountingTabContent: React.FC<{
 
                     {/* Overdue invoices widget */}
                     {overdueInvoices.length > 0 && (
-                        <div className="rounded-2xl border border-red-500/20 bg-q-surface/80 backdrop-blur-xl p-5">
+                        <div className="quimera-dashboard-panel-card group p-5 border-red-500/20">
                             <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><AlertTriangle size={18} className="text-red-400" />{t('accounting.overdueInvoices', 'Overdue Invoices')}</h3>
                             <div className="space-y-2">
                                 {overdueInvoices.map(inv => (
@@ -210,12 +212,13 @@ const AccountingTabContent: React.FC<{
                     <ReportGenerator transactions={transactions} isLoading={txLoading} />
                 </div>
             )}
-        </main>
+        </>
     );
 };
 
 const FinanceDashboard: React.FC = () => {
     const { t } = useTranslation();
+    const { setView } = useUI();
     const { user } = useAuth();
     const { hasApiKey, handleApiError } = useAI();
     const { activeProject } = useProject();
@@ -719,21 +722,20 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-q-bg">
-                <DashboardWaveRibbons className="absolute inset-x-0 top-28 h-72 z-0 pointer-events-none overflow-hidden" />
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 shrink-0">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 shrink-0">
                     <div className="flex items-center gap-1 sm:gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground rounded-lg">
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <DollarSign className="text-primary w-5 h-5" />
+                            <DollarSign className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-sm sm:text-lg font-semibold text-foreground">{t('financeDashboard.title')}</h1>
                         </div>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-3">
-                        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg">
-                            <TrendingUp className="w-4 h-4 text-primary" />
+                        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-q-border/60 bg-q-surface/60">
+                            <TrendingUp className="w-4 h-4 quimera-status-card-accent-text" />
                             <span className="text-sm font-bold text-foreground">${totalExpenses.toLocaleString()}</span>
                         </div>
                         <button
@@ -743,6 +745,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                         >
                             <Download className="w-4 h-4" />
                         </button>
+                        <HeaderBackButton onClick={() => setView('dashboard')} />
                     </div>
                 </header>
 
@@ -761,7 +764,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                             key={tab.id}
                             onClick={() => setActiveView(tab.id as any)}
                             className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${activeView === tab.id
-                                ? 'border-primary text-foreground font-semibold'
+                                ? 'border-[var(--quimera-status-accent-from)] quimera-status-card-accent-text font-semibold'
                                 : 'border-transparent text-q-text-muted hover:text-foreground'
                                 }`}
                         >
@@ -771,14 +774,13 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                     ))}
                 </div>
 
-                <AccountingTabContent
-                    activeView={activeView}
-                    user={user}
-                    activeProject={activeProject}
-                    t={t}
-                />
-
-                <main className="flex-1 overflow-y-auto p-6 relative z-10">
+                <main className="flex-1 min-h-0 overflow-y-auto p-6 relative z-10">
+                    <AccountingTabContent
+                        activeView={activeView}
+                        user={user}
+                        activeProject={activeProject}
+                        t={t}
+                    />
                     {/* OVERVIEW VIEW (Expenses) */}
                     {activeView === 'overview' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
@@ -812,7 +814,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                 {/* Left / Main column */}
                                 <div className="xl:col-span-2 space-y-6">
                                     {/* Upload Area - Fresha style: Clean and direct */}
-                                    <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-8 text-center hover:shadow-lg transition-all border-dashed border-2 hover:border-primary/50 group">
+                                    <div className="quimera-dashboard-panel-card group p-8 text-center border-dashed border-2 transition-all">
                                         <input
                                             type="file"
                                             id="receipt-upload"
@@ -825,15 +827,13 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         <label htmlFor="receipt-upload" className="cursor-pointer flex flex-col items-center gap-4">
                                             {isUploading ? (
                                                 <div className="relative">
-                                                    <Loader2 className="w-16 h-16 text-primary animate-spin" />
+                                                    <Loader2 className="w-16 h-16 quimera-status-card-accent-text animate-spin" />
                                                     <div className="absolute inset-0 flex items-center justify-center">
-                                                        <Sparkles className="w-6 h-6 text-primary/40" />
+                                                        <Sparkles className="w-6 h-6 text-q-text-muted/40" />
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center text-primary group-hover:bg-primary/10 transition-colors">
-                                                    <Upload className="w-10 h-10" />
-                                                </div>
+                                                <Upload className="w-16 h-16 quimera-status-card-accent-text mx-auto" strokeWidth={1.5} />
                                             )}
                                             <div className="space-y-2">
                                                 <h3 className="text-xl font-bold text-foreground">
@@ -844,7 +844,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 </p>
                                             </div>
                                             {!isUploading && (
-                                                <span className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:scale-105 transition-transform active:scale-95">
+                                                <span className="quimera-guide-cta inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold">
                                                     <Plus size={18} />
                                                     {t('financeDashboard.selectFile')}
                                                 </span>
@@ -860,15 +860,15 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
                                     {/* Charts Section */}
                                     {expenses.length > 0 ? (
-                                        <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-6">
+                                        <div className="quimera-dashboard-panel-card group p-6">
                                             <div className="flex justify-between items-center mb-6">
                                                 <h3 className="font-bold text-lg flex items-center gap-2">
-                                                    <TrendingUp className="w-5 h-5 text-primary" />
+                                                    <TrendingUp className="w-5 h-5 quimera-status-card-accent-text" strokeWidth={2} />
                                                     {t('financeDashboard.monthlyTrend')}
                                                 </h3>
                                                 <div className="flex gap-4">
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-3 h-3 rounded-full bg-primary" />
+                                                        <div className="w-3 h-3 rounded-full bg-[var(--quimera-status-accent-from)]" />
                                                         <span className="text-xs text-q-text-muted font-medium">{t('financeDashboard.charts.expenses')}</span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
@@ -931,7 +931,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 gap-6">
-                                            <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-6 h-[380px] flex flex-col">
+                                            <div className="quimera-dashboard-panel-card group p-6 h-[380px] flex flex-col">
                                                 <Skeleton className="h-6 w-48 mb-6" />
                                                 <div className="flex-1 flex items-center justify-center">
                                                     <div className="text-center space-y-4">
@@ -948,9 +948,9 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                     {/* Bottom Grid: Categories */}
                                     {expenses.length > 0 && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-6">
+                                            <div className="quimera-dashboard-panel-card group p-6">
                                                 <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-                                                    <PieChartIcon className="w-5 h-5 text-primary" />
+                                                    <PieChartIcon className="w-5 h-5 quimera-status-card-accent-text" strokeWidth={2} />
                                                     {t('financeDashboard.byCategory')}
                                                 </h3>
                                                 <div className="h-[250px]">
@@ -978,7 +978,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 </div>
                                             </div>
 
-                                            <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-6">
+                                            <div className="quimera-dashboard-panel-card group p-6">
                                                 <h3 className="font-bold text-lg mb-6">{t('financeDashboard.topCategories')}</h3>
                                                 <div className="space-y-4">
                                                     {expensesByCategory.slice(0, 5).map((cat, idx) => (
@@ -1013,7 +1013,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                 {/* Right Column - Siderbar Context */}
                                 <div className="space-y-6">
                                     {/* Recent Activity Mini-Card */}
-                                    <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-6">
+                                    <div className="quimera-dashboard-panel-card group p-6">
                                         <h3 className="font-bold mb-4">{t('financeDashboard.recentActivity')}</h3>
                                         <div className="space-y-4">
                                             {expenses.slice(0, 4).map(expense => (
@@ -1038,7 +1038,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                             )}
                                             <button
                                                 onClick={() => setActiveView('list')}
-                                                className="w-full text-xs font-bold text-primary hover:underline pt-2 border-t border-q-border/50 text-center"
+                                                className="w-full text-xs font-bold quimera-status-card-link hover:underline pt-2 border-t border-q-border/50 text-center"
                                             >
                                                 {t('financeDashboard.viewAllMovements')}
                                             </button>
@@ -1108,12 +1108,10 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                     {/* LIST VIEW */}
                     {activeView === 'list' && (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-2">
-                                <div className="p-4 border-b border-q-border flex flex-col md:flex-row gap-4 justify-between items-center bg-q-surface">
+                            <div className="lg:col-span-2 quimera-dashboard-panel-card group overflow-hidden">
+                                <div className="p-4 border-b border-q-border/60 flex flex-col md:flex-row gap-4 justify-between items-center">
                                     <div className="flex items-center gap-2">
-                                        <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                                            <Receipt size={18} />
-                                        </div>
+                                        <Receipt size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
                                         <h3 className="font-bold text-foreground shrink-0">{t('financeDashboard.recentMovements')}</h3>
                                         <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-q-text-muted">{filteredExpenses.length}</span>
                                     </div>
@@ -1197,7 +1195,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 filteredExpenses.map(expense => (
                                                     <tr
                                                         key={expense.id}
-                                                        className={`hover:bg-secondary/10 transition-colors cursor-pointer ${selectedExpense?.id === expense.id ? 'bg-primary/5 border-l-2 border-primary' : ''}`}
+                                                        className={`hover:bg-secondary/10 transition-colors cursor-pointer ${selectedExpense?.id === expense.id ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_10%,transparent)] border-l-2 border-[var(--quimera-status-accent-from)]' : ''}`}
                                                         onClick={() => setSelectedExpense(expense)}
                                                     >
                                                         <td className="px-4 py-3 font-medium">{expense.date}</td>
@@ -1255,12 +1253,10 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                             {/* Detail Panel */}
                             <div className="lg:col-span-1">
                                 {selectedExpense ? (
-                                    <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl flex flex-col h-[calc(100vh-200px)] sticky top-6 shadow-xl shadow-black/5">
-                                        <div className="p-4 border-b border-q-border flex justify-between items-center bg-muted/30">
+                                    <div className="quimera-dashboard-panel-card group flex flex-col h-[calc(100vh-200px)] sticky top-6 overflow-hidden">
+                                        <div className="p-4 border-b border-q-border/60 flex justify-between items-center bg-muted/30">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                                                    <FileText size={16} />
-                                                </div>
+                                                <FileText size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
                                                 <div>
                                                     <h3 className="font-bold text-sm">{t('financeDashboard.expenseDetail')}</h3>
                                                     <p className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider">ID: {selectedExpense.id.slice(0, 8)}</p>
@@ -1337,7 +1333,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                             <List size={12} />
                                                             {t('financeDashboard.items.detected')}
                                                         </h4>
-                                                        <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold">{t('financeDashboard.items.scanTag')}</span>
+                                                        <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text">{t('financeDashboard.items.scanTag')}</span>
                                                     </div>
 
                                                     {selectedExpense.items && selectedExpense.items.length > 0 ? (
@@ -1431,7 +1427,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 disabled={selectedExpense.status === 'approved'}
                                                 className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all ${selectedExpense.status === 'approved'
                                                     ? 'bg-green-500 text-white opacity-90 cursor-default'
-                                                    : 'bg-primary text-primary-foreground hover:shadow-lg hover:shadow-primary/20'
+                                                    : 'quimera-guide-cta'
                                                     }`}
                                             >
                                                 {selectedExpense.status === 'approved' ? (
@@ -1449,10 +1445,8 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="h-full flex flex-col items-center justify-center text-q-text-muted p-8 bg-secondary/5 rounded-xl border border-dashed border-q-border/50 min-h-[400px]">
-                                        <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mb-4">
-                                            <Receipt className="w-8 h-8 opacity-40" />
-                                        </div>
+                                    <div className="h-full flex flex-col items-center justify-center text-q-text-muted p-8 quimera-dashboard-panel-card border-dashed min-h-[400px]">
+                                        <Receipt className="w-12 h-12 quimera-status-card-accent-text mb-4" strokeWidth={1.5} />
                                         <h3 className="font-bold text-foreground mb-1">{t('financeDashboard.details.selectMovement')}</h3>
                                         <p className="text-sm text-center max-w-[200px]">{t('financeDashboard.details.selectMovementDesc')}</p>
                                     </div>
@@ -1466,11 +1460,9 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                         <div className="max-w-5xl mx-auto space-y-6">
                             {/* AI Actions */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl p-6">
+                                <div className="quimera-dashboard-panel-card group p-6">
                                     <div className="flex items-start gap-3 mb-4">
-                                        <div className="p-3 bg-primary/20 rounded-lg">
-                                            <FileText className="w-6 h-6 text-primary" />
-                                        </div>
+                                        <FileText className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                                         <div className="flex-1">
                                             <h3 className="font-bold text-lg mb-1">{t('financeDashboard.aiFinancialReport')}</h3>
                                             <p className="text-sm text-q-text-muted">{t('financeDashboard.generateReport')}</p>
@@ -1479,7 +1471,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                     <button
                                         onClick={generateFinancialReport}
                                         disabled={isGeneratingReport || expenses.length === 0}
-                                        className="w-full py-3 px-4 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                                        className="quimera-guide-cta w-full py-3 px-4 rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
                                         {isGeneratingReport ? (
                                             <>
@@ -1495,11 +1487,9 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                     </button>
                                 </div>
 
-                                <div className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/30 rounded-xl p-6">
+                                <div className="quimera-dashboard-panel-card group p-6">
                                     <div className="flex items-start gap-3 mb-4">
-                                        <div className="p-3 bg-purple-500/20 rounded-lg">
-                                            <TrendingUp className="w-6 h-6 text-purple-500" />
-                                        </div>
+                                        <TrendingUp className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                                         <div className="flex-1">
                                             <h3 className="font-bold text-lg mb-1">{t('financeDashboard.trendAnalysis')}</h3>
                                             <p className="text-sm text-q-text-muted">{t('financeDashboard.analyzeDesc')}</p>
@@ -1508,7 +1498,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                     <button
                                         onClick={analyzeTrends}
                                         disabled={isAnalyzingTrends || expenses.length === 0}
-                                        className="w-full py-3 px-4 rounded-lg bg-purple-500 text-white font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                                        className="quimera-guide-cta w-full py-3 px-4 rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
                                         {isAnalyzingTrends ? (
                                             <>
@@ -1527,10 +1517,10 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
                             {/* AI Report Output */}
                             {aiReport && (
-                                <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-6">
+                                <div className="quimera-dashboard-panel-card group p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-lg font-bold flex items-center gap-2">
-                                            <Zap className="w-5 h-5 text-primary" />
+                                            <Zap className="w-5 h-5 quimera-status-card-accent-text" strokeWidth={2} />
                                             {t('financeDashboard.analysis.generatedReport')}
                                         </h3>
                                         <button
@@ -1548,10 +1538,10 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
                             {/* Trend Analysis Output */}
                             {trendAnalysis && (
-                                <div className="bg-q-surface border border-purple-500/30 rounded-xl p-6">
+                                <div className="quimera-dashboard-panel-card group p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-lg font-bold flex items-center gap-2">
-                                            <TrendingDown className="w-5 h-5 text-purple-500" />
+                                            <TrendingDown className="w-5 h-5 quimera-status-card-accent-text" strokeWidth={2} />
                                             {t('financeDashboard.analysis.predictiveAnalysis')}
                                         </h3>
                                         <button
@@ -1561,15 +1551,15 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                             ✕
                                         </button>
                                     </div>
-                                    <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap bg-purple-500/5 rounded-lg p-4 border border-purple-500/20">
+                                    <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap bg-secondary/20 rounded-lg p-4 border border-q-border/50">
                                         {trendAnalysis}
                                     </div>
                                 </div>
                             )}
 
                             {expenses.length === 0 && (
-                                <div className="bg-q-surface border border-dashed border-q-border rounded-xl p-12 text-center col-span-1 md:col-span-2">
-                                    <Brain className="w-16 h-16 mx-auto text-q-text-muted/40 mb-4" />
+                                <div className="quimera-dashboard-panel-card border-dashed p-12 text-center col-span-1 md:col-span-2">
+                                    <Brain className="w-12 h-12 text-q-text-muted mx-auto mb-4" strokeWidth={1.5} />
                                     <h3 className="text-lg font-bold mb-2">{t('financeDashboard.analysis.noDataTitle')}</h3>
                                     <p className="text-sm text-q-text-muted">{t('financeDashboard.analysis.noDataDesc')}</p>
                                 </div>

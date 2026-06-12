@@ -15,7 +15,6 @@ import { useAuth } from '../../../contexts/core/AuthContext';
 import { db, collection, getDocs, addDoc, query, orderBy, doc, updateDoc } from '@/utils/compatData';
 import { supabase } from '../../../supabase';
 import DashboardSidebar from '../DashboardSidebar';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import DragDropZone from '../../ui/DragDropZone';
 import Modal from '../../ui/Modal';
 import MobileSearchModal from '../../ui/MobileSearchModal';
@@ -886,9 +885,8 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
     const content = (
         <>
         <div className="flex-1 flex flex-col overflow-hidden relative h-full">
-            {!noLayout && <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-0 pointer-events-none overflow-hidden" />}
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                         {!noLayout && (
                             <button
@@ -899,7 +897,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                             </button>
                         )}
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <FolderOpen className="text-primary" size={24} />
+                            <FolderOpen className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-lg sm:text-xl font-bold text-foreground hidden sm:block">
                                 {t('adminAssets.title', 'Admin Asset Library')}
                             </h1>

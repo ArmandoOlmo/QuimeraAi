@@ -279,9 +279,7 @@ export function ClientPermissionsEditor({
             <div className="p-6 border-b border-q-border">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Shield className="w-5 h-5 text-primary" />
-                        </div>
+                        <Shield className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                         <div>
                             <h3 className="font-semibold text-foreground">
                                 Permisos de Cliente

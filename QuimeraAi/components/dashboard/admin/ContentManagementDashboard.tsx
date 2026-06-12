@@ -330,14 +330,14 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Standardized Header - Same as user CMS */}
-                <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
+ <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center z-20 sticky top-0">
                     {/* Left Section */}
                     <div className="flex items-center gap-2 sm:gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-10 w-10 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation">
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <PenTool className="text-primary w-5 h-5" />
+                            <PenTool className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('contentManagement.title', 'Gestión de Contenido')}</h1>
                         </div>
 
@@ -580,9 +580,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         <div className="group relative overflow-hidden bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border border-primary/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
                                             <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
                                             <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/15 flex items-center justify-center mx-auto sm:mx-0">
-                                                    <FileText className="text-primary" size={16} />
-                                                </div>
+                                                <FileText className="w-4 h-4 sm:w-5 sm:h-5 quimera-dashboard-header-icon mx-auto sm:mx-0 flex-shrink-0" size={16} strokeWidth={2} />
                                                 <div className="text-center sm:text-left">
                                                     <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{metrics.total}</p>
                                                     <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('contentManagement.totalArticles', 'Total Artículos')}</p>
@@ -594,9 +592,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-500/5 via-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5">
                                             <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
                                             <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-500/15 flex items-center justify-center mx-auto sm:mx-0">
-                                                    <Globe className="text-emerald-500" size={16} />
-                                                </div>
+                                                <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mx-auto sm:mx-0 flex-shrink-0" size={16} strokeWidth={2} />
                                                 <div className="text-center sm:text-left">
                                                     <p className="text-xl sm:text-2xl font-bold text-emerald-500 tracking-tight">{metrics.published}</p>
                                                     <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('contentManagement.published', 'Publicados')}</p>
@@ -608,9 +604,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         <div className="group relative overflow-hidden bg-gradient-to-br from-amber-500/5 via-amber-500/10 to-amber-500/5 border border-amber-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5">
                                             <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-colors" />
                                             <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-500/15 flex items-center justify-center mx-auto sm:mx-0">
-                                                    <Edit3 className="text-amber-500" size={16} />
-                                                </div>
+                                                <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 mx-auto sm:mx-0 flex-shrink-0" size={16} strokeWidth={2} />
                                                 <div className="text-center sm:text-left">
                                                     <p className="text-xl sm:text-2xl font-bold text-amber-500 tracking-tight">{metrics.drafts}</p>
                                                     <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('contentManagement.drafts', 'Borradores')}</p>

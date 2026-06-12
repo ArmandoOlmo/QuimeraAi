@@ -5,7 +5,6 @@ import { useProject } from '../../contexts/project';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
-import DashboardWaveRibbons from './DashboardWaveRibbons';
 import {
     LayoutTemplate,
     Menu,
@@ -134,9 +133,8 @@ const UserTemplates: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                <DashboardWaveRibbons />
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 sticky top-0">
+                <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
@@ -146,7 +144,7 @@ const UserTemplates: React.FC = () => {
                             <Menu className="w-4 h-4" />
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <LayoutTemplate className="text-primary" size={24} />
+                            <LayoutTemplate className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-xl font-bold text-foreground hidden sm:block">
                                 {t('userTemplates.title', 'Plantillas')}
                             </h1>
@@ -180,26 +178,25 @@ const UserTemplates: React.FC = () => {
 
                         {/* Instructions Banner - Dismissible */}
                         {showInstructions && (
-                            <div className="mb-8 relative">
-                                <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl overflow-hidden">
-                                    {/* Background decoration */}
-                                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                            <div className="group mb-8 relative">
+                                <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl">
+                                    <div
+                                        className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-12 -right-12 w-64 h-64 rounded-full blur-3xl
+                                            group-hover:scale-105 transition-transform duration-500"
+                                        aria-hidden="true"
+                                    />
 
-                                    {/* Close button */}
                                     <button
                                         onClick={dismissInstructions}
-                                        className="absolute top-4 right-4 p-2 rounded-full text-q-text-muted hover:text-foreground hover:bg-secondary/50 transition-colors z-20"
+                                        className="absolute top-4 right-4 p-2 rounded-full text-q-text-muted hover:text-foreground hover:bg-q-surface-overlay/60 transition-colors z-20"
                                         aria-label={t('common.close')}
                                     >
                                         <X size={18} />
                                     </button>
 
-                                    {/* Content Section */}
                                     <div className="relative z-10 p-6">
                                         <div className="flex items-center gap-3 mb-4">
-                                            <div className="p-3 bg-primary/20 rounded-xl">
-                                                <BookOpen className="w-6 h-6 text-primary" />
-                                            </div>
+                                            <BookOpen className="w-6 h-6 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                                             <div>
                                                 <h2 className="text-lg font-bold text-foreground">
                                                     {t('userTemplates.howToUseTitle', '¿Cómo usar las plantillas?')}
@@ -208,28 +205,23 @@ const UserTemplates: React.FC = () => {
                                         </div>
 
                                         <ul className="space-y-2 text-sm text-q-text-muted mb-4">
-                                            <li className="flex items-center gap-2">
-                                                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                                <span>{t('userTemplates.step1', 'Explora las plantillas disponibles y encuentra una que se ajuste a tu industria')}</span>
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                                <span>{t('userTemplates.step2', 'Haz clic en una plantilla para ver la vista previa con todos los detalles')}</span>
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                                <span>{t('userTemplates.step3', 'Presiona "Usar esta plantilla" para crear tu sitio web basado en ella')}</span>
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                                <span>{t('userTemplates.step4', 'Personaliza colores, textos e imágenes en el editor para hacerla tuya')}</span>
-                                            </li>
+                                            {[
+                                                t('userTemplates.step1', 'Explora las plantillas disponibles y encuentra una que se ajuste a tu industria'),
+                                                t('userTemplates.step2', 'Haz clic en una plantilla para ver la vista previa con todos los detalles'),
+                                                t('userTemplates.step3', 'Presiona "Usar esta plantilla" para crear tu sitio web basado en ella'),
+                                                t('userTemplates.step4', 'Personaliza colores, textos e imágenes en el editor para hacerla tuya'),
+                                            ].map((step) => (
+                                                <li key={step} className="flex items-center gap-2">
+                                                    <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" strokeWidth={2} />
+                                                    <span>{step}</span>
+                                                </li>
+                                            ))}
                                         </ul>
 
                                         <div className="flex items-center justify-end pt-2 border-t border-q-border/50">
                                             <button
                                                 onClick={dismissInstructions}
-                                                className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                                                className="quimera-status-card-link text-xs font-medium hover:underline transition-colors"
                                             >
                                                 {t('dashboard.gotIt', 'Entendido, ocultar')}
                                             </button>

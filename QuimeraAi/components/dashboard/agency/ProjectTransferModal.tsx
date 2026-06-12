@@ -123,9 +123,7 @@ export function ProjectTransferModal({
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <FolderOutput className="h-5 w-5 text-primary" />
-                        </div>
+                        <FolderOutput className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                         <div>
                             <h2 className="text-lg font-semibold text-foreground">
                                 {t('agency.transferProject', 'Transferir Proyecto')}

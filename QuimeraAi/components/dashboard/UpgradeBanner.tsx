@@ -78,9 +78,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
             <div className={`bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 rounded-xl border border-primary/20 p-4 ${className}`}>
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/20 rounded-lg">
-                            <Sparkles className="w-5 h-5 text-primary" />
-                        </div>
+                        <Sparkles className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                         <div>
                             <p className="text-sm font-medium text-foreground">
                                 {isLoading ? '...' : `Plan ${usage?.plan || 'Free'}`}

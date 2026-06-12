@@ -109,14 +109,14 @@ Keep it professional. Language: ${t('accounting.insightsPromptLang', 'English')}
             {/* Controls */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div className="flex items-center gap-2 bg-secondary/30 rounded-xl p-1">
-                    <button onClick={() => setReportType('profit_loss')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${reportType === 'profit_loss' ? 'bg-primary text-white shadow-md' : 'text-q-text-muted hover:text-foreground'}`}>
+                    <button onClick={() => setReportType('profit_loss')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${reportType === 'profit_loss' ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}>
                         {t('accounting.profitLoss', 'Profit & Loss')}
                     </button>
-                    <button onClick={() => setReportType('balance_sheet')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${reportType === 'balance_sheet' ? 'bg-primary text-white shadow-md' : 'text-q-text-muted hover:text-foreground'}`}>
+                    <button onClick={() => setReportType('balance_sheet')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${reportType === 'balance_sheet' ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}>
                         {t('accounting.balanceSheet', 'Balance Sheet')}
                     </button>
                 </div>
-                <button onClick={handleGenerate} disabled={isGenerating || transactions.length === 0} className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all disabled:opacity-50 flex items-center gap-2">
+                <button onClick={handleGenerate} disabled={isGenerating || transactions.length === 0} className="quimera-guide-cta px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center gap-2">
                     {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
                     {t('accounting.generateReport', 'Generate Report')}
                 </button>
@@ -184,7 +184,7 @@ Keep it professional. Language: ${t('accounting.insightsPromptLang', 'English')}
                     <div className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl overflow-hidden">
                         <div className="p-5 border-b border-q-border/40 bg-gradient-to-r from-purple-500/10 via-transparent to-primary/10 flex items-center justify-between">
                             <div className="flex items-center gap-3"><div className="p-2 bg-gradient-to-br from-purple-500/30 to-primary/30 rounded-xl"><Sparkles size={18} className="text-purple-400" /></div><div><h4 className="font-bold text-foreground">{t('accounting.aiNarrative', 'AI Narrative')}</h4><p className="text-xs text-q-text-muted">{t('accounting.narrativeSubtitle', 'AI explains your results in plain language')}</p></div></div>
-                            <button onClick={handleAiNarrative} disabled={isNarrating} className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-purple-500 to-primary text-white shadow-md hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50">
+                            <button onClick={handleAiNarrative} disabled={isNarrating} className="quimera-guide-cta flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl disabled:opacity-50">
                                 {isNarrating ? <Loader2 size={14} className="animate-spin" /> : aiNarrative ? <RefreshCw size={14} /> : <Sparkles size={14} />}
                                 {aiNarrative ? t('accounting.regenerate', 'Regenerate') : t('accounting.generateNarrative', 'Generate Narrative')}
                             </button>

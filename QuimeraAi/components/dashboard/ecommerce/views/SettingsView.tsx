@@ -625,9 +625,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
             <div className="p-4 bg-muted/30 rounded-lg">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-500/20 rounded-lg">
-                            <DollarSign className="text-blue-400" size={24} />
-                        </div>
+                        <DollarSign className="text-blue-400 flex-shrink-0" size={24} strokeWidth={2} />
                         <div>
                             <h4 className="text-foreground font-medium">PayPal</h4>
                             <p className="text-q-text-muted text-sm">
@@ -666,9 +664,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
             <div className="p-4 bg-muted/30 rounded-lg">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-500/20 rounded-lg">
-                            <Truck className="text-green-400" size={24} />
-                        </div>
+                        <Truck className="text-green-400 flex-shrink-0" size={24} strokeWidth={2} />
                         <div>
                             <h4 className="text-foreground font-medium">
                                 {t('ecommerce.cod', 'Pago Contra Entrega')}

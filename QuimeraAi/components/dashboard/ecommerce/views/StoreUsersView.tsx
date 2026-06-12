@@ -245,9 +245,7 @@ const StoreUsersView: React.FC = () => {
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg" style={{ backgroundColor: `${theme.primary}20` }}>
-                            <Users style={{ color: theme.primary }} size={20} />
-                        </div>
+                        <Users className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.totalUsers}</p>
                             <p className="text-sm text-q-text-muted">{t('storeUsers.total', 'Total')}</p>
@@ -257,9 +255,7 @@ const StoreUsersView: React.FC = () => {
 
                 <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-500/20 rounded-lg">
-                            <UserCheck className="text-green-400" size={20} />
-                        </div>
+                        <UserCheck className="text-green-400 flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.activeUsers}</p>
                             <p className="text-sm text-q-text-muted">{t('storeUsers.active', 'Activos')}</p>
@@ -269,9 +265,7 @@ const StoreUsersView: React.FC = () => {
 
                 <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-yellow-500/20 rounded-lg">
-                            <Crown className="text-yellow-400" size={20} />
-                        </div>
+                        <Crown className="text-yellow-400 flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.usersByRole.vip}</p>
                             <p className="text-sm text-q-text-muted">VIP</p>
@@ -281,9 +275,7 @@ const StoreUsersView: React.FC = () => {
 
                 <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-500/20 rounded-lg">
-                            <Shield className="text-purple-400" size={20} />
-                        </div>
+                        <Shield className="text-purple-400 flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.usersByRole.wholesale}</p>
                             <p className="text-sm text-q-text-muted">{t('storeUsers.wholesale', 'Mayoristas')}</p>
@@ -293,13 +285,11 @@ const StoreUsersView: React.FC = () => {
 
                 <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-500/20 rounded-lg">
-                            {stats.newUsersThisMonth >= stats.newUsersLastMonth ? (
-                                <TrendingUp className="text-blue-400" size={20} />
-                            ) : (
-                                <TrendingDown className="text-blue-400" size={20} />
-                            )}
-                        </div>
+                        {stats.newUsersThisMonth >= stats.newUsersLastMonth ? (
+                            <TrendingUp className="text-blue-400 flex-shrink-0" size={20} strokeWidth={2} />
+                        ) : (
+                            <TrendingDown className="text-blue-400 flex-shrink-0" size={20} strokeWidth={2} />
+                        )}
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.newUsersThisMonth}</p>
                             <p className="text-sm text-q-text-muted">{t('storeUsers.newThisMonth', 'Nuevos este mes')}</p>

@@ -8,13 +8,13 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useCMS } from '../../../contexts/cms/CMSContext';
 import DashboardSidebar from '../DashboardSidebar';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import {
     Menu, Bot, MessageSquare, Settings, Sliders, FileText,
     Save, Sparkles, User, Building2, Globe, Book, Activity, LayoutGrid, ChevronRight, Clock,
     Mic, Radio, BookOpen, Package, Shield, Phone, Facebook, Instagram, Inbox,
     TrendingUp, TrendingDown, Users, Zap, BarChart3, MessageCircle, RefreshCw, Search,
-    ArrowUpRight, Loader2, Newspaper, CheckSquare, Square, Link2 as Link2Icon, PanelTopClose, PanelTopOpen
+    ArrowUpRight, Loader2, Newspaper, CheckSquare, Square, Link2 as Link2Icon, PanelTopClose, PanelTopOpen,
+    Target, Bell, Trophy,
 } from 'lucide-react';
 import ChatSimulator from './ChatSimulator';
 import { AiAssistantConfig } from '../../../types';
@@ -200,14 +200,13 @@ const AiAssistantDashboard: React.FC = () => {
             <div className="flex h-screen bg-q-bg text-foreground">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                 <div className="flex-1 flex flex-col overflow-hidden relative">
-                    <DashboardWaveRibbons />
-                    <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 shrink-0">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 shrink-0">
                         <div className="flex items-center gap-1 sm:gap-4">
                             <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-border/40 rounded-lg transition-colors">
                                 <Menu className="w-4 h-4" />
                             </button>
                             <div className="flex items-center gap-1 sm:gap-2">
-                                <Bot className="text-primary w-5 h-5" />
+                                <Bot className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                                 <h1 className="text-sm sm:text-lg font-semibold text-foreground">Chatbot</h1>
                             </div>
                         </div>
@@ -234,78 +233,56 @@ const AiAssistantDashboard: React.FC = () => {
                     <main className="flex-1 overflow-y-auto bg-gradient-to-br from-background via-background to-secondary/20">
                         <div className="max-w-7xl mx-auto p-6 lg:p-8 space-y-8">
 
-                            {/* Global Stats Banner */}
-                            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6">
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                                <div className="relative z-10">
-                                    <div className="flex items-center justify-between mb-6">
+                            {/* Global Stats */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <BarChart3 className="w-7 h-7 quimera-status-card-accent-text flex-shrink-0" strokeWidth={2} />
                                         <div>
-                                            <h2 className="text-2xl font-bold flex items-center gap-3">
-                                                <BarChart3 className="text-primary" size={28} />
+                                            <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                                                 Quimera Chat Analytics
                                             </h2>
-                                            <p className="text-q-text-muted mt-1">
+                                            <p className="text-q-text-muted text-sm mt-0.5">
                                                 Estadísticas en tiempo real de todos tus proyectos
                                             </p>
                                         </div>
-                                        {isLoadingStats && (
-                                            <Loader2 size={20} className="animate-spin text-primary" />
-                                        )}
                                     </div>
+                                    {isLoadingStats && (
+                                        <Loader2 size={20} className="animate-spin quimera-status-card-accent-text flex-shrink-0" />
+                                    )}
+                                </div>
 
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <div className="bg-q-surface/60 backdrop-blur-sm rounded-xl p-4 border border-q-border/50">
-                                            <div className="flex items-center gap-2 text-q-text-muted text-sm mb-1">
-                                                <MessageCircle size={14} />
-                                                Chats Activos
-                                            </div>
-                                            <div className="text-3xl font-bold text-primary">
-                                                {globalStats.totalActiveChats}
-                                            </div>
-                                            <div className="text-xs text-q-text-muted mt-1">
-                                                En todos los proyectos
-                                            </div>
-                                        </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                                    {[
+                                        { icon: MessageCircle, value: globalStats.totalActiveChats, label: 'Chats Activos', hint: 'En todos los proyectos' },
+                                        { icon: Zap, value: globalStats.totalMessages24h, label: 'Mensajes (24h)', hint: 'Últimas 24 horas' },
+                                        { icon: Users, value: globalStats.totalLeads, label: 'Leads Totales', hint: 'Generados por chat' },
+                                        { icon: Clock, value: formatResponseTime(globalStats.avgResponseTime), label: 'Tiempo Respuesta', hint: 'Promedio global' },
+                                    ].map((stat) => {
+                                        const Icon = stat.icon;
 
-                                        <div className="bg-q-surface/60 backdrop-blur-sm rounded-xl p-4 border border-q-border/50">
-                                            <div className="flex items-center gap-2 text-q-text-muted text-sm mb-1">
-                                                <Zap size={14} />
-                                                Mensajes (24h)
+                                        return (
+                                            <div
+                                                key={stat.label}
+                                                className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-q-border/60
+                                                    bg-q-surface/80 backdrop-blur-xl p-3 sm:p-4 hover:border-q-border transition-all duration-300"
+                                            >
+                                                <div
+                                                    className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 sm:w-32 sm:h-32 rounded-full blur-2xl
+                                                        group-hover:scale-110 transition-all duration-500"
+                                                    aria-hidden="true"
+                                                />
+                                                <div className="relative z-10">
+                                                    <div className="mb-1 md:mb-2">
+                                                        <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                                    </div>
+                                                    <div className="text-xl md:text-3xl font-extrabold text-foreground">{stat.value}</div>
+                                                    <p className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight truncate">{stat.label}</p>
+                                                    <p className="text-[10px] text-q-text-muted/80 hidden sm:block">{stat.hint}</p>
+                                                </div>
                                             </div>
-                                            <div className="text-3xl font-bold text-amber-500">
-                                                {globalStats.totalMessages24h}
-                                            </div>
-                                            <div className="text-xs text-q-text-muted mt-1">
-                                                Últimas 24 horas
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-q-surface/60 backdrop-blur-sm rounded-xl p-4 border border-q-border/50">
-                                            <div className="flex items-center gap-2 text-q-text-muted text-sm mb-1">
-                                                <Users size={14} />
-                                                Leads Totales
-                                            </div>
-                                            <div className="text-3xl font-bold text-green-500">
-                                                {globalStats.totalLeads}
-                                            </div>
-                                            <div className="text-xs text-q-text-muted mt-1">
-                                                Generados por chat
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-q-surface/60 backdrop-blur-sm rounded-xl p-4 border border-q-border/50">
-                                            <div className="flex items-center gap-2 text-q-text-muted text-sm mb-1">
-                                                <Clock size={14} />
-                                                Tiempo Respuesta
-                                            </div>
-                                            <div className="text-3xl font-bold text-blue-500">
-                                                {formatResponseTime(globalStats.avgResponseTime)}
-                                            </div>
-                                            <div className="text-xs text-q-text-muted mt-1">
-                                                Promedio global
-                                            </div>
-                                        </div>
-                                    </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -338,8 +315,12 @@ const AiAssistantDashboard: React.FC = () => {
                                             <button
                                                 key={project.id}
                                                 onClick={() => handleSelectProject(project.id)}
-                                                className="group relative rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col text-left bg-q-surface border border-q-border hover:border-primary/50"
+                                                className="group relative rounded-2xl overflow-hidden transition-all duration-300 flex flex-col text-left bg-q-surface/80 backdrop-blur-xl border border-q-border/60 hover:border-q-border hover:-translate-y-0.5"
                                             >
+                                                <div
+                                                    className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl group-hover:scale-110 transition-all duration-500 z-0 pointer-events-none"
+                                                    aria-hidden="true"
+                                                />
                                                 {/* Activity Indicator */}
                                                 {hasActivity && (
                                                     <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/20 backdrop-blur-sm border border-green-500/30">
@@ -365,9 +346,9 @@ const AiAssistantDashboard: React.FC = () => {
                                                 </div>
 
                                                 {/* Content Section */}
-                                                <div className="p-5 space-y-4">
+                                                <div className="relative z-10 p-5 space-y-4">
                                                     <div>
-                                                        <h3 className="font-bold text-lg text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                                                        <h3 className="font-bold text-lg text-foreground line-clamp-1 group-hover:text-[var(--quimera-status-accent-from)] transition-colors">
                                                             {project.name}
                                                         </h3>
                                                         <div className="flex items-center gap-2 mt-1 text-sm text-q-text-muted">
@@ -379,31 +360,20 @@ const AiAssistantDashboard: React.FC = () => {
                                                     </div>
 
                                                     {/* Stats Row */}
-                                                    <div className="grid grid-cols-3 gap-3">
-                                                        <div className="text-center p-2 rounded-lg bg-secondary/50">
-                                                            <div className="text-lg font-bold text-foreground">
-                                                                {projectStats?.totalMessages || 0}
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        {[
+                                                            { value: projectStats?.totalMessages || 0, label: 'Mensajes' },
+                                                            { value: projectStats?.totalLeads || 0, label: 'Leads' },
+                                                            { value: formatResponseTime(projectStats?.avgResponseTime || 0), label: 'Resp.' },
+                                                        ].map((stat) => (
+                                                            <div
+                                                                key={stat.label}
+                                                                className="text-center p-2 rounded-lg border border-q-border/50 bg-q-surface/50"
+                                                            >
+                                                                <div className="text-lg font-bold text-foreground">{stat.value}</div>
+                                                                <div className="text-[10px] text-q-text-muted uppercase tracking-wide">{stat.label}</div>
                                                             </div>
-                                                            <div className="text-[10px] text-q-text-muted uppercase tracking-wide">
-                                                                Mensajes
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-center p-2 rounded-lg bg-secondary/50">
-                                                            <div className="text-lg font-bold text-green-500">
-                                                                {projectStats?.totalLeads || 0}
-                                                            </div>
-                                                            <div className="text-[10px] text-q-text-muted uppercase tracking-wide">
-                                                                Leads
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-center p-2 rounded-lg bg-secondary/50">
-                                                            <div className="text-lg font-bold text-blue-500">
-                                                                {formatResponseTime(projectStats?.avgResponseTime || 0)}
-                                                            </div>
-                                                            <div className="text-[10px] text-q-text-muted uppercase tracking-wide">
-                                                                Resp.
-                                                            </div>
-                                                        </div>
+                                                        ))}
                                                     </div>
 
                                                     {/* Channels & Trend */}
@@ -442,7 +412,7 @@ const AiAssistantDashboard: React.FC = () => {
                                                         {/* Arrow */}
                                                         <ArrowUpRight
                                                             size={18}
-                                                            className="text-q-text-muted group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"
+                                                            className="quimera-status-card-link group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"
                                                         />
                                                     </div>
                                                 </div>
@@ -451,58 +421,51 @@ const AiAssistantDashboard: React.FC = () => {
                                     })}
                                 </div>
                             ) : searchQuery ? (
-                                <div className="text-center py-16 bg-q-surface rounded-2xl border border-q-border">
-                                    <Search className="w-12 h-12 mx-auto text-q-text-muted/40 mb-4" />
+                                <div className="text-center py-16 quimera-dashboard-panel-card">
+                                    <Search className="w-12 h-12 text-q-text-muted mx-auto mb-4" strokeWidth={1.5} />
                                     <h3 className="text-lg font-bold mb-2">Sin resultados</h3>
                                     <p className="text-sm text-q-text-muted">
                                         No se encontraron proyectos para "{searchQuery}"
                                     </p>
                                 </div>
                             ) : (
-                                <div className="text-center py-20 bg-q-surface rounded-2xl border border-dashed border-q-border">
-                                    <LayoutGrid className="w-16 h-16 mx-auto text-q-text-muted/40 mb-4" />
+                                <div className="text-center py-20 quimera-dashboard-panel-card border-dashed">
+                                    <LayoutGrid className="w-14 h-14 text-q-text-muted mx-auto mb-4" strokeWidth={1.5} />
                                     <h3 className="text-lg font-bold mb-2">{t('aiAssistant.dashboard.noProjects')}</h3>
                                     <p className="text-sm text-q-text-muted mb-6">{t('aiAssistant.dashboard.noProjectsDesc')}</p>
                                 </div>
                             )}
 
                             {/* Quick Tips / Ideas Section */}
-                            <div className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-primary/5 to-transparent border border-q-border">
+                            <div className="quimera-dashboard-panel-card group mt-8 p-6">
                                 <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-                                    <Sparkles className="text-primary" size={20} />
+                                    <Sparkles className="w-5 h-5 quimera-status-card-accent-text" strokeWidth={2} />
                                     Ideas para mejorar tu Dashboard
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <div className="p-4 rounded-xl bg-q-surface/50 border border-q-border/50">
-                                        <div className="text-primary mb-2">🎯</div>
-                                        <h5 className="font-semibold text-sm mb-1">Objetivos Semanales</h5>
-                                        <p className="text-xs text-q-text-muted">Define metas de leads y conversaciones por proyecto</p>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-q-surface/50 border border-q-border/50">
-                                        <div className="text-primary mb-2">📊</div>
-                                        <h5 className="font-semibold text-sm mb-1">Comparativas</h5>
-                                        <p className="text-xs text-q-text-muted">Compara rendimiento entre proyectos lado a lado</p>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-q-surface/50 border border-q-border/50">
-                                        <div className="text-primary mb-2">🔔</div>
-                                        <h5 className="font-semibold text-sm mb-1">Alertas Inteligentes</h5>
-                                        <p className="text-xs text-q-text-muted">Notificaciones cuando hay alta actividad</p>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-q-surface/50 border border-q-border/50">
-                                        <div className="text-primary mb-2">🤖</div>
-                                        <h5 className="font-semibold text-sm mb-1">AI Insights</h5>
-                                        <p className="text-xs text-q-text-muted">Resumen semanal generado por IA de tendencias</p>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-q-surface/50 border border-q-border/50">
-                                        <div className="text-primary mb-2">📈</div>
-                                        <h5 className="font-semibold text-sm mb-1">Gráficas Avanzadas</h5>
-                                        <p className="text-xs text-q-text-muted">Visualiza tendencias por hora del día</p>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-q-surface/50 border border-q-border/50">
-                                        <div className="text-primary mb-2">🏆</div>
-                                        <h5 className="font-semibold text-sm mb-1">Leaderboard</h5>
-                                        <p className="text-xs text-q-text-muted">Ranking de proyectos con mejor engagement</p>
-                                    </div>
+                                    {[
+                                        { icon: Target, title: 'Objetivos Semanales', desc: 'Define metas de leads y conversaciones por proyecto' },
+                                        { icon: BarChart3, title: 'Comparativas', desc: 'Compara rendimiento entre proyectos lado a lado' },
+                                        { icon: Bell, title: 'Alertas Inteligentes', desc: 'Notificaciones cuando hay alta actividad' },
+                                        { icon: Bot, title: 'AI Insights', desc: 'Resumen semanal generado por IA de tendencias' },
+                                        { icon: TrendingUp, title: 'Gráficas Avanzadas', desc: 'Visualiza tendencias por hora del día' },
+                                        { icon: Trophy, title: 'Leaderboard', desc: 'Ranking de proyectos con mejor engagement' },
+                                    ].map((idea) => {
+                                        const Icon = idea.icon;
+
+                                        return (
+                                            <div
+                                                key={idea.title}
+                                                className="quimera-guide-panel-accent p-4 flex gap-3"
+                                            >
+                                                <Icon className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
+                                                <div>
+                                                    <h5 className="font-semibold text-sm mb-1 text-foreground">{idea.title}</h5>
+                                                    <p className="text-xs text-q-text-muted">{idea.desc}</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
@@ -518,7 +481,7 @@ const AiAssistantDashboard: React.FC = () => {
                 const currentProjectStats = activeProject ? getStatsForProject(activeProject.id) : null;
                 return (
                     <div className="space-y-6 animate-fade-in-up">
-                        <div className="bg-q-surface border border-q-border p-6 rounded-xl shadow-sm">
+                        <div className="quimera-dashboard-panel-card group p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="font-bold text-lg">{t('aiAssistant.dashboard.performanceOverview')}</h3>
                                 <button
@@ -530,43 +493,37 @@ const AiAssistantDashboard: React.FC = () => {
                                     <RefreshCw size={16} className={isLoadingStats ? 'animate-spin' : ''} />
                                 </button>
                             </div>
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="p-4 bg-secondary/20 rounded-lg text-center">
-                                    <span className="block text-2xl font-bold text-primary">
-                                        {currentProjectStats?.totalMessages || 0}
-                                    </span>
-                                    <span className="text-xs text-q-text-muted uppercase tracking-wider">{t('aiAssistant.dashboard.chats')}</span>
-                                </div>
-                                <div className="p-4 bg-secondary/20 rounded-lg text-center">
-                                    <span className="block text-2xl font-bold text-green-500">
-                                        {currentProjectStats?.totalLeads || 0}
-                                    </span>
-                                    <span className="text-xs text-q-text-muted uppercase tracking-wider">{t('aiAssistant.dashboard.leads')}</span>
-                                </div>
-                                <div className="p-4 bg-secondary/20 rounded-lg text-center">
-                                    <span className="block text-2xl font-bold text-blue-500">
-                                        {formatResponseTime(currentProjectStats?.avgResponseTime || 0)}
-                                    </span>
-                                    <span className="text-xs text-q-text-muted uppercase tracking-wider">{t('aiAssistant.dashboard.latency')}</span>
-                                </div>
+                            <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                                {[
+                                    { icon: MessageCircle, value: currentProjectStats?.totalMessages || 0, label: t('aiAssistant.dashboard.chats') },
+                                    { icon: Users, value: currentProjectStats?.totalLeads || 0, label: t('aiAssistant.dashboard.leads') },
+                                    { icon: Clock, value: formatResponseTime(currentProjectStats?.avgResponseTime || 0), label: t('aiAssistant.dashboard.latency') },
+                                ].map((stat) => (
+                                        <div
+                                            key={stat.label}
+                                            className="p-3 sm:p-4 rounded-lg border border-q-border/60 bg-secondary/20 text-center"
+                                        >
+                                            <span className="block text-xl sm:text-2xl font-bold quimera-status-card-accent-text">{stat.value}</span>
+                                            <span className="text-[10px] sm:text-xs text-q-text-muted uppercase tracking-wider">{stat.label}</span>
+                                        </div>
+                                ))}
                             </div>
                         </div>
 
-
-                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
+                        <div className="quimera-dashboard-panel-card group p-6">
                             <h3 className="font-bold text-lg mb-4">{t('aiAssistant.dashboard.configStatus')}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Business Profile */}
                                 <button
                                     onClick={() => setActiveTab('knowledge')}
-                                    className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-xl border border-q-border/50 hover:border-primary/30 transition-all text-left group"
+                                    className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg ${formData.businessProfile ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.businessProfile ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
                                             <Building2 size={20} />
                                         </div>
                                         <div>
-                                            <span className="font-semibold text-sm block group-hover:text-primary transition-colors">{t('aiAssistant.dashboard.businessProfile')}</span>
+                                            <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">{t('aiAssistant.dashboard.businessProfile')}</span>
                                             <span className="text-xs text-q-text-muted">Información del negocio</span>
                                         </div>
                                     </div>
@@ -576,14 +533,14 @@ const AiAssistantDashboard: React.FC = () => {
                                 {/* Knowledge Base */}
                                 <button
                                     onClick={() => setActiveTab('knowledge')}
-                                    className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-xl border border-q-border/50 hover:border-primary/30 transition-all text-left group"
+                                    className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0 || formData.knowledgeLinks?.length > 0 || (formData.cmsArticleIds?.length || 0) > 0) ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                        <div className={`p-2 rounded-lg flex-shrink-0 ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0 || formData.knowledgeLinks?.length > 0 || (formData.cmsArticleIds?.length || 0) > 0) ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
                                             <BookOpen size={20} />
                                         </div>
                                         <div>
-                                            <span className="font-semibold text-sm block group-hover:text-primary transition-colors">Base de Conocimiento</span>
+                                            <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">Base de Conocimiento</span>
                                             <span className="text-xs text-q-text-muted">{formData.faqs?.length || 0} FAQs, {formData.knowledgeDocuments?.length || 0} docs, {formData.knowledgeLinks?.length || 0} links, {formData.cmsArticleIds?.length || 0} artículos CMS</span>
                                         </div>
                                     </div>
@@ -593,14 +550,14 @@ const AiAssistantDashboard: React.FC = () => {
                                 {/* Lead Capture */}
                                 <button
                                     onClick={() => setActiveTab('leadCapture')}
-                                    className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-xl border border-q-border/50 hover:border-primary/30 transition-all text-left group"
+                                    className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg ${formData.leadCaptureEnabled ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.leadCaptureEnabled ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
                                             <Sparkles size={20} />
                                         </div>
                                         <div>
-                                            <span className="font-semibold text-sm block group-hover:text-primary transition-colors">Captura de Leads</span>
+                                            <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">Captura de Leads</span>
                                             <span className="text-xs text-q-text-muted">{formData.leadCaptureEnabled ? 'Activado' : 'Desactivado'}</span>
                                         </div>
                                     </div>
@@ -610,14 +567,14 @@ const AiAssistantDashboard: React.FC = () => {
                                 {/* Live Voice */}
                                 <button
                                     onClick={() => setActiveTab('voice')}
-                                    className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-xl border border-q-border/50 hover:border-primary/30 transition-all text-left group"
+                                    className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg ${formData.enableLiveVoice ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.enableLiveVoice ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
                                             <Mic size={20} />
                                         </div>
                                         <div>
-                                            <span className="font-semibold text-sm block group-hover:text-primary transition-colors">{t('aiAssistant.dashboard.liveVoice')}</span>
+                                            <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">{t('aiAssistant.dashboard.liveVoice')}</span>
                                             <span className="text-xs text-q-text-muted">{formData.enableLiveVoice ? 'Activado' : 'Desactivado'}</span>
                                         </div>
                                     </div>
@@ -627,14 +584,14 @@ const AiAssistantDashboard: React.FC = () => {
                                 {/* Chat Active */}
                                 <button
                                     onClick={() => setActiveTab('settings')}
-                                    className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-xl border border-q-border/50 hover:border-primary/30 transition-all text-left group"
+                                    className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg ${formData.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
                                             <MessageSquare size={20} />
                                         </div>
                                         <div>
-                                            <span className="font-semibold text-sm block group-hover:text-primary transition-colors">Estado del Chat</span>
+                                            <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">Estado del Chat</span>
                                             <span className="text-xs text-q-text-muted">{formData.isActive ? 'Online' : 'Offline'}</span>
                                         </div>
                                     </div>
@@ -860,7 +817,10 @@ const AiAssistantDashboard: React.FC = () => {
                                     <button
                                         key={tone}
                                         onClick={() => updateForm('tone', tone)}
-                                        className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${formData.tone === tone ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-q-surface border-q-border hover:border-primary/50'}`}
+                                        className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${formData.tone === tone
+                                            ? 'border-[var(--quimera-status-accent-from)] bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
+                                            : 'bg-q-surface border-q-border hover:border-q-border/80'
+                                            }`}
                                     >
                                         {tone}
                                     </button>
@@ -935,14 +895,14 @@ const AiAssistantDashboard: React.FC = () => {
             case 'settings':
                 return (
                     <div className="space-y-6 animate-fade-in-up">
-                        <div className="bg-q-surface border border-q-border p-6 rounded-xl flex items-center justify-between">
+                        <div className="quimera-dashboard-panel-card group p-6 flex items-center justify-between">
                             <div>
                                 <h3 className="font-bold text-lg">{t('aiAssistant.dashboard.activateAssistant')}</h3>
                                 <p className="text-sm text-q-text-muted">{t('aiAssistant.dashboard.activateAssistantDesc')}</p>
                             </div>
                             <button
                                 onClick={() => updateForm('isActive', !formData.isActive)}
-                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isActive ? 'bg-primary' : 'bg-secondary'}`}
+                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isActive ? 'bg-[var(--quimera-status-accent-from)]' : 'bg-secondary'}`}
                             >
                                 <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
                             </button>
@@ -960,15 +920,15 @@ const AiAssistantDashboard: React.FC = () => {
 
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-8 border-b border-q-border flex items-center justify-between bg-q-bg z-20 shrink-0">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-8 flex items-center justify-between z-20 shrink-0">
                     <div className="flex items-center gap-1 sm:gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-border/40 rounded-lg transition-colors">
                             <Menu className="w-4 h-4" />
                         </button>
-                        <div className="flex items-center gap-1 sm:gap-2">
-                            <Bot className="text-primary w-5 h-5" />
+                        <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+                            <Bot className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-sm sm:text-lg font-semibold text-foreground">Chatbot</h1>
-                            <span className="text-xs text-q-text-muted flex items-center"><span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span> <span className="truncate max-w-[100px] sm:max-w-[200px]">{activeProject.name}</span></span>
+                            <span className="text-xs text-q-text-muted flex items-center min-w-0"><span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 flex-shrink-0"></span> <span className="truncate max-w-[100px] sm:max-w-[200px]">{activeProject.name}</span></span>
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -996,7 +956,7 @@ const AiAssistantDashboard: React.FC = () => {
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
 
                     {/* LEFT: Configuration Area (Scrollable) - Full width when Inbox is active */}
-                    <div className={`${activeTab === 'socialInbox' ? 'lg:col-span-12' : 'lg:col-span-8 xl:col-span-6'} flex flex-col border-r border-q-border bg-q-bg overflow-hidden relative z-10 shadow-lg`}>
+                    <div className={`${activeTab === 'socialInbox' ? 'lg:col-span-12' : 'lg:col-span-8 xl:col-span-6'} flex flex-col border-r border-q-border bg-q-bg overflow-hidden relative z-10`}>
                         <div className="flex flex-col md:flex-row h-full overflow-hidden">
                             {/* Desktop Sidebar (New) */}
                             <div className="hidden md:flex flex-col w-[240px] border-r border-q-border/50 bg-secondary/5 py-6 overflow-y-auto shrink-0">
@@ -1008,11 +968,11 @@ const AiAssistantDashboard: React.FC = () => {
                                                 key={tab.id}
                                                 onClick={() => setActiveTab(tab.id as Tab)}
                                                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group ${activeTab === tab.id
-                                                    ? 'bg-primary text-primary-foreground shadow-sm'
-                                                    : 'text-q-text-muted hover:bg-secondary hover:text-foreground'
+                                                    ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
+                                                    : 'text-q-text-muted hover:bg-secondary/50 hover:text-foreground'
                                                     }`}
                                             >
-                                                <div className={`${activeTab === tab.id ? 'text-primary-foreground' : 'text-q-text-muted group-hover:text-primary'} transition-colors`}>
+                                                <div className={`${activeTab === tab.id ? 'quimera-status-card-accent-text' : 'text-q-text-muted group-hover:text-[var(--quimera-status-accent-from)]'} transition-colors`}>
                                                     {tab.icon}
                                                 </div>
                                                 <span>{tab.label}</span>
@@ -1037,7 +997,7 @@ const AiAssistantDashboard: React.FC = () => {
                                                     setIsMobileNavOpen(false);
                                                 }}
                                                 className={`flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg text-[10px] font-medium leading-tight transition-colors ${activeTab === tab.id
-                                                    ? 'bg-primary/10 text-primary'
+                                                    ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
                                                     : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
                                                     }`}
                                             >

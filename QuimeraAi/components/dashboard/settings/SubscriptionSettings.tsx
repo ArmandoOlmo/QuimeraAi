@@ -37,6 +37,7 @@ import {
     SUBSCRIPTION_PLANS,
     SubscriptionPlanId,
 } from '../../../types/subscription';
+import { SettingsStatCard, settingsPanelClass } from './SettingsStatCard';
 
 // Plan icons mapping
 const PLAN_ICONS: Record<SubscriptionPlanId, React.ElementType> = {
@@ -366,7 +367,7 @@ const SubscriptionSettings: React.FC = () => {
             {/* ═══════════════════════════════════════════════ */}
             {/* HERO: Current Plan + Usage                     */}
             {/* ═══════════════════════════════════════════════ */}
-            <div className="relative bg-q-surface border border-q-border rounded-2xl overflow-hidden">
+            <div className={`relative ${settingsPanelClass}`}>
                 {/* Gradient accent strip */}
                 <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${currentGradient}`} />
 
@@ -375,7 +376,7 @@ const SubscriptionSettings: React.FC = () => {
                         {/* Plan info */}
                         <div className="flex-1">
                             <div className="flex items-center gap-4 mb-4">
-                                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${currentGradient} flex items-center justify-center shadow-lg`}>
+                                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${currentGradient} flex items-center justify-center`}>
                                     <PlanIcon className="w-7 h-7 text-white" />
                                 </div>
                                 <div>
@@ -394,30 +395,22 @@ const SubscriptionSettings: React.FC = () => {
                             </div>
 
                             {/* Plan features mini grid */}
-                            <div className="grid grid-cols-3 gap-3">
-                                <div className="p-3 rounded-xl bg-secondary/30 border border-q-border">
-                                    <Sparkles size={14} className="text-primary mb-1" />
-                                    <p className="text-lg font-bold text-foreground">{currentPlan.limits.maxAiCredits.toLocaleString()}</p>
-                                    <p className="text-[10px] text-q-text-muted uppercase tracking-wider">
-                                        {t('settings.subscription.aiCredits', 'Créditos IA')}
-                                    </p>
-                                </div>
-                                <div className="p-3 rounded-xl bg-secondary/30 border border-q-border">
-                                    <Rocket size={14} className="text-primary mb-1" />
-                                    <p className="text-lg font-bold text-foreground">
-                                        {currentPlan.limits.maxProjects === -1 ? '∞' : currentPlan.limits.maxProjects}
-                                    </p>
-                                    <p className="text-[10px] text-q-text-muted uppercase tracking-wider">
-                                        {t('settings.subscription.projects', 'Proyectos')}
-                                    </p>
-                                </div>
-                                <div className="p-3 rounded-xl bg-secondary/30 border border-q-border">
-                                    <Gift size={14} className="text-primary mb-1" />
-                                    <p className="text-lg font-bold text-foreground">{currentPlan.limits.maxStorageGB} GB</p>
-                                    <p className="text-[10px] text-q-text-muted uppercase tracking-wider">
-                                        {t('settings.subscription.storage', 'Almacenamiento')}
-                                    </p>
-                                </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <SettingsStatCard
+                                    label={t('settings.subscription.aiCredits', 'Créditos IA')}
+                                    value={currentPlan.limits.maxAiCredits.toLocaleString()}
+                                    icon={Sparkles}
+                                />
+                                <SettingsStatCard
+                                    label={t('settings.subscription.projects', 'Proyectos')}
+                                    value={currentPlan.limits.maxProjects === -1 ? '∞' : currentPlan.limits.maxProjects}
+                                    icon={Rocket}
+                                />
+                                <SettingsStatCard
+                                    label={t('settings.subscription.storage', 'Almacenamiento')}
+                                    value={`${currentPlan.limits.maxStorageGB} GB`}
+                                    icon={Gift}
+                                />
                             </div>
                         </div>
 
@@ -454,7 +447,7 @@ const SubscriptionSettings: React.FC = () => {
                                                     ? 'linear-gradient(90deg, #ef4444, #f87171)'
                                                     : usagePercentage > 70
                                                         ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
-                                                        : `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))`,
+                                                        : `linear-gradient(90deg, var(--quimera-status-accent-from), var(--quimera-status-accent-to))`,
                                             }}
                                         />
                                         {/* Shimmer effect */}
@@ -485,7 +478,7 @@ const SubscriptionSettings: React.FC = () => {
                                         </span>
                                         <span
                                             className="text-lg font-bold"
-                                            style={{ color: usage?.color || 'hsl(var(--primary))' }}
+                                            style={{ color: usage?.color || 'var(--quimera-status-accent-from)' }}
                                         >
                                             {usage?.remaining || 0}
                                         </span>
@@ -591,17 +584,17 @@ const SubscriptionSettings: React.FC = () => {
                         return (
                             <div
                                 key={plan.id}
-                                className={`relative flex flex-col rounded-2xl border overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isCurrentPlan
-                                    ? 'bg-primary/5 border-primary/50 shadow-md shadow-primary/10'
+                                className={`relative flex flex-col overflow-hidden transition-all duration-300 ${settingsPanelClass} ${isCurrentPlan
+                                    ? 'border-[color-mix(in_srgb,var(--quimera-status-accent-from)_40%,transparent)] bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_8%,transparent)]'
                                     : isRecommended
-                                        ? 'bg-q-surface border-amber-500/50 shadow-md shadow-amber-500/10'
-                                        : 'bg-q-surface border-q-border hover:border-primary/30'
+                                        ? 'border-amber-500/50'
+                                        : 'hover:border-q-border'
                                     }`}
                             >
                                 {/* Recommended badge */}
                                 {isRecommended && !isCurrentPlan && (
                                     <div className="absolute -top-0 left-1/2 -translate-x-1/2 z-10 -translate-y-1/2">
-                                        <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full shadow-lg">
+                                        <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full">
                                             <Star size={11} />
                                             {t('settings.subscription.recommended', 'Recomendado')}
                                         </span>
@@ -616,14 +609,14 @@ const SubscriptionSettings: React.FC = () => {
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex items-center gap-3">
                                             <div
-                                                className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${gradient} shadow-lg`}
+                                                className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${gradient}`}
                                             >
                                                 <Icon className="w-5 h-5 text-white" />
                                             </div>
                                             <div>
                                                 <h4 className="font-semibold text-foreground">{plan.name}</h4>
                                                 {isCurrentPlan && (
-                                                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                                                    <span className="text-[10px] font-bold quimera-status-card-accent-text bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] px-1.5 py-0.5 rounded-full">
                                                         {t('settings.subscription.current', 'Actual')}
                                                     </span>
                                                 )}
@@ -645,17 +638,13 @@ const SubscriptionSettings: React.FC = () => {
                                     {/* Features */}
                                     <ul className="space-y-2.5 mb-6 flex-grow">
                                         <li className="flex items-center gap-2.5 text-xs text-q-text-muted">
-                                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                                <Sparkles className="w-3 h-3 text-primary" />
-                                            </div>
+                                            <Sparkles className="w-4 h-4 quimera-status-card-accent-text flex-shrink-0" strokeWidth={2} />
                                             <span>
                                                 <strong className="text-foreground">{plan.limits.maxAiCredits.toLocaleString()}</strong> créditos IA
                                             </span>
                                         </li>
                                         <li className="flex items-center gap-2.5 text-xs text-q-text-muted">
-                                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                                <Rocket className="w-3 h-3 text-primary" />
-                                            </div>
+                                            <Rocket className="w-4 h-4 quimera-status-card-accent-text flex-shrink-0" strokeWidth={2} />
                                             <span>
                                                 <strong className="text-foreground">
                                                     {plan.limits.maxProjects === -1 ? 'Ilimitados' : plan.limits.maxProjects}
@@ -663,9 +652,7 @@ const SubscriptionSettings: React.FC = () => {
                                             </span>
                                         </li>
                                         <li className="flex items-center gap-2.5 text-xs text-q-text-muted">
-                                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                                <Gift className="w-3 h-3 text-primary" />
-                                            </div>
+                                            <Gift className="w-4 h-4 quimera-status-card-accent-text flex-shrink-0" strokeWidth={2} />
                                             <span>
                                                 <strong className="text-foreground">{plan.limits.maxStorageGB} GB</strong> almacenamiento
                                             </span>
@@ -676,7 +663,7 @@ const SubscriptionSettings: React.FC = () => {
                                     {isCurrentPlan ? (
                                         <button
                                             disabled
-                                            className="w-full py-2.5 rounded-xl bg-primary/10 text-primary text-sm font-semibold flex items-center justify-center gap-2 cursor-default"
+                                            className="w-full py-2.5 rounded-xl bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text text-sm font-semibold flex items-center justify-center gap-2 cursor-default"
                                         >
                                             <Check className="w-4 h-4" />
                                             {t('settings.subscription.currentPlan', 'Plan Actual')}
@@ -687,7 +674,7 @@ const SubscriptionSettings: React.FC = () => {
                                             onClick={() => handleSelectPlan(plan.id)}
                                             disabled={isLoading || loadingPlanId !== null}
                                             className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${isUpgrade
-                                                ? `bg-gradient-to-r ${gradient} text-white hover:shadow-lg hover:shadow-primary/25`
+                                                ? 'quimera-guide-cta'
                                                 : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                                                 }`}
                                         >
@@ -719,11 +706,9 @@ const SubscriptionSettings: React.FC = () => {
             {/* BILLING & MANAGEMENT                           */}
             {/* ═══════════════════════════════════════════════ */}
             {currentPlanId !== 'free' && subscriptionDetails?.stripe && (
-                <div className="bg-q-surface rounded-2xl border border-q-border overflow-hidden">
+                <div className={settingsPanelClass}>
                     <div className="p-5 border-b border-q-border flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <Calendar className="w-5 h-5 text-primary" />
-                        </div>
+                        <Calendar className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                         <div>
                             <h4 className="font-semibold text-foreground">
                                 {t('settings.subscription.billingPeriod', 'Período de Facturación')}
@@ -786,7 +771,7 @@ const SubscriptionSettings: React.FC = () => {
                                     <button
                                         onClick={handleReactivateSubscription}
                                         disabled={isReactivating}
-                                        className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-1.5"
+                                        className="quimera-guide-cta px-4 py-2 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50 flex items-center gap-1.5"
                                     >
                                         {isReactivating ? (
                                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -805,7 +790,7 @@ const SubscriptionSettings: React.FC = () => {
                                     type="button"
                                     onClick={handlePayInvoice}
                                     disabled={isOpeningPortal}
-                                    className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="quimera-guide-cta px-4 py-2.5 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {isOpeningPortal ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
                                     {requiresPayment

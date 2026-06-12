@@ -24,6 +24,13 @@ interface WebsitesViewProps {
     filters: DashboardFiltersHook;
 }
 
+interface WebsiteStatCard {
+    id: string;
+    icon: React.ElementType;
+    value: number;
+    labelKey: string;
+}
+
 /**
  * WebsitesView
  *
@@ -60,65 +67,68 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
         return values.length > 0 ? Math.max(...values) : 1;
     }, [projectUsage]);
 
+    const statCards: WebsiteStatCard[] = [
+        {
+            id: 'total',
+            icon: Globe,
+            value: allUserProjects.length,
+            labelKey: 'dashboard.totalWebsites',
+        },
+        {
+            id: 'published',
+            icon: CheckCircle,
+            value: publishedCount,
+            labelKey: 'dashboard.published',
+        },
+        {
+            id: 'draft',
+            icon: FileEdit,
+            value: draftCount,
+            labelKey: 'dashboard.draft',
+        },
+        {
+            id: 'filtered',
+            icon: LayoutGrid,
+            value: userProjects.length,
+            labelKey: 'dashboard.filtered',
+        },
+    ];
+
     return (
         <>
             {/* Statistics Section */}
             <section className="relative z-[1] grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-                <div className="bg-q-surface/50 border border-q-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
-                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-primary/20">
-                            <Globe className="text-primary w-4 h-4 md:w-5 md:h-5" />
-                        </div>
-                    </div>
-                    <div className="text-xl md:text-3xl font-extrabold text-foreground">
-                        {allUserProjects.length}
-                    </div>
-                    <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
-                        {t('dashboard.totalWebsites')}
-                    </div>
-                </div>
+                {statCards.map((card) => {
+                    const Icon = card.icon;
 
-                <div className="bg-q-surface/50 border border-q-border hover:border-green-500/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
-                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-green-500/20">
-                            <CheckCircle className="text-green-500 w-4 h-4 md:w-5 md:h-5" />
-                        </div>
-                    </div>
-                    <div className="text-xl md:text-3xl font-extrabold text-foreground">
-                        {publishedCount}
-                    </div>
-                    <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
-                        {t('dashboard.published')}
-                    </div>
-                </div>
+                    return (
+                        <div
+                            key={card.id}
+                            className="group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60
+                                bg-q-surface/80 backdrop-blur-xl p-2.5 md:p-4
+                                hover:border-q-border
+                                transition-all duration-300 ease-out"
+                        >
+                            <div
+                                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 md:w-32 md:h-32 rounded-full blur-2xl
+                                    group-hover:scale-110 transition-all duration-500"
+                                aria-hidden="true"
+                            />
 
-                <div className="bg-q-surface/50 border border-q-border hover:border-muted-foreground/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
-                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-muted">
-                            <FileEdit className="text-q-text-muted w-4 h-4 md:w-5 md:h-5" />
+                            <div className="relative z-10">
+                                <div className="mb-1 md:mb-2">
+                                    <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                </div>
+                                <div className="text-xl md:text-3xl font-extrabold text-foreground">
+                                    {card.value}
+                                </div>
+                                <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
+                                    {t(card.labelKey)}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div className="text-xl md:text-3xl font-extrabold text-foreground">
-                        {draftCount}
-                    </div>
-                    <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
-                        {t('dashboard.draft')}
-                    </div>
-                </div>
-
-                <div className="bg-q-surface/50 border border-q-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
-                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-primary/20">
-                            <LayoutGrid className="text-primary w-4 h-4 md:w-5 md:h-5" />
-                        </div>
-                    </div>
-                    <div className="text-xl md:text-3xl font-extrabold text-foreground">
-                        {userProjects.length}
-                    </div>
-                    <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
-                        {t('dashboard.filtered')}
-                    </div>
-                </div>
+                    );
+                })}
             </section>
 
             {/* Projects Section with Filters */}
@@ -182,7 +192,7 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
                                 onClick={() => setViewMode('grid')}
                                 className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${
                                     viewMode === 'grid'
-                                        ? 'text-primary bg-q-bg shadow-sm'
+                                        ? 'text-primary bg-q-bg'
                                         : 'text-q-text-muted hover:text-foreground'
                                 }`}
                                 aria-label={t('dashboard.gridView')}
@@ -194,7 +204,7 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
                                 onClick={() => setViewMode('list')}
                                 className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${
                                     viewMode === 'list'
-                                        ? 'text-primary bg-q-bg shadow-sm'
+                                        ? 'text-primary bg-q-bg'
                                         : 'text-q-text-muted hover:text-foreground'
                                 }`}
                                 aria-label={t('dashboard.listView')}

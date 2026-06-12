@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import DashboardSidebar from '../DashboardSidebar';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import Modal from '../../ui/Modal';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
@@ -332,7 +331,7 @@ const RealEstateDashboard: React.FC = () => {
             {/* Section Navigation Panel — Desktop only */}
             <div className="hidden md:flex flex-col w-56 lg:w-64 border-r border-q-border bg-q-surface/50 flex-shrink-0 overflow-hidden z-10">
                 <div className="h-14 px-4 border-b border-q-border flex items-center gap-2 flex-shrink-0">
-                    <Home size={20} className="text-primary" />
+                    <Home size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
                     <h2 className="text-sm font-bold text-foreground truncate">
                         {t('realEstate.title')}
                     </h2>
@@ -368,7 +367,6 @@ const RealEstateDashboard: React.FC = () => {
             </div>
 
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                <DashboardWaveRibbons className="absolute inset-x-0 top-28 h-72 z-0 pointer-events-none overflow-hidden" />
                 <RealEstateHeader
                     title={t('realEstate.title')}
                     projectName={activeProject?.name}
@@ -588,7 +586,7 @@ const RealEstateHeader = ({
     isSeedingDemo?: boolean;
     t: (key: string, options?: Record<string, unknown>) => string;
 }) => (
-    <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 shrink-0">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-1 sm:gap-4 min-w-0">
             <button
                 onClick={onOpenMenu}
@@ -598,7 +596,7 @@ const RealEstateHeader = ({
                 <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-1 sm:gap-2 min-w-0">
-                <Home className="text-primary w-5 h-5 flex-shrink-0" />
+                <Home className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                 <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">{title}</h1>
                 {projectName && (
                     <span className="hidden md:inline text-sm text-q-text-muted truncate max-w-[220px]">

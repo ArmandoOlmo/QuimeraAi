@@ -2,7 +2,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import DashboardSidebar from '../DashboardSidebar';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useCMS } from '../../../contexts/cms';
 import { useProject } from '../../../contexts/project';
@@ -166,10 +165,8 @@ const NavigationDashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                <DashboardWaveRibbons />
-
                 {/* Standardized Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 sticky top-0" role="banner">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 sticky top-0" role="banner">
                     {/* Left Section - Menu & Title */}
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                         <button
@@ -181,7 +178,7 @@ const NavigationDashboard: React.FC = () => {
                             <MenuIcon className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <Compass className="text-primary" size={24} aria-hidden="true" />
+                            <Compass className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} aria-hidden="true" />
                             <h1 className="text-sm sm:text-xl font-semibold sm:font-bold text-foreground">
                                 {t('navigationDashboard.title')}
                             </h1>
@@ -244,48 +241,64 @@ const NavigationDashboard: React.FC = () => {
                         {/* Stats Overview */}
                         {effectiveProject && (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-5 min-h-[130px] shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
-                                    <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-50 dark:group-hover:opacity-35 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
-                                    <div className="absolute right-4 bottom-3 select-none pointer-events-none">
-                                        <span className="leading-[0.85] text-foreground/[0.08] dark:text-white/[0.10] group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16] transition-colors duration-500" style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(4rem, 6vw, 7rem)' }}>
-                                            {stats.total}
-                                        </span>
-                                    </div>
-                                    <div className="relative z-10 flex flex-col justify-between h-full">
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-black/10">
-                                            <Globe className="w-5 h-5 text-white" strokeWidth={2} />
+                                {[
+                                    {
+                                        id: 'total',
+                                        icon: Globe,
+                                        value: stats.total,
+                                        labelKey: 'navigationDashboard.totalMenus',
+                                        defaultLabel: 'Total de Menús',
+                                    },
+                                    {
+                                        id: 'active',
+                                        icon: Check,
+                                        value: stats.active,
+                                        labelKey: 'navigationDashboard.activeMenus',
+                                        defaultLabel: 'Menús Activos',
+                                    },
+                                    {
+                                        id: 'orphans',
+                                        icon: LinkIcon,
+                                        value: stats.orphans,
+                                        labelKey: 'navigationDashboard.orphanMenus',
+                                        defaultLabel: 'Sin Asignar',
+                                    },
+                                ].map((card) => {
+                                    const Icon = card.icon;
+
+                                    return (
+                                        <div
+                                            key={card.id}
+                                            className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl
+                                                p-5 min-h-[130px] hover:border-q-border
+                                                hover:scale-[1.02] transition-all duration-300 ease-out"
+                                        >
+                                            <div
+                                                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl
+                                                    group-hover:scale-110 transition-all duration-500"
+                                                aria-hidden="true"
+                                            />
+                                            <div className="absolute right-4 bottom-3 select-none pointer-events-none">
+                                                <span
+                                                    className="quimera-status-card-watermark leading-[0.85]"
+                                                    style={{
+                                                        fontFamily: "'Fira Sans Extra Condensed', sans-serif",
+                                                        fontWeight: 100,
+                                                        fontSize: 'clamp(4rem, 6vw, 7rem)',
+                                                    }}
+                                                >
+                                                    {card.value}
+                                                </span>
+                                            </div>
+                                            <div className="relative z-10 flex flex-col justify-between h-full">
+                                                <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                                <p className="text-sm text-q-text-muted font-medium mt-auto">
+                                                    {t(card.labelKey, card.defaultLabel)}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <p className="text-sm text-q-text-muted font-medium mt-auto">{t('navigationDashboard.totalMenus', 'Total de Menús')}</p>
-                                    </div>
-                                </div>
-                                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-5 min-h-[130px] shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 ease-out">
-                                    <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl bg-gradient-to-br from-green-500 to-emerald-400 group-hover:opacity-50 dark:group-hover:opacity-35 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
-                                    <div className="absolute right-4 bottom-3 select-none pointer-events-none">
-                                        <span className="leading-[0.85] text-foreground/[0.08] dark:text-white/[0.10] group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16] transition-colors duration-500" style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(4rem, 6vw, 7rem)' }}>
-                                            {stats.active}
-                                        </span>
-                                    </div>
-                                    <div className="relative z-10 flex flex-col justify-between h-full">
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-400 shadow-lg shadow-black/10">
-                                            <Check className="w-5 h-5 text-white" strokeWidth={2} />
-                                        </div>
-                                        <p className="text-sm text-q-text-muted font-medium mt-auto">{t('navigationDashboard.activeMenus', 'Menús Activos')}</p>
-                                    </div>
-                                </div>
-                                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-5 min-h-[130px] shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 ease-out">
-                                    <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl bg-gradient-to-br from-orange-500 to-amber-400 group-hover:opacity-50 dark:group-hover:opacity-35 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
-                                    <div className="absolute right-4 bottom-3 select-none pointer-events-none">
-                                        <span className="leading-[0.85] text-foreground/[0.08] dark:text-white/[0.10] group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16] transition-colors duration-500" style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(4rem, 6vw, 7rem)' }}>
-                                            {stats.orphans}
-                                        </span>
-                                    </div>
-                                    <div className="relative z-10 flex flex-col justify-between h-full">
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-400 shadow-lg shadow-black/10">
-                                            <LinkIcon className="w-5 h-5 text-white" strokeWidth={2} />
-                                        </div>
-                                        <p className="text-sm text-q-text-muted font-medium mt-auto">{t('navigationDashboard.orphanMenus', 'Sin Asignar')}</p>
-                                    </div>
-                                </div>
+                                    );
+                                })}
                             </div>
                         )}
 
@@ -380,7 +393,7 @@ const NavigationDashboard: React.FC = () => {
                                         <div
                                             key={menu.id}
                                             onClick={() => handleEdit(menu)}
-                                            className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-5 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out cursor-pointer"
+                                            className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-5 hover:scale-[1.03] hover:border-q-border transition-all duration-300 ease-out cursor-pointer"
                                         >
                                             {/* Gradient blob decoration */}
                                             <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />

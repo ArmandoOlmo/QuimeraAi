@@ -54,7 +54,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
     ];
 
     return (
-        <header className="bg-q-bg border-b border-q-border h-14 flex-shrink-0 z-20">
+        <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 z-20">
             <div className="h-full flex items-center justify-between px-4 gap-4 relative">
                 {/* LEFT SECTION - Mobile Menu & Name */}
                 <div className="flex items-center gap-3 min-w-0">

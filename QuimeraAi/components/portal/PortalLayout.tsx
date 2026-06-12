@@ -86,7 +86,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
             {/* Main content area */}
             <div className="lg:pl-64">
                 {/* Top header */}
-                <header className="sticky top-0 z-30 h-16 bg-q-surface border-b border-q-border flex items-center justify-between px-4 lg:px-6">
+                <header className="quimera-dashboard-header-bar sticky top-0 z-30 h-16 flex items-center justify-between px-4 lg:px-6">
                     {/* Left side */}
                     <div className="flex items-center gap-4">
                         {/* Mobile menu button */}

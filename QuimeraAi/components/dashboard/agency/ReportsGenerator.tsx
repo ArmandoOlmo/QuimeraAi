@@ -307,9 +307,7 @@ export function ReportsGenerator() {
                 <div className="relative">
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                                <FileText className="h-7 w-7 text-primary" />
-                            </div>
+                            <FileText className="w-7 h-7 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                             <div>
                                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
                                     {t('dashboard.agency.reports.generatorTitle', 'Generador de Reportes')}
@@ -631,9 +629,7 @@ export function ReportsGenerator() {
                 <div className="bg-q-surface rounded-2xl border border-q-border/50 p-16">
                     <div className="text-center">
                         <div className="relative inline-flex">
-                            <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
-                                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                            </div>
+                            <Loader2 className="h-10 w-10 animate-spin quimera-dashboard-header-icon" strokeWidth={2} />
                             <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-ping" />
                         </div>
                         <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">

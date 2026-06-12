@@ -638,7 +638,7 @@ const AppointmentsDashboard: React.FC = () => {
 
             <div className="flex-1 flex flex-col min-h-0">
                 {/* Header */}
-                <header className="h-14 sm:h-16 px-3 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 shrink-0">
+ <header className="quimera-dashboard-header-bar h-14 sm:h-16 px-3 sm:px-6 flex items-center justify-between z-20 shrink-0">
                     <div className="flex items-center gap-2 sm:gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
@@ -648,9 +648,7 @@ const AppointmentsDashboard: React.FC = () => {
                         </button>
 
                         <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg sm:rounded-xl">
-                                <Calendar className="text-primary w-4 h-4 sm:w-5 sm:h-5" />
-                            </div>
+                            <Calendar className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <div>
                                 <h1 className="text-base sm:text-lg font-bold text-foreground">{t('appointments.title')}</h1>
                             </div>
@@ -782,7 +780,7 @@ const AppointmentsDashboard: React.FC = () => {
                                                 className={`
                                                     px-2.5 py-1 rounded-lg text-xs font-medium transition-colors
                                                     ${isActive
-                                                        ? 'bg-primary text-primary-foreground'
+                                                        ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
                                                         : 'bg-secondary/50 text-q-text-muted hover:text-foreground'
                                                     }
                                                 `}
@@ -814,7 +812,7 @@ const AppointmentsDashboard: React.FC = () => {
                         {isLoading ? (
                             <div className="h-full flex items-center justify-center">
                                 <div className="text-center">
-                                    <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
+                                    <Loader2 className="w-10 h-10 quimera-status-card-accent-text animate-spin mx-auto mb-4" />
                                     <p className="text-sm text-q-text-muted">{t('appointments.loadingAppointments')}</p>
                                 </div>
                             </div>

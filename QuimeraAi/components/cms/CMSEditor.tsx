@@ -532,7 +532,7 @@ IMPORTANT FORMATTING RULES:
             <ImageGeneratorModal isOpen={isImageModalOpen} onClose={() => setIsImageModalOpen(false)} destination="user" />
 
             {/* --- Header --- */}
-            <header className="h-16 border-b border-q-border bg-q-surface flex items-center justify-between px-6 shrink-0 z-30 shadow-sm">
+            <header className="quimera-dashboard-header-bar h-16 flex items-center justify-between px-6 shrink-0 z-30">
                 <div className="flex items-center gap-4 w-1/3">
                     <input
                         value={title}

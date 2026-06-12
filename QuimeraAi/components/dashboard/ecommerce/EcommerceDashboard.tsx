@@ -307,9 +307,7 @@ const EcommerceDashboard: React.FC = () => {
                 />
                 <div className="flex-1 flex items-center justify-center p-8">
                     <div className="text-center max-w-lg">
-                        <div className="p-4 bg-primary/10 rounded-full w-fit mx-auto mb-6">
-                            <ShoppingBag className="text-primary" size={48} />
-                        </div>
+                        <ShoppingBag className="w-10 h-10 quimera-dashboard-header-icon mx-auto mb-6" strokeWidth={1.5} />
                         <h2 className="text-2xl font-bold text-foreground mb-2">
                             {t('ecommerce.enableForProject', 'Habilitar Ecommerce')}
                         </h2>
@@ -324,7 +322,7 @@ const EcommerceDashboard: React.FC = () => {
                             <button
                                 onClick={handleEnableEcommerce}
                                 disabled={ecommerceLoading}
-                                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl hover:opacity-90 transition-colors font-medium disabled:opacity-50"
+                                className="quimera-guide-cta inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium disabled:opacity-50 disabled:pointer-events-none"
                             >
                                 {ecommerceLoading ? (
                                     <>
@@ -374,7 +372,7 @@ const EcommerceDashboard: React.FC = () => {
                     <p className="text-q-text-muted mb-4">{storeError}</p>
                     <button
                         onClick={() => initializeStore()}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-colors"
+                        className="quimera-guide-cta inline-flex items-center gap-2 px-4 py-2 rounded-lg"
                     >
                         <RefreshCw size={18} />
                         {t('common.retry', 'Reintentar')}
@@ -400,7 +398,7 @@ const EcommerceDashboard: React.FC = () => {
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col min-h-screen">
                     {/* Header */}
-                    <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-surface/50 backdrop-blur-sm sticky top-0 z-40">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between sticky top-0 z-40">
                         <div className="flex items-center gap-1 sm:gap-4">
                             <button
                                 onClick={() => setIsMobileMenuOpen(true)}
@@ -409,7 +407,7 @@ const EcommerceDashboard: React.FC = () => {
                                 <Menu className="w-5 h-5" />
                             </button>
                             <div className="flex items-center gap-1 sm:gap-2">
-                                <ShoppingBag className="text-primary w-5 h-5" />
+                                <ShoppingBag className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                                 <h1 className="text-sm sm:text-lg font-semibold text-foreground">
                                     {t('ecommerce.dashboardTitle', 'Panel de Ventas')}
                                 </h1>
@@ -448,7 +446,7 @@ const EcommerceDashboard: React.FC = () => {
                                                     <button
                                                         key={project.id}
                                                         onClick={() => handleProjectSelect(project.id)}
-                                                        className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-primary/10' : ''
+                                                        className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_12%,transparent)]' : ''
                                                             }`}
                                                     >
                                                     {thumbnailUrl ? (
@@ -466,12 +464,12 @@ const EcommerceDashboard: React.FC = () => {
                                                         <span className="text-sm font-medium text-foreground truncate block">
                                                             {project.name}
                                                         </span>
-                                                        <span className={`text-xs ${project.status === 'Published' ? 'text-green-500' : 'text-q-text-muted'}`}>
+                                                        <span className={`text-xs ${project.status === 'Published' ? 'quimera-status-card-accent-text' : 'text-q-text-muted'}`}>
                                                             {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
                                                         </span>
                                                     </div>
                                                     {project.id === effectiveProjectId && (
-                                                        <Check size={16} className="text-primary flex-shrink-0" />
+                                                        <Check size={16} className="quimera-status-card-accent-text flex-shrink-0" />
                                                     )}
                                                 </button>
                                                 );
@@ -483,7 +481,7 @@ const EcommerceDashboard: React.FC = () => {
                                                         setShowAllProjects(true);
                                                         setIsProjectSelectorOpen(false);
                                                     }}
-                                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium quimera-status-card-link hover:bg-q-surface-overlay/40 rounded-lg transition-colors"
                                                 >
                                                     <Store size={16} />
                                                     {t('ecommerce.viewAllProjects', 'Ver todos los proyectos')}
@@ -537,8 +535,8 @@ const EcommerceDashboard: React.FC = () => {
                                         key={item.id}
                                         onClick={() => handleViewChange(item.id)}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isActive
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'text-q-text-muted hover:text-foreground hover:bg-muted'
+                                            ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
+                                            : 'text-q-text-muted hover:text-foreground hover:bg-muted/50'
                                             }`}
                                     >
                                         <Icon size={18} />
@@ -611,31 +609,23 @@ const OverviewView: React.FC<OverviewProps> = ({
             label: t('ecommerce.totalRevenue', 'Ingresos Totales'),
             value: formatCurrency(totalRevenue),
             icon: DollarSign,
-            colorClass: 'text-green-400',
-            bgClass: 'bg-green-500/20',
         },
         {
             label: t('ecommerce.totalOrders', 'Total Pedidos'),
             value: totalOrders.toString(),
             icon: ShoppingCart,
-            colorClass: 'text-blue-400',
-            bgClass: 'bg-blue-500/20',
             onClick: () => onNavigate('orders'),
         },
         {
             label: t('ecommerce.totalCustomers', 'Total Clientes'),
             value: totalCustomers.toString(),
             icon: Users,
-            colorClass: 'text-secondary',
-            bgClass: 'bg-secondary/20',
             onClick: () => onNavigate('customers'),
         },
         {
             label: t('ecommerce.avgOrderValue', 'Ticket Promedio'),
             value: formatCurrency(averageOrderValue),
             icon: TrendingUp,
-            colorClass: 'text-primary',
-            bgClass: 'bg-primary/20',
         },
     ];
 
@@ -651,9 +641,9 @@ const OverviewView: React.FC<OverviewProps> = ({
         <div className="space-y-6">
             {/* Project Banner */}
             {projectName && (
-                <div className="bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl p-6 border border-primary/30">
+                <div className="quimera-guide-panel-accent p-4 sm:p-6">
                     <div className="flex items-center gap-3">
-                        <Store className="text-primary" size={24} />
+                        <Store className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                         <div>
                             <p className="text-sm text-q-text-muted">
                                 {t('ecommerce.storeFor', 'Tienda de')}
@@ -672,17 +662,21 @@ const OverviewView: React.FC<OverviewProps> = ({
                         <div
                             key={index}
                             onClick={stat.onClick}
-                            className={`bg-q-surface/50 rounded-xl p-6 border border-q-border ${stat.onClick ? 'cursor-pointer hover:bg-q-surface/70 transition-colors' : ''
-                                }`}
+                            className={`group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60
+                                bg-q-surface/80 backdrop-blur-xl p-2.5 md:p-4 hover:border-q-border
+                                transition-all duration-300 ease-out ${stat.onClick ? 'cursor-pointer' : ''}`}
                         >
-                            <div className="flex items-center gap-4">
-                                <div className={`p-3 rounded-lg ${stat.bgClass}`}>
-                                    <Icon className={stat.colorClass} size={24} />
+                            <div
+                                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 sm:w-32 sm:h-32 rounded-full blur-2xl
+                                    group-hover:scale-110 transition-all duration-500"
+                                aria-hidden="true"
+                            />
+                            <div className="relative z-10">
+                                <div className="mb-1 md:mb-2">
+                                    <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                                 </div>
-                                <div>
-                                    <p className="text-q-text-muted text-sm">{stat.label}</p>
-                                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                                </div>
+                                <div className="text-xl md:text-3xl font-extrabold text-foreground">{stat.value}</div>
+                                <p className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{stat.label}</p>
                             </div>
                         </div>
                     );
@@ -755,18 +749,16 @@ const OverviewView: React.FC<OverviewProps> = ({
 
             {/* Quick Start Guide */}
             {totalProducts === 0 && totalOrders === 0 && totalCustomers === 0 && (
-                <div className="bg-q-surface/50 rounded-xl p-8 border border-q-border">
+                <div className="quimera-dashboard-panel-card group p-6 sm:p-8">
                     <h3 className="text-xl font-bold text-foreground mb-4">
                         {t('ecommerce.getStarted', '¡Comienza con tu tienda!')}
                     </h3>
 
                     {/* Demo Data Button - Destacado */}
-                    <div className="mb-6 p-4 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl border border-primary/30">
+                    <div className="quimera-guide-panel-accent mb-6 p-4">
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-primary/30 rounded-lg">
-                                    <Sparkles className="text-primary" size={24} />
-                                </div>
+                                <Sparkles className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                                 <div>
                                     <p className="font-medium text-foreground">
                                         {t('ecommerce.quickStartTitle', '¿Primera vez?')}
@@ -778,7 +770,7 @@ const OverviewView: React.FC<OverviewProps> = ({
                             </div>
                             <button
                                 onClick={() => setShowSeeder(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors whitespace-nowrap"
+                                className="quimera-guide-cta flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap"
                             >
                                 <Sparkles size={18} />
                                 {t('ecommerce.loadDemoData', 'Cargar Datos Demo')}
@@ -791,33 +783,24 @@ const OverviewView: React.FC<OverviewProps> = ({
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <button
-                            onClick={() => onNavigate('settings')}
-                            className="flex flex-col items-center gap-3 p-6 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors"
-                        >
-                            <Settings className="text-primary" size={32} />
-                            <span className="text-foreground font-medium">
-                                {t('ecommerce.configureStore', 'Configura tu tienda')}
-                            </span>
-                        </button>
-                        <button
-                            onClick={() => onNavigate('products')}
-                            className="flex flex-col items-center gap-3 p-6 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors"
-                        >
-                            <Package className="text-green-400" size={32} />
-                            <span className="text-foreground font-medium">
-                                {t('ecommerce.addProducts', 'Agrega productos')}
-                            </span>
-                        </button>
-                        <button
-                            onClick={() => onNavigate('categories')}
-                            className="flex flex-col items-center gap-3 p-6 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors"
-                        >
-                            <FolderTree className="text-secondary" size={32} />
-                            <span className="text-foreground font-medium">
-                                {t('ecommerce.createCategories', 'Crea categorías')}
-                            </span>
-                        </button>
+                        {[
+                            { id: 'settings', icon: Settings, label: t('ecommerce.configureStore', 'Configura tu tienda') },
+                            { id: 'products', icon: Package, label: t('ecommerce.addProducts', 'Agrega productos') },
+                            { id: 'categories', icon: FolderTree, label: t('ecommerce.createCategories', 'Crea categorías') },
+                        ].map((item) => {
+                            const Icon = item.icon;
+
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() => onNavigate(item.id as EcommerceView)}
+                                    className="quimera-dashboard-panel-card group flex flex-col items-center gap-3 p-6 text-center"
+                                >
+                                    <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                    <span className="text-foreground font-medium">{item.label}</span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}

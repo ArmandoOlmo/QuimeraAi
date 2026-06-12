@@ -158,11 +158,11 @@ const DiscountsView: React.FC = () => {
     const getTypeIcon = (type: DiscountType) => {
         switch (type) {
             case 'percentage':
-                return <Percent size={18} />;
+                return <Percent size={18} className="quimera-dashboard-header-icon" strokeWidth={2} />;
             case 'fixed_amount':
-                return <DollarSign size={18} />;
+                return <DollarSign size={18} className="quimera-dashboard-header-icon" strokeWidth={2} />;
             case 'free_shipping':
-                return <Truck size={18} />;
+                return <Truck size={18} className="quimera-dashboard-header-icon" strokeWidth={2} />;
         }
     };
 
@@ -289,9 +289,7 @@ const DiscountsView: React.FC = () => {
                             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                                 {/* Code */}
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-primary/20 text-primary">
-                                        {getTypeIcon(discount.type)}
-                                    </div>
+                                    {getTypeIcon(discount.type)}
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <code className="text-lg font-mono font-bold text-foreground bg-muted/50 px-2 py-0.5 rounded">

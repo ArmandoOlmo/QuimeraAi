@@ -1309,7 +1309,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-4 lg:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0 relative">
+ <header className="quimera-dashboard-header-bar h-14 px-4 lg:px-6 flex items-center z-20 sticky top-0 relative">
                     {/* Left Section */}
                     <div className="flex items-center gap-3">
                         <button
@@ -1319,7 +1319,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                             <MenuIcon className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <Layout className="text-primary w-5 h-5" />
+                            <Layout className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-lg font-semibold text-foreground hidden sm:block">
                                 {t('landingEditor.title', 'Editor Landing Page')}
                             </h1>

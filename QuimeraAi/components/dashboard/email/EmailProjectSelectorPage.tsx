@@ -97,7 +97,7 @@ const EmailProjectSelectorPage: React.FC<EmailProjectSelectorPageProps> = ({
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-h-screen">
                 {/* Header */}
-                <header className="h-14 w-full px-4 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-surface/50 backdrop-blur-md sticky top-0 z-40">
+ <header className="quimera-dashboard-header-bar h-14 w-full px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
                     {/* Left: Menu & Title */}
                     <div className="flex items-center gap-4">
                         <button
@@ -108,7 +108,7 @@ const EmailProjectSelectorPage: React.FC<EmailProjectSelectorPageProps> = ({
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <Mail className="text-primary w-5 h-5" />
+                            <Mail className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-lg font-semibold text-foreground">
                                 {t('email.dashboard', 'Email Marketing')}
                             </h1>

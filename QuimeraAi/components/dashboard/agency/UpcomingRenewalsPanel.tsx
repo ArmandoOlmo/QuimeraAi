@@ -7,6 +7,7 @@ import React from 'react';
 import { UpcomingRenewal } from '../../../hooks/useAgencyMetrics';
 import { Calendar, Clock, DollarSign, AlertCircle } from 'lucide-react';
 import { useRouter } from '../../../hooks/useRouter';
+import { settingsPanelClass } from '../settings/SettingsStatCard';
 
 interface UpcomingRenewalsPanelProps {
     renewals: UpcomingRenewal[];
@@ -49,10 +50,13 @@ export function UpcomingRenewalsPanel({
 
     if (renewals.length === 0) {
         return (
-            <div className="bg-q-surface rounded-lg border border-q-border p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">
-                    Renovaciones Próximas
-                </h3>
+            <div className={`${settingsPanelClass} p-6`}>
+                <div className="flex items-center gap-3 mb-4">
+                    <Calendar size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
+                    <h3 className="text-lg font-semibold text-foreground">
+                        Renovaciones Próximas
+                    </h3>
+                </div>
                 <div className="text-center py-8">
                     <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-q-text-muted">
@@ -67,12 +71,15 @@ export function UpcomingRenewalsPanel({
     }
 
     return (
-        <div className="bg-q-surface rounded-lg border border-q-border p-6">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-foreground">
-                    Renovaciones Próximas
-                </h3>
-                <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400">
+        <div className={`${settingsPanelClass} p-6`}>
+            <div className="flex items-center justify-between mb-4 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                    <Calendar size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
+                    <h3 className="text-lg font-semibold text-foreground">
+                        Renovaciones Próximas
+                    </h3>
+                </div>
+                <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text">
                     {renewals.length}
                 </span>
             </div>

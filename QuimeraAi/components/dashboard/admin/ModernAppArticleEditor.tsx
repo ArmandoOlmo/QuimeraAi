@@ -739,7 +739,7 @@ Text to format:
             {/* Main Content Area */}
             <div className="flex flex-col flex-1 min-w-0">
                 {/* Admin-specific header - NO project name, shows "Contenido App" */}
-                <header className="h-14 px-3 md:px-6 border-b border-q-border bg-q-bg flex items-center justify-between z-20 sticky top-0 relative" role="banner">
+ <header className="quimera-dashboard-header-bar h-14 px-3 md:px-6 flex items-center justify-between z-20 sticky top-0 relative" role="banner">
                     <div className="flex items-center gap-2 md:gap-4 min-w-0">
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}

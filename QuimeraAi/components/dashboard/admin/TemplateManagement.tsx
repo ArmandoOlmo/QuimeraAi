@@ -307,7 +307,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-10">
+ <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                         {/* Botón hamburguesa para abrir sidebar en móvil */}
                         <button
@@ -318,7 +318,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                            <LayoutTemplate className="text-q-accent w-5 h-5" />
+                            <LayoutTemplate className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-base sm:text-lg font-semibold text-q-text truncate">{t('superadmin.templateManagement.title', 'Templates')}</h1>
                         </div>
 

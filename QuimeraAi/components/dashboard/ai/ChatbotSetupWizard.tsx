@@ -253,9 +253,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
     const renderNameStep = () => (
         <div className="space-y-6">
             <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-8 h-8 text-primary" />
-                </div>
+                <Sparkles className="w-8 h-8 quimera-dashboard-header-icon mx-auto mb-4" strokeWidth={2} />
                 <h3 className="text-xl font-bold text-foreground">
                     {t('chatbotWizard.nameStep.heading', '¿Cómo quieres que se llame tu asistente?')}
                 </h3>
@@ -300,9 +298,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
     const renderToneStep = () => (
         <div className="space-y-6">
             <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MessageCircle className="w-8 h-8 text-primary" />
-                </div>
+                <MessageCircle className="w-8 h-8 quimera-dashboard-header-icon mx-auto mb-4" strokeWidth={2} />
                 <h3 className="text-xl font-bold text-foreground">
                     {t('chatbotWizard.toneStep.heading', '¿Qué tono debe usar tu asistente?')}
                 </h3>
@@ -349,9 +345,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
         return (
             <div className="space-y-6">
                 <div className="text-center mb-6">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <HelpCircle className="w-8 h-8 text-primary" />
-                    </div>
+                    <HelpCircle className="w-8 h-8 quimera-dashboard-header-icon mx-auto mb-4" strokeWidth={2} />
                     <h3 className="text-xl font-bold text-foreground">
                         {t('chatbotWizard.faqsStep.heading', 'Preguntas frecuentes de tus clientes')}
                     </h3>
@@ -427,9 +421,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
     const renderLeadsStep = () => (
         <div className="space-y-6">
             <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Mail className="w-8 h-8 text-primary" />
-                </div>
+                <Mail className="w-8 h-8 quimera-dashboard-header-icon mx-auto mb-4" strokeWidth={2} />
                 <h3 className="text-xl font-bold text-foreground">
                     {t('chatbotWizard.leadsStep.heading', 'Captura contactos de clientes potenciales')}
                 </h3>
@@ -509,9 +501,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
         return (
             <div className="space-y-6">
                 <div className="text-center mb-6">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Eye className="w-8 h-8 text-primary" />
-                    </div>
+                    <Eye className="w-8 h-8 quimera-dashboard-header-icon mx-auto mb-4" strokeWidth={2} />
                     <h3 className="text-xl font-bold text-foreground">
                         {t('chatbotWizard.previewStep.heading', '¡Así se verá tu chatbot!')}
                     </h3>

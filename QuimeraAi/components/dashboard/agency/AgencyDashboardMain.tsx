@@ -170,7 +170,7 @@ const AgencyDashboardMain: React.FC = () => {
             <div className="hidden md:flex flex-col w-56 lg:w-64 border-r border-q-border bg-q-surface/50 flex-shrink-0 overflow-hidden">
                 {/* Panel Header */}
                 <div className="h-14 px-4 border-b border-q-border flex items-center gap-2 flex-shrink-0">
-                    <Building2 size={20} className="text-primary" />
+                    <Building2 size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
                     <h2 className="text-sm font-bold text-foreground truncate">
                         {t('agency.title', 'Agency Dashboard')}
                     </h2>
@@ -189,12 +189,12 @@ const AgencyDashboardMain: React.FC = () => {
                                     className={`
                                         w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                                         ${isActive
-                                            ? 'bg-primary/10 text-primary shadow-sm'
+                                            ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
                                             : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
                                         }
                                     `}
                                 >
-                                    <Icon size={18} className={`flex-shrink-0 ${isActive ? 'text-primary' : ''}`} />
+                                    <Icon size={18} className={`flex-shrink-0 ${isActive ? 'quimera-status-card-accent-text' : ''}`} strokeWidth={isActive ? 2 : 1.5} />
                                     <span className="truncate">{tab.label}</span>
                                 </button>
                             );
@@ -206,7 +206,7 @@ const AgencyDashboardMain: React.FC = () => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header — Title + right-aligned back action (tabs moved to sidebar panel) */}
-                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center z-20 sticky top-0">
                     {/* Left Section - Menu Button & Title */}
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                         <button
@@ -217,7 +217,7 @@ const AgencyDashboardMain: React.FC = () => {
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <Building2 size={24} className="text-primary" />
+                            <Building2 size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-lg sm:text-xl font-bold text-foreground hidden sm:block">
                                 {t('agency.title', 'Agency Dashboard')}
                             </h1>
@@ -239,11 +239,11 @@ const AgencyDashboardMain: React.FC = () => {
                                     key={tab.id}
                                     onClick={() => handleTabChange(tab.id)}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${isActive
-                                        ? 'bg-primary/15 text-primary border border-primary/30 shadow-sm'
+                                        ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text border border-[color-mix(in_srgb,var(--quimera-status-accent-from)_30%,transparent)]'
                                         : 'bg-q-bg border border-q-border text-q-text-muted hover:text-foreground hover:border-q-text-muted/50'
                                         }`}
                                 >
-                                    <Icon size={16} className={`shrink-0 ${isActive ? 'text-primary' : ''}`} />
+                                    <Icon size={16} className={`shrink-0 ${isActive ? 'quimera-status-card-accent-text' : ''}`} strokeWidth={isActive ? 2 : 1.5} />
                                     <span>{tab.label}</span>
                                 </button>
                             );

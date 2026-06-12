@@ -288,7 +288,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                 {/* Add button */}
                 <button
                     onClick={() => { setShowAddForm(true); setEditingId(null); setFormData(DEFAULT_TX); }}
-                    className="h-10 px-4 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all flex items-center gap-2"
+                    className="quimera-guide-cta h-10 px-4 rounded-xl text-sm font-semibold flex items-center gap-2"
                 >
                     <Plus size={16} />
                     {t('accounting.addTransaction', 'Add Transaction')}
@@ -350,7 +350,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                             </span>
                         )}
                         <button onClick={handleSave} disabled={isSaving || !formData.description || formData.amount <= 0}
-                            className="px-5 py-2 rounded-xl bg-primary text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-2 hover:bg-primary/90 transition-colors">
+                            className="quimera-guide-cta px-5 py-2 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center gap-2">
                             {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                             {editingId ? t('accounting.saveChanges', 'Save Changes') : t('accounting.addTransaction', 'Add Transaction')}
                         </button>

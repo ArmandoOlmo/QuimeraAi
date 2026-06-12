@@ -10,7 +10,6 @@ import {
     Search,
     Layers,
     ChevronRight,
-    ChevronDown,
     Globe,
     FileEdit,
     Clock,
@@ -19,7 +18,6 @@ import {
     List,
     Sparkles,
     Menu as MenuIcon,
-    X,
     PenTool,
     FileText,
     ArrowLeft,
@@ -29,6 +27,7 @@ import { useUI } from '../../contexts/core/UIContext';
 import { useProject } from '../../contexts/project/ProjectContext';
 import { Project } from '../../types/components';
 import DashboardSidebar from '../dashboard/DashboardSidebar';
+import { SettingsStatCard } from '../dashboard/settings/SettingsStatCard';
 import { useRouter } from '../../hooks/useRouter';
 import QuimeraLoader from '../ui/QuimeraLoader';
 import ConfirmationModal from '../ui/ConfirmationModal';
@@ -144,7 +143,7 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 {/* Header */}
-                <header className="h-14 bg-q-surface/50 backdrop-blur-md border-b border-q-border flex-shrink-0 flex items-center px-4 sm:px-6 lg:px-8 z-40">
+                <header className="quimera-dashboard-header-bar h-14 w-full px-4 sm:px-6 flex items-center sticky top-0 z-40 flex-shrink-0">
                     {/* Left: Menu & Title */}
                     <div className="flex items-center gap-4">
                         <button
@@ -155,8 +154,8 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                             <MenuIcon size={20} />
                         </button>
                         <div className="flex items-center gap-2">
-                            <PenTool className="text-primary" size={20} />
-                            <h1 className="text-lg font-bold text-foreground">
+                            <PenTool className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
+                            <h1 className="text-lg font-semibold text-foreground">
                                 {t('cms.content', 'Contenido')}
                             </h1>
                         </div>
@@ -200,54 +199,36 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                                 </div>
                                 <button
                                     onClick={() => setIsOnboardingOpen(true)}
-                                    className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30"
+                                    className="quimera-guide-cta flex items-center gap-2 px-5 py-3 rounded-xl font-medium"
                                 >
-                                    <Sparkles size={18} />
+                                    <Sparkles size={18} strokeWidth={2} />
                                     {t('dashboard.newProject', 'Nuevo Proyecto')}
                                 </button>
                             </div>
 
                             {/* Stats Bar */}
-                            <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-primary/30 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/20">
-                                            <Layers className="text-primary" size={18} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xl sm:text-2xl font-bold text-foreground">{userProjects.length}</p>
-                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.totalProjects', 'Total')}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-green-500/30 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/20">
-                                            <Globe className="text-green-500" size={18} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xl sm:text-2xl font-bold text-foreground">{publishedCount}</p>
-                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.published', 'Publicados')}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-slate-500/30 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="p-1.5 sm:p-2 rounded-lg bg-slate-500/20">
-                                            <FileEdit className="text-slate-400" size={18} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xl sm:text-2xl font-bold text-foreground">{draftCount}</p>
-                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.draft', 'Borradores')}</p>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div className="grid grid-cols-3 gap-2 md:gap-4">
+                                <SettingsStatCard
+                                    label={t('dashboard.totalProjects', 'Total')}
+                                    value={userProjects.length}
+                                    icon={Layers}
+                                />
+                                <SettingsStatCard
+                                    label={t('dashboard.published', 'Publicados')}
+                                    value={publishedCount}
+                                    icon={Globe}
+                                    valueClass="text-emerald-500"
+                                />
+                                <SettingsStatCard
+                                    label={t('dashboard.draft', 'Borradores')}
+                                    value={draftCount}
+                                    icon={FileEdit}
+                                />
                             </div>
                         </div>
 
-                        {/* Filter toolbar - Icons only, no boxes */}
-                        <div className="flex items-center gap-3 sm:gap-4 mb-6">
-                            {/* Select All Checkbox */}
+                        {/* Filter toolbar */}
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-2 mb-6">
                             {filteredProjects.length > 0 && (
                                 <label
                                     className="flex items-center gap-1.5 cursor-pointer flex-shrink-0"
@@ -260,74 +241,62 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                                         className="rounded border-q-border w-3.5 h-3.5 accent-primary"
                                     />
                                     {selectedProjects.length > 0 && (
-                                        <span className="text-[10px] font-semibold text-primary">
+                                        <span className="text-[10px] font-semibold quimera-status-card-accent-text">
                                             {selectedProjects.length}
                                         </span>
                                     )}
                                 </label>
                             )}
 
-                            <span className="text-[10px] text-q-text-muted font-medium flex-shrink-0">
-                                {filteredProjects.length}/{userProjects.length}
-                            </span>
-
-                            {/* Status filter - icon only */}
-                            <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.allStatus', 'Estado')}>
-                                <Globe size={15} className={`pointer-events-none transition-colors ${filterStatus !== 'all' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`} />
-                                <select
-                                    value={filterStatus}
-                                    onChange={(e) => setFilterStatus(e.target.value as any)}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                                <button
+                                    onClick={() => setFilterStatus('all')}
+                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
                                 >
-                                    <option value="all">{t('common.all', 'Todos')} ({userProjects.length})</option>
-                                    <option value="Published">{t('dashboard.published', 'Publicados')} ({publishedCount})</option>
-                                    <option value="Draft">{t('dashboard.draft', 'Borradores')} ({draftCount})</option>
-                                </select>
+                                    {t('common.all', 'Todos')} ({userProjects.length})
+                                </button>
+                                <span className="text-q-text-muted/60 text-xs">·</span>
+                                <button
+                                    onClick={() => setFilterStatus('Published')}
+                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'Published' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
+                                >
+                                    {t('dashboard.published', 'Publicados')} ({publishedCount})
+                                </button>
+                                <span className="text-q-text-muted/60 text-xs">·</span>
+                                <button
+                                    onClick={() => setFilterStatus('Draft')}
+                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'Draft' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
+                                >
+                                    {t('dashboard.draft', 'Borradores')} ({draftCount})
+                                </button>
                             </div>
 
-                            {/* Sort - icon only */}
-                            <div className="relative flex-shrink-0 cursor-pointer" title={t('common.mostRecent', 'Ordenar')}>
-                                <ChevronDown size={15} className="pointer-events-none text-q-text-muted hover:text-foreground transition-colors" />
+                            <div className="flex items-center gap-2 sm:ml-auto shrink-0">
                                 <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as 'recent' | 'name')}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    className="text-xs text-foreground bg-transparent border-none outline-none cursor-pointer text-q-text-muted hover:text-foreground focus:ring-0 py-0.5 w-auto max-w-[7.5rem] sm:max-w-[8rem] min-w-0"
+                                    aria-label={t('common.sortBy', 'Ordenar por')}
                                 >
                                     <option value="recent">{t('common.mostRecent', 'Más recientes')}</option>
                                     <option value="name">{t('common.alphabetical', 'Alfabético')}</option>
                                 </select>
-                            </div>
-
-                            {/* Clear filter */}
-                            {filterStatus !== 'all' && (
-                                <button
-                                    onClick={() => setFilterStatus('all')}
-                                    className="text-q-text-muted hover:text-foreground transition-colors flex-shrink-0"
-                                    title={t('common.clear', 'Limpiar filtros')}
-                                >
-                                    <X size={13} />
-                                </button>
-                            )}
-
-                            {/* Spacer */}
-                            <div className="flex-1 min-w-0" />
-
-                            {/* View Grid/List */}
-                            <div className="flex gap-2 flex-shrink-0">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
-                                    title="Grid View"
-                                >
-                                    <LayoutGrid size={15} />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
-                                    title="List View"
-                                >
-                                    <List size={15} />
-                                </button>
+                                <div className="hidden sm:flex items-center gap-0.5 border-l border-q-border/50 pl-2">
+                                    <button
+                                        onClick={() => setViewMode('grid')}
+                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'grid' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
+                                        aria-label={t('common.gridView', 'Vista cuadrícula')}
+                                    >
+                                        <LayoutGrid size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('list')}
+                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'list' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
+                                        aria-label={t('common.listView', 'Vista lista')}
+                                    >
+                                        <List size={16} />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -348,11 +317,11 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                             </div>
                         ) : filteredProjects.length === 0 ? (
                             <div className="text-center py-16">
-                                <div className="p-4 bg-muted/30 rounded-full w-fit mx-auto mb-6">
+                                <div className="w-fit mx-auto mb-6">
                                     {searchQuery ? (
-                                        <Search className="text-q-text-muted" size={48} />
+                                        <Search className="quimera-dashboard-header-icon mx-auto" size={48} strokeWidth={1.5} />
                                     ) : (
-                                        <FileText className="text-q-text-muted" size={48} />
+                                        <FileText className="quimera-dashboard-header-icon mx-auto" size={48} strokeWidth={1.5} />
                                     )}
                                 </div>
                                 <h3 className="text-xl font-bold text-foreground mb-2">
@@ -368,9 +337,9 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                                 {!searchQuery && (
                                     <button
                                         onClick={() => setIsOnboardingOpen(true)}
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-colors"
+                                        className="quimera-guide-cta inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium"
                                     >
-                                        <Plus size={20} />
+                                        <Plus size={20} strokeWidth={2} />
                                         {t('dashboard.newProject', 'Nuevo Proyecto')}
                                     </button>
                                 )}
@@ -458,7 +427,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
     const thumbnailUrl = getDynamicThumbnailUrl(project as any);
 
     return (
-        <div className={`group relative bg-q-surface/50 hover:bg-q-surface border rounded-2xl overflow-hidden transition-all duration-300 text-left hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 w-full ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-q-border hover:border-primary/50'}`}>
+        <div className={`group relative bg-q-surface/80 backdrop-blur-xl hover:bg-q-surface border border-q-border/60 rounded-2xl overflow-hidden transition-all duration-300 text-left hover:border-q-border hover:-translate-y-1 w-full ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : ''}`}>
             {/* Selection Checkbox */}
             <div
                 className="absolute top-3 left-3 z-10"
@@ -495,8 +464,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
 
                     {/* Hover Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-                        <span className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                            <PenTool size={16} />
+                        <span className="quimera-guide-cta flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                            <PenTool size={16} strokeWidth={2} />
                             {t('cms.manageContent', 'Gestionar Contenido')}
                         </span>
                     </div>
@@ -531,7 +500,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
     const thumbnailUrl = getDynamicThumbnailUrl(project as any);
 
     return (
-        <div className={`w-full flex items-center gap-4 p-4 bg-q-surface/50 hover:bg-q-surface border rounded-xl transition-all text-left group ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-q-border hover:border-primary/50'}`}>
+        <div className={`w-full flex items-center gap-4 p-4 bg-q-surface/80 backdrop-blur-xl hover:bg-q-surface border border-q-border/60 rounded-xl transition-all text-left group ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'hover:border-q-border'}`}>
             {/* Selection Checkbox */}
             <div
                 className="flex-shrink-0 cursor-pointer"

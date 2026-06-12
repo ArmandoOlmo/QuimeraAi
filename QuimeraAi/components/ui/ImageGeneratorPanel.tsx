@@ -654,7 +654,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
 
             {/* Header */}
             {!hideHeader && (
-            <header className="flex items-center justify-between whitespace-nowrap border-b border-q-border/70 bg-q-bg/85 backdrop-blur-xl px-3 lg:px-5 py-2.5 lg:py-3 shrink-0 z-20">
+            <header className="quimera-dashboard-header-bar flex items-center justify-between whitespace-nowrap px-3 lg:px-5 py-2.5 lg:py-3 shrink-0 z-20">
                 <div className="flex items-center gap-2 lg:gap-3 min-w-0">
                     <div className="h-8 w-8 rounded-xl bg-primary/10 text-q-accent flex items-center justify-center shrink-0">
                         <Wand2 size={18} />

@@ -5,10 +5,10 @@ import { useProject } from '../../contexts/project';
 import { useEditor } from '../../contexts/EditorContext';
 import { SEOConfig, AdPixelConfig } from '../../types';
 import DashboardSidebar from './DashboardSidebar';
-import DashboardWaveRibbons from './DashboardWaveRibbons';
 import ProjectSelectorPage from './seo/ProjectSelectorPage';
 import ImagePicker from '../ui/ImagePicker';
 import SEOAiAssistant from './seo/SEOAiAssistant';
+import HeaderBackButton from '../ui/HeaderBackButton';
 import { Globe, Search, Share2, Code, CheckCircle, Menu, Store, ChevronDown, Check, Layers, Activity, ExternalLink, Sparkles } from 'lucide-react';
 
 type SeoTab = 'basic' | 'social' | 'advanced' | 'ai' | 'pixels';
@@ -89,6 +89,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
     return (
       <ProjectSelectorPage
         onProjectSelect={handleProjectSelect}
+        onBack={() => setView('dashboard')}
       />
     );
   }
@@ -102,8 +103,70 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
       );
     }
 
+    const seoOverviewCards = [
+      {
+        id: 'title',
+        icon: Globe,
+        value: localConfig.title.length,
+        labelKey: 'seo.pageTitle',
+        defaultLabel: 'Título',
+      },
+      {
+        id: 'description',
+        icon: Search,
+        value: localConfig.description.length,
+        labelKey: 'seo.metaDescription',
+        defaultLabel: 'Descripción',
+      },
+      {
+        id: 'keywords',
+        icon: Layers,
+        value: localConfig.keywords?.length ?? 0,
+        labelKey: 'seo.keywords',
+        defaultLabel: 'Keywords',
+      },
+      {
+        id: 'ai',
+        icon: Activity,
+        value: localConfig.aiCrawlable ? '✓' : '—',
+        labelKey: 'seo.aiCrawlability',
+        defaultLabel: 'IA',
+      },
+    ];
+
     return (
       <>
+        {/* SEO overview stats */}
+        <section className="relative z-[2] grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 px-4 sm:px-6 pt-4 pb-2 bg-secondary/5">
+          {seoOverviewCards.map((card) => {
+            const Icon = card.icon;
+
+            return (
+              <div
+                key={card.id}
+                className="group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60
+                  bg-q-surface/80 backdrop-blur-xl p-2.5 md:p-4 hover:border-q-border
+                  transition-all duration-300 ease-out"
+              >
+                <div
+                  className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 md:w-32 md:h-32 rounded-full blur-2xl
+                    group-hover:scale-110 transition-all duration-500"
+                  aria-hidden="true"
+                />
+                <div className="relative z-10">
+                  <div className="mb-1 md:mb-2">
+                    <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                  </div>
+                  <div className="text-xl md:text-3xl font-extrabold text-foreground">{card.value}</div>
+                  <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
+                    {t(card.labelKey, card.defaultLabel)}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </section>
+
         {/* Tabs */}
         <div className="bg-secondary/20 border-b border-q-border px-2 sm:px-6 relative z-[2]">
           <div className="flex overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -118,7 +181,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as SeoTab)}
                 className={`flex items-center gap-1.5 px-3 sm:px-4 py-3 border-b-2 transition-colors whitespace-nowrap text-sm shrink-0 ${activeTab === tab.id
-                  ? 'border-primary text-foreground'
+                  ? 'border-[var(--quimera-status-accent-from)] text-foreground'
                   : 'border-transparent text-q-text-muted hover:text-foreground'
                   }`}
               >
@@ -136,7 +199,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             {/* Basic SEO Tab */}
             {activeTab === 'basic' && (
               <div className="space-y-6">
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.basicInformation')}
                   </h2>
@@ -255,7 +318,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             {/* Advanced Tab */}
             {activeTab === 'advanced' && (
               <div className="space-y-6">
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.structuredData')}
                   </h2>
@@ -281,7 +344,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                   </div>
                 </div>
 
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.siteVerification')}
                   </h2>
@@ -320,11 +383,11 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             {/* AI Optimization Tab */}
             {activeTab === 'ai' && (
               <div className="space-y-6">
-                <div className="bg-primary/20 dark:bg-primary/30 border border-primary/30 rounded-xl p-4 backdrop-blur-sm mb-6">
+                <div className="quimera-guide-panel-accent p-4 mb-6">
                   <div className="flex gap-3">
-                    <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" strokeWidth={2} />
                     <div>
-                      <h3 className="font-medium text-primary mb-1">{t('seo.aiBotOptimization')}</h3>
+                      <h3 className="font-medium text-foreground mb-1">{t('seo.aiBotOptimization')}</h3>
                       <p className="text-sm text-foreground/80">
                         {t('seo.optimizeWebsiteForAI')}
                       </p>
@@ -332,7 +395,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                   </div>
                 </div>
 
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.aiCrawlability')}
                   </h2>
@@ -349,7 +412,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <button
                         onClick={() => updateField('aiCrawlable', !localConfig.aiCrawlable)}
-                        className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.aiCrawlable ? 'bg-primary' : 'bg-gray-600'
+                        className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.aiCrawlable ? 'bg-[var(--quimera-status-icon-from)]' : 'bg-q-border'
                           }`}
                       >
                         <span
@@ -397,7 +460,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                   </div>
                 </div>
 
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.aiSearchEngines')}
                   </h2>
@@ -414,7 +477,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       'You.com'
                     ].map(engine => (
                       <li key={engine} className="flex items-center gap-2 text-q-text-muted">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" strokeWidth={2} />
                         {engine}
                       </li>
                     ))}
@@ -427,7 +490,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             {activeTab === 'social' && (
               <div className="space-y-6">
                 {/* Open Graph */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.openGraph')}
                   </h2>
@@ -507,7 +570,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Twitter Card */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.twitterCard')}
                   </h2>
@@ -563,11 +626,11 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             {activeTab === 'pixels' && (
               <div className="space-y-6">
                 {/* Info Banner */}
-                <div className="bg-primary/20 dark:bg-primary/30 border border-primary/30 rounded-xl p-4 backdrop-blur-sm">
+                <div className="quimera-guide-panel-accent p-4">
                   <div className="flex gap-3">
-                    <Activity className="w-5 h-5 text-white flex-shrink-0 mt-0.5" />
+                    <Activity className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                     <div>
-                      <h3 className="font-medium text-white mb-1">
+                      <h3 className="font-medium text-foreground mb-1">
                         {t('seo.trackingPixelsTitle', 'Píxeles de Publicidad')}
                       </h3>
                       <p className="text-sm text-foreground/80">
@@ -578,7 +641,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Facebook/Meta Pixel */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#1877F2] flex items-center justify-center">
@@ -635,7 +698,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Google Tag Manager */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#246FDB] flex items-center justify-center">
@@ -692,7 +755,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Google Ads */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#4285F4] via-[#EA4335] to-[#FBBC05] flex items-center justify-center">
@@ -741,7 +804,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Google Analytics 4 */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#F9AB00] flex items-center justify-center">
@@ -798,7 +861,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* TikTok Pixel */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
@@ -855,7 +918,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Twitter/X Pixel */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
@@ -912,7 +975,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* LinkedIn Insight Tag */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#0A66C2] flex items-center justify-center">
@@ -969,7 +1032,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Pinterest Tag */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#E60023] flex items-center justify-center">
@@ -1026,7 +1089,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Snapchat Pixel */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#FFFC00] flex items-center justify-center">
@@ -1083,7 +1146,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Microsoft/Bing Ads */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#00A4EF] flex items-center justify-center">
@@ -1140,7 +1203,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Reddit Pixel */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#FF4500] flex items-center justify-center">
@@ -1197,7 +1260,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Custom Scripts Section */}
-                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="quimera-dashboard-panel-card group">
                   <h2 className="text-lg font-semibold text-foreground mb-2">
                     {t('seo.customScripts', 'Scripts Personalizados')}
                   </h2>
@@ -1258,11 +1321,11 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                   localConfig.adPixels?.snapchatEnabled ||
                   localConfig.adPixels?.microsoftUetEnabled ||
                   localConfig.adPixels?.redditPixelEnabled) && (
-                    <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                    <div className="quimera-guide-panel-accent p-4">
                       <div className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" strokeWidth={2} />
                         <div>
-                          <h3 className="font-medium text-green-400 mb-2">
+                          <h3 className="font-medium text-foreground mb-2">
                             {t('seo.activePixels', 'Píxeles Activos')}
                           </h3>
                           <div className="flex flex-wrap gap-2">
@@ -1325,9 +1388,8 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
 
       <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-0 pointer-events-none overflow-hidden" />
         {/* Header */}
-        <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-surface/50 backdrop-blur-sm sticky top-0 z-40">
+        <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
@@ -1337,30 +1399,33 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
               <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              <Search className="text-primary w-5 h-5" />
+              <Search className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
               <h1 className="text-lg font-semibold text-foreground">SEO</h1>
             </div>
           </div>
 
-          {effectiveProject && localConfig && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsAiAssistantOpen(true)}
-                className="flex items-center justify-center h-9 w-9 sm:w-auto sm:px-3 rounded-lg text-sm font-bold transition-all text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30"
-                title={t('seo.optimizeWithAI', 'Optimizar con IA')}
-              >
-                <Sparkles className="w-4 h-4" />
-                <span className="hidden sm:inline ml-1.5">{t('seo.optimizeWithAI', 'Optimizar con IA')}</span>
-              </button>
-              <button
-                onClick={handleUpdate}
-                disabled={isSaving}
-                className="h-9 px-4 bg-primary text-primary-foreground font-medium text-sm rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 shadow-sm"
-              >
-                {isSaving ? t('seo.saving') : t('common.save', 'Guardar')}
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {effectiveProject && localConfig && (
+              <>
+                <button
+                  onClick={() => setIsAiAssistantOpen(true)}
+                  className="flex items-center justify-center h-9 w-9 sm:w-auto sm:px-3 rounded-lg text-sm font-bold transition-all quimera-status-card-link border border-q-border/60 hover:bg-q-surface-overlay/40"
+                  title={t('seo.optimizeWithAI', 'Optimizar con IA')}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-1.5">{t('seo.optimizeWithAI', 'Optimizar con IA')}</span>
+                </button>
+                <button
+                  onClick={handleUpdate}
+                  disabled={isSaving}
+                  className="quimera-guide-cta h-9 px-4 text-sm disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  {isSaving ? t('seo.saving') : t('common.save', 'Guardar')}
+                </button>
+              </>
+            )}
+            <HeaderBackButton onClick={() => setView('dashboard')} />
+          </div>
         </header>
 
         {renderMainContent()}

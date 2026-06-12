@@ -133,7 +133,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
             <div className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
                     <h4 className="font-semibold text-foreground text-sm uppercase tracking-wider">{t('accounting.termsAndDates', 'Terms & Dates')}</h4>
-                    <button onClick={handleAiOptimize} disabled={isOptimizing} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-primary to-purple-500 text-white shadow-md hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50">
+                    <button onClick={handleAiOptimize} disabled={isOptimizing} className="quimera-guide-cta flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg disabled:opacity-50">
                         {isOptimizing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}{t('accounting.aiOptimize', 'IA Optimize')}
                     </button>
                 </div>
@@ -166,7 +166,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
             </div>
             <div className="flex items-center gap-3 justify-end">
                 <button onClick={() => handleSave(true)} disabled={isSaving || !clientName} className="px-5 py-2.5 rounded-xl border border-q-border/60 bg-secondary/50 text-foreground text-sm font-semibold hover:bg-secondary disabled:opacity-50 flex items-center gap-2">{isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}{t('accounting.saveDraft', 'Save Draft')}</button>
-                <button onClick={() => handleSave(false)} disabled={isSaving || !clientName} className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all disabled:opacity-50 flex items-center gap-2">{isSaving ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}{t('accounting.saveAndSend', 'Save & Send')}</button>
+                <button onClick={() => handleSave(false)} disabled={isSaving || !clientName} className="quimera-guide-cta px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center gap-2">{isSaving ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}{t('accounting.saveAndSend', 'Save & Send')}</button>
             </div>
         </div>
     );
@@ -188,7 +188,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                         ]}
                         className="min-w-[120px]"
                     />
-                    <button onClick={() => { resetForm(); setView('form'); }} className="h-10 px-4 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all flex items-center gap-2"><Plus size={16} />{t('accounting.newInvoice', 'New Invoice')}</button>
+                    <button onClick={() => { resetForm(); setView('form'); }} className="quimera-guide-cta h-10 px-4 rounded-xl text-sm font-semibold flex items-center gap-2"><Plus size={16} />{t('accounting.newInvoice', 'New Invoice')}</button>
                 </div>
             </div>
             {filtered.length === 0 ? (
@@ -196,7 +196,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
             ) : (
                 <div className="space-y-3">{filtered.map(inv => {
                     const s = STATUS_STYLES[inv.status]; const I = s.icon; return (
-                        <div key={inv.id} className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-4 hover:shadow-lg transition-all group cursor-pointer" onClick={() => openEdit(inv)}>
+                        <div key={inv.id} className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-4 hover:border-q-border transition-all group cursor-pointer" onClick={() => openEdit(inv)}>
                             <div className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-4 min-w-0">
                                     <div className={`p-2 rounded-xl ${s.bg}`}><I size={18} className={s.text} /></div>

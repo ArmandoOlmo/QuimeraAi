@@ -12,7 +12,6 @@ import { MEDIA_CATEGORIES, MEDIA_CATEGORY_MAP } from '../../../types/media';
 import type { MediaCategory, MediaAssetRecord } from '../../../types/media';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import DragDropZone from '../../ui/DragDropZone';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import MediaGeneratorPanel from '../../media-generator/MediaGeneratorPanel';
 import VisualIdentityKitManager from '../visual/VisualIdentityKitManager';
 import HeaderBackButton from '../../ui/HeaderBackButton';
@@ -180,12 +179,11 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
             </aside>
 
             <div className="flex-1 flex min-h-0 flex-col overflow-hidden relative">
-                <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-0 pointer-events-none overflow-hidden" />
-                <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-surface/50 backdrop-blur-sm sticky top-0 z-40">
+ <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
                     <div className="flex items-center gap-4">
                         <button onClick={() => {}} className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"><Menu className="w-5 h-5" /></button>
                         <div className="flex items-center gap-2">
-                            <ImageIcon className="text-q-accent w-5 h-5" />
+                            <ImageIcon className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-lg font-semibold">{t('superadmin.unifiedMedia.title', 'Libreria de Medios')}</h1>
                             <span className="text-xs text-q-text-muted bg-secondary px-2 py-1 rounded-md">{t('superadmin.unifiedMedia.assetsCount', { count: mediaAssets.length })}</span>
                         </div>

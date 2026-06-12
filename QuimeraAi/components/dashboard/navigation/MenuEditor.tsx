@@ -601,7 +601,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-q-bg">
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-surface/50 backdrop-blur-sm z-20 sticky top-0">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-border/40 rounded-full transition-colors lg:hidden">
                             <MenuIcon className="w-4 h-4" />

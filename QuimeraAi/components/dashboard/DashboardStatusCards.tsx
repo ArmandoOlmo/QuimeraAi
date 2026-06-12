@@ -24,9 +24,6 @@ interface StatusCardDef {
     route: string;
     serviceId?: PlatformServiceId;
     requiredFeature?: keyof PlanFeatures;
-    /** Gradient accent colours (from / to) for the decorative blob */
-    gradientFrom: string;
-    gradientTo: string;
 }
 
 // ─── Fallback translations (used when i18n keys haven't been loaded) ─────────
@@ -47,8 +44,6 @@ const CARD_DEFS: StatusCardDef[] = [
         titleKey: 'dashboard.statusCards.websites',
         subtitleKey: 'dashboard.statusCards.websitesDesc',
         route: ROUTES.WEBSITES,
-        gradientFrom: 'from-orange-500',
-        gradientTo: 'to-amber-400',
     },
     {
         id: 'ecommerce',
@@ -58,8 +53,6 @@ const CARD_DEFS: StatusCardDef[] = [
         route: ROUTES.ECOMMERCE,
         serviceId: 'ecommerce',
         requiredFeature: 'ecommerceEnabled',
-        gradientFrom: 'from-violet-500',
-        gradientTo: 'to-fuchsia-400',
     },
     {
         id: 'cms',
@@ -69,8 +62,6 @@ const CARD_DEFS: StatusCardDef[] = [
         route: ROUTES.CMS,
         serviceId: 'cms',
         requiredFeature: 'cmsEnabled',
-        gradientFrom: 'from-sky-500',
-        gradientTo: 'to-cyan-400',
     },
     {
         id: 'leads',
@@ -80,8 +71,6 @@ const CARD_DEFS: StatusCardDef[] = [
         route: ROUTES.LEADS,
         serviceId: 'crm',
         requiredFeature: 'crmEnabled',
-        gradientFrom: 'from-emerald-500',
-        gradientTo: 'to-green-400',
     },
     {
         id: 'images',
@@ -89,8 +78,6 @@ const CARD_DEFS: StatusCardDef[] = [
         titleKey: 'dashboard.statusCards.images',
         subtitleKey: 'dashboard.statusCards.imagesDesc',
         route: ROUTES.ASSETS,
-        gradientFrom: 'from-violet-500',
-        gradientTo: 'to-purple-400',
     },
     {
         id: 'domains',
@@ -100,8 +87,6 @@ const CARD_DEFS: StatusCardDef[] = [
         route: ROUTES.DOMAINS,
         serviceId: 'domains',
         requiredFeature: 'customDomains',
-        gradientFrom: 'from-rose-500',
-        gradientTo: 'to-pink-400',
     },
     {
         id: 'appointments',
@@ -110,8 +95,6 @@ const CARD_DEFS: StatusCardDef[] = [
         subtitleKey: 'dashboard.statusCards.appointmentsDesc',
         route: ROUTES.APPOINTMENTS,
         serviceId: 'appointments',
-        gradientFrom: 'from-indigo-500',
-        gradientTo: 'to-blue-400',
     },
 ];
 
@@ -220,19 +203,15 @@ const DashboardStatusCards: React.FC = () => {
                                 className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-q-border/60
                                    bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl
                                    p-3 sm:p-5 text-left min-h-[100px] sm:min-h-[140px]
-                                   shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
-                                   hover:scale-[1.02] hover:shadow-md hover:shadow-primary/5
-                                   hover:border-q-border transition-all duration-300 ease-out
+                                   hover:scale-[1.02] hover:border-q-border transition-all duration-300 ease-out
                                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                                 style={{ animationDelay: `${idx * 60}ms` }}
                                 aria-label={t(card.titleKey)}
                             >
                                 {/* ── Gradient blob decoration ─────────────────────────────── */}
                                 <div
-                                    className={`absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl
-                                        bg-gradient-to-br ${card.gradientFrom} ${card.gradientTo}
-                                        group-hover:opacity-50 dark:group-hover:opacity-35
-                                        group-hover:scale-110 transition-all duration-500`}
+                                    className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl
+                                        group-hover:scale-110 transition-all duration-500"
                                     aria-hidden="true"
                                 />
 
@@ -243,10 +222,7 @@ const DashboardStatusCards: React.FC = () => {
                                         {metric.label}
                                     </span>
                                     <span
-                                        className="leading-[0.85]
-                                           text-foreground/[0.06] dark:text-white/[0.10]
-                                           group-hover:text-foreground/[0.10] dark:group-hover:text-white/[0.16]
-                                           transition-colors duration-500"
+                                        className="quimera-status-card-watermark leading-[0.85]"
                                         style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(3rem, 8vw, 9rem)' }}
                                     >
                                         {metric.value}
@@ -256,26 +232,22 @@ const DashboardStatusCards: React.FC = () => {
                                 {/* ── Left content ─────────────────────────────────────────── */}
                                 <div className="relative z-10 flex flex-col h-full">
                                     {/* Header */}
-                                    <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-3">
-                                        <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl
-                                                bg-gradient-to-br ${card.gradientFrom} ${card.gradientTo}
-                                                shadow-lg shadow-black/10`}>
-                                            <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" strokeWidth={2} />
+                                    <div className="mb-1 sm:mb-3 min-w-0">
+                                        <div className="mb-1 md:mb-2">
+                                            <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                                         </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-xs sm:text-sm font-bold text-foreground truncate">{t(card.titleKey, FB[card.id]?.title ?? card.id)}</span>
-                                            <span className="text-[9px] sm:text-[11px] text-q-text-muted truncate">{t(card.subtitleKey, FB[card.id]?.desc ?? '')}</span>
-                                        </div>
+                                        <span className="text-xs sm:text-sm font-bold text-foreground truncate block">{t(card.titleKey, FB[card.id]?.title ?? card.id)}</span>
+                                        <span className="text-[9px] sm:text-[11px] text-q-text-muted truncate block">{t(card.subtitleKey, FB[card.id]?.desc ?? '')}</span>
                                     </div>
 
 
 
                                     {/* Action link */}
                                     <div className="flex items-center gap-1 mt-auto pt-1 sm:pt-3">
-                                        <span className="text-[10px] sm:text-xs font-semibold text-primary group-hover:underline">
+                                        <span className="quimera-status-card-link text-[10px] sm:text-xs font-semibold group-hover:underline">
                                             {t('dashboard.statusCards.viewDetails', 'Ver detalles')}
                                         </span>
-                                        <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary group-hover:translate-x-1 transition-transform" />
+                                        <ArrowRight className="quimera-status-card-link w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:translate-x-1 transition-transform" />
                                     </div>
                                 </div>
                             </button>

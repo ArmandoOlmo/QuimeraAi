@@ -285,9 +285,7 @@ const LeadCaptureSettings: React.FC = () => {
             {/* Intent Keywords */}
             <div className="bg-q-surface border border-q-border rounded-xl p-6 space-y-4">
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-primary/20 rounded-lg">
-                        <Tag size={20} className="text-primary" />
-                    </div>
+                    <Tag size={20} className="quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                     <div>
                         <h3 className="font-semibold text-foreground">Intent Keywords</h3>
                         <p className="text-xs text-q-text-muted">Custom keywords that trigger lead capture when detected in conversation</p>
@@ -317,9 +315,7 @@ const LeadCaptureSettings: React.FC = () => {
             {/* Business Hours */}
             <div className="bg-q-surface border border-q-border rounded-xl p-6 space-y-4">
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-primary/20 rounded-lg">
-                        <Clock size={20} className="text-primary" />
-                    </div>
+                    <Clock size={20} className="quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                     <div>
                         <h3 className="font-semibold text-foreground">Business Hours</h3>
                         <p className="text-xs text-q-text-muted">Set your business hours for appointment scheduling suggestions</p>

@@ -217,9 +217,7 @@ const ReviewsView: React.FC = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/20 rounded-lg">
-                            <MessageSquare className="text-primary" size={20} />
-                        </div>
+                        <MessageSquare className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-q-text-muted text-sm">Total</p>
                             <p className="text-2xl font-bold text-foreground">{totalReviews}</p>
@@ -228,9 +226,7 @@ const ReviewsView: React.FC = () => {
                 </div>
                 <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-yellow-500/20 rounded-lg">
-                            <Clock className="text-yellow-400" size={20} />
-                        </div>
+                        <Clock className="text-yellow-400 flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-q-text-muted text-sm">Pendientes</p>
                             <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
@@ -239,9 +235,7 @@ const ReviewsView: React.FC = () => {
                 </div>
                 <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-500/20 rounded-lg">
-                            <Check className="text-green-400" size={20} />
-                        </div>
+                        <Check className="text-green-400 flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-q-text-muted text-sm">Aprobadas</p>
                             <p className="text-2xl font-bold text-foreground">{approvedCount}</p>
@@ -250,9 +244,7 @@ const ReviewsView: React.FC = () => {
                 </div>
                 <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-red-500/20 rounded-lg">
-                            <X className="text-red-400" size={20} />
-                        </div>
+                        <X className="text-red-400 flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-q-text-muted text-sm">Rechazadas</p>
                             <p className="text-2xl font-bold text-foreground">{rejectedCount}</p>

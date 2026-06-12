@@ -151,7 +151,7 @@ export default function VisualIdentityKitManager({ onBack, projectId, kitScope =
     return (
         <div className="h-full flex flex-col bg-q-bg">
             {/* Header */}
-            <header className="flex items-center justify-between border-b border-q-border bg-q-surface/80 backdrop-blur-md px-6 py-4 shrink-0">
+ <header className="quimera-dashboard-header-bar flex items-center justify-between px-6 py-4 shrink-0">
                 <div className="flex items-center gap-4">
                     {onBack && (
                         <button onClick={onBack} className="p-1.5 hover:bg-q-bg rounded-lg text-q-text-secondary hover:text-q-text transition-colors">

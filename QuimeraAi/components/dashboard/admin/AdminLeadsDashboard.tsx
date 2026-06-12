@@ -93,7 +93,6 @@ import { useState, useMemo, useEffect } from 'react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import {
     Menu, Plus, Search, Filter, MoreVertical,
     Mail, Phone, MessageSquare, Bot, LayoutGrid,
@@ -401,11 +400,10 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
     return (
         <>
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                <DashboardWaveRibbons className="absolute inset-x-0 top-14 h-64 z-0 pointer-events-none overflow-hidden" />
                 {/* Header */}
-                <header className="h-14 bg-q-bg/95 border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10 backdrop-blur-xl">
+                <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
-                        <Users className="w-5 h-5 text-primary" />
+                        <Users className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                         <h1 className="text-lg font-bold">{t('superadmin.platformLeads', 'Leads de Plataforma')}</h1>
                         <span className="text-xs text-q-text-muted bg-secondary px-2 py-0.5 rounded-full">{leads.length}</span>
                     </div>

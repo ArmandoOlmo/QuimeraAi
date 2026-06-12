@@ -152,10 +152,10 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
     return (
         <>
             <div className="flex flex-col h-screen bg-q-bg">
-                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+ <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                            <Shield className="text-q-accent" size={20} />
+                            <Shield className="quimera-dashboard-header-icon" size={20} strokeWidth={2} />
                             <h1 className="text-lg font-semibold text-q-text">
                                 {AGENCY_LEGAL_PAGE_LABELS[pageType]}
                             </h1>
@@ -273,9 +273,7 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                                                     onClick={() => setExpandedSection(isExpanded ? null : section.id)}
                                                 >
                                                     <GripVertical size={16} className="text-q-text-muted" />
-                                                    <div className="p-2 bg-primary/10 rounded-lg">
-                                                        <IconComponent size={16} className="text-primary" />
-                                                    </div>
+                                                    <IconComponent size={16} className="quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                                                     <span className="flex-1 font-medium">{section.title}</span>
                                                     <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                                                         <button

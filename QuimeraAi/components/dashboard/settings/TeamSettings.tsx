@@ -24,6 +24,7 @@ import { useTenantInvites } from '../../../hooks/useTenantInvites';
 import { InviteMemberModal, PendingInvites } from '../tenant';
 import EditMemberModal from '../tenant/EditMemberModal';
 import { TenantMembership, AgencyRole } from '../../../types/multiTenant';
+import { SettingsStatCard, settingsPanelClass } from './SettingsStatCard';
 
 const TeamSettings: React.FC = () => {
     const { t } = useTranslation();
@@ -70,14 +71,12 @@ const TeamSettings: React.FC = () => {
                 </div>
             )}
 
-            {/* ─── Stats Header ─── */}
-            <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
-                <div className="p-5 border-b border-q-border flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <Users size={20} className="text-primary" />
-                        </div>
-                        <div>
+            {/* ─── Header ─── */}
+            <div className={settingsPanelClass}>
+                <div className="p-5 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <Users size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
+                        <div className="min-w-0">
                             <h2 className="text-lg font-semibold text-foreground">
                                 {t('team.members', 'Miembros del Equipo')}
                             </h2>
@@ -90,44 +89,53 @@ const TeamSettings: React.FC = () => {
                     <button
                         onClick={() => setIsInviteModalOpen(true)}
                         disabled={!canInvite}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="quimera-guide-cta flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                     >
                         <UserPlus size={18} />
                         {t('team.invite', 'Invitar')}
                     </button>
                 </div>
+            </div>
 
-                {/* Stats row */}
-                <div className="grid grid-cols-4 divide-x divide-border">
-                    {[
-                        { label: t('team.totalMembers', 'Total'), value: members.length, icon: Users, color: 'text-primary' },
-                        { label: t('team.owners', 'Propietarios'), value: ownerCount, icon: Crown, color: 'text-yellow-500' },
-                        { label: t('team.admins', 'Admins'), value: adminCount, icon: Shield, color: 'text-blue-500' },
-                        { label: t('team.pending', 'Pendientes'), value: pendingInvites.length, icon: Clock, color: 'text-orange-500' },
-                    ].map((stat) => (
-                        <div key={stat.label} className="p-4 text-center">
-                            <stat.icon size={16} className={`mx-auto mb-1.5 ${stat.color}`} />
-                            <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                            <p className="text-xs text-q-text-muted">{stat.label}</p>
-                        </div>
-                    ))}
-                </div>
+            {/* Stats row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <SettingsStatCard
+                    label={t('team.totalMembers', 'Total')}
+                    value={members.length}
+                    icon={Users}
+                />
+                <SettingsStatCard
+                    label={t('team.owners', 'Propietarios')}
+                    value={ownerCount}
+                    icon={Crown}
+                    valueClass="text-yellow-500"
+                />
+                <SettingsStatCard
+                    label={t('team.admins', 'Admins')}
+                    value={adminCount}
+                    icon={Shield}
+                    valueClass="text-blue-500"
+                />
+                <SettingsStatCard
+                    label={t('team.pending', 'Pendientes')}
+                    value={pendingInvites.length}
+                    icon={Clock}
+                    valueClass="text-orange-500"
+                />
             </div>
 
             {/* ─── Members Table ─── */}
-            <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
+            <div className={settingsPanelClass}>
                 {membersLoading ? (
                     <div className="p-12 text-center">
-                        <Loader2 className="animate-spin mx-auto mb-3 text-primary" size={32} />
+                        <Loader2 className="animate-spin mx-auto mb-3 quimera-status-card-accent-text" size={32} />
                         <p className="text-q-text-muted">
                             {t('common.loading', 'Cargando equipo...')}
                         </p>
                     </div>
                 ) : members.length === 0 ? (
                     <div className="p-12 text-center">
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4">
-                            <Users size={36} className="text-primary/60" />
-                        </div>
+                        <Users size={40} className="text-q-text-muted/40 mx-auto mb-4" strokeWidth={1.5} />
                         <h3 className="text-lg font-medium text-foreground mb-2">
                             {t('team.noMembersTitle', 'Tu equipo está vacío')}
                         </h3>
@@ -137,7 +145,7 @@ const TeamSettings: React.FC = () => {
                         {canInvite && (
                             <button
                                 onClick={() => setIsInviteModalOpen(true)}
-                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all"
+                                className="quimera-guide-cta inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all"
                             >
                                 <UserPlus size={16} />
                                 {t('team.inviteFirst', 'Invitar al primer miembro')}
@@ -185,7 +193,7 @@ const TeamSettings: React.FC = () => {
                                                         </div>
                                                     )}
                                                     {member.userId === currentMembership?.userId && (
-                                                        <span className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold px-1 py-0.5 rounded-full border-2 border-card">
+                                                        <span className="absolute -bottom-1 -right-1 bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_85%,transparent)] text-white text-[8px] font-bold px-1 py-0.5 rounded-full border-2 border-card">
                                                             TÚ
                                                         </span>
                                                     )}
@@ -252,12 +260,10 @@ const TeamSettings: React.FC = () => {
             </div>
 
             {/* ─── Pending Invites ─── */}
-            <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
+            <div className={settingsPanelClass}>
                 <div className="p-5 border-b border-q-border flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                            <Mail size={20} className="text-orange-500" />
-                        </div>
+                        <Mail size={20} className="text-orange-500 flex-shrink-0" strokeWidth={2} />
                         <div>
                             <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                                 {t('team.pendingInvites', 'Invitaciones Pendientes')}
@@ -280,14 +286,12 @@ const TeamSettings: React.FC = () => {
                 <div className="p-5">
                     {invitesLoading ? (
                         <div className="py-6 text-center">
-                            <Loader2 className="animate-spin mx-auto mb-2 text-primary" size={24} />
+                            <Loader2 className="animate-spin mx-auto mb-2 quimera-status-card-accent-text" size={24} />
                             <p className="text-sm text-q-text-muted">{t('common.loading', 'Cargando...')}</p>
                         </div>
                     ) : pendingInvites.length === 0 ? (
                         <div className="py-6 text-center">
-                            <div className="w-14 h-14 rounded-xl bg-secondary/50 flex items-center justify-center mx-auto mb-3">
-                                <Mail size={24} className="text-q-text-muted/50" />
-                            </div>
+                            <Mail size={32} className="text-q-text-muted/40 mx-auto mb-3" strokeWidth={1.5} />
                             <p className="text-sm text-q-text-muted">
                                 {t('team.noPendingInvites', 'Todas las invitaciones han sido respondidas')}
                             </p>

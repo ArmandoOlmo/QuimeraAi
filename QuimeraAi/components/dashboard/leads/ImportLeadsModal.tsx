@@ -252,9 +252,7 @@ const UploadStep: React.FC<{
                     </div>
                 ) : (
                     <div className="flex flex-col items-center gap-3">
-                        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                            <Upload className="w-8 h-8 text-primary" />
-                        </div>
+                        <Upload className="w-8 h-8 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                         <div>
                             <p className="text-base font-semibold text-foreground mb-1">
                                 {t('leads.import.dropzone.title')}
@@ -813,9 +811,7 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <Upload className="w-5 h-5 text-primary" />
-                        </div>
+                        <Upload className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                         <div>
                             <h2 className="text-base sm:text-lg font-bold text-foreground">
                                 {t('leads.import.title')}

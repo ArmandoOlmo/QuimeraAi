@@ -87,7 +87,7 @@ const EditorHeader: React.FC = () => {
   const orientationDisabled = previewDevice === 'desktop';
 
   return (
-    <header className="bg-q-bg border-b border-q-border h-14 flex-shrink-0 z-20">
+ <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 z-20">
       <div className="h-full flex items-center justify-between px-3 gap-3 relative">
 
         {/* LEFT SECTION - Navigation & Project */}

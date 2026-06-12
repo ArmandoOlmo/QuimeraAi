@@ -9,7 +9,6 @@ import { useTranslation } from 'react-i18next';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import ProjectSelectorPage from './ProjectSelectorPage';
 import FileHistory from '../FileHistory';
 import MediaGeneratorPanel from '../../media-generator/MediaGeneratorPanel';
@@ -88,6 +87,7 @@ const AssetsDashboard: React.FC = () => {
         return (
             <ProjectSelectorPage
                 onProjectSelect={handleProjectSelect}
+                onBack={() => setView('dashboard')}
             />
         );
     }
@@ -100,9 +100,8 @@ const AssetsDashboard: React.FC = () => {
             />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-0 pointer-events-none overflow-hidden" />
                 {/* Header */}
-                <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-surface/50 backdrop-blur-sm sticky top-0 z-40">
+ <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
@@ -112,7 +111,7 @@ const AssetsDashboard: React.FC = () => {
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <Zap className="text-primary w-5 h-5" />
+                            <Zap className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-lg font-semibold text-foreground">
                                 {t('editor.imageGenerator', 'Generador de Imágenes')}
                             </h1>
@@ -125,7 +124,7 @@ const AssetsDashboard: React.FC = () => {
                             onClick={() => setShowKitManager(!showKitManager)}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                                 showKitManager
-                                    ? 'bg-primary/10 text-primary border-primary/30'
+                                    ? 'border-[var(--quimera-status-accent-from)] bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
                                     : 'bg-muted/50 text-muted-foreground border-border hover:text-foreground'
                             }`}
                         >
@@ -141,7 +140,7 @@ const AssetsDashboard: React.FC = () => {
                 <main className="flex-1 overflow-auto relative z-[2] p-4 md:p-6 lg:p-8">
                     {showKitManager ? (
                         <div className="max-w-7xl mx-auto">
-                            <div className="bg-q-surface/80 border border-q-border rounded-2xl overflow-hidden h-[calc(100vh-12rem)]">
+                            <div className="quimera-dashboard-panel-card group overflow-hidden h-[calc(100vh-12rem)]">
                                 <VisualIdentityKitManager
                                     onBack={() => setShowKitManager(false)}
                                     projectId={effectiveProjectId || undefined}
@@ -150,14 +149,14 @@ const AssetsDashboard: React.FC = () => {
                         </div>
                     ) : (
                     <div className="max-w-7xl mx-auto">
-                        <div className="bg-q-surface/80 border border-q-border rounded-2xl overflow-hidden">
+                        <div className="quimera-dashboard-panel-card group overflow-hidden">
                             {/* Generator Toggle Bar - same format open & closed */}
                             <div
-                                className="border-b border-q-border flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer group"
+                                className="border-b border-q-border/60 flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer group/toggle"
                                 onClick={() => setIsGeneratorCollapsed(prev => !prev)}
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-xl bg-primary/10 group-hover:bg-primary/20 text-primary transition-colors">
+                                    <div className="p-2 rounded-xl bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text transition-colors">
                                         <Sparkles size={18} />
                                     </div>
                                     <span className="text-sm font-semibold text-foreground">
@@ -166,7 +165,7 @@ const AssetsDashboard: React.FC = () => {
                                 </div>
                                 <ChevronDown
                                     size={18}
-                                    className={`text-q-text-muted group-hover:text-foreground transition-transform duration-200 ${!isGeneratorCollapsed ? 'rotate-180' : ''}`}
+                                    className={`text-q-text-muted group-hover/toggle:text-foreground transition-transform duration-200 ${!isGeneratorCollapsed ? 'rotate-180' : ''}`}
                                 />
                             </div>
 

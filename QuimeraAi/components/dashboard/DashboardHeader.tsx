@@ -52,7 +52,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     return (
         <>
             <header
-                className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 sticky top-0"
+                className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 sticky top-0"
                 role="banner"
             >
                 {/* Left Section - Logo & Title */}
@@ -66,7 +66,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         <Menu className="w-5 h-5" />
                     </button>
                     <div className="flex items-center gap-1 sm:gap-2">
-                        <HeaderIcon className="text-q-accent" size={24} aria-hidden="true" />
+                        <HeaderIcon className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} aria-hidden="true" />
                         <h1 className="text-sm sm:text-xl font-semibold sm:font-bold text-q-text">
                             {headerTitle}
                         </h1>

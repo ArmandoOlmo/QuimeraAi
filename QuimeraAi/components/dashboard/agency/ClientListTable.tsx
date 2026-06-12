@@ -12,10 +12,11 @@ import {
     AlertTriangle,
     CheckCircle,
     Clock,
-    XCircle,
-    MoreVertical,
     Download,
+    Users,
 } from 'lucide-react';
+import { settingsPanelClass } from '../settings/SettingsStatCard';
+import { ROUTES } from '../../../routes/config';
 
 interface ClientListTableProps {
     clients: Tenant[];
@@ -90,32 +91,18 @@ export function ClientListTable({ clients }: ClientListTableProps) {
 
     if (clients.length === 0) {
         return (
-            <div className="bg-q-surface rounded-lg border border-q-border p-12">
+            <div className={`${settingsPanelClass} p-12`}>
                 <div className="text-center">
-                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
-                        <svg
-                            className="h-8 w-8 text-gray-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                            />
-                        </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    <Users className="h-10 w-10 text-q-text-muted/40 mx-auto mb-4" strokeWidth={1.5} />
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
                         No hay clientes todavía
                     </h3>
                     <p className="text-q-text-muted mt-1">
                         Comienza agregando tu primer sub-cliente
                     </p>
                     <button
-                        onClick={() => navigate('/dashboard/agency/clients/new')}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        onClick={() => navigate(ROUTES.AGENCY_NEW_CLIENT)}
+                        className="quimera-guide-cta mt-4 px-4 py-2 rounded-xl font-medium transition-colors"
                     >
                         Agregar Primer Cliente
                     </button>
@@ -125,44 +112,45 @@ export function ClientListTable({ clients }: ClientListTableProps) {
     }
 
     return (
-        <div className="bg-q-surface rounded-lg border border-q-border overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h1 className="text-3xl font-bold text-foreground">
+        <div className={settingsPanelClass}>
+            <div className="px-5 py-4 border-b border-q-border flex items-center gap-3">
+                <Users size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
+                <h2 className="text-lg font-semibold text-foreground">
                     Clientes ({clients.length})
-                </h1>
+                </h2>
             </div>
 
             <div className="overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-muted">
+                    <thead className="bg-secondary/30">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase tracking-wider">
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                 Cliente
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                 Estado
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                 Plan
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                 Proyectos
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                 Storage
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                 AI Credits
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                 MRR
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <th className="px-5 py-3 text-right text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                 Acciones
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody className="divide-y divide-q-border">
                         {clients.map((client) => {
                             const metrics = getClientMetrics(client.id);
                             const hasAlerts = metrics && metrics.alerts.length > 0;
@@ -170,10 +158,10 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                             return (
                                 <tr
                                     key={client.id}
-                                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                                    className="hover:bg-secondary/20 transition-colors cursor-pointer"
                                     onClick={() => navigate(`/dashboard/agency/clients/${client.id}`)}
                                 >
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-5 py-3.5 whitespace-nowrap">
                                         <div className="flex items-center gap-2">
                                             <div>
                                                 <div className="font-medium text-foreground">
@@ -188,15 +176,15 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-5 py-3.5 whitespace-nowrap">
                                         {getStatusBadge(client.status)}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-5 py-3.5 whitespace-nowrap">
                                         <span className="text-sm text-foreground capitalize">
                                             {client.subscriptionPlan.replace('_', ' ')}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-5 py-3.5 whitespace-nowrap">
                                         {metrics ? (
                                             <span className={`text-sm ${getUsageColor(metrics.usagePercentages.projects)}`}>
                                                 {metrics.usage.projectCount} / {metrics.limits.maxProjects}
@@ -208,7 +196,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                             <span className="text-sm text-gray-400">-</span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-5 py-3.5 whitespace-nowrap">
                                         {metrics ? (
                                             <span className={`text-sm ${getUsageColor(metrics.usagePercentages.storage)}`}>
                                                 {metrics.usage.storageUsedGB.toFixed(1)} GB
@@ -220,7 +208,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                             <span className="text-sm text-gray-400">-</span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-5 py-3.5 whitespace-nowrap">
                                         {metrics ? (
                                             <span className={`text-sm ${getUsageColor(metrics.usagePercentages.aiCredits)}`}>
                                                 {metrics.usage.aiCreditsUsed.toLocaleString()}
@@ -232,9 +220,9 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                             <span className="text-sm text-gray-400">-</span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-5 py-3.5 whitespace-nowrap">
                                         {client.billing?.mrr ? (
-                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                            <span className="text-sm font-medium text-foreground">
                                                 ${client.billing.mrr.toFixed(0)}
                                             </span>
                                         ) : (
@@ -249,7 +237,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                                     handleExportClient(client.id);
                                                 }}
                                                 disabled={exportingClientId === client.id}
-                                                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
+                                                className="p-2 text-q-text-muted hover:text-foreground transition-colors disabled:opacity-50"
                                                 title="Exportar datos"
                                             >
                                                 <Download className="h-4 w-4" />
@@ -259,7 +247,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                                     e.stopPropagation();
                                                     navigate(`/dashboard/agency/clients/${client.id}`);
                                                 }}
-                                                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                                className="p-2 text-q-text-muted hover:text-foreground transition-colors"
                                                 title="Ver detalles"
                                             >
                                                 <ExternalLink className="h-4 w-4" />

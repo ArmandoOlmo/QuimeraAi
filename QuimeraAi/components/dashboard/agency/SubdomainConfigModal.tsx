@@ -147,9 +147,7 @@ export function SubdomainConfigModal({
             <div className="p-6">
                 {/* Header */}
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                        <Globe size={20} className="text-primary" />
-                    </div>
+                    <Globe size={20} className="quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                     <div>
                         <h2 className="text-lg font-bold text-foreground">
                             {t('agency.configureSubdomain', 'Configurar Subdominio')}

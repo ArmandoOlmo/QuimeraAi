@@ -28,6 +28,7 @@ import { TenantBranding } from '../../../types/multiTenant';
 
 import ImagePicker from '../../ui/ImagePicker';
 import ColorControl from '../../ui/ColorControl';
+import { settingsPanelClass } from '../settings/SettingsStatCard';
 
 interface BrandingSettingsProps {
     className?: string;
@@ -175,7 +176,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
     if (!currentTenant) {
         return (
             <div className={`p-8 text-center ${className}`}>
-                <Loader2 className="animate-spin mx-auto mb-2" size={24} />
+                <Loader2 className="animate-spin mx-auto mb-2 quimera-status-card-accent-text" size={24} />
                 <p className="text-q-text-muted">Cargando...</p>
             </div>
         );
@@ -189,7 +190,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
             {/* ═══════════════════════════════════════════ */}
             {/* CARD 1: Workspace Identity              */}
             {/* ═══════════════════════════════════════════ */}
-            <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
+            <div className={settingsPanelClass}>
                 {/* Header with gradient accent */}
                 <div className="relative p-5 border-b border-q-border">
                     <div className="absolute inset-0 opacity-[0.03]" style={{
@@ -341,7 +342,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                             <button
                                 onClick={handleSaveBranding}
                                 disabled={isSaving}
-                                className="ml-auto flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50 transition-all shadow-lg shadow-primary/20"
+                                className="quimera-guide-cta ml-auto flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium disabled:opacity-50 transition-all"
                             >
                                 {isSaving ? (
                                     <>
@@ -363,12 +364,10 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
             {/* ═══════════════════════════════════════════ */}
             {/* CARD 2: Visual Assets (Logo + Favicon)   */}
             {/* ═══════════════════════════════════════════ */}
-            <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
+            <div className={settingsPanelClass}>
                 <div className="p-5 border-b border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                            <Image size={20} className="text-violet-500" />
-                        </div>
+                        <Image size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
                         <div>
                             <h2 className="text-lg font-semibold text-foreground">
                                 {t('branding.visualAssets', 'Assets Visuales')}
@@ -415,12 +414,10 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
             {/* ═══════════════════════════════════════════ */}
             {/* CARD 3: Domain & Subdomain               */}
             {/* ═══════════════════════════════════════════ */}
-            <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
+            <div className={settingsPanelClass}>
                 <div className="p-5 border-b border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                            <Globe size={20} className="text-emerald-500" />
-                        </div>
+                        <Globe size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
                         <div>
                             <h2 className="text-lg font-semibold text-foreground">
                                 {t('branding.domainTitle', 'Dominio & Subdominio')}
@@ -507,7 +504,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                 </div>
                                 {branding.quimeraSubdomain && (
                                     <p className="text-xs text-q-text-muted mt-1.5">
-                                        Portal: <span className="text-primary font-medium">{branding.quimeraSubdomain}.quimera.ai</span>
+                                        Portal: <span className="quimera-status-card-link font-medium">{branding.quimeraSubdomain}.quimera.ai</span>
                                         {' '}— {t('branding.saveToApply', 'guarda los cambios para aplicar')}
                                     </p>
                                 )}
@@ -521,7 +518,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                     {/* ── Custom Domain ── */}
                     <div className="space-y-3">
                         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                            <Globe size={14} className="text-primary" />
+                            <Globe size={14} className="quimera-status-card-accent-text" />
                             {t('branding.customDomain', 'Dominio Personalizado')}
                         </h3>
 
@@ -536,7 +533,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                         {t('branding.upgradeForDomain', 'Actualiza tu plan para usar tu propio dominio')}
                                     </p>
                                 </div>
-                                <button className="px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors">
+                                <button className="quimera-guide-cta px-4 py-2 rounded-xl text-sm font-medium transition-colors">
                                     {t('common.viewPlans', 'Ver planes')}
                                 </button>
                             </div>
@@ -568,7 +565,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                                 <button
                                                     onClick={handleVerifyDomain}
                                                     disabled={isVerifyingDomain}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                                                    className="quimera-guide-cta flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg disabled:opacity-50 transition-colors"
                                                 >
                                                     {isVerifyingDomain ? (
                                                         <Loader2 size={14} className="animate-spin" />
@@ -608,7 +605,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                         <button
                                             onClick={handleAddDomain}
                                             disabled={!customDomain || isAddingDomain || !canManageSettings}
-                                            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50 transition-all"
+                                            className="quimera-guide-cta flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium disabled:opacity-50 transition-all"
                                         >
                                             {isAddingDomain ? (
                                                 <Loader2 size={16} className="animate-spin" />

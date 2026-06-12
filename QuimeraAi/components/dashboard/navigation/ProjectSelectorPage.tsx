@@ -139,7 +139,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
             {/* Main Content - Only this area scrolls */}
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 {/* Header - Fixed within content area */}
-                <header className="h-14 w-full bg-q-surface/50 backdrop-blur-md border-b border-q-border flex-shrink-0 flex items-center px-4 sm:px-6 lg:px-8 z-40">
+ <header className="quimera-dashboard-header-bar h-14 w-full flex-shrink-0 flex items-center px-4 sm:px-6 lg:px-8 z-40">
                     {/* Left: Menu & Title */}
                     <div className="flex items-center gap-4 flex-shrink-0 min-w-[200px]">
                         <button
@@ -150,7 +150,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                             <MenuIcon size={20} />
                         </button>
                         <div className="flex items-center gap-2">
-                            <MenuIcon className="text-primary" size={20} />
+                            <MenuIcon className="quimera-dashboard-header-icon" size={20} strokeWidth={2} />
                             <h1 className="text-lg font-bold text-foreground">
                                 {t('navigationDashboard.title', 'Navegación')}
                             </h1>
@@ -204,39 +204,55 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
 
                             {/* Stats Bar */}
                             <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-primary/30 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/20">
-                                            <Layers className="text-primary" size={18} />
+                                {[
+                                    {
+                                        id: 'total',
+                                        icon: Layers,
+                                        value: userProjects.length,
+                                        labelKey: 'dashboard.totalProjects',
+                                        defaultLabel: 'Total',
+                                    },
+                                    {
+                                        id: 'published',
+                                        icon: Globe,
+                                        value: publishedCount,
+                                        labelKey: 'dashboard.published',
+                                        defaultLabel: 'Publicados',
+                                    },
+                                    {
+                                        id: 'draft',
+                                        icon: FileEdit,
+                                        value: draftCount,
+                                        labelKey: 'dashboard.draft',
+                                        defaultLabel: 'Borradores',
+                                    },
+                                ].map((card) => {
+                                    const Icon = card.icon;
+
+                                    return (
+                                        <div
+                                            key={card.id}
+                                            className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-q-border/60
+                                                bg-q-surface/80 backdrop-blur-xl p-3 sm:p-4 hover:border-q-border
+                                                transition-all duration-300 ease-out"
+                                        >
+                                            <div
+                                                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 sm:w-32 sm:h-32 rounded-full blur-2xl
+                                                    group-hover:scale-110 transition-all duration-500"
+                                                aria-hidden="true"
+                                            />
+                                            <div className="relative z-10">
+                                                <div className="mb-1 md:mb-2">
+                                                    <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                                </div>
+                                                <div className="text-xl md:text-3xl font-extrabold text-foreground">{card.value}</div>
+                                                <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
+                                                    {t(card.labelKey, card.defaultLabel)}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-xl sm:text-2xl font-bold text-foreground">{userProjects.length}</p>
-                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.totalProjects', 'Total')}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-green-500/30 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/20">
-                                            <Globe className="text-green-500" size={18} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xl sm:text-2xl font-bold text-foreground">{publishedCount}</p>
-                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.published', 'Publicados')}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-slate-500/30 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="p-1.5 sm:p-2 rounded-lg bg-slate-500/20">
-                                            <FileEdit className="text-slate-400" size={18} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xl sm:text-2xl font-bold text-foreground">{draftCount}</p>
-                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.draft', 'Borradores')}</p>
-                                        </div>
-                                    </div>
-                                </div>
+                                    );
+                                })}
                             </div>
                         </div>
 

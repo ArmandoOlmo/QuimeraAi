@@ -41,7 +41,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     onBack,
 }) => {
     const { t, i18n } = useTranslation();
-    const { setIsOnboardingOpen } = useUI();
+    const { setIsOnboardingOpen, setView } = useUI();
     const { projects, isLoadingProjects } = useProject();
 
     // Local state
@@ -86,6 +86,8 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
         });
     };
 
+    const handleBack = onBack ?? (() => setView('dashboard'));
+
     return (
         <div className="h-screen bg-q-bg flex overflow-hidden">
             {/* Sidebar - Fixed in place */}
@@ -99,7 +101,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
             {/* Main Content - Only this area scrolls */}
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 {/* Header - Fixed within content area */}
-                <header className="h-14 w-full bg-q-surface/50 backdrop-blur-md border-b border-q-border flex-shrink-0 flex items-center px-4 sm:px-6 lg:px-8 z-40">
+ <header className="quimera-dashboard-header-bar h-14 w-full flex-shrink-0 flex items-center px-4 sm:px-6 lg:px-8 z-40">
                     {/* Left: Menu & Title */}
                     <div className="flex items-center gap-4 flex-shrink-0">
                         <button
@@ -110,7 +112,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                             <Menu size={20} />
                         </button>
                         <div className="flex items-center gap-2">
-                            <Calendar className="text-primary" size={20} />
+                            <Calendar className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-lg font-bold text-foreground">
                                 {t('appointments.projectSelector.pageTitle')}
                             </h1>
@@ -126,7 +128,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                         >
                             <Search size={20} />
                         </button>
-                        {onBack && <HeaderBackButton onClick={onBack} />}
+                        <HeaderBackButton onClick={handleBack} />
                     </div>
                 </header>
 
@@ -155,7 +157,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                 </div>
                                 <button
                                     onClick={() => setIsOnboardingOpen(true)}
-                                    className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30"
+                                    className="quimera-guide-cta flex items-center gap-2 px-5 py-3 rounded-xl font-medium"
                                 >
                                     <Sparkles size={18} />
                                     {t('dashboard.newProject', 'Nuevo Proyecto')}
@@ -164,39 +166,34 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
 
                             {/* Stats Bar */}
                             <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-primary/30 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/20">
-                                            <Layers className="text-primary" size={18} />
+                                {[
+                                    { id: 'total', icon: Layers, value: userProjects.length, label: t('dashboard.totalProjects', 'Total') },
+                                    { id: 'published', icon: Globe, value: publishedCount, label: t('dashboard.published', 'Publicados') },
+                                    { id: 'draft', icon: FileEdit, value: draftCount, label: t('dashboard.draft', 'Borradores') },
+                                ].map((card) => {
+                                    const Icon = card.icon;
+
+                                    return (
+                                        <div
+                                            key={card.id}
+                                            className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-3 sm:p-4 hover:border-q-border transition-all duration-300"
+                                        >
+                                            <div
+                                                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 sm:w-32 sm:h-32 rounded-full blur-2xl group-hover:scale-110 transition-all duration-500"
+                                                aria-hidden="true"
+                                            />
+                                            <div className="relative z-10">
+                                                <div className="mb-1 md:mb-2">
+                                                    <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                                </div>
+                                                <div className="text-xl md:text-3xl font-extrabold text-foreground">{card.value}</div>
+                                                <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
+                                                    {card.label}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-xl sm:text-2xl font-bold text-foreground">{userProjects.length}</p>
-                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.totalProjects', 'Total')}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-green-500/30 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/20">
-                                            <Globe className="text-green-500" size={18} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xl sm:text-2xl font-bold text-foreground">{publishedCount}</p>
-                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.published', 'Publicados')}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-slate-500/30 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="p-1.5 sm:p-2 rounded-lg bg-slate-500/20">
-                                            <FileEdit className="text-slate-400" size={18} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xl sm:text-2xl font-bold text-foreground">{draftCount}</p>
-                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.draft', 'Borradores')}</p>
-                                        </div>
-                                    </div>
-                                </div>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -205,14 +202,14 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                                 <button
                                     onClick={() => setFilterStatus('all')}
-                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'all' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
+                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
                                 >
                                     {t('common.all', 'Todos')} ({userProjects.length})
                                 </button>
                                 <span className="text-q-text-muted/60 text-xs">·</span>
                                 <button
                                     onClick={() => setFilterStatus('Published')}
-                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'Published' ? 'text-green-600 dark:text-green-400' : 'text-q-text-muted hover:text-foreground'}`}
+                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'Published' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
                                 >
                                     {t('dashboard.published', 'Publicados')} ({publishedCount})
                                 </button>
@@ -237,14 +234,14 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                 <div className="hidden sm:flex items-center gap-0.5 border-l border-q-border/50 pl-2">
                                     <button
                                         onClick={() => setViewMode('grid')}
-                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
+                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'grid' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
                                         aria-label={t('common.gridView', 'Vista cuadrícula')}
                                     >
                                         <LayoutGrid size={16} />
                                     </button>
                                     <button
                                         onClick={() => setViewMode('list')}
-                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
+                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'list' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
                                         aria-label={t('common.listView', 'Vista lista')}
                                     >
                                         <List size={16} />
@@ -266,14 +263,12 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                 <QuimeraLoader size="md" />
                             </div>
                         ) : filteredProjects.length === 0 ? (
-                            <div className="text-center py-16">
-                                <div className="p-4 bg-muted/30 rounded-full w-fit mx-auto mb-6">
-                                    {searchQuery ? (
-                                        <Search className="text-q-text-muted" size={48} />
-                                    ) : (
-                                        <Calendar className="text-q-text-muted" size={48} />
-                                    )}
-                                </div>
+                            <div className="text-center py-16 quimera-dashboard-panel-card">
+                                {searchQuery ? (
+                                    <Search className="mx-auto mb-6 text-q-text-muted" size={48} strokeWidth={1.5} />
+                                ) : (
+                                    <Calendar className="mx-auto mb-6 text-q-text-muted" size={48} strokeWidth={1.5} />
+                                )}
                                 <h3 className="text-xl font-bold text-foreground mb-2">
                                     {searchQuery
                                         ? t('appointments.projectSelector.noProjectsFound')
@@ -287,7 +282,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                 {!searchQuery && (
                                     <button
                                         onClick={() => setIsOnboardingOpen(true)}
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-colors"
+                                        className="quimera-guide-cta inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium"
                                     >
                                         <Plus size={20} />
                                         {t('dashboard.newProject', 'Nuevo Proyecto')}
@@ -338,8 +333,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
     return (
         <button
             onClick={onSelect}
-            className="group relative bg-q-surface/50 hover:bg-q-surface border border-q-border hover:border-primary/50 rounded-2xl overflow-hidden transition-all duration-300 text-left hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 w-full"
+            className="group relative bg-q-surface/80 backdrop-blur-xl hover:bg-q-surface border border-q-border/60 rounded-2xl overflow-hidden transition-all duration-300 text-left hover:border-q-border hover:-translate-y-1 w-full"
         >
+            <div
+                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl group-hover:scale-110 transition-all duration-500 z-0 pointer-events-none"
+                aria-hidden="true"
+            />
             {/* Thumbnail */}
             <div className="aspect-video relative overflow-hidden bg-muted">
                 {thumbnailUrl ? (
@@ -364,7 +363,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
 
                 {/* Hover Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-                    <span className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                    <span className="quimera-guide-cta flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                         <Calendar size={16} />
                         {t('appointments.projectSelector.viewAppointments')}
                     </span>
@@ -373,7 +372,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
 
             {/* Content */}
             <div className="p-4">
-                <h3 className="font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors">
+                <h3 className="font-semibold text-foreground mb-1 truncate group-hover:text-[var(--quimera-status-accent-from)] transition-colors">
                     {project.name}
                 </h3>
                 <div className="flex items-center gap-2 text-xs text-q-text-muted">
@@ -399,8 +398,12 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
     return (
         <button
             onClick={onSelect}
-            className="w-full flex items-center gap-4 p-4 bg-q-surface/50 hover:bg-q-surface border border-q-border hover:border-primary/50 rounded-xl transition-all text-left group"
+            className="w-full flex items-center gap-4 p-4 bg-q-surface/80 backdrop-blur-xl hover:bg-q-surface border border-q-border/60 hover:border-q-border rounded-2xl transition-all duration-300 text-left group relative overflow-hidden"
         >
+            <div
+                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl group-hover:scale-110 transition-all duration-500 pointer-events-none"
+                aria-hidden="true"
+            />
             {/* Thumbnail */}
             <div className="w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                 {thumbnailUrl ? (
@@ -416,11 +419,11 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                <h3 className="font-semibold text-foreground truncate group-hover:text-[var(--quimera-status-accent-from)] transition-colors">
                     {project.name}
                 </h3>
                 <div className="flex items-center gap-3 sm:gap-4 text-xs text-q-text-muted mt-1">
-                    <span className={`flex items-center gap-1 ${project.status === 'Published' ? 'text-green-500' : ''
+                    <span className={`flex items-center gap-1 ${project.status === 'Published' ? 'quimera-status-card-accent-text' : ''
                         }`}>
                         {project.status === 'Published' ? <Globe size={12} /> : <FileEdit size={12} />}
                         <span className="hidden sm:inline">
@@ -436,7 +439,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
             </div>
 
             {/* Action */}
-            <div className="flex items-center gap-2 text-q-text-muted group-hover:text-primary transition-colors">
+            <div className="flex items-center gap-2 quimera-status-card-link transition-colors">
                 <span className="text-sm font-medium hidden md:block">
                     {t('appointments.projectSelector.viewAppointments')}
                 </span>

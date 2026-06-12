@@ -731,7 +731,7 @@ Text to format:
 
             <div className="flex flex-col flex-1 min-w-0">
                 {/* ── CMS-style Header (merged, no sub-header) ── */}
-                <header className="h-12 px-3 lg:px-4 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
+ <header className="quimera-dashboard-header-bar h-12 px-3 lg:px-4 flex items-center z-20 sticky top-0">
                     {/* Left Section - Icon */}
                     <div className="flex items-center gap-2">
                         <button
@@ -740,7 +740,7 @@ Text to format:
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <Sparkles className="text-primary w-5 h-5 hidden md:block" />
+                        <Sparkles className="w-5 h-5 quimera-dashboard-header-icon strokeWidth={2} hidden md:block" />
                         <span className="text-sm font-bold text-foreground hidden md:inline">
                             {isEditing
                                 ? t('superadmin.news.editTitle', 'Editar Noticia')

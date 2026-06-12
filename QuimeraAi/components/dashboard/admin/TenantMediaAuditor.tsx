@@ -68,9 +68,9 @@ export default function TenantMediaAuditor() {
 
     return (
         <div className="flex-1 flex flex-col h-full bg-q-bg overflow-hidden relative">
-            <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-10 flex-shrink-0">
+ <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center justify-between z-10 flex-shrink-0">
                 <div className="flex items-center gap-2">
-                    <User className="text-q-accent w-5 h-5" />
+                    <User className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                     <h2 className="font-semibold text-q-text">
                         {t('superadmin.tenantMedia.title', 'Archivos de Usuarios')}
                     </h2>

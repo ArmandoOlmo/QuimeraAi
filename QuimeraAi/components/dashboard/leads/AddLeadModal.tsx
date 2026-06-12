@@ -175,9 +175,7 @@ const IndustryFieldsStep: React.FC<IndustryFieldsStepProps> = ({ fields, dynamic
     return (
         <div className="space-y-6 animate-fade-in-up">
             <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 bg-primary/10 rounded-lg">
-                    <ClipboardList size={14} className="text-primary" />
-                </div>
+                <ClipboardList size={14} className="quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                 <p className="text-xs text-q-text-muted font-medium">
                     {t('leads.crmSettings.customFields')}
                 </p>

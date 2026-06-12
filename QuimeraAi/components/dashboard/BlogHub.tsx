@@ -13,6 +13,7 @@ import { useUI } from '../../contexts/core/UIContext';
 import { AppArticle, AppArticleCategory } from '../../types/appContent';
 import DashboardSidebar from './DashboardSidebar';
 import HeaderBackButton from '../ui/HeaderBackButton';
+import { SettingsStatCard } from './settings/SettingsStatCard';
 import {
   Menu,
   Search,
@@ -153,6 +154,13 @@ const BlogHub: React.FC = () => {
     return publishedArticles.find((a) => a.featured) || null;
   }, [publishedArticles]);
 
+  const featuredCount = useMemo(
+    () => publishedArticles.filter((a) => a.featured).length,
+    [publishedArticles]
+  );
+
+  const isFiltering = searchQuery.length > 0 || categoryFilter !== 'all';
+
   // Available categories
   const availableCategories = useMemo(() => {
     const cats = new Set(publishedArticles.map((a) => a.category));
@@ -187,7 +195,7 @@ const BlogHub: React.FC = () => {
     const rawHtml = marked.parse(selectedArticle.content) as string;
     const processedHtml = rawHtml.replace(
       /<a href="(.*?)".*?>(.*?)<\/a>/g,
-      '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-primary hover:opacity-80 font-medium underline underline-offset-4 decoration-primary/30 hover:decoration-primary transition-colors">$2</a>'
+      '<a href="$1" target="_blank" rel="noopener noreferrer" class="quimera-status-card-link hover:opacity-80 font-medium underline underline-offset-4 transition-colors">$2</a>'
     );
     return processedHtml;
   }, [selectedArticle?.content]);
@@ -205,7 +213,7 @@ const BlogHub: React.FC = () => {
 
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
-          <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
+          <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center z-20 sticky top-0">
             <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -242,7 +250,7 @@ const BlogHub: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                 </>
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/10 via-secondary/20 to-primary/5 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-[color-mix(in_srgb,var(--quimera-status-accent-from)_10%,transparent)] via-secondary/20 to-transparent flex items-center justify-center">
                   <Newspaper className="w-16 h-16 text-q-text-muted/20" />
                 </div>
               )}
@@ -276,7 +284,7 @@ const BlogHub: React.FC = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-q-border mb-10">
                 {selectedArticle.showAuthor !== false && (
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary/50 to-primary/20 p-[2px]">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[var(--quimera-status-accent-from)]/50 to-[var(--quimera-status-accent-from)]/20 p-[2px]">
                       <div className="w-full h-full bg-q-bg rounded-full overflow-hidden flex items-center justify-center">
                         {selectedArticle.authorImage ? (
                           <img
@@ -311,11 +319,11 @@ const BlogHub: React.FC = () => {
                   prose-h3:text-xl prose-h3:mt-8
                   prose-p:leading-relaxed prose-p:text-q-text-muted
                   prose-li:text-q-text-muted
-                  prose-img:rounded-xl prose-img:shadow-lg
-                  prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-xl prose-blockquote:not-italic
+                  prose-img:rounded-xl
+                  prose-blockquote:border-[var(--quimera-status-accent-from)] prose-blockquote:bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_8%,transparent)] prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-xl prose-blockquote:not-italic
                   prose-hr:border-q-border
                   prose-strong:text-foreground
-                  prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:font-normal prose-code:before:content-none prose-code:after:content-none"
+                  prose-code:quimera-status-card-accent-text prose-code:bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_12%,transparent)] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:font-normal prose-code:before:content-none prose-code:after:content-none"
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(articleHtml) }}
               />
 
@@ -378,7 +386,7 @@ const BlogHub: React.FC = () => {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
+        <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center z-20 sticky top-0">
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
@@ -387,14 +395,11 @@ const BlogHub: React.FC = () => {
               <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              <Newspaper className="text-primary w-5 h-5" />
+              <Newspaper className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
               <h1 className="text-lg font-semibold text-foreground hidden sm:block">
                 Blog
               </h1>
             </div>
-            <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-              {publishedArticles.length} {publishedArticles.length === 1 ? t('blog.article', 'artículo') : t('blog.articles', 'artículos')}
-            </span>
           </div>
 
           {/* Search */}
@@ -426,7 +431,7 @@ const BlogHub: React.FC = () => {
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={`h-9 w-9 flex items-center justify-center rounded-lg transition-colors ${
-                  showFilters ? 'bg-primary/10 text-primary' : 'text-q-text-muted hover:text-foreground hover:bg-secondary'
+                  showFilters ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground hover:bg-secondary'
                 }`}
               >
                 <Search className="w-4 h-4" />
@@ -436,14 +441,14 @@ const BlogHub: React.FC = () => {
               onClick={() => setShowFilters(!showFilters)}
               className={`hidden md:flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                 showFilters || categoryFilter !== 'all'
-                  ? 'bg-primary/10 text-primary border border-primary/20'
+                  ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text border border-[color-mix(in_srgb,var(--quimera-status-accent-from)_30%,transparent)]'
                   : 'bg-secondary/50 hover:bg-secondary text-q-text-muted hover:text-foreground'
               }`}
             >
               <Filter size={14} />
               {t('common.filters', 'Filtros')}
               {categoryFilter !== 'all' && (
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--quimera-status-accent-from)]" />
               )}
             </button>
             <HeaderBackButton onClick={() => setView('dashboard')} />
@@ -452,7 +457,7 @@ const BlogHub: React.FC = () => {
 
         {/* Filters panel */}
         {showFilters && (
-          <div className="px-4 sm:px-6 py-3 border-b border-q-border bg-secondary/20 animate-slide-down">
+          <div className="px-4 sm:px-6 py-3 border-b border-q-border bg-q-surface/40 animate-slide-down">
             {/* Mobile search field */}
             <div className="md:hidden mb-3">
               <div className="flex items-center gap-2 bg-q-bg rounded-lg px-3 py-2 border border-q-border">
@@ -479,7 +484,7 @@ const BlogHub: React.FC = () => {
                 onClick={() => setCategoryFilter('all')}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
                   categoryFilter === 'all'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text border border-[color-mix(in_srgb,var(--quimera-status-accent-from)_30%,transparent)]'
                     : 'bg-secondary/50 text-q-text-muted hover:text-foreground hover:bg-secondary border border-q-border'
                 }`}
               >
@@ -493,7 +498,7 @@ const BlogHub: React.FC = () => {
                     onClick={() => setCategoryFilter(cat === categoryFilter ? 'all' : cat)}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
                       categoryFilter === cat
-                        ? `${colors.bg} ${colors.text} border ${colors.border} shadow-sm`
+                        ? `${colors.bg} ${colors.text} border ${colors.border}`
                         : 'bg-secondary/50 text-q-text-muted hover:text-foreground hover:bg-secondary border border-q-border'
                     }`}
                   >
@@ -518,14 +523,12 @@ const BlogHub: React.FC = () => {
           <div className="max-w-6xl mx-auto space-y-8">
             {isLoading ? (
               <div className="flex justify-center items-center h-64">
-                <Loader2 className="animate-spin w-10 h-10 text-primary" />
+                <Loader2 className="animate-spin w-10 h-10 quimera-status-card-accent-text" />
               </div>
             ) : publishedArticles.length === 0 ? (
               /* Empty state */
-              <div className="text-center py-24">
-                <div className="w-20 h-20 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Newspaper size={36} className="text-q-text-muted/40" />
-                </div>
+              <div className="text-center py-24 quimera-dashboard-panel-card border-dashed p-8">
+                <Newspaper size={48} className="text-q-text-muted mx-auto mb-6" strokeWidth={1.5} />
                 <h3 className="text-2xl font-bold text-foreground mb-3">
                   {t('blog.noArticles', 'No hay artículos publicados')}
                 </h3>
@@ -535,10 +538,8 @@ const BlogHub: React.FC = () => {
               </div>
             ) : filteredArticles.length === 0 ? (
               /* No results state */
-              <div className="text-center py-24">
-                <div className="w-20 h-20 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Search size={36} className="text-q-text-muted/40" />
-                </div>
+              <div className="text-center py-24 quimera-dashboard-panel-card border-dashed p-8">
+                <Search size={48} className="text-q-text-muted mx-auto mb-6" strokeWidth={1.5} />
                 <h3 className="text-xl font-bold text-foreground mb-3">
                   {t('blog.noResults', 'No se encontraron artículos')}
                 </h3>
@@ -550,13 +551,37 @@ const BlogHub: React.FC = () => {
                     setSearchQuery('');
                     setCategoryFilter('all');
                   }}
-                  className="text-primary font-semibold hover:underline"
+                  className="quimera-status-card-link font-semibold hover:underline"
                 >
                   {t('common.clearAll', 'Limpiar todo')}
                 </button>
               </div>
             ) : (
               <>
+                {/* Stats */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <SettingsStatCard
+                    label={t('blog.articles', 'artículos')}
+                    value={publishedArticles.length}
+                    icon={Newspaper}
+                  />
+                  <SettingsStatCard
+                    label={t('blog.featured', 'Destacados')}
+                    value={featuredCount}
+                    icon={Star}
+                  />
+                  <SettingsStatCard
+                    label={t('common.categories', 'Categorías')}
+                    value={availableCategories.length}
+                    icon={Tag}
+                  />
+                  <SettingsStatCard
+                    label={isFiltering ? t('blog.results', 'Resultados') : t('blog.showing', 'Mostrando')}
+                    value={filteredArticles.length}
+                    icon={isFiltering ? Search : FileText}
+                  />
+                </div>
+
                 {/* Featured Article Hero */}
                 {featuredArticle && !searchQuery && categoryFilter === 'all' && (
                   <FeaturedArticleHero
@@ -614,9 +639,13 @@ const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang
   return (
     <div
       onClick={onClick}
-      className="group relative cursor-pointer rounded-2xl overflow-hidden border border-q-border hover:border-primary/30 transition-all duration-500 hover:shadow-lg hover:shadow-primary/5"
+      className="group relative cursor-pointer overflow-hidden rounded-xl sm:rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl hover:border-q-border transition-all duration-300"
     >
-      <div className="grid lg:grid-cols-2 gap-0">
+      <div
+        className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-12 -right-12 w-40 h-40 sm:w-48 sm:h-48 rounded-full blur-2xl group-hover:scale-110 transition-all duration-500 pointer-events-none"
+        aria-hidden="true"
+      />
+      <div className="relative z-10 grid lg:grid-cols-2 gap-0">
         {/* Image */}
         <div className="relative h-56 sm:h-64 lg:h-80 overflow-hidden bg-secondary/30">
           {article.featuredImage ? (
@@ -626,21 +655,21 @@ const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/10 via-secondary/20 to-primary/5 flex items-center justify-center">
+            <div className="w-full h-full bg-gradient-to-br from-[color-mix(in_srgb,var(--quimera-status-accent-from)_10%,transparent)] via-secondary/20 to-transparent flex items-center justify-center">
               <Newspaper className="w-20 h-20 text-q-text-muted/15" />
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-background/80" />
 
           {/* Featured badge */}
-          <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest rounded-full shadow-sm">
+          <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 quimera-guide-cta text-[10px] font-bold uppercase tracking-widest rounded-full">
             <Star size={12} className="fill-current" />
             {t('blog.featured', 'Destacado')}
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 sm:p-8 flex flex-col justify-center bg-q-surface">
+        <div className="p-6 sm:p-8 flex flex-col justify-center bg-q-surface/80">
           <div className="flex items-center gap-3 mb-4">
             <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${catColors.bg} ${catColors.text} border ${catColors.border}`}>
               {t(`blog.categories.${article.category}`, article.category)}
@@ -653,7 +682,7 @@ const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang
             )}
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 leading-tight group-hover:text-primary transition-colors duration-300">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 leading-tight group-hover:text-[var(--quimera-status-accent-from)] transition-colors duration-300">
             {article.title}
           </h2>
 
@@ -682,7 +711,7 @@ const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang
               </div>
             )}
 
-            <div className="flex items-center gap-2 text-sm font-semibold text-primary group-hover:gap-3 transition-all duration-300">
+            <div className="flex items-center gap-2 text-sm font-semibold quimera-status-card-link group-hover:gap-3 transition-all duration-300">
               {t('blog.readArticle', 'Leer artículo')}
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </div>
@@ -709,10 +738,14 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, lang, compact = fals
   return (
     <article
       onClick={onClick}
-      className="group relative flex flex-col h-full bg-q-surface border border-q-border hover:border-primary/20 rounded-xl overflow-hidden hover:-translate-y-0.5 transition-all duration-300 hover:shadow-md hover:shadow-primary/5 cursor-pointer"
+      className="group relative flex flex-col h-full overflow-hidden rounded-xl sm:rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl hover:border-q-border transition-all duration-300 cursor-pointer"
     >
+      <div
+        className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 sm:w-32 sm:h-32 rounded-full blur-2xl group-hover:scale-110 transition-all duration-500 pointer-events-none"
+        aria-hidden="true"
+      />
       {/* Image */}
-      <div className={`relative overflow-hidden bg-secondary/30 ${compact ? 'h-32' : 'h-40 sm:h-44'}`}>
+      <div className={`relative z-10 overflow-hidden bg-secondary/30 ${compact ? 'h-32' : 'h-40 sm:h-44'}`}>
         {article.featuredImage ? (
           <img
             src={article.featuredImage}
@@ -736,13 +769,13 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, lang, compact = fals
         {/* Featured tag */}
         {article.featured && (
           <div className="absolute top-3 right-3">
-            <Star size={14} className="text-primary fill-primary" />
+            <Star size={14} className="quimera-status-card-accent-text fill-[var(--quimera-status-accent-from)]" />
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className={`flex-1 flex flex-col ${compact ? 'p-3' : 'p-4 sm:p-5'}`}>
+      <div className={`relative z-10 flex-1 flex flex-col ${compact ? 'p-3' : 'p-4 sm:p-5'}`}>
         <div className="flex items-center gap-3 text-xs text-q-text-muted mb-2">
           {article.showDate !== false && (
             <span className="flex items-center gap-1">
@@ -761,7 +794,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, lang, compact = fals
           )}
         </div>
 
-        <h3 className={`font-bold text-foreground mb-2 leading-snug group-hover:text-primary transition-colors duration-200 ${compact ? 'text-sm line-clamp-2' : 'text-base sm:text-lg line-clamp-2'}`}>
+        <h3 className={`font-bold text-foreground mb-2 leading-snug group-hover:text-[var(--quimera-status-accent-from)] transition-colors duration-200 ${compact ? 'text-sm line-clamp-2' : 'text-base sm:text-lg line-clamp-2'}`}>
           {article.title}
         </h3>
 
@@ -787,7 +820,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, lang, compact = fals
             <div />
           )}
 
-          <div className="flex items-center gap-1 text-xs font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className="flex items-center gap-1 text-xs font-semibold quimera-status-card-link opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             {t('blog.read', 'Leer')}
             <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
           </div>

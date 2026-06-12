@@ -141,8 +141,8 @@ const AnalyticsView: React.FC = () => {
                         <button
                             key={range}
                             onClick={() => setDateRange(range)}
-                            className={`px-3 py-1.5 rounded-md text-sm transition-colors ${dateRange === range
-                                    ? 'bg-primary text-primary-foreground'
+                            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${dateRange === range
+                                    ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
                                     : 'text-q-text-muted hover:text-foreground'
                                 }`}
                         >
@@ -162,34 +162,29 @@ const AnalyticsView: React.FC = () => {
                     value={formatCurrency(comparison.currentRevenue)}
                     change={comparison.revenueChange}
                     icon={DollarSign}
-                    color="green"
                 />
                 <MetricCard
                     title={t('ecommerce.orders', 'Pedidos')}
                     value={comparison.currentOrders.toString()}
                     change={comparison.ordersChange}
                     icon={ShoppingCart}
-                    color="blue"
                 />
                 <MetricCard
                     title={t('ecommerce.customers', 'Clientes')}
                     value={totalCustomers.toString()}
                     icon={Users}
-                    color="purple"
                 />
                 <MetricCard
                     title={t('ecommerce.avgOrderValue', 'Ticket Promedio')}
                     value={formatCurrency(averageOrderValue)}
                     icon={TrendingUp}
-                    color="primary"
-                    themeColor={theme.primary}
                 />
             </div>
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Revenue Chart */}
-                <div className="bg-q-surface/50 rounded-xl p-6 border border-q-border">
+                <div className="quimera-dashboard-panel-card group p-6">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                         {t('ecommerce.revenueOverTime', 'Ingresos en el Tiempo')}
                     </h3>
@@ -234,7 +229,7 @@ const AnalyticsView: React.FC = () => {
                 </div>
 
                 {/* Orders by Status */}
-                <div className="bg-q-surface/50 rounded-xl p-6 border border-q-border">
+                <div className="quimera-dashboard-panel-card group p-6">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                         {t('ecommerce.ordersByStatus', 'Pedidos por Estado')}
                     </h3>
@@ -277,7 +272,7 @@ const AnalyticsView: React.FC = () => {
             {/* Top Products & Customers */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Top Products */}
-                <div className="bg-q-surface/50 rounded-xl p-6 border border-q-border">
+                <div className="quimera-dashboard-panel-card group p-6">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                         {t('ecommerce.topProducts', 'Productos Más Vendidos')}
                     </h3>
@@ -306,7 +301,7 @@ const AnalyticsView: React.FC = () => {
                 </div>
 
                 {/* Top Customers */}
-                <div className="bg-q-surface/50 rounded-xl p-6 border border-q-border">
+                <div className="quimera-dashboard-panel-card group p-6">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                         {t('ecommerce.topCustomers', 'Mejores Clientes')}
                     </h3>
@@ -377,37 +372,32 @@ interface MetricCardProps {
     value: string;
     change?: number;
     icon: React.ElementType;
-    color: 'green' | 'blue' | 'purple' | 'primary';
-    themeColor?: string;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon: Icon, color, themeColor }) => {
-    const colorClasses: Record<string, string> = {
-        green: 'bg-green-500/20 text-green-400',
-        blue: 'bg-blue-500/20 text-blue-400',
-        purple: 'bg-purple-500/20 text-purple-400',
-        primary: 'bg-primary/20 text-primary',
-    };
-
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon: Icon }) => {
     return (
-        <div className="bg-q-surface/50 rounded-xl p-6 border border-q-border">
-            <div className="flex items-start justify-between">
-                <div>
-                    <p className="text-q-text-muted text-sm">{title}</p>
-                    <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
-                    {change !== undefined && (
-                        <div
-                            className={`flex items-center gap-1 mt-2 text-sm ${change >= 0 ? 'text-green-400' : 'text-red-400'
-                                }`}
-                        >
-                            {change >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
-                            {Math.abs(change).toFixed(1)}% vs período anterior
-                        </div>
-                    )}
+        <div className="group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60
+            bg-q-surface/80 backdrop-blur-xl p-2.5 md:p-4 hover:border-q-border transition-all duration-300">
+            <div
+                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 sm:w-32 sm:h-32 rounded-full blur-2xl
+                    group-hover:scale-110 transition-all duration-500"
+                aria-hidden="true"
+            />
+            <div className="relative z-10">
+                <div className="mb-1 md:mb-2">
+                    <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                 </div>
-                <div className={`p-3 rounded-lg ${colorClasses[color] || colorClasses.primary}`}>
-                    <Icon size={24} />
-                </div>
+                <div className="text-xl md:text-3xl font-extrabold text-foreground">{value}</div>
+                <p className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{title}</p>
+                {change !== undefined && (
+                    <div
+                        className={`flex items-center gap-1 mt-2 text-sm ${change >= 0 ? 'text-green-400' : 'text-red-400'
+                            }`}
+                    >
+                        {change >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+                        {Math.abs(change).toFixed(1)}% vs período anterior
+                    </div>
+                )}
             </div>
         </div>
     );

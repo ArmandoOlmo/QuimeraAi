@@ -13,92 +13,33 @@ import {
     DollarSign,
     HardDrive,
     Sparkles,
-    TrendingUp,
-    TrendingDown,
     Loader2,
 } from 'lucide-react';
-
-
-interface MetricCardProps {
-    title: string;
-    value: string | number;
-    subtitle?: string;
-    icon: React.ReactNode;
-    trend?: {
-        value: number;
-        label: string;
-    };
-    color: 'blue' | 'green' | 'purple' | 'orange' | 'cyan' | 'pink' | 'emerald';
-}
-
-function MetricCard({ title, value, subtitle, icon, trend, color }: MetricCardProps) {
-    const colorClasses = {
-        blue: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-        green: 'bg-green-500/20 text-green-400 border-green-500/30',
-        purple: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-        orange: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-        cyan: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-        pink: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
-        emerald: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    };
-
-    const colorClass = colorClasses[color];
-
-    return (
-        <div className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-6 hover:shadow-lg transition-shadow flex flex-col justify-between h-[100px] sm:h-auto sm:aspect-auto">
-            {/* Top row: Icon and Trend */}
-            <div className="flex items-center justify-between mb-1 sm:mb-4">
-                <div className={`flex items-center justify-center h-8 w-8 sm:h-12 sm:w-12 rounded-[10px] sm:rounded-xl border shrink-0 [&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-6 sm:[&>svg]:h-6 ${colorClass}`}>
-                    {icon}
-                </div>
-                {trend && (
-                    <div className="flex items-center gap-0.5 sm:gap-1 bg-q-bg/50 px-1.5 py-0.5 rounded-full border border-q-border/50">
-                        {trend.value >= 0 ? (
-                            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
-                        ) : (
-                            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
-                        )}
-                        <span className={`text-[10px] sm:text-sm font-bold ${trend.value >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                            {trend.value >= 0 ? '+' : ''}{trend.value}%
-                        </span>
-                    </div>
-                )}
-            </div>
-
-            {/* Bottom row: Value and Title */}
-            <div className="flex flex-col justify-end">
-                <div className="flex items-baseline gap-1.5">
-                    <p className="text-xl sm:text-3xl font-bold text-foreground leading-none tracking-tight">
-                        {value}
-                    </p>
-                    <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
-                        {title}
-                    </p>
-                </div>
-                {subtitle && (
-                    <p className="text-[10px] sm:text-sm text-q-text-muted/70 mt-1 truncate hidden sm:block">
-                        {subtitle}
-                    </p>
-                )}
-            </div>
-        </div>
-    );
-}
+import { SettingsStatCard } from '../settings/SettingsStatCard';
+import { ClientListTable } from './ClientListTable';
+import { ClientActivityFeed } from './ClientActivityFeed';
+import { ResourceAlertsPanel } from './ResourceAlertsPanel';
+import { UpcomingRenewalsPanel } from './UpcomingRenewalsPanel';
 
 export function AgencyOverview() {
     const { t } = useTranslation();
-    const { aggregatedMetrics: metrics, subClients, loadingClients } = useAgency();
+    const {
+        aggregatedMetrics: metrics,
+        subClients,
+        loadingClients,
+        resourceAlerts,
+        upcomingRenewals,
+        recentActivity,
+    } = useAgency();
 
-    // Loading state
     if (loadingClients) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <Loader2 className="w-8 h-8 animate-spin quimera-status-card-accent-text" />
             </div>
         );
     }
 
-    // Default values if metrics are not available
     const safeMetrics = metrics || {
         mrr: 0,
         activeSubClients: 0,
@@ -111,6 +52,7 @@ export function AgencyOverview() {
     };
 
     const totalClients = subClients?.length || 0;
+
     const formatCurrency = (amount: number): string => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
@@ -132,81 +74,67 @@ export function AgencyOverview() {
     };
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            {/* MRR */}
-            <MetricCard
-                title={t('dashboard.agency.overviewPage.mrr')}
-                value={formatCurrency(safeMetrics.mrr)}
-                subtitle={t('dashboard.agency.overviewPage.activeClients', { count: safeMetrics.activeSubClients })}
-                icon={<DollarSign className="h-6 w-6" />}
-                color="emerald"
-            />
-
-            {/* Total Clients */}
-            <MetricCard
-                title={t('dashboard.agency.overviewPage.totalClients')}
-                value={totalClients}
-                subtitle={t('dashboard.agency.overviewPage.active', { count: safeMetrics.activeSubClients })}
-                icon={<Users className="h-6 w-6" />}
-                color="blue"
-            />
-
-            {/* Total Projects */}
-            <MetricCard
-                title={t('dashboard.agency.overviewPage.totalProjects')}
-                value={formatNumber(safeMetrics.totalProjects)}
-                subtitle={t('dashboard.agency.overviewPage.acrossClients', { count: totalClients })}
-                icon={<FolderKanban className="h-6 w-6" />}
-                color="purple"
-            />
-
-            {/* Total Leads */}
-            <MetricCard
-                title={t('dashboard.agency.overviewPage.totalLeads')}
-                value={formatNumber(safeMetrics.totalLeads)}
-                subtitle={t('dashboard.agency.overviewPage.acrossClients', { count: totalClients })}
-                icon={<Contact className="h-6 w-6" />}
-                color="orange"
-            />
-
-            {/* Total Users */}
-            <MetricCard
-                title={t('dashboard.agency.overviewPage.totalUsers')}
-                value={formatNumber(safeMetrics.totalUsers)}
-                subtitle={t('dashboard.agency.overviewPage.teamMembers')}
-                icon={<Users className="h-6 w-6" />}
-                color="cyan"
-            />
-
-            {/* Storage Used */}
-            <MetricCard
-                title={t('dashboard.agency.overviewPage.storageUsed')}
-                value={formatStorage(safeMetrics.storageUsedGB)}
-                subtitle={t('dashboard.agency.overviewPage.acrossClients', { count: totalClients })}
-                icon={<HardDrive className="h-6 w-6" />}
-                color="pink"
-            />
-
-            {/* AI Credits Used */}
-            <MetricCard
-                title={t('dashboard.agency.overviewPage.aiCreditsUsed')}
-                value={formatNumber(safeMetrics.aiCreditsUsed)}
-                subtitle={t('dashboard.agency.overviewPage.lastMonth')}
-                icon={<Sparkles className="h-6 w-6" />}
-                color="purple"
-            />
-
-            {/* Revenue (if available) */}
-            {safeMetrics.totalRevenue > 0 && (
-                <MetricCard
-                    title={t('dashboard.agency.overviewPage.revenueGenerated')}
-                    value={formatCurrency(safeMetrics.totalRevenue)}
-                    subtitle={t('dashboard.agency.overviewPage.clientEcommerce')}
-                    icon={<DollarSign className="h-6 w-6" />}
-                    color="green"
+        <div className="space-y-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <SettingsStatCard
+                    label={t('dashboard.agency.overviewPage.mrr')}
+                    value={formatCurrency(safeMetrics.mrr)}
+                    icon={DollarSign}
+                    valueClass="text-emerald-500"
                 />
+                <SettingsStatCard
+                    label={t('dashboard.agency.overviewPage.totalClients')}
+                    value={totalClients}
+                    icon={Users}
+                />
+                <SettingsStatCard
+                    label={t('dashboard.agency.overviewPage.totalProjects')}
+                    value={formatNumber(safeMetrics.totalProjects)}
+                    icon={FolderKanban}
+                />
+                <SettingsStatCard
+                    label={t('dashboard.agency.overviewPage.totalLeads')}
+                    value={formatNumber(safeMetrics.totalLeads)}
+                    icon={Contact}
+                />
+                <SettingsStatCard
+                    label={t('dashboard.agency.overviewPage.totalUsers')}
+                    value={formatNumber(safeMetrics.totalUsers)}
+                    icon={Users}
+                />
+                <SettingsStatCard
+                    label={t('dashboard.agency.overviewPage.storageUsed')}
+                    value={formatStorage(safeMetrics.storageUsedGB)}
+                    icon={HardDrive}
+                />
+                <SettingsStatCard
+                    label={t('dashboard.agency.overviewPage.aiCreditsUsed')}
+                    value={formatNumber(safeMetrics.aiCreditsUsed)}
+                    icon={Sparkles}
+                />
+                {safeMetrics.totalRevenue > 0 && (
+                    <SettingsStatCard
+                        label={t('dashboard.agency.overviewPage.revenueGenerated')}
+                        value={formatCurrency(safeMetrics.totalRevenue)}
+                        icon={DollarSign}
+                        valueClass="text-emerald-500"
+                    />
+                )}
+            </div>
+
+            {(resourceAlerts.length > 0 || upcomingRenewals.length > 0) && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {resourceAlerts.length > 0 && (
+                        <ResourceAlertsPanel alerts={resourceAlerts} />
+                    )}
+                    {upcomingRenewals.length > 0 && (
+                        <UpcomingRenewalsPanel renewals={upcomingRenewals} />
+                    )}
+                </div>
             )}
+
+            <ClientListTable clients={subClients} />
+            <ClientActivityFeed activities={recentActivity} />
         </div>
     );
 }
-

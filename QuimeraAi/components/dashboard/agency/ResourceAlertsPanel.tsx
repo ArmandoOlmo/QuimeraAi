@@ -12,6 +12,7 @@ import {
 } from '../../../contexts/agency/AgencyContext';
 import { AlertTriangle, AlertCircle, ExternalLink } from 'lucide-react';
 import { useRouter } from '../../../hooks/useRouter';
+import { settingsPanelClass } from '../settings/SettingsStatCard';
 
 interface ResourceAlertsPanelProps {
     alerts: ResourceAlert[];
@@ -38,10 +39,13 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
 
     if (alerts.length === 0) {
         return (
-            <div className="bg-q-surface rounded-lg border border-q-border p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">
-                    Alertas de Recursos
-                </h3>
+            <div className={`${settingsPanelClass} p-6`}>
+                <div className="flex items-center gap-3 mb-4">
+                    <AlertCircle size={20} className="text-green-500 flex-shrink-0" strokeWidth={2} />
+                    <h3 className="text-lg font-semibold text-foreground">
+                        Alertas de Recursos
+                    </h3>
+                </div>
                 <div className="text-center py-8">
                     <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/20 mb-4">
                         <svg
@@ -70,11 +74,14 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
     }
 
     return (
-        <div className="bg-q-surface rounded-lg border border-q-border p-6">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-foreground">
-                    Alertas de Recursos
-                </h3>
+        <div className={`${settingsPanelClass} p-6`}>
+            <div className="flex items-center justify-between mb-4 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                    <AlertTriangle size={20} className="text-red-500 flex-shrink-0" strokeWidth={2} />
+                    <h3 className="text-lg font-semibold text-foreground">
+                        Alertas de Recursos
+                    </h3>
+                </div>
                 <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400">
                     {alerts.length}
                 </span>
@@ -85,7 +92,7 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
                     <button
                         key={alert.id}
                         onClick={() => handleAlertClick(alert)}
-                        className={`w-full text-left p-4 rounded-lg border transition-all hover:shadow-md ${getAlertColor(
+                        className={`w-full text-left p-4 rounded-lg border transition-all hover:border-q-border ${getAlertColor(
                             alert.severity
                         )}`}
                     >
@@ -121,7 +128,7 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
             {hasMore && (
                 <button
                     onClick={() => navigate('/dashboard/agency/alerts')}
-                    className="w-full mt-4 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                    className="w-full mt-4 text-sm quimera-status-card-link font-medium"
                 >
                     Ver todas las alertas ({alerts.length})
                 </button>

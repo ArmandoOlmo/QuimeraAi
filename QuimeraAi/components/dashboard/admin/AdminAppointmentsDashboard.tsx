@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../contexts/core/AuthContext';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import { Appointment, AppointmentStatus } from '../../../types';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 
@@ -222,12 +221,10 @@ const AdminAppointmentsDashboard: React.FC<AdminAppointmentsDashboardProps> = ({
     return (
         <>
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                <DashboardWaveRibbons className="absolute inset-x-0 top-14 h-64 z-0 pointer-events-none overflow-hidden" />
-
                 {/* Header */}
-                <header className="h-14 bg-q-bg/95 border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10 backdrop-blur-xl">
+                <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
-                        <Calendar className="w-5 h-5 text-primary" />
+                        <Calendar className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                         <h1 className="text-lg font-bold">{t('superadmin.platformAppointments', 'Citas de Plataforma')}</h1>
                         <span className="text-xs text-q-text-muted bg-secondary px-2 py-0.5 rounded-full">{appointments.length}</span>
                     </div>

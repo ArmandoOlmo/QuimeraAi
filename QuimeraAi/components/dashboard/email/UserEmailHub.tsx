@@ -494,7 +494,7 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
             {!showEmailEditor && (
                 <div className="hidden md:flex flex-col w-56 lg:w-64 border-r border-q-border bg-q-surface flex-shrink-0 overflow-hidden">
                     <div className="h-14 px-4 border-b border-q-border flex items-center gap-2 flex-shrink-0">
-                        <Mail size={20} className="text-q-accent" />
+                        <Mail size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
                         <h2 className="text-sm font-bold text-q-text truncate">
                             {t('email.hub.title')}
                         </h2>
@@ -528,10 +528,10 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Header */}
-                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+ <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text md:hidden transition-colors rounded-xl"><Menu className="w-5 h-5" /></button>
-                        <Mail className="text-q-accent w-5 h-5 hidden sm:block md:hidden lg:block" />
+                        <Mail className="w-5 h-5 quimera-dashboard-header-icon strokeWidth={2} hidden sm:block md:hidden lg:block" />
                         <h1 className="text-lg font-semibold text-q-text hidden sm:block">{t('email.hub.title')}</h1>
                         <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-semibold bg-purple-500/20 text-purple-400 rounded-full truncate max-w-[150px]">{projectName}</span>
                     </div>

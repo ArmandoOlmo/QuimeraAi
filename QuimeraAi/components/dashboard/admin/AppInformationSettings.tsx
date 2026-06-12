@@ -323,7 +323,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
         <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+ <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
@@ -334,7 +334,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                         </button>
                         <div className="flex flex-col">
                             <div className="flex items-center gap-2">
-                                <Globe className="text-q-accent w-5 h-5" />
+                                <Globe className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                                 <h1 className="text-lg font-semibold text-q-text">
                                     {t('superadmin.appInformation')}
                                 </h1>
@@ -379,7 +379,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                 <section className="space-y-6">
                                     <div className="bg-q-surface rounded-xl border border-q-border p-6">
                                         <div className="flex items-center gap-2 mb-4">
-                                            <Sparkles className="text-q-accent w-5 h-5" />
+                                            <Sparkles className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                                             <div>
                                                 <h2 className="text-xl font-semibold">{t('superadmin.appInfo.brandIdentity')}</h2>
                                                 <p className="text-sm text-q-text-secondary">
@@ -601,7 +601,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                 <aside className="space-y-6">
                                     <div className="bg-q-surface rounded-xl border border-q-border p-5">
                                         <div className="flex items-center gap-2 mb-4">
-                                            <CheckCircle className="text-q-accent w-5 h-5" />
+                                            <CheckCircle className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                                             <h3 className="text-lg font-semibold">{t('superadmin.appInfo.livePreview')}</h3>
                                         </div>
                                         <div className="space-y-3 text-sm">

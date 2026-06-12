@@ -233,7 +233,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
       <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+ <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
           <div className="flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
@@ -243,7 +243,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
               <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              <Globe className="text-q-accent w-5 h-5" />
+              <Globe className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
               <div>
                 <h1 className="text-lg font-semibold text-q-text">{t('superadmin.languageManagement')}</h1>
                 <p className="text-xs text-q-text-secondary hidden sm:block">{t('superadmin.configurePlatformLanguages')}</p>

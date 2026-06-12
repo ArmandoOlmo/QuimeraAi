@@ -97,7 +97,7 @@ const MediaGeneratorPanel: React.FC<MediaGeneratorPanelProps> = ({
     return (
         <div className={`flex flex-col h-full overflow-hidden bg-q-bg text-q-text ${className}`}>
             {!hideHeader && (
-                <header className="flex items-center justify-between border-b border-q-border/70 bg-q-bg/85 backdrop-blur-xl px-3 lg:px-5 py-2.5 lg:py-3 shrink-0 z-20 gap-3">
+                <header className="quimera-dashboard-header-bar flex items-center justify-between px-3 lg:px-5 py-2.5 lg:py-3 shrink-0 z-20 gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                         <span className="h-8 w-8 rounded-xl bg-primary/10 text-q-accent flex items-center justify-center shrink-0">
                             <Wand2 size={18} />

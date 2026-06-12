@@ -79,7 +79,7 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
             
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-surface/50 backdrop-blur-sm sticky top-0 z-40">
+ <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
@@ -89,7 +89,7 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                         </button>
                         {onBack && <HeaderBackButton onClick={onBack} />}
                         <div className="flex items-center gap-2">
-                            <Activity className="text-purple-500 w-5 h-5" />
+                            <Activity className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-lg font-semibold text-foreground">
                                 {t('superadmin.globalTrackingPixels', 'Píxeles de Tracking Global')}
                             </h1>

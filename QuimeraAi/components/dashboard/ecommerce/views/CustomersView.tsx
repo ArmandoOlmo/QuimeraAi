@@ -105,60 +105,42 @@ const CustomersView: React.FC = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-primary/20">
-                            <Users className="text-primary" size={20} />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-foreground">{customers.length}</p>
-                            <p className="text-sm text-q-text-muted">{t('ecommerce.totalCustomers', 'Total Clientes')}</p>
-                        </div>
-                    </div>
-                </div>
+                {[
+                    { icon: Users, value: customers.length, label: t('ecommerce.totalCustomers', 'Total Clientes') },
+                    { icon: DollarSign, value: `$${stats.totalSpent.toFixed(0)}`, label: t('ecommerce.totalSpent', 'Total Gastado') },
+                    { icon: ShoppingBag, value: stats.totalOrders, label: t('ecommerce.totalOrders', 'Total Pedidos') },
+                    { icon: Mail, value: stats.marketingSubscribed, label: t('ecommerce.subscribers', 'Suscritos') },
+                ].map((card) => {
+                    const Icon = card.icon;
 
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-500/20 rounded-lg">
-                            <DollarSign className="text-green-400" size={20} />
+                    return (
+                        <div
+                            key={card.label}
+                            className="group relative overflow-hidden rounded-xl border border-q-border/60
+                                bg-q-surface/80 backdrop-blur-xl p-4 hover:border-q-border transition-all duration-300"
+                        >
+                            <div
+                                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl
+                                    group-hover:scale-110 transition-all duration-500"
+                                aria-hidden="true"
+                            />
+                            <div className="relative z-10">
+                                <div className="mb-1 md:mb-2">
+                                    <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                </div>
+                                <div className="text-xl md:text-3xl font-extrabold text-foreground">{card.value}</div>
+                                <p className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{card.label}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-2xl font-bold text-foreground">${stats.totalSpent.toFixed(0)}</p>
-                            <p className="text-sm text-q-text-muted">{t('ecommerce.totalSpent', 'Total Gastado')}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-500/20 rounded-lg">
-                            <ShoppingBag className="text-purple-400" size={20} />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-foreground">{stats.totalOrders}</p>
-                            <p className="text-sm text-q-text-muted">{t('ecommerce.totalOrders', 'Total Pedidos')}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-500/20 rounded-lg">
-                            <Mail className="text-blue-400" size={20} />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-foreground">{stats.marketingSubscribed}</p>
-                            <p className="text-sm text-q-text-muted">{t('ecommerce.subscribers', 'Suscritos')}</p>
-                        </div>
-                    </div>
-                </div>
+                    );
+                })}
             </div>
 
             {/* Top Customers */}
             {topCustomers.length > 0 && (
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
-                    <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <Star className="text-yellow-400" size={20} />
+                <div className="quimera-dashboard-panel-card group p-4">
+                    <h3 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <Star className="w-4 h-4 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                         {t('ecommerce.topCustomers', 'Mejores Clientes')}
                     </h3>
                     <div className="flex gap-4 overflow-x-auto pb-2">

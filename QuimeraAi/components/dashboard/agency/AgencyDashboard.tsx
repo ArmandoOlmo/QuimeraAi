@@ -7,10 +7,6 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { AgencyOverview } from './AgencyOverview';
-import { ClientActivityFeed } from './ClientActivityFeed';
-import { ResourceAlertsPanel } from './ResourceAlertsPanel';
-import { ClientListTable } from './ClientListTable';
-import { UpcomingRenewalsPanel } from './UpcomingRenewalsPanel';
 import { Loader2 } from 'lucide-react';
 
 interface AgencyDashboardProps {
@@ -20,12 +16,7 @@ interface AgencyDashboardProps {
 export function AgencyDashboard({ className = '' }: AgencyDashboardProps) {
     const { t } = useTranslation();
     const {
-        subClients,
         loadingClients,
-        aggregatedMetrics,
-        resourceAlerts,
-        upcomingRenewals,
-        recentActivity,
         error,
         refreshMetrics,
     } = useAgency();
@@ -45,7 +36,7 @@ export function AgencyDashboard({ className = '' }: AgencyDashboardProps) {
         return (
             <div className="flex items-center justify-center h-screen">
                 <div className="text-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
+                    <Loader2 className="h-8 w-8 animate-spin quimera-status-card-accent-text mx-auto mb-4" />
                     <p className="text-gray-600 dark:text-gray-400">
                         {t('dashboard.agency.loading')}
                     </p>
@@ -92,7 +83,7 @@ export function AgencyDashboard({ className = '' }: AgencyDashboardProps) {
                 <button
                     onClick={handleRefresh}
                     disabled={refreshing}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="quimera-guide-cta flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <Loader2 className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
                     {refreshing ? t('dashboard.agency.refreshing') : t('dashboard.agency.refresh')}
@@ -100,29 +91,7 @@ export function AgencyDashboard({ className = '' }: AgencyDashboardProps) {
             </div>
 
             {/* Overview Cards */}
-            <AgencyOverview
-                metrics={aggregatedMetrics}
-                totalClients={subClients.length}
-            />
-
-            {/* Alerts and Renewals Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Resource Alerts */}
-                {resourceAlerts.length > 0 && (
-                    <ResourceAlertsPanel alerts={resourceAlerts} />
-                )}
-
-                {/* Upcoming Renewals */}
-                {upcomingRenewals.length > 0 && (
-                    <UpcomingRenewalsPanel renewals={upcomingRenewals} />
-                )}
-            </div>
-
-            {/* Clients Table */}
-            <ClientListTable clients={subClients} />
-
-            {/* Activity Feed */}
-            <ClientActivityFeed activities={recentActivity} />
+            <AgencyOverview />
         </div>
     );
 }

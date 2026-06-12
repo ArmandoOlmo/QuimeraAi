@@ -62,7 +62,7 @@ export function AgencyProjects() {
             {/* Header */}
             <div className="mb-6">
                 <div className="flex items-center gap-3 mb-1">
-                    <FolderOpen size={24} className="text-primary" />
+                    <FolderOpen className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                     <h2 className="text-2xl font-bold text-foreground">
                         {t('agency.projects', 'Proyectos')}
                     </h2>

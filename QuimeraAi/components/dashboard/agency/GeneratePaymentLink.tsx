@@ -145,9 +145,7 @@ export function GeneratePaymentLink({
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-q-border flex items-center justify-between sticky top-0 bg-q-surface rounded-t-xl z-10">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Link2 className="h-4.5 w-4.5 text-primary" />
-                        </div>
+                        <Link2 className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                         <div>
                             <h3 className="text-lg font-semibold text-foreground">
                                 Generar Link de Pago

@@ -116,14 +116,12 @@ Keep the response concise, professional, and under 500 words. Use bullet points 
     }
 
     return (
-        <div className="rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] overflow-hidden">
+        <div className="quimera-dashboard-panel-card group">
             {/* Header */}
-            <div className="p-5 border-b border-q-border/40 bg-gradient-to-r from-primary/10 via-transparent to-purple-500/10">
-                <div className="flex items-center justify-between">
+            <div className="p-5 border-b border-q-border/40">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-br from-primary/30 to-purple-500/30 rounded-xl">
-                            <Sparkles size={20} className="text-primary" />
-                        </div>
+                        <Sparkles size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
                         <div>
                             <h3 className="font-bold text-foreground">{t('accounting.financialInsights', 'AI Financial Insights')}</h3>
                             <p className="text-xs text-q-text-muted">{t('accounting.insightsSubtitle', 'Powered by AI analysis of your data')}</p>
@@ -132,7 +130,7 @@ Keep the response concise, professional, and under 500 words. Use bullet points 
                     <button
                         onClick={generateInsights}
                         disabled={isGenerating || transactions.length === 0}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                        className="quimera-guide-cta flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isGenerating ? (
                             <>
@@ -174,27 +172,23 @@ Keep the response concise, professional, and under 500 words. Use bullet points 
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/30 border border-q-border/30">
-                            <TrendingUp size={20} className="text-green-400" />
-                            <div>
-                                <p className="text-xs text-q-text-muted font-semibold uppercase tracking-wider">{t('accounting.cashFlowHealth', 'Cash Flow')}</p>
-                                <p className="text-sm text-foreground font-medium">{t('accounting.clickGenerate', 'Click generate to analyze')}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/30 border border-q-border/30">
-                            <DollarSign size={20} className="text-primary" />
-                            <div>
-                                <p className="text-xs text-q-text-muted font-semibold uppercase tracking-wider">{t('accounting.savingsOpps', 'Savings')}</p>
-                                <p className="text-sm text-foreground font-medium">{t('accounting.clickGenerate', 'Click generate to analyze')}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/30 border border-q-border/30">
-                            <ShieldCheck size={20} className="text-purple-400" />
-                            <div>
-                                <p className="text-xs text-q-text-muted font-semibold uppercase tracking-wider">{t('accounting.forecast', '3-Month Forecast')}</p>
-                                <p className="text-sm text-foreground font-medium">{t('accounting.clickGenerate', 'Click generate to analyze')}</p>
-                            </div>
-                        </div>
+                        {[
+                            { icon: TrendingUp, label: t('accounting.cashFlowHealth', 'Cash Flow') },
+                            { icon: DollarSign, label: t('accounting.savingsOpps', 'Savings') },
+                            { icon: ShieldCheck, label: t('accounting.forecast', '3-Month Forecast') },
+                        ].map((item) => {
+                            const Icon = item.icon;
+
+                            return (
+                                <div key={item.label} className="quimera-guide-panel-accent flex items-center gap-3 p-4">
+                                    <Icon size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
+                                    <div>
+                                        <p className="text-xs text-q-text-muted font-semibold uppercase tracking-wider">{item.label}</p>
+                                        <p className="text-sm text-foreground font-medium">{t('accounting.clickGenerate', 'Click generate to analyze')}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </div>

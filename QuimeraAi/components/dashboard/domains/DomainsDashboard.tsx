@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useDomains } from '../../../contexts/domains';
 import { useProject } from '../../../contexts/project';
@@ -9,7 +9,6 @@ import { usePlanAccess } from '../../../hooks/usePlanFeatures';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import DashboardSidebar from '../DashboardSidebar';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings, Crown, Zap, ChevronDown, ChevronUp, Building2, Lock, ClipboardList, ShieldCheck, XCircle, User, Server, Sparkles, Timer } from 'lucide-react';
 import Modal from '../../ui/Modal';
@@ -28,6 +27,14 @@ const getDomainDnsRecords = (domain: Domain): DNSRecord[] => {
 };
 
 // --- STEP INDICATOR COMPONENT ---
+const GuideStepBadge: React.FC<{ step: number }> = ({ step }) => (
+    <span className="quimera-guide-step-badge mt-0.5">{step}</span>
+);
+
+const GuideIconChip: React.FC<{ icon: React.ElementType; size?: number }> = ({ icon: Icon, size = 20 }) => (
+    <Icon size={size} className="quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+);
+
 const StepIndicator: React.FC<{
     step: number;
     label: string;
@@ -180,7 +187,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     };
 
     return (
-        <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+        <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl transition-all duration-300 ease-out hover:border-q-border">
             {/* Gradient blob decoration */}
             <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500 pointer-events-none" aria-hidden="true" />
             <div className="p-6">
@@ -1221,19 +1228,67 @@ const DomainsDashboard: React.FC = () => {
         setIsBuyModalOpen(true);
     };
 
+    const domainStats = useMemo(() => {
+        const pendingStatuses = new Set([
+            'pending',
+            'pending_nameservers',
+            'verifying',
+            'ssl_pending',
+            'deploying',
+        ]);
+        const connectedStatuses = new Set(['active', 'deployed']);
+
+        return {
+            total: domains.length,
+            connected: domains.filter((d) => connectedStatuses.has(d.status)).length,
+            pending: domains.filter((d) => pendingStatuses.has(d.status)).length,
+            withProject: domains.filter((d) => d.projectId).length,
+        };
+    }, [domains]);
+
+    const statCards = [
+        {
+            id: 'total',
+            icon: Link2,
+            value: domainStats.total,
+            labelKey: 'domainsDashboard.stats.total',
+            defaultLabel: 'Total de dominios',
+        },
+        {
+            id: 'connected',
+            icon: CheckCircle,
+            value: domainStats.connected,
+            labelKey: 'domainsDashboard.status.connected',
+            defaultLabel: 'Conectados',
+        },
+        {
+            id: 'pending',
+            icon: Clock,
+            value: domainStats.pending,
+            labelKey: 'domainsDashboard.status.dnsPending',
+            defaultLabel: 'DNS Pendiente',
+        },
+        {
+            id: 'withProject',
+            icon: Globe,
+            value: domainStats.withProject,
+            labelKey: 'domainsDashboard.stats.withProject',
+            defaultLabel: 'Con proyecto',
+        },
+    ];
+
     return (
         <div className="flex h-screen bg-q-bg text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                <DashboardWaveRibbons />
-                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 sticky top-0">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
                             <Menu className="w-4 h-4" />
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <Link2 className="text-primary w-5 h-5" />
+                            <Link2 className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-sm sm:text-lg font-semibold text-foreground">{t('domainsDashboard.title')}</h1>
                         </div>
                     </div>
@@ -1260,87 +1315,112 @@ const DomainsDashboard: React.FC = () => {
                 <main className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth bg-secondary/5 relative z-10">
                     <div className="max-w-5xl mx-auto space-y-8">
 
+                        {/* Statistics */}
+                        <section className="relative z-[1] grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                            {statCards.map((card) => {
+                                const Icon = card.icon;
+
+                                return (
+                                    <div
+                                        key={card.id}
+                                        className="group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60
+                                            bg-q-surface/80 backdrop-blur-xl p-2.5 md:p-4 hover:border-q-border
+                                            transition-all duration-300 ease-out"
+                                    >
+                                        <div
+                                            className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 md:w-32 md:h-32 rounded-full blur-2xl
+                                                group-hover:scale-110 transition-all duration-500"
+                                            aria-hidden="true"
+                                        />
+                                        <div className="relative z-10">
+                                            <div className="mb-1 md:mb-2">
+                                                <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                            </div>
+                                            <div className="text-xl md:text-3xl font-extrabold text-foreground">
+                                                {card.value}
+                                            </div>
+                                            <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
+                                                {t(card.labelKey, card.defaultLabel)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </section>
 
                         {/* Collapsible Instructions - Comprehensive Beginner Guide */}
-                        <div className="bg-gradient-to-br from-primary/10 via-blue-500/5 to-primary/5 border border-primary/30 rounded-xl overflow-hidden shadow-sm">
+                        <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl">
+                            <div
+                                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-12 -right-12 w-64 h-64 rounded-full blur-3xl
+                                    group-hover:scale-105 transition-transform duration-500"
+                                aria-hidden="true"
+                            />
                             <button
                                 onClick={() => setShowInstructions(!showInstructions)}
-                                className="w-full p-5 flex items-center justify-between hover:bg-primary/5 transition-colors"
+                                className="relative z-10 w-full p-5 flex items-center justify-between hover:bg-q-surface-overlay/30 transition-colors"
                             >
-                                <h4 className="font-bold text-primary flex items-center gap-2 text-base">
+                                <h4 className="font-bold text-foreground flex items-center gap-3 text-base">
+                                    <ClipboardList className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                                     {t('domainsDashboard.guide.title')}
                                 </h4>
-                                {showInstructions ? <ChevronUp className="text-primary" size={20} /> : <ChevronDown className="text-primary" size={20} />}
+                                {showInstructions
+                                    ? <ChevronUp className="quimera-status-card-link" size={20} />
+                                    : <ChevronDown className="quimera-status-card-link" size={20} />}
                             </button>
 
                             {showInstructions && (
-                                <div className="px-5 pb-6 text-sm space-y-6">
+                                <div className="relative z-10 px-5 pb-6 text-sm space-y-6">
 
                                     {/* ======== WHAT IS A DOMAIN - Intro for beginners ======== */}
-                                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                                    <div className="quimera-guide-panel-accent p-4">
                                         <h5 className="font-bold text-foreground mb-2 flex items-center gap-2">
-                                            <Globe size={16} className="text-blue-500" />
+                                            <GuideIconChip icon={Globe} size={16} />
                                             {t('domainsDashboard.guide.whatIsDomain')}
                                         </h5>
                                         <p className="text-q-text-muted text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.whatIsDomainDesc') }} />
                                     </div>
 
                                     {/* ======== VISUAL DIAGRAM - How DNS Works ======== */}
-                                    <div className="bg-q-surface border border-q-border rounded-xl p-5">
+                                    <div className="quimera-guide-panel p-5">
                                         <h5 className="font-bold text-foreground mb-4 flex items-center gap-2">
                                             {t('domainsDashboard.guide.howItWorksTitle')}
                                         </h5>
                                         <div className="flex flex-col items-center gap-0">
-                                            {/* Row 1: User */}
-                                            <div className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl px-5 py-3 w-full max-w-md">
-                                                <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center shrink-0">
-                                                    <User size={20} className="text-blue-500" />
-                                                </div>
+                                            <div className="quimera-guide-flow-row flex items-center gap-3 px-5 py-3 w-full max-w-md">
+                                                <GuideIconChip icon={User} />
                                                 <div>
                                                     <p className="font-bold text-foreground text-sm">{t('domainsDashboard.guide.diagramClientTypes')}</p>
-                                                    <code className="text-primary font-mono font-bold text-xs">www.tunegocio.com</code>
+                                                    <code className="quimera-guide-code-value text-xs font-bold">www.tunegocio.com</code>
                                                 </div>
                                             </div>
-                                            {/* Arrow */}
                                             <div className="flex flex-col items-center py-1">
-                                                <div className="w-0.5 h-4 bg-primary/40" />
-                                                <ChevronDown size={16} className="text-primary -mt-1.5" />
+                                                <div className="quimera-guide-arrow-line" />
+                                                <ChevronDown size={16} className="quimera-guide-arrow -mt-1.5" />
                                             </div>
-                                            {/* Row 2: DNS */}
-                                            <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 rounded-xl px-5 py-3 w-full max-w-md">
-                                                <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center shrink-0">
-                                                    <Globe size={20} className="text-amber-500" />
-                                                </div>
+                                            <div className="quimera-guide-flow-row flex items-center gap-3 px-5 py-3 w-full max-w-md">
+                                                <GuideIconChip icon={Globe} />
                                                 <div>
                                                     <p className="font-bold text-foreground text-sm">{t('domainsDashboard.guide.diagramDnsLookup')}</p>
                                                     <p className="text-xs text-q-text-muted">{t('domainsDashboard.guide.diagramDnsLookupDesc')}</p>
                                                 </div>
                                             </div>
-                                            {/* Arrow */}
                                             <div className="flex flex-col items-center py-1">
-                                                <div className="w-0.5 h-4 bg-primary/40" />
-                                                <ChevronDown size={16} className="text-primary -mt-1.5" />
+                                                <div className="quimera-guide-arrow-line" />
+                                                <ChevronDown size={16} className="quimera-guide-arrow -mt-1.5" />
                                             </div>
-                                            {/* Row 3: Our Server */}
-                                            <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-xl px-5 py-3 w-full max-w-md">
-                                                <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center shrink-0">
-                                                    <Server size={20} className="text-green-500" />
-                                                </div>
+                                            <div className="quimera-guide-flow-row flex items-center gap-3 px-5 py-3 w-full max-w-md">
+                                                <GuideIconChip icon={Server} />
                                                 <div>
                                                     <p className="font-bold text-foreground text-sm">{t('domainsDashboard.guide.diagramServerShows')}</p>
                                                     <p className="text-xs text-q-text-muted" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.diagramServerDesc') }} />
                                                 </div>
                                             </div>
-                                            {/* Arrow */}
                                             <div className="flex flex-col items-center py-1">
-                                                <div className="w-0.5 h-4 bg-primary/40" />
-                                                <ChevronDown size={16} className="text-primary -mt-1.5" />
+                                                <div className="quimera-guide-arrow-line" />
+                                                <ChevronDown size={16} className="quimera-guide-arrow -mt-1.5" />
                                             </div>
-                                            {/* Row 4: Result */}
-                                            <div className="flex items-center gap-3 bg-purple-500/10 border border-purple-500/20 rounded-xl px-5 py-3 w-full max-w-md">
-                                                <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center shrink-0">
-                                                    <Sparkles size={20} className="text-purple-500" />
-                                                </div>
+                                            <div className="quimera-guide-flow-row flex items-center gap-3 px-5 py-3 w-full max-w-md">
+                                                <GuideIconChip icon={Sparkles} />
                                                 <div>
                                                     <p className="font-bold text-foreground text-sm">{t('domainsDashboard.guide.diagramResult')}</p>
                                                     <p className="text-xs text-q-text-muted">{t('domainsDashboard.guide.diagramResultDesc')}</p>
@@ -1357,7 +1437,7 @@ const DomainsDashboard: React.FC = () => {
 
                                         {/* STEP 1: Go to your provider */}
                                         <div className="flex items-start gap-3">
-                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">1</span>
+                                            <GuideStepBadge step={1} />
                                             <div className="flex-1">
                                                 <strong className="text-foreground block mb-2 text-base">{t('domainsDashboard.guide.step1Title')}</strong>
                                                 <p className="text-q-text-muted mb-3" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step1Desc') }} />
@@ -1383,7 +1463,7 @@ const DomainsDashboard: React.FC = () => {
 
                                         {/* STEP 2: Find DNS section */}
                                         <div className="flex items-start gap-3">
-                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">2</span>
+                                            <GuideStepBadge step={2} />
                                             <div className="flex-1">
                                                 <strong className="text-foreground block mb-2 text-base">{t('domainsDashboard.guide.step2Title')}</strong>
                                                 <p className="text-q-text-muted mb-3">
@@ -1396,9 +1476,9 @@ const DomainsDashboard: React.FC = () => {
                                                         </span>
                                                     ))}
                                                 </div>
-                                                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-                                                    <p className="text-xs text-amber-600 dark:text-amber-400 flex items-start gap-2">
-                                                        <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+                                                <div className="quimera-guide-callout p-3">
+                                                    <p className="text-xs text-q-text-secondary flex items-start gap-2">
+                                                        <AlertTriangle size={14} className="quimera-status-card-accent-text shrink-0 mt-0.5" />
                                                         <span dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step2Warning') }} />
                                                     </p>
                                                 </div>
@@ -1407,26 +1487,26 @@ const DomainsDashboard: React.FC = () => {
 
                                         {/* STEP 3: DELETE old records */}
                                         <div className="flex items-start gap-3">
-                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">3</span>
+                                            <GuideStepBadge step={3} />
                                             <div className="flex-1">
                                                 <strong className="text-foreground block mb-2 text-base flex items-center gap-2">
                                                     {t('domainsDashboard.guide.step3Title')}
                                                 </strong>
-                                                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-3">
-                                                    <p className="text-sm text-red-600 dark:text-red-400 font-bold mb-3">
+                                                <div className="quimera-guide-callout-critical p-4 mb-3">
+                                                    <p className="text-sm quimera-guide-callout-critical-title mb-3">
                                                         {t('domainsDashboard.guide.step3Warning')}
                                                     </p>
                                                     <p className="text-sm text-q-text-muted mb-3" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step3Desc') }} />
                                                     <div className="space-y-2">
-                                                        <div className="flex items-center gap-3 bg-red-500/5 p-3 rounded-lg border border-red-500/10">
-                                                            <Trash2 size={16} className="text-red-500 shrink-0" />
+                                                        <div className="flex items-center gap-3 quimera-guide-panel p-3">
+                                                            <Trash2 size={16} className="text-q-error shrink-0" />
                                                             <div>
                                                                 <p className="font-bold text-foreground text-sm" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step3DeleteA') }} />
                                                                 <p className="text-xs text-q-text-muted" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step3DeleteADesc') }} />
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-3 bg-red-500/5 p-3 rounded-lg border border-red-500/10">
-                                                            <Trash2 size={16} className="text-red-500 shrink-0" />
+                                                        <div className="flex items-center gap-3 quimera-guide-panel p-3">
+                                                            <Trash2 size={16} className="text-q-error shrink-0" />
                                                             <div>
                                                                 <p className="font-bold text-foreground text-sm" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step3DeleteCNAME') }} />
                                                                 <p className="text-xs text-q-text-muted" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step3DeleteCNAMEDesc') }} />
@@ -1442,7 +1522,7 @@ const DomainsDashboard: React.FC = () => {
 
                                         {/* STEP 4: ADD new records */}
                                         <div className="flex items-start gap-3">
-                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">4</span>
+                                            <GuideStepBadge step={4} />
                                             <div className="flex-1">
                                                 <strong className="text-foreground block mb-2 text-base flex items-center gap-2">
                                                     {t('domainsDashboard.guide.step4Title')}
@@ -1450,15 +1530,15 @@ const DomainsDashboard: React.FC = () => {
                                                 <p className="text-q-text-muted mb-3" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step4Desc') }} />
 
                                                 {/* Record 1: A */}
-                                                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-3">
+                                                <div className="quimera-guide-record-card p-4 mb-3">
                                                     <div className="flex items-center gap-2 mb-3">
-                                                        <span className="text-xs font-extrabold bg-blue-500 text-white px-2.5 py-1 rounded-md">{t('domainsDashboard.guide.record1Label')}</span>
+                                                        <span className="quimera-guide-record-badge">{t('domainsDashboard.guide.record1Label')}</span>
                                                         <span className="text-sm font-bold text-foreground">{t('domainsDashboard.guide.record1Title')}</span>
                                                     </div>
                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-q-bg p-4 rounded-lg border border-q-border">
                                                         <div>
                                                             <span className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.typeColumn')}</span>
-                                                            <code className="font-mono font-extrabold text-blue-500 text-lg">A</code>
+                                                            <code className="quimera-guide-code-accent text-lg font-extrabold">A</code>
                                                         </div>
                                                         <div>
                                                             <span className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.hostColumn')}</span>
@@ -1468,10 +1548,10 @@ const DomainsDashboard: React.FC = () => {
                                                         <div>
                                                             <span className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.valueColumn')}</span>
                                                             <div className="flex items-center gap-2">
-                                                                <code className="font-mono font-extrabold text-primary text-lg">76.76.21.21</code>
+                                                                <code className="quimera-guide-code-value text-lg">76.76.21.21</code>
                                                                 <button
                                                                     onClick={() => { navigator.clipboard.writeText('76.76.21.21'); alert(t('domainsDashboard.guide.ipCopiedToClipboard')); }}
-                                                                    className="p-1.5 hover:bg-primary/20 rounded-lg text-primary transition-colors"
+                                                                    className="quimera-guide-copy-btn"
                                                                     title={t('domainsDashboard.guide.copyIpTitle')}
                                                                 >
                                                                     <Copy size={14} />
@@ -1482,15 +1562,15 @@ const DomainsDashboard: React.FC = () => {
                                                 </div>
 
                                                 {/* Record 2: CNAME */}
-                                                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                                                <div className="quimera-guide-record-card p-4">
                                                     <div className="flex items-center gap-2 mb-3">
-                                                        <span className="text-xs font-extrabold bg-green-500 text-white px-2.5 py-1 rounded-md">{t('domainsDashboard.guide.record2Label')}</span>
+                                                        <span className="quimera-guide-record-badge">{t('domainsDashboard.guide.record2Label')}</span>
                                                         <span className="text-sm font-bold text-foreground">{t('domainsDashboard.guide.record2Title')}</span>
                                                     </div>
                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-q-bg p-4 rounded-lg border border-q-border">
                                                         <div>
                                                             <span className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.typeColumn')}</span>
-                                                            <code className="font-mono font-extrabold text-green-500 text-lg">CNAME</code>
+                                                            <code className="quimera-guide-code-accent text-lg font-extrabold">CNAME</code>
                                                         </div>
                                                         <div>
                                                             <span className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.hostColumn')}</span>
@@ -1500,7 +1580,7 @@ const DomainsDashboard: React.FC = () => {
                                                         <div>
                                                             <span className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.valueColumn')}</span>
                                                             <div className="flex items-center gap-2">
-                                                                <code className="font-mono font-extrabold text-primary text-base">cname.vercel-dns.com</code>
+                                                                <code className="quimera-guide-code-value text-base">cname.vercel-dns.com</code>
                                                             </div>
                                                             <p className="text-[10px] text-q-text-muted mt-0.5">{t('domainsDashboard.guide.cnameValueHint')}</p>
                                                         </div>
@@ -1511,13 +1591,13 @@ const DomainsDashboard: React.FC = () => {
 
                                         {/* STEP 5: Save */}
                                         <div className="flex items-start gap-3">
-                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">5</span>
+                                            <GuideStepBadge step={5} />
                                             <div className="flex-1">
                                                 <strong className="text-foreground block mb-2 text-base">{t('domainsDashboard.guide.step5Title')}</strong>
                                                 <p className="text-q-text-muted mb-2" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step5Desc') }} />
-                                                <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
-                                                    <p className="text-xs text-purple-600 dark:text-purple-400 flex items-start gap-2">
-                                                        <Clock size={14} className="shrink-0 mt-0.5" />
+                                                <div className="quimera-guide-callout p-3">
+                                                    <p className="text-xs text-q-text-secondary flex items-start gap-2">
+                                                        <Clock size={14} className="quimera-status-card-accent-text shrink-0 mt-0.5" />
                                                         <span dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step5PropagationNote') }} />
                                                     </p>
                                                 </div>
@@ -1526,7 +1606,7 @@ const DomainsDashboard: React.FC = () => {
 
                                         {/* STEP 6: Connect here */}
                                         <div className="flex items-start gap-3">
-                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">6</span>
+                                            <GuideStepBadge step={6} />
                                             <div className="flex-1">
                                                 <strong className="text-foreground block mb-2 text-base">{t('domainsDashboard.guide.step6Title')}</strong>
                                                 <p className="text-q-text-muted" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step6Desc') }} />
@@ -1535,8 +1615,8 @@ const DomainsDashboard: React.FC = () => {
                                     </div>
 
                                     {/* ======== PROVIDER-SPECIFIC GUIDES ======== */}
-                                    <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
-                                        <h5 className="text-sm font-bold text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-2">
+                                    <div className="quimera-guide-provider-section p-4">
+                                        <h5 className="text-sm font-bold quimera-guide-provider-title mb-3 flex items-center gap-2">
                                             {t('domainsDashboard.guide.providerGuideTitle')}
                                         </h5>
                                         <div className="space-y-3">
@@ -1575,9 +1655,9 @@ const DomainsDashboard: React.FC = () => {
                                     </div>
 
                                     {/* ======== PRO TIP ======== */}
-                                    <div className="border-t border-primary/20 pt-4">
+                                    <div className="quimera-guide-divider pt-4">
                                         <p className="text-xs text-q-text-muted flex items-start gap-2">
-                                            <Timer size={14} className="shrink-0 mt-0.5" />
+                                            <Timer size={14} className="quimera-status-card-accent-text shrink-0 mt-0.5" />
                                             <span dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.proTip') }} />
                                         </p>
                                     </div>
@@ -1586,9 +1666,9 @@ const DomainsDashboard: React.FC = () => {
                                     <div className="flex flex-col items-center pt-2">
                                         <button
                                             onClick={() => customDomainsAllowed ? setIsConnectModalOpen(true) : handleDomainUpgrade()}
-                                            className="flex items-center gap-2.5 px-8 py-3.5 bg-primary text-primary-foreground rounded-xl font-bold text-base shadow-lg hover:shadow-xl hover:opacity-90 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                                            className="quimera-guide-cta active:scale-[0.98]"
                                         >
-                                            {!customDomainsAllowed && <Crown className="w-5 h-5 text-yellow-300" />}
+                                            {!customDomainsAllowed && <Crown className="w-5 h-5" />}
                                             <Link2 size={20} />
                                             {t('domainsDashboard.guide.ctaButton')}
                                         </button>
@@ -1601,20 +1681,22 @@ const DomainsDashboard: React.FC = () => {
                         </div>
 
                         {domains.length === 0 ? (
-                            <div className="group relative overflow-hidden text-center py-20 rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl border-dashed shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
-                                <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60" aria-hidden="true" />
-                                <div className="w-20 h-20 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <Globe size={40} className="text-q-text-muted opacity-50" />
-                                </div>
-                                <h2 className="text-2xl font-bold text-foreground mb-2">{t('domainsDashboard.noDomains')}</h2>
-                                <p className="text-q-text-muted max-w-md mx-auto mb-8">
-                                    {t('domainsDashboard.noDomainsDesc')}
-                                </p>
-                                <div className="flex justify-center gap-4">
+                            <div className="group relative overflow-hidden text-center py-20 rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl border-dashed">
+                                <div
+                                    className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl"
+                                    aria-hidden="true"
+                                />
+                                <Globe size={40} className="quimera-dashboard-header-icon relative z-10 mx-auto mb-6" strokeWidth={1.5} />
+                                <div className="relative z-10">
+                                    <h2 className="text-2xl font-bold text-foreground mb-2">{t('domainsDashboard.noDomains')}</h2>
+                                    <p className="text-q-text-muted max-w-md mx-auto mb-8">
+                                        {t('domainsDashboard.noDomainsDesc')}
+                                    </p>
+                                    <div className="flex justify-center gap-4">
                                     {!customDomainsAllowed ? (
                                         <button
                                             onClick={handleDomainUpgrade}
-                                            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold flex items-center gap-2 transition-colors"
+                                            className="quimera-guide-cta"
                                         >
                                             <Crown className="w-5 h-5" /> {t('domainsDashboard.upgradeForDomains')}
                                         </button>
@@ -1624,6 +1706,7 @@ const DomainsDashboard: React.FC = () => {
                                     {customDomainsAllowed && (
                                         <button onClick={handleBuyDomain} className="px-6 py-3 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-colors font-bold">{t('domainsDashboard.findDomain')}</button>
                                     )}
+                                    </div>
                                 </div>
                             </div>
                         ) : (

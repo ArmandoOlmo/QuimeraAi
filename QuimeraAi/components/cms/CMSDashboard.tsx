@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useCMS } from '../../contexts/cms';
 import { useProject } from '../../contexts/project';
 import DashboardSidebar from '../dashboard/DashboardSidebar';
-import DashboardWaveRibbons from '../dashboard/DashboardWaveRibbons';
+import { SettingsStatCard } from '../dashboard/settings/SettingsStatCard';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import MobileSearchModal from '../ui/MobileSearchModal';
 import QuimeraLoader from '../ui/QuimeraLoader';
@@ -416,16 +416,15 @@ const CMSDashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                <DashboardWaveRibbons />
                 {/* Standardized Header */}
-                <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
+                <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center z-20 sticky top-0">
                     {/* Left Section */}
                     <div className="flex items-center gap-2 sm:gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-10 w-10 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation">
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <PenTool className="text-primary w-5 h-5" />
+                            <PenTool className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-sm sm:text-lg font-semibold text-foreground">{t('cms.contentManager', 'Gestor de Contenido')}</h1>
                         </div>
 
@@ -494,17 +493,17 @@ const CMSDashboard: React.FC = () => {
                         {/* Botón Crear con IA - Icon only on mobile, full button on desktop */}
                         <button
                             onClick={handleAiCreate}
-                            className="flex items-center gap-1.5 h-8 w-8 sm:w-auto sm:h-9 sm:px-3 justify-center rounded-md text-sm font-bold transition-all text-primary sm:bg-primary/10 sm:hover:bg-primary/20 sm:border sm:border-primary/30 hover:text-primary/80"
+                            className="flex items-center gap-1.5 h-8 w-8 sm:w-auto sm:h-9 sm:px-3 justify-center rounded-lg text-sm font-medium transition-all text-q-accent hover:bg-primary/10"
                         >
-                            <Sparkles className="w-4 h-4" />
+                            <Sparkles className="w-4 h-4" strokeWidth={2} />
                             <span className="hidden sm:inline">{t('cms.createWithAI', 'Crear con IA')}</span>
                         </button>
 
                         <button
                             onClick={handleCreateNew}
-                            className="flex items-center gap-1.5 h-8 w-8 sm:w-auto sm:h-9 sm:px-3 justify-center rounded-md text-sm font-medium transition-all sm:bg-primary sm:text-primary-foreground sm:hover:opacity-90 text-foreground hover:text-foreground/80"
+                            className="quimera-guide-cta flex items-center gap-1.5 h-8 w-8 sm:w-auto sm:h-9 sm:px-3 justify-center rounded-lg text-sm font-medium"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-4 h-4" strokeWidth={2} />
                             <span className="hidden sm:inline">{t('cms.newPost', 'Nuevo Post')}</span>
                         </button>
 
@@ -516,52 +515,26 @@ const CMSDashboard: React.FC = () => {
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth relative z-10">
                     <div className="max-w-7xl mx-auto h-full space-y-4 sm:space-y-6">
 
-                        {/* Métricas - Unified responsive design */}
-                        {cmsPosts.length > 0 && (
-                            <div className="relative z-[1] grid grid-cols-3 gap-2 sm:gap-3">
-                                {/* Total Posts */}
-                                <div className="group relative overflow-hidden bg-q-surface border border-primary/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
-                                    <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
-                                    <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/15 flex items-center justify-center mx-auto sm:mx-0">
-                                            <FileText className="text-primary" size={16} />
-                                        </div>
-                                        <div className="text-center sm:text-left">
-                                            <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{metrics.total}</p>
-                                            <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('cms.totalPosts', 'Total Posts')}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Published */}
-                                <div className="group relative overflow-hidden bg-q-surface border border-emerald-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5">
-                                    <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
-                                    <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-500/15 flex items-center justify-center mx-auto sm:mx-0">
-                                            <Globe className="text-emerald-500" size={16} />
-                                        </div>
-                                        <div className="text-center sm:text-left">
-                                            <p className="text-xl sm:text-2xl font-bold text-emerald-500 tracking-tight">{metrics.published}</p>
-                                            <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('cms.published', 'Publicados')}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Drafts */}
-                                <div className="group relative overflow-hidden bg-q-surface border border-amber-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5">
-                                    <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-colors" />
-                                    <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-500/15 flex items-center justify-center mx-auto sm:mx-0">
-                                            <Edit3 className="text-amber-500" size={16} />
-                                        </div>
-                                        <div className="text-center sm:text-left">
-                                            <p className="text-xl sm:text-2xl font-bold text-amber-500 tracking-tight">{metrics.drafts}</p>
-                                            <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('cms.drafts', 'Borradores')}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        {/* Métricas */}
+                        <div className="relative z-[1] grid grid-cols-3 gap-2 md:gap-4">
+                            <SettingsStatCard
+                                label={t('cms.totalPosts', 'Total Posts')}
+                                value={metrics.total}
+                                icon={FileText}
+                            />
+                            <SettingsStatCard
+                                label={t('cms.published', 'Publicados')}
+                                value={metrics.published}
+                                icon={Globe}
+                                valueClass="text-emerald-500"
+                            />
+                            <SettingsStatCard
+                                label={t('cms.drafts', 'Borradores')}
+                                value={metrics.drafts}
+                                icon={Edit3}
+                                valueClass="text-amber-500"
+                            />
+                        </div>
 
                         {/* Barra de Filtros - Icons only, no boxes */}
                         <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible scrollbar-hide">
@@ -578,7 +551,7 @@ const CMSDashboard: React.FC = () => {
                                         className="rounded border-q-border w-3.5 h-3.5 accent-primary"
                                     />
                                     {selectedPosts.length > 0 && (
-                                        <span className="text-[10px] font-semibold text-primary">
+                                        <span className="text-[10px] font-semibold quimera-status-card-accent-text">
                                             {selectedPosts.length}
                                         </span>
                                     )}
@@ -591,7 +564,7 @@ const CMSDashboard: React.FC = () => {
 
                             {/* Icon-only filter selects — no boxes */}
                             <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.allStatus', 'Estado')}>
-                                <Globe size={15} className={`pointer-events-none transition-colors ${statusFilter !== 'all' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`} />
+                                <Globe size={15} className={`pointer-events-none transition-colors ${statusFilter !== 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`} />
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -604,7 +577,7 @@ const CMSDashboard: React.FC = () => {
                             </div>
 
                             <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.allTime', 'Fecha')}>
-                                <Calendar size={15} className={`pointer-events-none transition-colors ${dateRange !== 'all' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`} />
+                                <Calendar size={15} className={`pointer-events-none transition-colors ${dateRange !== 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`} />
                                 <select
                                     value={dateRange}
                                     onChange={(e) => setDateRange(e.target.value as any)}
@@ -620,7 +593,7 @@ const CMSDashboard: React.FC = () => {
                             {/* Category filter */}
                             {categories.length > 0 && (
                                 <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.category', 'Categoría')}>
-                                    <Tag size={15} className={`pointer-events-none transition-colors ${categoryFilter !== 'all' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`} />
+                                    <Tag size={15} className={`pointer-events-none transition-colors ${categoryFilter !== 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`} />
                                     <select
                                         value={categoryFilter}
                                         onChange={(e) => setCategoryFilter(e.target.value)}
@@ -639,7 +612,7 @@ const CMSDashboard: React.FC = () => {
                             {activeProfileCategory && (
                                 <button
                                     onClick={() => setShowProfileOrderModal(true)}
-                                    className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg text-primary text-xs font-bold transition-all flex-shrink-0"
+                                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold quimera-status-card-accent-text hover:opacity-80 transition-opacity flex-shrink-0"
                                     title={t('cms.orderProfiles', 'Ordenar Perfiles')}
                                 >
                                     <ArrowUpDown size={13} />
@@ -695,14 +668,14 @@ const CMSDashboard: React.FC = () => {
                             <div className="flex gap-2 flex-shrink-0">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`transition-colors ${viewMode === 'grid' ? 'text-q-accent' : 'text-q-text-muted hover:text-foreground'}`}
+                                    className={`transition-colors ${viewMode === 'grid' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
                                     title="Grid View"
                                 >
                                     <Grid size={15} />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`transition-colors ${viewMode === 'list' ? 'text-q-accent' : 'text-q-text-muted hover:text-foreground'}`}
+                                    className={`transition-colors ${viewMode === 'list' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
                                     title="List View"
                                 >
                                     <List size={15} />
@@ -716,9 +689,7 @@ const CMSDashboard: React.FC = () => {
                             </div>
                         ) : filteredAndSortedPosts.length === 0 ? (
                             <div className="text-center py-16 bg-q-surface/30 rounded-3xl border border-dashed border-q-border/50">
-                                <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <FileText size={32} className="text-q-text-muted opacity-50" />
-                                </div>
+                                <FileText size={40} className="quimera-dashboard-header-icon mx-auto mb-4" strokeWidth={1.5} />
                                 <h3 className="text-xl font-bold text-foreground mb-2">
                                     {searchQuery || statusFilter !== 'all' || dateRange !== 'all'
                                         ? t('cms.noPostsMatchFilters', 'No hay posts que coincidan con los filtros')
@@ -731,7 +702,7 @@ const CMSDashboard: React.FC = () => {
                                 </p>
                                 <button
                                     onClick={handleCreateNew}
-                                    className="text-primary font-bold hover:underline hover:opacity-80 transition-colors"
+                                    className="quimera-guide-cta px-5 py-2.5 rounded-xl font-medium"
                                 >
                                     {t('cms.createFirstPost', 'Crear tu primer post')}
                                 </button>

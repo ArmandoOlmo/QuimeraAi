@@ -1859,7 +1859,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
 
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 shrink-0">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 shrink-0">
                     <div className="flex items-center gap-1 sm:gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
@@ -1868,7 +1868,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             <Menu className="w-4 h-4" />
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <Bot className="text-primary w-5 h-5" />
+                            <Bot className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-lg font-semibold text-foreground hidden sm:block">
                                 {t('landingChatbot.title', 'Landing Page Chatbot')}
                             </h1>

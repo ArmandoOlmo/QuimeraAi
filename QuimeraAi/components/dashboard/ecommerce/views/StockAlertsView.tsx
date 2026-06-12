@@ -189,9 +189,7 @@ const StockAlertsView: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-yellow-500/20 rounded-lg">
-                            <AlertTriangle className="text-yellow-400" size={20} />
-                        </div>
+                        <AlertTriangle className="text-yellow-400 flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-q-text-muted text-sm">Bajo Stock</p>
                             <p className="text-2xl font-bold text-foreground">{lowStockProducts.length}</p>
@@ -200,9 +198,7 @@ const StockAlertsView: React.FC = () => {
                 </div>
                 <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-red-500/20 rounded-lg">
-                            <Package className="text-red-400" size={20} />
-                        </div>
+                        <Package className="text-red-400 flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-q-text-muted text-sm">Agotados</p>
                             <p className="text-2xl font-bold text-foreground">{outOfStockProducts.length}</p>
@@ -211,9 +207,7 @@ const StockAlertsView: React.FC = () => {
                 </div>
                 <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/20 rounded-lg">
-                            <Bell className="text-primary" size={20} />
-                        </div>
+                        <Bell className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                         <div>
                             <p className="text-q-text-muted text-sm">Suscriptores</p>
                             <p className="text-2xl font-bold text-foreground">{subscribers.length}</p>

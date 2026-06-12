@@ -90,7 +90,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg sticky top-0 z-10">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between sticky top-0 z-10">
                     <div className="flex items-center gap-1 sm:gap-3">
                         {/* Botón menú sidebar - solo en móvil */}
                         <button
@@ -100,7 +100,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <Building2 size={20} className="text-primary" />
+                        <Building2 size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
                         <h1 className="text-lg font-semibold text-foreground hidden sm:block">
                             {t('settings.title', 'Configuración del Workspace')}
                         </h1>
@@ -128,7 +128,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                                         key={tab.id}
                                         onClick={() => handleTabChange(tab.id)}
                                         className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all ${isActive
-                                            ? 'border-primary text-primary'
+                                            ? 'border-[var(--quimera-status-accent-from)] quimera-status-card-accent-text'
                                             : 'border-transparent text-q-text-muted hover:text-foreground hover:border-q-border'
                                             }`}
                                     >

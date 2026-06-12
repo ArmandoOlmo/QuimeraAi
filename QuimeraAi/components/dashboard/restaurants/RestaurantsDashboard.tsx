@@ -29,6 +29,7 @@ import {
   X,
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
+import { SettingsStatCard } from '../settings/SettingsStatCard';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import ImagePickerModal from '../../ui/ImagePickerModal';
@@ -139,7 +140,7 @@ const RestaurantsDashboard: React.FC = () => {
   };
 
   if (isPlanLoading || restaurantState.isLoading) {
-    return <div className="flex h-screen items-center justify-center bg-q-bg"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    return <div className="flex h-screen items-center justify-center bg-q-bg"><Loader2 className="h-8 w-8 animate-spin quimera-status-card-accent-text" /></div>;
   }
 
   return (
@@ -150,7 +151,7 @@ const RestaurantsDashboard: React.FC = () => {
       <div className="hidden md:flex flex-col w-56 lg:w-64 border-r border-q-border bg-q-surface/50 flex-shrink-0 overflow-hidden">
           {/* Panel Header */}
           <div className="h-14 px-4 border-b border-q-border flex items-center gap-2 flex-shrink-0">
-              <Utensils size={20} className="text-primary" />
+              <Utensils size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
               <h2 className="text-sm font-bold text-foreground truncate">
                   {t('restaurants.title', 'Restaurants')}
               </h2>
@@ -169,12 +170,12 @@ const RestaurantsDashboard: React.FC = () => {
                               className={`
                                   w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                                   ${isActive
-                                      ? 'bg-primary/10 text-primary shadow-sm'
+                                      ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
                                       : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
                                   }
                               `}
                           >
-                              <Icon size={18} className={`flex-shrink-0 ${isActive ? 'text-primary' : ''}`} />
+                              <Icon size={18} className="flex-shrink-0" />
                               <span className="truncate">{item.label}</span>
                           </button>
                       );
@@ -186,7 +187,7 @@ const RestaurantsDashboard: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center z-20 sticky top-0">
           {/* Left Section - Menu Button & Title */}
           <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
             <button
@@ -196,7 +197,7 @@ const RestaurantsDashboard: React.FC = () => {
               <MenuIcon className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-1 sm:gap-2">
-              <Utensils size={24} className="text-primary" />
+              <Utensils size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
               <h1 className="text-lg sm:text-xl font-bold text-foreground hidden sm:block">
                 {t('restaurants.title', 'Restaurants')}
               </h1>
@@ -230,7 +231,7 @@ const RestaurantsDashboard: React.FC = () => {
                             key={item.id}
                             onClick={() => setView(item.id)}
                             className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-lg text-[10px] font-medium transition-colors leading-tight ${isActive
-                                ? 'bg-primary/10 text-primary'
+                                ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
                                 : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
                                 }`}
                         >
@@ -247,11 +248,11 @@ const RestaurantsDashboard: React.FC = () => {
             <div className="w-full h-full overflow-y-auto p-4 sm:p-6 lg:p-8">
                 <div className="max-w-7xl mx-auto">
                     {!hasAccess ? (
-                    <div className="max-w-2xl rounded-xl border border-q-border bg-q-surface/70 p-8">
-                        <Sparkles className="h-10 w-10 text-primary mb-4" />
+                    <div className="max-w-2xl quimera-dashboard-panel-card p-8">
+                        <Sparkles className="h-10 w-10 quimera-status-card-accent-text mb-4" />
                         <h2 className="text-2xl font-bold mb-2">{t('restaurants.premiumGateTitle', 'Restaurants is a premium module')}</h2>
                         <p className="text-q-text-muted mb-6">{t('restaurants.premiumGateDescription', 'Upgrade to manage menus, QR publishing, reservations and restaurant AI workflows.')}</p>
-                        <button onClick={() => upgrade?.openUpgradeModal('generic')} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground">{t('common.upgrade', 'Upgrade')}</button>
+                        <button onClick={() => upgrade?.openUpgradeModal('generic')} className="quimera-guide-cta px-4 py-2 rounded-lg font-medium">{t('common.upgrade', 'Upgrade')}</button>
                     </div>
                     ) : (
                     <div className="space-y-6">{renderView()}</div>
@@ -264,13 +265,13 @@ const RestaurantsDashboard: React.FC = () => {
   );
 };
 
-const Stat = ({ label, value, icon: Icon }: { label: string; value: React.ReactNode; icon: React.ElementType }) => (
-  <div className="rounded-xl border border-q-border bg-q-surface/60 p-4">
-    <div className="flex items-center justify-between gap-3">
-      <p className="text-sm text-q-text-muted">{label}</p>
-      <Icon size={18} className="text-primary" />
+const SectionTitle = ({ icon: Icon, title, subtitle }: { icon: React.ElementType; title: string; subtitle?: string }) => (
+  <div>
+    <div className="flex items-center gap-2">
+      <Icon className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
+      <h2 className="text-2xl font-bold">{title}</h2>
     </div>
-    <p className="mt-3 text-2xl font-bold">{value}</p>
+    {subtitle && <p className="text-q-text-muted mt-1">{subtitle}</p>}
   </div>
 );
 
@@ -279,22 +280,14 @@ const OverviewView = ({ items, reservations, todayCount, pendingCount, onNavigat
   const popular = items.filter((item) => item.isFeatured).slice(0, 4);
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <BarChart3 className="text-primary w-6 h-6" />
-            <h2 className="text-2xl font-bold">{t('restaurants.overview', 'Overview')}</h2>
-          </div>
-          <p className="text-q-text-muted mt-1">{t('restaurants.overviewSubtitle', 'Performance and quick actions')}</p>
-        </div>
-      </div>
+      <SectionTitle icon={BarChart3} title={t('restaurants.overview', 'Overview')} subtitle={t('restaurants.overviewSubtitle', 'Performance and quick actions')} />
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
-        <Stat label={t('restaurants.totalDishes', 'Total dishes')} value={items.length} icon={Utensils} />
-        <Stat label={t('restaurants.todayReservations', "Today's reservations")} value={todayCount} icon={Calendar} />
-        <Stat label={t('restaurants.pendingReservations', 'Pending reservations')} value={pendingCount} icon={Clipboard} />
-        <Stat label={t('restaurants.popularDishes', 'Popular dishes')} value={popular.length} icon={Star} />
-        <Stat label={t('restaurants.activePromotions', 'Active promotions')} value="0" icon={Sparkles} />
-        <Stat label={t('restaurants.qrScans', 'QR scans')} value="0" icon={QrCode} />
+        <SettingsStatCard label={t('restaurants.totalDishes', 'Total dishes')} value={items.length} icon={Utensils} />
+        <SettingsStatCard label={t('restaurants.todayReservations', "Today's reservations")} value={todayCount} icon={Calendar} />
+        <SettingsStatCard label={t('restaurants.pendingReservations', 'Pending reservations')} value={pendingCount} icon={Clipboard} />
+        <SettingsStatCard label={t('restaurants.popularDishes', 'Popular dishes')} value={popular.length} icon={Star} />
+        <SettingsStatCard label={t('restaurants.activePromotions', 'Active promotions')} value="0" icon={Sparkles} />
+        <SettingsStatCard label={t('restaurants.qrScans', 'QR scans')} value="0" icon={QrCode} />
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
@@ -302,13 +295,13 @@ const OverviewView = ({ items, reservations, todayCount, pendingCount, onNavigat
           ['reservations', t('restaurants.createReservation', 'Create reservation'), Calendar],
           ['digital-menu', t('restaurants.publishQr', 'Publish QR menu'), QrCode],
         ].map(([view, label, Icon]) => (
-          <button key={view as string} onClick={() => onNavigate(view as RestaurantView)} className="rounded-xl border border-q-border bg-q-surface/60 p-4 text-left hover:bg-muted/60 transition-colors">
-            {React.createElement(Icon as React.ElementType, { size: 20, className: 'text-primary mb-3' })}
+          <button key={view as string} onClick={() => onNavigate(view as RestaurantView)} className="quimera-dashboard-panel-card p-4 text-left hover:border-q-border transition-colors">
+            {React.createElement(Icon as React.ElementType, { size: 20, className: 'quimera-status-card-accent-text mb-3', strokeWidth: 2 })}
             <span className="text-sm font-medium">{label as string}</span>
           </button>
         ))}
       </div>
-      <div className="rounded-xl border border-q-border bg-q-surface/60 p-4">
+      <div className="quimera-dashboard-panel-card p-4">
         <h2 className="font-semibold mb-3">{t('restaurants.popularDishes', 'Popular dishes')}</h2>
         {popular.length ? <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{popular.map((item) => <DishMini key={item.id} item={item} />)}</div> : <p className="text-sm text-q-text-muted">{t('restaurants.noFeaturedDishes', 'Feature dishes to surface them here.')}</p>}
       </div>
@@ -345,28 +338,22 @@ const MenuManager = ({ menu, restaurantCurrency, scope, restaurantId }: any) => 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Utensils className="text-primary w-6 h-6" />
-            <h2 className="text-2xl font-bold">{t('restaurants.menu', 'Menu')}</h2>
-          </div>
-          <p className="text-q-text-muted mt-1">{menu.items.length} {t('restaurants.dishes', 'dishes')}</p>
-        </div>
-        <button onClick={() => setEditing({ ...emptyDish, currency: restaurantCurrency })} className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-primary-foreground font-medium hover:bg-primary/90 transition-colors">
+        <SectionTitle icon={Utensils} title={t('restaurants.menu', 'Menu')} subtitle={`${menu.items.length} ${t('restaurants.dishes', 'dishes')}`} />
+        <button onClick={() => setEditing({ ...emptyDish, currency: restaurantCurrency })} className="quimera-guide-cta inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium">
           <Plus size={18} />
           {t('restaurants.createDish', 'Create dish')}
         </button>
       </div>
-      <div className="rounded-xl border border-q-border bg-q-surface/60 p-5 flex flex-col lg:flex-row gap-3">
+      <div className="quimera-dashboard-panel-card p-5 flex flex-col lg:flex-row gap-3">
         <div className="flex items-center gap-2 flex-1 rounded-lg bg-muted/50 px-3 py-2"><Search size={16} className="text-q-text-muted" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('restaurants.searchDishes', 'Search dishes...')} className="bg-transparent outline-none flex-1 text-sm" /></div>
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className="bg-muted/50 border border-q-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary/20"><option value="">{t('ecommerce.allCategories', 'All categories')}</option>{RESTAURANT_MENU_CATEGORIES.concat(menu.categories.filter((c: string) => !RESTAURANT_MENU_CATEGORIES.includes(c))).map((cat) => <option key={cat}>{cat}</option>)}</select>
-        <select value={tag} onChange={(e) => setTag(e.target.value)} className="bg-muted/50 border border-q-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary/20"><option value="">{t('restaurants.allTags', 'All tags')}</option>{Object.entries(DIETARY_TAG_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
-        <div className="flex rounded-lg bg-muted/50 p-1"><button onClick={() => setViewMode('grid')} className={`p-2 rounded ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : ''}`}><Grid size={18} /></button><button onClick={() => setViewMode('table')} className={`p-2 rounded ${viewMode === 'table' ? 'bg-primary text-primary-foreground' : ''}`}><List size={18} /></button></div>
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="bg-muted/50 border border-q-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-ring"><option value="">{t('ecommerce.allCategories', 'All categories')}</option>{RESTAURANT_MENU_CATEGORIES.concat(menu.categories.filter((c: string) => !RESTAURANT_MENU_CATEGORIES.includes(c))).map((cat) => <option key={cat}>{cat}</option>)}</select>
+        <select value={tag} onChange={(e) => setTag(e.target.value)} className="bg-muted/50 border border-q-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-ring"><option value="">{t('restaurants.allTags', 'All tags')}</option>{Object.entries(DIETARY_TAG_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
+        <div className="flex rounded-lg bg-muted/50 p-1"><button onClick={() => setViewMode('grid')} className={`p-2 rounded ${viewMode === 'grid' ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : ''}`}><Grid size={18} /></button><button onClick={() => setViewMode('table')} className={`p-2 rounded ${viewMode === 'table' ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : ''}`}><List size={18} /></button></div>
       </div>
       {filtered.length === 0 ? <EmptyPanel title={t('restaurants.emptyMenu', 'No dishes yet')} action={t('restaurants.createDish', 'Create dish')} onAction={() => setEditing({ ...emptyDish, currency: restaurantCurrency })} /> : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">{filtered.map((item: RestaurantMenuItem) => <DishCard key={item.id} item={item} onEdit={() => setEditing(item)} onDelete={() => setDeleteId(item.id)} onToggle={(data) => menu.updateItem(item.id, data)} onAi={runAi} />)}</div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-q-border bg-q-surface/60"><table className="w-full text-sm"><tbody>{filtered.map((item: RestaurantMenuItem) => <tr key={item.id} className="border-b border-q-border last:border-0"><td className="p-3 font-medium">{item.name}</td><td className="p-3 text-q-text-muted">{item.category}</td><td className="p-3">{item.currency} {item.price.toFixed(2)}</td><td className="p-3">{item.isAvailable ? t('restaurants.available', 'Available') : t('restaurants.unavailable', 'Unavailable')}</td><td className="p-3 text-right"><button onClick={() => setEditing(item)} className="p-2 hover:bg-muted rounded"><Pencil size={16} /></button></td></tr>)}</tbody></table></div>
+        <div className="overflow-x-auto quimera-dashboard-panel-card"><table className="w-full text-sm"><tbody>{filtered.map((item: RestaurantMenuItem) => <tr key={item.id} className="border-b border-q-border last:border-0"><td className="p-3 font-medium">{item.name}</td><td className="p-3 text-q-text-muted">{item.category}</td><td className="p-3">{item.currency} {item.price.toFixed(2)}</td><td className="p-3">{item.isAvailable ? t('restaurants.available', 'Available') : t('restaurants.unavailable', 'Unavailable')}</td><td className="p-3 text-right"><button onClick={() => setEditing(item)} className="p-2 hover:bg-muted rounded"><Pencil size={16} /></button></td></tr>)}</tbody></table></div>
       )}
       {editing && <DishForm initial={editing} onClose={() => setEditing(null)} onSave={async (data) => { editing.id ? await menu.updateItem(editing.id, data) : await menu.createItem(data); setEditing(null); toast.success(t('common.saved', 'Saved')); }} />}
       <ConfirmationModal isOpen={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={async () => { await menu.deleteItem(deleteId); setDeleteId(null); }} title={t('restaurants.deleteDish', 'Delete dish')} message={t('restaurants.deleteDishConfirm', 'This dish will be removed from the menu.')} confirmText={t('common.delete', 'Delete')} variant="danger" />
@@ -377,16 +364,16 @@ const MenuManager = ({ menu, restaurantCurrency, scope, restaurantId }: any) => 
 const DishCard = ({ item, onEdit, onDelete, onToggle, onAi }: { item: RestaurantMenuItem; onEdit: () => void; onDelete: () => void; onToggle: (data: Partial<RestaurantMenuItem>) => void; onAi: (item: RestaurantMenuItem, action: string) => void }) => {
   const { t } = useTranslation();
   return (
-    <div className="rounded-xl border border-q-border bg-q-surface/60 overflow-hidden">
+    <div className="quimera-dashboard-panel-card overflow-hidden">
       <div className="aspect-[4/3] bg-muted">{item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <div className="h-full flex items-center justify-center"><Utensils className="text-q-text-muted" /></div>}</div>
       <div className="p-4 space-y-3">
         <div className="flex justify-between gap-3"><div><h3 className="font-semibold">{item.name}</h3><p className="text-sm text-q-text-muted">{item.category}</p></div><p className="font-bold">{item.currency} {item.price.toFixed(2)}</p></div>
         <p className="text-sm text-q-text-muted line-clamp-2">{item.description}</p>
-        <div className="flex flex-wrap gap-1">{item.dietaryTags.map((tag) => <span key={tag} className="rounded-full bg-primary/10 px-2 py-1 text-[11px] text-primary">{t(`restaurants.dietaryTagLabels.${tag}`, DIETARY_TAG_LABELS[tag])}</span>)}</div>
+        <div className="flex flex-wrap gap-1">{item.dietaryTags.map((tag) => <span key={tag} className="rounded-full bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] px-2 py-1 text-[11px] quimera-status-card-accent-text">{t(`restaurants.dietaryTagLabels.${tag}`, DIETARY_TAG_LABELS[tag])}</span>)}</div>
         <div className="flex flex-wrap gap-2 pt-2">
           <button onClick={() => onToggle({ isAvailable: !item.isAvailable })} className="px-3 py-1.5 rounded-lg bg-muted text-xs">{item.isAvailable ? t('restaurants.disable', 'Disable') : t('restaurants.enable', 'Enable')}</button>
           <button onClick={() => onToggle({ isFeatured: !item.isFeatured })} className="px-3 py-1.5 rounded-lg bg-muted text-xs">{item.isFeatured ? t('restaurants.unfeature', 'Unfeature') : t('restaurants.feature', 'Feature')}</button>
-          <button onClick={() => onAi(item, 'improve description')} className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs">{t('restaurants.aiAssist', 'AI')}</button>
+          <button onClick={() => onAi(item, 'improve description')} className="px-3 py-1.5 rounded-lg bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text text-xs">{t('restaurants.aiAssist', 'AI')}</button>
           <button onClick={onEdit} className="p-2 rounded-lg hover:bg-muted"><Pencil size={16} /></button>
           <button onClick={onDelete} className="p-2 rounded-lg hover:bg-muted text-red-500"><Trash2 size={16} /></button>
         </div>
@@ -414,9 +401,9 @@ const DishForm = ({ initial, onClose, onSave }: { initial: Partial<RestaurantMen
           <Input label={t('restaurants.ingredients', 'Ingredients')} value={(form.ingredients || []).join(', ')} onChange={(v) => update('ingredients', v.split(','))} />
           <Input label={t('restaurants.allergens', 'Allergens')} value={(form.allergens || []).join(', ')} onChange={(v) => update('allergens', v.split(','))} />
           <Input label={t('restaurants.upsells', 'Upsells')} value={(form.upsellItems || []).join(', ')} onChange={(v) => update('upsellItems', v.split(','))} />
-          <div className="space-y-2"><p className="text-sm font-medium">{t('restaurants.dietaryTags', 'Dietary tags')}</p><div className="flex flex-wrap gap-2">{Object.entries(DIETARY_TAG_LABELS).map(([key, label]) => <button key={key} type="button" onClick={() => { const exists = (form.dietaryTags || []).includes(key as DietaryTag); update('dietaryTags', exists ? (form.dietaryTags || []).filter((tag) => tag !== key) : [...(form.dietaryTags || []), key]); }} className={`px-2 py-1 rounded-lg text-xs border ${form.dietaryTags?.includes(key as DietaryTag) ? 'bg-primary text-primary-foreground border-primary' : 'border-q-border bg-muted/40'}`}>{label}</button>)}</div></div>
+          <div className="space-y-2"><p className="text-sm font-medium">{t('restaurants.dietaryTags', 'Dietary tags')}</p><div className="flex flex-wrap gap-2">{Object.entries(DIETARY_TAG_LABELS).map(([key, label]) => <button key={key} type="button" onClick={() => { const exists = (form.dietaryTags || []).includes(key as DietaryTag); update('dietaryTags', exists ? (form.dietaryTags || []).filter((tag) => tag !== key) : [...(form.dietaryTags || []), key]); }} className={`px-2 py-1 rounded-lg text-xs border ${form.dietaryTags?.includes(key as DietaryTag) ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text border-[var(--quimera-status-accent-from)]' : 'border-q-border bg-muted/40'}`}>{label}</button>)}</div></div>
         </div>
-        <div className="mt-5 flex justify-end gap-2"><button onClick={onClose} className="px-4 py-2 rounded-lg bg-muted">{t('common.cancel', 'Cancel')}</button><button onClick={() => onSave(form)} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground">{t('common.save', 'Save')}</button></div>
+        <div className="mt-5 flex justify-end gap-2"><button onClick={onClose} className="px-4 py-2 rounded-lg bg-muted">{t('common.cancel', 'Cancel')}</button><button onClick={() => onSave(form)} className="quimera-guide-cta px-4 py-2 rounded-lg font-medium">{t('common.save', 'Save')}</button></div>
       </div>
     </div>
   );
@@ -428,18 +415,10 @@ const DigitalMenuView = ({ restaurant, items, publicUrl }: { restaurant: any; it
   const copy = async () => { await navigator.clipboard.writeText(publicUrl); toast.success(t('common.copied', 'Copied')); };
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <QrCode className="text-primary w-6 h-6" />
-            <h2 className="text-2xl font-bold">{t('restaurants.digitalMenu', 'Digital Menu')}</h2>
-          </div>
-          <p className="text-q-text-muted mt-1">{t('restaurants.digitalMenuSubtitle', 'Your public QR code menu link and preview')}</p>
-        </div>
-      </div>
+      <SectionTitle icon={QrCode} title={t('restaurants.digitalMenu', 'Digital Menu')} subtitle={t('restaurants.digitalMenuSubtitle', 'Your public QR code menu link and preview')} />
       <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6">
-        <div className="rounded-xl border border-q-border bg-q-surface/60 p-5 space-y-4">
-          <button onClick={copy} className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-primary-foreground font-medium hover:bg-primary/90 transition-colors"><Clipboard size={18} />{t('restaurants.copyMenuLink', 'Copy Menu Link')}</button>
+        <div className="quimera-dashboard-panel-card p-5 space-y-4">
+          <button onClick={copy} className="quimera-guide-cta w-full flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium"><Clipboard size={18} />{t('restaurants.copyMenuLink', 'Copy Menu Link')}</button>
           <button onClick={() => window.open(publicUrl, '_blank')} className="w-full flex items-center justify-center gap-2 rounded-lg bg-muted px-4 py-2.5 font-medium hover:bg-muted/80 transition-colors"><ExternalLink size={18} />{t('restaurants.previewPublicMenu', 'Preview Public Menu')}</button>
           <div className="rounded-lg border border-q-border bg-q-bg p-6 text-center mt-4">
             <div className="mx-auto grid h-44 w-44 grid-cols-7 gap-1 rounded bg-white p-3">{Array.from({ length: 49 }).map((_, i) => <span key={i} className={`${(i * 7 + i) % 5 === 0 || i < 7 || i % 7 === 0 ? 'bg-black' : 'bg-white'}`} />)}</div>
@@ -455,7 +434,7 @@ const DigitalMenuView = ({ restaurant, items, publicUrl }: { restaurant: any; it
 const PublicMenuPreview = ({ restaurant, items }: { restaurant: any; items: RestaurantMenuItem[] }) => {
   const grouped = items.reduce<Record<string, RestaurantMenuItem[]>>((acc, item) => ({ ...acc, [item.category]: [...(acc[item.category] || []), item] }), {});
   return (
-    <div className="rounded-xl border border-q-border bg-q-surface/60 overflow-hidden">
+    <div className="quimera-dashboard-panel-card overflow-hidden">
       <div className="min-h-56 bg-muted p-6 flex items-end" style={restaurant.heroImageUrl ? { backgroundImage: `linear-gradient(to top, rgba(0,0,0,.7), rgba(0,0,0,.15)), url(${restaurant.heroImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}>
         <div><h2 className="text-3xl font-bold text-white">{restaurant.name}</h2><p className="text-white/80">{restaurant.cuisineType}</p></div>
       </div>
@@ -476,10 +455,10 @@ const ReservationCard = ({ item, onEdit, onUpdateStatus }: { item: RestaurantRes
   };
 
   return (
-    <div className="rounded-xl border border-q-border bg-q-surface/60 p-5 space-y-4 hover:border-primary/30 transition-colors">
+    <div className="quimera-dashboard-panel-card p-5 space-y-4 hover:border-q-border transition-colors">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] flex items-center justify-center quimera-status-card-accent-text font-bold shrink-0">
             {item.customerName.charAt(0).toUpperCase()}
           </div>
           <div>
@@ -512,13 +491,13 @@ const ReservationCard = ({ item, onEdit, onUpdateStatus }: { item: RestaurantRes
             <button 
               key={s} 
               onClick={() => onUpdateStatus(s)} 
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${item.status === s ? 'bg-primary/20 text-primary pointer-events-none' : 'bg-muted hover:bg-muted/80 text-foreground'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${item.status === s ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_20%,transparent)] quimera-status-card-accent-text pointer-events-none' : 'bg-muted hover:bg-muted/80 text-foreground'}`}
             >
               {t(`restaurants.status.${s}`, s)}
             </button>
           ))}
         </div>
-        <button onClick={onEdit} className="p-2 rounded-lg bg-muted hover:bg-primary/20 hover:text-primary transition-colors shrink-0">
+        <button onClick={onEdit} className="p-2 rounded-lg bg-muted hover:bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] hover:text-[var(--quimera-status-accent-from)] transition-colors shrink-0">
           <Pencil size={16} />
         </button>
       </div>
@@ -534,20 +513,14 @@ const ReservationsManager = ({ reservationsState, scope, restaurantId }: any) =>
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Calendar className="text-primary w-6 h-6" />
-            <h2 className="text-2xl font-bold">{t('restaurants.reservations', 'Reservations')}</h2>
-          </div>
-          <p className="text-q-text-muted mt-1">{filtered.length} {t('restaurants.reservations', 'reservations')}</p>
-        </div>
-        <button onClick={() => setEditing(emptyReservation)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-primary-foreground font-medium hover:bg-primary/90 transition-colors">
+        <SectionTitle icon={Calendar} title={t('restaurants.reservations', 'Reservations')} subtitle={`${filtered.length} ${t('restaurants.reservations', 'reservations')}`} />
+        <button onClick={() => setEditing(emptyReservation)} className="quimera-guide-cta inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium">
           <Plus size={18} />
           {t('restaurants.createReservation', 'Create reservation')}
         </button>
       </div>
-      <div className="rounded-xl border border-q-border bg-q-surface/60 p-5">
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="bg-muted/50 border border-q-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary/20 w-full sm:w-auto mb-4">
+      <div className="quimera-dashboard-panel-card p-5">
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className="bg-muted/50 border border-q-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto mb-4">
           <option value="">{t('restaurants.allStatuses', 'All statuses')}</option>
           {['pending', 'confirmed', 'cancelled', 'completed', 'noShow'].map((s) => <option key={s} value={s}>{t(`restaurants.status.${s}`, s)}</option>)}
         </select>
@@ -629,7 +602,7 @@ const EditorDatePicker = ({ label, value, onChange }: { label: string; value: st
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="flex w-full items-center justify-between rounded-md border border-q-border bg-q-bg/80 px-3 py-2 text-sm outline-none transition-colors hover:bg-q-bg focus:ring-2 focus:ring-primary/20"
+        className="flex w-full items-center justify-between rounded-md border border-q-border bg-q-bg/80 px-3 py-2 text-sm outline-none transition-colors hover:bg-q-bg focus:ring-2 focus:ring-ring"
       >
         <span className={value ? 'text-foreground' : 'text-q-text-muted'}>
           {displayValue || (isEs ? 'Seleccionar fecha' : 'Select date')}
@@ -638,7 +611,7 @@ const EditorDatePicker = ({ label, value, onChange }: { label: string; value: st
       </button>
 
       {open && (
-        <div className="absolute left-0 z-50 mt-1 w-full min-w-[280px] rounded-lg border border-q-border bg-q-surface p-3 shadow-xl">
+        <div className="absolute left-0 z-50 mt-1 w-full min-w-[280px] rounded-lg border border-q-border bg-q-surface p-3">
           <div className="mb-2 flex items-center justify-between">
             <button type="button" onClick={() => goMonth(-1)} className="rounded-md p-1 hover:bg-muted text-foreground"><ChevronLeft size={18} /></button>
             <span className="text-sm font-semibold text-foreground">{monthNames[viewMonth]} {viewYear}</span>
@@ -662,9 +635,9 @@ const EditorDatePicker = ({ label, value, onChange }: { label: string; value: st
                   disabled={isPast}
                   onClick={() => selectDay(day)}
                   className={`rounded-md py-1.5 text-sm transition-colors ${
-                    isSelected ? 'bg-primary text-primary-foreground font-bold' :
+                    isSelected ? 'bg-[var(--quimera-status-accent-from)] text-white font-bold' :
                     isPast ? 'text-q-text-muted/40 cursor-default' :
-                    isToday ? 'border border-primary font-bold text-primary hover:bg-muted' :
+                    isToday ? 'border border-[var(--quimera-status-accent-from)] font-bold quimera-status-card-accent-text hover:bg-muted' :
                     'text-foreground hover:bg-muted'
                   }`}
                 >
@@ -694,7 +667,7 @@ const EditorTimePicker = ({ label, value, onChange }: { label: string; value: st
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="flex w-full appearance-none items-center justify-between rounded-md border border-q-border bg-q-bg/80 px-3 py-2 pr-10 text-sm outline-none transition-colors hover:bg-q-bg focus:ring-2 focus:ring-primary/20"
+          className="flex w-full appearance-none items-center justify-between rounded-md border border-q-border bg-q-bg/80 px-3 py-2 pr-10 text-sm outline-none transition-colors hover:bg-q-bg focus:ring-2 focus:ring-ring"
         >
           <option value="" disabled className="text-q-text-muted">{t('restaurants.selectTime', 'Select time')}</option>
           {times.map(timeStr => <option key={timeStr} value={timeStr}>{timeStr}</option>)}
@@ -737,12 +710,12 @@ const ReservationForm = ({ initial, onClose, onSave, onAi }: { initial: Partial<
         </div>
 
         <div className="p-5 border-t border-q-border flex justify-between gap-2 shrink-0 bg-q-surface">
-          <button onClick={onAi} className="px-4 py-2 rounded-md bg-primary/10 text-primary flex items-center gap-2 font-medium hover:bg-primary/20 transition-colors">
+          <button onClick={onAi} className="px-4 py-2 rounded-md bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text flex items-center gap-2 font-medium hover:bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_25%,transparent)] transition-colors">
             <Sparkles size={16} />{t('restaurants.aiAssist', 'AI Message')}
           </button>
           <div className="flex gap-2">
             <button onClick={onClose} className="px-4 py-2 rounded-md bg-muted font-medium hover:bg-muted/80 transition-colors">{t('common.cancel', 'Cancel')}</button>
-            <button onClick={() => onSave(form)} className="px-4 py-2 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors">{t('common.save', 'Save')}</button>
+            <button onClick={() => onSave(form)} className="quimera-guide-cta px-4 py-2 rounded-md font-medium">{t('common.save', 'Save')}</button>
           </div>
         </div>
       </div>
@@ -764,25 +737,17 @@ const AiOutputPanel = ({ title, subtitle, actions, run, icon: Icon }: { title: s
   const [loading, setLoading] = useState(false);
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Icon className="text-primary w-6 h-6" />
-            <h2 className="text-2xl font-bold">{title}</h2>
-          </div>
-          <p className="text-q-text-muted mt-1">{subtitle}</p>
-        </div>
-      </div>
+      <SectionTitle icon={Icon} title={title} subtitle={subtitle} />
       <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
-        <div className="rounded-xl border border-q-border bg-q-surface/60 p-5 space-y-4">
+        <div className="quimera-dashboard-panel-card p-5 space-y-4">
           <Select label={t('restaurants.action', 'Action')} value={action} onChange={setAction} options={actions} />
           <TextArea label={t('restaurants.context', 'Context')} value={context} onChange={setContext} />
-          <button disabled={loading} onClick={async () => { setLoading(true); try { setOutput(await run(action, context)); } finally { setLoading(false); } }} className="w-full inline-flex justify-center items-center gap-2 rounded-lg bg-primary px-4 py-2.5 mt-4 text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-60">
+          <button disabled={loading} onClick={async () => { setLoading(true); try { setOutput(await run(action, context)); } finally { setLoading(false); } }} className="quimera-guide-cta w-full inline-flex justify-center items-center gap-2 rounded-lg px-4 py-2.5 mt-4 font-medium disabled:opacity-60">
             {loading ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
             {t('restaurants.generate', 'Generate')}
           </button>
         </div>
-        <div className="rounded-xl border border-q-border bg-q-surface/60 p-5 whitespace-pre-wrap text-sm leading-relaxed">
+        <div className="quimera-dashboard-panel-card p-5 whitespace-pre-wrap text-sm leading-relaxed">
           {output || t('restaurants.aiOutputPlaceholder', 'AI output will appear here.')}
         </div>
       </div>
@@ -829,7 +794,7 @@ const ImageField = ({ label, value, onChange }: { label: string; value: string; 
         />
         <button
           onClick={() => setPickerOpen(true)}
-          className="flex items-center gap-2 px-3 py-2 bg-primary/10 text-primary border border-primary/30 rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors whitespace-nowrap"
+          className="flex items-center gap-2 px-3 py-2 bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text border border-[color-mix(in_srgb,var(--quimera-status-accent-from)_30%,transparent)] rounded-lg text-sm font-medium hover:bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_25%,transparent)] transition-colors whitespace-nowrap"
         >
           <Search size={14} />
           {t('restaurants.browseLibrary', 'Browse library')}
@@ -872,11 +837,11 @@ const ScheduleEditor = ({ schedule, onChange }: { schedule: WeekSchedule; onChan
         {WEEK_DAYS.map((day) => {
           const d = schedule[day] || DEFAULT_SCHEDULE[day];
           return (
-            <div key={day} className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${d.open ? 'border-primary/30 bg-primary/5' : 'border-q-border bg-muted/20'
+            <div key={day} className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${d.open ? 'border-[color-mix(in_srgb,var(--quimera-status-accent-from)_30%,transparent)] bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_5%,transparent)]' : 'border-q-border bg-muted/20'
               }`}>
               <button
                 onClick={() => updateDay(day, { open: !d.open })}
-                className={`shrink-0 w-10 h-6 rounded-full relative transition-colors ${d.open ? 'bg-primary' : 'bg-muted'
+                className={`shrink-0 w-10 h-6 rounded-full relative transition-colors ${d.open ? 'bg-[var(--quimera-status-accent-from)]' : 'bg-muted'
                   }`}
               >
                 <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${d.open ? 'left-[18px]' : 'left-0.5'
@@ -932,7 +897,7 @@ const RestaurantSettingsView = ({ restaurant, onSave }: { restaurant: any; onSav
 
   const SectionHeader = ({ icon: Icon, title }: { icon: React.ElementType; title: string }) => (
     <div className="flex items-center gap-3 mb-5">
-      <Icon size={22} className="text-primary" />
+      <Icon size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
       <h3 className="text-lg font-semibold text-foreground">{title}</h3>
     </div>
   );
@@ -941,17 +906,11 @@ const RestaurantSettingsView = ({ restaurant, onSave }: { restaurant: any; onSav
     <div className="max-w-4xl mx-auto space-y-6 pb-20">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Settings className="text-primary w-6 h-6" />
-            <h2 className="text-2xl font-bold text-foreground">{t('restaurants.settingsTitle', 'Restaurant Settings')}</h2>
-          </div>
-          <p className="text-q-text-muted mt-1">{t('restaurants.settingsSubtitle', 'Manage your restaurant profile and operations')}</p>
-        </div>
+        <SectionTitle icon={Settings} title={t('restaurants.settingsTitle', 'Restaurant Settings')} subtitle={t('restaurants.settingsSubtitle', 'Manage your restaurant profile and operations')} />
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          className="quimera-guide-cta flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-medium disabled:opacity-50"
         >
           {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
           {t('restaurants.saveSettings', 'Save settings')}
@@ -959,7 +918,7 @@ const RestaurantSettingsView = ({ restaurant, onSave }: { restaurant: any; onSav
       </div>
 
       {/* Section: General Information */}
-      <div className="rounded-xl border border-q-border bg-q-surface/50 p-6">
+      <div className="quimera-dashboard-panel-card p-6">
         <SectionHeader icon={Utensils} title={t('restaurants.sectionGeneral', 'General Information')} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <Input label={t('restaurants.restaurantName', 'Restaurant name')} value={form.name || ''} onChange={(v) => set('name', v)} />
@@ -986,7 +945,7 @@ const RestaurantSettingsView = ({ restaurant, onSave }: { restaurant: any; onSav
       </div>
 
       {/* Section: Branding & Images */}
-      <div className="rounded-xl border border-q-border bg-q-surface/50 p-6">
+      <div className="quimera-dashboard-panel-card p-6">
         <SectionHeader icon={Star} title={t('restaurants.sectionBranding', 'Branding & Images')} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ImageField
@@ -1003,13 +962,13 @@ const RestaurantSettingsView = ({ restaurant, onSave }: { restaurant: any; onSav
       </div>
 
       {/* Section: Operating Hours */}
-      <div className="rounded-xl border border-q-border bg-q-surface/50 p-6">
+      <div className="quimera-dashboard-panel-card p-6">
         <SectionHeader icon={Calendar} title={t('restaurants.sectionSchedule', 'Operating Hours')} />
         <ScheduleEditor schedule={schedule} onChange={setSchedule} />
       </div>
 
       {/* Section: Reservations */}
-      <div className="rounded-xl border border-q-border bg-q-surface/50 p-6">
+      <div className="quimera-dashboard-panel-card p-6">
         <SectionHeader icon={Settings} title={t('restaurants.sectionReservations', 'Reservations')} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
@@ -1028,7 +987,7 @@ const RestaurantSettingsView = ({ restaurant, onSave }: { restaurant: any; onSav
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors shadow-lg shadow-primary/20"
+          className="quimera-guide-cta flex items-center gap-2 px-6 py-3 rounded-xl font-medium disabled:opacity-50"
         >
           {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
           {t('restaurants.saveSettings', 'Save settings')}
@@ -1038,7 +997,7 @@ const RestaurantSettingsView = ({ restaurant, onSave }: { restaurant: any; onSav
   );
 };
 
-const EmptyPanel = ({ title, action, onAction }: { title: string; action: string; onAction: () => void }) => <div className="rounded-xl border border-dashed border-q-border bg-q-surface/40 p-10 text-center"><Utensils className="mx-auto mb-3 text-q-text-muted" /><h3 className="font-semibold mb-3">{title}</h3><button onClick={onAction} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground"><Plus size={18} />{action}</button></div>;
+const EmptyPanel = ({ title, action, onAction }: { title: string; action: string; onAction: () => void }) => <div className="rounded-xl border border-dashed border-q-border bg-q-surface/40 p-10 text-center"><Utensils className="mx-auto mb-3 text-q-text-muted w-8 h-8" strokeWidth={2} /><h3 className="font-semibold mb-3">{title}</h3><button onClick={onAction} className="quimera-guide-cta inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium"><Plus size={18} />{action}</button></div>;
 const Input = ({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; type?: string }) => <label className="block space-y-1"><span className="text-sm font-medium">{label}</span><input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-lg border border-q-border bg-muted/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></label>;
 const TextArea = ({ label, value, onChange, className = '' }: { label: string; value: string; onChange: (value: string) => void; className?: string }) => <label className={`block space-y-1 ${className}`}><span className="text-sm font-medium">{label}</span><textarea value={value} onChange={(e) => onChange(e.target.value)} rows={4} className="w-full rounded-lg border border-q-border bg-muted/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></label>;
 const Select = ({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: string[] }) => <label className="block space-y-1"><span className="text-sm font-medium">{label}</span><select value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-lg border border-q-border bg-muted/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring">{options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>;

@@ -437,12 +437,12 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
   return (
     <div className="h-screen bg-q-bg flex flex-col">
       {/* Header */}
-      <header className="h-14 bg-q-surface border-b border-q-border flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
+ <header className="quimera-dashboard-header-bar h-14 flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
         <div className="flex items-center gap-3">
           <HeaderBackButton onClick={onBack} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
           <div className="w-px h-5 bg-q-surface-overlay hidden sm:block" />
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-q-accent" />
+            <Sparkles className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
             <h1 className="text-lg font-bold text-q-text">
               Gestión del Changelog
             </h1>

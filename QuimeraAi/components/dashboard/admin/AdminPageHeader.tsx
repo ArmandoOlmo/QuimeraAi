@@ -34,7 +34,7 @@ const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
 }) => {
   return (
     <header
-      className={`relative h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 ${sticky ? `sticky top-0 ${zIndexClassName}` : ''} ${className}`}
+      className={`relative h-14 quimera-dashboard-header-bar flex-shrink-0 flex items-center justify-between px-4 sm:px-6 ${sticky ? `sticky top-0 ${zIndexClassName}` : ''} ${className}`}
     >
       <div className="min-w-0 flex items-center gap-3">
         {onMenuClick && !hideMenuButton && (
@@ -51,7 +51,7 @@ const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
 
         <div className="min-w-0 flex items-center gap-2">
           {icon && (
-            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-q-accent">
+            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center quimera-dashboard-header-icon">
               {icon}
             </span>
           )}

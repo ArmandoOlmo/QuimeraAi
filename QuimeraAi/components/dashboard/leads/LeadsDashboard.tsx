@@ -8,7 +8,7 @@ import { useCRM } from '../../../contexts/crm';
 import { useAI } from '../../../contexts/ai';
 import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
+import { SettingsStatCard } from '../settings/SettingsStatCard';
 import { getSourceConfig, getLeadScoreLabel } from '../../../utils/leadScoring';
 import {
     Menu, Plus, Search, Filter, MoreVertical,
@@ -35,6 +35,7 @@ import AddLeadModal from './AddLeadModal';
 import ImportLeadsModal from './ImportLeadsModal';
 import AddToAudienceModal from '../email/AddToAudienceModal';
 import MobileSearchModal from '../../ui/MobileSearchModal';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { logApiCall } from '../../../services/apiLoggingService';
 import { INDUSTRY_STAGES, INDUSTRY_FIELDS, INDUSTRY_META } from '../../../utils/crmIndustryPresets';
 import { db, doc, updateDoc } from '@/utils/compatData';
@@ -95,6 +96,7 @@ const CARD_COLORS = [
     { id: 'pink', bg: 'bg-gradient-to-r from-pink-500/40 via-pink-500/20 to-transparent', border: 'border-pink-500/30', indicator: 'bg-pink-500' },
     { id: 'red', bg: 'bg-gradient-to-r from-red-500/40 via-red-500/20 to-transparent', border: 'border-red-500/30', indicator: 'bg-red-500' },
 ];
+
 
 
 const EMOJI_MARKERS = [
@@ -1004,9 +1006,8 @@ const LeadsDashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-q-bg">
-                <DashboardWaveRibbons className="absolute inset-x-0 top-[14rem] h-64 z-0 pointer-events-none overflow-hidden" />
                 {/* Header - Mobile optimized */}
-                <header className="h-auto min-h-[56px] px-3 sm:px-6 py-2 sm:py-0 border-b border-q-border bg-q-bg sticky top-0 z-20 shrink-0">
+ <header className="quimera-dashboard-header-bar h-auto min-h-[56px] px-3 sm:px-6 py-2 sm:py-0 sticky top-0 z-20 shrink-0">
                     {/* Main header row */}
                     <div className="flex items-center justify-between h-[52px] sm:h-14">
                         <div className="flex items-center gap-2 sm:gap-4">
@@ -1015,7 +1016,7 @@ const LeadsDashboard: React.FC = () => {
                             </button>
                             <div className="flex items-center gap-2 sm:gap-4">
                                 <div className="flex items-center gap-1.5 sm:gap-2">
-                                    <LayoutGrid className="text-primary w-4 h-4 sm:w-5 sm:h-5" />
+                                    <LayoutGrid className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                                     <h1 className="text-sm sm:text-lg font-semibold text-foreground">{t('leads.dashboard.title')}</h1>
                                 </div>
 
@@ -1029,7 +1030,7 @@ const LeadsDashboard: React.FC = () => {
                                         {(() => {
                                             const meta = INDUSTRY_META.find(m => m.id === currentIndustry);
                                             const IconComp = meta ? INDUSTRY_ICONS[meta.icon] || Briefcase : Briefcase;
-                                            return <IconComp size={14} className="text-primary" />;
+                                            return <IconComp size={14} className="quimera-status-card-accent-text" />;
                                         })()}
                                         <span className="hidden sm:inline">{t(`leads.industry.${currentIndustry === 'auto_dealership' ? 'autoDealership' : currentIndustry === 'real_estate' ? 'realEstate' : currentIndustry}`)}</span>
                                         <ChevronDown size={12} className={`transition-transform ${showIndustryDropdown ? 'rotate-180' : ''}`} />
@@ -1053,9 +1054,11 @@ const LeadsDashboard: React.FC = () => {
                                                                 : 'text-foreground hover:bg-secondary/80'
                                                         }`}
                                                     >
-                                                        <div className={`p-1.5 rounded-lg ${isActive ? 'bg-primary/20' : 'bg-secondary'}`}>
-                                                            <Icon size={14} />
-                                                        </div>
+                                                        <Icon
+                                                            size={14}
+                                                            className={isActive ? 'quimera-dashboard-header-icon' : 'text-q-text-muted'}
+                                                            strokeWidth={2}
+                                                        />
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-xs font-semibold truncate">{t(meta.labelKey)}</p>
                                                             <p className="text-[10px] text-q-text-muted truncate">{t(meta.descriptionKey)}</p>
@@ -1071,13 +1074,13 @@ const LeadsDashboard: React.FC = () => {
                                 <div className="flex items-center bg-muted/50 p-0.5 sm:p-1 rounded-lg border border-q-border/50">
                                     <button
                                         onClick={() => setActiveTab('pipeline')}
-                                        className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${activeTab === 'pipeline' ? 'bg-q-bg text-foreground shadow-sm' : 'text-q-text-muted hover:text-foreground'}`}
+                                        className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${activeTab === 'pipeline' ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
                                     >
                                         {t('leads.dashboard.pipeline')}
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('library')}
-                                        className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${activeTab === 'library' ? 'bg-q-bg text-foreground shadow-sm' : 'text-q-text-muted hover:text-foreground'}`}
+                                        className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${activeTab === 'library' ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
                                     >
                                         {t('leads.dashboard.library')}
                                     </button>
@@ -1089,43 +1092,47 @@ const LeadsDashboard: React.FC = () => {
                             {activeTab === 'pipeline' && (
                                 <>
                                     {/* Stats Row (Hidden on mobile) */}
-                                    <div className="hidden lg:flex items-center gap-6 mr-4">
-                                        <div>
-                                            <p className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider">{t('leads.dashboard.pipelineValue')}</p>
-                                            <p className="text-lg font-bold text-foreground">${stats.totalValue.toLocaleString()}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider">{t('leads.dashboard.conversionRate')}</p>
-                                            <div className="flex items-center text-green-500">
-                                                <p className="text-lg font-bold mr-1">{stats.conversionRate}%</p>
-                                                <ArrowUpRight size={14} />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider">{t('leads.dashboard.activeLeads')}</p>
-                                            <p className="text-lg font-bold text-foreground">{stats.activeLeads}</p>
-                                        </div>
+                                    <div className="hidden lg:flex items-center gap-2 mr-2">
+                                        <SettingsStatCard
+                                            compact
+                                            label={t('leads.dashboard.pipelineValue')}
+                                            value={`$${stats.totalValue.toLocaleString()}`}
+                                            icon={DollarSign}
+                                        />
+                                        <SettingsStatCard
+                                            compact
+                                            label={t('leads.dashboard.conversionRate')}
+                                            value={`${stats.conversionRate}%`}
+                                            icon={ArrowUpRight}
+                                            valueClass="text-green-500"
+                                        />
+                                        <SettingsStatCard
+                                            compact
+                                            label={t('leads.dashboard.activeLeads')}
+                                            value={stats.activeLeads}
+                                            icon={Users}
+                                        />
                                     </div>
 
                                     {/* View Mode Selector - Compact on mobile */}
                                     <div className="hidden sm:flex items-center gap-0.5 sm:gap-1">
                                         <button
                                             onClick={() => setViewMode('kanban')}
-                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'text-q-accent bg-q-accent/10' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
+                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'quimera-status-card-accent-text bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)]' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
                                             title={t('leads.dashboard.kanbanView')}
                                         >
                                             <Columns className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => setViewMode('table')}
-                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'text-q-accent bg-q-accent/10' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
+                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'quimera-status-card-accent-text bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)]' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
                                             title={t('leads.dashboard.tableView')}
                                         >
                                             <Table className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => setViewMode('list')}
-                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-q-accent bg-q-accent/10' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
+                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'quimera-status-card-accent-text bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)]' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
                                             title={t('leads.dashboard.listView')}
                                         >
                                             <List className="w-4 h-4" />
@@ -1187,13 +1194,14 @@ const LeadsDashboard: React.FC = () => {
                                     </button>
                                     <button
                                         onClick={() => setIsAddModalOpen(true)}
-                                        className="flex items-center justify-center gap-1 h-8 w-8 sm:w-auto sm:h-9 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90 whitespace-nowrap"
+                                        className="quimera-guide-cta flex items-center justify-center gap-1 h-8 w-8 sm:w-auto sm:h-9 sm:px-3 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap"
                                     >
                                         <Plus className="w-4 h-4" />
                                         <span className="hidden sm:inline">{t('leads.dashboard.addLead')}</span>
                                     </button>
                                 </>
                             )}
+                            <HeaderBackButton onClick={() => setView('dashboard')} />
                         </div>
                     </div>
 

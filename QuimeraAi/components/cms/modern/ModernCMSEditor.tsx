@@ -1049,7 +1049,7 @@ IMPORTANT FORMATTING RULES:
             {/* Main Content Area */}
             <div className="flex flex-col flex-1 min-w-0">
                 {/* Header - Replicated from LandingPageEditor */}
-                <header className="h-12 px-3 lg:px-4 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
+ <header className="quimera-dashboard-header-bar h-12 px-3 lg:px-4 flex items-center z-20 sticky top-0">
                     {/* Left Section - Menu + Icon */}
                     <div className="flex items-center gap-2">
                         <button
@@ -1058,7 +1058,7 @@ IMPORTANT FORMATTING RULES:
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <Layout className="text-primary w-5 h-5" />
+                        <Layout className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                     </div>
 
                     {/* Center - Status Toggle */}

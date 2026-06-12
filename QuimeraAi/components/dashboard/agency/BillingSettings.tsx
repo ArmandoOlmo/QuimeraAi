@@ -152,9 +152,7 @@ export function BillingSettings() {
                     className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                            <HelpCircle className="h-5 w-5 text-primary" />
-                        </div>
+                        <HelpCircle className="h-5 w-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                         <div className="text-left">
                             <h3 className="font-semibold text-foreground">
                                 {connectStatus.status === 'not_configured'
@@ -205,9 +203,7 @@ export function BillingSettings() {
                         {/* Step by Step Guide */}
                         <div>
                             <h4 className="font-bold text-foreground text-lg mb-4 flex items-center gap-2">
-                                <span className="p-1.5 bg-primary/10 rounded-lg">
-                                    <FileText className="h-4 w-4 text-primary" />
-                                </span>
+                                <FileText className="h-4 w-4 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                                 Pasos para configurar tu cuenta
                             </h4>
 

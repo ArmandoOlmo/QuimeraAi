@@ -17,7 +17,6 @@ import { es } from 'date-fns/locale';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 import { Tenant } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import { fetchBillingData } from '../../../data/mockBillingData';
 import { BillingData } from '../../../types';
 import { useAdmin } from '../../../contexts/admin';
@@ -61,22 +60,20 @@ const StatCard = ({ title, value, icon: Icon, trend, trendLabel, isPositiveTrend
 }) => (
     <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-4 sm:p-5 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
         <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-15 dark:opacity-10 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
-        <div className="relative z-10 flex justify-between items-start mb-3">
-            <div className="p-2 bg-primary/20 rounded-lg">
-                <Icon size={18} className="text-primary" />
+        <div className="relative z-10">
+            <div className="flex justify-between items-start mb-1 md:mb-2">
+                <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" size={18} strokeWidth={2} />
+                {trend && (
+                    <span className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${isPositiveTrend ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                        }`}>
+                        {isPositiveTrend ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                        {trend}
+                    </span>
+                )}
             </div>
-            {trend && (
-                <span className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${isPositiveTrend ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                    }`}>
-                    {isPositiveTrend ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                    {trend}
-                </span>
-            )}
-        </div>
-        <div className="relative z-10 space-y-1">
-            <p className="text-[10px] sm:text-xs font-semibold text-q-text-muted uppercase tracking-wider">{title}</p>
-            <h3 className="text-xl sm:text-2xl font-bold text-foreground">{value}</h3>
-            {trendLabel && <p className="text-[10px] sm:text-xs text-q-text-muted">{trendLabel}</p>}
+            <div className="text-xl md:text-3xl font-extrabold text-foreground">{value}</div>
+            <p className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{title}</p>
+            {trendLabel && <p className="text-[10px] sm:text-xs text-q-text-muted mt-0.5">{trendLabel}</p>}
         </div>
     </div>
 );
@@ -279,16 +276,14 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-q-bg">
-                <DashboardWaveRibbons className="absolute inset-x-0 top-28 h-72 z-0 pointer-events-none overflow-hidden" />
-
                 {/* ── Header ─────────────────────────────────────────────── */}
-                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 shrink-0">
+ <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 shrink-0">
                     <div className="flex items-center gap-1 sm:gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-q-text-muted hover:text-foreground">
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <DollarSign className="text-primary w-5 h-5" />
+                            <DollarSign className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-sm sm:text-lg font-semibold text-foreground">
                                 {t('superadmin.finances', 'Finanzas & MRR')}
                             </h1>

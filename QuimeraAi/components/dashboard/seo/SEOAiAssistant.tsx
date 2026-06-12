@@ -154,11 +154,9 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up">
             <div className="bg-q-surface border border-q-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="p-6 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-primary/10 to-transparent">
+                <div className="p-6 border-b border-q-border flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="bg-primary/20 p-2 rounded-lg">
-                            <Sparkles className="text-primary w-6 h-6" />
-                        </div>
+                        <Sparkles className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                         <div>
                             <h2 className="text-xl font-bold">{t('seo.aiAssistant', 'Asistente SEO con IA')}</h2>
                             <p className="text-xs text-q-text-muted">{t('seo.aiAssistantDesc', 'Genera configuración SEO optimizada automáticamente')}</p>
@@ -190,7 +188,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                         value={businessDescription}
                                         onChange={(e) => setBusinessDescription(e.target.value)}
                                         placeholder={t('seo.businessDescPlaceholder', 'Ej: Somos una agencia de marketing digital especializada en startups y pymes. Ofrecemos servicios de SEO, publicidad en redes sociales y diseño web...')}
-                                        className="w-full h-32 bg-secondary/30 border border-q-border rounded-xl p-4 text-base focus:ring-2 focus:ring-primary/50 outline-none resize-none"
+                                        className="w-full h-32 bg-secondary/30 border border-q-border rounded-xl p-4 text-base focus:ring-2 focus:ring-[var(--quimera-status-accent-from)]/40 outline-none resize-none"
                                     />
                                 </div>
 
@@ -203,7 +201,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                         value={websiteUrl}
                                         onChange={(e) => setWebsiteUrl(e.target.value)}
                                         placeholder="https://example.com"
-                                        className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary/50"
+                                        className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 outline-none focus:ring-2 focus:ring-[var(--quimera-status-accent-from)]/40"
                                     />
                                 </div>
 
@@ -223,8 +221,8 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                                 key={lang.value}
                                                 onClick={() => setLanguage(lang.value)}
                                                 className={`p-2.5 rounded-lg border text-sm font-medium transition-all ${language === lang.value
-                                                    ? 'bg-primary text-primary-foreground border-primary'
-                                                    : 'bg-q-surface border-q-border hover:border-primary/50'
+                                                    ? 'border-[var(--quimera-status-accent-from)] bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
+                                                    : 'bg-q-surface border-q-border hover:border-q-border'
                                                     }`}
                                             >
                                                 {lang.label}
@@ -238,7 +236,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                 <button
                                     onClick={handleGenerate}
                                     disabled={!businessDescription.trim()}
-                                    className="bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                    className="quimera-guide-cta px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                 >
                                     <Sparkles size={18} /> {t('seo.generateSEO', 'Generar SEO')}
                                 </button>
@@ -249,8 +247,8 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                     {step === 'generating' && (
                         <div className="flex flex-col items-center justify-center h-full text-center py-12 space-y-6">
                             <div className="relative">
-                                <div className="absolute inset-0 bg-primary blur-xl opacity-20 rounded-full animate-pulse"></div>
-                                <Loader2 className="w-16 h-16 text-primary animate-spin relative z-10" />
+                                <div className="absolute inset-0 bg-[var(--quimera-status-icon-from)] blur-xl opacity-20 rounded-full animate-pulse"></div>
+                                <Loader2 className="w-16 h-16 text-[var(--quimera-status-icon-from)] animate-spin relative z-10" />
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold mb-2">{t('seo.aiOptimizing', 'Optimizando tu SEO...')}</h3>
@@ -263,20 +261,20 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
 
                     {step === 'preview' && generatedSeo && (
                         <div className="space-y-6 animate-fade-in-up h-full flex flex-col">
-                            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-start gap-3">
-                                <CheckCircle className="text-green-500 shrink-0 mt-0.5" size={20} />
+                            <div className="quimera-guide-panel-accent p-4 flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" strokeWidth={2} />
                                 <div>
-                                    <p className="font-bold text-green-600">{t('seo.seoGenerated', '¡Configuración SEO generada!')}</p>
-                                    <p className="text-xs text-green-600/80">{t('seo.reviewBeforeApply', 'Revisa los resultados antes de aplicarlos a tu proyecto.')}</p>
+                                    <p className="font-bold text-foreground">{t('seo.seoGenerated', '¡Configuración SEO generada!')}</p>
+                                    <p className="text-xs text-q-text-muted">{t('seo.reviewBeforeApply', 'Revisa los resultados antes de aplicarlos a tu proyecto.')}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                                 {/* Basic SEO */}
-                                <div className="bg-secondary/20 rounded-xl p-4 border border-q-border/50 space-y-3">
+                                <div className="quimera-dashboard-panel-card group p-4 space-y-3">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <Globe className="w-4 h-4 text-primary" />
-                                        <span className="text-sm font-bold text-primary uppercase">{t('seo.basicSEO', 'SEO Básico')}</span>
+                                        <Globe className="w-4 h-4 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                        <span className="text-sm font-bold quimera-status-card-accent-text uppercase">{t('seo.basicSEO', 'SEO Básico')}</span>
                                     </div>
                                     <div>
                                         <span className="text-xs font-bold text-q-text-muted uppercase">{t('seo.pageTitle', 'Título')}</span>
@@ -301,7 +299,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                             <span className="text-xs font-bold text-q-text-muted uppercase">Keywords</span>
                                             <div className="flex gap-1.5 flex-wrap mt-1">
                                                 {generatedSeo.keywords.map((kw, i) => (
-                                                    <span key={i} className="px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full font-medium">
+                                                    <span key={i} className="px-2 py-0.5 text-xs bg-[color-mix(in_srgb,var(--quimera-status-icon-from)_15%,transparent)] quimera-status-card-accent-text rounded-full font-medium">
                                                         {kw}
                                                     </span>
                                                 ))}
@@ -311,10 +309,10 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                 </div>
 
                                 {/* Social / Open Graph */}
-                                <div className="bg-secondary/20 rounded-xl p-4 border border-q-border/50 space-y-3">
+                                <div className="quimera-dashboard-panel-card group p-4 space-y-3">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <Share2 className="w-4 h-4 text-blue-500" />
-                                        <span className="text-sm font-bold text-blue-500 uppercase">{t('seo.socialMedia', 'Redes Sociales')}</span>
+                                        <Share2 className="w-4 h-4 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                        <span className="text-sm font-bold quimera-status-card-accent-text uppercase">{t('seo.socialMedia', 'Redes Sociales')}</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
@@ -352,10 +350,10 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
 
                                 {/* AI Optimization */}
                                 {(generatedSeo.aiDescription || (generatedSeo.aiKeyTopics && generatedSeo.aiKeyTopics.length > 0)) && (
-                                    <div className="bg-secondary/20 rounded-xl p-4 border border-q-border/50 space-y-3">
+                                    <div className="quimera-dashboard-panel-card group p-4 space-y-3">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <Bot className="w-4 h-4 text-purple-500" />
-                                            <span className="text-sm font-bold text-purple-500 uppercase">{t('seo.aiOptimization', 'Optimización IA')}</span>
+                                            <Bot className="w-4 h-4 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                            <span className="text-sm font-bold quimera-status-card-accent-text uppercase">{t('seo.aiOptimization', 'Optimización IA')}</span>
                                         </div>
                                         {generatedSeo.aiDescription && (
                                             <div>
@@ -368,7 +366,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                                 <span className="text-xs font-bold text-q-text-muted uppercase">{t('seo.keyTopicsCommaSeparated', 'Temas Clave')}</span>
                                                 <div className="flex gap-1.5 flex-wrap mt-1">
                                                     {generatedSeo.aiKeyTopics.map((topic, i) => (
-                                                        <span key={i} className="px-2 py-0.5 text-xs bg-purple-500/10 text-purple-500 rounded-full font-medium">
+                                                        <span key={i} className="px-2 py-0.5 text-xs bg-[color-mix(in_srgb,var(--quimera-status-icon-from)_15%,transparent)] quimera-status-card-accent-text rounded-full font-medium">
                                                             {topic}
                                                         </span>
                                                     ))}
@@ -405,7 +403,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                 </button>
                                 <button
                                     onClick={handleApply}
-                                    className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-green-700 transition-all shadow-lg shadow-green-900/20"
+                                    className="quimera-guide-cta px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all"
                                 >
                                     {t('seo.applySEO', 'Aplicar SEO')} <ArrowRight size={18} />
                                 </button>

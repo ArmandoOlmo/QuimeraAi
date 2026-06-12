@@ -171,10 +171,10 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
         <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+ <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
                         <div className="flex items-center gap-2">
-                            <BarChart3 className="text-q-accent w-5 h-5" />
+                            <BarChart3 className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-lg font-semibold text-q-text">{t('superadmin.usage.title', { defaultValue: 'Usage Statistics' })}</h1>
                         </div>
                     </div>

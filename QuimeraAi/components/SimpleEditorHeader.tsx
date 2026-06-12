@@ -85,7 +85,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
   };
 
   return (
-    <header className="h-14 px-3 md:px-6 border-b border-q-border bg-q-bg flex items-center justify-between z-20 sticky top-0 relative" role="banner">
+ <header className="quimera-dashboard-header-bar h-14 px-3 md:px-6 flex items-center justify-between z-20 sticky top-0 relative" role="banner">
       <div className="flex items-center gap-2 md:gap-4 min-w-0">
         {/* Mobile Menu Button - Opens DashboardSidebar */}
         {onOpenMobileMenu && (
@@ -122,7 +122,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
 
         {/* Project Name - Hidden on mobile (already shown in BrowserPreview) */}
         <div className="hidden md:flex items-center gap-2">
-          <Globe className="text-q-accent" size={24} aria-hidden="true" />
+          <Globe className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} aria-hidden="true" />
 
           {/* Project Name */}
           {isEditingName ? (

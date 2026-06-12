@@ -189,7 +189,7 @@ export function AddonsManager() {
       description: t('dashboard.agency.addonsPage.extraSubClientsDesc'),
       pricePerUnit: pricing.extraSubClients,
       unit: t('dashboard.agency.addonsPage.client'),
-      icon: <Users className="w-5 h-5 text-primary" />,
+      icon: <Users className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />,
       currentQuantity: pendingAddons.extraSubClients,
     },
     {
@@ -198,7 +198,7 @@ export function AddonsManager() {
       description: t('dashboard.agency.addonsPage.extraStorageDesc'),
       pricePerUnit: pricing.extraStorageGB,
       unit: '100GB',
-      icon: <HardDrive className="w-5 h-5 text-primary" />,
+      icon: <HardDrive className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />,
       currentQuantity: pendingAddons.extraStorageGB,
     },
     {
@@ -207,7 +207,7 @@ export function AddonsManager() {
       description: t('dashboard.agency.addonsPage.extraAiCreditsDesc'),
       pricePerUnit: pricing.extraAiCredits,
       unit: '1000 credits',
-      icon: <Zap className="w-5 h-5 text-primary" />,
+      icon: <Zap className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />,
       currentQuantity: pendingAddons.extraAiCredits,
     },
   ];
@@ -302,7 +302,7 @@ export function AddonsManager() {
           <div key={addon.id} className="bg-q-surface border border-q-border rounded-xl p-6">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4 flex-1">
-                <div className="bg-primary/10 p-3 rounded-lg">
+                <div className="flex-shrink-0">
                   {addon.icon}
                 </div>
                 <div className="flex-1">

@@ -19,6 +19,7 @@ import {
     Globe,
     Activity,
 } from 'lucide-react';
+import { settingsPanelClass } from '../settings/SettingsStatCard';
 
 interface ClientActivityFeedProps {
     activities: ActivityEvent[];
@@ -47,12 +48,15 @@ export function ClientActivityFeed({
 
     if (activities.length === 0) {
         return (
-            <div className="bg-q-surface rounded-lg border border-q-border p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">
-                    Actividad Reciente
-                </h3>
+            <div className={`${settingsPanelClass} p-6`}>
+                <div className="flex items-center gap-3 mb-4">
+                    <Activity size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
+                    <h3 className="text-lg font-semibold text-foreground">
+                        Actividad Reciente
+                    </h3>
+                </div>
                 <div className="text-center py-8">
-                    <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <Activity className="h-10 w-10 text-q-text-muted/40 mx-auto mb-4" strokeWidth={1.5} />
                     <p className="text-q-text-muted">
                         No hay actividad reciente
                     </p>
@@ -65,11 +69,14 @@ export function ClientActivityFeed({
     }
 
     return (
-        <div className="bg-q-surface rounded-lg border border-q-border p-6">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-foreground">
-                    Actividad Reciente
-                </h3>
+        <div className={`${settingsPanelClass} p-6`}>
+            <div className="flex items-center justify-between mb-4 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                    <Activity size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
+                    <h3 className="text-lg font-semibold text-foreground">
+                        Actividad Reciente
+                    </h3>
+                </div>
                 <span className="text-sm text-q-text-muted">
                     Últimas {activities.length} actividades
                 </span>
@@ -132,7 +139,7 @@ export function ClientActivityFeed({
             {hasMore && !showAll && (
                 <button
                     onClick={() => setShowAll(true)}
-                    className="w-full mt-4 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                    className="w-full mt-4 text-sm quimera-status-card-link font-medium"
                 >
                     Ver todas las actividades ({activities.length})
                 </button>
