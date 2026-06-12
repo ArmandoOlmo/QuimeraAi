@@ -1,6 +1,7 @@
-import React, { createContext, useContext, ReactNode, useState } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useEditorCompat } from './compatibility/useEditorCompat';
 import { SEOConfig } from '../types';
+import { resolveProjectSeoConfig } from '../utils/resolveProjectSeoConfig';
 
 // Re-export types from the old context for compatibility
 export type { 
@@ -35,7 +36,8 @@ export const EditorContext = createContext<EditorContextType | undefined>(undefi
 export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Obtener valores de los contextos modulares
     const compatValues = useEditorCompat();
-    
+    const { activeProjectId, activeProject, projects, updateProjectSeoConfig } = compatValues;
+
     // Estado adicional que no está en los contextos modulares aún
     const [seoConfig, setSeoConfig] = useState<SEOConfig | null>(null);
     const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
@@ -44,9 +46,28 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return saved ? JSON.parse(saved) : [];
     });
 
-    // Función para actualizar SEO config
+    // Sync SEO config when the active project changes
+    useEffect(() => {
+        if (!activeProjectId) {
+            setSeoConfig(null);
+            return;
+        }
+
+        const project = projects.find((p) => p.id === activeProjectId) || activeProject;
+        if (!project || project.id !== activeProjectId) {
+            setSeoConfig(null);
+            return;
+        }
+
+        setSeoConfig(resolveProjectSeoConfig(project));
+    }, [activeProjectId, activeProject, projects]);
+
     const updateSeoConfig = async (updates: Partial<SEOConfig>) => {
-        setSeoConfig(prev => prev ? { ...prev, ...updates } : null);
+        if (!activeProjectId || !seoConfig) return;
+
+        const merged: SEOConfig = { ...seoConfig, ...updates };
+        setSeoConfig(merged);
+        await updateProjectSeoConfig(activeProjectId, merged);
     };
 
     // Combinar todo en el valor del contexto

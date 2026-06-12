@@ -6,17 +6,20 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Truck, Shield, CreditCard, RefreshCw, Clock, Award,
     Lock, Headphones, Package, CheckCircle, Star, Heart
 } from 'lucide-react';
 import { TrustBadgesData, TrustBadgeIcon, TrustBadgeItem } from '../../../types/components';
 import { useSafeProject } from '../../../contexts/project';
-import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { resolveI18nField } from '../../../utils/i18nContent';
 
 interface TrustBadgesProps {
     data: TrustBadgesData;
     storeId?: string;
+    globalColors?: StorefrontGlobalColors;
 }
 
 const iconMap: Record<TrustBadgeIcon, React.FC<{ size?: number; className?: string }>> = {
@@ -34,12 +37,15 @@ const iconMap: Record<TrustBadgeIcon, React.FC<{ size?: number; className?: stri
     'heart': Heart,
 };
 
-const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId }) => {
+const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId, globalColors }) => {
+    const { i18n } = useTranslation();
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
+    const text = React.useCallback((value: any) => resolveI18nField(value, i18n.language), [i18n.language]);
+    const title = text(data.title as any);
     
     // Unified colors system
-    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);
+    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
     // Default badges if none provided
     const badges: TrustBadgeItem[] = data.badges?.length > 0 ? data.badges : [
         { icon: 'truck', title: 'Envío Gratis', description: 'En pedidos mayores a $50' },
@@ -72,6 +78,8 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId }) => {
     // Badge Component
     const Badge = ({ badge }: { badge: TrustBadgeItem }) => {
         const IconComponent = iconMap[badge.icon] || CheckCircle;
+        const badgeTitle = text(badge.title as any);
+        const badgeDescription = text(badge.description as any);
 
         return (
             <div className="flex items-center gap-3">
@@ -87,11 +95,11 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId }) => {
                             className="font-semibold text-sm"
                             style={{ color: colors?.heading || colors?.text }}
                         >
-                            {badge.title}
+                            {badgeTitle}
                         </h4>
-                        {badge.description && (
+                        {badgeDescription && (
                             <p className="text-xs" style={{ color: colors?.text }}>
-                                {badge.description}
+                                {badgeDescription}
                             </p>
                         )}
                     </div>
@@ -114,6 +122,8 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {badges.map((badge, index) => {
                 const IconComponent = iconMap[badge.icon] || CheckCircle;
+                const badgeTitle = text(badge.title as any);
+                const badgeDescription = text(badge.description as any);
                 return (
                     <div
                         key={index}
@@ -135,11 +145,11 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId }) => {
                                     className="font-semibold mb-1"
                                     style={{ color: colors?.heading || colors?.text }}
                                 >
-                                    {badge.title}
+                                    {badgeTitle}
                                 </h4>
-                                {badge.description && (
+                                {badgeDescription && (
                                     <p className="text-sm" style={{ color: colors?.text }}>
-                                        {badge.description}
+                                        {badgeDescription}
                                     </p>
                                 )}
                             </>
@@ -155,12 +165,13 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId }) => {
         <div className="flex flex-wrap justify-center items-center gap-8">
             {badges.map((badge, index) => {
                 const IconComponent = iconMap[badge.icon] || CheckCircle;
+                const badgeTitle = text(badge.title as any);
                 return (
                     <div key={index} className="flex items-center gap-2">
                         <IconComponent size={getIconSize()} style={{ color: colors?.accent }} />
                         {data.showLabels && (
                             <span className="font-medium text-sm" style={{ color: colors?.text }}>
-                                {badge.title}
+                                {badgeTitle}
                             </span>
                         )}
                     </div>
@@ -174,6 +185,8 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {badges.map((badge, index) => {
                 const IconComponent = iconMap[badge.icon] || CheckCircle;
+                const badgeTitle = text(badge.title as any);
+                const badgeDescription = text(badge.description as any);
                 return (
                     <div
                         key={index}
@@ -193,11 +206,11 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId }) => {
                             className="font-bold text-lg mb-2"
                             style={{ color: colors?.heading || colors?.text }}
                         >
-                            {badge.title}
+                            {badgeTitle}
                         </h4>
-                        {badge.description && (
+                        {badgeDescription && (
                             <p className="text-sm leading-relaxed" style={{ color: colors?.text }}>
-                                {badge.description}
+                                {badgeDescription}
                             </p>
                         )}
                     </div>
@@ -217,12 +230,12 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId }) => {
         >
             <div className="max-w-7xl mx-auto">
                 {/* Optional Title */}
-                {data.title && (
+                {title && (
                     <h3
                         className="text-center font-semibold mb-6"
                         style={{ color: colors?.heading }}
                     >
-                        {data.title}
+                        {title}
                     </h3>
                 )}
 

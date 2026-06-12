@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FileText, Palette, Settings } from 'lucide-react';
+import { resolveProjectName } from '../../utils/resolveProjectName';
 
 interface TabbedControlsProps {
     contentTab?: React.ReactNode;
@@ -20,16 +21,17 @@ const TabbedControls: React.FC<TabbedControlsProps> = ({
 }) => {
     const resolvedContentTab = contentTab ?? contentControls ?? null;
     const resolvedStyleTab = styleTab ?? null;
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [activeTab, setActiveTab] = useState<TabType>('content');
+    const resolveLabel = (text: unknown) => resolveProjectName(text, i18n.language);
 
     const tabs = [
-        { id: 'content' as TabType, label: t('controls.contentTab'), icon: FileText, content: resolvedContentTab },
-        { id: 'style' as TabType, label: t('controls.styleTab'), icon: Palette, content: resolvedStyleTab },
+        { id: 'content' as TabType, label: resolveLabel(t('controls.contentTab')), icon: FileText, content: resolvedContentTab },
+        { id: 'style' as TabType, label: resolveLabel(t('controls.styleTab')), icon: Palette, content: resolvedStyleTab },
     ];
 
     if (advancedTab) {
-        tabs.push({ id: 'advanced' as TabType, label: t('controls.advanced'), icon: Settings, content: advancedTab });
+        tabs.push({ id: 'advanced' as TabType, label: resolveLabel(t('controls.advanced')), icon: Settings, content: advancedTab });
     }
 
     return (

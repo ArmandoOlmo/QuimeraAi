@@ -377,6 +377,9 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             const cfData = await analyzeWebsite(url);
 
             const result = cfData.result;
+            if (!result) {
+                throw new Error(cfData.error || 'Analysis returned no extracted website data');
+            }
             const pagesScraped = (cfData as any).meta?.pagesScraped || 1;
 
             // 2. Map Cloud Function result into our BusinessBrief

@@ -8,27 +8,35 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { CategoryGridData, CategoryItem } from '../../../types/components';
 import { useSafeProject } from '../../../contexts/project';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
-import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { resolveI18nField } from '../../../utils/i18nContent';
 
 interface CategoryGridProps {
     data: CategoryGridData;
     storeId?: string;
+    globalColors?: StorefrontGlobalColors;
     onCategoryClick?: (categorySlug: string) => void;
 }
 
 const CategoryGrid: React.FC<CategoryGridProps> = ({
     data,
     storeId,
+    globalColors,
     onCategoryClick,
 }) => {
+    const { i18n } = useTranslation();
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
+    const text = React.useCallback((value: any) => resolveI18nField(value, i18n.language), [i18n.language]);
+    const title = text(data.title as any);
+    const description = text(data.description as any);
     
     // Unified colors system - merges global theme with component-specific colors
-    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);
+    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
     
     const { categories: storeCategories, isLoading } = usePublicProducts(effectiveStoreId);
 
@@ -98,6 +106,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
 
     // Category Card Component
     const CategoryCard = ({ category }: { category: CategoryItem }) => {
+        const categoryName = text(category.name as any);
         const handleClick = () => {
             if (category.slug) {
                 onCategoryClick?.(category.slug);
@@ -116,7 +125,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                         {category.imageUrl ? (
                             <img
                                 src={category.imageUrl}
-                                alt={category.name}
+                                alt={categoryName}
                                 className="w-full h-full transition-transform duration-500 group-hover:scale-110"
                                 style={{ objectFit: getObjectFit() }}
                             />
@@ -134,7 +143,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                             className="font-semibold text-lg mb-1"
                             style={{ color: colors?.cardText || colors?.heading }}
                         >
-                            {category.name}
+                            {categoryName}
                         </h3>
                         {data.showProductCount && category.productCount !== undefined && (
                             <p className="text-sm" style={{ color: colors?.text }}>
@@ -156,7 +165,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                     {category.imageUrl ? (
                         <img
                             src={category.imageUrl}
-                            alt={category.name}
+                            alt={categoryName}
                             className="w-full h-full transition-transform duration-500 group-hover:scale-110"
                             style={{ objectFit: getObjectFit() }}
                         />
@@ -172,7 +181,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                             background: `linear-gradient(to top, ${colors?.overlayEnd}, ${colors?.overlayStart})`,
                         }}
                     >
-                        <h3 className="font-bold text-xl" style={{ color: colors?.buttonText }}>{category.name}</h3>
+                        <h3 className="font-bold text-xl" style={{ color: colors?.buttonText }}>{categoryName}</h3>
                         {data.showProductCount && category.productCount !== undefined && (
                             <p className="text-sm" style={{ color: colors?.buttonText, opacity: 0.8 }}>{category.productCount} productos</p>
                         )}
@@ -196,7 +205,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                         {category.imageUrl ? (
                             <img
                                 src={category.imageUrl}
-                                alt={category.name}
+                                alt={categoryName}
                                 className="w-full h-full transition-transform duration-300 group-hover:scale-105"
                                 style={{ objectFit: getObjectFit() }}
                             />
@@ -213,7 +222,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                         className="font-medium group-hover:underline"
                         style={{ color: colors?.heading }}
                     >
-                        {category.name}
+                        {categoryName}
                     </h3>
                     {data.showProductCount && category.productCount !== undefined && (
                         <p className="text-sm" style={{ color: colors?.text }}>
@@ -234,7 +243,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                     {category.imageUrl ? (
                         <img
                             src={category.imageUrl}
-                            alt={category.name}
+                            alt={categoryName}
                             className="w-full h-full transition-transform duration-500 group-hover:scale-105"
                             style={{ objectFit: getObjectFit() }}
                         />
@@ -251,7 +260,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                         }}
                     >
                         <div className="text-center">
-                            <h3 className="font-bold text-2xl mb-1" style={{ color: colors?.buttonText }}>{category.name}</h3>
+                            <h3 className="font-bold text-2xl mb-1" style={{ color: colors?.buttonText }}>{categoryName}</h3>
                             {data.showProductCount && category.productCount !== undefined && (
                                 <p style={{ color: colors?.buttonText, opacity: 0.8 }}>{category.productCount} productos</p>
                             )}
@@ -290,19 +299,19 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
         >
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                {(data.title || data.description) && (
+                {(title || description) && (
                     <div className="text-center mb-10">
-                        {data.title && (
+                        {title && (
                             <h2
                                 className={`${getTitleSize()} font-bold mb-3`}
                                 style={{ color: colors?.heading, fontFamily: colors?.headingFontFamily }}
                             >
-                                {data.title}
+                                {title}
                             </h2>
                         )}
-                        {data.description && (
+                        {description && (
                             <p className="text-lg max-w-2xl mx-auto" style={{ color: colors?.text }}>
-                                {data.description}
+                                {description}
                             </p>
                         )}
                     </div>

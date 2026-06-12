@@ -9,8 +9,10 @@ import type {
     VideoModelCapabilities,
 } from '../types/videoGeneration';
 import { CURATED_VIDEO_MODELS, resolveOmniModelId } from '../constants/curatedVideoModels';
+import { supabase } from '../supabase';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const AI_PROXY_URL = import.meta.env.VITE_VIDEO_PROXY_URL ||
     import.meta.env.VITE_AI_PROXY_URL ||
     `${SUPABASE_URL}/functions/v1/ai-proxy`;
@@ -18,11 +20,36 @@ const OPENROUTER_VIDEO_MODELS_URL = 'https://openrouter.ai/api/v1/videos/models'
 const OPENROUTER_ORIGIN = 'https://openrouter.ai';
 
 async function callVideoProxy(body: Record<string, unknown>): Promise<Response> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+    if (isSupabaseFunctionUrl(AI_PROXY_URL)) {
+        const { data } = await supabase.auth.getSession();
+        const accessToken = data.session?.access_token || SUPABASE_ANON_KEY;
+
+        if (SUPABASE_ANON_KEY) {
+            headers.apikey = SUPABASE_ANON_KEY;
+        }
+
+        if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`;
+        }
+    }
+
     return fetch(AI_PROXY_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(body),
     });
+}
+
+function isSupabaseFunctionUrl(endpoint: string): boolean {
+    try {
+        const endpointUrl = new URL(endpoint);
+        const supabaseUrl = new URL(SUPABASE_URL);
+        return endpointUrl.origin === supabaseUrl.origin && endpointUrl.pathname.startsWith('/functions/v1/');
+    } catch {
+        return false;
+    }
 }
 
 function sleep(ms: number): Promise<void> {

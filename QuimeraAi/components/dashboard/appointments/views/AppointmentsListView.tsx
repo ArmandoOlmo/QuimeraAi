@@ -82,7 +82,7 @@ const DayGroup: React.FC<DayGroupProps> = ({
                 <div className={`
                     flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full
                     ${isCurrentDay
-                        ? 'bg-primary text-primary-foreground'
+                        ? 'bg-[var(--quimera-status-accent-from)] text-white'
                         : 'bg-muted text-foreground'
                     }
                 `}>

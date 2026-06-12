@@ -203,7 +203,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                     <div className={`
                                         w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-sm sm:text-lg font-bold
                                         ${isCurrentDay
-                                            ? 'bg-primary text-primary-foreground shadow-sm'
+                                            ? 'bg-[var(--quimera-status-accent-from)] text-white'
                                             : 'text-foreground hover:bg-secondary/50'
                                         }
                                     `}>

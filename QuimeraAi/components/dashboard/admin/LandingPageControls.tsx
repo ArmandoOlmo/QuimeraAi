@@ -189,7 +189,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
         if (!section) return;
         
         // Extract the property path (e.g., 'hero.headline' -> 'headline')
-        const parts = path.split('.');
+        const parts = path.replace(/\?\./g, '.').split('.');
         
         // Safety check for empty paths if passed without prefix by accident
         const propertyPath = parts.length > 1 ? parts.slice(1) : parts;

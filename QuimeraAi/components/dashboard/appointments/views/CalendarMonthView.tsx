@@ -169,7 +169,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                                         relative rounded-xl border overflow-hidden
                                         cursor-pointer group
                                         transition-all duration-200
-                                        hover:border-primary/50 hover:shadow-lg
+                                        hover:border-q-border
                                         ${isCurrentDay
                                             ? 'border-primary bg-primary/5'
                                             : isCurrentMonth
@@ -182,7 +182,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                                     <div className="p-2 flex items-center justify-between">
                                         <span className={`
                                             ${isCurrentDay
-                                                ? 'w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm'
+                                                ? 'w-7 h-7 rounded-full bg-[var(--quimera-status-accent-from)] text-white flex items-center justify-center font-bold text-sm'
                                                 : `text-sm font-medium ${isCurrentMonth ? 'text-foreground' : 'text-q-text-muted/50'}`
                                             }
                                         `}>

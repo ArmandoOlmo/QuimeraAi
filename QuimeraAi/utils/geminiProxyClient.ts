@@ -5,23 +5,53 @@
  * This keeps API keys secure and allows chatbots to work on any domain.
  */
 
+import { supabase } from '../supabase';
+
 // Configuration — Use Supabase Edge Function (OpenRouter) instead of Supabase Cloud Function
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const AI_PROXY_URL = import.meta.env.VITE_AI_PROXY_URL ||
     import.meta.env.VITE_VIDEO_PROXY_URL ||
     `${SUPABASE_URL}/functions/v1/ai-proxy`;
 
 /**
  * Call the AI proxy Edge Function.
- * The Edge Function is deployed with --no-verify-jwt, so no auth headers are needed.
+ * Supabase Edge Functions may be deployed with JWT verification enabled,
+ * so include the current user token when available and fall back to anon.
  * This routes through OpenRouter for all AI generation.
  */
 async function callAiProxy(body: Record<string, any>): Promise<Response> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const isSupabaseFunction = isSupabaseFunctionUrl(AI_PROXY_URL);
+
+    if (isSupabaseFunction) {
+        const { data } = await supabase.auth.getSession();
+        const accessToken = data.session?.access_token || SUPABASE_ANON_KEY;
+
+        if (SUPABASE_ANON_KEY) {
+            headers.apikey = SUPABASE_ANON_KEY;
+        }
+
+        if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`;
+        }
+    }
+
     return fetch(AI_PROXY_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(body),
     });
+}
+
+function isSupabaseFunctionUrl(endpoint: string): boolean {
+    try {
+        const endpointUrl = new URL(endpoint);
+        const supabaseUrl = new URL(SUPABASE_URL);
+        return endpointUrl.origin === supabaseUrl.origin && endpointUrl.pathname.startsWith('/functions/v1/');
+    } catch {
+        return false;
+    }
 }
 
 export interface GeminiProxyConfig {
@@ -704,7 +734,6 @@ export function shouldUseProxy(): boolean {
     // This ensures the API key is NEVER exposed in the browser
     return true;
 }
-
 
 
 

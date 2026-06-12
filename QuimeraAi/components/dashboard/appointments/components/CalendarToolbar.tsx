@@ -70,7 +70,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
                         </button>
                         <button
                             onClick={() => onNavigate('today')}
-                            className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-foreground hover:text-primary transition-colors touch-manipulation"
+                            className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-foreground hover:text-[var(--quimera-status-accent-from)] transition-colors touch-manipulation"
                         >
                             {t('common.today', 'Hoy')}
                         </button>
@@ -98,7 +98,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
                                 className={cn(
                                     "px-2 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all touch-manipulation",
                                     viewMode === view.id
-                                        ? "bg-q-bg text-foreground shadow-sm"
+                                        ? "bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text"
                                         : "text-q-text-muted hover:text-foreground hover:bg-q-bg/50"
                                 )}
                             >
@@ -130,7 +130,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
 
                     <button
                         onClick={onCreateClick}
-                        className="flex items-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90 whitespace-nowrap touch-manipulation active:scale-95"
+                        className="quimera-guide-cta flex items-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap touch-manipulation"
                     >
                         <Plus className="w-4 h-4" />
                         <span className="hidden sm:inline">{t('appointments.new', 'Nueva Cita')}</span>
@@ -193,7 +193,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
                     className={cn(
                         "flex items-center gap-1.5 sm:gap-2 h-9 px-3 sm:px-4 rounded-full text-xs sm:text-sm font-medium transition-colors border border-transparent shrink-0 touch-manipulation",
                         showFilters
-                            ? "bg-primary/10 text-primary border-primary/20"
+                            ? "border-[var(--quimera-status-accent-from)] bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text"
                             : "bg-secondary/30 hover:bg-secondary/50 text-foreground"
                     )}
                 >

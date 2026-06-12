@@ -34,7 +34,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
   }, [payload?.items]);
 
   if (isLoading) {
-    return <div className="min-h-screen bg-q-bg flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    return <div className="min-h-screen bg-q-bg flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin quimera-status-card-accent-text" /></div>;
   }
 
   if (!payload?.restaurant) {
@@ -78,7 +78,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
                     </div>
                     <p className="mt-1 text-sm text-q-text-muted">{item.description}</p>
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {item.dietaryTags.map((tag) => <span key={tag} className="rounded-full bg-primary/10 px-2 py-1 text-[11px] text-primary">{tag}</span>)}
+                      {item.dietaryTags.map((tag) => <span key={tag} className="rounded-full bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] px-2 py-1 text-[11px] quimera-status-card-accent-text">{tag}</span>)}
                     </div>
                   </div>
                 </article>
@@ -91,7 +91,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
           <div id="reserve" className="rounded-xl border border-q-border bg-q-surface/60 p-5">
             <h2 className="text-xl font-bold">Reserve a table</h2>
             <p className="mt-2 text-sm text-q-text-muted">Call the restaurant to confirm availability.</p>
-            {restaurant.phone && <a href={`tel:${restaurant.phone}`} className="mt-4 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground">Call {restaurant.phone}</a>}
+            {restaurant.phone && <a href={`tel:${restaurant.phone}`} className="quimera-guide-cta mt-4 inline-flex rounded-lg px-4 py-2 font-medium">Call {restaurant.phone}</a>}
           </div>
         )}
       </section>

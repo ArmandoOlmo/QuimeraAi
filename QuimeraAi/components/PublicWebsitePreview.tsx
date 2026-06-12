@@ -1998,6 +1998,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           <FeaturedProducts
             data={compData}
             storeId={storeProjectId || undefined}
+            globalColors={theme?.globalColors}
           />
         ) : null;
       case 'categoryGrid':
@@ -2005,6 +2006,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           <CategoryGrid
             data={compData}
             storeId={storeProjectId || undefined}
+            globalColors={theme?.globalColors}
           />
         ) : null;
       case 'productHero':
@@ -2012,6 +2014,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           <ProductHero
             data={compData}
             storeId={storeProjectId || undefined}
+            globalColors={theme?.globalColors}
           />
         ) : null;
       case 'saleCountdown':
@@ -2019,30 +2022,33 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           <SaleCountdown
             data={compData}
             storeId={storeProjectId || undefined}
+            globalColors={theme?.globalColors}
           />
         ) : null;
       case 'trustBadges':
-        return compData ? withBackground(<TrustBadges data={compData} />) : null;
+        return compData ? withBackground(<TrustBadges data={compData} storeId={storeProjectId || undefined} globalColors={theme?.globalColors} />) : null;
       case 'recentlyViewed':
         return compData ? withBackground(
           <RecentlyViewed
             data={compData}
             storeId={storeProjectId || undefined}
+            globalColors={theme?.globalColors}
           />
         ) : null;
       case 'productReviews':
-        return compData ? withBackground(<ProductReviews data={compData} />) : null;
+        return compData ? withBackground(<ProductReviews data={compData} storeId={storeProjectId || undefined} globalColors={theme?.globalColors} />) : null;
       case 'collectionBanner':
-        return compData ? withBackground(<CollectionBanner data={compData} />) : null;
+        return compData ? withBackground(<CollectionBanner data={compData} storeId={storeProjectId || undefined} globalColors={theme?.globalColors} />) : null;
       case 'productBundle':
         return compData ? withBackground(
           <ProductBundle
             data={compData}
             storeId={storeProjectId || undefined}
+            globalColors={theme?.globalColors}
           />
         ) : null;
       case 'announcementBar':
-        return compData ? <AnnouncementBar data={compData} /> : null;
+        return compData ? <AnnouncementBar data={compData} storeId={storeProjectId || undefined} globalColors={theme?.globalColors} /> : null;
       case 'separator1':
       case 'separator2':
       case 'separator3':
@@ -2164,7 +2170,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       {/* Announcement Bar - Above Header position */}
       {componentOrder?.includes('announcementBar' as PageSection) && mergedData.announcementBar?.position === 'above-header' && componentStatus?.announcementBar !== false && sectionVisibility?.announcementBar !== false && mergedData.announcementBar && (
         <div id="announcementBar-above" className="w-full">
-          <AnnouncementBar data={mergedData.announcementBar} />
+          <AnnouncementBar data={mergedData.announcementBar} storeId={storeProjectId || undefined} globalColors={theme?.globalColors} />
         </div>
       )}
 

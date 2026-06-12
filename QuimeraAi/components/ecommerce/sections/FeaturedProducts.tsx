@@ -8,15 +8,18 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, ShoppingCart, Eye, Star, ArrowRight } from 'lucide-react';
 import { FeaturedProductsData, StorefrontProductItem } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
-import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { resolveI18nField } from '../../../utils/i18nContent';
 
 interface FeaturedProductsProps {
     data: FeaturedProductsData;
     storeId?: string;
+    globalColors?: StorefrontGlobalColors;
     onProductClick?: (productSlug: string) => void;
     onAddToCart?: (productId: string) => void;
 }
@@ -24,14 +27,18 @@ interface FeaturedProductsProps {
 const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     data,
     storeId,
+    globalColors,
     onProductClick,
     onAddToCart,
 }) => {
+    const { i18n } = useTranslation();
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
+    const title = resolveI18nField(data.title as any, i18n.language);
+    const description = resolveI18nField(data.description as any, i18n.language);
     
     // Unified colors system - merges global theme with component-specific colors
-    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);
+    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
     
     const { products: allProducts, isLoading } = usePublicProducts(effectiveStoreId, {
         limitCount: data.productsToShow || 8,
@@ -458,19 +465,19 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
         >
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                {(data.title || data.description) && (
+                {(title || description) && (
                     <div className="mb-8">
-                        {data.title && (
+                        {title && (
                             <h2
                                 className={`${getTitleSize()} font-bold mb-2`}
                                 style={{ color: colors?.heading, fontFamily: colors?.headingFontFamily }}
                             >
-                                {data.title}
+                                {title}
                             </h2>
                         )}
-                        {data.description && (
+                        {description && (
                             <p className="text-lg" style={{ color: colors?.text }}>
-                                {data.description}
+                                {description}
                             </p>
                         )}
                     </div>
@@ -511,4 +518,3 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
 };
 
 export default FeaturedProducts;
-

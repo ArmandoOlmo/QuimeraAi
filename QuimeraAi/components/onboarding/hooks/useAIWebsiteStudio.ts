@@ -10,7 +10,7 @@
  *  - Images: gemini-3-pro-image-preview
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useProject } from '../../../contexts/project';
 import { useEditor } from '../../../contexts/EditorContext';
@@ -27,12 +27,28 @@ import { logApiCall } from '../../../services/apiLoggingService';
 import { Conversation, Role } from '@elevenlabs/client';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { getGoogleGenAI } from '../../../utils/genAiClient';
-import { generateComponentColorMappings, generateHeroWaveGradientColors } from '../../ui/GlobalStylesControl';
+import { generateComponentColorMappings, generateHeroWaveGradientColors, readableTextOn } from '../../ui/GlobalStylesControl';
 import { generateAiAssistantConfig, GlobalColors } from '../../../utils/chatbotConfigGenerator';
 import { generatePagesFromLegacyProject } from '../../../utils/legacyMigration';
 import { extractHeroImage } from '../../../contexts/project/ProjectContext';
 import { analyzeWebsite } from '../../../utils/analyzeWebsiteClient';
-import { PageSection, SitePage } from '../../../types';
+import { FontFamily, PageSection, SitePage } from '../../../types';
+import { resolveFontFamily } from '../../../utils/fontLoader';
+import { usePlanAccess } from '../../../hooks/usePlanFeatures';
+import { useServiceAvailability } from '../../../hooks/useServiceAvailability';
+import { getAccessibleComponentRegistry, registryToPromptList, filterAccessibleSections } from '../../../data/componentRegistry';
+import type { ComponentAccessContext } from '../../../data/componentRegistry';
+import type { WebsitePlan } from '../../../types/websitePlan';
+import {
+    buildAssetPlan,
+    buildComponentPlan,
+    createWebsitePlanFromBrief,
+    createWebsitePlanFromImport,
+    applyColorExpertToPlan,
+    sanitizeComponentOrder,
+    validateGeneratedWebsite,
+} from '../../../utils/websitePlanEngine';
+import { createColorBriefFromWebsitePlan } from '../../../utils/colorSystemEngine';
 
 // ── Models ──────────────────────────────────────────────────────────────────
 const MODEL_CHAT = 'qwen/qwen3-max';  // Flagship orchestrator — 262K context, 32K output
@@ -126,6 +142,15 @@ const ALL_SECTIONS: PageSection[] = [
     'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
     'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu', 'realEstateListings',
     'leads', 'newsletter', 'map', 'chatbot', 'cmsFeed', 'signupFloat', 'footer',
+    'announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'trustBadges', 'saleCountdown',
+    'collectionBanner', 'recentlyViewed', 'productReviews', 'productBundle', 'restaurantReservation',
+    'products', 'storeSettings', 'productDetail', 'categoryProducts', 'articleContent', 'productGrid',
+    'propertyDirectory', 'propertyDetail', 'cart', 'checkout',
+    'heroQuimera', 'featuresQuimera', 'pricingQuimera', 'testimonialsQuimera', 'faqQuimera', 'ctaQuimera',
+    'platformShowcaseQuimera', 'aiCapabilitiesQuimera', 'industrySolutionsQuimera', 'agencyWhiteLabelQuimera',
+    'metricsQuimera', 'whatIsQuimera', 'templatesPreviewQuimera', 'aiWebStudioQuimera', 'contentManagerQuimera',
+    'imageGeneratorQuimera', 'chatbotWorkflowQuimera', 'chatbotBuilderQuimera', 'leadsManagerQuimera',
+    'appointmentsQuimera', 'bioPageQuimera', 'emailMarketingQuimera',
     'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
 ];
 
@@ -137,6 +162,407 @@ function buildVisibility(enabledSections: PageSection[]): Record<string, boolean
     vis['header'] = true;
     vis['footer'] = true;
     return vis;
+}
+
+function pruneUnplannedComponentData(data: any, componentOrder: PageSection[]): void {
+    if (!data || typeof data !== 'object') return;
+    const allowed = new Set<PageSection>(componentOrder);
+    for (const section of ALL_SECTIONS) {
+        if (!allowed.has(section) && Object.prototype.hasOwnProperty.call(data, section)) {
+            delete data[section];
+        }
+    }
+}
+
+const ECOMMERCE_SECTIONS = new Set<PageSection>([
+    'announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'trustBadges',
+    'saleCountdown', 'collectionBanner', 'recentlyViewed', 'productReviews', 'productBundle',
+    'products', 'storeSettings', 'productDetail', 'categoryProducts', 'productGrid', 'cart', 'checkout',
+]);
+
+type FontPairing = { header: FontFamily; body: FontFamily; button: FontFamily; weight?: number };
+
+const FONT_PAIRINGS_BY_INDUSTRY: Record<string, FontPairing[]> = {
+    ecommerce: [
+        { header: 'biorhyme', body: 'dm-sans', button: 'space-grotesk', weight: 700 },
+        { header: 'fraunces', body: 'instrument-sans', button: 'manrope', weight: 700 },
+        { header: 'syne', body: 'figtree', button: 'dm-sans', weight: 700 },
+        { header: 'unbounded', body: 'public-sans', button: 'space-grotesk', weight: 700 },
+    ],
+    restaurant: [
+        { header: 'fraunces', body: 'dm-sans', button: 'dm-sans', weight: 700 },
+        { header: 'marcellus', body: 'instrument-sans', button: 'instrument-sans', weight: 400 },
+        { header: 'bree-serif', body: 'figtree', button: 'figtree', weight: 400 },
+    ],
+    'real-estate': [
+        { header: 'newsreader', body: 'libre-franklin', button: 'libre-franklin', weight: 700 },
+        { header: 'instrument-serif', body: 'instrument-sans', button: 'instrument-sans', weight: 400 },
+        { header: 'red-hat-display', body: 'public-sans', button: 'public-sans', weight: 700 },
+    ],
+    technology: [
+        { header: 'space-grotesk', body: 'inter-tight', button: 'space-grotesk', weight: 700 },
+        { header: 'sora', body: 'inter', button: 'sora', weight: 700 },
+        { header: 'bricolage-grotesque', body: 'manrope', button: 'manrope', weight: 700 },
+    ],
+    creative: [
+        { header: 'syne', body: 'figtree', button: 'figtree', weight: 700 },
+        { header: 'unbounded', body: 'manrope', button: 'manrope', weight: 700 },
+        { header: 'fraunces', body: 'dm-sans', button: 'dm-sans', weight: 700 },
+    ],
+    services: [
+        { header: 'red-hat-display', body: 'public-sans', button: 'public-sans', weight: 700 },
+        { header: 'manrope', body: 'inter', button: 'manrope', weight: 700 },
+        { header: 'sora', body: 'dm-sans', button: 'dm-sans', weight: 700 },
+    ],
+};
+
+const BODY_SAFE_FONTS = new Set<FontFamily>([
+    'inter', 'inter-tight', 'dm-sans', 'outfit', 'figtree', 'urbanist', 'manrope',
+    'sora', 'public-sans', 'open-sans', 'work-sans', 'instrument-sans',
+    'libre-franklin', 'fira-sans', 'ibm-plex-sans',
+]);
+
+const NAV_LABELS: Partial<Record<PageSection, { es: string; en: string }>> = {
+    hero: { es: 'Inicio', en: 'Home' },
+    heroSplit: { es: 'Inicio', en: 'Home' },
+    heroGallery: { es: 'Inicio', en: 'Home' },
+    heroWave: { es: 'Inicio', en: 'Home' },
+    heroNova: { es: 'Inicio', en: 'Home' },
+    heroLead: { es: 'Inicio', en: 'Home' },
+    productHero: { es: 'Colección', en: 'Collection' },
+    featuredProducts: { es: 'Productos', en: 'Products' },
+    categoryGrid: { es: 'Categorías', en: 'Categories' },
+    trustBadges: { es: 'Confianza', en: 'Trust' },
+    saleCountdown: { es: 'Ofertas', en: 'Deals' },
+    productReviews: { es: 'Reseñas', en: 'Reviews' },
+    collectionBanner: { es: 'Colección', en: 'Collection' },
+    recentlyViewed: { es: 'Vistos', en: 'Recent' },
+    productBundle: { es: 'Bundles', en: 'Bundles' },
+    services: { es: 'Servicios', en: 'Services' },
+    features: { es: 'Beneficios', en: 'Benefits' },
+    howItWorks: { es: 'Proceso', en: 'Process' },
+    testimonials: { es: 'Testimonios', en: 'Testimonials' },
+    faq: { es: 'FAQ', en: 'FAQ' },
+    pricing: { es: 'Precios', en: 'Pricing' },
+    portfolio: { es: 'Portafolio', en: 'Portfolio' },
+    slideshow: { es: 'Galería', en: 'Gallery' },
+    team: { es: 'Equipo', en: 'Team' },
+    cta: { es: 'Comenzar', en: 'Start' },
+    leads: { es: 'Contacto', en: 'Contact' },
+    newsletter: { es: 'Newsletter', en: 'Newsletter' },
+    map: { es: 'Ubicación', en: 'Location' },
+    menu: { es: 'Menú', en: 'Menu' },
+    restaurantReservation: { es: 'Reservar', en: 'Reserve' },
+    realEstateListings: { es: 'Propiedades', en: 'Listings' },
+    footer: { es: 'Contacto', en: 'Contact' },
+};
+
+function hashString(value: string): number {
+    let hash = 0;
+    for (let i = 0; i < value.length; i += 1) {
+        hash = ((hash << 5) - hash) + value.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash);
+}
+
+function pickFrom<T>(items: T[], seed: string): T {
+    return items[hashString(seed) % items.length];
+}
+
+function normalizeDesignIndustry(brief: BusinessBrief): string {
+    const text = `${brief.industry || ''} ${brief.subIndustry || ''} ${brief.description || ''}`.toLowerCase();
+    if (brief.hasEcommerce || /ecommerce|e-commerce|shop|store|retail|producto|tienda/.test(text)) return 'ecommerce';
+    if (/restaurant|restaurante|cafe|food|bakery|bar|menu/.test(text)) return 'restaurant';
+    if (/real estate|inmobili|property|propiedad|realtor/.test(text)) return 'real-estate';
+    if (/tech|software|saas|ai|ia|web3|cyber/.test(text)) return 'technology';
+    if (/creative|portfolio|arte|cultur|diseño|design|artist|photograph/.test(text)) return 'creative';
+    return 'services';
+}
+
+function chooseWebsiteFontPairing(
+    brief: BusinessBrief,
+    preferred?: Partial<Record<'header' | 'body' | 'button', string>>,
+): FontPairing {
+    const industry = normalizeDesignIndustry(brief);
+    const pairings = FONT_PAIRINGS_BY_INDUSTRY[industry] || FONT_PAIRINGS_BY_INDUSTRY.services;
+    const fallback = pickFrom(pairings, `${brief.businessName}|${industry}|fonts`);
+    let header = resolveFontFamily(preferred?.header) || fallback.header;
+    let body = resolveFontFamily(preferred?.body) || fallback.body;
+    let button = resolveFontFamily(preferred?.button) || fallback.button;
+
+    const importedLooksInvalid = (value?: string) => Boolean(value && resolveFontFamily(value) === 'inter' && value.trim().toLowerCase().replace(/\s+/g, '-') !== 'inter');
+    if (importedLooksInvalid(preferred?.header)) header = fallback.header;
+    if (importedLooksInvalid(preferred?.body)) body = fallback.body;
+    if (importedLooksInvalid(preferred?.button)) button = fallback.button;
+    if (!BODY_SAFE_FONTS.has(body)) body = fallback.body;
+    if (!BODY_SAFE_FONTS.has(button)) button = fallback.button;
+
+    if (header === body) body = fallback.body !== header ? fallback.body : 'dm-sans';
+    if (button === header) button = fallback.button !== header ? fallback.button : body;
+
+    return { header, body, button, weight: fallback.weight || 700 };
+}
+
+function buildHeaderLinksForOrder(componentOrder: PageSection[], isSpanish: boolean): Array<{ text: string; href: string }> {
+    const links: Array<{ text: string; href: string }> = [{ text: isSpanish ? 'Inicio' : 'Home', href: '/' }];
+    const seen = new Set<string>(['/']);
+    const hasEcommerce = componentOrder.some(section => ECOMMERCE_SECTIONS.has(section));
+    const heroSections = new Set<PageSection>(['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'heroLumina', 'heroNeon']);
+
+    if (hasEcommerce) {
+        links.push({ text: isSpanish ? 'Tienda' : 'Shop', href: '/tienda' });
+        seen.add('/tienda');
+    }
+
+    const orderedSections = hasEcommerce
+        ? [
+            ...(['featuredProducts', 'categoryGrid', 'productReviews', 'footer', 'saleCountdown'] as PageSection[]).filter(section => componentOrder.includes(section)),
+            ...componentOrder,
+        ]
+        : componentOrder;
+
+    for (const section of orderedSections) {
+        if (['colors', 'typography', 'header', 'topBar', 'announcementBar'].includes(section)) continue;
+        if (heroSections.has(section)) continue;
+        const label = NAV_LABELS[section];
+        if (!label) continue;
+        const href = `/#${section}`;
+        if (seen.has(href)) continue;
+        links.push({ text: isSpanish ? label.es : label.en, href });
+        seen.add(href);
+        if (links.length >= 6) break;
+    }
+
+    const contactTarget = componentOrder.includes('leads')
+        ? '/#leads'
+        : componentOrder.includes('restaurantReservation')
+            ? '/#restaurantReservation'
+            : componentOrder.includes('map')
+                ? '/#map'
+                : componentOrder.includes('footer')
+                    ? '/#footer'
+                    : '';
+    if (contactTarget && !seen.has(contactTarget) && links.length < 6) {
+        links.push({ text: isSpanish ? 'Contacto' : 'Contact', href: contactTarget });
+    }
+
+    return links;
+}
+
+function pickHeaderStyle(brief: BusinessBrief, componentOrder: PageSection[], colors: Record<string, string>): string {
+    const industry = normalizeDesignIndustry(brief);
+    const seed = `${brief.businessName}|${industry}|${componentOrder.join(',')}`;
+    const accentCanUseWhite = readableTextOn(colors.accent || '#000000') === '#ffffff';
+
+    if (industry === 'ecommerce') {
+        const options = accentCanUseWhite
+            ? ['floating-pill', 'edge-bordered', 'tabbed', 'segmented-pill', 'floating-shadow']
+            : ['floating-pill', 'edge-bordered', 'tabbed', 'floating-shadow'];
+        return pickFrom(options, seed);
+    }
+    if (industry === 'restaurant') {
+        return pickFrom(['transparent-blur', 'floating-shadow', 'edge-solid', 'floating-glass'], seed);
+    }
+    if (industry === 'real-estate') {
+        return pickFrom(['edge-minimal', 'floating-glass', 'edge-bordered', 'floating-shadow'], seed);
+    }
+    if (industry === 'technology') {
+        const options = accentCanUseWhite
+            ? ['floating-glass', 'floating-pill', 'segmented-pill', 'tabbed']
+            : ['floating-glass', 'floating-pill', 'tabbed', 'edge-minimal'];
+        return pickFrom(options, seed);
+    }
+    if (industry === 'creative') {
+        return pickFrom(['transparent-bordered', 'floating-glass', 'tabbed', 'floating-pill'], seed);
+    }
+    return pickFrom(['edge-minimal', 'floating-shadow', 'floating-pill', 'edge-bordered'], seed);
+}
+
+function getHeaderCtaTarget(componentOrder: PageSection[], hasEcommerce: boolean): string {
+    if (hasEcommerce) return '/tienda';
+    if (componentOrder.includes('leads')) return '/#leads';
+    if (componentOrder.includes('restaurantReservation')) return '/#restaurantReservation';
+    if (componentOrder.includes('pricing')) return '/#pricing';
+    if (componentOrder.includes('cta')) return '/#cta';
+    if (componentOrder.includes('map')) return '/#map';
+    return '/#footer';
+}
+
+function repairGeneratedWebsiteDesign(
+    data: any,
+    finalTheme: any,
+    componentOrder: PageSection[],
+    brief: BusinessBrief,
+    isSpanish: boolean,
+): void {
+    if (!data || typeof data !== 'object') return;
+    const colors = finalTheme?.globalColors || brief.colorPalette || {};
+    const hasEcommerce = componentOrder.some(section => ECOMMERCE_SECTIONS.has(section));
+    const style = pickHeaderStyle(brief, componentOrder, colors);
+    const useSurfaceHeader = ['floating-pill', 'floating-glass', 'floating-shadow', 'edge-minimal', 'transparent-bordered', 'transparent-blur', 'tabbed', 'segmented-pill'].includes(style);
+    const headerBackground = useSurfaceHeader ? (colors.surface || colors.background) : (colors.primary || colors.background);
+    const headerText = readableTextOn(headerBackground, colors.heading || colors.text);
+    const buttonBackground = useSurfaceHeader ? (colors.primary || colors.accent) : (colors.secondary || colors.accent || colors.primary);
+
+    if (!data.header || typeof data.header !== 'object') data.header = {};
+    data.header = {
+        ...data.header,
+        style,
+        layout: style === 'tabbed' ? 'classic' : style === 'floating-pill' ? 'minimal' : (data.header.layout || 'classic'),
+        isSticky: true,
+        glassEffect: ['floating-glass', 'transparent-blur'].includes(style),
+        height: style === 'floating-pill' ? 72 : style === 'tabbed' || style === 'segmented-pill' ? 86 : 82,
+        logoType: data.header.logoType || 'text',
+        logoText: data.header.logoText || brief.businessName || 'Website',
+        showCta: true,
+        ctaText: data.header.ctaText || (hasEcommerce ? (isSpanish ? 'Comprar ahora' : 'Shop now') : (isSpanish ? 'Comenzar' : 'Get started')),
+        ctaUrl: getHeaderCtaTarget(componentOrder, hasEcommerce),
+        showCart: hasEcommerce || data.header.showCart,
+        links: buildHeaderLinksForOrder(componentOrder, isSpanish),
+        colors: {
+            ...(data.header.colors || {}),
+            background: headerBackground,
+            text: headerText,
+            accent: useSurfaceHeader ? (colors.primary || headerText) : headerText,
+            border: useSurfaceHeader ? (colors.border || 'transparent') : 'transparent',
+            buttonBackground,
+            buttonText: readableTextOn(buttonBackground),
+            tabActiveColor: colors.primary || colors.accent,
+            tabBorderColor: colors.border,
+            gradientFadeColor: colors.surface || colors.background,
+            gradientDarkColor: colors.surface || colors.background,
+        },
+    };
+}
+
+function hasDesignSignal(brief: BusinessBrief, pattern: RegExp): boolean {
+    const text = [
+        brief.businessName,
+        brief.industry,
+        brief.subIndustry,
+        brief.description,
+        brief.tagline,
+        ...(brief.services || []).flatMap(service => [service.name, service.description]),
+    ].filter(Boolean).join(' ').toLowerCase();
+    return pattern.test(text);
+}
+
+function applyDesignStrategyToGeneratedData(
+    data: any,
+    componentOrder: PageSection[],
+    brief: BusinessBrief,
+    finalTheme: any,
+): void {
+    if (!data || typeof data !== 'object') return;
+    const industry = normalizeDesignIndustry(brief);
+    const seed = `${brief.businessName}|${industry}|${componentOrder.join(',')}|design`;
+    const isVisual = ['creative', 'restaurant', 'real-estate'].includes(industry) || hasDesignSignal(brief, /\b(gallery|galería|portfolio|portafolio|visual|photo|foto|cultural|cultura|arte|design|diseño|event|travel|spa|salon|construction|architecture)\b/i);
+    const isPremium = hasDesignSignal(brief, /\b(premium|luxury|lujo|boutique|exclusive|exclusivo|high-end|profesional|enterprise)\b/i);
+    const isBooking = hasDesignSignal(brief, /\b(booking|appointment|cita|consulta|reservation|reserva|quote|cotización|estimate|demo)\b/i);
+
+    if (data.hero && typeof data.hero === 'object') {
+        const heroOptions: Record<string, string[]> = {
+            restaurant: ['cinematic', 'overlap', 'editorial'],
+            creative: ['editorial', 'overlap', 'bold', 'cinematic'],
+            'real-estate': ['overlap', 'verticalSplit', 'minimal'],
+            technology: ['gradient', 'glass', 'modern'],
+            services: isBooking ? ['verticalSplit', 'modern', 'overlap'] : ['modern', 'overlap', 'minimal'],
+            ecommerce: ['editorial', 'overlap', 'cinematic'],
+        };
+        data.hero.heroVariant = pickFrom(heroOptions[industry] || heroOptions.services, seed);
+        data.hero.textLayout = data.hero.heroVariant === 'cinematic' || data.hero.heroVariant === 'editorial'
+            ? pickFrom(['left-bottom', 'center-bottom', 'left-top'], `${seed}|hero-text`)
+            : pickFrom(['left-top', 'center', 'left-bottom'], `${seed}|hero-text`);
+        data.hero.imagePosition = pickFrom(['left', 'right'], `${seed}|hero-image-position`);
+        data.hero.imageAspectRatio = isVisual ? '4:3' : '16:9';
+        data.hero.imageObjectFit = 'cover';
+        data.hero.glassEffect = data.hero.heroVariant === 'glass' || isPremium;
+        data.hero.backgroundOverlayEnabled = ['cinematic', 'editorial', 'bold'].includes(data.hero.heroVariant);
+        data.hero.backgroundOverlayOpacity = data.hero.backgroundOverlayEnabled ? 45 : data.hero.backgroundOverlayOpacity;
+    }
+
+    if (data.services && typeof data.services === 'object') {
+        const options = industry === 'technology'
+            ? ['grid', 'neon-glow', 'minimal']
+            : isPremium
+                ? ['grid', 'minimal', 'cards']
+                : ['grid', 'cards', 'minimal'];
+        data.services.servicesVariant = pickFrom(options, `${seed}|services`);
+        data.services.animationType = data.services.animationType || 'fade-in-up';
+        data.services.enableCardAnimation = true;
+    }
+
+    if (data.features && typeof data.features === 'object') {
+        const options = industry === 'technology'
+            ? ['bento-premium', 'neon-glow', 'press-release']
+            : isVisual
+                ? ['image-overlay', 'bento-overlay', 'bento-premium']
+                : ['bento-premium', 'modern', 'press-release'];
+        data.features.featuresVariant = pickFrom(options, `${seed}|features`);
+        data.features.gridColumns = data.features.featuresVariant === 'image-overlay' ? 4 : 3;
+        data.features.imageHeight = data.features.featuresVariant === 'image-overlay' ? 420 : 340;
+        data.features.showSectionHeader = true;
+        data.features.enableCardAnimation = true;
+    }
+
+    if (data.testimonials && typeof data.testimonials === 'object') {
+        const options = industry === 'technology'
+            ? ['neon-glow', 'glassmorphism', 'gradient-shift']
+            : isPremium
+                ? ['floating-cards', 'glassmorphism', 'minimal-cards']
+                : ['floating-cards', 'gradient-shift', 'minimal-cards'];
+        data.testimonials.testimonialsVariant = pickFrom(options, `${seed}|testimonials`);
+        data.testimonials.enableCardAnimation = true;
+    }
+
+    if (data.faq && typeof data.faq === 'object') {
+        data.faq.faqVariant = pickFrom(isPremium ? ['minimal', 'cards'] : ['cards', 'gradient', 'minimal'], `${seed}|faq`);
+    }
+
+    if (data.leads && typeof data.leads === 'object') {
+        data.leads.leadsVariant = pickFrom(isPremium ? ['floating-glass', 'minimal-border'] : ['split-gradient', 'floating-glass', 'minimal-border'], `${seed}|leads`);
+        data.leads.glassEffect = data.leads.leadsVariant === 'floating-glass';
+    }
+
+    if (data.portfolio && typeof data.portfolio === 'object') {
+        data.portfolio.portfolioVariant = isVisual ? 'image-overlay' : pickFrom(['classic', 'image-overlay'], `${seed}|portfolio`);
+        data.portfolio.gridColumns = isVisual ? 3 : 2;
+        data.portfolio.imageHeight = isVisual ? 460 : 360;
+        data.portfolio.showSectionHeader = true;
+    }
+
+    if (data.slideshow && typeof data.slideshow === 'object') {
+        data.slideshow.slideshowVariant = pickFrom(isVisual ? ['kenburns', 'cards3d', 'thumbnails'] : ['cards3d', 'classic'], `${seed}|slideshow`);
+        data.slideshow.transitionEffect = data.slideshow.slideshowVariant === 'kenburns' ? 'zoom' : 'fade';
+        data.slideshow.arrowStyle = 'floating';
+        data.slideshow.dotStyle = 'pill';
+        data.slideshow.slideHeight = isVisual ? 560 : 420;
+        data.slideshow.showCaptions = true;
+    }
+
+    if (data.pricing && typeof data.pricing === 'object') {
+        data.pricing.pricingVariant = pickFrom(industry === 'technology' ? ['neon-glow', 'glassmorphism', 'gradient'] : ['glassmorphism', 'gradient', 'minimalist'], `${seed}|pricing`);
+    }
+
+    if (data.cta && typeof data.cta === 'object') {
+        data.cta.glassEffect = isPremium || industry === 'technology';
+        data.cta.backgroundOverlayEnabled = isVisual;
+        data.cta.backgroundOverlayOpacity = isVisual ? 55 : data.cta.backgroundOverlayOpacity;
+    }
+
+    const globalColors = finalTheme?.globalColors || brief.colorPalette;
+    for (const key of ['hero', 'services', 'features', 'testimonials', 'faq', 'leads', 'portfolio', 'slideshow', 'pricing', 'cta']) {
+        if (data[key] && typeof data[key] === 'object') {
+            data[key].colors = {
+                ...(data[key].colors || {}),
+                background: data[key].colors?.background || globalColors.background,
+                heading: data[key].colors?.heading || globalColors.heading || globalColors.text,
+                text: data[key].colors?.text || globalColors.text,
+                accent: data[key].colors?.accent || globalColors.accent || globalColors.primary,
+            };
+        }
+    }
 }
 
 // ── Safe JSON parse ─────────────────────────────────────────────────────────
@@ -178,6 +604,27 @@ export function useAIWebsiteStudio() {
     const tenantContext = useSafeTenant();
     const { t, i18n } = useTranslation();
     const currentTenantId = tenantContext?.currentTenant?.id || null;
+    const planAccess = usePlanAccess();
+    const { canAccessService, isLoading: isLoadingServices } = useServiceAvailability();
+
+    const accessContext = useMemo<ComponentAccessContext>(() => ({
+        canAccessService: (serviceId) => !isLoadingServices && canAccessService(serviceId),
+        hasPlanFeature: (feature) => !planAccess.isLoading && planAccess.hasAccess(feature),
+    }), [canAccessService, isLoadingServices, planAccess.hasAccess, planAccess.isLoading]);
+
+    const accessibleComponentRegistry = useMemo(
+        () => getAccessibleComponentRegistry(accessContext),
+        [accessContext]
+    );
+
+    const availableComponents = useMemo(
+        () => accessibleComponentRegistry.map(item => ({ key: item.id, label: item.label })),
+        [accessibleComponentRegistry]
+    );
+
+    const filterAllowedComponents = useCallback((components: PageSection[] = []): PageSection[] => {
+        return filterAccessibleSections(components, accessContext);
+    }, [accessContext]);
 
     // ── Chat state ──────────────────────────────────────────────────────────
     const [messages, setMessages] = useState<DisplayMessage[]>([]);
@@ -188,6 +635,8 @@ export function useAIWebsiteStudio() {
 
     // ── Brief state ─────────────────────────────────────────────────────────
     const [businessBrief, setBusinessBrief] = useState<BusinessBrief>(createEmptyBrief());
+    const [websitePlan, setWebsitePlan] = useState<WebsitePlan | null>(null);
+    const [showPlanReview, setShowPlanReview] = useState(false);
 
     // ── Reference images state ──────────────────────────────────────────────
     const [referenceImages, setReferenceImages] = useState<string[]>([]);
@@ -214,7 +663,8 @@ export function useAIWebsiteStudio() {
     const [isExtracting, setIsExtracting] = useState(false);
 
     // ── Computed ─────────────────────────────────────────────────────────────
-    const canGenerate = businessBrief.readinessScore >= 70 && !isGenerating;
+    const isAccessLoading = isLoadingServices || planAccess.isLoading;
+    const canGenerate = businessBrief.readinessScore >= 70 && !isGenerating && !isAccessLoading;
 
     // ═════════════════════════════════════════════════════════════════════════
     // SYSTEM PROMPT
@@ -222,6 +672,8 @@ export function useAIWebsiteStudio() {
 
     const buildSystemPrompt = useCallback(() => {
         const lang = i18n.language === 'es' ? 'Spanish' : 'English';
+        const availableComponentIds = accessibleComponentRegistry.map(item => item.id).join(', ');
+        const availableComponentDetails = registryToPromptList(accessibleComponentRegistry);
         return `You are Quimera AI — a Senior Creative Director & Web Design Expert with over 20 years of experience at world-class digital agencies. You specialize in color theory, typography, modern UI/UX trends, and conversion-focused web design. You help users create stunning, award-worthy websites through natural conversation.
 
 YOUR EXPERTISE:
@@ -246,7 +698,7 @@ CRITICAL RULES:
 3. After EVERY response, include a hidden brief update tag with ALL currently known information:
    <!--BRIEF:{"businessName":"[GENERATE_TEXT]","industry":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]","tagline":"[GENERATE_TEXT]","services":[{"name":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]"}],"contactInfo":{"email":"[GENERATE_TEXT]","phone":"[GENERATE_TEXT]","address":"[GENERATE_TEXT]","city":"[GENERATE_TEXT]","state":"[GENERATE_TEXT]","country":"[GENERATE_TEXT]","businessHours":"[GENERATE_TEXT]","instagram":"[GENERATE_TEXT]","facebook":"[GENERATE_TEXT]","twitter":"[GENERATE_TEXT]","tiktok":"[GENERATE_TEXT]"},"hasEcommerce":false,"colorPalette":{"primary":"#hex","secondary":"#hex","accent":"#hex","background":"#hex","surface":"#hex","text":"#hex"},"fontPairing":{"header":"[FONT_KEY_FROM_GUIDE]","body":"[FONT_KEY_FROM_GUIDE]","button":"[FONT_KEY_FROM_GUIDE]"},"suggestedComponents":["hero","services","features","testimonials","faq","cta","leads","newsletter","map","signupFloat"],"readinessScore":0,"missingFields":["businessName","industry"],"referenceImageContext":""}-->
 4. Update readinessScore progressively: 0-20 (just started), 20-40 (basic info), 40-60 (good detail), 60-80 (almost ready), 80-100 (ready to generate)
-5. For suggestedComponents, pick from: hero, heroSplit, heroGallery, heroWave, heroNova, heroLead, topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, video, howItWorks, menu, realEstateListings, leads, newsletter, map, signupFloat, separator1, separator2, separator3. NEVER include: slideshow, portfolio, team. heroLead is a split hero with integrated lead form. Use realEstateListings only for realtor/property websites, and pair it with the existing leads component.
+5. For suggestedComponents, pick ONLY from the ACCESSIBLE COMPONENTS list below: ${availableComponentIds}. Never include components that are not listed. Components tied to services like ecommerce, restaurants, real estate, newsletter, chatbot, or CMS are omitted unless the platform service is enabled by Admin AND the current user's plan includes the required feature.
    - IF THE USER REQUESTS "Lumina Suite", OR if the industry is related to AI, Luxury, Enterprise, or Data, you MUST exclusively use Lumina components (heroLumina, featuresLumina, ctaLumina, portfolioLumina, pricingLumina, testimonialsLumina, faqLumina) instead of the standard ones.
    - IF THE USER REQUESTS "Neon Suite", OR if the industry is related to Tech, Gaming, Web3, Cyber, or eSports, you MUST exclusively use Neon components (heroNeon, featuresNeon, ctaNeon, portfolioNeon, pricingNeon, testimonialsNeon, faqNeon) instead of the standard ones.
 6. Apply your expert color theory knowledge to choose palettes (see COLOR PALETTES section below)
@@ -264,19 +716,14 @@ CRITICAL RULES:
 ═══════════════════════════════════════════════════════════
 AVAILABLE COMPONENTS
 ═══════════════════════════════════════════════════════════
-You have these components at your disposal. Choose whichever combination best fits — there are NO rigid industry rules. Be creative:
+You have these currently accessible components at your disposal. Choose whichever combination best fits — there are NO rigid industry rules. Be creative, but never reference inaccessible services:
 
-HERO VARIANTS (pick ONE): hero, heroSplit, heroGallery, heroWave, heroNova, heroLead
-SUITE COMPONENTS (use ALL from ONE suite if the user requests it, or if the vibe fits):
-  - Lumina Suite: heroLumina, featuresLumina, ctaLumina, portfolioLumina, pricingLumina, testimonialsLumina, faqLumina
-  - Neon Suite: heroNeon, featuresNeon, ctaNeon, portfolioNeon, pricingNeon, testimonialsNeon, faqNeon
-STANDARD: topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, team, video, howItWorks, menu, realEstateListings, leads, newsletter, map, signupFloat, portfolio, slideshow
-DECORATIVE: separator1, separator2, separator3, separator4, separator5
+${availableComponentDetails}
 
 RULES:
 - heroLead = split hero with integrated lead form — great for service businesses.
-- realEstateListings = only for property/real estate. Pair with leads.
-- banner MUST always be included.
+   - realEstateListings = only for property/real estate. Pair with leads.
+- banner is optional. Include it only when it improves the plan.
 - ALWAYS include at least one hero variant.
 - Vary header styles freely: sticky-solid, floating-glass, floating-pill, transparent-blur, edge-minimal, edge-bordered, transparent-gradient-dark, etc.
 
@@ -324,7 +771,7 @@ Example: "referenceImageContext":"Use this person as the business owner in hero 
 ${referenceImagesRef.current.length > 0 ? `⚠️ The user has currently uploaded ${referenceImagesRef.current.length} reference image(s). If you haven't already asked how they want them used, ASK NOW.` : ''}
 
 Remember: You are building a COMPLETE website — every component needs full, rich content. Be thorough in your information gathering.`;
-    }, [i18n.language, referenceImages.length]);
+    }, [i18n.language, referenceImages.length, accessibleComponentRegistry]);
 
     // ═════════════════════════════════════════════════════════════════════════
     // INIT
@@ -350,6 +797,8 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         const welcomeMsg: DisplayMessage = { role: 'model', text: welcomeText, timestamp: Date.now() };
         setMessages([welcomeMsg]);
         setBusinessBrief(createEmptyBrief());
+        setWebsitePlan(null);
+        setShowPlanReview(false);
         setGenerationPhase(null);
         setIsGenerating(false);
 
@@ -376,24 +825,35 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             const cfData = await analyzeWebsite(url);
 
             const result = cfData.result;
+            if (!result) {
+                throw new Error(cfData.error || 'Analysis returned no extracted website data');
+            }
             const pagesScraped = (cfData as any).meta?.pagesScraped || 1;
+            const importedPlan = createWebsitePlanFromImport(cfData, accessibleComponentRegistry);
+            setWebsitePlan(importedPlan);
+            setShowPlanReview(true);
 
             // 2. Map Cloud Function result into our BusinessBrief
             const lang = i18n.language === 'es' ? 'es' : 'en';
             setBusinessBrief(prev => ({
                 ...prev,
-                businessName: result.businessName || prev.businessName,
-                industry: result.industry || prev.industry,
-                description: result.description || prev.description,
-                tagline: result.tagline || prev.tagline,
-                services: result.services?.length
-                    ? result.services.map((s: any) => ({ name: s.name, description: s.description || '' }))
+                businessName: importedPlan.businessProfile.businessName || result.businessName || prev.businessName,
+                industry: importedPlan.businessProfile.industry || result.industry || prev.industry,
+                description: importedPlan.businessProfile.description || result.description || prev.description,
+                tagline: importedPlan.businessProfile.tagline || result.tagline || prev.tagline,
+                services: importedPlan.businessProfile.services?.length
+                    ? importedPlan.businessProfile.services.map((s: any) => ({ name: s.name, description: s.description || '' }))
+                    : result.services?.length
+                        ? result.services.map((s: any) => ({ name: s.name, description: s.description || '' }))
                     : prev.services,
                 contactInfo: {
                     ...prev.contactInfo,
-                    email: result.contactInfo?.email || prev.contactInfo.email,
-                    phone: result.contactInfo?.phone || prev.contactInfo.phone,
-                    address: result.contactInfo?.address || prev.contactInfo.address,
+                    email: importedPlan.businessProfile.contactInfo?.email || result.contactInfo?.email || prev.contactInfo.email,
+                    phone: importedPlan.businessProfile.contactInfo?.phone || result.contactInfo?.phone || prev.contactInfo.phone,
+                    address: importedPlan.businessProfile.contactInfo?.address || result.contactInfo?.address || prev.contactInfo.address,
+                    city: importedPlan.businessProfile.contactInfo?.city || result.contactInfo?.city || prev.contactInfo.city,
+                    state: importedPlan.businessProfile.contactInfo?.state || result.contactInfo?.state || prev.contactInfo.state,
+                    country: importedPlan.businessProfile.contactInfo?.country || result.contactInfo?.country || prev.contactInfo.country,
                     businessHours: result.contactInfo?.businessHours
                         ? (typeof result.contactInfo.businessHours === 'string'
                             ? result.contactInfo.businessHours
@@ -403,11 +863,12 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                 // Map branding into colorPalette
                 colorPalette: result.branding ? {
                     ...prev.colorPalette,
-                    primary: result.branding.primaryColor || prev.colorPalette.primary,
-                    secondary: result.branding.secondaryColor || prev.colorPalette.secondary,
-                    accent: result.branding.accentColor || prev.colorPalette.accent,
-                    background: result.branding.backgroundColor || prev.colorPalette.background,
+                    primary: importedPlan.brandProfile.colors.primary || result.branding.primaryColor || prev.colorPalette.primary,
+                    secondary: importedPlan.brandProfile.colors.secondary || result.branding.secondaryColor || prev.colorPalette.secondary,
+                    accent: importedPlan.brandProfile.colors.accent || result.branding.accentColor || prev.colorPalette.accent,
+                    background: importedPlan.brandProfile.colors.background || result.branding.backgroundColor || prev.colorPalette.background,
                 } : prev.colorPalette,
+                suggestedComponents: importedPlan.componentPlan.map(item => item.component),
                 readinessScore: Math.min(70, (prev.readinessScore || 0) + 30),
             }));
 
@@ -444,7 +905,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                   (result.contactInfo?.address ? `**Dirección:** ${result.contactInfo.address}\n` : '') +
                   (socialLinks.length ? `**Redes sociales:** ${socialLinks.join(', ')}\n` : '') +
                   (brandingLines.length ? `\n**Branding detectado:**\n${brandingLines.join('\n')}\n` : '') +
-                  `\nHe importado toda la información disponible. ¿Hay algo que quieras ajustar o agregar antes de generar tu sitio web?`
+                  `\nHe importado toda la información disponible. Puedes seguir ajustando el plan aquí en el chat. Cuando esté listo, presiona Generar para revisar el plan final antes de crear el sitio.`
                 : `✅ **Website analyzed:** ${url} (${pagesScraped} ${pagesScraped === 1 ? 'page' : 'pages'} scraped)\n\n` +
                   `**Business:** ${result.businessName || 'Not detected'}\n` +
                   `**Industry:** ${result.industry || 'Not detected'}\n` +
@@ -456,7 +917,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                   (result.contactInfo?.address ? `**Address:** ${result.contactInfo.address}\n` : '') +
                   (socialLinks.length ? `**Social media:** ${socialLinks.join(', ')}\n` : '') +
                   (brandingLines.length ? `\n**Branding detected:**\n${brandingLines.join('\n')}\n` : '') +
-                  `\nI've imported all available information. Would you like to adjust or add anything before generating your website?`;
+                  `\nI've imported all available information. You can keep adjusting the plan here in chat. When it is ready, press Generate to review the final plan before creating the website.`;
 
             // 4. Update chat messages
             setMessages(prev => {
@@ -484,7 +945,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         } finally {
             setIsExtracting(false);
         }
-    }, [user, t, i18n.language]);
+    }, [user, t, i18n.language, accessibleComponentRegistry]);
 
     // ═════════════════════════════════════════════════════════════════════════
     // BRIEF EXTRACTION — Parse <!--BRIEF:{...}--> from AI responses
@@ -496,6 +957,10 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
 
         try {
             const briefData = JSON.parse(briefMatch[1]);
+            const normalizedSuggestedComponents = briefData.suggestedComponents && Array.isArray(briefData.suggestedComponents)
+                ? filterAllowedComponents(briefData.suggestedComponents as PageSection[])
+                : null;
+
             setBusinessBrief(prev => {
                 const updated = { ...prev };
                 if (briefData.businessName) updated.businessName = briefData.businessName;
@@ -508,14 +973,66 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                 if (briefData.hasEcommerce !== undefined) updated.hasEcommerce = briefData.hasEcommerce;
                 if (briefData.ecommerceType) updated.ecommerceType = briefData.ecommerceType;
                 if (briefData.colorPalette) updated.colorPalette = { ...prev.colorPalette, ...briefData.colorPalette };
-                if (briefData.fontPairing) updated.fontPairing = { ...prev.fontPairing, ...briefData.fontPairing };
-                if (briefData.suggestedComponents && Array.isArray(briefData.suggestedComponents)) {
-                    updated.suggestedComponents = briefData.suggestedComponents as PageSection[];
+                if (briefData.fontPairing) {
+                    updated.fontPairing = chooseWebsiteFontPairing(updated, { ...prev.fontPairing, ...briefData.fontPairing });
+                }
+                if (normalizedSuggestedComponents) {
+                    updated.suggestedComponents = normalizedSuggestedComponents;
                 }
                 if (typeof briefData.readinessScore === 'number') updated.readinessScore = briefData.readinessScore;
                 if (briefData.missingFields && Array.isArray(briefData.missingFields)) updated.missingFields = briefData.missingFields;
                 if (briefData.referenceImageContext) updated.referenceImageContext = briefData.referenceImageContext;
                 return updated;
+            });
+
+            setWebsitePlan(prevPlan => {
+                if (!prevPlan) return prevPlan;
+
+                const nextPlan: WebsitePlan = {
+                    ...prevPlan,
+                    businessProfile: {
+                        ...prevPlan.businessProfile,
+                        businessName: briefData.businessName || prevPlan.businessProfile.businessName,
+                        industry: briefData.industry || prevPlan.businessProfile.industry,
+                        description: briefData.description || prevPlan.businessProfile.description,
+                        tagline: briefData.tagline || prevPlan.businessProfile.tagline,
+                        services: Array.isArray(briefData.services) ? briefData.services : prevPlan.businessProfile.services,
+                        contactInfo: briefData.contactInfo
+                            ? { ...prevPlan.businessProfile.contactInfo, ...briefData.contactInfo }
+                            : prevPlan.businessProfile.contactInfo,
+                        hasEcommerce: briefData.hasEcommerce !== undefined ? briefData.hasEcommerce : prevPlan.businessProfile.hasEcommerce,
+                    },
+                    brandProfile: {
+                        ...prevPlan.brandProfile,
+                        colors: briefData.colorPalette
+                            ? { ...prevPlan.brandProfile.colors, ...briefData.colorPalette }
+                            : prevPlan.brandProfile.colors,
+                        fonts: briefData.fontPairing
+                            ? [
+                                briefData.fontPairing.header,
+                                briefData.fontPairing.body,
+                                briefData.fontPairing.button,
+                            ].filter(Boolean)
+                            : prevPlan.brandProfile.fonts,
+                        selectedColorCandidateId: briefData.colorPalette ? 'manual' : prevPlan.brandProfile.selectedColorCandidateId,
+                        colorBrief: briefData.colorPalette
+                            ? {
+                                ...(prevPlan.brandProfile.colorBrief || createColorBriefFromWebsitePlan(prevPlan)),
+                                lockedColors: {
+                                    ...(prevPlan.brandProfile.colorBrief?.lockedColors || {}),
+                                    ...briefData.colorPalette,
+                                },
+                            }
+                            : prevPlan.brandProfile.colorBrief,
+                    },
+                };
+
+                if (normalizedSuggestedComponents) {
+                    nextPlan.componentPlan = buildComponentPlan(normalizedSuggestedComponents, accessibleComponentRegistry, 'user');
+                }
+
+                nextPlan.assetPlan = buildAssetPlan(nextPlan);
+                return nextPlan;
             });
         } catch (e) {
             if (isDev) console.warn('[AIWebsiteStudio] Failed to parse brief:', e);
@@ -523,7 +1040,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
 
         // Remove the brief tag from visible text
         return text.replace(/<!--BRIEF:[\s\S]*?-->/g, '').trim();
-    }, []);
+    }, [accessibleComponentRegistry, filterAllowedComponents]);
 
     // ═════════════════════════════════════════════════════════════════════════
     // SEND MESSAGE
@@ -690,12 +1207,79 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
     //       imageUrl fields → Generate images → Write directly to fields
     // ═════════════════════════════════════════════════════════════════════════
 
-    const startGeneration = useCallback(async () => {
-        if (isGeneratingRef.current || !user) return;
+    const runGeneration = useCallback(async (planOverride?: WebsitePlan) => {
+        if (isGeneratingRef.current || !user || isAccessLoading) return;
         isGeneratingRef.current = true;
         setIsGenerating(true);
 
-        const brief = businessBrief;
+        let planForGeneration = planOverride || websitePlan || createWebsitePlanFromBrief(businessBrief, accessibleComponentRegistry);
+        const plannedComponents = planForGeneration.componentPlan.map(item => item.component);
+        const sanitizedComponents = sanitizeComponentOrder(
+            plannedComponents.length > 0 ? plannedComponents : businessBrief.suggestedComponents,
+            accessibleComponentRegistry
+        );
+        const visibleComponents = sanitizedComponents.filter(section => !['header', 'footer'].includes(section));
+        const normalizedPlanBase: WebsitePlan = {
+            ...planForGeneration,
+            componentPlan: buildComponentPlan(visibleComponents, accessibleComponentRegistry, planForGeneration.source === 'imported-url' ? 'import' : 'user'),
+        };
+        planForGeneration = {
+            ...normalizedPlanBase,
+            assetPlan: normalizedPlanBase.assetPlan?.length ? normalizedPlanBase.assetPlan : buildAssetPlan(normalizedPlanBase),
+        };
+        planForGeneration = applyColorExpertToPlan(planForGeneration);
+
+        const planColors = planForGeneration.brandProfile.colors || {};
+        const planFonts = planForGeneration.brandProfile.fonts || [];
+        const briefForFontSelection: BusinessBrief = {
+            ...businessBrief,
+            businessName: planForGeneration.businessProfile.businessName || businessBrief.businessName,
+            industry: planForGeneration.businessProfile.industry || businessBrief.industry,
+            description: planForGeneration.businessProfile.description || businessBrief.description,
+            hasEcommerce: Boolean(planForGeneration.businessProfile.hasEcommerce && accessibleComponentRegistry.some(item => item.role === 'ecommerce')),
+        };
+        const hasExplicitPlanFonts = planFonts.length > 0;
+        const hasNonDefaultBriefFonts = !(
+            businessBrief.fontPairing.header === 'playfair-display' &&
+            businessBrief.fontPairing.body === 'inter' &&
+            businessBrief.fontPairing.button === 'inter'
+        );
+        const selectedFontPairing = chooseWebsiteFontPairing(
+            briefForFontSelection,
+            hasExplicitPlanFonts
+                ? { header: planFonts[0], body: planFonts[1], button: planFonts[2] }
+                : hasNonDefaultBriefFonts
+                    ? businessBrief.fontPairing
+                    : undefined
+        );
+        const brief: BusinessBrief = {
+            ...businessBrief,
+            businessName: planForGeneration.businessProfile.businessName || businessBrief.businessName,
+            industry: planForGeneration.businessProfile.industry || businessBrief.industry,
+            description: planForGeneration.businessProfile.description || businessBrief.description,
+            tagline: planForGeneration.businessProfile.tagline || businessBrief.tagline,
+            services: planForGeneration.businessProfile.services?.length
+                ? planForGeneration.businessProfile.services.map(service => ({ name: service.name, description: service.description || '' }))
+                : businessBrief.services,
+            contactInfo: { ...businessBrief.contactInfo, ...(planForGeneration.businessProfile.contactInfo || {}) },
+            hasEcommerce: Boolean(planForGeneration.businessProfile.hasEcommerce && accessibleComponentRegistry.some(item => item.role === 'ecommerce')),
+            colorPalette: {
+                ...businessBrief.colorPalette,
+                primary: planColors.primary || businessBrief.colorPalette.primary,
+                secondary: planColors.secondary || businessBrief.colorPalette.secondary,
+                accent: planColors.accent || businessBrief.colorPalette.accent,
+                background: planColors.background || businessBrief.colorPalette.background,
+                surface: planColors.surface || businessBrief.colorPalette.surface,
+                text: planColors.text || businessBrief.colorPalette.text,
+            },
+            fontPairing: {
+                header: selectedFontPairing.header,
+                body: selectedFontPairing.body,
+                button: selectedFontPairing.button,
+            },
+            suggestedComponents: visibleComponents,
+        };
+        setWebsitePlan(planForGeneration);
         if (isDev) console.log('[AIWebsiteStudio] Starting website generation for:', brief.businessName);
 
         const addEvent = (type: GenerationEvent['type'], message: string, imageUrl?: string, imageKey?: string) => {
@@ -714,31 +1298,33 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             const projectId = createUuid();
             addEvent('content', 'Creating project...');
 
-            // Build theme from brief
+            const selectedGlobalColors = {
+                primary: planColors.primary || brief.colorPalette.primary,
+                secondary: planColors.secondary || brief.colorPalette.secondary,
+                accent: planColors.accent || brief.colorPalette.accent,
+                background: planColors.background || brief.colorPalette.background,
+                surface: planColors.surface || brief.colorPalette.surface,
+                text: planColors.text || brief.colorPalette.text,
+                textMuted: planColors.textMuted || `${planColors.text || brief.colorPalette.text}99`,
+                heading: planColors.heading || planColors.text || brief.colorPalette.text,
+                border: planColors.border || brief.colorPalette.surface,
+                success: planColors.success || '#7fb069',
+                error: planColors.error || '#c75c5c',
+            };
+
+            // Build theme from the validated Color Expert system.
             const theme = {
                 cardBorderRadius: 'md',
                 buttonBorderRadius: 'md',
-                fontFamilyHeader: brief.fontPairing?.header || 'playfair-display',
-                fontFamilyBody: brief.fontPairing?.body || 'inter',
-                fontFamilyButton: brief.fontPairing?.button || 'inter',
-                fontWeightHeader: 400,
+                fontFamilyHeader: selectedFontPairing.header,
+                fontFamilyBody: selectedFontPairing.body,
+                fontFamilyButton: selectedFontPairing.button,
+                fontWeightHeader: selectedFontPairing.weight || 700,
                 headingsAllCaps: false,
                 buttonsAllCaps: true,
                 navLinksAllCaps: false,
-                pageBackground: brief.colorPalette.background,
-                globalColors: {
-                    primary: brief.colorPalette.primary,
-                    secondary: brief.colorPalette.secondary,
-                    accent: brief.colorPalette.accent,
-                    background: brief.colorPalette.background,
-                    surface: brief.colorPalette.surface,
-                    text: brief.colorPalette.text,
-                    textMuted: brief.colorPalette.text + '99',
-                    heading: brief.colorPalette.text,
-                    border: brief.colorPalette.surface,
-                    success: '#7fb069',
-                    error: '#c75c5c',
-                },
+                pageBackground: selectedGlobalColors.background,
+                globalColors: selectedGlobalColors,
             };
 
             // Minimal memory skeleton — will be filled with AI content, only saved at the very end
@@ -806,11 +1392,23 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             setGenerationPhase(prev => prev ? { ...prev, progress: 35, currentStep: 'Mapping content to components...' } : prev);
             addEvent('content', 'Mapping content to components...');
 
-            // Merge AI theme with brief theme
-            const finalTheme = websiteData.theme ? { ...theme, ...websiteData.theme, globalColors: { ...theme.globalColors, ...(websiteData.theme.globalColors || {}) } } : theme;
+            // Merge AI theme structure, but keep Color Expert as the final authority for global colors.
+            const finalTheme = websiteData.theme
+                ? {
+                    ...theme,
+                    ...websiteData.theme,
+                    pageBackground: theme.pageBackground,
+                    globalColors: theme.globalColors,
+                    fontFamilyHeader: theme.fontFamilyHeader,
+                    fontFamilyBody: theme.fontFamilyBody,
+                    fontFamilyButton: theme.fontFamilyButton,
+                    fontWeightHeader: theme.fontWeightHeader,
+                }
+                : theme;
 
             // Build the data
             const finalData = websiteData.data;
+            applyExistingAssetPlan(finalData, planForGeneration.assetPlan);
 
             // Ensure all components have required fields
             ensureComponentCompleteness(finalData, brief, isSpanish);
@@ -840,32 +1438,53 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             }
 
             // Build component order & visibility
-            const componentOrder: PageSection[] = websiteData.componentOrder || brief.suggestedComponents || ['colors', 'typography', 'header', 'hero', 'services', 'features', 'cta', 'footer'];
+            const plannedOrder = sanitizeComponentOrder(brief.suggestedComponents, accessibleComponentRegistry);
+            const plannedSet = new Set<PageSection>(plannedOrder);
+            const generatedOrder = Array.isArray(websiteData.componentOrder)
+                ? websiteData.componentOrder as PageSection[]
+                : brief.suggestedComponents || ['hero', 'services', 'features', 'cta', 'footer'];
+            let componentOrder: PageSection[] = sanitizeComponentOrder(generatedOrder, accessibleComponentRegistry)
+                .filter(section => ['header', 'footer'].includes(section) || plannedSet.has(section));
+            if (!componentOrder.some(section => String(section).startsWith('hero'))) {
+                componentOrder = sanitizeComponentOrder(plannedOrder, accessibleComponentRegistry);
+            }
             if (!componentOrder.includes('colors')) componentOrder.unshift('colors');
             if (!componentOrder.includes('typography')) componentOrder.splice(1, 0, 'typography');
             if (!componentOrder.includes('header')) componentOrder.splice(2, 0, 'header');
             if (!componentOrder.includes('footer')) componentOrder.push('footer');
 
-            // Enforce banner right before footer
+            // If banner was selected, keep it near the end without forcing it into every site.
             const bannerIdx = componentOrder.indexOf('banner');
-            if (bannerIdx !== -1) componentOrder.splice(bannerIdx, 1);
-            const footerIdx = componentOrder.indexOf('footer');
-            if (footerIdx !== -1) {
-                componentOrder.splice(footerIdx, 0, 'banner');
-            } else {
-                componentOrder.push('banner');
+            if (bannerIdx !== -1) {
+                componentOrder.splice(bannerIdx, 1);
+                const footerIdx = componentOrder.indexOf('footer');
+                if (footerIdx !== -1) {
+                    componentOrder.splice(footerIdx, 0, 'banner');
+                } else {
+                    componentOrder.push('banner');
+                }
             }
 
+            pruneUnplannedComponentData(finalData, componentOrder);
+            repairGeneratedWebsiteDesign(finalData, finalTheme, componentOrder, brief, isSpanish);
+            applyDesignStrategyToGeneratedData(finalData, componentOrder, brief, finalTheme);
             const sectionVisibility = buildVisibility(componentOrder.filter(c => !['colors', 'typography', 'header', 'footer'].includes(c)));
 
             // Build menus
+            const headerLinks = Array.isArray(finalData.header?.links)
+                ? finalData.header.links.map((link: any, index: number) => ({
+                    id: `nav-${index + 1}`,
+                    text: link.text,
+                    href: link.href,
+                    type: 'section' as const,
+                }))
+                : buildHeaderLinksForOrder(componentOrder, isSpanish).map((link, index) => ({
+                    id: `nav-${index + 1}`,
+                    ...link,
+                    type: 'section' as const,
+                }));
             const projectMenus = [{
-                id: 'main', title: 'Main Menu', handle: 'main-menu', items: [
-                    { id: 'nav-1', text: isSpanish ? 'Inicio' : 'Home', href: '/', type: 'section' as const },
-                    { id: 'nav-2', text: isSpanish ? 'Servicios' : 'Services', href: '/#services', type: 'section' as const },
-                    { id: 'nav-3', text: isSpanish ? 'Nosotros' : 'About', href: '/#about', type: 'section' as const },
-                    { id: 'nav-4', text: isSpanish ? 'Contacto' : 'Contact', href: '/#contact', type: 'section' as const },
-                ],
+                id: 'main', title: 'Main Menu', handle: 'main-menu', items: headerLinks,
             }];
 
             // Build AI Assistant config
@@ -905,7 +1524,21 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             // ══════════════════════════════════════════════════════════════════
             // PHASE 4: Scan for empty imageUrl fields (40%)
             // ══════════════════════════════════════════════════════════════════
-            const imageSlots = collectImageSlots(finalData, brief, componentOrder);
+            const validation = validateGeneratedWebsite(finalData, componentOrder, planForGeneration);
+            if (validation.issues.length > 0) {
+                addEvent(
+                    validation.valid ? 'content' : 'image_fail',
+                    `Quality pass found ${validation.issues.length} issue${validation.issues.length === 1 ? '' : 's'}`
+                );
+                if (!validation.valid) {
+                    throw new Error(validation.issues.find(issue => issue.severity === 'error')?.message || 'Generated website failed validation');
+                }
+            }
+
+            const imageSlots = mergeImageSlots(
+                assetPlanToImageSlots(planForGeneration.assetPlan, finalData, brief),
+                collectImageSlots(finalData, brief, componentOrder)
+            );
             addEvent('content', `Found ${imageSlots.length} images to generate`);
             if (isDev) console.log('[AIWebsiteStudio] Image slots:', imageSlots.map(s => s.path));
 
@@ -1116,7 +1749,138 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             isGeneratingRef.current = false;
             setIsGenerating(false);
         }
-    }, [businessBrief, user, currentTenantId, t, generateImage, addNewProject, i18n.language, loadProject, setIsOnboardingOpen]);
+    }, [businessBrief, websitePlan, accessibleComponentRegistry, isAccessLoading, user, currentTenantId, t, generateImage, addNewProject, i18n.language, loadProject, setIsOnboardingOpen]);
+
+    const startGeneration = useCallback(() => {
+        if (!user || isGeneratingRef.current || isAccessLoading) return;
+        const basePlan = websitePlan || createWebsitePlanFromBrief(businessBrief, accessibleComponentRegistry);
+        const selectedComponents = sanitizeComponentOrder(
+            basePlan.componentPlan.map(item => item.component).length > 0
+                ? basePlan.componentPlan.map(item => item.component)
+                : businessBrief.suggestedComponents,
+            accessibleComponentRegistry
+        ).filter(section => !['header', 'footer'].includes(section));
+        const normalizedPlanBase: WebsitePlan = {
+            ...basePlan,
+            componentPlan: buildComponentPlan(selectedComponents, accessibleComponentRegistry, basePlan.source === 'imported-url' ? 'import' : 'user'),
+        };
+        const normalizedPlan = applyColorExpertToPlan({
+            ...normalizedPlanBase,
+            assetPlan: buildAssetPlan(normalizedPlanBase),
+        });
+        setWebsitePlan(normalizedPlan);
+        setShowPlanReview(true);
+    }, [accessibleComponentRegistry, businessBrief, isAccessLoading, user, websitePlan]);
+
+    const commitWebsitePlanToBrief = useCallback((plan: WebsitePlan, selectedComponentsOverride?: PageSection[]) => {
+        const selectedComponents = selectedComponentsOverride || sanitizeComponentOrder(
+            plan.componentPlan.map(item => item.component),
+            accessibleComponentRegistry
+        ).filter(section => !['header', 'footer'].includes(section));
+        const filteredComponents = filterAllowedComponents(selectedComponents);
+        const importedImageUrls = [
+            ...plan.assetPlan
+                .filter(asset => asset.source === 'existing' && asset.existingUrl)
+                .map(asset => asset.existingUrl as string),
+            ...(plan.contentMap.extractedImages || [])
+                .slice()
+                .sort((a, b) => (b.score || 0) - (a.score || 0))
+                .map(image => image.url),
+        ].filter((url, index, all): url is string => (
+            Boolean(url) &&
+            !/pixel|tracking|spacer|blank|placeholder|loader/i.test(url) &&
+            all.findIndex(item => item === url) === index
+        )).slice(0, 14);
+
+        setBusinessBrief(prev => {
+            const nextBrief: BusinessBrief = {
+                ...prev,
+                businessName: plan.businessProfile.businessName || prev.businessName,
+                industry: plan.businessProfile.industry || prev.industry,
+                description: plan.businessProfile.description || prev.description,
+                tagline: plan.businessProfile.tagline || prev.tagline,
+                services: plan.businessProfile.services?.length
+                    ? plan.businessProfile.services.map(service => ({ name: service.name, description: service.description || '' }))
+                    : prev.services,
+                contactInfo: { ...prev.contactInfo, ...(plan.businessProfile.contactInfo || {}) },
+                hasEcommerce: Boolean(plan.businessProfile.hasEcommerce),
+                colorPalette: {
+                    ...prev.colorPalette,
+                    primary: plan.brandProfile.colors.primary || prev.colorPalette.primary,
+                    secondary: plan.brandProfile.colors.secondary || prev.colorPalette.secondary,
+                    accent: plan.brandProfile.colors.accent || prev.colorPalette.accent,
+                    background: plan.brandProfile.colors.background || prev.colorPalette.background,
+                    surface: plan.brandProfile.colors.surface || prev.colorPalette.surface,
+                    text: plan.brandProfile.colors.text || prev.colorPalette.text,
+                },
+                suggestedComponents: filteredComponents,
+                readinessScore: Math.max(prev.readinessScore || 0, 80),
+                missingFields: [],
+            };
+            const importedFonts = plan.brandProfile.fonts || [];
+            nextBrief.fontPairing = chooseWebsiteFontPairing(nextBrief, {
+                header: importedFonts[0] || prev.fontPairing.header,
+                body: importedFonts[1] || importedFonts[0] || prev.fontPairing.body,
+                button: importedFonts[2] || importedFonts[1] || importedFonts[0] || prev.fontPairing.button,
+            });
+            return nextBrief;
+        });
+
+        if (importedImageUrls.length > 0) {
+            setReferenceImages(prev => {
+                const merged = [...prev];
+                for (const url of importedImageUrls) {
+                    if (merged.length >= 14) break;
+                    if (!merged.includes(url)) merged.push(url);
+                }
+                return merged;
+            });
+        }
+    }, [accessibleComponentRegistry, filterAllowedComponents]);
+
+    const returnToChatFromPlanReview = useCallback(() => {
+        if (websitePlan) {
+            commitWebsitePlanToBrief(websitePlan);
+        }
+        setShowPlanReview(false);
+    }, [commitWebsitePlanToBrief, websitePlan]);
+
+    const confirmWebsitePlan = useCallback(async (plan: WebsitePlan) => {
+        if (isAccessLoading) return;
+        const selectedComponents = sanitizeComponentOrder(
+            plan.componentPlan.map(item => item.component),
+            accessibleComponentRegistry
+        ).filter(section => !['header', 'footer'].includes(section));
+        const normalizedPlanBase: WebsitePlan = {
+            ...plan,
+            componentPlan: buildComponentPlan(selectedComponents, accessibleComponentRegistry, 'user'),
+            businessProfile: {
+                ...plan.businessProfile,
+                hasEcommerce: Boolean(plan.businessProfile.hasEcommerce && selectedComponents.some(component => {
+                    const item = accessibleComponentRegistry.find(entry => entry.id === component);
+                    return item?.role === 'ecommerce';
+                })),
+            },
+        };
+        const selectedAssetByPath = new Map(
+            plan.assetPlan
+                .filter(asset => asset.source === 'existing' && asset.existingUrl)
+                .map(asset => [asset.targetPath, asset])
+        );
+        const normalizedPlan = applyColorExpertToPlan({
+            ...normalizedPlanBase,
+            assetPlan: buildAssetPlan(normalizedPlanBase).map(asset => {
+                const selectedAsset = selectedAssetByPath.get(asset.targetPath);
+                return selectedAsset
+                    ? { ...asset, source: 'existing' as const, existingUrl: selectedAsset.existingUrl }
+                    : asset;
+            }),
+        });
+        setWebsitePlan(normalizedPlan);
+        commitWebsitePlanToBrief(normalizedPlan, selectedComponents);
+        setShowPlanReview(false);
+        await runGeneration(normalizedPlan);
+    }, [accessibleComponentRegistry, commitWebsitePlanToBrief, isAccessLoading, runGeneration]);
 
     // ═════════════════════════════════════════════════════════════════════════
     // PUBLIC API
@@ -1138,6 +1902,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
     }, []);
 
     const toggleBriefComponent = useCallback((component: PageSection) => {
+        if (filterAllowedComponents([component]).length === 0) return;
         setBusinessBrief(prev => {
             const exists = prev.suggestedComponents.includes(component);
             return {
@@ -1147,14 +1912,14 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                     : [...prev.suggestedComponents, component],
             };
         });
-    }, []);
+    }, [filterAllowedComponents]);
 
     const setBriefComponents = useCallback((components: PageSection[]) => {
         setBusinessBrief(prev => ({
             ...prev,
-            suggestedComponents: components,
+            suggestedComponents: filterAllowedComponents(components),
         }));
-    }, []);
+    }, [filterAllowedComponents]);
 
     // ── Reference image callbacks ────────────────────────────────────────────
     const addReferenceImage = useCallback((base64: string) => {
@@ -1177,11 +1942,12 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         liveUserTranscript, liveModelTranscript,
         startVoiceSession, stopVoiceSession,
         // Brief
-        businessBrief, updateBriefColor, updateBriefFont, toggleBriefComponent, setBriefComponents,
+        businessBrief, websitePlan, showPlanReview, setWebsitePlan, setShowPlanReview, returnToChatFromPlanReview,
+        availableComponents, updateBriefColor, updateBriefFont, toggleBriefComponent, setBriefComponents,
         // Reference Images
         referenceImages, addReferenceImage, removeReferenceImage,
         // Generation
-        isGenerating, generationPhase, canGenerate, startGeneration,
+        isGenerating, generationPhase, canGenerate, isAccessLoading, startGeneration, confirmWebsitePlan,
         // Website extraction
         showUrlModal, setShowUrlModal, isExtracting, extractWebsiteData,
         // Init
@@ -1200,6 +1966,46 @@ interface ImageSlot {
     componentType: string;  // e.g. "heroGallery"
     context: string;        // Title/description for smart prompt generation
     aspectRatio: string;    // Based on component type
+}
+
+function getNestedValue(obj: any, path: string): any {
+    return path.split('.').reduce((current, part) => {
+        if (current == null) return undefined;
+        const index = Number(part);
+        return !isNaN(index) ? current[index] : current[part];
+    }, obj);
+}
+
+function applyExistingAssetPlan(data: any, assetPlan: WebsitePlan['assetPlan'] = []): void {
+    for (const asset of assetPlan) {
+        if (asset.source === 'existing' && asset.existingUrl) {
+            setNestedValue(data, asset.targetPath, asset.existingUrl);
+        }
+    }
+}
+
+function assetPlanToImageSlots(assetPlan: WebsitePlan['assetPlan'] = [], data: any, brief: BusinessBrief): ImageSlot[] {
+    return assetPlan
+        .filter(asset => asset.source === 'generate' && !getNestedValue(data, asset.targetPath))
+        .map(asset => ({
+            path: asset.targetPath,
+            componentType: asset.targetPath.split('.')[0],
+            context: asset.prompt || `${brief.businessName} ${asset.targetPath}`,
+            aspectRatio: asset.aspectRatio || '16:9',
+        }));
+}
+
+function mergeImageSlots(...groups: ImageSlot[][]): ImageSlot[] {
+    const seen = new Set<string>();
+    const merged: ImageSlot[] = [];
+    for (const group of groups) {
+        for (const slot of group) {
+            if (seen.has(slot.path)) continue;
+            seen.add(slot.path);
+            merged.push(slot);
+        }
+    }
+    return merged;
 }
 
 function collectImageSlots(data: any, brief: any, componentOrder: string[]): ImageSlot[] {
@@ -1454,6 +2260,38 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
 // SMART IMAGE PROMPT — Context-aware prompt generation from component data
 // ═════════════════════════════════════════════════════════════════════════════
 
+function buildImageArtDirection(brief: BusinessBrief, slot: ImageSlot): string {
+    const industry = normalizeDesignIndustry(brief);
+    const baseByIndustry: Record<string, string> = {
+        restaurant: 'warm hospitality, plated details, real ambience, appetizing composition, natural human scale',
+        'real-estate': 'premium architectural photography, clean lines, spacious composition, trustworthy upscale atmosphere',
+        technology: 'high-end product/editorial tech visual, precise lighting, modern materials, subtle futuristic cues',
+        creative: 'editorial art direction, expressive composition, distinctive cultural or creative details, gallery-quality framing',
+        services: 'credible service-business photography, real environment, clear human problem-solution moment, polished but not generic',
+        ecommerce: 'premium lifestyle/product photography, tactile details, clean commercial composition',
+    };
+    const componentDirection: Record<string, string> = {
+        hero: 'hero image with one dominant focal subject and strong negative space for text overlay',
+        heroSplit: 'split-layout side image with subject facing toward the text area and clean crop edges',
+        heroGallery: 'immersive gallery slide with a different scene angle from other slides, cinematic but believable',
+        heroWave: 'wide atmospheric background with motion and depth, suitable behind graphic wave treatments',
+        heroNova: 'editorial hero background with bold composition and visual identity, not generic stock',
+        heroLead: 'trust-building lead-generation hero with approachable professional context and space for form UI',
+        features: 'specific visual proof of the benefit, detail-oriented and immediately understandable',
+        portfolio: 'finished work or real result, composed like a case-study image',
+        slideshow: 'atmospheric story image that adds variety from the hero image',
+        team: 'natural professional portrait, warm expression, authentic local context',
+        testimonials: 'customer portrait style, candid and credible, clean background',
+        banner: 'wide campaign image with clear depth and enough empty space for text overlay',
+        cta: 'ambient conversion background, subtle and text-safe',
+    };
+
+    return [
+        baseByIndustry[industry] || baseByIndustry.services,
+        componentDirection[slot.componentType] || 'purposeful website image with clear subject and premium composition',
+    ].join('; ');
+}
+
 function buildSmartImagePrompt(brief: BusinessBrief, slot: ImageSlot): string {
     // Location context
     const locationParts: string[] = [];
@@ -1482,6 +2320,7 @@ function buildSmartImagePrompt(brief: BusinessBrief, slot: ImageSlot): string {
     };
 
     const typeInstruction = typeInstructions[slot.componentType] || 'A professional, high-quality image.';
+    const artDirection = buildImageArtDirection(brief, slot);
 
     // Reference image context — user-specified instructions for how to apply reference images
     const refContext = brief.referenceImageContext
@@ -1492,7 +2331,8 @@ function buildSmartImagePrompt(brief: BusinessBrief, slot: ImageSlot): string {
 
 COMPONENT: ${slot.componentType}
 CONTEXT: ${slot.context}
-PURPOSE: ${typeInstruction}${refContext}
+PURPOSE: ${typeInstruction}
+ART DIRECTION: ${artDirection}${refContext}
 
 REQUIREMENTS:
 - LENS & CAMERA: Shot on a high-end full-frame camera (Sony A7R V or Canon R5) with premium prime lenses (35mm or 50mm).
@@ -1500,6 +2340,8 @@ REQUIREMENTS:
 - DEPTH: Masterful use of depth of field. Creamy bokeh (f/1.4-f/2.8) to isolate subjects where appropriate.
 - GEOGRAPHIC COHERENCE: The scene MUST feel authentically grounded in ${locationStr}. Strictly respect local architecture styles, endemic vegetation, realistic weather, and local demographics. If in a specific city/country, the environment must unmistakably reflect it.
 - BRAND COLOR INTEGRATION: The image's color palette MUST strictly harmonize with the brand. Subtly but clearly incorporate the brand colors (Primary: ${brief.colorPalette.primary}, Accent: ${brief.colorPalette.accent}) into the scene through props, wardrobe, lighting gels, or background elements. Do not just overlay color; integrate it naturally into the scene.
+- DESIGN USE: The image must be useful inside a responsive website component, with a clear focal point, crop-safe edges, and intentional negative space when used as a background.
+- AVOID: generic stock-photo poses, random objects unrelated to the business, busy collages, fake signage, duplicated people, distorted hands, and images that rely on text to communicate.
 - QUALITY: Ultra high-resolution 8k, flawless photorealism, no noise, no AI artifacts. Professional, premium, aspirational mood.
 - STRICT RULE: NO text, words, letters, watermarks, or logos of any kind should appear in the image. The image must be completely textless, UNLESS it is explicitly a UI (User Interface) being presented.
 - COMPOSITION: Professional composition using rule of thirds, leading lines, or perfect centered symmetry.
@@ -1548,7 +2390,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     // Default to a rich set of components if suggestedComponents is somehow empty
     const baseComponents = (brief.suggestedComponents && brief.suggestedComponents.length > 0)
         ? brief.suggestedComponents
-        : ['hero', 'services', 'features', 'testimonials', 'faq', 'cta', 'banner', 'footer'];
+        : ['hero', 'services', 'features', 'testimonials', 'faq', 'cta', 'footer'];
 
     let filteredComponents = baseComponents.filter(c => !EXCLUDED_COMPONENTS.includes(c));
     
@@ -1558,11 +2400,6 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         filteredComponents.unshift('hero');
     }
     
-    // Ensure banner is always present
-    if (!filteredComponents.includes('banner')) {
-        filteredComponents.push('banner');
-    }
-
     const hasHeroGallery = filteredComponents.includes('heroGallery');
     const hasMenu = filteredComponents.includes('menu');
 
@@ -1847,6 +2684,50 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     },`;
     }
 
+    if (filteredComponents.includes('restaurantReservation')) {
+        componentExamples += `
+    "restaurantReservation": {
+      "title": "${isSpanish ? 'Reserva tu mesa' : 'Reserve Your Table'}",
+      "subtitle": "${isSpanish ? 'Experiencia gastronómica' : 'Dining Experience'}",
+      "description": "[GENERATE_TEXT]",
+      "buttonText": "${isSpanish ? 'Confirmar Reserva' : 'Confirm Reservation'}",
+      "successMessage": "${isSpanish ? 'Tu solicitud de reserva fue recibida.' : 'Your reservation request was received.'}",
+      "showPhone": true,
+      "showNotes": true,
+      "showTablePreference": true,
+      "minPartySize": 1,
+      "maxPartySize": 12,
+      "paddingY": "lg",
+      "paddingX": "md",
+      "titleFontSize": "lg",
+      "descriptionFontSize": "md",
+      "borderRadius": "xl",
+      "buttonBorderRadius": "xl",
+      "backgroundImageUrl": "",
+      "colors": {"background": "${brief.colorPalette.background}", "heading": "${brief.colorPalette.text}", "description": "${brief.colorPalette.text}cc", "text": "${brief.colorPalette.text}", "accent": "${brief.colorPalette.accent}", "cardBackground": "${brief.colorPalette.surface}", "inputBackground": "${brief.colorPalette.background}", "inputText": "${brief.colorPalette.text}", "inputBorder": "${brief.colorPalette.surface}", "buttonBackground": "${brief.colorPalette.primary}", "buttonText": "#ffffff"}
+    },`;
+    }
+
+    const hasEcommerceComponents = filteredComponents.some(c => [
+        'announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'trustBadges',
+        'saleCountdown', 'collectionBanner', 'recentlyViewed', 'productReviews', 'productBundle',
+    ].includes(c));
+    const saleEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    if (hasEcommerceComponents) {
+        componentExamples += `
+    "announcementBar": {"variant": "static", "messages": [{"text": "[GENERATE_TEXT]", "linkText": "${isSpanish ? 'Comprar ahora' : 'Shop now'}", "link": "/tienda"}, {"text": "[GENERATE_TEXT]", "linkText": "${isSpanish ? 'Ver productos' : 'View products'}", "link": "/tienda"}], "paddingY": "sm", "paddingX": "md", "fontSize": "sm", "height": 40, "showIcon": true, "icon": "megaphone", "dismissible": false, "colors": {"background": "${brief.colorPalette.primary}", "text": "#ffffff", "linkColor": "#ffffff", "iconColor": "#ffffff", "borderColor": "transparent"}},
+    "productHero": {"variant": "featured", "layout": "full", "headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "buttonText": "${isSpanish ? 'Explorar productos' : 'Explore products'}", "buttonUrl": "/tienda", "backgroundImageUrl": "", "height": 520, "overlayStyle": "gradient", "overlayOpacity": 55, "textAlignment": "left", "contentPosition": "left", "showBadge": true, "badgeText": "${isSpanish ? 'Nuevo' : 'New'}", "buttonBorderRadius": "xl", "showAddToCartButton": true, "colors": {"background": "${brief.colorPalette.background}", "overlayColor": "#000000", "heading": "#ffffff", "text": "#ffffff", "buttonBackground": "${brief.colorPalette.primary}", "buttonText": "#ffffff", "badgeBackground": "${brief.colorPalette.accent}", "badgeText": "#ffffff", "addToCartBackground": "${brief.colorPalette.secondary}", "addToCartText": "#ffffff"}},
+    "featuredProducts": {"variant": "carousel", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "sourceType": "newest", "columns": 4, "productsToShow": 8, "autoScroll": true, "showArrows": true, "showDots": true, "showBadge": true, "showPrice": true, "showRating": true, "showAddToCart": true, "showViewAll": true, "viewAllUrl": "/tienda", "cardStyle": "modern", "colors": {"background": "${brief.colorPalette.background}", "heading": "${brief.colorPalette.text}", "text": "${brief.colorPalette.text}cc", "accent": "${brief.colorPalette.primary}", "cardBackground": "${brief.colorPalette.surface}", "cardText": "${brief.colorPalette.text}", "buttonBackground": "${brief.colorPalette.primary}", "buttonText": "#ffffff"}},
+    "categoryGrid": {"variant": "cards", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "columns": 4, "showProductCount": true, "imageAspectRatio": "1:1", "borderRadius": "xl", "categories": [], "colors": {"background": "${brief.colorPalette.background}", "heading": "${brief.colorPalette.text}", "text": "${brief.colorPalette.text}cc", "accent": "${brief.colorPalette.primary}", "cardBackground": "${brief.colorPalette.surface}", "cardText": "${brief.colorPalette.text}"}},
+    "trustBadges": {"variant": "horizontal", "title": "[GENERATE_TEXT]", "showLabels": true, "badges": [{"icon": "truck", "title": "${isSpanish ? 'Envío rápido' : 'Fast Shipping'}", "description": "[GENERATE_TEXT]"}, {"icon": "shield", "title": "${isSpanish ? 'Pago seguro' : 'Secure Payment'}", "description": "[GENERATE_TEXT]"}, {"icon": "refresh-cw", "title": "${isSpanish ? 'Cambios fáciles' : 'Easy Returns'}", "description": "[GENERATE_TEXT]"}], "colors": {"background": "${brief.colorPalette.surface}", "heading": "${brief.colorPalette.text}", "text": "${brief.colorPalette.text}cc", "iconColor": "${brief.colorPalette.primary}", "borderColor": "${brief.colorPalette.surface}"}},
+    "saleCountdown": {"variant": "banner", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "endDate": "${saleEndDate}", "discountText": "${isSpanish ? 'Hasta 50% OFF' : 'Up to 50% OFF'}", "showDays": true, "showHours": true, "showMinutes": true, "showSeconds": true, "colors": {"background": "${brief.colorPalette.surface}", "heading": "${brief.colorPalette.text}", "text": "${brief.colorPalette.text}cc", "accent": "${brief.colorPalette.accent}", "buttonBackground": "${brief.colorPalette.accent}", "buttonText": "#ffffff"}},
+    "collectionBanner": {"variant": "hero", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "backgroundImageUrl": "", "buttonText": "${isSpanish ? 'Ver colección' : 'View collection'}", "buttonUrl": "/tienda", "height": 420, "overlayStyle": "gradient", "overlayOpacity": 50, "textAlignment": "center", "contentPosition": "center", "showButton": true, "colors": {"background": "${brief.colorPalette.background}", "overlayColor": "#000000", "heading": "#ffffff", "text": "#ffffff", "buttonBackground": "${brief.colorPalette.primary}", "buttonText": "#ffffff"}},
+    "recentlyViewed": {"variant": "carousel", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "maxProducts": 10, "columns": 5, "showArrows": true, "showPrice": true, "cardStyle": "minimal", "colors": {"background": "${brief.colorPalette.background}", "heading": "${brief.colorPalette.text}", "text": "${brief.colorPalette.text}cc", "accent": "${brief.colorPalette.primary}", "cardBackground": "${brief.colorPalette.surface}", "cardText": "${brief.colorPalette.text}"}},
+    "productReviews": {"variant": "cards", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "showRatingDistribution": true, "showPhotos": true, "showVerifiedBadge": true, "maxReviews": 6, "colors": {"background": "${brief.colorPalette.background}", "heading": "${brief.colorPalette.text}", "text": "${brief.colorPalette.text}cc", "accent": "${brief.colorPalette.primary}", "cardBackground": "${brief.colorPalette.surface}", "cardText": "${brief.colorPalette.text}", "starColor": "#fbbf24", "verifiedBadgeColor": "#10b981"}},
+    "productBundle": {"variant": "horizontal", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "discountPercent": 15, "showSavings": true, "savingsText": "${isSpanish ? 'Ahorra' : 'Save'}", "buttonText": "${isSpanish ? 'Agregar bundle' : 'Add bundle'}", "showBadge": true, "badgeText": "${isSpanish ? 'Mejor valor' : 'Best value'}", "colors": {"background": "${brief.colorPalette.surface}", "heading": "${brief.colorPalette.text}", "text": "${brief.colorPalette.text}cc", "accent": "${brief.colorPalette.primary}", "cardBackground": "${brief.colorPalette.background}", "cardText": "${brief.colorPalette.text}", "priceColor": "${brief.colorPalette.text}", "savingsColor": "#10b981", "buttonBackground": "${brief.colorPalette.primary}", "buttonText": "#ffffff"}},`;
+    }
+
     // Build full address string for map (must be computed BEFORE the template literal)
     const mapAddressParts: string[] = [];
     if (brief.contactInfo?.address) mapAddressParts.push(safeStr(brief.contactInfo.address));
@@ -1947,13 +2828,18 @@ COLOR PALETTE:
 - Surface: ${brief.colorPalette.surface}
 - Text: ${brief.colorPalette.text}
 
+COLOR SYSTEM LOCK:
+The color palette above was produced by Quimera Color Expert. Use these exact color roles as semantic tokens.
+Do not invent new brand hex colors, do not replace theme.globalColors, and do not make accessibility decisions with new colors.
+If a component needs button text, badge text, overlays, cards, or ecommerce colors, derive them from the provided semantic roles.
+
 COMPONENTS TO GENERATE: ${filteredComponents.join(', ')}
 
 LANGUAGE: All content MUST be in ${lang}.
 
 OUTPUT FORMAT: Return a single JSON object with this EXACT structure:
 {
-  "componentOrder": ["colors", "typography", "header", ${filteredComponents.filter(c => !['colors', 'typography', 'header', 'footer', 'banner'].includes(c)).map(c => `"${c}"`).join(', ')}, "banner", "footer"],
+  "componentOrder": ["colors", "typography", "header", ${filteredComponents.filter(c => !['colors', 'typography', 'header', 'footer'].includes(c)).map(c => `"${c}"`).join(', ')}, "footer"],
   "theme": {
     "cardBorderRadius": "md",
     "buttonBorderRadius": "md",
@@ -1987,7 +2873,8 @@ CRITICAL RULES:
 13. For howItWorks: generate EXACTLY 3 steps with titles, descriptions, and valid lucide icons.
 14. For properties marked with [SELECT: a|b|c...], you MUST intelligently choose exactly ONE of the provided options based on what best fits the industry's aesthetic. Do not output the brackets.
 15. For header.style: VARY it based on the industry. Examples: restaurants/bars → 'transparent-gradient-dark' or 'edge-solid'; tech/SaaS → 'floating-glass' or 'floating-pill'; fitness/gym → 'sticky-solid' or 'edge-bordered'; luxury/spa → 'transparent-blur' or 'floating-shadow'; professional/corporate → 'edge-minimal' or 'sticky-solid'; creative/portfolio → 'transparent-bordered' or 'floating-glass'. NEVER always pick the same style.
-18. For map: use the COMPLETE address including street, city, state, and country. The address field must contain the full location string.
+16. Do not generate arbitrary new hex colors. Use the COLOR PALETTE values as semantic tokens; the application will apply validated component mappings after generation.
+17. For map: use the COMPLETE address including street, city, state, and country. The address field must contain the full location string.
 
 RESPOND WITH ONLY VALID JSON. NO MARKDOWN, NO BACKTICKS, NO EXPLANATION.`;
 }
@@ -1995,6 +2882,77 @@ RESPOND WITH ONLY VALID JSON. NO MARKDOWN, NO BACKTICKS, NO EXPLANATION.`;
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPER: Ensure all components have required fields filled
 // ═════════════════════════════════════════════════════════════════════════════
+
+function normalizeGeneratedText(value: any, fallback = ''): string {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (value && typeof value === 'object') {
+        return value.es || value.en || value.text || value.title || value.label || fallback;
+    }
+    return fallback;
+}
+
+function createDefaultSlideshowItems(brief: any, isSpanish: boolean): Array<{ imageUrl: string; altText: string; caption: string }> {
+    const businessName = brief.businessName || (isSpanish ? 'Negocio' : 'Business');
+    const services = Array.isArray(brief.services) ? brief.services : [];
+
+    return [
+        {
+            imageUrl: '',
+            altText: businessName,
+            caption: brief.tagline || brief.description || businessName,
+        },
+        {
+            imageUrl: '',
+            altText: normalizeGeneratedText(services[0]?.name, isSpanish ? 'Servicio destacado' : 'Featured service'),
+            caption: normalizeGeneratedText(services[0]?.description, isSpanish ? 'Una experiencia creada para tus clientes.' : 'An experience built for your customers.'),
+        },
+        {
+            imageUrl: '',
+            altText: normalizeGeneratedText(services[1]?.name, isSpanish ? 'Experiencia de marca' : 'Brand experience'),
+            caption: normalizeGeneratedText(services[1]?.description, isSpanish ? 'Diseño, confianza y conversiones en una sola presencia digital.' : 'Design, trust, and conversion in one digital presence.'),
+        },
+    ];
+}
+
+function normalizeGeneratedSlideshowItems(items: any, brief: any, isSpanish: boolean): Array<{ imageUrl: string; altText: string; caption: string }> {
+    let rawItems: any[] = [];
+
+    if (Array.isArray(items)) {
+        rawItems = items;
+    } else if (items && typeof items === 'object') {
+        const record = items as Record<string, any>;
+        const hasSingleSlideShape = ['imageUrl', 'url', 'src', 'image', 'backgroundImage', 'altText', 'alt', 'caption', 'title']
+            .some((key) => key in record);
+
+        rawItems = hasSingleSlideShape
+            ? [record]
+            : Object.values(record).filter((item) => item && (typeof item === 'object' || typeof item === 'string'));
+    } else if (typeof items === 'string') {
+        rawItems = [items];
+    }
+
+    const normalized = rawItems.map((item, index) => {
+        if (typeof item === 'string') {
+            return {
+                imageUrl: item,
+                altText: `${brief.businessName || (isSpanish ? 'Imagen' : 'Image')} ${index + 1}`,
+                caption: '',
+            };
+        }
+
+        const imageUrl = item?.imageUrl || item?.url || item?.src || item?.image || item?.backgroundImage || '';
+        const caption = normalizeGeneratedText(item?.caption || item?.description || item?.subtitle || item?.title, '');
+        const altText = normalizeGeneratedText(
+            item?.altText || item?.alt || item?.title || item?.caption,
+            `${brief.businessName || (isSpanish ? 'Imagen' : 'Image')} ${index + 1}`,
+        );
+
+        return { ...item, imageUrl, altText, caption };
+    });
+
+    return normalized.length > 0 ? normalized : createDefaultSlideshowItems(brief, isSpanish);
+}
 
 function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean): void {
     if (!data || typeof data !== 'object') return;
@@ -2278,6 +3236,20 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
         if (!data.howItWorks.title) data.howItWorks.title = isSpanish ? 'Cómo Funciona' : 'How It Works';
     }
 
+    // Slideshow defaults
+    if (data.slideshow && typeof data.slideshow === 'object') {
+        if (!data.slideshow.title) data.slideshow.title = isSpanish ? 'Galería' : 'Gallery';
+        data.slideshow.items = normalizeGeneratedSlideshowItems(data.slideshow.items, brief, isSpanish);
+        if (data.slideshow.showArrows === undefined) data.slideshow.showArrows = true;
+        if (data.slideshow.showDots === undefined) data.slideshow.showDots = true;
+        if (data.slideshow.showCaptions === undefined) data.slideshow.showCaptions = true;
+        if (!data.slideshow.slideshowVariant) data.slideshow.slideshowVariant = 'classic';
+        if (!data.slideshow.transitionEffect) data.slideshow.transitionEffect = 'slide';
+        if (!data.slideshow.transitionDuration) data.slideshow.transitionDuration = 500;
+        if (!data.slideshow.autoPlaySpeed) data.slideshow.autoPlaySpeed = 5000;
+        if (!data.slideshow.colors || typeof data.slideshow.colors !== 'object') data.slideshow.colors = {};
+    }
+
     // TopBar defaults
     if (data.topBar && typeof data.topBar === 'object') {
         if (!data.topBar.messages || !Array.isArray(data.topBar.messages) || data.topBar.messages.length === 0) {
@@ -2333,9 +3305,9 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
 function applyFontsToComponents(data: any, theme: any): void {
     if (!data || typeof data !== 'object' || !theme) return;
 
-    const headerFont = theme.fontFamilyHeader || 'playfair-display';
-    const bodyFont = theme.fontFamilyBody || 'inter';
-    const buttonFont = theme.fontFamilyButton || bodyFont;
+    const headerFont = resolveFontFamily(theme.fontFamilyHeader || 'playfair-display');
+    const bodyFont = resolveFontFamily(theme.fontFamilyBody || 'inter');
+    const buttonFont = resolveFontFamily(theme.fontFamilyButton || bodyFont);
     const fontWeightHeader = theme.fontWeightHeader || 700;
 
     // Apply to typography component so the editor renders fonts correctly
@@ -2354,6 +3326,10 @@ function applyFontsToComponents(data: any, theme: any): void {
         'team', 'pricing', 'faq', 'portfolio', 'cta', 'howItWorks',
         'leads', 'newsletter', 'banner', 'video', 'slideshow', 'menu',
         'map', 'topBar', 'signupFloat', 'cmsFeed',
+        'announcementBar', 'productHero', 'featuredProducts', 'categoryGrid',
+        'trustBadges', 'saleCountdown', 'collectionBanner', 'recentlyViewed',
+        'productReviews', 'productBundle', 'products', 'storeSettings',
+        'productDetail', 'categoryProducts', 'productGrid', 'cart', 'checkout',
         'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
     ];
 

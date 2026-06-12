@@ -19,7 +19,10 @@ import { ROUTES } from '../../routes/config';
 import { initialData } from '../../data/initialData';
 import { PageSection } from '../../types';
 import { SitePage } from '../../types/project';
+import { usePlanAccess } from '../../hooks/usePlanFeatures';
+import { resolveProjectName } from '../../utils/resolveProjectName';
 import PageSettings from '../dashboard/PageSettings';
+import PageSelector from '../dashboard/PageSelector';
 import { PageTemplateId, PAGE_TEMPLATES } from '../../types/onboarding';
 import GlobalStylesControl from '../ui/GlobalStylesControl';
 import MobileBottomSheet from '../ui/MobileBottomSheet';
@@ -140,8 +143,8 @@ const Controls: React.FC = () => {
   const { menus, categories } = useCMS();
   const [showPageSettings, setShowPageSettings] = useState<string | null>(null);
   const { componentStatus: rawComponentStatus, componentStyles } = useAdmin();
-  const { canAccessService } = useServiceAvailability();
-  const canAccessEcommerce = canAccessService('ecommerce');
+  const { canAccessService, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+  const { hasAccess: hasPlanAccess, isLoading: isLoadingPlanAccess } = usePlanAccess();
 
   const ECOMMERCE_SECTIONS: Set<string> = useMemo(() => new Set([
     'products', 'storeSettings', 'featuredProducts', 'categoryGrid',
@@ -149,15 +152,9 @@ const Controls: React.FC = () => {
     'productReviews', 'collectionBanner', 'productBundle', 'announcementBar',
   ]), []);
 
-  const componentStatus = useMemo(() => {
-    const merged = { ...rawComponentStatus };
-    if (!canAccessEcommerce) {
-      ECOMMERCE_SECTIONS.forEach(section => {
-        merged[section as PageSection] = false;
-      });
-    }
-    return merged;
-  }, [rawComponentStatus, canAccessEcommerce, ECOMMERCE_SECTIONS]);
+  const componentStatus = rawComponentStatus;
+  const canAddEcommerceComponents = (isLoadingServiceAvailability || canAccessService('ecommerce')) &&
+    (isLoadingPlanAccess || hasPlanAccess('ecommerceEnabled'));
 
   const { navigate } = useRouter();
   const [aiAssistField, setAiAssistField] = useState<{ path: string, value: string, context: string } | null>(null);
@@ -220,32 +217,36 @@ const Controls: React.FC = () => {
   const handlePageSettings = (pageId: string) => setShowPageSettings(pageId);
   const handleSavePageSettings = (pageId: string, updates: Partial<SitePage>) => { updatePage(pageId, updates); setShowPageSettings(null); };
   const isSlugUnique = (slug: string, currentPageId: string): boolean => !pages.some(p => p.id !== currentPageId && p.slug === slug);
+  const usesPageSections = Boolean(activePage?.sections?.length && !activePage.isHomePage);
 
   // ─── Effective component order & visibility ───────────────────────────────
   const effectiveComponentOrder = useMemo(() => {
-    const raw = activePage?.sections?.length ? activePage.sections : componentOrder;
+    const raw = usesPageSections ? activePage!.sections : componentOrder;
     const seen = new Set<PageSection>();
     return raw.filter(s => { if (seen.has(s)) return false; seen.add(s); return true; });
-  }, [activePage, componentOrder]);
+  }, [activePage, componentOrder, usesPageSections]);
 
   const effectiveSectionVisibility = useMemo(() => {
-    if (activePage?.sections?.length) {
+    if (usesPageSections) {
       const vis: Record<string, boolean> = {};
-      activePage.sections.forEach(s => { vis[s] = sectionVisibility[s] ?? true; });
+      activePage!.sections.forEach(s => { vis[s] = sectionVisibility[s] ?? true; });
+      vis.header = sectionVisibility.header ?? true;
+      vis.footer = sectionVisibility.footer ?? true;
       return vis;
     }
     return sectionVisibility;
-  }, [activePage, sectionVisibility]);
+  }, [activePage, sectionVisibility, usesPageSections]);
 
   // ─── setNestedData helper ─────────────────────────────────────────────────
   const lastUpdatedSectionRef = useRef<string | null>(null);
   const setNestedData = (path: string, value: any) => {
-    const sectionKey = path.split('.')[0];
+    const normalizedPath = path.replace(/\?\./g, '.');
+    const sectionKey = normalizedPath.split('.')[0];
     lastUpdatedSectionRef.current = sectionKey;
     setData(prevData => {
       if (!prevData) return null;
       const newData = safeClone(prevData);
-      const keys = path.split('.');
+      const keys = normalizedPath.split('.');
       let current: any = newData;
       for (let i = 0; i < keys.length - 1; i++) {
         const key = keys[i];
@@ -262,6 +263,10 @@ const Controls: React.FC = () => {
   // Multi-page sync
   useEffect(() => {
     if (!activePage || !updatePage || !data || !lastUpdatedSectionRef.current) return;
+    if (activePage.isHomePage) {
+      lastUpdatedSectionRef.current = null;
+      return;
+    }
     const sectionKey = lastUpdatedSectionRef.current;
     if (activePage?.sections?.includes(sectionKey as any)) {
       const sectionData = data[sectionKey as keyof typeof data];
@@ -410,14 +415,24 @@ const Controls: React.FC = () => {
 
   const sortableSections = effectiveComponentOrder.filter(k => k !== 'footer' && componentStatus[k as PageSection]);
   const availableComponentsToAdd = (Object.keys(sectionConfig) as PageSection[]).filter(
-    section => componentStatus[section] && section !== 'typography' && section !== 'footer' && section !== 'colors'
+    section => componentStatus[section] &&
+      section !== 'typography' &&
+      section !== 'footer' &&
+      section !== 'colors' &&
+      (!ECOMMERCE_SECTIONS.has(section) || canAddEcommerceComponents)
   );
 
   const handleAddComponent = (section: PageSection) => {
     const newOrder = [...effectiveComponentOrder.filter(k => k !== 'footer'), section, 'footer' as PageSection];
-    if (activePage) updatePage(activePage.id, { sections: newOrder });
-    setComponentOrder(newOrder as PageSection[]);
-    setEditorComponentOrder(newOrder as PageSection[]);
+    const nextComponentOrder = usesPageSections
+      ? componentOrder.includes(section)
+        ? componentOrder
+        : [...componentOrder.filter(k => k !== 'footer'), section, 'footer' as PageSection]
+      : newOrder;
+
+    if (usesPageSections && activePage) updatePage(activePage.id, { sections: newOrder });
+    setComponentOrder(nextComponentOrder as PageSection[]);
+    setEditorComponentOrder(nextComponentOrder as PageSection[]);
     const globalDefault = (componentStyles && componentStyles[section]) ? componentStyles[section] : {};
     let newDataSnapshot: any = null;
     setData(prevData => {
@@ -440,7 +455,7 @@ const Controls: React.FC = () => {
     pushProjectUndoAction(`Añadió la sección ${section}`, {
         data: newDataSnapshot || data,
         theme,
-        componentOrder: newOrder as PageSection[],
+        componentOrder: nextComponentOrder as PageSection[],
         sectionVisibility: newVisibility,
         pages
     });
@@ -448,17 +463,20 @@ const Controls: React.FC = () => {
 
   const handleRemoveComponent = (section: PageSection) => {
     const newOrder = effectiveComponentOrder.filter(k => k !== section);
-    if (activePage) updatePage(activePage.id, { sections: newOrder });
-    setComponentOrder(newOrder);
-    setEditorComponentOrder(newOrder);
-    const newVisibility = { ...sectionVisibility, [section]: false };
+    if (usesPageSections && activePage) {
+      updatePage(activePage.id, { sections: newOrder });
+    } else {
+      setComponentOrder(newOrder);
+      setEditorComponentOrder(newOrder);
+    }
+    const newVisibility = usesPageSections ? sectionVisibility : { ...sectionVisibility, [section]: false };
     setSectionVisibility(newVisibility);
     if (activeSection === section) onSectionSelect(null as any);
     
     pushProjectUndoAction(`Eliminó la sección ${section}`, {
         data,
         theme,
-        componentOrder: newOrder,
+        componentOrder: usesPageSections ? componentOrder : newOrder,
         sectionVisibility: newVisibility,
         pages
     });
@@ -467,7 +485,7 @@ const Controls: React.FC = () => {
   // ─── Section label helper ─────────────────────────────────────────────────
   const getSectionLabel = (section: PageSection): string => {
     const config = sectionConfig[section];
-    return config?.label || section;
+    return resolveProjectName(config?.label || section);
   };
 
   // ─── Active section renderer ──────────────────────────────────────────────
@@ -572,14 +590,17 @@ const Controls: React.FC = () => {
 
   // ─── Reorder handler (shared) ─────────────────────────────────────────────
   const handleReorder = (newOrder: PageSection[]) => {
-    if (activePage) updatePage(activePage.id, { sections: newOrder });
-    setComponentOrder(newOrder);
-    setEditorComponentOrder(newOrder);
+    if (usesPageSections && activePage) {
+      updatePage(activePage.id, { sections: newOrder });
+    } else {
+      setComponentOrder(newOrder);
+      setEditorComponentOrder(newOrder);
+    }
     
     pushProjectUndoAction(`Reordenó las secciones`, {
         data,
         theme,
-        componentOrder: newOrder,
+        componentOrder: usesPageSections ? componentOrder : newOrder,
         sectionVisibility,
         pages
     });
@@ -598,6 +619,20 @@ const Controls: React.FC = () => {
       <div className={`bg-q-surface/50 w-64 lg:w-72 flex-shrink-0 flex flex-col overflow-hidden
         fixed inset-y-0 left-0 z-40 transform duration-300 ease-in-out
         md:relative md:inset-auto md:z-auto md:transform-none md:h-full hidden md:flex`}>
+        {pages.length > 0 && (
+          <div className="p-3 border-b border-q-border">
+            <PageSelector
+              pages={pages}
+              activePage={activePage}
+              onSelectPage={handleSelectPage}
+              onAddPage={handleAddPage}
+              onDuplicatePage={handleDuplicatePage}
+              onDeletePage={handleDeletePage}
+              onPageSettings={handlePageSettings}
+              compact
+            />
+          </div>
+        )}
         <div className="flex-1 min-h-0 overflow-hidden">
           <ComponentTree
             componentOrder={effectiveComponentOrder} activeSection={activeSection}
@@ -617,6 +652,20 @@ const Controls: React.FC = () => {
       <MobileBottomSheet isOpen={isMobile && isSidebarOpen && !activeSection}
         onClose={() => setIsSidebarOpen(false)} title={t('controls.sections', 'Secciones')}>
         <div className="min-h-[50vh]">
+          {pages.length > 0 && (
+            <div className="mb-3">
+              <PageSelector
+                pages={pages}
+                activePage={activePage}
+                onSelectPage={handleSelectPage}
+                onAddPage={handleAddPage}
+                onDuplicatePage={handleDuplicatePage}
+                onDeletePage={handleDeletePage}
+                onPageSettings={handlePageSettings}
+                compact
+              />
+            </div>
+          )}
           <ComponentTree componentOrder={effectiveComponentOrder} activeSection={activeSection}
             sectionVisibility={effectiveSectionVisibility} componentStatus={componentStatus}
             onSectionSelect={(s) => onSectionSelect(s as any)}
@@ -677,6 +726,20 @@ const Controls: React.FC = () => {
       <TabletSlidePanel isOpen={isTablet && isSidebarOpen && !activeSection}
         onClose={() => setIsSidebarOpen(false)} title={t('controls.sections', 'Secciones')} position="left">
         <div className="min-h-[60vh]">
+          {pages.length > 0 && (
+            <div className="mb-3">
+              <PageSelector
+                pages={pages}
+                activePage={activePage}
+                onSelectPage={handleSelectPage}
+                onAddPage={handleAddPage}
+                onDuplicatePage={handleDuplicatePage}
+                onDeletePage={handleDeletePage}
+                onPageSettings={handlePageSettings}
+                compact
+              />
+            </div>
+          )}
           <ComponentTree componentOrder={effectiveComponentOrder} activeSection={activeSection}
             sectionVisibility={effectiveSectionVisibility} componentStatus={componentStatus}
             onSectionSelect={(s) => onSectionSelect(s as any)}

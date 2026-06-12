@@ -12,6 +12,7 @@ import { FontFamily } from '../types';
  * Any key that still exists in the new catalog is NOT listed here.
  */
 const legacyFontMigration: Record<string, FontFamily> = {
+    'bebas-neue': 'barlow-condensed',
     'roboto': 'inter',
     'lato': 'inter',
     'oswald': 'barlow-condensed',
@@ -107,6 +108,14 @@ export const fontStacks: Record<FontFamily, string> = {
  */
 export const resolveFontFamily = (font: string | undefined): FontFamily => {
     if (!font) return 'inter';
+    const normalized = font
+        .trim()
+        .replace(/^['"]|['"]$/g, '')
+        .toLowerCase()
+        .replace(/[_\s]+/g, '-')
+        .replace(/[^a-z0-9-]/g, '');
+    if (normalized in fontStacks) return normalized as FontFamily;
+    if (normalized in legacyFontMigration) return legacyFontMigration[normalized];
     // If font exists in current catalog, use it
     if (font in fontStacks) return font as FontFamily;
     // Try legacy migration

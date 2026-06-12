@@ -8,10 +8,12 @@ import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { RecentlyViewedData, StorefrontProductItem } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
+import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 
 interface RecentlyViewedProps {
     data: RecentlyViewedData;
     storeId?: string;
+    globalColors?: StorefrontGlobalColors;
     onProductClick?: (productSlug: string) => void;
 }
 
@@ -20,10 +22,12 @@ const STORAGE_KEY = 'quimera_recently_viewed';
 const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
     data,
     storeId,
+    globalColors,
     onProductClick,
 }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
+    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
 
     const { products: allProducts, isLoading } = usePublicProducts(effectiveStoreId);
 
@@ -131,9 +135,9 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                         ) : (
                             <div
                                 className="w-full h-full flex items-center justify-center"
-                                style={{ backgroundColor: data.colors?.accent + '20' }}
+                                style={{ backgroundColor: colors?.accent + '20' }}
                             >
-                                <span style={{ color: data.colors?.cardText }}>Sin imagen</span>
+                                <span style={{ color: colors?.cardText }}>Sin imagen</span>
                             </div>
                         )}
                         
@@ -172,7 +176,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
         return (
             <div
                 className={`group cursor-pointer ${cardStyles[data.cardStyle]}`}
-                style={{ backgroundColor: data.colors?.cardBackground }}
+                style={{ backgroundColor: colors?.cardBackground }}
                 onClick={() => product.slug && onProductClick?.(product.slug)}
             >
                 <div className={`relative aspect-square overflow-hidden ${getBorderRadius()}`}>
@@ -185,16 +189,16 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                     ) : (
                         <div
                             className="w-full h-full flex items-center justify-center"
-                            style={{ backgroundColor: data.colors?.accent + '20' }}
+                            style={{ backgroundColor: colors?.accent + '20' }}
                         >
-                            <span style={{ color: data.colors?.cardText }}>Sin imagen</span>
+                            <span style={{ color: colors?.cardText }}>Sin imagen</span>
                         </div>
                     )}
                 </div>
                 <div className="p-3">
                     <h4
                         className="font-medium text-sm line-clamp-2"
-                        style={{ color: data.colors?.cardText || data.colors?.heading }}
+                        style={{ color: colors?.cardText || colors?.heading }}
                     >
                         {product.name}
                     </h4>
@@ -204,14 +208,14 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                                 <Star
                                     key={i}
                                     size={12}
-                                    style={{ color: i < Math.round(product.rating!) ? data.colors?.starColor : (data.colors?.borderColor || '#d1d5db') }}
+                                    style={{ color: i < Math.round(product.rating!) ? colors?.starColor : (colors?.borderColor || '#d1d5db') }}
                                     fill={i < Math.round(product.rating!) ? 'currentColor' : 'none'}
                                 />
                             ))}
                         </div>
                     )}
                     {data.showPrice && (
-                        <p className="font-semibold mt-1" style={{ color: data.colors?.accent }}>
+                        <p className="font-semibold mt-1" style={{ color: colors?.accent }}>
                             ${product.price.toFixed(2)}
                         </p>
                     )}
@@ -254,7 +258,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                         onClick={handlePrev}
                         disabled={currentIndex === 0}
                         className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 p-2 rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-110"
-                        style={{ backgroundColor: data.colors?.accent, color: data.colors?.buttonText || '#ffffff' }}
+                        style={{ backgroundColor: colors?.accent, color: colors?.buttonText || '#ffffff' }}
                     >
                         <ChevronLeft size={20} />
                     </button>
@@ -262,7 +266,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                         onClick={handleNext}
                         disabled={currentIndex >= maxIndex}
                         className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 p-2 rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-110"
-                        style={{ backgroundColor: data.colors?.accent, color: data.colors?.buttonText || '#ffffff' }}
+                        style={{ backgroundColor: colors?.accent, color: colors?.buttonText || '#ffffff' }}
                     >
                         <ChevronRight size={20} />
                     </button>
@@ -299,7 +303,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                         ) : (
                             <div
                                 className="w-full h-full flex items-center justify-center text-xs"
-                                style={{ backgroundColor: data.colors?.cardBackground }}
+                                style={{ backgroundColor: colors?.cardBackground }}
                             >
                                 Sin imagen
                             </div>
@@ -307,12 +311,12 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                     </div>
                     <h4
                         className="text-xs font-medium line-clamp-2"
-                        style={{ color: data.colors?.text }}
+                        style={{ color: colors?.text }}
                     >
                         {product.name}
                     </h4>
                     {data.showPrice && (
-                        <p className="text-sm font-semibold" style={{ color: data.colors?.accent }}>
+                        <p className="text-sm font-semibold" style={{ color: colors?.accent }}>
                             ${product.price.toFixed(2)}
                         </p>
                     )}
@@ -323,13 +327,13 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
 
     if (isLoading) {
         return (
-            <section className={`${getPaddingY()} ${getPaddingX()}`} style={{ backgroundColor: data.colors?.background }}>
+            <section className={`${getPaddingY()} ${getPaddingX()}`} style={{ backgroundColor: colors?.background }}>
                 <div className="max-w-7xl mx-auto">
                     <div className="animate-pulse">
-                        <div className="h-8 rounded w-1/4 mb-6" style={{ backgroundColor: data.colors?.borderColor }} />
+                        <div className="h-8 rounded w-1/4 mb-6" style={{ backgroundColor: colors?.borderColor }} />
                         <div className={`grid grid-cols-2 ${getGridCols()} gap-4`}>
                             {Array.from({ length: 5 }).map((_, i) => (
-                                <div key={i} className="aspect-square rounded-xl" style={{ backgroundColor: data.colors?.borderColor }} />
+                                <div key={i} className="aspect-square rounded-xl" style={{ backgroundColor: colors?.borderColor }} />
                             ))}
                         </div>
                     </div>
@@ -341,7 +345,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
     return (
         <section
             className={`${getPaddingY()} ${getPaddingX()}`}
-            style={{ backgroundColor: data.colors?.background }}
+            style={{ backgroundColor: colors?.background }}
         >
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
@@ -350,13 +354,13 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                         {data.title && (
                             <h2
                                 className={`${getTitleSize()} font-bold mb-1`}
-                                style={{ color: data.colors?.heading }}
+                                style={{ color: colors?.heading }}
                             >
                                 {data.title}
                             </h2>
                         )}
                         {data.description && (
-                            <p style={{ color: data.colors?.text }}>{data.description}</p>
+                            <p style={{ color: colors?.text }}>{data.description}</p>
                         )}
                     </div>
                 )}

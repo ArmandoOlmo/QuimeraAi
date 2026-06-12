@@ -67,7 +67,9 @@ export * from './realEstate';
 // Restaurants Types
 export * from './restaurants';
 
-
+// AI Website Studio plan contract
+export * from './websitePlan';
+export * from './colorSystem';
 
 
 

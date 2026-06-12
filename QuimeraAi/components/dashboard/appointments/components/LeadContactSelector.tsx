@@ -378,7 +378,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
 
                     <button
                         onClick={handleImport}
-                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity"
+                        className="quimera-guide-cta px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2"
                     >
                         <UserPlus size={16} />
                         {t('appointments.leadSelector.import')}

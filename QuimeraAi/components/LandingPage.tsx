@@ -1133,6 +1133,7 @@ const LandingPageContent: React.FC = () => {
       <FeaturedProducts
         data={mergedFeaturedProductsData}
         storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
       />
     ) : null,
@@ -1140,6 +1141,7 @@ const LandingPageContent: React.FC = () => {
       <CategoryGrid
         data={mergedCategoryGridData}
         storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onCategoryClick={handleNavigateToCategory}
       />
     ) : null,
@@ -1147,6 +1149,7 @@ const LandingPageContent: React.FC = () => {
       <ProductHero
         data={mergedProductHeroData}
         storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
       />
     ) : null,
@@ -1154,25 +1157,29 @@ const LandingPageContent: React.FC = () => {
       <SaleCountdown
         data={mergedSaleCountdownData}
         storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
       />
     ) : null,
     trustBadges: mergedTrustBadgesData ? (
-      <TrustBadges data={mergedTrustBadgesData} />
+      <TrustBadges data={mergedTrustBadgesData} storeId={activeProjectId || undefined} globalColors={theme.globalColors} />
     ) : null,
     recentlyViewed: mergedRecentlyViewedData ? (
       <RecentlyViewed
         data={mergedRecentlyViewedData}
         storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
       />
     ) : null,
     productReviews: mergedProductReviewsData ? (
-      <ProductReviews data={mergedProductReviewsData} />
+      <ProductReviews data={mergedProductReviewsData} storeId={activeProjectId || undefined} globalColors={theme.globalColors} />
     ) : null,
     collectionBanner: mergedCollectionBannerData ? (
       <CollectionBanner
         data={mergedCollectionBannerData}
+        storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onCollectionClick={handleNavigateToCategory}
       />
     ) : null,
@@ -1180,11 +1187,12 @@ const LandingPageContent: React.FC = () => {
       <ProductBundle
         data={mergedProductBundleData}
         storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
       />
     ) : null,
     announcementBar: mergedAnnouncementBarData ? (
-      <AnnouncementBar data={mergedAnnouncementBarData} />
+      <AnnouncementBar data={mergedAnnouncementBarData} storeId={activeProjectId || undefined} globalColors={theme.globalColors} />
     ) : null,
     realEstateListings: (
       <SectionBackground backgroundImageUrl={mergedRealEstateListingsData?.backgroundImageUrl} backgroundColor={mergedRealEstateListingsData?.colors?.background} backgroundOverlayEnabled={mergedRealEstateListingsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedRealEstateListingsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedRealEstateListingsData?.backgroundOverlayColor} backgroundPosition={mergedRealEstateListingsData?.backgroundPosition}>

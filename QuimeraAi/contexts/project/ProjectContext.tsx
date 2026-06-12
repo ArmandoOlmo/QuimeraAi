@@ -5,7 +5,7 @@
  */
 
 import React, { createContext, useState, useContext, useEffect, useRef, ReactNode, useCallback } from 'react';
-import { Project, PageData, ThemeData, PageSection, BrandIdentity, SitePage } from '../../types';
+import { Project, PageData, ThemeData, PageSection, BrandIdentity, SitePage, SEOConfig } from '../../types';
 import { initialData } from '../../data/initialData';
 import { createDefaultPages, createPageFromTemplate } from '../../data/defaultPages';
 import { PageTemplateId } from '../../types/onboarding';
@@ -89,6 +89,18 @@ export const sanitizeForStorage = <T extends unknown>(obj: T): T => {
         return {} as T; // Safe fallback
     }
 };
+
+const hasItems = <T,>(value: T[] | undefined | null): value is T[] => Array.isArray(value) && value.length > 0;
+
+const isInitialCatalogOrder = (order: PageSection[]): boolean =>
+    order.length === initialData.componentOrder.length &&
+    initialData.componentOrder.every((section, index) => order[index] === section);
+
+const isSparseFallbackPageSet = (projectPages: SitePage[]): boolean =>
+    projectPages.length === 1 &&
+    Array.isArray(projectPages[0]?.sections) &&
+    projectPages[0].sections.length <= 2 &&
+    projectPages[0].sections.every(section => section === 'header' || section === 'footer');
 
 const cloneProjectValue = <T,>(value: T): T => {
     try {
@@ -276,6 +288,8 @@ interface ProjectContextType {
     updateProjectFavicon: (projectId: string, file: File) => Promise<void>;
     /** Update aiAssistantConfig in‑memory only (prevents auto‑save overwrite) */
     updateProjectAiConfig: (projectId: string, config: any) => void;
+    /** Persist SEO config to Supabase and sync local project state */
+    updateProjectSeoConfig: (projectId: string, config: SEOConfig) => Promise<void>;
 
     // Trash & Backup Recovery
     deletedProjects: Project[];
@@ -612,7 +626,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     setData(storedProject.data);
                     setTheme(storedProject.theme);
                     setBrandIdentity(storedProject.brandIdentity || initialData.brandIdentity);
-                    setComponentOrder(storedProject.componentOrder || initialData.componentOrder as PageSection[]);
+                    setComponentOrder(hasItems(storedProject.componentOrder) ? storedProject.componentOrder : initialData.componentOrder as PageSection[]);
                     setSectionVisibility(storedProject.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>);
 
                     // CRITICAL FIX: Also restore pages for multi-page architecture
@@ -753,10 +767,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         activeProjectIdRef.current = projectId;
 
         setActiveProjectId(projectId);
-        setData(project.data || {});
+        setData((project.data || {}) as PageData);
         setTheme(project.theme);
         setBrandIdentity(project.brandIdentity || initialData.brandIdentity);
-        setComponentOrder(project.componentOrder || initialData.componentOrder as PageSection[]);
+        setComponentOrder(hasItems(project.componentOrder) ? project.componentOrder : initialData.componentOrder as PageSection[]);
         setSectionVisibility(project.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>);
 
         // Load pages if using multi-page architecture
@@ -851,11 +865,18 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Menus are owned by CMSContext (projects.menus column). Fetch the latest
         // version so autosave keeps data.menus in sync and never drops navigation.
         let latestMenus = project.menus || [];
-        let menuRow: { menus?: unknown; data?: unknown; status?: string; published_at?: string | null } | null = null;
+        let menuRow: {
+            menus?: unknown;
+            data?: any;
+            status?: string;
+            published_at?: string | null;
+            component_order?: PageSection[];
+            pages?: SitePage[];
+        } | null = null;
         try {
             const { data: fetchedRow } = await supabase
                 .from('projects')
-                .select('menus, data, status, published_at')
+                .select('menus, data, status, published_at, component_order, pages')
                 .eq('id', activeProjectId)
                 .single();
             menuRow = fetchedRow;
@@ -870,6 +891,34 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             menuRow?.published_at || menuRow?.status === 'Published' || project.status === 'Published'
                 ? 'Published'
                 : (project.status || 'Draft');
+
+        const persistedOrder = hasItems(menuRow?.component_order)
+            ? menuRow?.component_order
+            : hasItems(menuRow?.data?.componentOrder)
+                ? menuRow?.data?.componentOrder as PageSection[]
+                : undefined;
+        const persistedPages = hasItems(menuRow?.pages)
+            ? menuRow?.pages
+            : hasItems(menuRow?.data?.pages)
+                ? menuRow?.data?.pages as SitePage[]
+                : undefined;
+        if (
+            isInitialCatalogOrder(componentOrder) &&
+            isSparseFallbackPageSet(pages) &&
+            hasItems(persistedOrder) &&
+            persistedOrder.length < componentOrder.length &&
+            hasItems(persistedPages) &&
+            persistedPages.length > pages.length
+        ) {
+            console.warn('[ProjectContext] saveProject skipped: refusing to overwrite curated project structure with global fallback component catalog', {
+                activeProjectId,
+                currentOrderCount: componentOrder.length,
+                persistedOrderCount: persistedOrder.length,
+                currentPagesCount: pages.length,
+                persistedPagesCount: persistedPages.length,
+            });
+            return;
+        }
 
         // Save ALL project fields to ensure Supabase stays in sync with editor
         // Use removeUndefinedValues to filter out undefined (Supabase doesn't accept undefined)
@@ -919,9 +968,25 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 name: updatedProject.name || project.name,
                 status: isTemplate ? 'Template' : persistedStatus,
                 data: updatedProject,
+                theme: updatedProject.theme || theme,
+                brand_identity: updatedProject.brandIdentity || brandIdentity,
+                component_order: componentOrder,
+                section_visibility: sectionVisibility,
+                pages: pages.length > 0 ? pages : null,
+                thumbnail_url: updatedProject.thumbnailUrl ?? null,
+                last_updated: now,
             };
             if (latestMenus.length > 0) {
                 supabaseUpdate.menus = latestMenus;
+            }
+            if (updatedProject.aiAssistantConfig) {
+                supabaseUpdate.ai_assistant_config = updatedProject.aiAssistantConfig;
+            }
+            if (updatedProject.seoConfig) {
+                supabaseUpdate.seo_config = updatedProject.seoConfig;
+            }
+            if (updatedProject.crmConfig) {
+                supabaseUpdate.crm_config = updatedProject.crmConfig;
             }
 
             const { error: updateErr } = await supabase.from('projects').update(supabaseUpdate).eq('id', activeProjectId);
@@ -1245,6 +1310,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 user_id: user.id,
                 tenant_id: currentTenantId,
                 data: dataToSave,
+                theme: project.theme,
+                brand_identity: project.brandIdentity || initialData.brandIdentity,
+                component_order: project.componentOrder || [],
+                section_visibility: project.sectionVisibility || {},
+                pages: project.pages || null,
+                thumbnail_url: project.thumbnailUrl || null,
+                last_updated: dataToSave.lastUpdated,
                 ...(projectMenus.length > 0 && { menus: projectMenus }),
             });
             if (insertErr) throw insertErr;
@@ -1256,6 +1328,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 user_id: user.id,
                 tenant_id: currentTenantId,
                 data: dataToSave,
+                theme: project.theme,
+                brand_identity: project.brandIdentity || initialData.brandIdentity,
+                component_order: project.componentOrder || [],
+                section_visibility: project.sectionVisibility || {},
+                pages: project.pages || null,
+                thumbnail_url: project.thumbnailUrl || null,
+                last_updated: dataToSave.lastUpdated,
                 ...(projectMenus.length > 0 && { menus: projectMenus }),
             }).select().single();
             if (insertErr) throw insertErr;
@@ -1870,6 +1949,19 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         ));
     }, []);
 
+    const updateProjectSeoConfig = useCallback(async (projectId: string, config: SEOConfig) => {
+        const { error } = await supabase
+            .from('projects')
+            .update({ seo_config: config, last_updated: new Date().toISOString() })
+            .eq('id', projectId);
+
+        if (error) throw error;
+
+        setProjects(prev => prev.map(p =>
+            p.id === projectId ? { ...p, seoConfig: config, lastUpdated: new Date().toISOString() } : p
+        ));
+    }, []);
+
     const value: ProjectContextType = {
         // Project State
         projects,
@@ -1932,6 +2024,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         // In-memory AI config update (prevents auto-save overwrite)
         updateProjectAiConfig,
+        updateProjectSeoConfig,
 
         // Refresh
         refreshProjects,

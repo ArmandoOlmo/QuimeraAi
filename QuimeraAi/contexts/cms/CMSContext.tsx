@@ -55,6 +55,21 @@ const defaultMenus: Menu[] = [
     }
 ];
 
+const normalizeMenu = (menu: any): Menu => ({
+    ...menu,
+    title: resolveProjectName(menu.title),
+    items: menu.items?.map((item: any) => ({
+        ...item,
+        text: resolveProjectName(item.text),
+    })) || [],
+});
+
+const normalizeCategory = (category: any): CMSCategory => ({
+    ...category,
+    name: resolveProjectName(category.name),
+    description: resolveProjectName(category.description),
+});
+
 const getProjectTag = (projectId: string) => `project:${projectId}`;
 
 const withProjectTag = (tags: string[] | undefined, projectId: string): string[] => {
@@ -86,22 +101,6 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setMenus([]);
             return;
         }
-
-        // Helper to normalize i18n objects
-        const normalizeMenu = (menu: any): Menu => ({
-            ...menu,
-            title: resolveProjectName(menu.title),
-            items: menu.items?.map((item: any) => ({
-                ...item,
-                text: resolveProjectName(item.text)
-            })) || []
-        });
-
-        const normalizeCategory = (category: any): CMSCategory => ({
-            ...category,
-            name: resolveProjectName(category.name),
-            description: resolveProjectName(category.description)
-        });
 
         const loadProjectData = async () => {
             try {
@@ -284,7 +283,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 updatedMenusList = [...currentMenus, menu];
             }
 
-            setMenus(updatedMenusList);
+            setMenus(updatedMenusList.map(normalizeMenu));
 
             const { data: existingRow } = await supabase
                 .from('projects')
@@ -316,7 +315,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
         try {
             const updatedMenusList = menus.filter(m => m.id !== menuId);
-            setMenus(updatedMenusList);
+            setMenus(updatedMenusList.map(normalizeMenu));
 
             const { data: existingRow } = await supabase
                 .from('projects')

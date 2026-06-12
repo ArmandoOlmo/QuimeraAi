@@ -25,6 +25,7 @@ import { PageSection } from '../../types/ui';
 import ImagePicker from '../ui/ImagePicker';
 import FontFamilyPicker from '../ui/FontFamilyPicker';
 import { SortableComponentChips } from '../ui/SortableComponentChips';
+import { WebsitePlanReview } from './WebsitePlanReview';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -148,7 +149,7 @@ const AIWebsiteStudio: React.FC = () => {
                         {/* Import website — icon-only on mobile, label on desktop */}
                         <button
                             onClick={() => studio.setShowUrlModal(true)}
-                            disabled={studio.isExtracting || studio.isGenerating}
+                            disabled={studio.isExtracting || studio.isGenerating || studio.isAccessLoading}
                             className="h-8 w-8 lg:w-auto lg:px-3 flex items-center justify-center lg:justify-start gap-1.5 rounded-lg text-q-accent hover:bg-primary/10 lg:bg-primary/10 text-xs font-medium lg:hover:bg-primary/20 transition-colors disabled:opacity-40"
                             title={t('aiWebsiteStudio.extraction.buttonLabel')}
                         >
@@ -281,7 +282,7 @@ const AIWebsiteStudio: React.FC = () => {
 
                     {/* RIGHT: Business Brief Panel (desktop) */}
                     <div className="hidden lg:flex w-[360px] flex-col border-l border-q-border/70 bg-q-surface/55 backdrop-blur-xl overflow-y-auto custom-scrollbar">
-                        <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} onSetComponents={studio.setBriefComponents} />
+                        <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} onSetComponents={studio.setBriefComponents} availableComponents={studio.availableComponents} />
                     </div>
 
                     {/* RIGHT: Business Brief Panel (mobile bottom sheet) */}
@@ -306,7 +307,7 @@ const AIWebsiteStudio: React.FC = () => {
                                 </div>
                                 {/* Content — scrollable */}
                                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                    <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} onSetComponents={studio.setBriefComponents} />
+                                    <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} onSetComponents={studio.setBriefComponents} availableComponents={studio.availableComponents} />
                                 </div>
                             </div>
                         </div>
@@ -323,6 +324,17 @@ const AIWebsiteStudio: React.FC = () => {
 
                 {/* GENERATION OVERLAY */}
                 {studio.generationPhase && <GenerationOverlay phase={studio.generationPhase} businessName={studio.businessBrief.businessName} />}
+
+                {studio.showPlanReview && studio.websitePlan && (
+                    <WebsitePlanReview
+                        plan={studio.websitePlan}
+                        availableComponents={studio.availableComponents}
+                        isGenerating={studio.isGenerating}
+                        onPlanChange={studio.setWebsitePlan}
+                        onConfirm={studio.confirmWebsitePlan}
+                        onClose={studio.returnToChatFromPlanReview}
+                    />
+                )}
             </div>
 
             <style>{`
@@ -378,34 +390,6 @@ const ChatBubble: React.FC<{ message: { role: 'user' | 'model'; text: string; is
 // BUSINESS BRIEF PANEL — uses editor tokens
 // ═══════════════════════════════════════════════════════════════════════════
 
-const AVAILABLE_COMPONENTS: { key: PageSection; label: string }[] = [
-    { key: 'hero', label: 'Hero' }, { key: 'heroSplit', label: 'Hero Split' },
-    { key: 'heroGallery', label: 'Hero Gallery' }, { key: 'heroWave', label: 'Hero Wave' },
-    { key: 'heroNova', label: 'Hero Nova' }, { key: 'heroLead', label: 'Hero Lead' },
-    { key: 'topBar', label: 'Top Bar' }, { key: 'logoBanner', label: 'Logo Banner' },
-    { key: 'banner', label: 'Banner' }, { key: 'features', label: 'Features' },
-    { key: 'testimonials', label: 'Testimonials' }, { key: 'pricing', label: 'Pricing' },
-    { key: 'faq', label: 'FAQ' }, { key: 'cta', label: 'CTA' },
-    { key: 'services', label: 'Services' }, { key: 'video', label: 'Video' },
-    { key: 'howItWorks', label: 'How It Works' }, { key: 'menu', label: 'Menu' },
-    { key: 'leads', label: 'Leads' }, { key: 'newsletter', label: 'Newsletter' },
-    { key: 'map', label: 'Map' }, { key: 'signupFloat', label: 'Signup Float' },
-    { key: 'slideshow', label: 'Slideshow' }, { key: 'portfolio', label: 'Portfolio' },
-    { key: 'team', label: 'Team' },
-    { key: 'separator1', label: 'Separator 1' }, { key: 'separator2', label: 'Separator 2' },
-    { key: 'separator3', label: 'Separator 3' },
-    // Lumina Suite
-    { key: 'heroLumina', label: 'Hero Lumina' }, { key: 'featuresLumina', label: 'Features Lumina' },
-    { key: 'ctaLumina', label: 'CTA Lumina' }, { key: 'portfolioLumina', label: 'Portfolio Lumina' },
-    { key: 'pricingLumina', label: 'Pricing Lumina' }, { key: 'testimonialsLumina', label: 'Testimonials Lumina' },
-    { key: 'faqLumina', label: 'FAQ Lumina' },
-    // Neon Suite
-    { key: 'heroNeon', label: 'Hero Neon' }, { key: 'testimonialsNeon', label: 'Testimonials Neon' },
-    { key: 'featuresNeon', label: 'Features Neon' }, { key: 'ctaNeon', label: 'CTA Neon' },
-    { key: 'portfolioNeon', label: 'Portfolio Neon' }, { key: 'pricingNeon', label: 'Pricing Neon' },
-    { key: 'faqNeon', label: 'FAQ Neon' },
-];
-
 const COLOR_KEYS = ['primary', 'secondary', 'accent', 'background', 'surface', 'text'] as const;
 
 const BriefPanel: React.FC<{
@@ -420,7 +404,8 @@ const BriefPanel: React.FC<{
     onUpdateFont: (fontKey: 'header' | 'body' | 'button', newFont: string) => void;
     onToggleComponent: (component: PageSection) => void;
     onSetComponents: (components: PageSection[]) => void;
-}> = ({ brief, canGenerate, isGenerating, onGenerate, referenceImages, onAddReferenceImage, onRemoveReferenceImage, onUpdateColor, onUpdateFont, onToggleComponent, onSetComponents }) => {
+    availableComponents: { key: PageSection; label: string }[];
+}> = ({ brief, canGenerate, isGenerating, onGenerate, referenceImages, onAddReferenceImage, onRemoveReferenceImage, onUpdateColor, onUpdateFont, onToggleComponent, onSetComponents, availableComponents }) => {
     const { t } = useTranslation();
     const readiness = brief.readinessScore;
     const readinessColor = readiness >= 80 ? '#22c55e' : readiness >= 50 ? '#f59e0b' : readiness >= 20 ? '#ef4444' : '#6b7280';
@@ -451,7 +436,7 @@ const BriefPanel: React.FC<{
     };
 
     // Components not yet selected
-    const availableToAdd = AVAILABLE_COMPONENTS.filter(c => !brief.suggestedComponents.includes(c.key));
+    const availableToAdd = availableComponents.filter(c => !brief.suggestedComponents.includes(c.key));
 
     return (
         <div className="flex-1 flex flex-col p-4 space-y-4 text-xs">
@@ -528,7 +513,7 @@ const BriefPanel: React.FC<{
                     {brief.services.map((s, i) => (
                         <div key={i} className="flex items-start gap-1.5 text-q-text-secondary">
                             <CheckCircle2 size={11} className="text-green-400/60 mt-0.5 flex-shrink-0" />
-                            <span>{s.name}</span>
+                            <span>{formatBriefValue(s.name)}</span>
                         </div>
                     ))}
                 </BriefSection>
@@ -699,13 +684,51 @@ const BriefSection: React.FC<{ title: string; icon: React.ReactNode; children: R
     </div>
 );
 
-const BriefField: React.FC<{ label: string; value?: string }> = ({ label, value }) => (
-    <div className="flex items-center gap-1.5">
-        {value ? <CheckCircle2 size={10} className="text-green-400/60 flex-shrink-0" /> : <Circle size={10} className="text-q-text-secondary/30 flex-shrink-0" />}
-        <span className="text-q-text-secondary/60">{label}:</span>
-        <span className={`truncate ${value ? 'text-q-text' : 'text-q-text-secondary/30 italic'}`}>{value || '...'}</span>
-    </div>
-);
+function formatBriefValue(value: unknown): string {
+    if (value == null || value === '') return '';
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (Array.isArray(value)) return value.map(formatBriefValue).filter(Boolean).join(', ');
+    if (typeof value === 'object') {
+        const record = value as Record<string, any>;
+        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        if (dayKeys.some(day => day in record)) {
+            const labels: Record<string, string> = {
+                monday: 'Mon',
+                tuesday: 'Tue',
+                wednesday: 'Wed',
+                thursday: 'Thu',
+                friday: 'Fri',
+                saturday: 'Sat',
+                sunday: 'Sun',
+            };
+            const openDays = dayKeys
+                .map(day => {
+                    const entry = record[day];
+                    if (!entry || entry.isOpen === false) return '';
+                    const hours = entry.openTime && entry.closeTime ? ` ${entry.openTime}-${entry.closeTime}` : '';
+                    return `${labels[day]}${hours}`;
+                })
+                .filter(Boolean);
+            return openDays.join(', ');
+        }
+        if ('es' in record || 'en' in record) {
+            return String(record.es || record.en || Object.values(record).find(Boolean) || '');
+        }
+        return Object.values(record).map(formatBriefValue).filter(Boolean).join(', ');
+    }
+    return String(value);
+}
+
+const BriefField: React.FC<{ label: string; value?: unknown }> = ({ label, value }) => {
+    const displayValue = formatBriefValue(value);
+    return (
+        <div className="flex items-center gap-1.5">
+            {displayValue ? <CheckCircle2 size={10} className="text-green-400/60 flex-shrink-0" /> : <Circle size={10} className="text-q-text-secondary/30 flex-shrink-0" />}
+            <span className="text-q-text-secondary/60">{label}:</span>
+            <span className={`truncate ${displayValue ? 'text-q-text' : 'text-q-text-secondary/30 italic'}`}>{displayValue || '...'}</span>
+        </div>
+    );
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // GENERATION OVERLAY — uses editor tokens for theme support

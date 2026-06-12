@@ -13,7 +13,6 @@ import { trackDashboardView } from '../../utils/analytics';
 
 // Layout Components
 import DashboardSidebar from './DashboardSidebar';
-import DashboardWaveRibbons from './DashboardWaveRibbons';
 import DashboardHeader from './DashboardHeader';
 import DashboardWelcome from './DashboardWelcome';
 import DashboardHelpGuide from './DashboardHelpGuide';
@@ -125,8 +124,6 @@ const Dashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                {!isDashboard && <DashboardWaveRibbons />}
-
                 <DashboardHeader
                     isDashboard={isDashboard}
                     isWebsites={isWebsites}

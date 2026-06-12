@@ -178,7 +178,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                     rounded-md
                     cursor-pointer
                     transition-all duration-200
-                    hover:brightness-95 hover:scale-[1.01] hover:shadow-md hover:z-20
+                    hover:brightness-95 hover:z-20
                     ${className}
                 `}
                 style={{
@@ -218,7 +218,6 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                     ${solidColorClasses[typeConfig.color]} 
                     text-white text-xs px-2 py-1 rounded-md cursor-pointer 
                     truncate hover:opacity-90 transition-all duration-200
-                    hover:shadow-lg hover:scale-[1.02]
                     ${className}
                 `}
                 style={{ animationDelay: `${animationDelay}ms` }}
@@ -248,7 +247,6 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                     p-3 cursor-pointer
                     transition-all duration-300 ease-out
                     hover:bg-q-surface/80 hover:border-q-border
-                    hover:shadow-lg hover:shadow-black/5
                     hover:-translate-y-0.5
                     animate-fade-in-up
                     ${className}
@@ -314,9 +312,8 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 border border-white/10 dark:border-white/5
                 rounded-2xl
                 transition-all duration-500 ease-out
-                hover:bg-q-surface/60 hover:border-white/20
-                hover:shadow-2xl hover:shadow-black/10
-                hover:-translate-y-1
+                hover:bg-q-surface/60 hover:border-q-border/60
+                hover:-translate-y-0.5
                 cursor-pointer
                 animate-fade-in-up
                 ${className}
@@ -365,9 +362,9 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                         <div className={`
                             relative p-3 rounded-xl
                             bg-gradient-to-br ${typeConfig.gradient}
-                            text-white shadow-lg
+                            text-white
                             transition-all duration-300
-                            group-hover:scale-110 group-hover:shadow-xl
+                            group-hover:scale-105
                         `}>
                             <TypeIcon size={20} />
                             {/* Shine effect */}
@@ -425,7 +422,6 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                         absolute right-0 top-full mt-1 z-50
                                         bg-popover/95 backdrop-blur-xl
                                         border border-q-border rounded-xl
-                                        shadow-2xl shadow-black/20
                                         py-1 min-w-[160px]
                                         animate-scale-in
                                     ">
@@ -619,7 +615,6 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                 text-white font-semibold text-sm
                                 flex items-center justify-center gap-2
                                 hover:opacity-90 transition-opacity
-                                shadow-lg
                             `}
                         >
                             <Video size={16} />

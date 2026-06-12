@@ -791,6 +791,7 @@ const AgencyLandingPageContent: React.FC = () => {
       <FeaturedProducts
         data={mergedFeaturedProductsData}
         storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
       />
     ) : null,
@@ -798,6 +799,7 @@ const AgencyLandingPageContent: React.FC = () => {
       <CategoryGrid
         data={mergedCategoryGridData}
         storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onCategoryClick={handleNavigateToCategory}
       />
     ) : null,
@@ -805,6 +807,7 @@ const AgencyLandingPageContent: React.FC = () => {
       <ProductHero
         data={mergedProductHeroData}
         storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
       />
     ) : null,
@@ -812,25 +815,29 @@ const AgencyLandingPageContent: React.FC = () => {
       <SaleCountdown
         data={mergedSaleCountdownData}
         storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
       />
     ) : null,
     trustBadges: mergedTrustBadgesData ? (
-      <TrustBadges data={mergedTrustBadgesData} />
+      <TrustBadges data={mergedTrustBadgesData} storeId={activeProjectId || undefined} globalColors={theme.globalColors} />
     ) : null,
     recentlyViewed: mergedRecentlyViewedData ? (
       <RecentlyViewed
         data={mergedRecentlyViewedData}
         storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
       />
     ) : null,
     productReviews: mergedProductReviewsData ? (
-      <ProductReviews data={mergedProductReviewsData} />
+      <ProductReviews data={mergedProductReviewsData} storeId={activeProjectId || undefined} globalColors={theme.globalColors} />
     ) : null,
     collectionBanner: mergedCollectionBannerData ? (
       <CollectionBanner
         data={mergedCollectionBannerData}
+        storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onCollectionClick={handleNavigateToCategory}
       />
     ) : null,
@@ -838,11 +845,12 @@ const AgencyLandingPageContent: React.FC = () => {
       <ProductBundle
         data={mergedProductBundleData}
         storeId={activeProjectId || undefined}
+        globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
       />
     ) : null,
     announcementBar: mergedAnnouncementBarData ? (
-      <AnnouncementBar data={mergedAnnouncementBarData} />
+      <AnnouncementBar data={mergedAnnouncementBarData} storeId={activeProjectId || undefined} globalColors={theme.globalColors} />
     ) : null,
     // Store settings is a config section, not a visual component
     storeSettings: null,

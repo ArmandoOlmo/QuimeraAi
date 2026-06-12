@@ -37,7 +37,6 @@ import {
     Image,
     Sparkles,
     Menu,
-    ArrowLeft,
     Eye,
     EyeOff,
     MoreVertical,
@@ -104,6 +103,7 @@ import { useBioPage, type BioLink as ContextBioLink, type BioProfile as ContextB
 import { useSafeUndo } from '../../contexts/undo';
 import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
+import HeaderBackButton from '../ui/HeaderBackButton';
 import ImagePicker from '../ui/ImagePicker';
 import ColorControl from '../ui/ColorControl';
 import ChatCore from '../chat/ChatCore';
@@ -337,7 +337,7 @@ const SortableLinkItem: React.FC<SortableLinkItemProps> = ({
         <div
             ref={setNodeRef}
             style={style}
-            className={`group bg-q-surface/50 backdrop-blur-sm border border-q-border/50 rounded-xl p-4 hover:border-q-border transition-all ${isDragging ? 'shadow-lg ring-2 ring-primary/20' : ''
+            className={`group bg-q-surface/50 border border-q-border rounded-lg p-3 hover:border-q-border/80 transition-all ${isDragging ? 'shadow-lg ring-2 ring-q-accent/20' : ''
                 }`}
         >
             <div className="flex items-start gap-3">
@@ -400,7 +400,7 @@ const SortableLinkItem: React.FC<SortableLinkItemProps> = ({
                 <button
                     onClick={onToggle}
                     className={`p-2 rounded-lg transition-colors ${link.enabled
-                        ? 'bg-primary/20 text-primary'
+                        ? 'bg-q-accent/10 text-q-accent'
                         : 'bg-muted text-q-text-muted'
                         }`}
                     title={link.enabled ? t('bioPage.enabled', 'Enabled') : t('bioPage.disabled', 'Disabled')}
@@ -828,11 +828,11 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
     // ==========================================================================
 
     const renderLinksEditor = () => (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Add Link Button */}
             <button
                 onClick={openAddLinkModal}
-                className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-primary/50 rounded-xl text-primary font-semibold hover:bg-primary/10 hover:border-primary transition-all"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-dashed border-q-border/80 rounded-lg text-sm font-medium text-q-accent hover:bg-q-accent/10 hover:border-q-accent/40 transition-all"
             >
                 <Plus size={20} />
                 {t('bioPage.addLink', 'Add Link')}
@@ -848,7 +848,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     items={links.map(l => l.id)}
                     strategy={verticalListSortingStrategy}
                 >
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         {links.map((link) => (
                             <SortableLinkItem
                                 key={link.id}
@@ -880,15 +880,13 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
         ];
 
         return (
-                <div>
+                <div className="space-y-4">
                     {/* HEADER SECTION */}
                     {designSubTab === 'header' && (
-                        <div className="space-y-6">
-                            <h3 className="text-lg font-semibold text-foreground">{t('bioPage.header', 'Header')}</h3>
-
+                        <div className="space-y-4">
                             {/* Profile Image Layout */}
                             <div className="space-y-3">
-                                <label className="text-sm font-medium text-foreground">
+                                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.profileImageLayout', 'Profile image layout')}
                                 </label>
                                 <div className="grid grid-cols-2 gap-3">
@@ -917,7 +915,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                             {/* Title Style */}
                             <div className="space-y-3">
-                                <label className="text-sm font-medium text-foreground">
+                                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.titleStyle', 'Title style')}
                                 </label>
                                 <div className="grid grid-cols-3 gap-2">
@@ -991,7 +989,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                             {/* Size */}
                             <div className="space-y-3">
-                                <label className="text-sm font-medium text-foreground">
+                                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.size', 'Size')}
                                 </label>
                                 <div className="grid grid-cols-2 gap-3">
@@ -1012,7 +1010,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                             {/* Title Font */}
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-foreground">
+                                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.titleFont', 'Title font')}
                                 </label>
                                 <select
@@ -1037,9 +1035,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                     {/* THEME SECTION */}
                     {designSubTab === 'theme' && (
-                        <div className="space-y-6">
-                            <h3 className="text-lg font-semibold text-foreground">{t('bioPage.theme', 'Theme')}</h3>
-
+                        <div className="space-y-4">
                             {/* Theme Presets Grid */}
                             <div className="grid grid-cols-3 gap-3">
                                 {THEME_PRESETS.map((preset) => (
@@ -1075,12 +1071,10 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                     {/* WALLPAPER SECTION */}
                     {designSubTab === 'wallpaper' && (
-                        <div className="space-y-6">
-                            <h3 className="text-lg font-semibold text-foreground">{t('bioPage.wallpaper', 'Wallpaper')}</h3>
-
+                        <div className="space-y-4">
                             {/* Wallpaper Style */}
                             <div className="space-y-3">
-                                <label className="text-sm font-medium text-foreground">
+                                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.wallpaperStyle', 'Wallpaper style')}
                                 </label>
                                 <div className="grid grid-cols-3 gap-3">
@@ -1130,7 +1124,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 <div className="space-y-4">
                                     {/* Pattern Type Selection */}
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">
+                                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                             {t('bioPage.patternType', 'Pattern type')}
                                         </label>
                                         <div className="grid grid-cols-4 gap-2">
@@ -1176,7 +1170,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                                     {/* Pattern Size */}
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-foreground">
+                                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                             {t('bioPage.patternSize', 'Pattern size')}
                                         </label>
                                         <div className="flex items-center gap-3">
@@ -1200,7 +1194,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             {theme.backgroundType === 'image' && (
                                 <div className="space-y-4">
                                     {/* Section Title */}
-                                    <label className="text-sm font-medium text-foreground">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                         {t('bioPage.backgroundImage', 'Background image')}
                                     </label>
 
@@ -1346,7 +1340,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             {theme.backgroundType === 'video' && (
                                 <div className="space-y-4">
                                     {/* Section Title */}
-                                    <label className="text-sm font-medium text-foreground">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                         {t('bioPage.backgroundVideo', 'Background video')}
                                     </label>
 
@@ -1525,12 +1519,11 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                     {/* TEXT SECTION */}
                     {designSubTab === 'text' && (
-                        <div className="space-y-6">
-                            <h3 className="text-lg font-semibold text-foreground">{t('bioPage.text', 'Text')}</h3>
+                        <div className="space-y-4">
 
                             {/* Page Text Font */}
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-foreground">
+                                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.pageTextFont', 'Page text font')}
                                 </label>
                                 <select
@@ -1553,7 +1546,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                             {/* Title Font */}
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-foreground">
+                                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.titleFont', 'Title font')}
                                 </label>
                                 <select
@@ -1578,12 +1571,11 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                     {/* BUTTONS SECTION */}
                     {designSubTab === 'buttons' && (
-                        <div className="space-y-6">
-                            <h3 className="text-lg font-semibold text-foreground">{t('bioPage.buttons', 'Buttons')}</h3>
+                        <div className="space-y-4">
 
                             {/* Button Style */}
                             <div className="space-y-3">
-                                <label className="text-sm font-medium text-foreground">
+                                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.buttonStyle', 'Button style')}
                                 </label>
                                 <div className="grid grid-cols-3 gap-3">
@@ -1608,7 +1600,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                             {/* Corner Roundness */}
                             <div className="space-y-3">
-                                <label className="text-sm font-medium text-foreground">
+                                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.cornerRoundness', 'Corner roundness')}
                                 </label>
                                 <div className="grid grid-cols-3 gap-2">
@@ -1632,7 +1624,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                             {/* Button Shadow */}
                             <div className="space-y-3">
-                                <label className="text-sm font-medium text-foreground">
+                                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.buttonShadow', 'Button shadow')}
                                 </label>
                                 <div className="grid grid-cols-4 gap-2">
@@ -1669,12 +1661,11 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                     {/* COLOR SECTION */}
                     {designSubTab === 'color' && (
-                        <div className="space-y-6">
-                            <h3 className="text-lg font-semibold text-foreground">{t('bioPage.colorManagement', 'Color Management')}</h3>
+                        <div className="space-y-4">
 
                             {/* Import from Project */}
                             <div className="space-y-3">
-                                <label className="text-sm font-medium text-foreground">
+                                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.importProjectColors', 'Import from project')}
                                 </label>
                                 <button
@@ -1720,7 +1711,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                             {/* Coolors Palette Import */}
                             <div className="space-y-3">
-                                <label className="text-sm font-medium text-foreground">
+                                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.importCoolors', 'Import from Coolors')}
                                 </label>
                                 <div className="flex items-center gap-2">
@@ -1768,7 +1759,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             {/* Quick Color Overview */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium text-foreground">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                         {t('bioPage.currentColors', 'Current colors')}
                                     </label>
                                     <button
@@ -1848,7 +1839,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
 
     const renderShopEditor = () => (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <div className="text-center py-12">
                 <ShoppingBag size={48} className="mx-auto text-q-text-muted mb-4" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -1862,7 +1853,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
     );
 
     const renderAnalytics = () => (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-q-surface/50 backdrop-blur-sm border border-q-border/50 rounded-xl p-4">
@@ -1878,8 +1869,10 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
             </div>
 
             {/* Top Links */}
-            <div className="space-y-3">
-                <h3 className="font-semibold text-foreground">{t('bioPage.topPerforming', 'Top Performing')}</h3>
+            <div className="space-y-2">
+                <h3 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
+                    {t('bioPage.topPerforming', 'Top Performing')}
+                </h3>
                 {links
                     .sort((a, b) => b.clicks - a.clicks)
                     .slice(0, 5)
@@ -1904,7 +1897,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
     );
 
     const renderAudience = () => (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Email Signup Toggle */}
             <div className="flex items-center justify-between p-4 bg-q-surface/50 backdrop-blur-sm border border-q-border/50 rounded-xl">
                 <div className="flex items-center gap-3">
@@ -2414,7 +2407,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 sticky top-0">
+                <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
@@ -2423,49 +2416,48 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <Link2 className="text-primary" size={24} />
+                            <Link2 className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-xl font-bold text-foreground hidden sm:block">
                                 {t('bioPage.title', 'Bio Page')}
                             </h1>
                         </div>
                     </div>
 
-                    {/* Save Status Indicator + Save Button */}
-                    <div className="flex items-center gap-3 text-xs">
-                        {isSaving ? (
-                            <span className="flex items-center gap-1.5 text-q-text-muted">
-                                <Loader2 size={14} className="animate-spin" />
-                                <span className="hidden sm:inline">{t('common.saving', 'Saving...')}</span>
-                            </span>
-                        ) : hasUnsavedChanges ? (
-                            <>
-                                <span className="flex items-center gap-1.5 text-yellow-500">
-                                    <span className="w-2 h-2 rounded-full bg-yellow-500" />
-                                    <span className="hidden sm:inline">{t('common.unsavedChanges', 'Unsaved')}</span>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                        {/* Save status */}
+                        <div className="flex items-center gap-2 sm:gap-3 text-xs">
+                            {isSaving ? (
+                                <span className="flex items-center gap-1.5 text-q-text-muted">
+                                    <Loader2 size={14} className="animate-spin" />
+                                    <span className="hidden sm:inline">{t('common.saving', 'Saving...')}</span>
                                 </span>
-                                <button
-                                    onClick={async () => {
-                                        if (!bioPage && activeProjectId) {
-                                            const username = profile.name?.toLowerCase().replace(/\s+/g, '-') || `bio-${Date.now()}`;
-                                            await createBioPage(activeProjectId, username);
-                                        }
-                                        await saveBioPage();
-                                    }}
-                                    className="h-9 w-9 flex items-center justify-center text-primary hover:opacity-80 transition-opacity"
-                                    title={t('common.save', 'Save')}
-                                >
-                                    <Check size={18} />
-                                </button>
-                            </>
-                        ) : bioPage ? (
-                            <span className="flex items-center gap-1.5 text-green-500">
-                                <Check size={14} />
-                                <span className="hidden sm:inline">{t('common.saved', 'Saved')}</span>
-                            </span>
-                        ) : null}
-                    </div>
-
-                    <div className="flex items-center gap-2">
+                            ) : hasUnsavedChanges ? (
+                                <>
+                                    <span className="flex items-center gap-1.5 text-yellow-500">
+                                        <span className="w-2 h-2 rounded-full bg-yellow-500" />
+                                        <span className="hidden sm:inline">{t('common.unsavedChanges', 'Unsaved')}</span>
+                                    </span>
+                                    <button
+                                        onClick={async () => {
+                                            if (!bioPage && activeProjectId) {
+                                                const username = profile.name?.toLowerCase().replace(/\s+/g, '-') || `bio-${Date.now()}`;
+                                                await createBioPage(activeProjectId, username);
+                                            }
+                                            await saveBioPage();
+                                        }}
+                                        className="h-9 w-9 flex items-center justify-center text-primary hover:opacity-80 transition-opacity"
+                                        title={t('common.save', 'Save')}
+                                    >
+                                        <Check size={18} />
+                                    </button>
+                                </>
+                            ) : bioPage ? (
+                                <span className="flex items-center gap-1.5 text-green-500">
+                                    <Check size={14} />
+                                    <span className="hidden sm:inline">{t('common.saved', 'Saved')}</span>
+                                </span>
+                            ) : null}
+                        </div>
                         <button
                             onClick={async () => {
                                 if (bioPage?.isPublished) {
@@ -2541,13 +2533,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             </button>
                         )}
 
-                        <button
-                            onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground transition-colors"
-                            title={t('common.back', 'Back')}
-                        >
-                            <ArrowLeft size={18} />
-                        </button>
+                        <HeaderBackButton onClick={() => navigate(ROUTES.DASHBOARD)} />
                     </div>
                 </header>
 
@@ -2563,12 +2549,12 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                 {/* 3-Column Layout */}
                 <div className="flex-1 flex overflow-hidden">
-                    {/* Internal Sidebar */}
-                    <nav className="hidden md:flex w-56 border-r border-q-border/50 p-4 flex-col gap-1 bg-q-surface/30">
+                    {/* Internal Sidebar — matches web editor sections panel (w-64 lg:w-72) */}
+                    <nav className="hidden md:flex w-64 lg:w-72 flex-shrink-0 flex-col overflow-hidden bg-q-surface/50 border-r border-q-border">
                         {/* Profile Section - Click to Edit */}
                         <button
                             onClick={openProfileModal}
-                            className="mb-6 p-4 bg-q-surface/50 backdrop-blur-sm rounded-xl border border-q-border/50 hover:bg-q-surface/70 hover:border-primary/30 transition-all group w-full text-left"
+                            className="p-3 border-b border-q-border hover:bg-q-surface/70 transition-colors group w-full text-left"
                         >
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="relative">
@@ -2595,48 +2581,50 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     </p>
                                 </div>
                             </div>
-                            <p className="text-xs text-q-text-muted line-clamp-2">
+                            <p className="text-xs text-q-text-muted line-clamp-2 mt-2">
                                 {profile.bio || t('bioPage.shortBio', 'Write a short bio...')}
                             </p>
                         </button>
 
                         {/* Nav Items with Design sub-tree */}
-                        {navItems.map((item) => (
-                            <React.Fragment key={item.id}>
-                                <button
-                                    onClick={() => { setActiveTab(item.id as ActiveTab); setIsControlsPanelOpen(true); }}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === item.id
-                                        ? 'bg-primary/20 text-primary'
-                                        : 'text-q-text-muted hover:text-foreground hover:bg-muted/50'
-                                        }`}
-                                >
-                                    <item.icon size={18} />
-                                    {item.label}
-                                </button>
-                                {/* Design sub-items — shown when Design tab is active */}
-                                {item.id === 'design' && activeTab === 'design' && (
-                                    <div className="ml-4 pl-3 border-l-2 border-primary/20 flex flex-col gap-0.5">
-                                        {DESIGN_SECTIONS.map((section) => {
-                                            const Icon = section.icon;
-                                            return (
-                                                <button
-                                                    key={section.id}
-                                                    onClick={() => { setDesignSubTab(section.id); setIsControlsPanelOpen(true); }}
-                                                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                                                        designSubTab === section.id
-                                                            ? 'bg-primary/15 text-primary'
-                                                            : 'text-q-text-muted hover:text-foreground hover:bg-muted/30'
-                                                    }`}
-                                                >
-                                                    <Icon size={14} />
-                                                    {section.label}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </React.Fragment>
-                        ))}
+                        <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1 custom-scrollbar">
+                            {navItems.map((item) => (
+                                <React.Fragment key={item.id}>
+                                    <button
+                                        onClick={() => { setActiveTab(item.id as ActiveTab); setIsControlsPanelOpen(true); }}
+                                        className={`flex w-full items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${activeTab === item.id
+                                            ? 'bg-q-accent/10 text-q-accent'
+                                            : 'text-q-text hover:text-q-accent hover:bg-q-surface/50'
+                                            }`}
+                                    >
+                                        <item.icon size={16} className="flex-shrink-0" />
+                                        {item.label}
+                                    </button>
+                                    {/* Design sub-items — shown when Design tab is active */}
+                                    {item.id === 'design' && activeTab === 'design' && (
+                                        <div className="ml-2 pl-2 border-l border-q-border/60 space-y-1 py-1">
+                                            {DESIGN_SECTIONS.map((section) => {
+                                                const Icon = section.icon;
+                                                return (
+                                                    <button
+                                                        key={section.id}
+                                                        onClick={() => { setDesignSubTab(section.id); setIsControlsPanelOpen(true); }}
+                                                        className={`flex w-full items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                                                            designSubTab === section.id
+                                                                ? 'bg-q-accent/10 text-q-accent'
+                                                                : 'text-q-text-secondary hover:text-q-accent hover:bg-q-surface/50'
+                                                            }`}
+                                                    >
+                                                        <Icon size={16} className="flex-shrink-0" />
+                                                        {section.label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </div>
                     </nav>
 
                     {/* CENTER: Live Preview */}
@@ -2658,13 +2646,13 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     <div className={`${isControlsPanelOpen ? 'w-80 lg:w-96' : 'w-0 overflow-hidden'} border-l border-q-border bg-q-surface/50 flex-col overflow-hidden flex-shrink-0 order-last hidden md:flex transition-all duration-300`}>
                         <div className="p-4 border-b border-q-border flex items-center justify-between">
                             <h2 className="font-semibold text-sm flex items-center gap-2">
-                                <Settings size={16} className="text-primary" />
+                                <Settings size={16} className="text-q-accent" />
                                 {t('common.edit', 'Edit')}: <span className="capitalize">{activeTab === 'design'
                                     ? DESIGN_SECTIONS.find(s => s.id === designSubTab)?.label || designSubTab
                                     : activeTab}</span>
                             </h2>
                             <button onClick={() => setIsControlsPanelOpen(false)}
-                                className="p-1.5 rounded-md text-q-text-muted hover:text-foreground hover:bg-muted transition-colors"
+                                className="p-1.5 rounded-md text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay transition-colors"
                                 title={t('bioPage.closePanel', 'Close panel')}>
                                 <X size={18} />
                             </button>
@@ -2681,24 +2669,24 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     {/* MOBILE: Full-screen controls overlay (no preview on mobile) */}
                     <div className="md:hidden flex-1 flex flex-col overflow-hidden">
                         {/* Mobile Nav */}
-                        <div className="p-4 border-b border-q-border/50 bg-q-surface/95 backdrop-blur-sm z-20 flex-shrink-0">
+                        <div className="p-3 border-b border-q-border bg-q-surface/95 backdrop-blur-sm z-20 flex-shrink-0">
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                 {navItems.map((item) => (
                                     <button
                                         key={item.id}
                                         onClick={() => setActiveTab(item.id as ActiveTab)}
-                                        className={`flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === item.id
-                                            ? 'bg-primary text-primary-foreground shadow-sm'
-                                            : 'bg-q-surface text-q-text-muted border border-q-border hover:bg-muted/50'
+                                        className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all ${activeTab === item.id
+                                            ? 'bg-q-accent/10 text-q-accent border border-q-accent/30'
+                                            : 'bg-q-surface text-q-text-secondary border border-q-border hover:bg-q-surface/50 hover:text-q-accent'
                                             }`}
                                     >
-                                        <item.icon size={18} className="flex-shrink-0" />
+                                        <item.icon size={16} className="flex-shrink-0" />
                                         <span className="truncate">{item.label}</span>
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                        <div className="quimera-clean-controls flex-1 overflow-y-auto p-4 custom-scrollbar">
                             {activeTab === 'links' && renderLinksEditor()}
                             {activeTab === 'design' && renderDesignEditor()}
                             {activeTab === 'shop' && renderShopEditor()}
@@ -3043,7 +3031,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             {/* Bio Input */}
                             <div>
                                 <div className="flex items-center justify-between mb-2">
-                                    <label className="text-sm font-medium text-foreground">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                         {t('bioPage.bioDescription', 'Bio Description')}
                                     </label>
                                     <button

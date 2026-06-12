@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import DashboardSidebar from '../DashboardSidebar';
-import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import AdminPageHeader from './AdminPageHeader';
 
 interface AdminViewLayoutProps {
@@ -19,7 +18,6 @@ const AdminViewLayout: React.FC<AdminViewLayoutProps> = ({ title, onBack, childr
       <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        <DashboardWaveRibbons />
         <AdminPageHeader
           title={title}
           icon={icon}

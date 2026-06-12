@@ -81,11 +81,11 @@ export function generatePagesFromLegacyProject(
             'header',
             'announcementBar',
             'categoryGrid',
-            'ProductGridSection', // Main product grid
+            'productGrid', // Main product grid
             'trustBadges',
             'footer'
         ].filter(s => 
-            s === 'header' || s === 'footer' || s === 'ProductGridSection' ||
+            s === 'header' || s === 'footer' || s === 'productGrid' ||
             (activeEcommerceSections.includes(s as PageSection) && sectionVisibility[s] !== false)
         ) as PageSection[];
         
@@ -112,7 +112,7 @@ export function generatePagesFromLegacyProject(
             slug: '/producto/:slug',
             type: 'dynamic',
             dynamicSource: 'products',
-            sections: ['header', 'ProductDetailSection', 'recentlyViewed', 'productReviews', 'footer'] as PageSection[],
+            sections: ['header', 'productDetail', 'recentlyViewed', 'productReviews', 'footer'] as PageSection[],
             sectionData: {},
             seo: {
                 title: '{{product.name}}',
@@ -130,7 +130,7 @@ export function generatePagesFromLegacyProject(
             slug: '/categoria/:slug',
             type: 'dynamic',
             dynamicSource: 'categories',
-            sections: ['header', 'CategoryProductsSection', 'trustBadges', 'footer'] as PageSection[],
+            sections: ['header', 'categoryProducts', 'trustBadges', 'footer'] as PageSection[],
             sectionData: {},
             seo: {
                 title: '{{category.name}}',
@@ -147,7 +147,7 @@ export function generatePagesFromLegacyProject(
             title: 'Carrito',
             slug: '/carrito',
             type: 'static',
-            sections: ['header', 'CartSection', 'footer'] as PageSection[],
+            sections: ['header', 'cart', 'footer'] as PageSection[],
             sectionData: {},
             seo: {
                 title: 'Carrito de Compras',
@@ -164,7 +164,7 @@ export function generatePagesFromLegacyProject(
             title: 'Checkout',
             slug: '/checkout',
             type: 'static',
-            sections: ['header', 'CheckoutSection', 'footer'] as PageSection[],
+            sections: ['header', 'checkout', 'footer'] as PageSection[],
             sectionData: {},
             seo: {
                 title: 'Finalizar Compra',
@@ -347,4 +347,3 @@ export function migrateProjectToMultiPage<T extends {
         pages,
     };
 }
-

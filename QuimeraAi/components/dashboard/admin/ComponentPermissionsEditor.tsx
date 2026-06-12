@@ -92,7 +92,7 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
-                <Shield className="text-q-accent" size={20} />
+                <Shield className="quimera-dashboard-header-icon" size={20} strokeWidth={2} />
                 <h4 className="font-semibold text-q-text">Component Permissions</h4>
             </div>
 

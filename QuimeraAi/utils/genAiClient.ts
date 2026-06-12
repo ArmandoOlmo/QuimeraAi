@@ -14,6 +14,7 @@ import {
     extractTextFromResponse,
     type GeminiProxyConfig
 } from './geminiProxyClient';
+import { supabase } from '../supabase';
 
 // Cache for API key — only populated by secure backend fetch for Live API
 let cachedApiKey: string | null = null;
@@ -37,11 +38,23 @@ export const fetchGoogleApiKey = async (): Promise<string> => {
     if (cachedApiKey) return cachedApiKey;
 
     const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+    const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
     const AI_PROXY_URL = `${SUPABASE_URL}/functions/v1/ai-proxy`;
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token || SUPABASE_ANON_KEY;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+    if (SUPABASE_ANON_KEY) {
+        headers.apikey = SUPABASE_ANON_KEY;
+    }
+
+    if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+    }
 
     const response = await fetch(AI_PROXY_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ action: 'getLiveApiKey' }),
     });
 
@@ -97,4 +110,3 @@ export const generateContent = async (
 export const isProxyMode = (): boolean => {
     return shouldUseProxy();
 };
-

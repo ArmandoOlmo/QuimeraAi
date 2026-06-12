@@ -6,10 +6,12 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageData } from '../../types';
-import { CategoryItem, ComponentVisibilityContext } from '../../types/components';
+import { CategoryItem, ComponentVisibilityContext, ProductReviewItem, TrustBadgeIcon, TrustBadgeItem } from '../../types/components';
+import { initialData } from '../../data/initialData';
 import ColorControl from './ColorControl';
 import TabbedControls from './TabbedControls';
 import ImagePicker from './ImagePicker';
+import { I18nInput, I18nTextArea } from './EditorControlPrimitives';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
 import { useCMS } from '../../contexts/cms/CMSContext';
 import { X, Check, Search, ChevronDown, ChevronUp, ChevronRight, FolderOpen, Package, Image as ImageIcon, Loader2, SlidersHorizontal, ShoppingBag, ShoppingCart, LayoutGrid, Maximize2, Palette, Info, Grid, List, MessageCircle, Trash2, Plus, FileText, Scale } from 'lucide-react';
@@ -757,11 +759,94 @@ interface EcommerceControlsProps {
     storeId?: string;
 }
 
+const getSectionWithDefaults = <T extends Record<string, any>>(data: PageData, sectionKey: keyof PageData): T => {
+    const defaults = ((initialData.data as any)[sectionKey] || {}) as Record<string, any>;
+    const current = (((data as any) || {})[sectionKey] || {}) as Record<string, any>;
+    return {
+        ...defaults,
+        ...current,
+        colors: {
+            ...(defaults.colors || {}),
+            ...(current.colors || {}),
+        },
+        cornerGradient: current.cornerGradient || defaults.cornerGradient,
+    } as unknown as T;
+};
+
+const newId = (prefix: string) => `${prefix}-${Date.now()}`;
+
+const toDateInputValue = (value?: string) => {
+    if (!value) return new Date().toISOString().slice(0, 10);
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return new Date().toISOString().slice(0, 10);
+    return date.toISOString().slice(0, 10);
+};
+
+const ListEditorShell = ({
+    title,
+    children,
+    onAdd,
+    addLabel,
+}: {
+    title: string;
+    children: React.ReactNode;
+    onAdd: () => void;
+    addLabel: string;
+}) => (
+    <div className="space-y-3 rounded-lg border border-q-border bg-q-surface/40 p-3">
+        <div className="flex items-center justify-between gap-3">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider">{title}</h5>
+            <button
+                type="button"
+                onClick={onAdd}
+                className="inline-flex items-center gap-1.5 rounded-md border border-q-border px-2 py-1 text-xs font-semibold text-q-text-secondary hover:border-q-accent hover:text-q-accent"
+            >
+                <Plus size={13} />
+                {addLabel}
+            </button>
+        </div>
+        <div className="space-y-3">{children}</div>
+    </div>
+);
+
+const ItemHeader = ({
+    label,
+    onRemove,
+}: {
+    label: string;
+    onRemove: () => void;
+}) => (
+    <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-q-text-secondary">{label}</span>
+        <button
+            type="button"
+            onClick={onRemove}
+            className="rounded p-1 text-q-text-secondary transition-colors hover:bg-red-500/10 hover:text-red-400"
+        >
+            <Trash2 size={14} />
+        </button>
+    </div>
+);
+
+const TRUST_BADGE_ICON_OPTIONS: Array<{ value: TrustBadgeIcon; label: string }> = [
+    { value: 'truck', label: 'Truck' },
+    { value: 'shield', label: 'Shield' },
+    { value: 'credit-card', label: 'Credit Card' },
+    { value: 'refresh-cw', label: 'Returns' },
+    { value: 'clock', label: 'Clock' },
+    { value: 'award', label: 'Award' },
+    { value: 'lock', label: 'Lock' },
+    { value: 'headphones', label: 'Support' },
+    { value: 'package', label: 'Package' },
+    { value: 'check-circle', label: 'Check' },
+    { value: 'star', label: 'Star' },
+    { value: 'heart', label: 'Heart' },
+];
+
 export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' }: EcommerceControlsProps) => {
     const { t } = useTranslation();
-    if (!data?.featuredProducts) return null;
 
-    const d = data.featuredProducts;
+    const d = getSectionWithDefaults<any>(data, 'featuredProducts');
 
     const contentTab = (
         <div className="space-y-4">
@@ -769,9 +854,9 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 value={d.visibleIn}
                 onChange={(v) => setNestedData('featuredProducts.visibleIn', v)}
             />
-            <Input label={t('editor.controls.ecommerce.title', 'Title')} value={d.title || ''} onChange={(e) => setNestedData('featuredProducts.title', e.target.value)} />
+            <I18nInput label={t('editor.controls.ecommerce.title', 'Title')} value={d.title} onChange={(v) => setNestedData('featuredProducts.title', v)} />
             <FontSizeSelector label={t('editor.controls.ecommerce.titleSize', 'Title Size')} value={d.titleFontSize || 'lg'} onChange={(v) => setNestedData('featuredProducts.titleFontSize', v)} />
-            <TextArea label={t('editor.controls.ecommerce.description', 'Description')} value={d.description || ''} onChange={(e) => setNestedData('featuredProducts.description', e.target.value)} rows={2} />
+            <I18nTextArea label={t('editor.controls.ecommerce.description', 'Description')} value={d.description} onChange={(v) => setNestedData('featuredProducts.description', v)} rows={2} />
 
 
             <SelectControl
@@ -994,9 +1079,10 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
 
 export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: EcommerceControlsProps) => {
     const { t } = useTranslation();
-    if (!data?.categoryGrid) return null;
 
-    const d = data.categoryGrid;
+    const d = getSectionWithDefaults<any>(data, 'categoryGrid');
+    const categories: CategoryItem[] = Array.isArray(d.categories) ? d.categories : [];
+    const setCategories = (nextCategories: CategoryItem[]) => setNestedData('categoryGrid.categories', nextCategories);
 
     const contentTab = (
         <div className="space-y-4">
@@ -1004,7 +1090,8 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                 value={d.visibleIn}
                 onChange={(v) => setNestedData('categoryGrid.visibleIn', v)}
             />
-            <Input label={t('editor.controls.ecommerce.title', 'Title')} value={d.title || ''} onChange={(e) => setNestedData('categoryGrid.title', e.target.value)} />
+            <I18nInput label={t('editor.controls.ecommerce.title', 'Title')} value={d.title} onChange={(v) => setNestedData('categoryGrid.title', v)} />
+            <I18nTextArea label={t('editor.controls.ecommerce.description', 'Description')} value={d.description} onChange={(v) => setNestedData('categoryGrid.description', v)} rows={2} />
             <ToggleControl
                 label={t('editor.controls.ecommerce.showTitle', 'Show Title')}
                 checked={d.showTitle !== false}
@@ -1012,14 +1099,15 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
             />
 
             <SelectControl
-                label={t('editor.controls.ecommerce.layout', 'Layout')}
-                value={d.layout || 'grid'}
+                label={t('editor.controls.ecommerce.variant', 'Variant')}
+                value={d.variant || 'cards'}
                 options={[
-                    { value: 'grid', label: t('editor.controls.ecommerce.grid', 'Grid') },
-                    { value: 'slider', label: t('editor.controls.ecommerce.slider', 'Slider') },
-                    { value: 'list', label: t('editor.controls.ecommerce.list', 'List') },
+                    { value: 'cards', label: t('editor.controls.ecommerce.cards', 'Cards') },
+                    { value: 'overlay', label: t('editor.controls.ecommerce.overlay', 'Overlay') },
+                    { value: 'minimal', label: t('editor.controls.ecommerce.minimal', 'Minimal') },
+                    { value: 'banner', label: t('editor.controls.ecommerce.banner', 'Banner') },
                 ]}
-                onChange={(v) => setNestedData('categoryGrid.layout', v)}
+                onChange={(v) => setNestedData('categoryGrid.variant', v)}
             />
 
             <NumberInput
@@ -1036,9 +1124,64 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                 onChange={(v) => setNestedData('categoryGrid.showProductCount', v)}
             />
 
-            {/* Collection Selection - now managed in LeadsLibrary/AddLeadModal unified style or similar list management */}
-            {/* For now, we assume automatic category fetching or basic selection */}
-
+            <ListEditorShell
+                title={t('editor.controls.ecommerce.categories', 'Categories')}
+                addLabel={t('editor.controls.list.add', 'Add')}
+                onAdd={() => setCategories([
+                    ...categories,
+                    {
+                        id: newId('category'),
+                        name: { es: 'Nueva categoria', en: 'New category' } as any,
+                        description: { es: '', en: '' } as any,
+                        imageUrl: '',
+                        productCount: 0,
+                        slug: '',
+                    },
+                ])}
+            >
+                {categories.length === 0 && (
+                    <p className="rounded-md border border-dashed border-q-border p-3 text-xs text-q-text-secondary">
+                        {t('editor.controls.ecommerce.noCategoriesConfigured', 'No manual categories configured. Store categories will be used when available.')}
+                    </p>
+                )}
+                {categories.map((category, index) => (
+                    <div key={category.id || index} className="space-y-3 rounded-md border border-q-border bg-q-bg p-3">
+                        <ItemHeader
+                            label={`${t('editor.controls.ecommerce.category', 'Category')} #${index + 1}`}
+                            onRemove={() => setCategories(categories.filter((_, i) => i !== index))}
+                        />
+                        <I18nInput
+                            label={t('editor.controls.ecommerce.name', 'Name')}
+                            value={category.name as any}
+                            onChange={(v) => setNestedData(`categoryGrid.categories.${index}.name`, v)}
+                        />
+                        <I18nTextArea
+                            label={t('editor.controls.ecommerce.description', 'Description')}
+                            value={category.description as any}
+                            onChange={(v) => setNestedData(`categoryGrid.categories.${index}.description`, v)}
+                            rows={2}
+                        />
+                        <ImagePicker
+                            label={t('editor.controls.ecommerce.image', 'Image')}
+                            value={category.imageUrl || ''}
+                            onChange={(url) => setNestedData(`categoryGrid.categories.${index}.imageUrl`, url)}
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                            <Input
+                                label={t('editor.controls.ecommerce.slug', 'Slug')}
+                                value={category.slug || ''}
+                                onChange={(e) => setNestedData(`categoryGrid.categories.${index}.slug`, e.target.value)}
+                            />
+                            <NumberInput
+                                label={t('editor.controls.ecommerce.productCount', 'Product Count')}
+                                value={category.productCount || 0}
+                                onChange={(v) => setNestedData(`categoryGrid.categories.${index}.productCount`, v)}
+                                min={0}
+                            />
+                        </div>
+                    </div>
+                ))}
+            </ListEditorShell>
         </div>
     );
 
@@ -1322,9 +1465,10 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
 
 export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControlsProps) => {
     const { t } = useTranslation();
-    if (!data?.trustBadges) return null;
 
-    const d = data.trustBadges;
+    const d = getSectionWithDefaults<any>(data, 'trustBadges');
+    const badges: TrustBadgeItem[] = Array.isArray(d.badges) ? d.badges : [];
+    const setBadges = (nextBadges: TrustBadgeItem[]) => setNestedData('trustBadges.badges', nextBadges);
 
     const contentTab = (
         <div className="space-y-4">
@@ -1332,19 +1476,27 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
                 value={d.visibleIn}
                 onChange={(v) => setNestedData('trustBadges.visibleIn', v)}
             />
-            <Input label={t('editor.controls.ecommerce.title', 'Title')} value={d.title || ''} onChange={(e) => setNestedData('trustBadges.title', e.target.value)} />
+            <I18nInput label={t('editor.controls.ecommerce.title', 'Title')} value={d.title} onChange={(v) => setNestedData('trustBadges.title', v)} />
 
-            {/* Note: In a real implementation, we would have a list editor for the badges (icon + title + desc) */}
-            <div className="text-xs text-q-text-secondary italic border p-2 rounded border-q-border">
-                {t('editor.controls.ecommerce.badgesManageNote', 'Badges content management would be here (list of icon/title/desc).')}
-            </div>
+            <SelectControl
+                label={t('editor.controls.ecommerce.variant', 'Variant')}
+                value={d.variant || 'horizontal'}
+                options={[
+                    { value: 'horizontal', label: t('editor.controls.ecommerce.horizontal', 'Horizontal') },
+                    { value: 'grid', label: t('editor.controls.ecommerce.grid', 'Grid') },
+                    { value: 'minimal', label: t('editor.controls.ecommerce.minimal', 'Minimal') },
+                    { value: 'detailed', label: t('editor.controls.ecommerce.detailed', 'Detailed') },
+                ]}
+                onChange={(v) => setNestedData('trustBadges.variant', v)}
+            />
 
             <SelectControl
                 label={t('editor.controls.ecommerce.layout', 'Layout')}
                 value={d.layout || 'grid'}
                 options={[
+                    { value: 'horizontal', label: t('editor.controls.ecommerce.horizontal', 'Horizontal') },
                     { value: 'grid', label: t('editor.controls.ecommerce.grid', 'Grid') },
-                    { value: 'flex', label: t('editor.controls.ecommerce.flexRow', 'Flex Row') },
+                    { value: 'vertical', label: t('editor.controls.ecommerce.vertical', 'Vertical') },
                 ]}
                 onChange={(v) => setNestedData('trustBadges.layout', v)}
             />
@@ -1354,8 +1506,64 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
                 value={d.columns || 4}
                 onChange={(v) => setNestedData('trustBadges.columns', v)}
                 min={2}
-                max={4}
+                max={6}
             />
+
+            <SelectControl
+                label={t('editor.controls.ecommerce.iconSize', 'Icon Size')}
+                value={d.iconSize || 'md'}
+                options={[
+                    { value: 'sm', label: 'Small' },
+                    { value: 'md', label: 'Medium' },
+                    { value: 'lg', label: 'Large' },
+                ]}
+                onChange={(v) => setNestedData('trustBadges.iconSize', v)}
+            />
+
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showLabels', 'Show Labels')}
+                checked={d.showLabels !== false}
+                onChange={(v) => setNestedData('trustBadges.showLabels', v)}
+            />
+
+            <ListEditorShell
+                title={t('editor.controls.ecommerce.badges', 'Badges')}
+                addLabel={t('editor.controls.list.add', 'Add')}
+                onAdd={() => setBadges([
+                    ...badges,
+                    {
+                        icon: 'check-circle',
+                        title: { es: 'Nueva garantia', en: 'New guarantee' } as any,
+                        description: { es: '', en: '' } as any,
+                    },
+                ])}
+            >
+                {badges.map((badge, index) => (
+                    <div key={`${badge.icon}-${index}`} className="space-y-3 rounded-md border border-q-border bg-q-bg p-3">
+                        <ItemHeader
+                            label={`${t('editor.controls.ecommerce.badge', 'Badge')} #${index + 1}`}
+                            onRemove={() => setBadges(badges.filter((_, i) => i !== index))}
+                        />
+                        <SelectControl
+                            label={t('editor.controls.ecommerce.icon', 'Icon')}
+                            value={badge.icon || 'check-circle'}
+                            options={TRUST_BADGE_ICON_OPTIONS}
+                            onChange={(v) => setNestedData(`trustBadges.badges.${index}.icon`, v)}
+                        />
+                        <I18nInput
+                            label={t('editor.controls.ecommerce.title', 'Title')}
+                            value={badge.title as any}
+                            onChange={(v) => setNestedData(`trustBadges.badges.${index}.title`, v)}
+                        />
+                        <I18nTextArea
+                            label={t('editor.controls.ecommerce.description', 'Description')}
+                            value={badge.description as any}
+                            onChange={(v) => setNestedData(`trustBadges.badges.${index}.description`, v)}
+                            rows={2}
+                        />
+                    </div>
+                ))}
+            </ListEditorShell>
         </div>
     );
 
@@ -2228,9 +2436,10 @@ export const useRecentlyViewedControls = ({ data, setNestedData }: EcommerceCont
 
 export const useProductReviewsControls = ({ data, setNestedData }: EcommerceControlsProps) => {
     const { t } = useTranslation();
-    if (!data?.productReviews) return null;
 
-    const d = data.productReviews;
+    const d = getSectionWithDefaults<any>(data, 'productReviews');
+    const reviews: ProductReviewItem[] = Array.isArray(d.reviews) ? d.reviews : [];
+    const setReviews = (nextReviews: ProductReviewItem[]) => setNestedData('productReviews.reviews', nextReviews);
 
     const contentTab = (
         <div className="space-y-4">
@@ -2239,11 +2448,157 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
                 checked={d.enabled !== false}
                 onChange={(v) => setNestedData('productReviews.enabled', v)}
             />
-            <Input
+            <I18nInput
                 label={t('editor.controls.ecommerce.title', 'Title')}
-                value={d.title || ''}
-                onChange={(e) => setNestedData('productReviews.title', e.target.value)}
+                value={d.title}
+                onChange={(v) => setNestedData('productReviews.title', v)}
             />
+            <I18nTextArea
+                label={t('editor.controls.ecommerce.description', 'Description')}
+                value={d.description}
+                onChange={(v) => setNestedData('productReviews.description', v)}
+                rows={2}
+            />
+
+            <SelectControl
+                label={t('editor.controls.ecommerce.variant', 'Variant')}
+                value={d.variant || 'cards'}
+                options={[
+                    { value: 'cards', label: t('editor.controls.ecommerce.cards', 'Cards') },
+                    { value: 'list', label: t('editor.controls.ecommerce.list', 'List') },
+                    { value: 'masonry', label: t('editor.controls.ecommerce.masonry', 'Masonry') },
+                    { value: 'featured', label: t('editor.controls.ecommerce.featured', 'Featured') },
+                ]}
+                onChange={(v) => setNestedData('productReviews.variant', v)}
+            />
+
+            <SelectControl
+                label={t('editor.controls.ecommerce.sortBy', 'Sort By')}
+                value={d.sortBy || 'newest'}
+                options={[
+                    { value: 'newest', label: t('editor.controls.ecommerce.newest', 'Newest') },
+                    { value: 'highest', label: t('editor.controls.ecommerce.highestRating', 'Highest Rating') },
+                    { value: 'lowest', label: t('editor.controls.ecommerce.lowestRating', 'Lowest Rating') },
+                    { value: 'helpful', label: t('editor.controls.ecommerce.mostHelpful', 'Most Helpful') },
+                ]}
+                onChange={(v) => setNestedData('productReviews.sortBy', v)}
+            />
+
+            <NumberInput
+                label={t('editor.controls.ecommerce.maxReviews', 'Max Reviews')}
+                value={d.maxReviews || 6}
+                onChange={(v) => setNestedData('productReviews.maxReviews', v)}
+                min={1}
+                max={24}
+            />
+
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showRatingDistribution', 'Show Rating Distribution')}
+                checked={d.showRatingDistribution !== false}
+                onChange={(v) => setNestedData('productReviews.showRatingDistribution', v)}
+            />
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showVerifiedBadge', 'Show Verified Badge')}
+                checked={d.showVerifiedBadge !== false}
+                onChange={(v) => setNestedData('productReviews.showVerifiedBadge', v)}
+            />
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showProductInfo', 'Show Product Info')}
+                checked={d.showProductInfo === true}
+                onChange={(v) => setNestedData('productReviews.showProductInfo', v)}
+            />
+
+            <ListEditorShell
+                title={t('editor.controls.ecommerce.reviews', 'Reviews')}
+                addLabel={t('editor.controls.list.add', 'Add')}
+                onAdd={() => setReviews([
+                    ...reviews,
+                    {
+                        id: newId('review'),
+                        authorName: 'Cliente',
+                        rating: 5,
+                        title: { es: 'Excelente experiencia', en: 'Excellent experience' } as any,
+                        content: { es: 'La calidad y el servicio fueron excelentes.', en: 'The quality and service were excellent.' } as any,
+                        date: new Date().toISOString(),
+                        verified: true,
+                        helpful: 0,
+                    },
+                ])}
+            >
+                {reviews.length === 0 && (
+                    <p className="rounded-md border border-dashed border-q-border p-3 text-xs text-q-text-secondary">
+                        {t('editor.controls.ecommerce.noReviewsConfigured', 'No manual reviews configured. Default demo reviews will be shown until you add reviews here.')}
+                    </p>
+                )}
+                {reviews.map((review, index) => (
+                    <div key={review.id || index} className="space-y-3 rounded-md border border-q-border bg-q-bg p-3">
+                        <ItemHeader
+                            label={`${t('editor.controls.ecommerce.review', 'Review')} #${index + 1}`}
+                            onRemove={() => setReviews(reviews.filter((_, i) => i !== index))}
+                        />
+                        <Input
+                            label={t('editor.controls.ecommerce.authorName', 'Author Name')}
+                            value={review.authorName || ''}
+                            onChange={(e) => setNestedData(`productReviews.reviews.${index}.authorName`, e.target.value)}
+                        />
+                        <ImagePicker
+                            label={t('editor.controls.ecommerce.authorImage', 'Author Image')}
+                            value={review.authorImage || ''}
+                            onChange={(url) => setNestedData(`productReviews.reviews.${index}.authorImage`, url)}
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                            <NumberInput
+                                label={t('editor.controls.ecommerce.rating', 'Rating')}
+                                value={review.rating || 5}
+                                onChange={(v) => setNestedData(`productReviews.reviews.${index}.rating`, Math.min(5, Math.max(1, v)))}
+                                min={1}
+                                max={5}
+                                step={1}
+                            />
+                            <Input
+                                type="date"
+                                label={t('editor.controls.ecommerce.date', 'Date')}
+                                value={toDateInputValue(review.date)}
+                                onChange={(e) => setNestedData(`productReviews.reviews.${index}.date`, new Date(`${e.target.value}T12:00:00`).toISOString())}
+                            />
+                        </div>
+                        <I18nInput
+                            label={t('editor.controls.ecommerce.reviewTitle', 'Review Title')}
+                            value={review.title as any}
+                            onChange={(v) => setNestedData(`productReviews.reviews.${index}.title`, v)}
+                        />
+                        <I18nTextArea
+                            label={t('editor.controls.ecommerce.reviewContent', 'Review Content')}
+                            value={review.content as any}
+                            onChange={(v) => setNestedData(`productReviews.reviews.${index}.content`, v)}
+                            rows={3}
+                        />
+                        <Input
+                            label={t('editor.controls.ecommerce.productName', 'Product Name')}
+                            value={review.productName || ''}
+                            onChange={(e) => setNestedData(`productReviews.reviews.${index}.productName`, e.target.value)}
+                        />
+                        <ImagePicker
+                            label={t('editor.controls.ecommerce.productImage', 'Product Image')}
+                            value={review.productImage || ''}
+                            onChange={(url) => setNestedData(`productReviews.reviews.${index}.productImage`, url)}
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                            <ToggleControl
+                                label={t('editor.controls.ecommerce.verified', 'Verified')}
+                                checked={review.verified !== false}
+                                onChange={(v) => setNestedData(`productReviews.reviews.${index}.verified`, v)}
+                            />
+                            <NumberInput
+                                label={t('editor.controls.ecommerce.helpful', 'Helpful')}
+                                value={review.helpful || 0}
+                                onChange={(v) => setNestedData(`productReviews.reviews.${index}.helpful`, v)}
+                                min={0}
+                            />
+                        </div>
+                    </div>
+                ))}
+            </ListEditorShell>
         </div>
     );
 

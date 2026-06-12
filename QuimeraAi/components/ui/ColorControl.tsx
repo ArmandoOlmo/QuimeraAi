@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { Palette, Sparkles, History, ChevronDown } from 'lucide-react';
 import { useSafeProject } from '../../contexts/project';
 
@@ -239,6 +240,7 @@ const variantStyles = {
 };
 
 const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, paletteColors: propPaletteColors, recentPalettes, variant = 'editor', portalContainer: propPortalContainer, compact }) => {
+    const { t } = useTranslation();
     const styles = variantStyles[variant];
     const project = useSafeProject();
     
@@ -585,7 +587,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
             {/* Palette colors from theme */}
             {paletteColors && paletteColors.length > 0 && (
                 <div className="mb-3">
-                    <label className={styles.label}><Palette size={12} className="inline mr-1" />Theme Palette</label>
+                    <label className={styles.label}><Palette size={12} className="inline mr-1" />{t('editor.controls.globalStyles.websiteColors', 'Website Colors')}</label>
                     <div className="flex flex-wrap gap-1">
                         {paletteColors.map((color, i) => (
                             <button

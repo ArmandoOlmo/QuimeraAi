@@ -14,11 +14,12 @@ import { ArrowRight, ShoppingCart, Star, Check } from 'lucide-react';
 import { ProductHeroData } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
-import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 
 interface ProductHeroProps {
     data: ProductHeroData;
     storeId?: string;
+    globalColors?: StorefrontGlobalColors;
     onProductClick?: (productSlug: string) => void;
     onCollectionClick?: (collectionSlug: string) => void;
     onAddToCart?: (productId: string) => void;
@@ -27,6 +28,7 @@ interface ProductHeroProps {
 const ProductHero: React.FC<ProductHeroProps> = ({
     data,
     storeId,
+    globalColors,
     onProductClick,
     onCollectionClick,
     onAddToCart,
@@ -35,7 +37,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
     
     // Unified colors system
-    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);
+    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
     
     const { products, isLoading } = usePublicProducts(effectiveStoreId, {
         limitCount: 1,

@@ -1,11 +1,13 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, Check, ArrowUpLeft, ArrowUp, ArrowUpRight, ArrowLeft, CircleDot, ArrowRight, ArrowDownLeft, ArrowDown, ArrowDownRight } from 'lucide-react';
 
 // --- Editor Control Primitives ---
 // Extracted from Controls.tsx for reusability across the editor
 
 import { mergeI18nValue } from '../../utils/i18nContent';
+import { resolveProjectName } from '../../utils/resolveProjectName';
 
 export const Input = ({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?: string }) => (
   <div className={`mb-4 ${className || ''}`}>
@@ -142,6 +144,8 @@ export interface SelectGroup {
 }
 
 export const Select = ({ label, options, groups, value, onChange, className, noMargin }: { label?: string, options?: { value: string, label: string }[], groups?: SelectGroup[], value: string, onChange: (value: string) => void, className?: string, noMargin?: boolean }) => {
+  const { i18n } = useTranslation();
+  const resolveLabel = (text: unknown) => resolveProjectName(text, i18n.language);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -205,7 +209,7 @@ export const Select = ({ label, options, groups, value, onChange, className, noM
               : 'text-q-text hover:bg-q-bg'
           }`}
         >
-          <span className="flex-1 text-xs truncate">{opt.label}</span>
+          <span className="flex-1 text-xs truncate">{resolveLabel(opt.label)}</span>
           {isSelected && <Check className="h-3.5 w-3.5 flex-shrink-0 text-q-accent" />}
         </button>
       );
@@ -223,7 +227,7 @@ export const Select = ({ label, options, groups, value, onChange, className, noM
             : 'border-q-border/80 hover:border-q-accent/50'
         }`}
       >
-        <span className="truncate">{selectedOption?.label || value}</span>
+        <span className="truncate">{resolveLabel(selectedOption?.label ?? value)}</span>
         <ChevronDown className={`h-3.5 w-3.5 text-q-text-secondary flex-shrink-0 ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && (
@@ -234,7 +238,7 @@ export const Select = ({ label, options, groups, value, onChange, className, noM
                 groups.map((group, gi) => (
                   <div key={gi}>
                     <div className="px-3 py-1.5 text-[10px] font-bold text-q-text-secondary uppercase tracking-wider bg-q-bg/50 border-b border-q-border/30 sticky top-0">
-                      {group.label}
+                      {resolveLabel(group.label)}
                     </div>
                     {renderOptions(group.options)}
                   </div>

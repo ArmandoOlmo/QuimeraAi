@@ -11,10 +11,12 @@ import { useTranslation } from 'react-i18next';
 import { useAdmin } from '../../contexts/admin/AdminContext';
 import { useProject } from '../../contexts/project/ProjectContext';
 import { FontFamily, GlobalColors, PageData } from '../../types';
+import type { ColorCandidate } from '../../types/colorSystem';
 import ColorControl from './ColorControl';
 import CoolorsImporter from './CoolorsImporter';
 import { colorPalettes, ColorPalette, getDefaultGlobalColors } from '../../data/colorPalettes';
 import { hexToRgba } from '../../utils/colorUtils';
+import { createColorBriefFromTheme, generateColorCandidates, toGlobalColors } from '../../utils/colorSystemEngine';
 import { fontOptions, fontStacks, formatFontName, getFontStack, loadAllFonts, resolveFontFamily } from '../../utils/fontLoader';
 import { Type, Palette, Check, Sparkles, Grid, RotateCcw, Info, Loader2, Upload, ChevronDown } from 'lucide-react';
 import FontFamilyPicker from './FontFamilyPicker';
@@ -29,6 +31,40 @@ type Tab = 'typography' | 'colors';
 interface GlobalStylesControlProps {
     mode?: GlobalStylesMode;
 }
+
+const normalizeGlobalColors = (colors?: Partial<GlobalColors>): GlobalColors => ({
+    ...getDefaultGlobalColors(),
+    ...(colors || {}),
+});
+
+const getWebsitePaletteColors = (colors: GlobalColors): string[] => Array.from(new Set([
+    colors.primary,
+    colors.secondary,
+    colors.accent,
+    colors.background,
+    colors.surface,
+    colors.text,
+    colors.heading,
+    colors.textMuted,
+    colors.border,
+    colors.success,
+    colors.error,
+].filter(Boolean)));
+
+const getGenericComponentColorMapping = (colors: GlobalColors): Record<string, string> => ({
+    background: colors.background,
+    heading: colors.heading,
+    text: colors.text,
+    textMuted: colors.textMuted,
+    accent: colors.accent,
+    borderColor: colors.border,
+    cardBackground: colors.surface,
+    cardText: readableTextOn(colors.surface, colors.text),
+    buttonBackground: colors.primary,
+    buttonText: readableTextOn(colors.primary),
+});
+
+const NON_VISUAL_DATA_KEYS = new Set(['colors', 'typography']);
 
 /**
  * Calcula la luminancia relativa de un color hex y devuelve el texto que mejor contrasta.
@@ -48,126 +84,220 @@ export const contrastText = (bgHex: string, lightColor = '#ffffff', darkColor = 
     }
 };
 
+const normalizeHexForContrast = (value?: string): string | null => {
+    if (!value || typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    const short = /^#([0-9a-f]{3})$/i.exec(trimmed);
+    if (short) {
+        return `#${short[1].split('').map(char => char + char).join('').toLowerCase()}`;
+    }
+    const long = /^#([0-9a-f]{6})$/i.exec(trimmed);
+    return long ? `#${long[1].toLowerCase()}` : null;
+};
+
+const srgbToLinear = (channel: number): number => (
+    channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4)
+);
+
+const relativeLuminance = (color?: string): number | null => {
+    const hex = normalizeHexForContrast(color);
+    if (!hex) return null;
+    const r = srgbToLinear(parseInt(hex.slice(1, 3), 16) / 255);
+    const g = srgbToLinear(parseInt(hex.slice(3, 5), 16) / 255);
+    const b = srgbToLinear(parseInt(hex.slice(5, 7), 16) / 255);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+export const colorContrastRatio = (foreground?: string, background?: string): number => {
+    const fg = relativeLuminance(foreground);
+    const bg = relativeLuminance(background);
+    if (fg === null || bg === null) return 1;
+    const lighter = Math.max(fg, bg);
+    const darker = Math.min(fg, bg);
+    return (lighter + 0.05) / (darker + 0.05);
+};
+
+export const readableTextOn = (
+    background?: string,
+    preferred?: string,
+    fallbackLight = '#ffffff',
+    fallbackDark = '#1a1a1a',
+): string => {
+    if (preferred && normalizeHexForContrast(preferred) && colorContrastRatio(preferred, background) >= 4.5) {
+        return preferred;
+    }
+    const candidates = [preferred, fallbackLight, fallbackDark]
+        .filter((candidate): candidate is string => Boolean(normalizeHexForContrast(candidate)));
+    if (!normalizeHexForContrast(background)) return candidates[0] || fallbackLight;
+
+    const sorted = candidates.sort((a, b) => colorContrastRatio(b, background) - colorContrastRatio(a, background));
+    return sorted[0] || contrastText(background || '#000000', fallbackLight, fallbackDark);
+};
+
+const readableMutedTextOn = (background?: string, preferred?: string): string => {
+    if (preferred && colorContrastRatio(preferred, background) >= 3) return preferred;
+    const base = readableTextOn(background, preferred);
+    return base;
+};
+
+const getReadableRoles = (colors: GlobalColors) => {
+    const backgroundText = readableTextOn(colors.background, colors.text);
+    const backgroundHeading = readableTextOn(colors.background, colors.heading || colors.text);
+    const surfaceText = readableTextOn(colors.surface, colors.text);
+    const surfaceHeading = readableTextOn(colors.surface, colors.heading || colors.text);
+    const primaryText = readableTextOn(colors.primary);
+    const secondaryText = readableTextOn(colors.secondary);
+    const accentText = readableTextOn(colors.accent);
+    const errorText = readableTextOn(colors.error);
+    const successText = readableTextOn(colors.success);
+
+    return {
+        backgroundText,
+        backgroundHeading,
+        backgroundMuted: readableMutedTextOn(colors.background, colors.textMuted),
+        surfaceText,
+        surfaceHeading,
+        surfaceMuted: readableMutedTextOn(colors.surface, colors.textMuted),
+        primaryText,
+        secondaryText,
+        accentText,
+        errorText,
+        successText,
+    };
+};
+
 /**
  * Genera el mapeo de colores de la paleta global a cada componente
  * Exportado para uso en onboarding y otras partes de la aplicación
  */
 export const generateComponentColorMappings = (colors: GlobalColors): Record<string, Record<string, string>> => {
+    const readable = getReadableRoles(colors);
+
     return {
         hero: {
             primary: colors?.primary,
             secondary: colors?.secondary,
             background: colors?.background,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.backgroundText,
+            heading: readable.backgroundHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
             secondaryButtonBackground: colors?.surface,
-            secondaryButtonText: colors?.heading,
+            secondaryButtonText: readable.surfaceHeading,
         },
         heroSplit: {
             textBackground: colors?.background,
             imageBackground: colors?.surface,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
         },
         banner: {
             background: colors?.surface,
             overlayColor: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.surfaceHeading,
+            text: readable.surfaceText,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
         },
         map: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             borderColor: colors?.border,
         },
         features: {
             background: colors?.background,
             accent: colors?.accent,
             borderColor: colors?.border,
-            text: colors?.text,
-            heading: colors?.heading,
-            description: colors?.text,
+            text: readable.backgroundText,
+            heading: readable.backgroundHeading,
+            description: readable.backgroundText,
             cardBackground: colors?.surface,
-            cardHeading: colors?.heading,
-            cardText: colors?.text,
+            cardHeading: readable.surfaceHeading,
+            cardText: readable.surfaceText,
         },
         testimonials: {
             background: colors?.surface,
             accent: colors?.accent,
             borderColor: colors?.border,
-            text: colors?.text,
-            heading: colors?.heading,
-            description: colors?.text,
-            subtitleColor: colors?.textMuted,
+            text: readable.surfaceText,
+            heading: readable.surfaceHeading,
+            description: readable.surfaceText,
+            subtitleColor: readable.surfaceMuted,
             cardBackground: colors?.surface,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
         },
         cta: {
             background: colors?.background,
             gradientStart: colors?.primary,
             gradientEnd: colors?.secondary,
-            text: colors?.heading,
-            heading: colors?.heading,
-            description: colors?.text,
+            text: readable.backgroundHeading,
+            heading: readable.backgroundHeading,
+            description: readable.backgroundText,
             buttonBackground: colors?.background,
-            buttonText: colors?.heading,
+            buttonText: readable.backgroundHeading,
         },
         services: {
             background: colors?.surface,
             accent: colors?.accent,
             borderColor: colors?.border,
-            text: colors?.text,
-            heading: colors?.heading,
-            description: colors?.text,
+            text: readable.surfaceText,
+            heading: readable.surfaceHeading,
+            description: readable.surfaceText,
             cardBackground: colors?.surface,
-            cardHeading: colors?.heading,
-            cardText: colors?.text,
+            cardHeading: readable.surfaceHeading,
+            cardText: readable.surfaceText,
         },
         team: {
             background: colors?.background,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.backgroundText,
+            heading: readable.backgroundHeading,
             accent: colors?.accent,
             cardBackground: colors?.surface,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             photoBorderColor: colors?.primary,
         },
         slideshow: {
             background: colors?.surface,
-            heading: colors?.heading,
+            heading: readable.surfaceHeading,
             arrowBackground: hexToRgba(colors?.background, 0.5),
-            arrowText: colors?.heading,
-            dotActive: colors?.heading,
-            dotInactive: hexToRgba(colors?.heading, 0.5),
+            arrowText: readable.backgroundHeading,
+            dotActive: readable.surfaceHeading,
+            dotInactive: hexToRgba(readable.surfaceHeading, 0.5),
             captionBackground: hexToRgba(colors?.background, 0.8),
-            captionText: colors?.text,
+            captionText: readable.backgroundText,
         },
         pricing: {
             background: colors?.background,
             accent: colors?.accent,
             borderColor: colors?.border,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.backgroundText,
+            heading: readable.backgroundHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
             gradientStart: colors?.primary,
             gradientEnd: colors?.secondary,
             cardBackground: colors?.surface,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
         },
         faq: {
             background: colors?.surface,
             accent: colors?.accent,
             borderColor: colors?.border,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.surfaceText,
+            heading: readable.surfaceHeading,
             cardBackground: colors?.surface,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             gradientStart: colors?.primary,
             gradientEnd: colors?.secondary,
         },
@@ -175,11 +305,11 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             background: colors?.background,
             accent: colors?.accent,
             borderColor: colors?.border,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.backgroundText,
+            heading: readable.backgroundHeading,
             cardBackground: hexToRgba(colors?.background, 0.9),
-            cardTitleColor: colors?.heading,
-            cardTextColor: hexToRgba(colors?.text, 0.9),
+            cardTitleColor: readable.backgroundHeading,
+            cardTextColor: hexToRgba(readable.backgroundText, 0.9),
             cardOverlayStart: hexToRgba(colors?.background, 0.95),
             cardOverlayEnd: hexToRgba(colors?.background, 0.3),
         },
@@ -187,77 +317,81 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             background: colors?.background,
             accent: colors?.accent,
             borderColor: colors?.border,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.backgroundText,
+            heading: readable.backgroundHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
             cardBackground: colors?.surface,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             inputBackground: colors?.background,
-            inputText: colors?.heading,
+            inputText: readable.backgroundHeading,
             inputBorder: colors?.border,
             gradientStart: colors?.primary,
             gradientEnd: colors?.secondary,
         },
         realEstateListings: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
-            textMuted: colors?.textMuted,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
+            textMuted: readable.backgroundMuted,
             accent: colors?.primary,
             cardBackground: colors?.surface,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             border: colors?.border,
             borderColor: colors?.border,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
         },
         newsletter: {
             background: colors?.surface,
             accent: colors?.accent,
             borderColor: colors?.border,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.surfaceText,
+            heading: readable.surfaceHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
             cardBackground: colors?.surface,
             inputBackground: colors?.background,
-            inputText: colors?.heading,
+            inputText: readable.backgroundHeading,
             inputBorder: colors?.border,
         },
         video: {
             background: colors?.surface,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.surfaceText,
+            heading: readable.surfaceHeading,
         },
         howItWorks: {
             background: colors?.background,
             accent: colors?.accent,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.backgroundText,
+            heading: readable.backgroundHeading,
         },
         footer: {
             background: colors?.surface,
             border: colors?.border,
-            text: colors?.textMuted,
+            text: readable.surfaceMuted,
             linkHover: colors?.primary,
-            heading: colors?.heading,
+            heading: readable.surfaceHeading,
         },
         header: {
             background: colors?.primary,
-            text: contrastText(colors?.primary, colors?.background, colors?.heading),
-            accent: contrastText(colors?.primary, colors?.background, colors?.heading),
+            text: readable.primaryText,
+            accent: readable.primaryText,
             border: 'transparent',
             buttonBackground: colors?.secondary,
-            buttonText: contrastText(colors?.secondary, colors?.background, colors?.heading),
+            buttonText: readable.secondaryText,
         },
         menu: {
             background: colors?.background,
             accent: colors?.accent,
             borderColor: colors?.border,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.backgroundText,
+            heading: readable.backgroundHeading,
             cardBackground: colors?.surface,
-            cardTitleColor: colors?.heading,
-            cardText: colors?.text,
+            cardTitleColor: readable.surfaceHeading,
+            cardText: readable.surfaceText,
             priceColor: colors?.accent,
         },
         chatbot: {
@@ -267,31 +401,32 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             accentColor: colors?.accent,
             // Chat bubbles
             userBubbleColor: colors?.primary,
-            userTextColor: contrastText(colors?.primary, colors?.background, colors?.heading),
+            userTextColor: readable.primaryText,
             botBubbleColor: colors?.surface,
-            botTextColor: colors?.text,
+            botTextColor: readable.surfaceText,
             // Background and inputs
             backgroundColor: colors?.background,
             inputBackground: colors?.surface,
             inputBorder: colors?.border,
-            inputText: colors?.text,
+            inputText: readable.surfaceText,
             // Header
             headerBackground: colors?.primary,
-            headerText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            headerText: readable.primaryText,
         },
         // Ecommerce components
         featuredProducts: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
-            cardText: colors?.heading,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
             badgeBackground: colors?.primary,
-            badgeText: contrastText(colors?.primary, colors?.background, colors?.heading),
-            priceColor: colors?.heading,
+            badgeText: readable.primaryText,
+            priceColor: readable.surfaceHeading,
             salePriceColor: colors?.error,
             overlayStart: 'transparent',
             overlayEnd: hexToRgba(colors?.background, 0.7),
@@ -299,11 +434,12 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
         },
         categoryGrid: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
-            cardText: colors?.heading,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             overlayStart: 'transparent',
             overlayEnd: hexToRgba(colors?.background, 0.7),
             borderColor: colors?.border,
@@ -311,93 +447,97 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
         productHero: {
             background: colors?.background,
             overlayColor: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
             badgeBackground: colors?.error,
-            badgeText: contrastText(colors?.error, colors?.background, colors?.heading),
+            badgeText: readable.errorText,
         },
         trustBadges: {
             background: colors?.surface,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.surfaceHeading,
+            text: readable.surfaceText,
             accent: colors?.accent,
             borderColor: colors?.border,
         },
         saleCountdown: {
             background: colors?.surface,
-            heading: '#ffffff',
-            text: colors?.textMuted,
+            heading: readable.surfaceHeading,
+            text: readable.surfaceText,
             accent: colors?.error,
             countdownBackground: colors?.background,
-            countdownText: '#ffffff',
+            countdownText: readable.backgroundHeading,
             buttonBackground: colors?.error,
-            buttonText: '#ffffff',
+            buttonText: readable.errorText,
             badgeBackground: colors?.error,
-            badgeText: '#ffffff',
+            badgeText: readable.errorText,
         },
         announcementBar: {
             background: colors?.primary,
-            text: '#ffffff',
-            linkColor: '#ffffff',
-            iconColor: '#ffffff',
+            text: readable.primaryText,
+            linkColor: readable.primaryText,
+            iconColor: readable.primaryText,
             borderColor: colors?.border,
         },
         collectionBanner: {
             background: colors?.background,
             overlayColor: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
         },
         recentlyViewed: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
-            cardText: colors?.heading,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
         },
         productReviews: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
-            cardText: colors?.heading,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             starColor: '#fbbf24',
             verifiedBadgeColor: colors?.success,
         },
         productBundle: {
             background: colors?.surface,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.surfaceHeading,
+            text: readable.surfaceText,
             accent: colors?.accent,
             cardBackground: colors?.background,
-            cardText: colors?.heading,
-            priceColor: colors?.heading,
+            cardText: readable.backgroundText,
+            cardHeading: readable.backgroundHeading,
+            priceColor: readable.backgroundHeading,
             savingsColor: colors?.success,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
             badgeBackground: colors?.primary,
-            badgeText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            badgeText: readable.primaryText,
         },
         storeSettings: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
-            cardText: colors?.heading,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
             badgeBackground: colors?.error,
-            badgeText: contrastText(colors?.error, colors?.background, colors?.heading),
-            priceColor: colors?.heading,
+            badgeText: readable.errorText,
+            priceColor: readable.surfaceHeading,
             salePriceColor: colors?.error,
             borderColor: colors?.border,
             starColor: '#fbbf24',
@@ -405,122 +545,124 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
         // Products grid component
         products: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
-            cardText: colors?.heading,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
         },
         productDetailPage: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
-            cardText: colors?.heading,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
             badgeBackground: colors?.error,
-            badgeText: contrastText(colors?.error, colors?.background, colors?.heading),
-            priceColor: colors?.heading,
+            badgeText: readable.errorText,
+            priceColor: readable.surfaceHeading,
             salePriceColor: colors?.error,
             borderColor: colors?.border,
             starColor: '#fbbf24',
             linkColor: colors?.primary,
             secondaryButtonBackground: colors?.surface,
-            secondaryButtonText: colors?.text,
+            secondaryButtonText: readable.surfaceText,
         },
         // ── New component mappings (topBar, logoBanner, signupFloat, cmsFeed, hero variants, screenshotCarousel) ──
         topBar: {
             background: colors?.primary,
-            text: '#ffffff',
-            linkColor: '#ffffff',
-            iconColor: '#ffffff',
+            text: readable.primaryText,
+            linkColor: readable.primaryText,
+            iconColor: readable.primaryText,
             borderColor: colors?.border,
         },
         logoBanner: {
             background: colors?.background,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.backgroundText,
+            heading: readable.backgroundHeading,
             accent: colors?.accent,
             borderColor: colors?.border,
         },
         signupFloat: {
             background: colors?.primary,
-            text: contrastText(colors?.primary, colors?.background, colors?.heading),
-            heading: contrastText(colors?.primary, colors?.background, colors?.heading),
+            text: readable.primaryText,
+            heading: readable.primaryText,
             buttonBackground: colors?.secondary,
-            buttonText: contrastText(colors?.secondary, colors?.background, colors?.heading),
+            buttonText: readable.secondaryText,
             inputBackground: colors?.background,
-            inputText: colors?.text,
+            inputText: readable.backgroundText,
             inputBorder: colors?.border,
             overlayBackground: hexToRgba(colors?.background, 0.5),
         },
         cmsFeed: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
-            cardText: colors?.text,
-            cardHeading: colors?.heading,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             borderColor: colors?.border,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
         },
         heroGallery: {
             primary: colors?.primary,
             secondary: colors?.secondary,
             background: colors?.background,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.backgroundText,
+            heading: readable.backgroundHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
         },
         heroWave: {
             primary: colors?.primary,
             secondary: colors?.secondary,
             background: colors?.background,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.backgroundText,
+            heading: readable.backgroundHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
         },
         heroNova: {
             primary: colors?.primary,
             secondary: colors?.secondary,
             background: colors?.background,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: readable.backgroundText,
+            heading: readable.backgroundHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
             accent: colors?.accent,
         },
         heroLead: {
             background: colors?.background,
             infoBackground: colors?.background,
             formBackground: colors?.surface,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
             inputBackground: colors?.background,
-            inputText: colors?.heading,
+            inputText: readable.backgroundHeading,
             inputBorder: colors?.border,
-            inputPlaceholder: colors?.textMuted,
+            inputPlaceholder: readable.backgroundMuted,
             badgeBackground: colors?.primary,
-            badgeText: contrastText(colors?.primary, colors?.background, colors?.heading),
-            formHeading: colors?.heading,
-            formText: colors?.text,
+            badgeText: readable.primaryText,
+            formHeading: readable.surfaceHeading,
+            formText: readable.surfaceText,
             borderColor: colors?.border,
         },
         screenshotCarousel: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             arrowBackground: 'rgba(0, 0, 0, 0.5)',
             arrowText: '#ffffff',
@@ -529,56 +671,62 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
         },
         productDetail: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
-            priceColor: colors?.heading,
+            priceColor: readable.backgroundHeading,
             salePriceColor: colors?.error,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
         },
         categoryProducts: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
-            cardText: colors?.text,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
         },
         articleContent: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             linkColor: colors?.primary,
         },
         productGrid: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
-            cardText: colors?.text,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
         },
         cart: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
         },
         checkout: {
             background: colors?.background,
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: readable.backgroundHeading,
+            text: readable.backgroundText,
             accent: colors?.accent,
             cardBackground: colors?.surface,
+            cardText: readable.surfaceText,
+            cardHeading: readable.surfaceHeading,
             buttonBackground: colors?.primary,
-            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+            buttonText: readable.primaryText,
             inputBackground: colors?.background,
             inputBorder: colors?.border,
         },
@@ -608,30 +756,20 @@ export const generateHeroWaveGradientColors = (colors: GlobalColors): string[] =
 const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both' }) => {
     const { t } = useTranslation();
     const { updateComponentStyle } = useAdmin();
-    const { theme, setTheme, data, setData } = useProject();
+    const { theme, setTheme, data, setData, activeProject, brandIdentity, componentOrder } = useProject();
     const [activeTab, setActiveTab] = useState<Tab>('colors');
     const [selectedPaletteId, setSelectedPaletteId] = useState<string | null>(null);
+    const [selectedExpertCandidateId, setSelectedExpertCandidateId] = useState<string | null>(null);
+    const [expertColorCandidates, setExpertColorCandidates] = useState<ColorCandidate[]>([]);
     const [isApplying, setIsApplying] = useState(false);
     const [showCoolorsImporter, setShowCoolorsImporter] = useState(false);
 
-    // Ensure globalColors exists with defaults
-    const globalColors = theme.globalColors || getDefaultGlobalColors();
+    // Website colors are the canonical palette for this project.
+    const globalColors = normalizeGlobalColors(theme.globalColors);
 
     // Create full array of all palette colors for ColorControl
     // This ensures users can pick any color from the palette, not just the 4 preview colors
-    const allPaletteColors = [
-        globalColors.primary,
-        globalColors.secondary,
-        globalColors.accent,
-        globalColors.background,
-        globalColors.surface,
-        globalColors.text,
-        globalColors.heading,
-        globalColors.textMuted,
-        globalColors.border,
-        globalColors.success,
-        globalColors.error
-    ].filter((color, index, self) => self.indexOf(color) === index); // Remove duplicates
+    const allPaletteColors = getWebsitePaletteColors(globalColors);
 
     // Determine which content to show based on mode
     const showColors = mode === 'colors' || mode === 'both';
@@ -669,23 +807,40 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
     };
 
     const handleColorChange = (colorKey: keyof GlobalColors, value: string) => {
+        const newColors = normalizeGlobalColors({
+            ...globalColors,
+            [colorKey]: value,
+        });
+
         setTheme(prev => {
-            const newColors = {
-                ...(prev.globalColors || getDefaultGlobalColors()),
-                [colorKey]: value
-            };
-            
-            // Propagate individual color changes to all components globally
-            setTimeout(() => {
-                applyPaletteToAllComponents(newColors);
-            }, 0);
-            
             return {
                 ...prev,
-                globalColors: newColors
+                globalColors: newColors,
+                pageBackground: colorKey === 'background' ? value : (prev.pageBackground || newColors.background),
+                paletteColors: getWebsitePaletteColors(newColors),
             };
         });
+
+        void applyPaletteToAllComponents(newColors);
         setSelectedPaletteId(null); // Clear palette selection when custom color is picked
+    };
+
+    const handleReapplyWebsiteColors = async () => {
+        const colors = normalizeGlobalColors(globalColors);
+        setIsApplying(true);
+        try {
+            setTheme(prev => ({
+                ...prev,
+                globalColors: colors,
+                pageBackground: colors.background,
+                paletteColors: getWebsitePaletteColors(colors),
+            }));
+            await applyPaletteToAllComponents(colors);
+        } catch (error) {
+            console.error('Error re-applying website colors:', error);
+        } finally {
+            setIsApplying(false);
+        }
     };
 
     /**
@@ -694,6 +849,8 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
      */
     const applyPaletteToAllComponents = async (colors: GlobalColors) => {
         const componentColorMappings = generateComponentColorMappings(colors);
+        const genericComponentColors = getGenericComponentColorMapping(colors);
+        const readable = getReadableRoles(colors);
 
         // Aplicar colores a cada componente en componentStyles
         for (const [componentId, componentColors] of Object.entries(componentColorMappings)) {
@@ -706,58 +863,63 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                 if (!prev) return prev;
 
                 const newData = { ...prev };
-
-                // Lista de componentes de ecommerce que deben crearse si no existen
-                const ecommerceComponents = [
-                    'productDetailPage',
-                    'storeSettings',
-                    'featuredProducts',
-                    'categoryGrid',
-                    'productHero',
-                    'trustBadges',
-                    'saleCountdown',
-                    'announcementBar',
-                    'collectionBanner',
-                    'recentlyViewed',
-                    'productReviews',
-                    'productBundle',
-                    'products'
-                ];
-
-                // Actualizar colores de cada componente en data
-                for (const [componentId, componentColors] of Object.entries(componentColorMappings)) {
+                const applyColorsToDataComponent = (componentId: string, componentColors: Record<string, string>) => {
                     const key = componentId as keyof PageData;
-                    // Si el componente existe y es un objeto, actualizar sus colores
-                    if (newData[key] && typeof newData[key] === 'object') {
-                        (newData[key] as any) = {
-                            ...(newData[key] as any),
-                            colors: {
-                                ...((newData[key] as any).colors || {}),
-                                ...componentColors
-                            }
-                        };
-                        // Usar los nuevos colores para actualizar propiedades raíz si existen (vital para compatibilidad y fallback visual)
-                        if (componentColors) {
-                            if (componentColors.background) (newData[key] as any).backgroundColor = componentColors.background;
-                            if (componentColors.text) (newData[key] as any).textColor = componentColors.text;
-                            if (componentColors.primary || componentColors.accent) (newData[key] as any).accentColor = componentColors.accent || componentColors.primary;
-                            if (componentColors.error) (newData[key] as any).errorColor = componentColors.error;
-                            // Update overlay colors for SectionBackground (background image overlays)
-                            if (componentColors.background && (newData[key] as any).backgroundOverlayColor) {
-                                (newData[key] as any).backgroundOverlayColor = componentColors.background;
-                            }
-                            // Update banner/productHero/collectionBanner overlayColor
-                            if (componentColors.overlayColor) {
-                                (newData[key] as any).overlayColor = componentColors.overlayColor;
-                            }
+                    if (!newData[key] || typeof newData[key] !== 'object' || Array.isArray(newData[key])) return;
+
+                    (newData[key] as any) = {
+                        ...(newData[key] as any),
+                        colors: {
+                            ...((newData[key] as any).colors || {}),
+                            ...componentColors
                         }
-                    } else if (ecommerceComponents.includes(key)) {
-                        // Para componentes de ecommerce que pueden no existir,
-                        // crearlos con los colores
-                        (newData as any)[key] = {
-                            colors: componentColors
-                        };
+                    };
+
+                    // Usar los nuevos colores para actualizar propiedades raíz si existen (vital para compatibilidad y fallback visual)
+                    if (componentColors.background) (newData[key] as any).backgroundColor = componentColors.background;
+                    if (componentColors.text) (newData[key] as any).textColor = componentColors.text;
+                    if (componentColors.primary || componentColors.accent) (newData[key] as any).accentColor = componentColors.accent || componentColors.primary;
+                    if (componentColors.error) (newData[key] as any).errorColor = componentColors.error;
+                    // Update overlay colors for SectionBackground (background image overlays)
+                    if (componentColors.background && (newData[key] as any).backgroundOverlayColor) {
+                        (newData[key] as any).backgroundOverlayColor = componentColors.background;
                     }
+                    // Update banner/productHero/collectionBanner overlayColor
+                    if (componentColors.overlayColor) {
+                        (newData[key] as any).overlayColor = componentColors.overlayColor;
+                    }
+                };
+
+                for (const componentId of Object.keys(newData)) {
+                    if (NON_VISUAL_DATA_KEYS.has(componentId)) continue;
+                    applyColorsToDataComponent(
+                        componentId,
+                        componentColorMappings[componentId] || genericComponentColors
+                    );
+                }
+
+                // Keep the store-wide ecommerce color contract synchronized for dynamic store pages.
+                if (newData.storeSettings && typeof newData.storeSettings === 'object' && !Array.isArray(newData.storeSettings)) {
+                    (newData.storeSettings as any) = {
+                        ...(newData.storeSettings as any),
+                        colors: {
+                            ...((newData.storeSettings as any).colors || {}),
+                            ...(componentColorMappings.storeSettings || genericComponentColors),
+                        },
+                        cartDrawerColors: {
+                            ...((newData.storeSettings as any).cartDrawerColors || {}),
+                            background: colors.background,
+                            heading: readable.backgroundHeading,
+                            text: readable.backgroundText,
+                            accent: colors.primary,
+                            cardBackground: colors.surface,
+                            cardText: readable.surfaceText,
+                            buttonBackground: colors.primary,
+                            buttonText: readable.primaryText,
+                            priceColor: readable.surfaceHeading,
+                            borderColor: colors.border,
+                        },
+                    };
                 }
 
                 // Actualizar gradientColors y waveColor de HeroWave con los colores de la paleta
@@ -770,6 +932,46 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
 
                 return newData;
             });
+        }
+    };
+
+    const handleGenerateExpertPalettes = () => {
+        const hasEcommerce = componentOrder.some(section => [
+            'announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'trustBadges',
+            'saleCountdown', 'collectionBanner', 'recentlyViewed', 'productReviews', 'productBundle',
+            'productGrid', 'productDetail', 'cart', 'checkout',
+        ].includes(section));
+        const colorBrief = createColorBriefFromTheme({
+            theme,
+            industry: brandIdentity?.industry || activeProject?.brandIdentity?.industry || '',
+            businessName: activeProject?.name,
+            description: brandIdentity?.coreValues || activeProject?.brandIdentity?.coreValues || '',
+            activeComponents: componentOrder,
+            hasEcommerce,
+        });
+        const candidates = generateColorCandidates(colorBrief);
+        setExpertColorCandidates(candidates);
+        setSelectedExpertCandidateId(candidates[0]?.id || null);
+        setSelectedPaletteId(null);
+    };
+
+    const handleExpertCandidateSelect = async (candidate: ColorCandidate) => {
+        const colors = normalizeGlobalColors(toGlobalColors(candidate));
+        setIsApplying(true);
+        setSelectedExpertCandidateId(candidate.id);
+        setSelectedPaletteId(null);
+        try {
+            setTheme(prev => ({
+                ...prev,
+                globalColors: colors,
+                pageBackground: colors.background,
+                paletteColors: getWebsitePaletteColors(colors),
+            }));
+            await applyPaletteToAllComponents(colors);
+        } catch (error) {
+            console.error('Error applying expert color candidate:', error);
+        } finally {
+            setIsApplying(false);
         }
     };
 
@@ -789,8 +991,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                 ...prev,
                 globalColors: palette.colors,
                 pageBackground: palette.colors?.background,
-                // Guardar los colores de preview de la paleta para el selector de colores
-                paletteColors: palette.preview
+                paletteColors: getWebsitePaletteColors(palette.colors),
             }));
 
             // 2. Aplicar colores a todos los componentes
@@ -822,8 +1023,10 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                 ...prev,
                 globalColors: colors,
                 pageBackground: colors?.background,
-                // Guardar los colores originales de la paleta para acceso rápido en el selector
-                paletteColors: preview
+                paletteColors: Array.from(new Set([
+                    ...getWebsitePaletteColors(colors),
+                    ...preview,
+                ])),
             }));
 
             // Aplicar colores a todos los componentes
@@ -922,9 +1125,9 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
 
             {/* Colors Content - Show when mode is 'colors' OR when mode is 'both' and activeTab is 'colors' */}
             {(mode === 'colors' || (showTabs && activeTab === 'colors')) && (
-                <div className="space-y-5">
+                <div className="flex flex-col gap-5">
                     {/* Coolors.co Importer Section */}
-                    <div className="border border-dashed border-purple-500/30 rounded-lg overflow-hidden">
+                    <div className="order-1 border border-dashed border-purple-500/30 rounded-lg overflow-hidden">
                         <button
                             onClick={() => setShowCoolorsImporter(!showCoolorsImporter)}
                             className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 transition-all"
@@ -932,6 +1135,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             <div className="flex items-center gap-2">
                                 <Upload size={16} className="text-purple-400" />
                                 <span className="text-sm font-medium text-q-text">
+                                    {t('editor.controls.globalStyles.importPalette', 'Importar paleta')}
                                 </span>
                             </div>
                             <ChevronDown size={14} className={`text-purple-400 transition-transform ${showCoolorsImporter ? 'rotate-180' : ''}`} />
@@ -944,12 +1148,83 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                         )}
                     </div>
 
+                    {/* Re-apply website colors button */}
+                    <div className="order-2">
+                        <button
+                            onClick={handleReapplyWebsiteColors}
+                            disabled={isApplying}
+                            className="w-full py-2.5 px-3 bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 border border-purple-500/30 rounded-lg text-sm font-medium text-purple-300 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                        >
+                            {isApplying ? (
+                                <Loader2 size={14} className="animate-spin" />
+                            ) : (
+                                <Sparkles size={14} />
+                            )}
+                            {t('editor.controls.globalStyles.reapplyColors', 'Reaplicar colores a todos los componentes')}
+                        </button>
+                    </div>
+
+                    {/* Quimera Color Expert Section */}
+                    <div className="order-3 rounded-lg border border-q-border bg-q-surface/30 p-3">
+                        <div className="flex items-center justify-between gap-3 mb-3">
+                            <div className="min-w-0">
+                                <label className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
+                                    <Sparkles size={14} />
+                                    {t('editor.controls.globalStyles.colorExpert', 'Color Expert')}
+                                </label>
+                                <p className="mt-1 text-[11px] text-q-text-secondary">
+                                    {t('editor.controls.globalStyles.colorExpertDescription', 'Genera sistemas de color validados para este website.')}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleGenerateExpertPalettes}
+                                disabled={isApplying}
+                                className="shrink-0 rounded-lg border border-q-border bg-q-bg px-3 py-2 text-[11px] font-medium text-q-text-secondary hover:border-q-accent/60 hover:text-q-accent disabled:opacity-50"
+                            >
+                                {t('editor.controls.globalStyles.generateExpertPalettes', 'Generar paletas expertas')}
+                            </button>
+                        </div>
+
+                        {expertColorCandidates.length > 0 && (
+                            <div className="grid grid-cols-2 gap-2">
+                                {expertColorCandidates.slice(0, 6).map(candidate => (
+                                    <button
+                                        key={candidate.id}
+                                        type="button"
+                                        onClick={() => handleExpertCandidateSelect(candidate)}
+                                        disabled={isApplying}
+                                        className={`rounded-lg border p-2 text-left transition-all ${
+                                            selectedExpertCandidateId === candidate.id
+                                                ? 'border-q-accent bg-q-accent/10 ring-1 ring-q-accent/30'
+                                                : 'border-q-border bg-q-bg hover:border-q-accent/50'
+                                        } ${isApplying ? 'opacity-60 cursor-wait' : ''}`}
+                                    >
+                                        <div className="flex gap-1 mb-2">
+                                            {candidate.preview.slice(0, 5).map((color, index) => (
+                                                <span
+                                                    key={`${candidate.id}-${color}-${index}`}
+                                                    className="h-4 flex-1 rounded border border-white/10"
+                                                    style={{ backgroundColor: color }}
+                                                />
+                                            ))}
+                                        </div>
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="truncate text-[11px] font-semibold text-q-text">{candidate.labelEs || candidate.label}</span>
+                                            <span className="text-[10px] text-q-accent">{candidate.system.score}</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
                     {/* Palettes Section */}
-                    <div>
+                    <div className="order-5">
                         <div className="flex items-center justify-between mb-3">
                             <label className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                                 <Sparkles size={14} />
-                                {t('editor.controls.globalStyles.presetPalettes', 'Preset Palettes')}
+                                {t('editor.controls.globalStyles.suggestedPalettes', 'Paletas sugeridas')}
                             </label>
                             <button
                                 onClick={handleResetColors}
@@ -971,20 +1246,6 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 </span>
                             </p>
                         </div>
-
-                        {/* Re-apply colors button */}
-                        <button
-                            onClick={() => applyPaletteToAllComponents(globalColors)}
-                            disabled={isApplying}
-                            className="w-full mb-3 py-2.5 px-3 bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 border border-purple-500/30 rounded-lg text-sm font-medium text-purple-300 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                        >
-                            {isApplying ? (
-                                <Loader2 size={14} className="animate-spin" />
-                            ) : (
-                                <Sparkles size={14} />
-                            )}
-                            {t('editor.controls.globalStyles.reapplyColors', 'Re-apply colors to all components')}
-                        </button>
 
                         <div className="grid grid-cols-2 gap-2">
                             {colorPalettes.map((palette) => (
@@ -1031,10 +1292,10 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                     {/* Divider */}
 
                     {/* Custom Colors Section */}
-                    <div>
+                    <div className="order-4">
                         <label className="block text-xs font-bold text-q-text-secondary mb-3 uppercase tracking-wider flex items-center gap-2">
                             <Grid size={14} />
-                            {t('editor.controls.globalStyles.customColors', 'Custom Colors')}
+                            {t('editor.controls.globalStyles.websiteColors', 'Colores del website')}
                         </label>
 
                         <div className="space-y-4">

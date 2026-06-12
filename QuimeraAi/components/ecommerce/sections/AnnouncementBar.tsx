@@ -9,11 +9,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Megaphone, Tag, Gift, Truck, Percent, Sparkles, Bell, Info, ChevronLeft, ChevronRight, Phone, Mail } from 'lucide-react';
 import { AnnouncementBarData, AnnouncementMessage, ServiceIcon } from '../../../types/components';
 import { useSafeProject } from '../../../contexts/project';
-import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 
 interface AnnouncementBarProps {
     data: AnnouncementBarData;
     storeId?: string;
+    globalColors?: StorefrontGlobalColors;
 }
 
 const iconMap: Record<string, React.FC<{ size?: number; className?: string }>> = {
@@ -29,12 +30,12 @@ const iconMap: Record<string, React.FC<{ size?: number; className?: string }>> =
     'mail': Mail,
 };
 
-const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId }) => {
+const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, globalColors }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
 
     // Unified colors system
-    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);
+    const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
     const [isVisible, setIsVisible] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
@@ -78,9 +79,9 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId }) => {
     // Get effective colors from data.colors (Web Editor) with fallbacks
     const bgColor = data.colors?.background || colors?.primary;
     const textColor = data.colors?.text || colors?.buttonText;
-    const linkColor = data.colors?.linkColor || textColor;
-    const iconColor = data.colors?.iconColor || textColor;
-    const borderColor = data.colors?.borderColor;
+    const linkColor = colors?.link || textColor;
+    const iconColor = colors?.iconColor || textColor;
+    const borderColor = colors?.borderColor;
 
     // Build href based on linkType
     const getMessageHref = (message: AnnouncementMessage): string => {

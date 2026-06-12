@@ -9,7 +9,8 @@
  * - Actions (duplicate, delete, settings)
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     FileText,
     Home,
@@ -39,6 +40,7 @@ import {
 import { SitePage } from '../../types/project';
 import { PageTemplateId } from '../../types/onboarding';
 import ConfirmationModal from '../ui/ConfirmationModal';
+import { resolveProjectName } from '../../utils/resolveProjectName';
 
 interface PageSelectorProps {
     /** All pages in the project */
@@ -113,6 +115,11 @@ const PageSelector: React.FC<PageSelectorProps> = ({
     const [deletePageId, setDeletePageId] = useState<string | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const addMenuRef = useRef<HTMLDivElement>(null);
+    const { i18n } = useTranslation();
+    const resolvePageTitle = useCallback(
+        (title: unknown) => resolveProjectName(title, i18n.language),
+        [i18n.language],
+    );
 
     // Close dropdowns when clicking outside
     // Using 'click' instead of 'mousedown' to avoid race condition with button onClick
@@ -149,7 +156,7 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                 >
                     {activePage && getPageIcon(activePage)}
                     <span className="flex-1 text-left text-sm text-[var(--editor-text-primary)] truncate">
-                        {activePage?.title || 'Seleccionar página'}
+                        {resolvePageTitle(activePage?.title) || 'Seleccionar página'}
                     </span>
                     <ChevronDown
                         size={16}
@@ -170,7 +177,7 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                                     }`}
                             >
                                 {getPageIcon(page)}
-                                <span className="flex-1 text-sm truncate">{page.title}</span>
+                                <span className="flex-1 text-sm truncate">{resolvePageTitle(page.title)}</span>
                                 {page.type === 'dynamic' && (
                                     <span className="text-xs px-1.5 py-0.5 bg-[var(--editor-accent)]/20 text-[var(--editor-accent)] rounded">
                                         Dinámica
@@ -294,7 +301,7 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                             <div className="flex items-center gap-2">
                                 <span className={`text-sm truncate ${activePage?.id === page.id ? 'text-[var(--editor-accent)] font-medium' : 'text-[var(--editor-text-primary)]'
                                     }`}>
-                                    {page.title}
+                                    {resolvePageTitle(page.title)}
                                 </span>
                                 {page.isHomePage && (
                                     <span className="text-xs px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">
@@ -384,7 +391,7 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                     setDeletePageId(null);
                 }}
                 onCancel={() => setDeletePageId(null)}
-                title={`¿Eliminar la página "${pages.find(p => p.id === deletePageId)?.title}"?`}
+                title={`¿Eliminar la página "${resolvePageTitle(pages.find(p => p.id === deletePageId)?.title)}"?`}
                 message="Esta acción no se puede deshacer. La página será eliminada permanentemente."
                 variant="danger"
             />

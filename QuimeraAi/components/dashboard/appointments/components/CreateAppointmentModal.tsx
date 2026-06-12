@@ -689,7 +689,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
                         type="button"
                         onClick={addExternalParticipant}
                         disabled={!newParticipant.name || !newParticipant.email}
-                        className="h-10 px-4 bg-primary text-primary-foreground rounded-lg font-medium text-sm disabled:opacity-50 hover:opacity-90 transition-opacity"
+                        className="quimera-guide-cta h-10 px-4 rounded-lg font-medium text-sm disabled:opacity-50"
                     >
                         <Plus size={16} />
                     </button>
@@ -789,7 +789,7 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
                                     px-3 py-2 rounded-lg text-sm font-medium
                                     transition-all duration-200
                                     ${isActive
-                                        ? 'bg-primary text-primary-foreground'
+                                        ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
                                         : 'bg-secondary/50 text-q-text-muted hover:bg-secondary hover:text-foreground'
                                     }
                                 `}
@@ -1083,7 +1083,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                                             flex items-center gap-2 px-3 py-2 rounded-lg
                                             transition-all duration-200
                                             ${isActive
-                                                ? 'bg-primary text-primary-foreground'
+                                                ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
                                                 : isCompleted
                                                     ? 'bg-primary/10 text-primary cursor-pointer hover:bg-primary/20'
                                                     : 'text-q-text-muted'
@@ -1159,7 +1159,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                         <button
                             onClick={handleSubmit}
                             disabled={isSubmitting}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                            className="quimera-guide-cta flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm disabled:opacity-50"
                         >
                             {isSubmitting ? (
                                 <>
@@ -1176,7 +1176,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                     ) : (
                         <button
                             onClick={handleNext}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
+                            className="quimera-guide-cta flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm"
                         >
                             {t('appointments.modal.next')}
                             <ChevronRight size={18} />

@@ -835,6 +835,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         key={key}
                         data={mergedData.featuredProducts}
                         storeId={project.id}
+                        globalColors={globalColors}
                         onProductClick={handleNavigateToProduct}
                     />
                 );
@@ -845,6 +846,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         key={key}
                         data={mergedData.categoryGrid}
                         storeId={project.id}
+                        globalColors={globalColors}
                         onCategoryClick={handleNavigateToCategory}
                     />
                 );
@@ -855,6 +857,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         key={key}
                         data={mergedData.productHero}
                         storeId={project.id}
+                        globalColors={globalColors}
                         onProductClick={handleNavigateToProduct}
                     />
                 );
@@ -865,6 +868,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         key={key}
                         data={mergedData.saleCountdown}
                         storeId={project.id}
+                        globalColors={globalColors}
                         onProductClick={handleNavigateToProduct}
                     />
                 );
@@ -874,6 +878,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     <TrustBadges
                         key={key}
                         data={mergedData.trustBadges}
+                        storeId={project.id}
+                        globalColors={globalColors}
                     />
                 );
 
@@ -883,6 +889,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         key={key}
                         data={mergedData.recentlyViewed}
                         storeId={project.id}
+                        globalColors={globalColors}
                         onProductClick={handleNavigateToProduct}
                     />
                 );
@@ -892,6 +899,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     <ProductReviews
                         key={key}
                         data={mergedData.productReviews}
+                        storeId={project.id}
+                        globalColors={globalColors}
                     />
                 );
 
@@ -900,6 +909,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     <CollectionBanner
                         key={key}
                         data={mergedData.collectionBanner}
+                        storeId={project.id}
+                        globalColors={globalColors}
                         onCollectionClick={handleNavigateToCategory}
                     />
                 );
@@ -910,6 +921,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         key={key}
                         data={mergedData.productBundle}
                         storeId={project.id}
+                        globalColors={globalColors}
                         onProductClick={handleNavigateToProduct}
                     />
                 );
@@ -919,6 +931,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     <AnnouncementBar
                         key={key}
                         data={mergedData.announcementBar}
+                        storeId={project.id}
+                        globalColors={globalColors}
                     />
                 );
 

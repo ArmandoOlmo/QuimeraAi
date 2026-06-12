@@ -98,7 +98,7 @@ const TabButton: React.FC<TabButtonProps> = ({ id, label, icon: Icon, isActive, 
             flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm
             transition-all duration-200
             ${isActive
-                ? 'bg-primary text-primary-foreground shadow-sm'
+                ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
                 : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
             }
         `}
@@ -280,7 +280,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                             href={appointment.location.meetingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 py-2.5 sm:py-3 bg-q-surface border border-q-border rounded-xl shadow-lg font-semibold text-xs sm:text-sm text-foreground flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-secondary transition-colors"
+                            className="flex-1 py-2.5 sm:py-3 bg-q-surface border border-q-border rounded-xl font-semibold text-xs sm:text-sm text-foreground flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-secondary transition-colors"
                         >
                             <Video size={16} className="sm:w-[18px] sm:h-[18px] text-primary" />
                             <span>{t('appointments.join')}</span>
@@ -291,7 +291,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                     <div className="relative">
                         <button
                             onClick={() => setShowStatusMenu(!showStatusMenu)}
-                            className="h-full px-2.5 sm:px-4 bg-q-surface border border-q-border rounded-xl shadow-lg text-xs sm:text-sm text-foreground flex items-center gap-1.5 sm:gap-2 hover:bg-secondary transition-colors"
+                            className="h-full px-2.5 sm:px-4 bg-q-surface border border-q-border rounded-xl text-xs sm:text-sm text-foreground flex items-center gap-1.5 sm:gap-2 hover:bg-secondary transition-colors"
                         >
                             {isChangingStatus ? (
                                 <Loader2 size={14} className="sm:w-4 sm:h-4 animate-spin" />
@@ -325,7 +325,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                     <div className="relative">
                         <button
                             onClick={() => setShowMoreMenu(!showMoreMenu)}
-                            className="px-3 h-full bg-q-surface border border-q-border rounded-xl shadow-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
+                            className="px-3 h-full bg-q-surface border border-q-border rounded-xl text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
                         >
                             <MoreVertical size={18} />
                         </button>
@@ -667,7 +667,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                         <button
                                             onClick={handleAddNote}
                                             disabled={!newNoteContent.trim() || isAddingNote}
-                                            className="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+                                            className="quimera-guide-cta px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2"
                                         >
                                             {isAddingNote ? (
                                                 <>

@@ -26,10 +26,57 @@ import {
 } from 'lucide-react';
 import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../../ui/EcommerceControls';
 
+type SlideshowControlItem = {
+  imageUrl: string;
+  altText: string;
+  caption?: string;
+  [key: string]: any;
+};
+
+const normalizeSlideshowControlItem = (item: any): SlideshowControlItem => {
+  if (typeof item === 'string') {
+    return { imageUrl: item, altText: 'Slide image', caption: '' };
+  }
+
+  if (!item || typeof item !== 'object') {
+    return { imageUrl: '', altText: 'Slide image', caption: '' };
+  }
+
+  return {
+    ...item,
+    imageUrl: item.imageUrl || item.url || item.src || item.image || item.backgroundImage || '',
+    altText: item.altText || item.alt || item.title || item.caption || 'Slide image',
+    caption: item.caption || '',
+  };
+};
+
+const normalizeSlideshowControlItems = (items: unknown): SlideshowControlItem[] => {
+  if (Array.isArray(items)) {
+    return items.map(normalizeSlideshowControlItem);
+  }
+
+  if (items && typeof items === 'object') {
+    const record = items as Record<string, any>;
+    const hasSingleSlideShape = ['imageUrl', 'url', 'src', 'image', 'backgroundImage', 'altText', 'alt', 'caption', 'title']
+      .some((key) => key in record);
+
+    if (hasSingleSlideShape) {
+      return [normalizeSlideshowControlItem(record)];
+    }
+
+    return Object.values(record)
+      .filter((item) => item && (typeof item === 'object' || typeof item === 'string'))
+      .map(normalizeSlideshowControlItem);
+  }
+
+  return [];
+};
+
 
 export const renderSlideshowControls = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
   if (!data?.slideshow) return null;
+  const slideshowItems = normalizeSlideshowControlItems(data.slideshow.items);
   return (
     <div className="space-y-4">
       <I18nInput label={t('editor.controls.common.title')} value={data.slideshow.title} onChange={(val) => setNestedData('slideshow.title', val)} />
@@ -217,35 +264,44 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       />
 
       <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.slides')}</label>
-      {(data.slideshow.items || []).map((item: any, index: number) => (
+      {slideshowItems.map((item: any, index: number) => (
         <div key={index} className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 group">
           <ImagePicker
             label={`Slide #${index + 1}`}
-            value={item.imageUrl}
-            onChange={(url) => setNestedData(`slideshow.items.${index}.imageUrl`, url)}
+            value={item.imageUrl || ''}
+            onChange={(url) => {
+              const newItems = slideshowItems.map((current, i) => i === index ? { ...current, imageUrl: url } : current);
+              setNestedData('slideshow.items', newItems);
+            }}
             onRemove={() => {
-              const newItems = (data.slideshow.items || []).filter((_: any, i: number) => i !== index);
+              const newItems = slideshowItems.filter((_: any, i: number) => i !== index);
               setNestedData('slideshow.items', newItems);
             }}
           />
           <I18nInput
             placeholder="Alt Text"
-            value={item.altText}
-            onChange={(val) => setNestedData(`slideshow.items.${index}.altText`, val)}
+            value={item.altText || ''}
+            onChange={(val) => {
+              const newItems = slideshowItems.map((current, i) => i === index ? { ...current, altText: val } : current);
+              setNestedData('slideshow.items', newItems);
+            }}
             className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mt-2"
           />
           {(data.slideshow.showCaptions ?? false) && (
             <I18nInput
               placeholder="Caption (optional)"
               value={item.caption || ''}
-              onChange={(val) => setNestedData(`slideshow.items.${index}.caption`, val)}
+              onChange={(val) => {
+                const newItems = slideshowItems.map((current, i) => i === index ? { ...current, caption: val } : current);
+                setNestedData('slideshow.items', newItems);
+              }}
               className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mt-2"
             />
           )}
         </div>
       ))}
       <button type="button"         onClick={() => {
-          const newItems = [...(data.slideshow.items || []), { imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800', altText: 'New slide', caption: '' }];
+          const newItems = [...slideshowItems, { imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800', altText: 'New slide', caption: '' }];
           setNestedData('slideshow.items', newItems);
         }}
         className="w-full py-2 bg-q-accent text-q-bg rounded-md hover:bg-q-accent/90 transition-colors flex items-center justify-center gap-2 font-medium"
@@ -261,6 +317,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 export const renderSlideshowControlsWithTabs = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
   if (!data?.slideshow) return null;
+  const slideshowItems = normalizeSlideshowControlItems(data.slideshow.items);
 
   const contentTab = (
     <div className="space-y-4">
@@ -286,35 +343,44 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Slides */}
       <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.slides')}</label>
-      {(data.slideshow.items || []).map((item: any, index: number) => (
+      {slideshowItems.map((item: any, index: number) => (
         <div key={index} className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 group">
           <ImagePicker
             label={`Slide #${index + 1}`}
-            value={item.imageUrl}
-            onChange={(url) => setNestedData(`slideshow.items.${index}.imageUrl`, url)}
+            value={item.imageUrl || ''}
+            onChange={(url) => {
+              const newItems = slideshowItems.map((current, i) => i === index ? { ...current, imageUrl: url } : current);
+              setNestedData('slideshow.items', newItems);
+            }}
             onRemove={() => {
-              const newItems = (data.slideshow.items || []).filter((_: any, i: number) => i !== index);
+              const newItems = slideshowItems.filter((_: any, i: number) => i !== index);
               setNestedData('slideshow.items', newItems);
             }}
           />
           <I18nInput
             placeholder="Alt Text"
-            value={item.altText}
-            onChange={(val) => setNestedData(`slideshow.items.${index}.altText`, val)}
+            value={item.altText || ''}
+            onChange={(val) => {
+              const newItems = slideshowItems.map((current, i) => i === index ? { ...current, altText: val } : current);
+              setNestedData('slideshow.items', newItems);
+            }}
             className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mt-2"
           />
           {(data.slideshow.showCaptions ?? false) && (
             <I18nInput
               placeholder="Caption (optional)"
               value={item.caption || ''}
-              onChange={(val) => setNestedData(`slideshow.items.${index}.caption`, val)}
+              onChange={(val) => {
+                const newItems = slideshowItems.map((current, i) => i === index ? { ...current, caption: val } : current);
+                setNestedData('slideshow.items', newItems);
+              }}
               className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mt-2"
             />
           )}
         </div>
       ))}
       <button type="button"         onClick={() => {
-          const newItems = [...(data.slideshow.items || []), { imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800', altText: 'New slide', caption: '' }];
+          const newItems = [...slideshowItems, { imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800', altText: 'New slide', caption: '' }];
           setNestedData('slideshow.items', newItems);
         }}
         className="w-full py-2 bg-q-accent text-q-bg rounded-md hover:bg-q-accent/90 transition-colors flex items-center justify-center gap-2 font-medium"

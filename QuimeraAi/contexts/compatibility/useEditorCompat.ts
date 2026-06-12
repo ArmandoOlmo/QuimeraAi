@@ -161,6 +161,7 @@ export const useEditorCompat = () => {
         exportProjectAsHtml: project.exportProjectAsHtml,
         updateProjectThumbnail: project.updateProjectThumbnail,
         updateProjectFavicon: project.updateProjectFavicon,
+        updateProjectSeoConfig: project.updateProjectSeoConfig,
         isEditingTemplate: project.isEditingTemplate,
         exitTemplateEditor: project.exitTemplateEditor,
         createNewTemplate: project.createNewTemplate,

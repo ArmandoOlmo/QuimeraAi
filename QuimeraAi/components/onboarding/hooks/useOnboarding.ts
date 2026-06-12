@@ -13,7 +13,7 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { extractHeroImage } from '../../../contexts/project/ProjectContext';
 import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
-import { analyzeWebsite } from '../../../utils/analyzeWebsiteClient';
+import { analyzeWebsite as analyzeWebsiteRequest } from '../../../utils/analyzeWebsiteClient';
 import { generateComponentColorMappings, generateHeroWaveGradientColors } from '../../ui/GlobalStylesControl';
 import { getDefaultGlobalColors } from '../../../data/colorPalettes';
 import { logApiCall } from '../../../services/apiLoggingService';
@@ -584,9 +584,12 @@ export const useOnboarding = () => {
         setError(null);
 
         try {
-            const data = await analyzeWebsite(url);
+            const data = await analyzeWebsiteRequest(url);
 
             const result = data.result;
+            if (!result) {
+                throw new Error(data.error || 'Analysis returned no extracted website data');
+            }
 
             // Auto-populate onboarding progress with analyzed data
             const updates: Partial<OnboardingProgress> = {
