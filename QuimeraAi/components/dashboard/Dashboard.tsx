@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useUI } from '../../contexts/core/UIContext';
 import { useDomains } from '../../contexts/domains/DomainsContext';
 import { useCMS } from '../../contexts/cms';
 import { useRouter } from '../../hooks/useRouter';
-import { ROUTES } from '../../routes/config';
 import { usePersistedBoolean } from '../../hooks/usePersistedState';
 import { useDashboardSections } from '../../hooks/useDashboardSections';
 import { useDashboardFilters } from '../../hooks/useDashboardFilters';
@@ -26,6 +26,11 @@ import DashboardProjectsSection, { ProjectsViewAllAction } from './DashboardProj
 import DashboardTemplatesSection from './DashboardTemplatesSection';
 import DashboardLeadsSection, { LeadsViewAllAction } from './DashboardLeadsSection';
 import DashboardNewsSection from './DashboardNewsSection';
+import {
+    dashboardContainerVariants,
+    dashboardItemVariants,
+    getDashboardSectionTransition,
+} from './dashboardMotion';
 
 // Icons
 import { LayoutGrid, LayoutTemplate, Users, Newspaper } from 'lucide-react';
@@ -35,7 +40,8 @@ const Dashboard: React.FC = () => {
     const { view, setIsOnboardingOpen } = useUI();
     const { domains } = useDomains();
     const { cmsPosts } = useCMS();
-    const { navigate, goBack } = useRouter();
+    const { goBack } = useRouter();
+    const shouldReduceMotion = useReducedMotion();
 
     // ─── Custom Hooks ────────────────────────────────────────────────────────
     const filters = useDashboardFilters();
@@ -150,16 +156,35 @@ const Dashboard: React.FC = () => {
 
                         {/* ─── Dashboard Home View ─────────────────────────────────── */}
                         {isDashboard && (
-                            <>
+                            <motion.div
+                                className="relative space-y-6 lg:space-y-10"
+                                initial={shouldReduceMotion ? false : 'hidden'}
+                                animate="show"
+                                variants={dashboardContainerVariants}
+                            >
+                                {!shouldReduceMotion && (
+                                    <motion.div
+                                        aria-hidden="true"
+                                        className="pointer-events-none absolute inset-x-0 -top-6 z-0 h-40 rounded-[2rem] bg-gradient-to-r from-transparent via-white/18 to-transparent blur-2xl dark:via-white/10"
+                                        initial={{ opacity: 0.55, x: '-18%', y: -20 }}
+                                        animate={{ opacity: 0, x: '18%', y: 10 }}
+                                        transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}
+                                    />
+                                )}
+
                                 {/* Welcome / Hero Section */}
-                                <DashboardWelcome allUserProjectsCount={filters.allUserProjects.length} />
+                                <motion.div className="relative z-[1]" variants={dashboardItemVariants}>
+                                    <DashboardWelcome allUserProjectsCount={filters.allUserProjects.length} />
+                                </motion.div>
 
                                 {/* First Visit Welcome Banner */}
-                                <FirstVisitWelcomeBanner hasProjects={filters.allUserProjects.length > 0} />
+                                <motion.div className="relative z-[1]" variants={dashboardItemVariants}>
+                                    <FirstVisitWelcomeBanner hasProjects={filters.allUserProjects.length > 0} />
+                                </motion.div>
 
                                 {/* Help Guide / Instructions */}
                                 {showInstructions && (
-                                    <div className="w-full animate-fade-in-up">
+                                    <motion.div className="relative z-[1] w-full" variants={dashboardItemVariants}>
                                         <DashboardHelpGuide
                                             onClose={dismissInstructions}
                                             hasProjects={filters.allUserProjects.length > 0}
@@ -170,31 +195,37 @@ const Dashboard: React.FC = () => {
                                             hasCMSContent={cmsPosts.length > 0}
                                             onCreateProject={() => setIsOnboardingOpen(true)}
                                         />
-                                    </div>
+                                    </motion.div>
                                 )}
 
                                 {/* Draggable Dashboard Sections */}
-                                <div className="quimera-dashboard-section-deck space-y-6 lg:space-y-8">
-                                    {sectionOrder.map((sectionId) => {
+                                <motion.div className="quimera-dashboard-section-deck relative z-[1] space-y-6 lg:space-y-8" variants={dashboardItemVariants}>
+                                    {sectionOrder.map((sectionId, index) => {
                                         const config = sectionConfig[sectionId];
                                         return (
-                                            <DashboardDraggableSection
+                                            <motion.div
                                                 key={sectionId}
-                                                sectionId={sectionId}
-                                                title={config.title}
-                                                icon={config.icon}
-                                                isCollapsed={config.isCollapsed}
-                                                onToggleCollapse={config.onToggle}
-                                                wrapperClasses={getWrapperClasses(sectionId)}
-                                                dragHandlers={dragHandlers}
-                                                rightAction={config.rightAction}
+                                                initial={shouldReduceMotion ? false : { opacity: 0, y: 28, scale: 0.97, filter: 'blur(8px)' }}
+                                                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                                                transition={getDashboardSectionTransition(index)}
                                             >
-                                                {config.content}
-                                            </DashboardDraggableSection>
+                                                <DashboardDraggableSection
+                                                    sectionId={sectionId}
+                                                    title={config.title}
+                                                    icon={config.icon}
+                                                    isCollapsed={config.isCollapsed}
+                                                    onToggleCollapse={config.onToggle}
+                                                    wrapperClasses={getWrapperClasses(sectionId)}
+                                                    dragHandlers={dragHandlers}
+                                                    rightAction={config.rightAction}
+                                                >
+                                                    {config.content}
+                                                </DashboardDraggableSection>
+                                            </motion.div>
                                         );
                                     })}
-                                </div>
-                            </>
+                                </motion.div>
+                            </motion.div>
                         )}
 
                         {/* ─── Websites View ───────────────────────────────────────── */}

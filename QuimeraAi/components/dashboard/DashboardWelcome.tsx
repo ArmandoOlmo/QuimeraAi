@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useUI } from '../../contexts/core/UIContext';
 import { useSafeTenant } from '../../contexts/tenant/TenantContext';
@@ -12,6 +13,7 @@ import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import DashboardStatusCards from './DashboardStatusCards';
+import { dashboardContainerVariants, dashboardItemVariants } from './dashboardMotion';
 import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Plus, Sparkles } from 'lucide-react';
 
 interface DashboardWelcomeProps {
@@ -34,6 +36,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
     const { usage } = useCreditsUsage();
     const { logoUrl: appLogoUrl } = useAppLogo();
     const { navigate } = useRouter();
+    const shouldReduceMotion = useReducedMotion();
 
     const [upgradeMinimized, setUpgradeMinimized] = usePersistedBoolean('quimera_upgrade_minimized', false);
     const [aiPrompt, setAiPrompt] = useState('');
@@ -96,10 +99,18 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
     };
 
     return (
-        <section className="w-full">
+        <motion.section
+            className="w-full"
+            initial={shouldReduceMotion ? false : 'hidden'}
+            animate="show"
+            variants={dashboardContainerVariants}
+        >
             <div className="flex flex-col justify-center py-3 lg:py-6">
                 {/* Greeting Header with CTA */}
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 lg:gap-6 mb-3 lg:mb-4 overflow-visible">
+                <motion.div
+                    className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 lg:gap-6 mb-3 lg:mb-4 overflow-visible"
+                    variants={dashboardItemVariants}
+                >
                     <h1 className="text-2xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-q-text flex items-center flex-wrap">
                         {/* Logo - conditional: tenant logo > App logo */}
                         {tenantContext?.currentTenant?.branding?.logoUrl ? (
@@ -125,7 +136,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                         )}
                         <span>
                             {getGreeting()},{' '}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+                            <span className="quimera-user-name-highlight text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
                                 {userDocument?.name?.split(' ')[0] || 'Creator'}
                             </span>
                             .
@@ -202,19 +213,22 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                             ))}
                     </div>
                     )}
-                </div>
+                </motion.div>
 
-                <p className="text-sm sm:text-lg text-q-text-muted max-w-3xl mb-4 lg:mb-8 leading-relaxed">
+                <motion.p
+                    className="text-sm sm:text-lg text-q-text-muted max-w-3xl mb-4 lg:mb-8 leading-relaxed"
+                    variants={dashboardItemVariants}
+                >
                     {t('dashboard.heroSubtitlePart1')}{' '}
                     <span className="text-q-text font-semibold">
                         {allUserProjectsCount} {t('dashboard.heroSubtitlePart2')}
                     </span>{' '}
                     {t('dashboard.heroSubtitlePart3')}
-                </p>
+                </motion.p>
 
                 <form
                     onSubmit={handlePromptSubmit}
-                    className="quimera-ai-launcher mx-auto mt-2 mb-6 w-full max-w-3xl lg:mt-4 lg:mb-10"
+                    className="quimera-ai-launcher quimera-ai-launcher-enter mx-auto mt-2 mb-6 w-full max-w-3xl lg:mt-4 lg:mb-10"
                 >
                     <label className="sr-only" htmlFor="dashboard-ai-prompt">
                         {t('dashboard.createWithAI')}
@@ -276,9 +290,11 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                 </form>
 
                 {/* Status Cards */}
-                <DashboardStatusCards />
+                <motion.div variants={dashboardItemVariants}>
+                    <DashboardStatusCards />
+                </motion.div>
             </div>
-        </section>
+        </motion.section>
     );
 };
 

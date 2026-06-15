@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Globe, ShoppingBag, PenTool, Users, ImageIcon, Link2, Calendar, ArrowRight, ChevronDown } from 'lucide-react';
 import { useProject } from '../../contexts/project';
 import { useDomains } from '../../contexts/domains/DomainsContext';
@@ -14,6 +15,7 @@ import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { PlatformServiceId } from '../../types/serviceAvailability';
 import { PlanFeatures } from '../../types/subscription';
+import { dashboardCardVariants, dashboardContainerVariants } from './dashboardMotion';
 
 // ─── Card definition ─────────────────────────────────────────────────────────
 interface StatusCardDef {
@@ -110,6 +112,7 @@ const DashboardStatusCards: React.FC = () => {
     const { canAccessService, isLoading: isLoadingService } = useServiceAvailability();
     const { hasAccess, isLoading: isLoadingPlan } = usePlanAccess();
     const { navigate } = useRouter();
+    const shouldReduceMotion = useReducedMotion();
 
     // ── Metric helpers ───────────────────────────────────────────────────────
     const userProjects = projects.filter(p => p.status !== 'Template');
@@ -191,69 +194,74 @@ const DashboardStatusCards: React.FC = () => {
                     opacity: isCollapsed ? 0 : 1,
                 }}
             >
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 py-1 pb-4">
-                    {visibleCards.map((card, idx) => {
+                <motion.div
+                    className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 py-1 pb-4"
+                    initial={shouldReduceMotion ? false : 'hidden'}
+                    animate={isCollapsed ? 'hidden' : 'show'}
+                    variants={dashboardContainerVariants}
+                >
+                    {visibleCards.map((card) => {
                         const Icon = card.icon;
                         const metric = getMetric(card.id);
 
                         return (
-                            <button
-                                key={card.id}
-                                onClick={() => navigate(card.route)}
-                                className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-q-border/60
-                                   bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl
-                                   p-3 sm:p-5 text-left min-h-[100px] sm:min-h-[140px]
-                                   hover:scale-[1.02] hover:border-q-border transition-all duration-300 ease-out
-                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-                                style={{ animationDelay: `${idx * 60}ms` }}
-                                aria-label={t(card.titleKey)}
-                            >
-                                {/* ── Gradient blob decoration ─────────────────────────────── */}
-                                <div
-                                    className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl
-                                        group-hover:scale-110 transition-all duration-500"
-                                    aria-hidden="true"
-                                />
+                            <motion.div key={card.id} className="h-full" variants={dashboardCardVariants}>
+                                <button
+                                    onClick={() => navigate(card.route)}
+                                    className="group relative h-full w-full overflow-hidden rounded-xl sm:rounded-2xl border border-q-border/60
+                                       bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl
+                                       p-3 sm:p-5 text-left min-h-[100px] sm:min-h-[140px]
+                                       hover:scale-[1.02] hover:border-q-border transition-all duration-300 ease-out
+                                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                                    aria-label={t(card.titleKey)}
+                                >
+                                    {/* ── Gradient blob decoration ─────────────────────────────── */}
+                                    <div
+                                        className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl
+                                            group-hover:scale-110 transition-all duration-500"
+                                        aria-hidden="true"
+                                    />
 
 
-                                {/* ── Big number + label (right side, bottom-aligned) ──────── */}
-                                <div className="absolute right-2 sm:right-4 bottom-1 sm:bottom-3 flex items-end gap-1 sm:gap-1.5 select-none pointer-events-none">
-                                    <span className="text-[9px] sm:text-xs font-semibold text-q-text-muted/80 dark:text-q-text-muted/50 mb-0.5 sm:mb-1 hidden sm:inline">
-                                        {metric.label}
-                                    </span>
-                                    <span
-                                        className="quimera-status-card-watermark leading-[0.85]"
-                                        style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(3rem, 8vw, 9rem)' }}
-                                    >
-                                        {metric.value}
-                                    </span>
-                                </div>
-
-                                {/* ── Left content ─────────────────────────────────────────── */}
-                                <div className="relative z-10 flex flex-col h-full">
-                                    {/* Header */}
-                                    <div className="mb-1 sm:mb-3 min-w-0">
-                                        <div className="mb-1 md:mb-2">
-                                            <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
-                                        </div>
-                                        <span className="text-xs sm:text-sm font-bold text-foreground truncate block">{t(card.titleKey, FB[card.id]?.title ?? card.id)}</span>
-                                        <span className="text-[9px] sm:text-[11px] text-q-text-muted truncate block">{t(card.subtitleKey, FB[card.id]?.desc ?? '')}</span>
-                                    </div>
-
-
-
-                                    {/* Action link */}
-                                    <div className="flex items-center gap-1 mt-auto pt-1 sm:pt-3">
-                                        <span className="quimera-status-card-link text-[10px] sm:text-xs font-semibold group-hover:underline">
-                                            {t('dashboard.statusCards.viewDetails', 'Ver detalles')}
+                                    {/* ── Big number + label (right side, bottom-aligned) ──────── */}
+                                    <div className="absolute right-2 sm:right-4 bottom-1 sm:bottom-3 flex items-end gap-1 sm:gap-1.5 select-none pointer-events-none">
+                                        <span className="text-[9px] sm:text-xs font-semibold text-q-text-muted/80 dark:text-q-text-muted/50 mb-0.5 sm:mb-1 hidden sm:inline">
+                                            {metric.label}
                                         </span>
-                                        <ArrowRight className="quimera-status-card-link w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:translate-x-1 transition-transform" />
+                                        <span
+                                            className="quimera-status-card-watermark leading-[0.85]"
+                                            style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(3rem, 8vw, 9rem)' }}
+                                        >
+                                            {metric.value}
+                                        </span>
                                     </div>
-                                </div>
-                            </button>
+
+                                    {/* ── Left content ─────────────────────────────────────────── */}
+                                    <div className="relative z-10 flex flex-col h-full">
+                                        {/* Header */}
+                                        <div className="mb-1 sm:mb-3 min-w-0">
+                                            <div className="mb-1 md:mb-2">
+                                                <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                            </div>
+                                            <span className="text-xs sm:text-sm font-bold text-foreground truncate block">{t(card.titleKey, FB[card.id]?.title ?? card.id)}</span>
+                                            <span className="text-[9px] sm:text-[11px] text-q-text-muted truncate block">{t(card.subtitleKey, FB[card.id]?.desc ?? '')}</span>
+                                        </div>
+
+
+
+                                        {/* Action link */}
+                                        <div className="flex items-center gap-1 mt-auto pt-1 sm:pt-3">
+                                            <span className="quimera-status-card-link text-[10px] sm:text-xs font-semibold group-hover:underline">
+                                                {t('dashboard.statusCards.viewDetails', 'Ver detalles')}
+                                            </span>
+                                            <ArrowRight className="quimera-status-card-link w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:translate-x-1 transition-transform" />
+                                        </div>
+                                    </div>
+                                </button>
+                            </motion.div>
                         );
                     })}
-                </div>
+                </motion.div>
             </div>
         </div>
     );

@@ -351,13 +351,63 @@ html.black .quimera-dashboard-home-bg {
     linear-gradient(180deg, #000000 0%, #0a0a0a 35%, #211008 62%, #fbb92b 100%);
 }
 
+.quimera-user-name-highlight {
+  display: inline-block;
+  background-image: linear-gradient(90deg, #fbb92b 0%, #ff7a1a 26%, #fff2c2 48%, #ff9d00 62%, #fbb92b 100%);
+  background-size: 240% 100%;
+  text-shadow: 0 0 16px rgba(251, 185, 43, 0.18);
+  animation: quimeraUserNameTextSheen 4.2s ease-in-out infinite;
+}
+
+@keyframes quimeraUserNameTextSheen {
+  0%,
+  18% {
+    background-position: 0% 50%;
+  }
+
+  55% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .quimera-ai-launcher {
+  position: relative;
+  overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--q-border) 70%, transparent);
   background: color-mix(in srgb, var(--q-surface) 88%, transparent);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(22px);
   border-radius: 1.5rem;
   padding: 0.875rem;
+}
+
+.quimera-ai-launcher-enter {
+  animation: quimeraAiLauncherEnter 1.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: 50% 0%;
+}
+
+.quimera-ai-launcher-enter::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.48) 42%, rgba(251, 185, 43, 0.5) 50%, transparent 62%),
+    radial-gradient(circle at 50% 0%, rgba(251, 185, 43, 0.35), transparent 42%);
+  opacity: 0;
+  transform: translateX(-80%);
+  animation: quimeraAiLauncherSheen 1.15s ease-out 0.12s both;
+}
+
+.quimera-ai-launcher-enter > * {
+  position: relative;
+  z-index: 1;
 }
 
 html.dark .quimera-ai-launcher {
@@ -371,6 +421,51 @@ html.dark .quimera-ai-launcher {
 html.black .quimera-ai-launcher {
   background: rgba(18, 18, 18, 0.9);
   border-color: rgba(255, 255, 255, 0.13);
+}
+
+@keyframes quimeraAiLauncherEnter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -80px, 0) scale(0.72);
+    filter: blur(14px);
+    box-shadow: 0 0 0 rgba(251, 185, 43, 0), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  58% {
+    opacity: 1;
+    transform: translate3d(0, 8px, 0) scale(1.035);
+    filter: blur(0);
+    box-shadow:
+      0 32px 90px rgba(0, 0, 0, 0.28),
+      0 0 42px rgba(251, 185, 43, 0.26),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes quimeraAiLauncherSheen {
+  0% {
+    opacity: 0;
+    transform: translateX(-85%);
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  72% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(85%);
+  }
 }
 
 .quimera-dashboard-section-deck {
@@ -2045,6 +2140,33 @@ span.rounded-full.w-4 {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* User-requested dashboard input entrance: keep a short, explicit cue even when global motion is reduced. */
+@media (prefers-reduced-motion: reduce) {
+  .quimera-ai-launcher-enter {
+    animation: quimeraAiLauncherReducedEnter 0.42s ease-out both !important;
+  }
+
+  .quimera-ai-launcher-enter::before {
+    animation: none !important;
+  }
+
+  .quimera-user-name-highlight {
+    animation: quimeraUserNameTextSheen 6s ease-in-out infinite !important;
+  }
+}
+
+@keyframes quimeraAiLauncherReducedEnter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -28px, 0) scale(0.92);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
