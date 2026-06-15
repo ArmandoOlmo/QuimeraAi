@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { detectSubdomain, isDevelopmentHostname } from '../utils/subdomainUtils';
+import { getBootBackgroundColor } from '../utils/bootBackground';
 
 // Domains that are NOT custom domains (our own app domains)
 // Custom domains like quimeraapp.com ARE treated as custom domains
@@ -92,10 +93,16 @@ export function useCustomDomain(): CustomDomainState {
                 projectData: null,
             };
         }
-        // No SSR config — start in loading state for client-side resolution
+
+        const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+        const subInfo = detectSubdomain(hostname);
+        const needsDomainResolution =
+            subInfo.type === 'user' ||
+            Boolean(hostname && isCustomDomainHostname(hostname));
+
         return {
             isCustomDomain: false,
-            isLoading: true,
+            isLoading: needsDomainResolution,
             projectId: null,
             userId: null,
             domain: null,
@@ -360,11 +367,11 @@ export function DomainNotConfiguredPage({ domain }: { domain: string }) {
  * NO Quimera branding, NO blue backgrounds, NO logos.
  */
 export function DomainLoadingPage() {
-    const serverConfig = typeof window !== 'undefined' ? window.__DOMAIN_CONFIG__ : null;
-    const backgroundColor = serverConfig?.backgroundColor || '#0f172a';
+    const backgroundColor = getBootBackgroundColor();
 
     return (
         <div
+            aria-hidden="true"
             style={{
                 minHeight: '100vh',
                 background: backgroundColor,

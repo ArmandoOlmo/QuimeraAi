@@ -19,6 +19,7 @@ import { DynamicData, PublicProduct, PublicCategory } from '../utils/metaGenerat
 import AdPixelsInjector from './AdPixelsInjector';
 import { getPreviewPrefetch } from '../utils/previewPrefetch';
 import { getSafeImageUrl, isLegacyStorageUrl } from '../utils/imageUrlHelper';
+import { getBootBackgroundColor } from '../utils/bootBackground';
 import SectionBackground from './ui/SectionBackground';
 import { usePublicRealEstateListings } from '../hooks/usePublicRealEstateListings';
 import { Property } from '../types/realEstate';
@@ -1578,10 +1579,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
   // Loading state — invisible placeholder, SSR skeleton already provides the visual loading
   if (loading) {
-    const domainConfig = typeof window !== 'undefined' ? (window as any).__DOMAIN_CONFIG__ : null;
-    const bgColor = domainConfig?.backgroundColor || '#0f172a';
+    const bgColor = getBootBackgroundColor();
     return (
-      <div style={{ minHeight: '100vh', background: bgColor }} />
+      <div aria-hidden="true" style={{ minHeight: '100vh', background: bgColor }} />
     );
   }
 

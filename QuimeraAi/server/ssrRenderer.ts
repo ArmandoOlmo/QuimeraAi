@@ -218,11 +218,19 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
 
     const initialDataScript = `<script>window.__INITIAL_DATA__ = { project: ${JSON.stringify(sanitizedData).replace(/</g, '\\u003c')}, projectId: "${projectId}" };${domainConfig ? `\nwindow.__DOMAIN_CONFIG__ = ${domainConfig};` : ''}</script>`;
 
+    const initialBackgroundColor =
+        projectData.theme?.pageBackground ||
+        projectData.theme?.globalColors?.background ||
+        projectData.data?.hero?.colors?.background ||
+        '#000000';
+
+    const initialBackgroundStyle = `<style id="quimera-ssr-initial-bg">html,body,#root{background:${escapeHtml(initialBackgroundColor)} !important;}html{--initial-page-bg:${escapeHtml(initialBackgroundColor)};}</style>`;
+
     const finalHtml = template
         // Inject SSR HTML into the root element
         .replace('<!--ssr-outlet-->', appHtml)
         // Inject SEO tags in head
-        .replace('</head>', `${seoTags}\n${headTags}\n</head>`)
+        .replace('</head>', `${seoTags}\n${headTags}\n${initialBackgroundStyle}\n</head>`)
         // Inject initial state for instant client-side hydration
         .replace('</body>', `${initialDataScript}\n</body>`);
     
@@ -741,7 +749,6 @@ function escapeHtml(str: string): string {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
 }
-
 
 
 

@@ -10,6 +10,8 @@
         var savedTheme = localStorage.getItem('themeMode');
         var theme = savedTheme && ['light', 'dark', 'black'].includes(savedTheme) ? savedTheme : 'black';
         document.documentElement.classList.add(theme);
+        var initialBg = theme === 'light' ? '#F2F0EB' : theme === 'dark' ? '#1E1535' : '#000000';
+        document.documentElement.style.setProperty('--initial-page-bg', initialBg);
 
         // Onboarding mode detection (?onboarding=ai or ?onboarding=classic)
         var params = new URLSearchParams(window.location.search);
@@ -34,6 +36,7 @@
       } catch (e) {
         // If localStorage fails, default to dark
         document.documentElement.classList.add('dark');
+        document.documentElement.style.setProperty('--initial-page-bg', '#1E1535');
       }
     })();
   </script>
@@ -70,9 +73,13 @@
   <style>
     /* Minimal defaults - prevents some flash of white */
     html.dark {
+      background-color: #1E1535;
+      color: #F7F7F7;
     }
 
     html.light {
+      background-color: #F2F0EB;
+      color: #1A1816;
     }
 
     html.black {

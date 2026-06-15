@@ -229,7 +229,7 @@ function render404(project: ProjectData): string {
  */
 function renderError(): string {
     return `
-        <div style="min-height: 100vh; background: #0f172a;">
+        <div style="min-height: 100vh; background: inherit;">
             <!-- SSR render skipped, client-side React will handle rendering -->
         </div>
     `;
