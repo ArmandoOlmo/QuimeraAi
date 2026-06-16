@@ -10,6 +10,7 @@ import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
 import { useSafeProject } from '../project';
 import { useSafeTenant } from '../tenant';
+import { buildLeadInsertRow, buildLeadUpdateRow, mapLeadRowToLead } from '../../utils/leadData';
 
 interface CRMContextType {
     // Leads
@@ -87,24 +88,7 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
                 if (error) throw error;
 
-                const leadsData = (data || []).map(l => ({
-                    id: l.id,
-                    projectId: l.project_id,
-                    name: l.name,
-                    email: l.email,
-                    phone: l.phone,
-                    company: l.company,
-                    source: l.source,
-                    status: l.status,
-                    value: l.value,
-                    notes: l.notes,
-                    tags: l.tags || [],
-                    createdAt: l.created_at,
-                    updatedAt: l.updated_at,
-                    conversationTranscript: l.conversation_transcript,
-                    aiSummary: l.ai_summary,
-                    metadata: l.metadata
-                })) as Lead[];
+                const leadsData = (data || []).map(mapLeadRowToLead);
                 setLeads(leadsData);
             } catch (error) {
                 console.error("[CRMContext] Error fetching leads:", error);
@@ -304,24 +288,7 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
 
         try {
-            const newLead = {
-                tenant_id: currentTenantId,
-                project_id: activeProjectId,
-                name: leadData.name,
-                email: leadData.email,
-                phone: leadData.phone,
-                company: leadData.company,
-                source: leadData.source,
-                status: leadData.status,
-                value: leadData.value,
-                notes: leadData.notes,
-                tags: leadData.tags,
-                conversation_transcript: leadData.conversationTranscript,
-                ai_summary: leadData.aiSummary,
-                metadata: leadData.metadata,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            };
+            const newLead = buildLeadInsertRow(leadData, currentTenantId, activeProjectId);
 
             const { data, error } = await supabase
                 .from('leads')
@@ -350,31 +317,7 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
             for (let i = 0; i < leadsData.length; i += BATCH_SIZE) {
                 const batch = leadsData.slice(i, i + BATCH_SIZE);
-                const records = batch.map(leadData => {
-                    const sanitized: any = {};
-                    Object.entries(leadData).forEach(([key, val]) => {
-                        if (val !== undefined) sanitized[key] = val;
-                    });
-                    
-                    return {
-                        tenant_id: currentTenantId,
-                        project_id: activeProjectId,
-                        name: sanitized.name,
-                        email: sanitized.email,
-                        phone: sanitized.phone,
-                        company: sanitized.company,
-                        source: sanitized.source,
-                        status: sanitized.status,
-                        value: sanitized.value,
-                        notes: sanitized.notes,
-                        tags: sanitized.tags,
-                        conversation_transcript: sanitized.conversationTranscript,
-                        ai_summary: sanitized.aiSummary,
-                        metadata: sanitized.metadata,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    };
-                });
+                const records = batch.map(leadData => buildLeadInsertRow(leadData, currentTenantId, activeProjectId));
 
                 const { data, error } = await supabase
                     .from('leads')
@@ -415,19 +358,17 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!user || !activeProjectId) return;
 
         try {
-            const updateData: any = { updated_at: new Date().toISOString() };
-            if (data.name !== undefined) updateData.name = data.name;
-            if (data.email !== undefined) updateData.email = data.email;
-            if (data.phone !== undefined) updateData.phone = data.phone;
-            if (data.company !== undefined) updateData.company = data.company;
-            if (data.source !== undefined) updateData.source = data.source;
-            if (data.status !== undefined) updateData.status = data.status;
-            if (data.value !== undefined) updateData.value = data.value;
-            if (data.notes !== undefined) updateData.notes = data.notes;
-            if (data.tags !== undefined) updateData.tags = data.tags;
-            if (data.conversationTranscript !== undefined) updateData.conversation_transcript = data.conversationTranscript;
-            if (data.aiSummary !== undefined) updateData.ai_summary = data.aiSummary;
-            if (data.metadata !== undefined) updateData.metadata = data.metadata;
+            const { data: currentLead } = await supabase
+                .from('leads')
+                .select('custom_data')
+                .eq('id', leadId)
+                .maybeSingle();
+            const existingCustomData = currentLead?.custom_data
+                && typeof currentLead.custom_data === 'object'
+                && !Array.isArray(currentLead.custom_data)
+                ? currentLead.custom_data as Record<string, unknown>
+                : {};
+            const updateData = buildLeadUpdateRow(data, existingCustomData);
 
             const { error } = await supabase
                 .from('leads')

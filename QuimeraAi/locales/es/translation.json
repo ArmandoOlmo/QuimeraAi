@@ -6055,6 +6055,231 @@
     "reset": "Reiniciar Conversación",
     "voice": "Voz"
   },
+  "realty": {
+    "title": "Quimera Realty Suite",
+    "selectProject": "Selecciona un proyecto para gestionar la suite inmobiliaria.",
+    "selectProperty": "Seleccionar propiedad",
+    "tabs": {
+      "overview": "Resumen",
+      "properties": "Propiedades",
+      "leads": "Leads",
+      "ai": "AI",
+      "settings": "Configuración"
+    },
+    "metrics": {
+      "properties": "Propiedades",
+      "active": "Activas",
+      "leads": "Leads nuevos",
+      "featured": "Destacadas"
+    },
+    "access": {
+      "enabled": "Activo",
+      "disabled": "Sin acceso"
+    },
+    "empty": {
+      "noProject": "No hay proyecto activo",
+      "noProjectDesc": "Selecciona o crea un website antes de activar Realty.",
+      "noAccess": "Realty no está disponible",
+      "noAccessDesc": "El módulo está desactivado por plan, servicio, tenant, proyecto o permisos.",
+      "noProperties": "Sin propiedades",
+      "noPropertiesDesc": "Crea tu primera propiedad para publicarla en el directorio.",
+      "noLeads": "Sin leads",
+      "noLeadsDesc": "Los leads enviados desde los listings aparecerán aquí."
+    },
+    "overview": {
+      "recentProperties": "Propiedades recientes",
+      "recentLeads": "Leads recientes"
+    },
+    "properties": {
+      "create": "Nueva propiedad",
+      "edit": "Editar propiedad"
+    },
+    "actions": {
+      "publish": "Publicar",
+      "unpublish": "Despublicar",
+      "useDemo": "Crear post",
+      "addImage": "Añadir imagen"
+    },
+    "form": {
+      "title": "Título",
+      "price": "Precio",
+      "address": "Dirección",
+      "city": "Ciudad",
+      "type": "Tipo",
+      "status": "Estado",
+      "bedrooms": "Habitaciones",
+      "bathrooms": "Baños",
+      "area": "Área",
+      "featured": "Propiedad destacada",
+      "description": "Descripción",
+      "amenities": "Amenidades, una por línea",
+      "images": "Imágenes de la propiedad",
+      "imageSlot": "Imagen {{index}}",
+      "save": "Guardar propiedad"
+    },
+    "status": {
+      "draft": "Borrador",
+      "active": "Activa",
+      "pending": "Pendiente",
+      "sold": "Vendida",
+      "archived": "Archivada"
+    },
+    "propertyTypes": {
+      "house": "Casa",
+      "condo": "Condominio",
+      "apartment": "Apartamento",
+      "townhouse": "Townhouse",
+      "land": "Terreno",
+      "commercial": "Comercial"
+    },
+    "leadStatus": {
+      "new": "Nuevo",
+      "contacted": "Contactado",
+      "qualified": "Visita programada",
+      "negotiation": "Oferta enviada",
+      "won": "Cerrado",
+      "showing_scheduled": "Visita programada",
+      "offer_made": "Oferta enviada",
+      "closed": "Cerrado",
+      "lost": "Perdido"
+    },
+    "leads": {
+      "name": "Nombre",
+      "email": "Email",
+      "phone": "Teléfono",
+      "property": "Propiedad"
+    },
+    "ai": {
+      "title": "Asistente AI de Realty",
+      "defaultPrompt": "Genera copy premium para esta propiedad.",
+      "prompt": "Instrucción",
+      "generate": "Generar copy",
+      "output": "Resultado",
+      "empty": "El resultado de AI aparecerá aquí.",
+      "generatedListing": "{{title}} en {{city}}\n\n{{price}} · {{beds}} habitaciones · {{baths}} baños · {{area}} ft²\n\n{{description}}\n\nEnfoque solicitado: {{prompt}}\n\nPróximo paso: agenda una visita o solicita más información desde el formulario del listing."
+    },
+    "settings": {
+      "title": "Activación del módulo",
+      "moduleEnabled": "Realty habilitado para este proyecto",
+      "aiEnabled": "AI habilitada",
+      "publicDirectoryEnabled": "Directorio público habilitado",
+      "publicPath": "Ruta pública"
+    },
+    "website": {
+      "eyebrow": "Quimera Realty",
+      "defaultTitle": "Propiedades destacadas",
+      "defaultSubtitle": "Explora listings activos conectados directamente con Quimera Realty Suite.",
+      "featured": "Destacada",
+      "demo": "Demo",
+      "viewAll": "Ver todos los listings",
+      "viewDetails": "Ver detalles",
+      "empty": "Todavía no hay propiedades publicadas."
+    },
+    "directory": {
+      "title": "Directorio de propiedades",
+      "searchPlaceholder": "Buscar por ciudad, dirección o nombre",
+      "sortFeatured": "Destacadas primero",
+      "sortNewest": "Más recientes",
+      "sortPriceAsc": "Precio menor a mayor",
+      "sortPriceDesc": "Precio mayor a menor",
+      "gridView": "Vista de tarjetas",
+      "listView": "Vista de lista",
+      "allTypes": "Todos los tipos",
+      "minPrice": "Precio mínimo",
+      "maxPrice": "Precio máximo",
+      "beds": "Habitaciones",
+      "reset": "Reiniciar",
+      "resultCount": "{{count}} propiedades encontradas",
+      "empty": "No hay propiedades que coincidan con los filtros."
+    },
+    "detail": {
+      "notFound": "Propiedad no encontrada",
+      "backToListings": "Volver a listados",
+      "description": "Descripción",
+      "contactTitle": "Solicitar información",
+      "contactSubtitle": "Envía tus datos y el equipo te dará seguimiento.",
+      "messagePlaceholder": "Me interesa esta propiedad...",
+      "sendLead": "Enviar solicitud",
+      "sending": "Enviando...",
+      "sent": "Solicitud enviada correctamente.",
+      "sendError": "No se pudo enviar la solicitud.",
+      "related": "Propiedades relacionadas",
+      "defaultLeadMessage": "Me interesa recibir información sobre {{title}}."
+    },
+    "units": {
+      "beds": "Habitaciones",
+      "baths": "Baños",
+      "area": "ft²"
+    },
+    "errors": {
+      "saveProperty": "No se pudo guardar la propiedad."
+    },
+    "demo": {
+      "ocean": {
+        "title": "Ocean Residence Condado",
+        "description": "Residencia luminosa con vistas al océano, terraza privada y acceso a amenidades premium.",
+        "address": "1055 Ashford Ave",
+        "city": "San Juan"
+      },
+      "family": {
+        "title": "Garden Home Guaynabo",
+        "description": "Casa familiar con patio amplio, cocina renovada y espacios flexibles para trabajo remoto.",
+        "address": "Calle Flamboyán 18",
+        "city": "Guaynabo"
+      },
+      "penthouse": {
+        "title": "Penthouse Miramar Skyline",
+        "description": "Penthouse contemporáneo con terraza, vistas urbanas y acabados modernos.",
+        "address": "Miramar Plaza",
+        "city": "San Juan"
+      },
+      "retail": {
+        "title": "Retail Loft Santurce",
+        "description": "Espacio comercial flexible con fachada a la calle, techos altos y planta abierta para showroom, oficina o estudio.",
+        "address": "Ponce de León 1608",
+        "city": "San Juan"
+      },
+      "leads": {
+        "maria": {
+          "name": "María Rivera",
+          "message": "Quiere visitar {{property}} esta semana y confirmó financiamiento preaprobado."
+        },
+        "carlos": {
+          "name": "Carlos Méndez",
+          "message": "Solicitó una segunda visita para revisar vista, estacionamientos y costos de mantenimiento."
+        },
+        "sofia": {
+          "name": "Sofía Torres",
+          "message": "Busca una casa lista para mudanza con patio y energía solar."
+        },
+        "andres": {
+          "name": "Andrés Cruz",
+          "message": "Pidió detalles de HOA, terraza y disponibilidad para visita virtual."
+        },
+        "lucia": {
+          "name": "Lucía Santos",
+          "message": "Está evaluando una oferta inicial y pidió comparables recientes de Miramar."
+        },
+        "valeria": {
+          "name": "Valeria Peña",
+          "message": "Quiere convertir {{property}} en showroom y estudio creativo."
+        }
+      },
+      "amenities": {
+        "oceanView": "Vista al océano",
+        "pool": "Piscina",
+        "security": "Seguridad",
+        "backyard": "Patio",
+        "solar": "Placas solares",
+        "smartHome": "Smart home",
+        "terrace": "Terraza",
+        "concierge": "Concierge",
+        "streetAccess": "Acceso a la calle",
+        "parking": "Estacionamiento",
+        "highCeilings": "Techos altos"
+      }
+    }
+  },
   "realEstate": {
     "title": "Real Estate OS",
     "selectProject": "Selecciona o crea un proyecto web antes de gestionar propiedades y leads inmobiliarios.",

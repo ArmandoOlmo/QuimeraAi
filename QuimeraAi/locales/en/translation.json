@@ -6055,6 +6055,231 @@
     "reset": "Reset Conversation",
     "voice": "Voice"
   },
+  "realty": {
+    "title": "Quimera Realty Suite",
+    "selectProject": "Select a project to manage the realty suite.",
+    "selectProperty": "Select property",
+    "tabs": {
+      "overview": "Overview",
+      "properties": "Properties",
+      "leads": "Leads",
+      "ai": "AI",
+      "settings": "Settings"
+    },
+    "metrics": {
+      "properties": "Properties",
+      "active": "Active",
+      "leads": "New leads",
+      "featured": "Featured"
+    },
+    "access": {
+      "enabled": "Enabled",
+      "disabled": "No access"
+    },
+    "empty": {
+      "noProject": "No active project",
+      "noProjectDesc": "Select or create a website before enabling Realty.",
+      "noAccess": "Realty is not available",
+      "noAccessDesc": "The module is disabled by plan, service, tenant, project, or permissions.",
+      "noProperties": "No properties",
+      "noPropertiesDesc": "Create your first property to publish it in the directory.",
+      "noLeads": "No leads",
+      "noLeadsDesc": "Leads submitted from listings will appear here."
+    },
+    "overview": {
+      "recentProperties": "Recent properties",
+      "recentLeads": "Recent leads"
+    },
+    "properties": {
+      "create": "New property",
+      "edit": "Edit property"
+    },
+    "actions": {
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "useDemo": "Create post",
+      "addImage": "Add image"
+    },
+    "form": {
+      "title": "Title",
+      "price": "Price",
+      "address": "Address",
+      "city": "City",
+      "type": "Type",
+      "status": "Status",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "area": "Area",
+      "featured": "Featured property",
+      "description": "Description",
+      "amenities": "Amenities, one per line",
+      "images": "Property images",
+      "imageSlot": "Image {{index}}",
+      "save": "Save property"
+    },
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "pending": "Pending",
+      "sold": "Sold",
+      "archived": "Archived"
+    },
+    "propertyTypes": {
+      "house": "House",
+      "condo": "Condo",
+      "apartment": "Apartment",
+      "townhouse": "Townhouse",
+      "land": "Land",
+      "commercial": "Commercial"
+    },
+    "leadStatus": {
+      "new": "New",
+      "contacted": "Contacted",
+      "qualified": "Showing scheduled",
+      "negotiation": "Offer made",
+      "won": "Closed",
+      "showing_scheduled": "Showing scheduled",
+      "offer_made": "Offer made",
+      "closed": "Closed",
+      "lost": "Lost"
+    },
+    "leads": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "property": "Property"
+    },
+    "ai": {
+      "title": "Realty AI assistant",
+      "defaultPrompt": "Generate premium copy for this property.",
+      "prompt": "Instruction",
+      "generate": "Generate copy",
+      "output": "Output",
+      "empty": "The AI output will appear here.",
+      "generatedListing": "{{title}} in {{city}}\n\n{{price}} · {{beds}} beds · {{baths}} baths · {{area}} sqft\n\n{{description}}\n\nRequested angle: {{prompt}}\n\nNext step: schedule a showing or request more information from the listing form."
+    },
+    "settings": {
+      "title": "Module activation",
+      "moduleEnabled": "Realty enabled for this project",
+      "aiEnabled": "AI enabled",
+      "publicDirectoryEnabled": "Public directory enabled",
+      "publicPath": "Public path"
+    },
+    "website": {
+      "eyebrow": "Quimera Realty",
+      "defaultTitle": "Featured properties",
+      "defaultSubtitle": "Explore active listings connected directly to Quimera Realty Suite.",
+      "featured": "Featured",
+      "demo": "Demo",
+      "viewAll": "View all listings",
+      "viewDetails": "View details",
+      "empty": "There are no published properties yet."
+    },
+    "directory": {
+      "title": "Property directory",
+      "searchPlaceholder": "Search by city, address, or name",
+      "sortFeatured": "Featured first",
+      "sortNewest": "Newest",
+      "sortPriceAsc": "Price low to high",
+      "sortPriceDesc": "Price high to low",
+      "gridView": "Card view",
+      "listView": "List view",
+      "allTypes": "All types",
+      "minPrice": "Minimum price",
+      "maxPrice": "Maximum price",
+      "beds": "Bedrooms",
+      "reset": "Reset",
+      "resultCount": "{{count}} properties found",
+      "empty": "No properties match these filters."
+    },
+    "detail": {
+      "notFound": "Property not found",
+      "backToListings": "Back to listings",
+      "description": "Description",
+      "contactTitle": "Request information",
+      "contactSubtitle": "Send your details and the team will follow up.",
+      "messagePlaceholder": "I am interested in this property...",
+      "sendLead": "Send request",
+      "sending": "Sending...",
+      "sent": "Request sent successfully.",
+      "sendError": "The request could not be sent.",
+      "related": "Related properties",
+      "defaultLeadMessage": "I am interested in receiving information about {{title}}."
+    },
+    "units": {
+      "beds": "Bedrooms",
+      "baths": "Bathrooms",
+      "area": "sqft"
+    },
+    "errors": {
+      "saveProperty": "The property could not be saved."
+    },
+    "demo": {
+      "ocean": {
+        "title": "Ocean Residence Condado",
+        "description": "Bright residence with ocean views, private terrace, and access to premium amenities.",
+        "address": "1055 Ashford Ave",
+        "city": "San Juan"
+      },
+      "family": {
+        "title": "Garden Home Guaynabo",
+        "description": "Family home with a generous backyard, renovated kitchen, and flexible spaces for remote work.",
+        "address": "Calle Flamboyan 18",
+        "city": "Guaynabo"
+      },
+      "penthouse": {
+        "title": "Penthouse Miramar Skyline",
+        "description": "Contemporary penthouse with a terrace, city views, and modern finishes.",
+        "address": "Miramar Plaza",
+        "city": "San Juan"
+      },
+      "retail": {
+        "title": "Retail Loft Santurce",
+        "description": "Flexible commercial space with street frontage, high ceilings, and an open floor plan for a showroom, office, or studio.",
+        "address": "Ponce de Leon 1608",
+        "city": "San Juan"
+      },
+      "leads": {
+        "maria": {
+          "name": "Maria Rivera",
+          "message": "Wants to tour {{property}} this week and confirmed preapproved financing."
+        },
+        "carlos": {
+          "name": "Carlos Mendez",
+          "message": "Requested a second showing to review the view, parking, and monthly fees."
+        },
+        "sofia": {
+          "name": "Sofia Torres",
+          "message": "Is looking for a move-in-ready home with a backyard and solar power."
+        },
+        "andres": {
+          "name": "Andres Cruz",
+          "message": "Asked for HOA details, terrace information, and virtual showing availability."
+        },
+        "lucia": {
+          "name": "Lucia Santos",
+          "message": "Is evaluating an initial offer and requested recent Miramar comparables."
+        },
+        "valeria": {
+          "name": "Valeria Pena",
+          "message": "Wants to convert {{property}} into a showroom and creative studio."
+        }
+      },
+      "amenities": {
+        "oceanView": "Ocean view",
+        "pool": "Pool",
+        "security": "Security",
+        "backyard": "Backyard",
+        "solar": "Solar panels",
+        "smartHome": "Smart home",
+        "terrace": "Terrace",
+        "concierge": "Concierge",
+        "streetAccess": "Street access",
+        "parking": "Parking",
+        "highCeilings": "High ceilings"
+      }
+    }
+  },
   "realEstate": {
     "title": "Real Estate OS",
     "selectProject": "Select or create a website project before managing properties and realtor leads.",

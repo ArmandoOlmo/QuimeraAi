@@ -127,7 +127,7 @@ export interface Lead {
 
     // CRM Fields
     status: LeadStatus;
-    source: 'chatbot' | 'chatbot-widget' | 'contact-form' | 'form' | 'manual' | 'referral' | 'linkedin' | 'cold_call' | 'voice-call' | 'quimera-chat' | 'import-csv' | 'import-excel';
+    source: 'chatbot' | 'chatbot-widget' | 'contact-form' | 'form' | 'manual' | 'referral' | 'linkedin' | 'cold_call' | 'voice-call' | 'quimera-chat' | 'import-csv' | 'import-excel' | 'hero-lead-form' | 'signup-float' | 'landing-chatbot' | 'bio_page' | 'newsletter' | 'contact-page' | 'embedded-widget' | 'realty-website' | 'library-import';
     value?: number;
     probability?: number;
     expectedCloseDate?: { seconds: number; nanoseconds: number };
@@ -144,6 +144,7 @@ export interface Lead {
     color?: string;
     emojiMarker?: string;
     createdAt: { seconds: number; nanoseconds: number; };
+    updatedAt?: { seconds: number; nanoseconds: number; };
     lastContacted?: { seconds: number; nanoseconds: number; };
 
     // AI Features
@@ -573,7 +574,6 @@ export interface BrandIdentity {
     logoUrl?: string;
     tagline?: string;
 }
-
 
 
 

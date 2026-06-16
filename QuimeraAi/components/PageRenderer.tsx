@@ -102,9 +102,9 @@ import ArticleContentSection from './ecommerce/sections/ArticleContentSection';
 import CartSection from './ecommerce/sections/CartSection';
 import CheckoutSection from './ecommerce/sections/CheckoutSection';
 import ProductGridSection from './ecommerce/sections/ProductGridSection';
-import RealEstateListingsSection from './real-estate/RealEstateListingsSection';
-import PropertyDirectoryPage from './real-estate/PropertyDirectoryPage';
-import PropertyDetailSection from './real-estate/PropertyDetailSection';
+import RealEstateListingsSection from './realty/PublicRealtyListingsSection';
+import PropertyDirectoryPage from './realty/PublicRealtyDirectoryPage';
+import PropertyDetailSection from './realty/PublicRealtyPropertyDetail';
 
 interface PageRendererProps {
     /** The page to render */

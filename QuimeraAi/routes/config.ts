@@ -532,7 +532,7 @@ export const routeConfigs: RouteConfig[] = [
     path: ROUTES.REAL_ESTATE,
     view: 'real-estate',
     type: 'private',
-    title: 'Real Estate OS',
+    title: 'Quimera Realty Suite',
     requiresAuth: true,
     requiresEmailVerified: true,
     showInNav: true,

@@ -34,8 +34,21 @@ const LEAD_STATUSES: { id: LeadStatus; label: string; color: string }[] = [
 
 const SOURCES = [
     { id: 'chatbot', label: 'AI Chatbot', icon: Zap },
+    { id: 'chatbot-widget', label: 'Chat Widget', icon: Zap },
+    { id: 'quimera-chat', label: 'Quimera Chat', icon: Zap },
     { id: 'form', label: 'Formulario', icon: CircleDot },
+    { id: 'contact-form', label: 'Contact Form', icon: CircleDot },
+    { id: 'hero-lead-form', label: 'Hero Form', icon: CircleDot },
+    { id: 'signup-float', label: 'Signup Float', icon: CircleDot },
+    { id: 'landing-chatbot', label: 'Landing Chatbot', icon: Zap },
+    { id: 'bio_page', label: 'Bio Page', icon: CircleDot },
+    { id: 'newsletter', label: 'Newsletter', icon: CircleDot },
+    { id: 'contact-page', label: 'Contact Page', icon: CircleDot },
+    { id: 'embedded-widget', label: 'Embedded Widget', icon: CircleDot },
+    { id: 'realty-website', label: 'Realty Website', icon: CircleDot },
     { id: 'manual', label: 'Manual', icon: CircleDot },
+    { id: 'import-csv', label: 'Import CSV', icon: CircleDot },
+    { id: 'import-excel', label: 'Import Excel', icon: CircleDot },
 ];
 
 // Dropdown component reutilizable

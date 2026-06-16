@@ -24,6 +24,8 @@ interface DashboardSelectProps {
     className?: string;
     /** Placeholder when no value is selected */
     placeholder?: string;
+    /** Disable interactions while preserving dashboard styling */
+    disabled?: boolean;
 }
 
 const DashboardSelect: React.FC<DashboardSelectProps> = ({
@@ -32,6 +34,7 @@ const DashboardSelect: React.FC<DashboardSelectProps> = ({
     options,
     className = '',
     placeholder,
+    disabled = false,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -77,18 +80,23 @@ const DashboardSelect: React.FC<DashboardSelectProps> = ({
     const selectedOption = options.find(opt => opt.value === value);
 
     return (
-        <div className={`relative ${className}`} ref={containerRef}>
+        <div className={`relative min-w-0 ${className}`} ref={containerRef}>
             {/* Trigger Button */}
             <button
                 type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className={`h-10 w-full flex items-center justify-between px-3 rounded-xl border text-sm transition-all cursor-pointer ${
+                onClick={() => {
+                    if (!disabled) setIsOpen(!isOpen);
+                }}
+                disabled={disabled}
+                className={`flex h-10 w-full min-w-0 items-center justify-between rounded-xl border px-3 text-sm transition-all ${
+                    disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                } ${
                     isOpen
                         ? 'border-q-accent/60 ring-2 ring-q-accent/40 bg-q-surface text-q-text'
                         : 'border-q-border/60 bg-q-surface/30 text-q-text hover:border-q-accent/40'
                 }`}
             >
-                <span className="truncate">{selectedOption?.label || placeholder || value}</span>
+                <span className="min-w-0 truncate">{selectedOption?.label || placeholder || value}</span>
                 <ChevronDown className={`h-3.5 w-3.5 text-q-text-muted flex-shrink-0 ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 

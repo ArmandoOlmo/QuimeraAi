@@ -75,6 +75,15 @@ export const calculateLeadScore = (factors: Partial<LeadScoringFactors>): number
         'quimera-chat': 8,
         'import-csv': 5,
         'import-excel': 5,
+        'hero-lead-form': 10,
+        'signup-float': 8,
+        'landing-chatbot': 8,
+        'bio_page': 7,
+        'newsletter': 6,
+        'contact-page': 10,
+        'embedded-widget': 8,
+        'realty-website': 10,
+        'library-import': 5,
     };
 
     if (factors.source) {
@@ -112,6 +121,15 @@ export const getSourceConfig = (source: Lead['source']) => {
         'quimera-chat': { icon: '🤖', color: 'bg-indigo-600', label: 'Quimera Chat' },
         'import-csv': { icon: '📥', color: 'bg-gray-500', label: 'Import CSV' },
         'import-excel': { icon: '📊', color: 'bg-green-600', label: 'Import Excel' },
+        'hero-lead-form': { icon: '📝', color: 'bg-blue-600', label: 'Hero Form' },
+        'signup-float': { icon: '🪪', color: 'bg-cyan-600', label: 'Signup Float' },
+        'landing-chatbot': { icon: '💬', color: 'bg-purple-600', label: 'Landing Chat' },
+        'bio_page': { icon: '👤', color: 'bg-teal-600', label: 'Bio Page' },
+        'newsletter': { icon: '✉️', color: 'bg-sky-600', label: 'Newsletter' },
+        'contact-page': { icon: '📨', color: 'bg-blue-500', label: 'Contact Page' },
+        'embedded-widget': { icon: '🧩', color: 'bg-violet-600', label: 'Embedded Widget' },
+        'realty-website': { icon: '🏠', color: 'bg-emerald-600', label: 'Realty' },
+        'library-import': { icon: '📚', color: 'bg-slate-500', label: 'Library Import' },
     };
 
     return configs[source] || { icon: '🌐', color: 'bg-violet-500', label: 'Otro' };
@@ -181,6 +199,15 @@ export const calculateConversionProbability = (lead: Lead): number => {
         'quimera-chat': 8,
         'import-csv': 5,
         'import-excel': 5,
+        'hero-lead-form': 8,
+        'signup-float': 7,
+        'landing-chatbot': 7,
+        'bio_page': 6,
+        'newsletter': 5,
+        'contact-page': 8,
+        'embedded-widget': 7,
+        'realty-website': 9,
+        'library-import': 5,
     };
     probability += sourceBonus[lead.source] || 5;
 
@@ -226,4 +253,3 @@ export const enrichLeadData = (lead: Partial<Lead>): Partial<Lead> => {
 
     return enriched;
 };
-

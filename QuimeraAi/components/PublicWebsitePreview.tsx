@@ -21,8 +21,8 @@ import { getPreviewPrefetch } from '../utils/previewPrefetch';
 import { getSafeImageUrl, isLegacyStorageUrl } from '../utils/imageUrlHelper';
 import { getBootBackgroundColor } from '../utils/bootBackground';
 import SectionBackground from './ui/SectionBackground';
-import { usePublicRealEstateListings } from '../hooks/usePublicRealEstateListings';
-import { Property } from '../types/realEstate';
+import { usePublicRealtyListings } from '../hooks/usePublicRealtyListings';
+import { RealtyProperty } from '../types/realty';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
 
@@ -96,9 +96,9 @@ const BlogPost = lazy(() => import('./BlogPost'));
 const Products = lazy(() => import('./Products'));
 const PageRenderer = lazy(() => import('./PageRenderer'));
 const BlogCategoryPage = lazy(() => import('./BlogCategoryPage'));
-const RealEstateListingsSection = lazy(() => import('./real-estate/RealEstateListingsSection'));
-const PropertyDirectoryPage = lazy(() => import('./real-estate/PropertyDirectoryPage'));
-const PropertyDetailSection = lazy(() => import('./real-estate/PropertyDetailSection'));
+const RealEstateListingsSection = lazy(() => import('./realty/PublicRealtyListingsSection'));
+const PropertyDirectoryPage = lazy(() => import('./realty/PublicRealtyDirectoryPage'));
+const PropertyDetailSection = lazy(() => import('./realty/PublicRealtyPropertyDetail'));
 const RestaurantReservationComponent = lazy(() => import('./RestaurantReservation'));
 
 // Lumina components
@@ -1563,13 +1563,13 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   ) || false;
   const realEstateProjectId = hasRealEstateSections ? (project?.id || propProjectId || null) : null;
 
-  const { properties: chatbotRealEstateProperties } = usePublicRealEstateListings(realEstateProjectId, {
+  const { properties: chatbotRealEstateProperties } = usePublicRealtyListings(realEstateProjectId, {
     limitCount: 50,
     featuredOnly: false,
     realtime: false,
   });
 
-  const currentPropertyForChatbot = useMemo<Property | null>(() => {
+  const currentPropertyForChatbot = useMemo<RealtyProperty | null>(() => {
     const currentPath = getLogicalPath(window.location.pathname);
     const isPropertyDetail = currentPath.startsWith('/listados/') && currentPath !== '/listados/' && currentPath !== '/listados';
     if (!isPropertyDetail) return null;
@@ -2098,6 +2098,21 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         showUserAvatar: false,
         userAvatarStyle: 'initials'
       },
+      colors: {
+        primaryColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
+        secondaryColor: project.data?.chatbot?.colors?.secondaryColor || '#6366f1',
+        accentColor: project.data?.chatbot?.colors?.accentColor || '#22c55e',
+        userBubbleColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
+        userTextColor: '#ffffff',
+        botBubbleColor: '#f8fafc',
+        botTextColor: '#0f172a',
+        backgroundColor: '#ffffff',
+        inputBackground: '#ffffff',
+        inputBorder: '#cbd5e1',
+        inputText: '#0f172a',
+        headerBackground: project.data?.chatbot?.colors?.primary || '#4f46e5',
+        headerText: '#ffffff'
+      },
       behavior: {
         position: project.data?.chatbot?.position || 'bottom-right',
         offsetX: 20,
@@ -2140,7 +2155,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     `Type: ${currentPropertyForChatbot.propertyType}`,
     `Beds: ${currentPropertyForChatbot.bedrooms}`,
     `Baths: ${currentPropertyForChatbot.bathrooms}`,
-    `Square feet: ${currentPropertyForChatbot.squareFeet}`,
+    `Square feet: ${currentPropertyForChatbot.area}`,
     `Year built: ${currentPropertyForChatbot.yearBuilt || 'N/A'}`,
     `Amenities: ${(currentPropertyForChatbot.amenities || []).join(', ') || 'N/A'}`,
     `Description: ${currentPropertyForChatbot.description}`,

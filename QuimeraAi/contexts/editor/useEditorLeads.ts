@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { Lead, LeadStatus, LeadActivity, LeadTask, LibraryLead } from '../../types';
 import { supabase } from '../../supabase';
 import type { User } from '@supabase/supabase-js';
+import { buildLeadInsertRow, buildLeadUpdateRow, mapLeadRowToLead } from '../../utils/leadData';
 
 interface UseEditorLeadsParams {
     user: User | null;
@@ -58,24 +59,7 @@ export const useEditorLeads = ({ user, activeProjectId }: UseEditorLeadsParams) 
 
                 if (error) throw error;
 
-                const leadsData = (data || []).map(l => ({
-                    id: l.id,
-                    projectId: l.project_id,
-                    name: l.name,
-                    email: l.email,
-                    phone: l.phone,
-                    company: l.company,
-                    source: l.source,
-                    status: l.status,
-                    value: l.value,
-                    notes: l.notes,
-                    tags: l.tags || [],
-                    createdAt: l.created_at,
-                    updatedAt: l.updated_at,
-                    conversationTranscript: l.conversation_transcript,
-                    aiSummary: l.ai_summary,
-                    metadata: l.metadata
-                })) as Lead[];
+                const leadsData = (data || []).map(mapLeadRowToLead);
                 setLeads(leadsData);
             } catch (e) {
                 console.error("[useEditorLeads] Error setting up Leads subscription:", e);
@@ -274,24 +258,7 @@ export const useEditorLeads = ({ user, activeProjectId }: UseEditorLeadsParams) 
         try {
             const { data, error } = await supabase
                 .from('leads')
-                .insert([{
-                    tenant_id: tenantId,
-                    project_id: activeProjectId,
-                    name: leadData.name,
-                    email: leadData.email,
-                    phone: leadData.phone,
-                    company: leadData.company,
-                    source: leadData.source,
-                    status: leadData.status,
-                    value: leadData.value,
-                    notes: leadData.notes,
-                    tags: leadData.tags,
-                    conversation_transcript: leadData.conversationTranscript,
-                    ai_summary: leadData.aiSummary,
-                    metadata: leadData.metadata,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                }])
+                .insert([buildLeadInsertRow(leadData, tenantId, activeProjectId)])
                 .select('id')
                 .single();
 
@@ -323,19 +290,17 @@ export const useEditorLeads = ({ user, activeProjectId }: UseEditorLeadsParams) 
     const updateLead = async (leadId: string, data: Partial<Lead>) => {
         if (!user || !activeProjectId) return;
         try {
-            const updateData: any = { updated_at: new Date().toISOString() };
-            if (data.name !== undefined) updateData.name = data.name;
-            if (data.email !== undefined) updateData.email = data.email;
-            if (data.phone !== undefined) updateData.phone = data.phone;
-            if (data.company !== undefined) updateData.company = data.company;
-            if (data.source !== undefined) updateData.source = data.source;
-            if (data.status !== undefined) updateData.status = data.status;
-            if (data.value !== undefined) updateData.value = data.value;
-            if (data.notes !== undefined) updateData.notes = data.notes;
-            if (data.tags !== undefined) updateData.tags = data.tags;
-            if (data.conversationTranscript !== undefined) updateData.conversation_transcript = data.conversationTranscript;
-            if (data.aiSummary !== undefined) updateData.ai_summary = data.aiSummary;
-            if (data.metadata !== undefined) updateData.metadata = data.metadata;
+            const { data: currentLead } = await supabase
+                .from('leads')
+                .select('custom_data')
+                .eq('id', leadId)
+                .maybeSingle();
+            const existingCustomData = currentLead?.custom_data
+                && typeof currentLead.custom_data === 'object'
+                && !Array.isArray(currentLead.custom_data)
+                ? currentLead.custom_data as Record<string, unknown>
+                : {};
+            const updateData = buildLeadUpdateRow(data, existingCustomData);
 
             const { error } = await supabase
                 .from('leads')

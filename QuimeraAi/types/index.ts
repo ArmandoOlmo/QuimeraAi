@@ -61,8 +61,8 @@ export * from './news';
 // Agency Plans Types (Plans that agencies create for their clients)
 export * from './agencyPlans';
 
-// Real Estate OS Types
-export * from './realEstate';
+// Quimera Realty Suite Types
+export * from './realty';
 
 // Restaurants Types
 export * from './restaurants';
@@ -70,7 +70,6 @@ export * from './restaurants';
 // AI Website Studio plan contract
 export * from './websitePlan';
 export * from './colorSystem';
-
 
 
 

@@ -39,7 +39,7 @@ import ChatbotWidget from '../../ChatbotWidget';
 import BusinessMap from '../../BusinessMap';
 import Menu from '../../Menu';
 import Banner from '../../Banner';
-import RealEstateListingsSection from '../../real-estate/RealEstateListingsSection';
+import RealEstateListingsSection from '../../realty/PublicRealtyListingsSection';
 
 interface ComponentPreviewProps {
     selectedComponentId: string;

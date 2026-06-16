@@ -17,6 +17,7 @@ import { useCreditsUsage } from '../../hooks/useCreditsUsage';
 import { useAppLogo, QUIMERA_FULL_LOGO, QUIMERA_FULL_LOGO_LIGHT, QUIMERA_DEFAULT_LOGO } from '../../hooks/useAppLogo';
 import { usePlanAccess } from '../../hooks/usePlanFeatures';
 import { useServiceAvailability } from '../../hooks/useServiceAvailability';
+import { useRealtyAccess } from '../../hooks/realty/useRealtyAccess';
 import { PlatformServiceId } from '../../types/serviceAvailability';
 import { PlanFeatures } from '../../types/subscription';
 import { UpgradeTrigger } from '../ui/UpgradeModal';
@@ -101,6 +102,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
   // Get global service availability control
   const { canAccessService: canAccessGlobalService, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+  const realtyAccess = useRealtyAccess();
 
   // Get global app logo
   const { logoUrl: appLogoUrl } = useAppLogo();
@@ -222,7 +224,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE, serviceId: 'finance' },
     { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS, serviceId: 'appointments' },
     { id: 'restaurants', icon: Utensils, label: t('restaurants.title', 'Restaurants'), view: 'restaurants', route: ROUTES.RESTAURANTS, upgradeTrigger: 'generic', serviceId: 'restaurants' },
-    { id: 'real-estate', icon: Home, label: t('realEstate.title', 'Real Estate'), view: 'real-estate', route: ROUTES.REAL_ESTATE, requiredFeature: 'realEstateModule', upgradeTrigger: 'generic', serviceId: 'realEstate' },
+    { id: 'real-estate', icon: Home, label: t('realty.title'), view: 'real-estate', route: ROUTES.REAL_ESTATE, requiredFeature: 'realEstateModule', upgradeTrigger: 'generic', serviceId: 'realEstate' },
   ];
 
   // Blog - standalone outside tools section, above agency
@@ -348,6 +350,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const isItemAccessible = (item: NavItemData): boolean => {
     if (!item.serviceId) return true; // No service restriction
     if (isLoadingServiceAvailability) return true; // Show while loading
+    if (item.id === 'real-estate') {
+      if (realtyAccess.isLoading) return true;
+      return canAccessGlobalService(item.serviceId) && realtyAccess.canView;
+    }
     return canAccessGlobalService(item.serviceId);
   };
 

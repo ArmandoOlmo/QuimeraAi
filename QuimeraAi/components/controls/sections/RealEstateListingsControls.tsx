@@ -1,6 +1,7 @@
 import React from 'react';
 import { Building2, Eye, Layout, Palette, Type , Layers } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
+import AnimationControls from '../../ui/AnimationControls';
 import TabbedControls from '../../ui/TabbedControls';
 import {
   Input, Select, TextArea, ToggleControl
@@ -100,11 +101,29 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <SectionHeader icon={Palette} title={t('controls.colors')} />
         <ColorControl label={t('editor.controls.common.background')} value={sectionData.colors?.background || '#ffffff'} onChange={(v) => setNestedData('realEstateListings.colors.background', v)} />
+        <ColorControl label={t('editor.controls.globalStyles.surface', 'Surface')} value={sectionData.colors?.surface || sectionData.colors?.cardBackground || '#ffffff'} onChange={(v) => setNestedData('realEstateListings.colors.surface', v)} />
         <ColorControl label={t('controls.heading')} value={sectionData.colors?.heading || '#111827'} onChange={(v) => setNestedData('realEstateListings.colors.heading', v)} />
         <ColorControl label={t('controls.text')} value={sectionData.colors?.text || '#374151'} onChange={(v) => setNestedData('realEstateListings.colors.text', v)} />
+        <ColorControl label={t('controls.secondaryText', 'Secondary Text')} value={sectionData.colors?.textMuted || '#6b7280'} onChange={(v) => setNestedData('realEstateListings.colors.textMuted', v)} />
+        <ColorControl label={t('editor.controls.globalStyles.primary', 'Primary')} value={sectionData.colors?.primary || sectionData.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('realEstateListings.colors.primary', v)} />
+        <ColorControl label={t('editor.controls.globalStyles.secondary', 'Secondary')} value={sectionData.colors?.secondary || '#10b981'} onChange={(v) => setNestedData('realEstateListings.colors.secondary', v)} />
         <ColorControl label={t('controls.accent')} value={sectionData.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('realEstateListings.colors.accent', v)} />
         <ColorControl label={t('controls.cardBackground')} value={sectionData.colors?.cardBackground || '#ffffff'} onChange={(v) => setNestedData('realEstateListings.colors.cardBackground', v)} />
         <ColorControl label={t('controls.border')} value={sectionData.colors?.border || '#e5e7eb'} onChange={(v) => setNestedData('realEstateListings.colors.border', v)} />
+        <ColorControl label={t('controls.fondoBotn')} value={sectionData.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('realEstateListings.colors.buttonBackground', v)} />
+        <ColorControl label={t('editor.controls.common.buttonText')} value={sectionData.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('realEstateListings.colors.buttonText', v)} />
+        <ColorControl label={t('controls.priceColor', 'Price Color')} value={sectionData.colors?.priceColor || sectionData.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('realEstateListings.colors.priceColor', v)} />
+        <ColorControl label={t('editor.controls.globalStyles.success', 'Success')} value={sectionData.colors?.success || '#16a34a'} onChange={(v) => setNestedData('realEstateListings.colors.success', v)} />
+        <ColorControl label={t('editor.controls.globalStyles.error', 'Error')} value={sectionData.colors?.error || '#dc2626'} onChange={(v) => setNestedData('realEstateListings.colors.error', v)} />
+      </div>
+
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <AnimationControls
+          animationType={sectionData.animationType || 'fade-in-up'}
+          enableCardAnimation={sectionData.enableCardAnimation !== false}
+          onChangeAnimationType={(value) => setNestedData('realEstateListings.animationType', value)}
+          onToggleAnimation={(value) => setNestedData('realEstateListings.enableCardAnimation', value)}
+        />
       </div>
     </div>
   );

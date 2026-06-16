@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AiAssistantConfig, Project } from '../../../types';
+import { AiAssistantConfig, Lead, Project } from '../../../types';
 import { useCRM } from '../../../contexts/crm';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { getDefaultAppearanceConfig } from '../../../utils/chatThemes';
@@ -75,12 +75,12 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
             transcriptPreview: leadData.conversationTranscript?.substring(0, 200)
         });
 
-        const fullLeadData = {
+        const fullLeadData: Omit<Lead, 'id' | 'createdAt' | 'projectId'> = {
             ...leadData,
             source: 'quimera-chat',
             status: 'new',
             tags: ['quimera-chat', ...(leadData.tags || [])]
-        };
+        } as Omit<Lead, 'id' | 'createdAt' | 'projectId'>;
 
         try {
             const targetUserId = project?.userId || user?.id;

@@ -45,6 +45,7 @@ export function PermissionTemplateEditor({
         canManageLeads: false,
         canManageCMS: false,
         canManageEcommerce: false,
+        canManageRealEstate: false,
         canManageFiles: false,
         canManageDomains: false,
         canInviteMembers: false,
@@ -123,7 +124,7 @@ export function PermissionTemplateEditor({
         },
         {
             name: 'Ventas y Marketing',
-            permissions: ['canManageLeads', 'canManageEcommerce', 'canExportData'] as const,
+            permissions: ['canManageLeads', 'canManageEcommerce', 'canManageRealEstate', 'canExportData'] as const,
         },
         {
             name: 'Administración',

@@ -9,7 +9,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import { Menu as MenuIcon } from 'lucide-react';
 import { useClickOutside } from '../../../hooks/useClickOutside';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
-import { useRealEstateWebsiteNavigation } from '../../../hooks/useRealEstateWebsiteNavigation';
+import { useRealtyWebsiteNavigation } from '../../../hooks/useRealtyWebsiteNavigation';
 import IconSelector from '../../ui/IconSelector';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 
@@ -60,7 +60,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
     // Ecommerce data for link picker
     const { products: storeProducts, categories: storeCategories } = usePublicProducts(effectiveProjectId);
-    const { sectionLink: realEstateListingsLink } = useRealEstateWebsiteNavigation();
+    const { sectionLink: realEstateListingsLink } = useRealtyWebsiteNavigation();
     const sectionLinks = React.useMemo(
         () => [...SECTION_LINKS, realEstateListingsLink],
         [realEstateListingsLink]

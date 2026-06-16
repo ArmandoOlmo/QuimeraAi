@@ -262,6 +262,18 @@ export const COMPONENT_OPTIONS = {
         },
         colorFields: ['background', 'text', 'heading', 'accent', 'cardBackground', 'cardText', 'buttonBackground', 'buttonText'],
     },
+
+    realEstateListings: {
+        name: 'Quimera Realty Listings',
+        category: 'industry',
+        options: {
+            layout: ['grid', 'featured'],
+            maxItems: [3, 6, 9, 12],
+            featuredOnly: [true, false],
+            animationType: ['none', 'fade-in', 'fade-in-up', 'fade-in-down', 'slide-up', 'slide-down', 'scale-in', 'bounce-in'],
+        },
+        colorFields: ['background', 'surface', 'heading', 'text', 'textMuted', 'primary', 'secondary', 'accent', 'cardBackground', 'cardHeading', 'cardText', 'border', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText', 'priceColor', 'success', 'error'],
+    },
     
     // ==========================================================================
     // ECOMMERCE COMPONENTS
@@ -461,4 +473,3 @@ export const COMPONENT_CATEGORIES = {
     ecommerce: ['products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown', 'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner', 'productBundle', 'announcementBar'],
     other: ['map', 'chatbot'],
 };
-

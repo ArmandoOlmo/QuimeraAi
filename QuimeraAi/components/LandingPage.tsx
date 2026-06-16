@@ -54,9 +54,9 @@ import SignupFloat from './SignupFloat';
 import SectionBackground from './ui/SectionBackground';
 import Products from './Products';
 import Separator from './Separator';
-import RealEstateListingsSection from './real-estate/RealEstateListingsSection';
+import RealEstateListingsSection from './realty/PublicRealtyListingsSection';
 import RestaurantReservation from './RestaurantReservation';
-import PropertyDetailSection from './real-estate/PropertyDetailSection';
+import PropertyDetailSection from './realty/PublicRealtyPropertyDetail';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData, ThemeData } from '../types';
 import { fontStacks, loadGoogleFonts, loadGoogleFontsSync, resolveFontFamily } from '../utils/fontLoader';
 import { initialData } from '../data/initialData';
@@ -789,7 +789,7 @@ const LandingPageContent: React.FC = () => {
     };
 
     // Derive any missing colors from the template palette
-    const derivedColors = deriveColorsFromPalette(mergedColors, componentKey);
+    const derivedColors = deriveColorsFromPalette(mergedColors, String(componentKey));
 
     // Merge cornerGradient if it exists in styles (defaults first, then user changes)
     const mergedCornerGradient = (styles as any).cornerGradient ? {

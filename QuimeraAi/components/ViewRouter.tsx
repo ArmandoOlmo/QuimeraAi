@@ -51,7 +51,7 @@ const SettingsPage = lazy(() => import('./dashboard/settings/SettingsPage'));
 const AgencyDashboard = lazy(() => import('./dashboard/agency/AgencyDashboardMain'));
 const BioPageBuilder = lazy(() => import('./dashboard/BioPageBuilder'));
 const BlogHub = lazy(() => import('./dashboard/BlogHub'));
-const RealEstateDashboard = lazy(() => import('./dashboard/real-estate/RealEstateDashboard'));
+const RealtyDashboard = lazy(() => import('./dashboard/realty/RealtyDashboard'));
 
 // Editor components
 const Controls = lazy(() => import('./Controls'));
@@ -98,7 +98,7 @@ const VIEW_COMPONENTS: Record<string, React.LazyExoticComponent<React.ComponentT
     'agency': AgencyDashboard,
     'biopage': BioPageBuilder,
     'blog-hub': BlogHub,
-    'real-estate': RealEstateDashboard,
+    'real-estate': RealtyDashboard,
 };
 
 /**
@@ -114,6 +114,7 @@ const VIEW_SERVICE_MAP: Partial<Record<View, PlatformServiceId>> = {
     'appointments': 'appointments',
     'domains': 'domains',
     'finance': 'finance',
+    'real-estate': 'realEstate',
 };
 
 /**

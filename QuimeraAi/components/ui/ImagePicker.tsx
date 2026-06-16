@@ -160,6 +160,18 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         success(t('dashboard.imagePicker.imageSelected'));
     };
 
+    const openGenerator = () => {
+        const referenceImageUrl = normalizeImageUrl(value);
+        setIsLibraryOpen(true);
+        setActiveTab('generate');
+
+        if (referenceImageUrl && !isLegacyStorageUrl(referenceImageUrl)) {
+            window.setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('assets:add-reference-image', { detail: referenceImageUrl }));
+            }, 0);
+        }
+    };
+
     const handleFileUpload = async (file: File) => {
         try {
             if (destination === 'admin') {
@@ -283,7 +295,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => { setIsLibraryOpen(true); setActiveTab('generate'); }}
+                                        onClick={openGenerator}
                                         className="p-2 rounded-lg bg-q-accent/80 backdrop-blur-md border border-q-accent/40 text-white hover:bg-q-accent transition-all duration-200"
                                         title={t('dashboard.imagePicker.generateWithAI')}
                                     >
@@ -334,7 +346,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                             </button>
                             <button
                                 type="button"
-                                onClick={() => { setIsLibraryOpen(true); setActiveTab('generate'); }}
+                                onClick={openGenerator}
                                 className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-q-accent/10 border border-q-accent/20 text-q-accent hover:bg-q-accent/20 transition-all text-xs font-medium"
                             >
                                 <Zap size={12} /> Generar IA

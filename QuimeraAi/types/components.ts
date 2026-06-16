@@ -2707,6 +2707,8 @@ export interface PageData {
         paddingX?: string;
         cardBorderRadius?: string;
         buttonBorderRadius?: string;
+        enableCardAnimation?: boolean;
+        animationType?: AnimationType;
         colors?: Record<string, string>;
         backgroundImageUrl?: string;
         backgroundPosition?: string;

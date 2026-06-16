@@ -73,6 +73,7 @@ export type TenantFeature =
     | 'cms'
     | 'leads'
     | 'ecommerce'
+    | 'realEstate'
     | 'chat'
     | 'email'
     | 'domains'
@@ -177,6 +178,7 @@ export interface TenantPermissions {
     canManageLeads: boolean;
     canManageCMS: boolean;
     canManageEcommerce: boolean;
+    canManageRealEstate: boolean;
     canManageFiles: boolean;
     canManageDomains: boolean;
     canInviteMembers: boolean;
@@ -215,6 +217,7 @@ export const DEFAULT_PERMISSIONS: Record<AgencyRole, TenantPermissions> = {
         canManageLeads: true,
         canManageCMS: true,
         canManageEcommerce: true,
+        canManageRealEstate: true,
         canManageFiles: true,
         canManageDomains: true,
         canInviteMembers: true,
@@ -229,6 +232,7 @@ export const DEFAULT_PERMISSIONS: Record<AgencyRole, TenantPermissions> = {
         canManageLeads: true,
         canManageCMS: true,
         canManageEcommerce: true,
+        canManageRealEstate: true,
         canManageFiles: true,
         canManageDomains: true,
         canInviteMembers: true,
@@ -243,6 +247,7 @@ export const DEFAULT_PERMISSIONS: Record<AgencyRole, TenantPermissions> = {
         canManageLeads: true,
         canManageCMS: true,
         canManageEcommerce: false,
+        canManageRealEstate: false,
         canManageFiles: true,
         canManageDomains: false,
         canInviteMembers: false,
@@ -257,6 +262,7 @@ export const DEFAULT_PERMISSIONS: Record<AgencyRole, TenantPermissions> = {
         canManageLeads: true,
         canManageCMS: true,
         canManageEcommerce: true,
+        canManageRealEstate: true,
         canManageFiles: true,
         canManageDomains: false,
         canInviteMembers: false,
@@ -639,6 +645,7 @@ export const FEATURE_LABELS: Record<TenantFeature, string> = {
     cms: 'CMS / Blog',
     leads: 'Leads / CRM',
     ecommerce: 'E-commerce',
+    realEstate: 'Quimera Realty',
     chat: 'Chat Widget',
     email: 'Email Marketing',
     domains: 'Dominios',
@@ -691,8 +698,6 @@ export function calculateAddonsCost(addons: SubscriptionAddons): number {
 
     return totalCost;
 }
-
-
 
 
 
