@@ -62,6 +62,16 @@ async function consumeCreditsServerSide(params: {
         };
     }
 
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('quimera:credits-updated', {
+            detail: {
+                tenantId: params.tenantId,
+                creditsRemaining: Number(data.creditsRemaining || 0),
+                transactionId: data.transactionId,
+            },
+        }));
+    }
+
     return {
         success: true,
         creditsUsed: Number(data.creditsUsed || params.creditsUsed),

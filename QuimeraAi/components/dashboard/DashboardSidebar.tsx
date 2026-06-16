@@ -71,8 +71,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const userRole = userDocument?.role;
   const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
 
-  // Debug log to verify role detection
-  console.log('[DashboardSidebar] User role check:', { userRole, isOwner, isUserOwner, userEmail: user?.email });
   const { navigate, path } = useRouter();
   const tenantContext = useSafeTenant();
   const upgradeContext = useSafeUpgrade();
@@ -887,12 +885,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       </span>
                     </div>
                     <span className="text-[10px] font-mono text-gray-500 dark:text-white/60">
-                      {isLoadingCredits ? '...' : isOwner ? '∞/∞' : `${creditsUsage?.used || 0}/${creditsUsage?.limit || 30}`}
+                      {isLoadingCredits ? '...' : `${creditsUsage?.used || 0}/${creditsUsage?.limit || 0}`}
                     </span>
                   </div>
 
                   <ProgressBar3D
-                    percentage={isOwner ? 100 : (creditsUsage?.percentage || 0)}
+                    percentage={creditsUsage?.percentage || 0}
                     color="var(--q-accent)"
                     size="md"
                   />
@@ -909,7 +907,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     )}
                     {isOwner && (
                       <span className="text-[10px] font-bold text-primary px-2">
-                        {t('common.unlimited', 'Ilimitado')}
+                        {(creditsUsage?.remaining || 0).toLocaleString()} {t('dashboard.creditsRemaining', 'restantes')}
                       </span>
                     )}
                   </div>

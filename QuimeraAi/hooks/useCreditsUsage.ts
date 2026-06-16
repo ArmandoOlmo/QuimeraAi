@@ -39,15 +39,11 @@ interface UseCreditsUsageReturn {
 }
 
 export function useCreditsUsage(): UseCreditsUsageReturn {
-    const { user, isUserOwner, userDocument, loadingAuth } = useAuth();
+    const { loadingAuth } = useAuth();
     const tenantContext = useSafeTenant();
     const [usage, setUsage] = useState<CreditsUsageData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    // Check role first (most reliable), then email-based owner check as fallback
-    const userRole = userDocument?.role;
-    const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
 
     const tenantId = tenantContext?.currentTenant?.id;
 
@@ -69,25 +65,14 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
                 throw error;
             }
 
-            let planKey: SubscriptionPlanId = (data?.plan_id as SubscriptionPlanId) || 'free';
-            let plan = SUBSCRIPTION_PLANS[planKey] || SUBSCRIPTION_PLANS.free;
+            const planKey: SubscriptionPlanId = (data?.plan_id as SubscriptionPlanId) || 'free';
+            const plan = SUBSCRIPTION_PLANS[planKey] || SUBSCRIPTION_PLANS.free;
             const status = data?.status || 'active';
             
             const aiUsage = data?.ai_credits_usage as any;
-            let used = aiUsage?.creditsUsed ?? aiUsage?.total_used ?? 0;
-            let limit = aiUsage?.creditsIncluded || plan.limits.maxAiCredits;
+            const used = Number(aiUsage?.creditsUsed ?? aiUsage?.total_used ?? 0);
+            const limit = Number(aiUsage?.creditsIncluded ?? plan.limits.maxAiCredits ?? 0);
             
-            let planName = plan.name;
-            let planId = planKey;
-
-            // OVERRIDE FOR OWNER/SUPERADMIN
-            if (isOwner) {
-                planId = 'enterprise';
-                const enterprisePlan = SUBSCRIPTION_PLANS.enterprise;
-                planName = enterprisePlan.name;
-                limit = enterprisePlan.limits.maxAiCredits;
-            }
-
             const remaining = Math.max(0, limit - used);
             const percentage = limit > 0 ? Math.min(Math.round((used / limit) * 100), 100) : 0;
 
@@ -96,8 +81,8 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
                 limit,
                 remaining,
                 percentage,
-                plan: planName,
-                planId,
+                plan: plan.name,
+                planId: planKey,
                 status,
                 billingCycle: data?.billing_cycle,
                 currentPeriodEnd: data?.current_period_end,
@@ -114,7 +99,7 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [tenantId, isOwner]);
+    }, [tenantId]);
 
     // Cargar al montar y cuando cambie el tenant
     useEffect(() => {
@@ -149,6 +134,37 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
         };
     }, [tenantId, loadUsage]);
 
+    useEffect(() => {
+        if (!tenantId || typeof window === 'undefined') return;
+
+        const handleCreditsUpdated = (event: Event) => {
+            const detail = (event as CustomEvent<{ tenantId?: string }>).detail;
+            if (!detail?.tenantId || detail.tenantId === tenantId) {
+                loadUsage();
+            }
+        };
+
+        const handleFocus = () => {
+            loadUsage();
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                loadUsage();
+            }
+        };
+
+        window.addEventListener('quimera:credits-updated', handleCreditsUpdated);
+        window.addEventListener('focus', handleFocus);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener('quimera:credits-updated', handleCreditsUpdated);
+            window.removeEventListener('focus', handleFocus);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [tenantId, loadUsage]);
+
     return {
         usage,
         isLoading: isLoading || loadingAuth,
@@ -158,6 +174,5 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
 }
 
 export default useCreditsUsage;
-
 
 

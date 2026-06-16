@@ -151,6 +151,20 @@ function splitProxyConfig<T extends GeminiProxyConfig>(config: T): { modelConfig
     return { modelConfig, billing };
 }
 
+function notifyCreditsUpdated(response: unknown): void {
+    if (typeof window === 'undefined') return;
+    const metadata = (response as { metadata?: { billing?: { tenantId?: string; requestedTenantId?: string } } })?.metadata;
+    const billing = metadata?.billing;
+    if (!billing) return;
+
+    window.dispatchEvent(new CustomEvent('quimera:credits-updated', {
+        detail: {
+            tenantId: billing.requestedTenantId || billing.tenantId,
+            billing,
+        },
+    }));
+}
+
 /**
  * Generate content using the Gemini proxy
  * Includes automatic fallback from gemini-3 to gemini-2.5 on capacity errors
@@ -222,6 +236,7 @@ export async function generateContentViaProxy(
         }
 
         const data: GeminiProxyResponse = await response.json();
+        notifyCreditsUpdated(data);
         return data;
     } catch (error) {
         // Also catch network-level 503 errors
@@ -329,6 +344,7 @@ export async function generateChatContentViaProxy(
         }
 
         const data: GeminiProxyResponse = await response.json();
+        notifyCreditsUpdated(data);
         return data;
     } catch (error) {
         // Also catch network-level 503 errors
@@ -432,6 +448,7 @@ export async function generateMultimodalContentViaProxy(
         }
 
         const data: GeminiProxyResponse = await response.json();
+        notifyCreditsUpdated(data);
         return data;
     } catch (error) {
         // Also catch network-level 503 errors
@@ -638,6 +655,7 @@ export async function generateImageViaProxy(
             throw new Error('No image returned from proxy');
         }
 
+        notifyCreditsUpdated(data);
         return data;
     } catch (error) {
         console.error('Image generation proxy error:', error);
@@ -761,7 +779,6 @@ export function shouldUseProxy(): boolean {
     // This ensures the API key is NEVER exposed in the browser
     return true;
 }
-
 
 
 
