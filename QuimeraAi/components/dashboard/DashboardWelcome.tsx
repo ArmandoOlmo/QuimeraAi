@@ -269,18 +269,18 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                             <Sparkles size={13} className="text-q-accent" />
                             <span className="truncate">Web Design Studio</span>
                         </button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-shrink-0 items-center gap-2">
                             <button
                                 type="button"
                                 onClick={() => handleOpenAIStudio(undefined, true)}
-                                className="h-9 w-9 flex items-center justify-center rounded-full text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/60 transition-colors"
+                                className="no-min-touch size-9 flex shrink-0 items-center justify-center rounded-full p-0 text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/60 transition-colors touch-manipulation"
                                 title={t('aiWebsiteStudio.chat.startVoice', 'Iniciar voz')}
                             >
                                 <Mic size={16} />
                             </button>
                             <button
                                 type="submit"
-                                className="h-9 w-9 flex items-center justify-center rounded-full bg-q-accent text-q-text-on-accent shadow-lg shadow-q-accent/20 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-q-accent/40"
+                                className="no-min-touch size-9 flex shrink-0 items-center justify-center rounded-full p-0 bg-q-accent text-q-text-on-accent shadow-lg shadow-q-accent/20 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-q-accent/40 touch-manipulation"
                                 title={t('dashboard.createWithAI')}
                             >
                                 <ArrowUp size={17} />
