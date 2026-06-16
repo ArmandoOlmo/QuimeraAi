@@ -13,8 +13,6 @@ import {
     Edit,
     Trash2,
     Package,
-    Grid,
-    List,
     Image as ImageIcon,
     Loader2,
     X,
@@ -26,6 +24,8 @@ import { Product, ProductStatus } from '../../../../types/ecommerce';
 import ProductForm from '../components/ProductForm';
 import ProductCard from '../components/ProductCard';
 import { useEcommerceContext } from '../EcommerceDashboard';
+import { CatalogFilterBar, FilterChipRow, SortViewControls, CatalogToolbarFooter } from '../../filters';
+import type { FilterChipOption } from '../../filters';
 
 type ViewMode = 'grid' | 'list';
 
@@ -38,7 +38,7 @@ const ProductsView: React.FC = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('');
-    const [selectedStatus, setSelectedStatus] = useState<ProductStatus | ''>('');
+    const [selectedStatus, setSelectedStatus] = useState<ProductStatus | 'all'>('all');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [showForm, setShowForm] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -52,11 +52,25 @@ const ProductsView: React.FC = () => {
                 product.sku?.toLowerCase().includes(searchTerm.toLowerCase());
 
             const matchesCategory = !selectedCategory || product.categoryId === selectedCategory;
-            const matchesStatus = !selectedStatus || product.status === selectedStatus;
+            const matchesStatus = selectedStatus === 'all' || product.status === selectedStatus;
 
             return matchesSearch && matchesCategory && matchesStatus;
         });
     }, [products, searchTerm, selectedCategory, selectedStatus]);
+
+    const statusCounts = useMemo(() => ({
+        all: products.length,
+        active: products.filter((p) => p.status === 'active').length,
+        draft: products.filter((p) => p.status === 'draft').length,
+        archived: products.filter((p) => p.status === 'archived').length,
+    }), [products]);
+
+    const statusFilterOptions = useMemo<FilterChipOption<ProductStatus | 'all'>[]>(() => [
+        { id: 'all', label: t('ecommerce.allStatuses', 'Todos los estados'), count: statusCounts.all },
+        { id: 'active', label: t('ecommerce.active', 'Activo'), count: statusCounts.active, color: 'green' },
+        { id: 'draft', label: t('ecommerce.draft', 'Borrador'), count: statusCounts.draft, color: 'gray' },
+        { id: 'archived', label: t('ecommerce.archived', 'Archivado'), count: statusCounts.archived, color: 'gray' },
+    ], [t, statusCounts]);
 
     // Get low stock count
     const lowStockCount = useMemo(() => {
@@ -134,75 +148,62 @@ const ProductsView: React.FC = () => {
                 </button>
             </div>
 
-            {/* Filters Bar */}
-            <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
-                <div className="flex flex-col lg:flex-row gap-4">
-                    {/* Search */}
-                    <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
-                        <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
-                        <input
-                            type="text"
-                            placeholder={t('ecommerce.searchProducts', 'Buscar productos...')}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                        />
-                        {searchTerm && (
-                            <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
-                                <X size={16} />
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Category Filter */}
-                    <select
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                        <option value="">{t('ecommerce.allCategories', 'Todas las categorías')}</option>
-                        {categories.map((cat) => (
-                            <option key={cat.id} value={cat.id}>
-                                {cat.name}
-                            </option>
-                        ))}
-                    </select>
-
-                    {/* Status Filter */}
-                    <select
-                        value={selectedStatus}
-                        onChange={(e) => setSelectedStatus(e.target.value as ProductStatus | '')}
-                        className="px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                        <option value="">{t('ecommerce.allStatuses', 'Todos los estados')}</option>
-                        <option value="active">{t('ecommerce.active', 'Activo')}</option>
-                        <option value="draft">{t('ecommerce.draft', 'Borrador')}</option>
-                        <option value="archived">{t('ecommerce.archived', 'Archivado')}</option>
-                    </select>
-
-                    {/* View Mode Toggle */}
-                    <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
-                        <button
-                            onClick={() => setViewMode('grid')}
-                            className={`p-2 rounded transition-colors ${viewMode === 'grid'
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'text-q-text-muted hover:text-foreground'
-                                }`}
-                        >
-                            <Grid size={20} />
+            {/* Search + category */}
+            <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                    <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
+                    <input
+                        type="text"
+                        placeholder={t('ecommerce.searchProducts', 'Buscar productos...')}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="flex-1 bg-transparent outline-none text-sm min-w-0"
+                    />
+                    {searchTerm && (
+                        <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
+                            <X size={16} />
                         </button>
-                        <button
-                            onClick={() => setViewMode('list')}
-                            className={`p-2 rounded transition-colors ${viewMode === 'list'
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'text-q-text-muted hover:text-foreground'
-                                }`}
-                        >
-                            <List size={20} />
-                        </button>
-                    </div>
+                    )}
                 </div>
+                <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                    <option value="">{t('ecommerce.allCategories', 'Todas las categorías')}</option>
+                    {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                        </option>
+                    ))}
+                </select>
             </div>
+
+            <CatalogFilterBar
+                filters={
+                    <FilterChipRow
+                        options={statusFilterOptions}
+                        value={selectedStatus}
+                        onChange={(value) => setSelectedStatus(value as ProductStatus | 'all')}
+                    />
+                }
+                trailing={
+                    <SortViewControls
+                        viewMode={viewMode}
+                        onViewModeChange={setViewMode}
+                        sortVariant="none"
+                    />
+                }
+                footer={
+                    <CatalogToolbarFooter
+                        count={filteredProducts.length}
+                        total={products.length}
+                        countLabelDefault={`${filteredProducts.length} de ${products.length}`}
+                        viewMode={viewMode}
+                        onViewModeChange={setViewMode}
+                    />
+                }
+            />
 
             {/* Products Grid/List */}
             {filteredProducts.length === 0 ? (
@@ -212,11 +213,11 @@ const ProductsView: React.FC = () => {
                         {t('ecommerce.noProducts', 'No hay productos')}
                     </h3>
                     <p className="text-q-text-muted mb-4">
-                        {searchTerm || selectedCategory || selectedStatus
+                        {searchTerm || selectedCategory || selectedStatus !== 'all'
                             ? t('ecommerce.noProductsFilter', 'No se encontraron productos con los filtros aplicados')
                             : t('ecommerce.noProductsYet', 'Aún no has agregado ningún producto')}
                     </p>
-                    {!searchTerm && !selectedCategory && !selectedStatus && (
+                    {!searchTerm && !selectedCategory && selectedStatus === 'all' && (
                         <button
                             onClick={() => setShowForm(true)}
                             className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90"

@@ -21,6 +21,8 @@ import { ProjectTransferModal } from './ProjectTransferModal';
 import { SubdomainConfigModal } from './SubdomainConfigModal';
 import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
 import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
+import { CatalogFilterBar, ProjectStatusFilterChips, CatalogToolbarFooter } from '../filters';
+import type { ProjectFilterStatus } from '../filters';
 
 // ============================================================================
 // COMPONENT
@@ -31,18 +33,22 @@ export function AgencyProjects() {
     const { projects, isLoadingProjects } = useProject();
 
     const [searchQuery, setSearchQuery] = useState('');
+    const [filterStatus, setFilterStatus] = useState<ProjectFilterStatus>('all');
     const [transferProject, setTransferProject] = useState<Project | null>(null);
     const [subdomainProject, setSubdomainProject] = useState<Project | null>(null);
 
     // Filter out templates, show only user projects
     const userProjects = projects.filter(p => p.status !== 'Template');
 
-    // Apply search filter
-    const filteredProjects = searchQuery
-        ? userProjects.filter(p =>
-            p.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        : userProjects;
+    const publishedCount = userProjects.filter(p => p.status === 'Published').length;
+    const draftCount = userProjects.filter(p => p.status === 'Draft').length;
+
+    // Apply search and status filters
+    const filteredProjects = userProjects.filter(p => {
+        const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
+        return matchesSearch && matchesStatus;
+    });
 
     const formatDate = (dateStr: string) => {
         try {
@@ -86,6 +92,26 @@ export function AgencyProjects() {
                 </div>
             </div>
 
+            <CatalogFilterBar
+                filters={
+                    <ProjectStatusFilterChips
+                        value={filterStatus}
+                        onChange={setFilterStatus}
+                        totalCount={userProjects.length}
+                        publishedCount={publishedCount}
+                        draftCount={draftCount}
+                    />
+                }
+                footer={
+                    <CatalogToolbarFooter
+                        count={filteredProjects.length}
+                        total={userProjects.length}
+                        countLabelDefault={`${filteredProjects.length} de ${userProjects.length}`}
+                    />
+                }
+                className="mb-6"
+            />
+
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
                 <div className="p-4 rounded-xl bg-secondary/30 border border-q-border/50">
@@ -121,7 +147,7 @@ export function AgencyProjects() {
                 <div className="text-center py-16">
                     <FileText size={40} className="mx-auto mb-3 text-q-text-muted/50" />
                     <p className="text-q-text-muted font-medium">
-                        {searchQuery
+                        {searchQuery || filterStatus !== 'all'
                             ? t('agency.noProjectsSearch', 'No hay proyectos que coincidan con tu búsqueda')
                             : t('agency.noProjectsYet', 'No tienes proyectos aún')
                         }

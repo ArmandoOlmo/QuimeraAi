@@ -26,6 +26,7 @@ import { useDiscounts } from '../hooks/useDiscounts';
 import { Discount, DiscountType } from '../../../../types/ecommerce';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
 import { useEcommerceContext } from '../EcommerceDashboard';
+import { CatalogFilterBar, FilterChipRow } from '../../filters';
 
 const DiscountsView: React.FC = () => {
     const { t } = useTranslation();
@@ -227,36 +228,29 @@ const DiscountsView: React.FC = () => {
                 </button>
             </div>
 
-            {/* Filter Tabs */}
-            <div className="flex gap-2">
-                <button
-                    onClick={() => setFilter('all')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${filter === 'all'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-q-surface/50 text-q-text-muted hover:text-foreground'
-                        }`}
-                >
-                    {t('ecommerce.all', 'Todos')} ({discounts.length})
-                </button>
-                <button
-                    onClick={() => setFilter('active')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${filter === 'active'
-                            ? 'bg-green-600 text-white'
-                            : 'bg-q-surface/50 text-q-text-muted hover:text-foreground'
-                        }`}
-                >
-                    {t('ecommerce.active', 'Activos')} ({activeDiscounts.length})
-                </button>
-                <button
-                    onClick={() => setFilter('expired')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${filter === 'expired'
-                            ? 'bg-muted text-foreground'
-                            : 'bg-q-surface/50 text-q-text-muted hover:text-foreground'
-                        }`}
-                >
-                    {t('ecommerce.expired', 'Expirados')} ({expiredDiscounts.length})
-                </button>
-            </div>
+            <CatalogFilterBar
+                filters={
+                    <FilterChipRow
+                        value={filter}
+                        onChange={(value) => setFilter(value as typeof filter)}
+                        options={[
+                            { id: 'all', label: t('ecommerce.all', 'Todos'), count: discounts.length },
+                            {
+                                id: 'active',
+                                label: t('ecommerce.active', 'Activos'),
+                                count: activeDiscounts.length,
+                                color: 'green',
+                            },
+                            {
+                                id: 'expired',
+                                label: t('ecommerce.expired', 'Expirados'),
+                                count: expiredDiscounts.length,
+                                color: 'gray',
+                            },
+                        ]}
+                    />
+                }
+            />
 
             {/* Discounts List */}
             {filteredDiscounts.length === 0 ? (

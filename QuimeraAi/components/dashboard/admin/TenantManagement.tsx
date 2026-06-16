@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import { FilterChipRow } from '../filters';
+import type { FilterChipOption } from '../filters';
 import { db, collection, getDocs, query, where, orderBy, limit } from '@/utils/compatData';
 import { doc, getDoc } from '@/utils/compatData';
 import { AiCreditsUsage, AiCreditTransaction, getUsageColor } from '../../../types/subscription';
@@ -320,38 +322,16 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                     {/* Tabs y controles */}
                     <div className="bg-q-surface border border-q-border rounded-lg p-4 mb-6">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                            {/* Tabs */}
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setActiveTab('all')}
-                                    className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'all'
-                                        ? 'text-q-accent'
-                                        : 'text-q-text-secondary hover:text-q-text'
-                                        }`}
-                                >
-                                    {t('superadmin.tenant.allTenants', 'Todos')} ({tenants.length})
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('individual')}
-                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'individual'
-                                        ? 'text-q-accent'
-                                        : 'text-q-text-secondary hover:text-q-text'
-                                        }`}
-                                >
-                                    <User size={16} />
-                                    {t('superadmin.tenant.individual', 'Individuales')} ({individualCount})
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('agency')}
-                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'agency'
-                                        ? 'text-q-accent'
-                                        : 'text-q-text-secondary hover:text-q-text'
-                                        }`}
-                                >
-                                    <Building2 size={16} />
-                                    {t('superadmin.tenant.agencies', 'Agencias')} ({agencyCount})
-                                </button>
-                            </div>
+                            {/* Type filter */}
+                            <FilterChipRow
+                                options={[
+                                    { id: 'all' as const, label: t('superadmin.tenant.allTenants', 'Todos'), count: tenants.length },
+                                    { id: 'individual' as const, label: t('superadmin.tenant.individual', 'Individuales'), count: individualCount, icon: <User size={14} /> },
+                                    { id: 'agency' as const, label: t('superadmin.tenant.agencies', 'Agencias'), count: agencyCount, icon: <Building2 size={14} /> },
+                                ]}
+                                value={activeTab}
+                                onChange={(value) => setActiveTab(value as 'all' | 'individual' | 'agency')}
+                            />
 
                             {/* Búsqueda y filtros */}
                             <div className="flex items-center gap-3">

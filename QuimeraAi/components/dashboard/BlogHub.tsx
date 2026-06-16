@@ -13,7 +13,10 @@ import { useUI } from '../../contexts/core/UIContext';
 import { AppArticle, AppArticleCategory } from '../../types/appContent';
 import DashboardSidebar from './DashboardSidebar';
 import HeaderBackButton from '../ui/HeaderBackButton';
+import MobileSearchModal from '../ui/MobileSearchModal';
 import { SettingsStatCard } from './settings/SettingsStatCard';
+import { FilterChipRow } from './filters';
+import type { FilterChipOption } from './filters';
 import {
   Menu,
   Search,
@@ -25,7 +28,6 @@ import {
   FileText,
   ArrowRight,
   ExternalLink,
-  X,
   Filter,
   Newspaper,
   ChevronDown,
@@ -100,6 +102,7 @@ const BlogHub: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<'all' | AppArticleCategory>('all');
   const [selectedArticle, setSelectedArticle] = useState<AppArticle | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Scroll to top when selecting an article
   useEffect(() => {
@@ -166,6 +169,22 @@ const BlogHub: React.FC = () => {
     const cats = new Set(publishedArticles.map((a) => a.category));
     return Array.from(cats);
   }, [publishedArticles]);
+
+  const categoryFilterOptions = useMemo<FilterChipOption<'all' | AppArticleCategory>[]>(() => {
+    const categoryCounts = publishedArticles.reduce<Record<string, number>>((acc, article) => {
+      acc[article.category] = (acc[article.category] || 0) + 1;
+      return acc;
+    }, {});
+
+    return [
+      { id: 'all', label: t('common.all', 'Todos'), count: publishedArticles.length },
+      ...availableCategories.map((cat) => ({
+        id: cat,
+        label: t(`blog.categories.${cat}`, cat),
+        count: categoryCounts[cat],
+      })),
+    ];
+  }, [availableCategories, publishedArticles, t]);
 
   // Related articles for the currently selected article
   const relatedArticles = useMemo(() => {
@@ -402,51 +421,28 @@ const BlogHub: React.FC = () => {
             </div>
           </div>
 
-          {/* Search */}
-          <div className="hidden md:flex flex-1 justify-center mx-4">
-            <div className="flex items-center gap-2 w-full max-w-md bg-muted/50 rounded-lg px-3 py-2">
-              <Search className="w-4 h-4 text-q-text-muted flex-shrink-0" />
-              <input
-                type="text"
-                placeholder={t('blog.searchPlaceholder', 'Buscar artículos...')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-q-text-muted"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="text-q-text-muted hover:text-foreground flex-shrink-0"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Filter toggle */}
+          {/* Right actions */}
           <div className="ml-auto flex items-center gap-2">
-            {/* Mobile search */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`h-9 w-9 flex items-center justify-center rounded-lg transition-colors ${
-                  showFilters ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground hover:bg-secondary'
-                }`}
-              >
-                <Search className="w-4 h-4" />
-              </button>
-            </div>
+            {/* Search trigger */}
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="h-9 w-9 flex items-center justify-center rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
+              title={t('blog.searchPlaceholder', 'Buscar artículos...')}
+            >
+              <Search className="w-4 h-4" />
+            </button>
+
+            {/* Filter toggle */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`hidden md:flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+              className={`flex items-center gap-2 px-2 sm:px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                 showFilters || categoryFilter !== 'all'
                   ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text border border-[color-mix(in_srgb,var(--quimera-status-accent-from)_30%,transparent)]'
                   : 'bg-secondary/50 hover:bg-secondary text-q-text-muted hover:text-foreground'
               }`}
             >
               <Filter size={14} />
-              {t('common.filters', 'Filtros')}
+              <span className="hidden sm:inline">{t('common.filters', 'Filtros')}</span>
               {categoryFilter !== 'all' && (
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--quimera-status-accent-from)]" />
               )}
@@ -455,67 +451,23 @@ const BlogHub: React.FC = () => {
           </div>
         </header>
 
+        <MobileSearchModal
+          isOpen={isSearchOpen}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onClose={() => setIsSearchOpen(false)}
+          placeholder={t('blog.searchPlaceholder', 'Buscar artículos...')}
+        />
+
         {/* Filters panel */}
         {showFilters && (
           <div className="px-4 sm:px-6 py-3 border-b border-q-border bg-q-surface/40 animate-slide-down">
-            {/* Mobile search field */}
-            <div className="md:hidden mb-3">
-              <div className="flex items-center gap-2 bg-q-bg rounded-lg px-3 py-2 border border-q-border">
-                <Search className="w-4 h-4 text-q-text-muted" />
-                <input
-                  type="text"
-                  placeholder={t('blog.searchPlaceholder', 'Buscar artículos...')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-q-text-muted"
-                  autoFocus
-                />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="text-q-text-muted hover:text-foreground">
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Category pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              <button
-                onClick={() => setCategoryFilter('all')}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
-                  categoryFilter === 'all'
-                    ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text border border-[color-mix(in_srgb,var(--quimera-status-accent-from)_30%,transparent)]'
-                    : 'bg-secondary/50 text-q-text-muted hover:text-foreground hover:bg-secondary border border-q-border'
-                }`}
-              >
-                {t('common.all', 'Todos')}
-              </button>
-              {availableCategories.map((cat) => {
-                const colors = CATEGORY_COLORS[cat] || CATEGORY_COLORS.blog;
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setCategoryFilter(cat === categoryFilter ? 'all' : cat)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
-                      categoryFilter === cat
-                        ? `${colors.bg} ${colors.text} border ${colors.border}`
-                        : 'bg-secondary/50 text-q-text-muted hover:text-foreground hover:bg-secondary border border-q-border'
-                    }`}
-                  >
-                    {t(`blog.categories.${cat}`, cat)}
-                  </button>
-                );
-              })}
-              {categoryFilter !== 'all' && (
-                <button
-                  onClick={() => setCategoryFilter('all')}
-                  className="ml-auto text-xs text-q-text-muted hover:text-foreground flex items-center gap-1 flex-shrink-0"
-                >
-                  <X size={12} />
-                  {t('common.clear', 'Limpiar')}
-                </button>
-              )}
-            </div>
+            {/* Category filters */}
+            <FilterChipRow
+              options={categoryFilterOptions}
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+            />
           </div>
         )}
 

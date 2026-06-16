@@ -23,6 +23,8 @@ import {
     ServiceAuditEntry,
 } from '../../../types/serviceAvailability';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import { FilterChipRow } from '../filters';
+import type { FilterChipOption } from '../filters';
 
 // =============================================================================
 // TYPES
@@ -438,21 +440,15 @@ const ServiceAvailabilityControl: React.FC<ServiceAvailabilityControlProps> = ({
                     {activeTab === 'services' && (
                         <>
                             {/* Category Filter */}
-                            <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
-                                <Filter size={16} className="text-q-text-secondary flex-shrink-0" />
-                                {categories.map(cat => (
-                                    <button
-                                        key={cat.id}
-                                        onClick={() => setCategoryFilter(cat.id)}
-                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${categoryFilter === cat.id
-                                            ? 'bg-q-accent text-white'
-                                            : 'bg-q-surface text-q-text-secondary hover:text-q-text'
-                                            }`}
-                                    >
-                                        {cat.label}
-                                    </button>
-                                ))}
-                            </div>
+                            <FilterChipRow
+                                options={categories.map((cat) => ({
+                                    id: cat.id,
+                                    label: cat.label,
+                                }))}
+                                value={categoryFilter}
+                                onChange={setCategoryFilter}
+                                className="mb-6"
+                            />
 
                             {/* Services Grid */}
                             {categoryFilter === 'all' ? (

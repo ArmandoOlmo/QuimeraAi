@@ -7,15 +7,16 @@ import type { DashboardFiltersHook } from '../../hooks/useDashboardFilters';
 import ProjectCard from './ProjectCard';
 import ProjectCardSkeleton from './ProjectCardSkeleton';
 import ProjectListItem from './ProjectListItem';
-import FilterChip from './FilterChip';
 import EmptyState from './EmptyState';
+import {
+    WebsiteCatalogToolbar,
+} from './filters';
 import {
     Plus,
     Search,
     Globe,
     LayoutGrid,
     List,
-    ArrowUpDown,
     CheckCircle,
     FileEdit,
 } from 'lucide-react';
@@ -133,111 +134,20 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
 
             {/* Projects Section with Filters */}
             <section className="relative z-[1]">
-                {/* Filter Chips */}
-                <div className="mb-4 md:mb-6 space-y-3 md:space-y-4">
-                    <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                        <FilterChip
-                            label={t('dashboard.allStatus')}
-                            active={filterStatus === 'all'}
-                            count={allUserProjects.length}
-                            onClick={() => setFilterStatus('all')}
-                        />
-                        <FilterChip
-                            label={t('dashboard.published')}
-                            active={filterStatus === 'Published'}
-                            count={publishedCount}
-                            onClick={() => setFilterStatus('Published')}
-                            color="green"
-                        />
-                        <FilterChip
-                            label={t('dashboard.draft')}
-                            active={filterStatus === 'Draft'}
-                            count={draftCount}
-                            onClick={() => setFilterStatus('Draft')}
-                            color="gray"
-                        />
-
-                        {/* Spacer */}
-                        <div className="flex-1" />
-
-                        {/* Sort Button */}
-                        <button
-                            onClick={() => {
-                                if (sortBy === 'lastUpdated') {
-                                    setSortBy('name');
-                                    setSortOrder('asc');
-                                } else if (sortBy === 'name' && sortOrder === 'asc') {
-                                    setSortOrder('desc');
-                                } else {
-                                    setSortBy('lastUpdated');
-                                    setSortOrder('desc');
-                                }
-                            }}
-                            className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-q-text-muted hover:text-foreground hover:bg-secondary"
-                            aria-label={`Sort by ${sortBy} (${sortOrder}ending)`}
-                        >
-                            <ArrowUpDown size={14} aria-hidden="true" />
-                            <span className="hidden md:inline">
-                                {sortBy === 'name' ? t('common.name') : t('common.updated')}
-                            </span>
-                        </button>
-
-                        {/* View Mode Toggle */}
-                        <div
-                            className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1"
-                            role="group"
-                            aria-label="View mode"
-                        >
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${
-                                    viewMode === 'grid'
-                                        ? 'text-primary bg-q-bg'
-                                        : 'text-q-text-muted hover:text-foreground'
-                                }`}
-                                aria-label={t('dashboard.gridView')}
-                                aria-pressed={viewMode === 'grid'}
-                            >
-                                <LayoutGrid size={15} aria-hidden="true" />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${
-                                    viewMode === 'list'
-                                        ? 'text-primary bg-q-bg'
-                                        : 'text-q-text-muted hover:text-foreground'
-                                }`}
-                                aria-label={t('dashboard.listView')}
-                                aria-pressed={viewMode === 'list'}
-                            >
-                                <List size={15} aria-hidden="true" />
-                            </button>
-                        </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs md:text-sm text-q-text-muted">
-                            {t('dashboard.showingProjects', {
-                                count: userProjects.length,
-                                total: allUserProjects.length,
-                            })}
-                        </span>
-                        {/* Mobile controls */}
-                        <div className="flex items-center gap-2 sm:hidden">
-                            <button
-                                onClick={() =>
-                                    setViewMode(viewMode === 'grid' ? 'list' : 'grid')
-                                }
-                                className="p-2 bg-secondary/50 rounded-lg text-q-text-muted hover:text-foreground transition-colors"
-                            >
-                                {viewMode === 'grid' ? (
-                                    <List size={16} />
-                                ) : (
-                                    <LayoutGrid size={16} />
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <WebsiteCatalogToolbar
+                    filterStatus={filterStatus}
+                    onFilterStatusChange={setFilterStatus}
+                    totalCount={allUserProjects.length}
+                    publishedCount={publishedCount}
+                    draftCount={draftCount}
+                    filteredCount={userProjects.length}
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSortByChange={setSortBy}
+                    onSortOrderChange={setSortOrder}
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                />
 
                 {/* Project Cards */}
                 {isLoadingProjects ? (

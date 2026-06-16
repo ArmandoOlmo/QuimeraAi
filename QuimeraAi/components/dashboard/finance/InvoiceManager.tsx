@@ -14,7 +14,8 @@ import { generateContentViaProxy, extractTextFromResponse } from '../../../utils
 import { logApiCall } from '../../../services/apiLoggingService';
 import { Skeleton } from '../../ui/skeleton';
 import ConfirmationModal from '../../ui/ConfirmationModal';
-import DashboardSelect from '../../ui/DashboardSelect';
+import { FilterChipRow } from '../../dashboard/filters';
+import type { FilterChipOption } from '../../dashboard/filters';
 import type { Invoice, InvoiceItem, InvoiceStatus } from '../../../types/finance';
 
 interface InvoiceManagerProps {
@@ -74,6 +75,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
         if (filterStatus !== 'all') r = r.filter(inv => inv.status === filterStatus);
         return r;
     }, [invoices, searchTerm, filterStatus]);
+
+    const statusFilterOptions = useMemo<FilterChipOption<InvoiceStatus | 'all'>[]>(() => [
+        { id: 'all', label: t('accounting.allStatuses', 'All'), count: invoices.length },
+        { id: 'draft', label: t('accounting.draft', 'Draft'), count: invoices.filter(i => i.status === 'draft').length, color: 'gray' },
+        { id: 'sent', label: t('accounting.sent', 'Sent'), count: invoices.filter(i => i.status === 'sent').length },
+        { id: 'paid', label: t('accounting.paid', 'Paid'), count: invoices.filter(i => i.status === 'paid').length, color: 'green' },
+        { id: 'overdue', label: t('accounting.overdue', 'Overdue'), count: invoices.filter(i => i.status === 'overdue').length, color: 'gray' },
+    ], [invoices, t]);
 
     const resetForm = () => { setClientName(''); setClientEmail(''); setIssueDate(today); setDueDate(''); setPaymentTerms('Net 30'); setReminderNote(''); setNotes(''); setCurrency('USD'); setItems([{ ...EMPTY_ITEM, id: crypto.randomUUID() }]); setEditingId(null); };
 
@@ -176,18 +185,11 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div className="relative flex-1 w-full"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted" /><input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder={t('accounting.searchInvoices', 'Search invoices...')} className="w-full h-10 pl-9 pr-4 rounded-xl border border-q-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40" /></div>
                 <div className="flex items-center gap-2">
-                    <DashboardSelect
-                        value={filterStatus}
-                        onChange={val => setFilterStatus(val as any)}
-                        options={[
-                            { value: 'all', label: t('accounting.allStatuses', 'All') },
-                            { value: 'draft', label: t('accounting.draft', 'Draft') },
-                            { value: 'sent', label: t('accounting.sent', 'Sent') },
-                            { value: 'paid', label: t('accounting.paid', 'Paid') },
-                            { value: 'overdue', label: t('accounting.overdue', 'Overdue') },
-                        ]}
-                        className="min-w-[120px]"
-                    />
+                <FilterChipRow
+                    options={statusFilterOptions}
+                    value={filterStatus}
+                    onChange={setFilterStatus}
+                />
                     <button onClick={() => { resetForm(); setView('form'); }} className="quimera-guide-cta h-10 px-4 rounded-xl text-sm font-semibold flex items-center gap-2"><Plus size={16} />{t('accounting.newInvoice', 'New Invoice')}</button>
                 </div>
             </div>

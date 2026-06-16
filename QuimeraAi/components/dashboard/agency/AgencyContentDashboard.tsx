@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { AgencyArticle, AgencyArticleCategory, AgencyLegalPageType, AGENCY_LEGAL_PAGE_LABELS } from '../../../types/agencyContent';
 import { sanitizeHtml } from '../../../utils/sanitize';
+import { CatalogFilterBar, ContentStatusFilterChips, SortViewControls, CatalogToolbarFooter } from '../filters';
 
 interface AgencyContentDashboardProps {
     onBack: () => void;
@@ -607,106 +608,79 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
 
                                 {/* Filter Bar */}
                                 <div className="space-y-3">
-                                    {/* Top row - Count and view toggles */}
-                                    <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="px-3 py-1.5 bg-secondary/50 text-xs rounded-full text-q-text-muted font-medium">
-                                                {filteredAndSortedArticles.length} de {articles.length}
-                                            </span>
-
-                                            {/* Active filters indicator */}
-                                            {(statusFilter !== 'all' || categoryFilter !== 'all' || dateRange !== 'all') && (
-                                                <button
-                                                    onClick={() => {
-                                                        setStatusFilter('all');
-                                                        setCategoryFilter('all');
-                                                        setDateRange('all');
-                                                    }}
-                                                    className="text-xs text-q-text-muted hover:text-foreground flex items-center gap-1 transition-colors"
+                                    <CatalogFilterBar
+                                        filters={
+                                            <ContentStatusFilterChips
+                                                value={statusFilter}
+                                                onChange={setStatusFilter}
+                                                totalCount={metrics.total}
+                                                publishedCount={metrics.published}
+                                                draftCount={metrics.drafts}
+                                            />
+                                        }
+                                        trailing={
+                                            <SortViewControls
+                                                viewMode={viewMode}
+                                                onViewModeChange={setViewMode}
+                                                sortVariant="cycle"
+                                                sortBy={sortBy === 'date' ? 'lastUpdated' : 'name'}
+                                                sortOrder={sortOrder}
+                                                onSortByChange={(field) =>
+                                                    setSortBy(field === 'lastUpdated' ? 'date' : 'title')
+                                                }
+                                                onSortOrderChange={setSortOrder}
+                                            />
+                                        }
+                                        footer={
+                                            <>
+                                                <CatalogToolbarFooter
+                                                    count={filteredAndSortedArticles.length}
+                                                    total={articles.length}
+                                                    countLabelDefault={`${filteredAndSortedArticles.length} de ${articles.length}`}
+                                                    viewMode={viewMode}
+                                                    onViewModeChange={setViewMode}
+                                                />
+                                                <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible scrollbar-hide pt-3">
+                                                {/* Category filter */}
+                                                <select
+                                                    value={categoryFilter}
+                                                    onChange={(e) => setCategoryFilter(e.target.value as any)}
+                                                    className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                                 >
-                                                    <XIcon size={12} /> {t('common.clear', 'Limpiar')}
-                                                </button>
-                                            )}
-                                        </div>
+                                                    <option value="all">{t('contentManagement.filters.allCategories', 'Todas las categorías')}</option>
+                                                    {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+                                                        <option key={value} value={value}>{label}</option>
+                                                    ))}
+                                                </select>
 
-                                        <div className="flex items-center gap-1">
-                                            {/* Sort order asc/desc */}
-                                            <button
-                                                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                                                className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors text-q-text-muted hover:text-foreground hover:bg-border/40"
-                                                title={sortOrder === 'asc' ? 'Ascendente' : 'Descendente'}
-                                            >
-                                                {sortOrder === 'desc' ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
-                                            </button>
-
-                                            {/* View Grid/List */}
-                                            <div className="flex gap-0.5 sm:gap-1">
-                                                <button
-                                                    onClick={() => setViewMode('grid')}
-                                                    className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'grid' ? 'text-primary bg-primary/10' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
-                                                    title="Vista en cuadrícula"
+                                                {/* Date range filter */}
+                                                <select
+                                                    value={dateRange}
+                                                    onChange={(e) => setDateRange(e.target.value as any)}
+                                                    className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                                 >
-                                                    <Grid size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={() => setViewMode('list')}
-                                                    className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-primary bg-primary/10' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
-                                                    title="Vista en lista"
+                                                    <option value="all">{t('contentManagement.filters.allTime', 'Todo el tiempo')}</option>
+                                                    <option value="today">{t('contentManagement.filters.today', 'Hoy')}</option>
+                                                    <option value="week">{t('contentManagement.filters.last7Days', 'Últimos 7 días')}</option>
+                                                    <option value="month">{t('contentManagement.filters.last30Days', 'Últimos 30 días')}</option>
+                                                </select>
+
+                                                {/* Sort by views (date/title via cycle button above) */}
+                                                <select
+                                                    value={sortBy === 'views' ? 'views' : 'default'}
+                                                    onChange={(e) =>
+                                                        setSortBy(e.target.value === 'views' ? 'views' : 'date')
+                                                    }
+                                                    className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                                 >
-                                                    <List size={14} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Filters row - Horizontal scroll on mobile */}
-                                    <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible scrollbar-hide">
-                                        {/* Status filter */}
-                                        <select
-                                            value={statusFilter}
-                                            onChange={(e) => setStatusFilter(e.target.value as any)}
-                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
-                                        >
-                                            <option value="all">{t('contentManagement.filters.allStatus', 'Todos los estados')}</option>
-                                            <option value="published">{t('contentManagement.filters.published', 'Publicados')}</option>
-                                            <option value="draft">{t('contentManagement.filters.draft', 'Borradores')}</option>
-                                        </select>
-
-                                        {/* Category filter */}
-                                        <select
-                                            value={categoryFilter}
-                                            onChange={(e) => setCategoryFilter(e.target.value as any)}
-                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
-                                        >
-                                            <option value="all">{t('contentManagement.filters.allCategories', 'Todas las categorías')}</option>
-                                            {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-                                                <option key={value} value={value}>{label}</option>
-                                            ))}
-                                        </select>
-
-                                        {/* Date range filter */}
-                                        <select
-                                            value={dateRange}
-                                            onChange={(e) => setDateRange(e.target.value as any)}
-                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
-                                        >
-                                            <option value="all">{t('contentManagement.filters.allTime', 'Todo el tiempo')}</option>
-                                            <option value="today">{t('contentManagement.filters.today', 'Hoy')}</option>
-                                            <option value="week">{t('contentManagement.filters.last7Days', 'Últimos 7 días')}</option>
-                                            <option value="month">{t('contentManagement.filters.last30Days', 'Últimos 30 días')}</option>
-                                        </select>
-
-                                        {/* Sort by */}
-                                        <select
-                                            value={sortBy}
-                                            onChange={(e) => setSortBy(e.target.value as any)}
-                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
-                                        >
-                                            <option value="date">{t('contentManagement.filters.sortByDate', 'Ordenar por fecha')}</option>
-                                            <option value="title">{t('contentManagement.filters.sortByTitle', 'Ordenar por título')}</option>
-                                            <option value="views">{t('contentManagement.filters.sortByViews', 'Ordenar por vistas')}</option>
-                                        </select>
-                                    </div>
+                                                    <option value="default">{t('contentManagement.filters.sortByDate', 'Fecha / Título')}</option>
+                                                    <option value="views">{t('contentManagement.filters.sortByViews', 'Por vistas')}</option>
+                                                </select>
+                                                </div>
+                                            </>
+                                        }
+                                        className="mb-0"
+                                    />
                                 </div>
 
                                 {isLoading ? (

@@ -3,7 +3,7 @@
  * Vista para gestionar campañas de email marketing
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -44,6 +44,8 @@ import { CampaignStatus, AudienceType, EmailDocument, DEFAULT_EMAIL_GLOBAL_STYLE
 import EmailEditor from '../editor/EmailEditor';
 import EmailTemplateGallery from '../editor/EmailTemplateGallery';
 import { generateEmailHtml } from '../../../../utils/emailHtmlGenerator';
+import { CatalogFilterBar, FilterChipRow } from '../../filters';
+import type { FilterChipOption } from '../../filters';
 
 // Helper to convert plain text/markdown draft to HTML
 const parseDraftContent = (content: string, subject?: string): string => {
@@ -230,6 +232,24 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
         const matchesStatus = statusFilter === 'all' || campaign.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
+
+    const campaignStatusCounts = useMemo(() => ({
+        all: campaigns.length,
+        draft: campaigns.filter((c) => c.status === 'draft').length,
+        scheduled: campaigns.filter((c) => c.status === 'scheduled').length,
+        sending: campaigns.filter((c) => c.status === 'sending').length,
+        sent: campaigns.filter((c) => c.status === 'sent').length,
+        paused: campaigns.filter((c) => c.status === 'paused').length,
+    }), [campaigns]);
+
+    const statusFilterOptions = useMemo<FilterChipOption<CampaignStatus | 'all'>[]>(() => [
+        { id: 'all', label: t('email.allStatuses', 'Todos los estados'), count: campaignStatusCounts.all },
+        { id: 'draft', label: t('email.draft', 'Borrador'), count: campaignStatusCounts.draft, color: 'gray' },
+        { id: 'scheduled', label: t('email.scheduled', 'Programada'), count: campaignStatusCounts.scheduled },
+        { id: 'sending', label: t('email.sending', 'Enviando'), count: campaignStatusCounts.sending },
+        { id: 'sent', label: t('email.sent', 'Enviada'), count: campaignStatusCounts.sent, color: 'green' },
+        { id: 'paused', label: t('email.paused', 'Pausada'), count: campaignStatusCounts.paused, color: 'gray' },
+    ], [t, campaignStatusCounts]);
 
     const getStatusBadge = (status: CampaignStatus | undefined) => {
         const statusConfig: Record<CampaignStatus, { label: string; color: string; icon: React.ElementType }> = {
@@ -608,36 +628,32 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
 
 
             {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
-                    <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
-                    <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder={t('email.searchCampaigns', 'Buscar campañas...')}
-                        className="flex-1 bg-transparent outline-none text-sm min-w-0"
+            <CatalogFilterBar
+                filters={
+                    <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                        <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder={t('email.searchCampaigns', 'Buscar campañas...')}
+                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
+                        />
+                        {searchTerm && (
+                            <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
+                                <X size={16} />
+                            </button>
+                        )}
+                    </div>
+                }
+                footer={
+                    <FilterChipRow
+                        options={statusFilterOptions}
+                        value={statusFilter}
+                        onChange={setStatusFilter}
                     />
-                    {searchTerm && (
-                        <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
-                            <X size={16} />
-                        </button>
-                    )}
-                </div>
-
-                <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as CampaignStatus | 'all')}
-                    className="px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                    <option value="all">{t('email.allStatuses', 'Todos los estados')}</option>
-                    <option value="draft">{t('email.draft', 'Borrador')}</option>
-                    <option value="scheduled">{t('email.scheduled', 'Programada')}</option>
-                    <option value="sending">{t('email.sending', 'Enviando')}</option>
-                    <option value="sent">{t('email.sent', 'Enviada')}</option>
-                    <option value="paused">{t('email.paused', 'Pausada')}</option>
-                </select>
-            </div>
+                }
+            />
 
             {/* Campaigns List */}
             {

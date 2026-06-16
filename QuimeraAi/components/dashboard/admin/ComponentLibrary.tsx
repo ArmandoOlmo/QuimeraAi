@@ -8,6 +8,7 @@ import { Plus, Search, Filter, Trash2, Edit2, Shield, Eye, Settings, Layout, Cod
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import ComponentDocumentationViewer from './ComponentDocumentationViewer';
+import { FilterChipRow } from '../filters';
 
 const Label: React.FC<{ children: React.ReactNode, htmlFor?: string }> = ({ children, htmlFor }) => (
     <label htmlFor={htmlFor} className="block text-sm font-medium text-q-text-secondary mb-1">{children}</label>
@@ -151,6 +152,15 @@ const ComponentLibrary: React.FC = () => {
         });
     }, [searchQuery, filterStatus, filterCategory, componentStatus]);
 
+    const componentStatusCounts = useMemo(() => {
+        const keys = Object.keys(componentNames);
+        return {
+            all: keys.length,
+            enabled: keys.filter((key) => componentStatus[key]).length,
+            disabled: keys.filter((key) => !componentStatus[key]).length,
+        };
+    }, [componentStatus, componentNames]);
+
     return (
         <div className="p-6 sm:p-8 overflow-y-auto h-full">
             <div className="max-w-6xl mx-auto">
@@ -199,20 +209,15 @@ const ComponentLibrary: React.FC = () => {
                         <div className="flex items-center gap-2">
                             <Filter size={18} className="text-q-text-secondary" />
                             <span className="text-sm text-q-text-secondary font-medium">Status:</span>
-                            <div className="flex gap-2">
-                                {['all', 'enabled', 'disabled'].map(status => (
-                                    <button
-                                        key={status}
-                                        onClick={() => setFilterStatus(status as any)}
-                                        className={`px-3 py-1 text-sm font-medium transition-colors ${filterStatus === status
-                                            ? 'text-q-accent'
-                                            : 'text-q-text-secondary hover:text-q-text'
-                                            }`}
-                                    >
-                                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                                    </button>
-                                ))}
-                            </div>
+                            <FilterChipRow
+                                options={[
+                                    { id: 'all', label: 'All', count: componentStatusCounts.all },
+                                    { id: 'enabled', label: 'Enabled', count: componentStatusCounts.enabled, color: 'green' },
+                                    { id: 'disabled', label: 'Disabled', count: componentStatusCounts.disabled, color: 'gray' },
+                                ]}
+                                value={filterStatus}
+                                onChange={(value) => setFilterStatus(value as typeof filterStatus)}
+                            />
                         </div>
 
                         <div className="flex items-center gap-2">

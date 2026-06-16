@@ -17,6 +17,8 @@ import {
     MoreVertical, Eye, Settings2, Users, Target, Activity,
     CheckCircle, AlertTriangle, AlertCircle, Sparkles, BarChart3, Filter,
 } from 'lucide-react';
+import { FilterChipRow } from '../../../filters';
+import type { FilterChipOption } from '../../../filters';
 
 // Simple unique ID generator (no external dependency)
 const genId = () => Math.random().toString(36).substring(2, 10);
@@ -474,13 +476,13 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
     }, [automations, searchTerm, categoryFilter]);
 
     // Categories for filter
-    const categories: { id: AutomationCategoryFilter; label: string; count: number }[] = [
+    const categories = useMemo<FilterChipOption<AutomationCategoryFilter>[]>(() => [
         { id: 'all', label: t('adminEmail.automations.allCategories'), count: automations.length },
         { id: 'lifecycle', label: t('adminEmail.automations.catLifecycle'), count: automations.filter(a => a.category === 'lifecycle').length },
         { id: 'conversion', label: t('adminEmail.automations.catConversion'), count: automations.filter(a => a.category === 'conversion').length },
         { id: 'engagement', label: t('adminEmail.automations.catEngagement'), count: automations.filter(a => a.category === 'engagement').length },
         { id: 'retention', label: t('adminEmail.automations.catRetention'), count: automations.filter(a => a.category === 'retention').length },
-    ];
+    ], [automations, t]);
 
     // ==== Workflow Builder Helpers ====
 
@@ -830,23 +832,12 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
             {/* Category Tabs + Search */}
             <div className="bg-q-surface border border-q-border rounded-xl p-4">
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
-                    {/* Category pills */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                        {categories.map(cat => (
-                            <button
-                                key={cat.id}
-                                onClick={() => setCategoryFilter(cat.id)}
-                                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-                                    categoryFilter === cat.id
-                                        ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
-                                        : 'bg-q-bg/50 text-q-text-secondary border border-transparent hover:text-q-text hover:bg-q-bg'
-                                }`}
-                            >
-                                {cat.label}
-                                {cat.count > 0 && <span className="ml-1.5 opacity-60">({cat.count})</span>}
-                            </button>
-                        ))}
-                    </div>
+                    {/* Category filters */}
+                    <FilterChipRow
+                        options={categories}
+                        value={categoryFilter}
+                        onChange={(value) => setCategoryFilter(value as typeof categoryFilter)}
+                    />
                     {/* Search */}
                     <div className="flex-1 flex items-center gap-2 bg-q-bg/50 rounded-lg px-3 py-2 md:max-w-xs md:ml-auto">
                         <Search size={14} className="text-q-text-secondary flex-shrink-0" />

@@ -29,6 +29,7 @@ import {
   X,
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
+import { CatalogFilterBar, FilterChipRow } from '../filters';
 import { SettingsStatCard } from '../settings/SettingsStatCard';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import ConfirmationModal from '../../ui/ConfirmationModal';
@@ -508,8 +509,17 @@ const ReservationCard = ({ item, onEdit, onUpdateStatus }: { item: RestaurantRes
 const ReservationsManager = ({ reservationsState, scope, restaurantId }: any) => {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Partial<RestaurantReservation> | null>(null);
-  const [status, setStatus] = useState('');
-  const filtered = reservationsState.reservations.filter((item: RestaurantReservation) => !status || item.status === status);
+  const [status, setStatus] = useState<'all' | RestaurantReservation['status']>('all');
+  const reservations = reservationsState.reservations as RestaurantReservation[];
+  const statusCounts = useMemo(() => ({
+    all: reservations.length,
+    pending: reservations.filter((item) => item.status === 'pending').length,
+    confirmed: reservations.filter((item) => item.status === 'confirmed').length,
+    cancelled: reservations.filter((item) => item.status === 'cancelled').length,
+    completed: reservations.filter((item) => item.status === 'completed').length,
+    noShow: reservations.filter((item) => item.status === 'noShow').length,
+  }), [reservations]);
+  const filtered = reservations.filter((item: RestaurantReservation) => status === 'all' || item.status === status);
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -519,11 +529,23 @@ const ReservationsManager = ({ reservationsState, scope, restaurantId }: any) =>
           {t('restaurants.createReservation', 'Create reservation')}
         </button>
       </div>
+      <CatalogFilterBar
+        filters={
+          <FilterChipRow
+            value={status}
+            onChange={(value) => setStatus(value as typeof status)}
+            options={[
+              { id: 'all', label: t('restaurants.allStatuses', 'All statuses'), count: statusCounts.all },
+              { id: 'pending', label: t('restaurants.status.pending', 'pending'), count: statusCounts.pending, color: 'gray' },
+              { id: 'confirmed', label: t('restaurants.status.confirmed', 'confirmed'), count: statusCounts.confirmed, color: 'green' },
+              { id: 'cancelled', label: t('restaurants.status.cancelled', 'cancelled'), count: statusCounts.cancelled, color: 'gray' },
+              { id: 'completed', label: t('restaurants.status.completed', 'completed'), count: statusCounts.completed, color: 'green' },
+              { id: 'noShow', label: t('restaurants.status.noShow', 'noShow'), count: statusCounts.noShow },
+            ]}
+          />
+        }
+      />
       <div className="quimera-dashboard-panel-card p-5">
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="bg-muted/50 border border-q-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto mb-4">
-          <option value="">{t('restaurants.allStatuses', 'All statuses')}</option>
-          {['pending', 'confirmed', 'cancelled', 'completed', 'noShow'].map((s) => <option key={s} value={s}>{t(`restaurants.status.${s}`, s)}</option>)}
-        </select>
         {filtered.length === 0 ? (
           <EmptyPanel title={t('restaurants.emptyReservations', 'No reservations yet')} action={t('restaurants.createReservation', 'Create reservation')} onAction={() => setEditing(emptyReservation)} />
         ) : (

@@ -10,15 +10,9 @@ import { useAuth } from '../../contexts/core/AuthContext';
 import { useProject } from '../../contexts/project';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
-import {
-    db,
-    collection,
-    getDocs,
-    query,
-    orderBy,
-    limit,
-} from '@/utils/compatData';
+import { supabase } from '../../supabase';
 import { Lead } from '../../types';
+import { resolveProjectName } from '../../utils/resolveProjectName';
 import {
     Users,
     ExternalLink,
@@ -59,6 +53,14 @@ interface DashboardLead extends Lead {
     projectName?: string;
 }
 
+const toLeadTimestamp = (value: string | null | undefined): { seconds: number; nanoseconds: number } => {
+    const parsed = value ? Date.parse(value) : NaN;
+    return {
+        seconds: Number.isNaN(parsed) ? 0 : Math.floor(parsed / 1000),
+        nanoseconds: 0,
+    };
+};
+
 const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
     const { t } = useTranslation();
     const { user } = useAuth();
@@ -91,20 +93,37 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
                 // Fetch up to 5 recent leads per project (in parallel)
                 const promises = userProjects.map(async (project) => {
                     try {
-                        const leadsPath = `users/${user.id}/projects/${project.id}/leads`;
-                        const q = query(
-                            collection(db, leadsPath),
-                            orderBy('createdAt', 'desc'),
-                            limit(5)
-                        );
-                        const snapshot = await getDocs(q);
-                        return snapshot.docs.map(doc => ({
-                            id: doc.id,
+                        const { data, error } = await supabase
+                            .from('leads')
+                            .select('*')
+                            .eq('project_id', project.id)
+                            .order('created_at', { ascending: false })
+                            .limit(5);
+
+                        if (error) throw error;
+
+                        const projectName = resolveProjectName(project.name);
+                        return (data || []).map((lead) => ({
+                            id: lead.id,
                             projectId: project.id,
-                            projectName: project.name,
-                            ...doc.data(),
+                            projectName,
+                            name: lead.name,
+                            email: lead.email,
+                            phone: lead.phone,
+                            company: lead.company,
+                            source: lead.source || 'manual',
+                            status: lead.status || 'new',
+                            value: lead.value === null ? undefined : Number(lead.value),
+                            notes: lead.notes,
+                            tags: lead.tags || [],
+                            message: lead.custom_data?.message,
+                            customFields: lead.custom_data?.customFields,
+                            createdAt: toLeadTimestamp(lead.created_at),
+                            lastContacted: toLeadTimestamp(lead.last_contact_date),
+                            metadata: lead.custom_data || undefined,
                         } as DashboardLead));
-                    } catch {
+                    } catch (error) {
+                        console.error('[RecentLeads] Error fetching project leads:', project.id, error);
                         return [];
                     }
                 });

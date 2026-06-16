@@ -70,10 +70,10 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className="p-2 hover:bg-secondary rounded text-q-text-muted hover:text-foreground transition-colors"
+                className="no-min-touch flex h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 shrink-0 items-center justify-center rounded-lg border border-q-border/60 bg-q-surface/70 p-0 text-q-text-secondary transition-all hover:bg-secondary hover:text-q-text sm:h-8 sm:w-8 sm:min-h-8 sm:min-w-8 sm:max-h-8 sm:max-w-8"
                 title="Configure Custom Fields"
             >
-                <Settings size={16} />
+                <Settings size={14} />
             </button>
 
             <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} maxWidth="max-w-2xl">
@@ -204,4 +204,3 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
 };
 
 export default CustomFieldsManager;
-

@@ -20,6 +20,7 @@ import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { CMSPost, CMSCategory } from '../../types';
 import { sanitizeHtml } from '../../utils/sanitize';
+import { CatalogFilterBar, ContentStatusFilterChips, SortViewControls, CatalogToolbarFooter } from '../dashboard/filters';
 
 // === Drag & Drop Sortable Profile Item ===
 const SortableProfileItem: React.FC<{ post: CMSPost; index: number }> = ({ post, index }) => {
@@ -536,152 +537,115 @@ const CMSDashboard: React.FC = () => {
                             />
                         </div>
 
-                        {/* Barra de Filtros - Icons only, no boxes */}
-                        <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible scrollbar-hide">
-                            {/* Select All Checkbox */}
-                            {filteredAndSortedPosts.length > 0 && (
-                                <label
-                                    className="flex items-center gap-1.5 cursor-pointer flex-shrink-0"
-                                    title={t('cms.selectAll', 'Seleccionar todos')}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedPosts.length === filteredAndSortedPosts.length && filteredAndSortedPosts.length > 0}
-                                        onChange={handleSelectAll}
-                                        className="rounded border-q-border w-3.5 h-3.5 accent-primary"
-                                    />
-                                    {selectedPosts.length > 0 && (
-                                        <span className="text-[10px] font-semibold quimera-status-card-accent-text">
-                                            {selectedPosts.length}
-                                        </span>
+                        {/* Barra de Filtros */}
+                        <CatalogFilterBar
+                            leading={
+                                <>
+                                    {filteredAndSortedPosts.length > 0 && (
+                                        <label
+                                            className="flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                                            title={t('cms.selectAll', 'Seleccionar todos')}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedPosts.length === filteredAndSortedPosts.length && filteredAndSortedPosts.length > 0}
+                                                onChange={handleSelectAll}
+                                                className="rounded border-q-border w-3.5 h-3.5 accent-primary"
+                                            />
+                                            {selectedPosts.length > 0 && (
+                                                <span className="text-[10px] font-semibold quimera-status-card-accent-text">
+                                                    {selectedPosts.length}
+                                                </span>
+                                            )}
+                                        </label>
                                     )}
-                                </label>
-                            )}
-
-                            <span className="text-[10px] text-q-text-muted font-medium flex-shrink-0">
-                                {filteredAndSortedPosts.length}/{cmsPosts.length}
-                            </span>
-
-                            {/* Icon-only filter selects — no boxes */}
-                            <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.allStatus', 'Estado')}>
-                                <Globe size={15} className={`pointer-events-none transition-colors ${statusFilter !== 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`} />
-                                <select
+                                    <span className="text-[10px] text-q-text-muted font-medium flex-shrink-0">
+                                        {filteredAndSortedPosts.length}/{cmsPosts.length}
+                                    </span>
+                                </>
+                            }
+                            filters={
+                                <ContentStatusFilterChips
                                     value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value as any)}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                >
-                                    <option value="all">{t('cms.filters.allStatus', 'Todos')}</option>
-                                    <option value="published">{t('cms.filters.published', 'Publicados')}</option>
-                                    <option value="draft">{t('cms.filters.draft', 'Borradores')}</option>
-                                </select>
-                            </div>
+                                    onChange={setStatusFilter}
+                                    totalCount={metrics.total}
+                                    publishedCount={metrics.published}
+                                    draftCount={metrics.drafts}
+                                />
+                            }
+                            trailing={
+                                <>
+                                    <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.allTime', 'Fecha')}>
+                                        <Calendar size={15} className={`pointer-events-none transition-colors ${dateRange !== 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`} />
+                                        <select
+                                            value={dateRange}
+                                            onChange={(e) => setDateRange(e.target.value as any)}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        >
+                                            <option value="all">{t('cms.filters.allTime', 'Todo')}</option>
+                                            <option value="today">{t('cms.filters.today', 'Hoy')}</option>
+                                            <option value="week">{t('cms.filters.last7Days', '7 días')}</option>
+                                            <option value="month">{t('cms.filters.last30Days', '30 días')}</option>
+                                        </select>
+                                    </div>
 
-                            <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.allTime', 'Fecha')}>
-                                <Calendar size={15} className={`pointer-events-none transition-colors ${dateRange !== 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`} />
-                                <select
-                                    value={dateRange}
-                                    onChange={(e) => setDateRange(e.target.value as any)}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                >
-                                    <option value="all">{t('cms.filters.allTime', 'Todo')}</option>
-                                    <option value="today">{t('cms.filters.today', 'Hoy')}</option>
-                                    <option value="week">{t('cms.filters.last7Days', '7 días')}</option>
-                                    <option value="month">{t('cms.filters.last30Days', '30 días')}</option>
-                                </select>
-                            </div>
+                                    {categories.length > 0 && (
+                                        <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.category', 'Categoría')}>
+                                            <Tag size={15} className={`pointer-events-none transition-colors ${categoryFilter !== 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`} />
+                                            <select
+                                                value={categoryFilter}
+                                                onChange={(e) => setCategoryFilter(e.target.value)}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            >
+                                                <option value="all">{t('cms.filters.allCategories', 'Todas')}</option>
+                                                <option value="uncategorized">{t('cms.filters.uncategorized', t('cms.uncategorized'))}</option>
+                                                {categories.map(cat => (
+                                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
 
-                            {/* Category filter */}
-                            {categories.length > 0 && (
-                                <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.category', 'Categoría')}>
-                                    <Tag size={15} className={`pointer-events-none transition-colors ${categoryFilter !== 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`} />
-                                    <select
-                                        value={categoryFilter}
-                                        onChange={(e) => setCategoryFilter(e.target.value)}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    {activeProfileCategory && (
+                                        <button
+                                            onClick={() => setShowProfileOrderModal(true)}
+                                            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold quimera-status-card-accent-text hover:opacity-80 transition-opacity flex-shrink-0"
+                                            title={t('cms.orderProfiles', 'Ordenar Perfiles')}
+                                        >
+                                            <ArrowUpDown size={13} />
+                                            <span className="hidden sm:inline">{t('cms.orderProfiles', 'Ordenar Perfiles')}</span>
+                                        </button>
+                                    )}
+
+                                    <button
+                                        onClick={() => { setShowCategoryManager(true); setEditingCategory(null); setCategoryForm({ name: '', slug: '', description: '', layoutType: 'blog' }); }}
+                                        className="text-q-text-muted hover:text-foreground transition-colors flex-shrink-0"
+                                        title={t('cms.manageCategories', 'Gestionar Categorías')}
                                     >
-                                        <option value="all">{t('cms.filters.allCategories', 'Todas')}</option>
-                                        <option value="uncategorized">{t('cms.filters.uncategorized', t('cms.uncategorized'))}</option>
-                                        {categories.map(cat => (
-                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
+                                        <FolderOpen size={15} />
+                                    </button>
 
-                            {/* Order Profiles button — only when profile category is active */}
-                            {activeProfileCategory && (
-                                <button
-                                    onClick={() => setShowProfileOrderModal(true)}
-                                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold quimera-status-card-accent-text hover:opacity-80 transition-opacity flex-shrink-0"
-                                    title={t('cms.orderProfiles', 'Ordenar Perfiles')}
-                                >
-                                    <ArrowUpDown size={13} />
-                                    <span className="hidden sm:inline">{t('cms.orderProfiles', 'Ordenar Perfiles')}</span>
-                                </button>
-                            )}
-
-                            {/* Manage Categories button */}
-                            <button
-                                onClick={() => { setShowCategoryManager(true); setEditingCategory(null); setCategoryForm({ name: '', slug: '', description: '', layoutType: 'blog' }); }}
-                                className="text-q-text-muted hover:text-foreground transition-colors flex-shrink-0"
-                                title={t('cms.manageCategories', 'Gestionar Categorías')}
-                            >
-                                <FolderOpen size={15} />
-                            </button>
-
-                            <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.sortByDate', 'Ordenar')}>
-                                <ChevronDown size={15} className="pointer-events-none text-q-text-muted hover:text-foreground transition-colors" />
-                                <select
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value as any)}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                >
-                                    <option value="date">{t('cms.filters.sortByDate', 'Fecha')}</option>
-                                    <option value="title">{t('cms.filters.sortByTitle', 'Título')}</option>
-                                </select>
-                            </div>
-
-                            {/* Clear filters */}
-                            {(statusFilter !== 'all' || dateRange !== 'all' || categoryFilter !== 'all') && (
-                                <button
-                                    onClick={() => { setStatusFilter('all'); setDateRange('all'); setCategoryFilter('all'); }}
-                                    className="text-q-text-muted hover:text-foreground transition-colors flex-shrink-0"
-                                    title={t('common.clear', 'Limpiar filtros')}
-                                >
-                                    <XIcon size={13} />
-                                </button>
-                            )}
-
-                            {/* Spacer */}
-                            <div className="flex-1 min-w-0" />
-
-                            {/* Orden asc/desc */}
-                            <button
-                                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                                className="text-q-text-muted hover:text-foreground transition-colors flex-shrink-0"
-                                title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-                            >
-                                {sortOrder === 'desc' ? <ArrowDown size={15} /> : <ArrowUp size={15} />}
-                            </button>
-
-                            {/* Vista Grid/List */}
-                            <div className="flex gap-2 flex-shrink-0">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`transition-colors ${viewMode === 'grid' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
-                                    title="Grid View"
-                                >
-                                    <Grid size={15} />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`transition-colors ${viewMode === 'list' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
-                                    title="List View"
-                                >
-                                    <List size={15} />
-                                </button>
-                            </div>
-                        </div>
+                                    <SortViewControls
+                                        viewMode={viewMode}
+                                        onViewModeChange={setViewMode}
+                                        sortVariant="cycle"
+                                        sortBy={sortBy === 'date' ? 'lastUpdated' : 'name'}
+                                        sortOrder={sortOrder}
+                                        onSortByChange={(field) => setSortBy(field === 'lastUpdated' ? 'date' : 'title')}
+                                        onSortOrderChange={setSortOrder}
+                                    />
+                                </>
+                            }
+                            footer={
+                                <CatalogToolbarFooter
+                                    count={filteredAndSortedPosts.length}
+                                    total={cmsPosts.length}
+                                    countLabelDefault={`${filteredAndSortedPosts.length}/${cmsPosts.length}`}
+                                    viewMode={viewMode}
+                                    onViewModeChange={setViewMode}
+                                />
+                            }
+                        />
 
                         {isLoading ? (
                             <div className="flex justify-center items-center h-64">

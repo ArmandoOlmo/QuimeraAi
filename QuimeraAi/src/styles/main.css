@@ -3428,4 +3428,182 @@ button.rounded-full[class*="h-5"][class*="w-10"] > span.rounded-full[class*="lef
   right: auto !important;
   transform: none !important;
 }
+
+/* Internal app headers: every boxed control matches HeaderBackButton height. */
+.quimera-dashboard-header-bar {
+  --q-header-control-height: 36px;
+}
+
+.quimera-dashboard-header-bar button:not([role="switch"]),
+.quimera-dashboard-header-bar [role="button"]:not([role="switch"]),
+.quimera-dashboard-header-bar [data-slot="button"],
+.quimera-dashboard-header-bar select,
+.quimera-dashboard-header-bar input {
+  height: var(--q-header-control-height) !important;
+  min-height: var(--q-header-control-height) !important;
+  max-height: var(--q-header-control-height) !important;
+  align-items: center;
+}
+
+.quimera-dashboard-header-bar button:not([role="switch"]),
+.quimera-dashboard-header-bar [role="button"]:not([role="switch"]),
+.quimera-dashboard-header-bar [data-slot="button"] {
+  display: inline-flex;
+  justify-content: center;
+}
+
+.quimera-dashboard-header-bar button:not([role="switch"]):not([class*="w-auto"]):is(
+  [class*="w-7"],
+  [class*="w-8"],
+  [class*="w-9"],
+  [class*="w-10"],
+  [class*="w-11"],
+  [class*="w-12"],
+  [class*="w-[36px]"],
+  [class*="w-[40px]"],
+  [class*="w-[44px]"],
+  [class*="size-7"],
+  [class*="size-8"],
+  [class*="size-9"],
+  [class*="size-10"],
+  [class*="size-11"],
+  [class*="size-12"]
+),
+.quimera-dashboard-header-bar [role="button"]:not([role="switch"]):not([class*="w-auto"]):is(
+  [class*="w-7"],
+  [class*="w-8"],
+  [class*="w-9"],
+  [class*="w-10"],
+  [class*="w-11"],
+  [class*="w-12"],
+  [class*="w-[36px]"],
+  [class*="w-[40px]"],
+  [class*="w-[44px]"],
+  [class*="size-7"],
+  [class*="size-8"],
+  [class*="size-9"],
+  [class*="size-10"],
+  [class*="size-11"],
+  [class*="size-12"]
+),
+.quimera-dashboard-header-bar [data-slot="button"]:not([class*="w-auto"]):is(
+  [class*="w-7"],
+  [class*="w-8"],
+  [class*="w-9"],
+  [class*="w-10"],
+  [class*="w-11"],
+  [class*="w-12"],
+  [class*="w-[36px]"],
+  [class*="w-[40px]"],
+  [class*="w-[44px]"],
+  [class*="size-7"],
+  [class*="size-8"],
+  [class*="size-9"],
+  [class*="size-10"],
+  [class*="size-11"],
+  [class*="size-12"]
+) {
+  width: var(--q-header-control-height) !important;
+  min-width: var(--q-header-control-height) !important;
+  max-width: var(--q-header-control-height) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+@media (max-width: 639px) {
+  .quimera-dashboard-header-bar button:not([role="switch"]):is(
+    [class*="w-7"],
+    [class*="w-8"],
+    [class*="w-9"],
+    [class*="w-10"],
+    [class*="w-11"],
+    [class*="w-12"],
+    [class*="w-[36px]"],
+    [class*="w-[40px]"],
+    [class*="w-[44px]"],
+    [class*="size-7"],
+    [class*="size-8"],
+    [class*="size-9"],
+    [class*="size-10"],
+    [class*="size-11"],
+    [class*="size-12"]
+  ),
+  .quimera-dashboard-header-bar [role="button"]:not([role="switch"]):is(
+    [class*="w-7"],
+    [class*="w-8"],
+    [class*="w-9"],
+    [class*="w-10"],
+    [class*="w-11"],
+    [class*="w-12"],
+    [class*="w-[36px]"],
+    [class*="w-[40px]"],
+    [class*="w-[44px]"],
+    [class*="size-7"],
+    [class*="size-8"],
+    [class*="size-9"],
+    [class*="size-10"],
+    [class*="size-11"],
+    [class*="size-12"]
+  ),
+  .quimera-dashboard-header-bar [data-slot="button"]:is(
+    [class*="w-7"],
+    [class*="w-8"],
+    [class*="w-9"],
+    [class*="w-10"],
+    [class*="w-11"],
+    [class*="w-12"],
+    [class*="w-[36px]"],
+    [class*="w-[40px]"],
+    [class*="w-[44px]"],
+    [class*="size-7"],
+    [class*="size-8"],
+    [class*="size-9"],
+    [class*="size-10"],
+    [class*="size-11"],
+    [class*="size-12"]
+  ) {
+    width: var(--q-header-control-height) !important;
+    min-width: var(--q-header-control-height) !important;
+    max-width: var(--q-header-control-height) !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
+.quimera-dashboard-header-bar button:not([role="switch"]),
+.quimera-dashboard-header-bar [role="button"]:not([role="switch"]) {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.quimera-dashboard-header-bar select,
+.quimera-dashboard-header-bar input {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.quimera-dashboard-header-bar button:is(
+  [aria-label*="search" i],
+  [aria-label*="buscar" i],
+  [title*="search" i],
+  [title*="buscar" i]
+) {
+  width: var(--q-header-control-height) !important;
+  min-width: var(--q-header-control-height) !important;
+  max-width: var(--q-header-control-height) !important;
+  height: var(--q-header-control-height) !important;
+  min-height: var(--q-header-control-height) !important;
+  max-height: var(--q-header-control-height) !important;
+  padding: 0 !important;
+  border-radius: 0.5rem;
+}
+
+.quimera-dashboard-header-bar button:is(
+  [aria-label*="search" i],
+  [aria-label*="buscar" i],
+  [title*="search" i],
+  [title*="buscar" i]
+):hover {
+  background: hsl(var(--secondary));
+}
 /* force tailwind rebuild */

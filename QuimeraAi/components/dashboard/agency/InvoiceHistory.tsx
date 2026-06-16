@@ -3,7 +3,7 @@
  * Display payment history and invoices
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { db } from '@/utils/compatData';
 import { collection, query, where, orderBy, getDocs, limit } from '@/utils/compatData';
@@ -19,6 +19,7 @@ import {
     Filter,
 } from 'lucide-react';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
+import { CatalogFilterBar, FilterChipRow } from '../filters';
 
 interface Payment {
     id: string;
@@ -250,6 +251,21 @@ export function InvoiceHistory() {
             ? invoices
             : invoices.filter((i) => i.status === filterStatus);
 
+    const paymentStatusOptions = useMemo(() => [
+        { id: 'all', label: 'Todos los estados', count: payments.length },
+        { id: 'succeeded', label: 'Exitoso', count: payments.filter((p) => p.status === 'succeeded').length, color: 'green' as const },
+        { id: 'failed', label: 'Fallido', count: payments.filter((p) => p.status === 'failed').length, color: 'gray' as const },
+        { id: 'pending', label: 'Pendiente', count: payments.filter((p) => p.status === 'pending').length },
+    ], [payments]);
+
+    const invoiceStatusOptions = useMemo(() => [
+        { id: 'all', label: 'Todos los estados', count: invoices.length },
+        { id: 'draft', label: 'Borrador', count: invoices.filter((i) => i.status === 'draft').length, color: 'gray' as const },
+        { id: 'sent', label: 'Enviado', count: invoices.filter((i) => i.status === 'sent').length },
+        { id: 'paid', label: 'Pagado', count: invoices.filter((i) => i.status === 'paid').length, color: 'green' as const },
+        { id: 'overdue', label: 'Vencido', count: invoices.filter((i) => i.status === 'overdue').length, color: 'gray' as const },
+    ], [invoices]);
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -308,60 +324,43 @@ export function InvoiceHistory() {
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    {/* View Tabs */}
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setActiveView('payments')}
-                            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${activeView === 'payments'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                }`}
+            <CatalogFilterBar
+                filters={
+                    <>
+                        <FilterChipRow
+                            options={[
+                                { id: 'payments', label: 'Pagos', count: payments.length },
+                                { id: 'invoices', label: 'Invoices', count: invoices.length },
+                            ]}
+                            value={activeView}
+                            onChange={(value) => {
+                                setActiveView(value as 'payments' | 'invoices');
+                                setFilterStatus('all');
+                            }}
+                        />
+                        <FilterChipRow
+                            options={activeView === 'payments' ? paymentStatusOptions : invoiceStatusOptions}
+                            value={filterStatus}
+                            onChange={setFilterStatus}
+                        />
+                    </>
+                }
+                trailing={
+                    <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-gray-500" />
+                        <select
+                            value={dateRange}
+                            onChange={(e) => setDateRange(e.target.value as any)}
+                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-q-surface text-foreground text-sm focus:ring-2 focus:ring-blue-500"
                         >
-                            Pagos
-                        </button>
-                        <button
-                            onClick={() => setActiveView('invoices')}
-                            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${activeView === 'invoices'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                }`}
-                        >
-                            Invoices
-                        </button>
+                            <option value="7d">Últimos 7 días</option>
+                            <option value="30d">Últimos 30 días</option>
+                            <option value="90d">Últimos 90 días</option>
+                            <option value="all">Todo</option>
+                        </select>
                     </div>
-
-                    {/* Status Filter */}
-                    <select
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-q-surface text-foreground text-sm focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value="all">Todos los estados</option>
-                        <option value="succeeded">Exitoso</option>
-                        <option value="failed">Fallido</option>
-                        <option value="pending">Pendiente</option>
-                        {activeView === 'invoices' && <option value="paid">Pagado</option>}
-                    </select>
-                </div>
-
-                {/* Date Range */}
-                <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <select
-                        value={dateRange}
-                        onChange={(e) => setDateRange(e.target.value as any)}
-                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-q-surface text-foreground text-sm focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value="7d">Últimos 7 días</option>
-                        <option value="30d">Últimos 30 días</option>
-                        <option value="90d">Últimos 90 días</option>
-                        <option value="all">Todo</option>
-                    </select>
-                </div>
-            </div>
+                }
+            />
 
             {/* Content */}
             {activeView === 'payments' ? (

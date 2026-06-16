@@ -4,12 +4,13 @@ import React from 'react';
 interface FilterChipProps {
   label: string;
   active: boolean;
-  count: number;
+  count?: number;
   onClick: () => void;
   color?: 'green' | 'primary' | 'gray';
+  icon?: React.ReactNode;
 }
 
-const FilterChip: React.FC<FilterChipProps> = ({ label, active, count, onClick, color = 'primary' }) => {
+const FilterChip: React.FC<FilterChipProps> = ({ label, active, count, onClick, color = 'primary', icon }) => {
   const colorClasses = {
     green: active 
       ? 'bg-green-500/20 text-green-500 border-green-500/50' 
@@ -32,7 +33,9 @@ const FilterChip: React.FC<FilterChipProps> = ({ label, active, count, onClick, 
         ${active ? 'shadow-sm' : ''}
       `}
     >
+      {icon && <span className="flex-shrink-0">{icon}</span>}
       <span>{label}</span>
+      {count !== undefined && (
       <span className={`
         px-1.5 py-0.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold
         ${active 
@@ -42,6 +45,7 @@ const FilterChip: React.FC<FilterChipProps> = ({ label, active, count, onClick, 
       `}>
         {count}
       </span>
+      )}
     </button>
   );
 };

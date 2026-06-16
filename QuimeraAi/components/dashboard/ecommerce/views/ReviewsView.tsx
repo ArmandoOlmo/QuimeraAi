@@ -31,6 +31,8 @@ import { Review, ReviewStatus } from '../../../../types/ecommerce';
 import type { StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
 import { useEcommerceContext } from '../EcommerceDashboard';
+import { FilterChipRow } from '../../filters';
+import type { FilterChipOption } from '../../filters';
 
 type StatusFilter = ReviewStatus | 'all';
 
@@ -77,6 +79,13 @@ const ReviewsView: React.FC = () => {
             return matchesSearch && matchesStatus && matchesProduct;
         });
     }, [reviews, searchTerm, statusFilter, productFilter]);
+
+    const statusFilterOptions = useMemo<FilterChipOption<StatusFilter>[]>(() => [
+        { id: 'all', label: t('ecommerce.allStatuses', 'Todos los estados'), count: totalReviews },
+        { id: 'pending', label: t('ecommerce.pending', 'Pendientes'), count: pendingCount, color: 'gray' },
+        { id: 'approved', label: t('ecommerce.approved', 'Aprobadas'), count: approvedCount, color: 'green' },
+        { id: 'rejected', label: t('ecommerce.rejected', 'Rechazadas'), count: rejectedCount, color: 'gray' },
+    ], [t, totalReviews, pendingCount, approvedCount, rejectedCount]);
 
     // Get product name by ID
     const getProductName = (productId: string) => {
@@ -273,17 +282,11 @@ const ReviewsView: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Status Filter */}
-                    <select
+                    <FilterChipRow
+                        options={statusFilterOptions}
                         value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                        className="px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                        <option value="all">{t('ecommerce.allStatuses', 'Todos los estados')}</option>
-                        <option value="pending">{t('ecommerce.pending', 'Pendientes')}</option>
-                        <option value="approved">{t('ecommerce.approved', 'Aprobadas')}</option>
-                        <option value="rejected">{t('ecommerce.rejected', 'Rechazadas')}</option>
-                    </select>
+                        onChange={setStatusFilter}
+                    />
 
                     {/* Product Filter */}
                     <select

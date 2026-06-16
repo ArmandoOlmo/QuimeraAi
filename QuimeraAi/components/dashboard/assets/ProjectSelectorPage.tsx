@@ -4,7 +4,7 @@
  * Diseño igual que el de SEO y Ecommerce
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Search,
@@ -31,6 +31,8 @@ import MobileSearchModal from '../../ui/MobileSearchModal';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
 import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
+import { WebsiteCatalogToolbar } from '../filters';
+import { useProjectCatalogFilters } from '../../../hooks/useProjectCatalogFilters';
 
 interface ProjectSelectorPageProps {
     onProjectSelect: (projectId: string) => void;
@@ -45,38 +47,25 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     const { setIsOnboardingOpen, setView } = useUI();
     const { projects, isLoadingProjects } = useProject();
 
-    // Local state
-    const [searchQuery, setSearchQuery] = useState('');
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [filterStatus, setFilterStatus] = useState<'all' | 'Published' | 'Draft'>('all');
-    const [sortBy, setSortBy] = useState<'recent' | 'name'>('recent');
+    const {
+        searchQuery,
+        setSearchQuery,
+        filterStatus,
+        setFilterStatus,
+        sortBy,
+        setSortBy,
+        sortOrder,
+        setSortOrder,
+        viewMode,
+        setViewMode,
+        userProjects,
+        filteredProjects,
+        publishedCount,
+        draftCount,
+    } = useProjectCatalogFilters(projects);
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-    // Filter and sort projects
-    const filteredProjects = useMemo(() => {
-        let filtered = projects.filter(p =>
-            p.status !== 'Template' &&
-            p.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-
-        if (filterStatus !== 'all') {
-            filtered = filtered.filter(p => p.status === filterStatus);
-        }
-
-        filtered.sort((a, b) => {
-            if (sortBy === 'name') {
-                return a.name.localeCompare(b.name);
-            }
-            return new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime();
-        });
-
-        return filtered;
-    }, [projects, searchQuery, filterStatus, sortBy]);
-
-    const userProjects = projects.filter(p => p.status !== 'Template');
-    const publishedCount = userProjects.filter(p => p.status === 'Published').length;
-    const draftCount = userProjects.filter(p => p.status === 'Draft').length;
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
@@ -217,65 +206,20 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                             </div>
                         </div>
 
-                        {/* Filter + Sort - compacto, móvil en 2 filas */}
-                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-2 mb-4">
-                            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                                <button
-                                    onClick={() => setFilterStatus('all')}
-                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
-                                >
-                                    {t('common.all', 'Todos')} ({userProjects.length})
-                                </button>
-                                <span className="text-q-text-muted/60 text-xs">·</span>
-                                <button
-                                    onClick={() => setFilterStatus('Published')}
-                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'Published' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
-                                >
-                                    {t('dashboard.published', 'Publicados')} ({publishedCount})
-                                </button>
-                                <span className="text-q-text-muted/60 text-xs">·</span>
-                                <button
-                                    onClick={() => setFilterStatus('Draft')}
-                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'Draft' ? 'text-foreground' : 'text-q-text-muted hover:text-foreground'}`}
-                                >
-                                    {t('dashboard.draft', 'Borrador')} ({draftCount})
-                                </button>
-                            </div>
-                            <div className="flex items-center gap-2 sm:ml-auto shrink-0">
-                                <select
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value as 'recent' | 'name')}
-                                    className="text-xs text-foreground bg-transparent border-none outline-none cursor-pointer text-q-text-muted hover:text-foreground focus:ring-0 py-0.5 w-auto max-w-[7.5rem] sm:max-w-[8rem] min-w-0"
-                                    aria-label={t('common.sortBy', 'Ordenar por')}
-                                >
-                                    <option value="recent">{t('common.mostRecent', 'Más recientes')}</option>
-                                    <option value="name">{t('common.alphabetical', 'Alfabético')}</option>
-                                </select>
-                                <div className="hidden sm:flex items-center gap-0.5 border-l border-q-border/50 pl-2">
-                                    <button
-                                        onClick={() => setViewMode('grid')}
-                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'grid' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
-                                        aria-label={t('common.gridView', 'Vista cuadrícula')}
-                                    >
-                                        <LayoutGrid size={16} />
-                                    </button>
-                                    <button
-                                        onClick={() => setViewMode('list')}
-                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'list' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
-                                        aria-label={t('common.listView', 'Vista lista')}
-                                    >
-                                        <List size={16} />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Results Count */}
-                        {searchQuery && (
-                            <p className="text-sm text-q-text-muted mb-4">
-                                {filteredProjects.length} {t('common.resultsFound', 'resultados encontrados')}
-                            </p>
-                        )}
+                        <WebsiteCatalogToolbar
+                            filterStatus={filterStatus}
+                            onFilterStatusChange={setFilterStatus}
+                            totalCount={userProjects.length}
+                            publishedCount={publishedCount}
+                            draftCount={draftCount}
+                            filteredCount={filteredProjects.length}
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                            onSortByChange={setSortBy}
+                            onSortOrderChange={setSortOrder}
+                            viewMode={viewMode}
+                            onViewModeChange={setViewMode}
+                        />
 
                         {/* Projects Grid/List */}
                         {isLoadingProjects ? (

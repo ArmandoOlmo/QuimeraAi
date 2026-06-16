@@ -37,6 +37,7 @@ import ConfirmationModal from '../../ui/ConfirmationModal';
 import TemplateEditorModal from './TemplateEditorModal';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
 import { supabase } from '../../../supabase';
+import { CatalogFilterBar, FilterChipRow } from '../filters';
 
 /**
  * Safely resolves a value that might be a bilingual {en, es} object
@@ -114,6 +115,12 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
     const templates = projects.filter(p => p.status === 'Template');
     const userProjects = projects.filter(p => p.status !== 'Template');
+
+    const templateStatusCounts = useMemo(() => ({
+        all: templates.length,
+        active: templates.filter((t) => !t.isArchived).length,
+        archived: templates.filter((t) => t.isArchived).length,
+    }), [templates]);
 
     const getTemplateUsage = (templateId: string) => {
         return userProjects.filter(p => p.sourceTemplateId === templateId).length;
@@ -459,17 +466,17 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 </select>
                             </div>
 
-                            <div className="flex flex-col gap-1.5">
+                            <div className="col-span-2 sm:col-span-full flex flex-col gap-1.5">
                                 <label className="text-xs text-q-text-secondary">{t('leads.status')}</label>
-                                <select
+                                <FilterChipRow
+                                    options={[
+                                        { id: 'all', label: t('superadmin.allTemplates'), count: templateStatusCounts.all },
+                                        { id: 'active', label: t('superadmin.activeTemplates'), count: templateStatusCounts.active, color: 'green' },
+                                        { id: 'archived', label: t('superadmin.archivedTemplates'), count: templateStatusCounts.archived, color: 'gray' },
+                                    ]}
                                     value={filterStatus}
-                                    onChange={(e) => setFilterStatus(e.target.value as any)}
-                                    className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full"
-                                >
-                                    <option value="all">{t('superadmin.allTemplates')}</option>
-                                    <option value="active">{t('superadmin.activeTemplates')}</option>
-                                    <option value="archived">{t('superadmin.archivedTemplates')}</option>
-                                </select>
+                                    onChange={(value) => setFilterStatus(value as typeof filterStatus)}
+                                />
                             </div>
 
                             <div className="flex flex-col gap-1.5">

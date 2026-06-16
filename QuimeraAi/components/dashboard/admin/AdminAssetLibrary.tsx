@@ -7,6 +7,8 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import ConfirmationModal from '../../ui/ConfirmationModal';
+import { FilterChipRow } from '../filters';
+import type { FilterChipOption } from '../filters';
 import { useFiles, AdminAssetCategory, AdminAssetRecord } from '../../../contexts/files';
 import { useAI } from '../../../contexts/ai';
 import { useAppContent } from '../../../contexts/appContent';
@@ -643,6 +645,18 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
         return stats;
     }, [adminAssets]);
 
+    const categoryFilterOptions = useMemo<FilterChipOption<AdminAssetCategory | 'all'>[]>(() => [
+        { id: 'all', label: t('common.all', 'All'), count: adminAssets.length, icon: <FolderOpen size={12} /> },
+        ...Object.entries(CATEGORY_CONFIG)
+            .filter(([key]) => categoryStats[key as AdminAssetCategory] > 0)
+            .map(([key, config]) => ({
+                id: key as AdminAssetCategory,
+                label: config.label,
+                count: categoryStats[key as AdminAssetCategory],
+                icon: config.icon,
+            })),
+    ], [adminAssets.length, categoryStats, t]);
+
     // Reference images handlers
     const processFiles = (files: FileList | File[]) => {
         const remainingSlots = 14 - referenceImages.length;
@@ -1064,35 +1078,12 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                                 </div>
 
                                 {/* Category Filter Chips */}
-                                <div className="mb-4 flex flex-wrap gap-2">
-                                    <button
-                                        onClick={() => setCategoryFilter('all')}
-                                        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryFilter === 'all'
-                                            ? 'bg-primary/10 text-primary border-primary/30'
-                                            : 'bg-secondary/50 text-q-text-muted border-q-border hover:border-primary/30'
-                                            }`}
-                                    >
-                                        <FolderOpen size={12} />
-                                        {t('common.all', 'All')} ({adminAssets.length})
-                                    </button>
-                                    {Object.entries(CATEGORY_CONFIG).map(([key, config]) => {
-                                        const count = categoryStats[key as AdminAssetCategory];
-                                        if (count === 0) return null;
-                                        return (
-                                            <button
-                                                key={key}
-                                                onClick={() => setCategoryFilter(key as AdminAssetCategory)}
-                                                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryFilter === key
-                                                    ? config.color
-                                                    : 'bg-secondary/50 text-q-text-muted border-q-border hover:border-primary/30'
-                                                    }`}
-                                            >
-                                                {config.icon}
-                                                {config.label} ({count})
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                                <FilterChipRow
+                                    options={categoryFilterOptions}
+                                    value={categoryFilter}
+                                    onChange={(value) => setCategoryFilter(value as typeof categoryFilter)}
+                                    className="mb-4"
+                                />
 
                                 {/* Filters Panel */}
                                 {showFilters && (

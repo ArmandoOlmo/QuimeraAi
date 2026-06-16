@@ -35,6 +35,7 @@ export { default as WebsitesView } from './WebsitesView';
 // UI Components
 export { default as StatCard } from './StatCard';
 export { default as FilterChip } from './FilterChip';
+export * from './filters';
 export { default as EmptyState } from './EmptyState';
 export { default as FileHistory } from './FileHistory';
 export { default as ProfileModal } from './ProfileModal';

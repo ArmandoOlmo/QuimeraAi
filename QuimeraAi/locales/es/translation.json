@@ -7891,9 +7891,9 @@
     "filters": {
       "advancedFilters": "Filtros Avanzados",
       "clearAll": "Limpiar Todo",
-      "dealValueRange": "Rango de Valor del Trato",
-      "aiScoreRange": "Rango de Puntuación AI",
-      "createdDateRange": "Rango de Fecha de Creación"
+      "dealValueRange": "Valor",
+      "aiScoreRange": "Score IA",
+      "createdDateRange": "Fecha"
     },
     "dashboard": {
       "title": "CRM de Leads",

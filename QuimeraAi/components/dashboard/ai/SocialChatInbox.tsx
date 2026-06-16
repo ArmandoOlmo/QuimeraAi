@@ -3,7 +3,7 @@
  * Unified inbox for managing conversations from WhatsApp, Facebook, and Instagram
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     MessageCircle, Phone, Instagram, Facebook, Search, Filter,
@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { useSocialChat, ConversationWithMessages } from '../../chat/hooks/useSocialChat';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import { FilterChipRow } from '../filters';
+import type { FilterChipOption } from '../filters';
 import { SocialChannel } from '../../../types/socialChat';
 import { formatDistanceToNow } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -57,6 +59,27 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [activeConversation?.messages]);
+
+    type ChannelFilter = 'all' | SocialChannel;
+    type StatusFilter = 'all' | 'active' | 'pending' | 'escalated';
+
+    const channelFilterOptions = useMemo<FilterChipOption<ChannelFilter>[]>(() => [
+        { id: 'all', label: t('common.all', 'Todos') },
+        { id: 'web', label: t('socialChat.channelWeb', 'Web Chat') },
+        { id: 'whatsapp', label: 'WhatsApp' },
+        { id: 'facebook', label: 'Facebook' },
+        { id: 'instagram', label: 'Instagram' },
+    ], [t]);
+
+    const statusFilterOptions = useMemo<FilterChipOption<StatusFilter>[]>(() => [
+        { id: 'all', label: t('common.all', 'Todos') },
+        { id: 'active', label: t('socialChat.statusActive', 'Activo'), color: 'green' },
+        { id: 'pending', label: t('socialChat.statusPending', 'Pendiente'), color: 'gray' },
+        { id: 'escalated', label: t('socialChat.statusEscalated', 'Escalado'), color: 'gray' },
+    ], [t]);
+
+    const activeChannelFilter: ChannelFilter = filter.channel ?? 'all';
+    const activeStatusFilter: StatusFilter = (filter.status as StatusFilter | undefined) ?? 'all';
 
     // Get channel icon
     const getChannelIcon = (channel: SocialChannel, size: number = 16) => {
@@ -185,40 +208,20 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
                 {showFilters && (
                     <div className="mt-3 p-3 bg-secondary/30 rounded-lg space-y-3 animate-fade-in-up">
                         <div>
-                            <label className="text-xs text-q-text-muted mb-1 block">Canal</label>
-                            <div className="flex gap-1 flex-wrap">
-                                {(['all', 'web', 'whatsapp', 'facebook', 'instagram'] as const).map((ch) => (
-                                    <button
-                                        key={ch}
-                                        onClick={() => setFilter({ ...filter, channel: ch === 'all' ? undefined : ch })}
-                                        className={`flex-1 min-w-[60px] p-2 rounded-lg text-xs font-medium transition-colors ${
-                                            (ch === 'all' && !filter.channel) || filter.channel === ch
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'bg-secondary/50 hover:bg-secondary'
-                                        }`}
-                                    >
-                                        {ch === 'all' ? 'Todos' : ch === 'web' ? 'Web Chat' : ch.charAt(0).toUpperCase() + ch.slice(1)}
-                                    </button>
-                                ))}
-                            </div>
+                            <label className="text-xs text-q-text-muted mb-1 block">{t('socialChat.channel', 'Canal')}</label>
+                            <FilterChipRow
+                                options={channelFilterOptions}
+                                value={activeChannelFilter}
+                                onChange={(value) => setFilter({ ...filter, channel: value === 'all' ? undefined : value })}
+                            />
                         </div>
                         <div>
-                            <label className="text-xs text-q-text-muted mb-1 block">Estado</label>
-                            <div className="flex gap-1">
-                                {(['all', 'active', 'pending', 'escalated'] as const).map((st) => (
-                                    <button
-                                        key={st}
-                                        onClick={() => setFilter({ ...filter, status: st === 'all' ? undefined : st })}
-                                        className={`flex-1 p-2 rounded-lg text-xs font-medium transition-colors ${
-                                            (st === 'all' && !filter.status) || filter.status === st
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'bg-secondary/50 hover:bg-secondary'
-                                        }`}
-                                    >
-                                        {st === 'all' ? 'Todos' : st.charAt(0).toUpperCase() + st.slice(1)}
-                                    </button>
-                                ))}
-                            </div>
+                            <label className="text-xs text-q-text-muted mb-1 block">{t('socialChat.status', 'Estado')}</label>
+                            <FilterChipRow
+                                options={statusFilterOptions}
+                                value={activeStatusFilter}
+                                onChange={(value) => setFilter({ ...filter, status: value === 'all' ? undefined : value })}
+                            />
                         </div>
                     </div>
                 )}

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { RESERVED_SUBDOMAINS } from '../../../services/subdomainService';
+import { CatalogFilterBar, FilterChipRow } from '../filters';
 
 interface SubdomainEntry {
     id: string; // document ID = subdomain name
@@ -84,6 +85,20 @@ const SubdomainManagement: React.FC<SubdomainManagementProps> = ({ onBack }) => 
             return matchesSearch && matchesStatus && matchesType;
         });
     }, [subdomains, searchQuery, filterStatus, filterType]);
+
+    const statusCounts = useMemo(() => ({
+        all: subdomains.length,
+        active: subdomains.filter((s) => s.status === 'active').length,
+        reserved: subdomains.filter((s) => s.status === 'reserved').length,
+        suspended: subdomains.filter((s) => s.status === 'suspended').length,
+    }), [subdomains]);
+
+    const typeCounts = useMemo(() => ({
+        all: subdomains.length,
+        user: subdomains.filter((s) => s.type === 'user').length,
+        agency: subdomains.filter((s) => s.type === 'agency').length,
+        tenant: subdomains.filter((s) => s.type === 'tenant').length,
+    }), [subdomains]);
 
     // Suspend a subdomain
     const handleSuspend = async (subdomain: string) => {
@@ -225,26 +240,33 @@ const SubdomainManagement: React.FC<SubdomainManagementProps> = ({ onBack }) => 
                             className="w-full pl-9 pr-4 py-2 text-sm bg-q-surface border border-q-border rounded-lg text-q-text placeholder:text-q-text-secondary focus:outline-none focus:ring-1 focus:ring-q-accent"
                         />
                     </div>
-                    <select
-                        value={filterStatus}
-                        onChange={e => setFilterStatus(e.target.value)}
-                        className="px-3 py-2 text-sm bg-q-surface border border-q-border rounded-lg text-q-text"
-                    >
-                        <option value="all">Todos los estados</option>
-                        <option value="active">Activos</option>
-                        <option value="reserved">Reservados</option>
-                        <option value="suspended">Suspendidos</option>
-                    </select>
-                    <select
-                        value={filterType}
-                        onChange={e => setFilterType(e.target.value)}
-                        className="px-3 py-2 text-sm bg-q-surface border border-q-border rounded-lg text-q-text"
-                    >
-                        <option value="all">Todos los tipos</option>
-                        <option value="user">Usuario</option>
-                        <option value="agency">Agencia</option>
-                        <option value="tenant">Tenant</option>
-                    </select>
+                    <CatalogFilterBar
+                        className="mb-0"
+                        filters={
+                            <>
+                                <FilterChipRow
+                                    options={[
+                                        { id: 'all', label: 'Todos los estados', count: statusCounts.all },
+                                        { id: 'active', label: 'Activos', count: statusCounts.active, color: 'green' },
+                                        { id: 'reserved', label: 'Reservados', count: statusCounts.reserved },
+                                        { id: 'suspended', label: 'Suspendidos', count: statusCounts.suspended, color: 'gray' },
+                                    ]}
+                                    value={filterStatus}
+                                    onChange={setFilterStatus}
+                                />
+                                <FilterChipRow
+                                    options={[
+                                        { id: 'all', label: 'Todos los tipos', count: typeCounts.all },
+                                        { id: 'user', label: 'Usuario', count: typeCounts.user },
+                                        { id: 'agency', label: 'Agencia', count: typeCounts.agency },
+                                        { id: 'tenant', label: 'Tenant', count: typeCounts.tenant },
+                                    ]}
+                                    value={filterType}
+                                    onChange={setFilterType}
+                                />
+                            </>
+                        }
+                    />
                     <button
                         onClick={() => setShowReserveModal(true)}
                         className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-q-accent text-white rounded-lg hover:opacity-90 transition-opacity"

@@ -7873,9 +7873,9 @@
     "filters": {
       "advancedFilters": "Advanced Filters",
       "clearAll": "Clear All",
-      "dealValueRange": "Deal Value Range",
-      "aiScoreRange": "AI Score Range",
-      "createdDateRange": "Created Date Range"
+      "dealValueRange": "Value",
+      "aiScoreRange": "AI Score",
+      "createdDateRange": "Date"
     },
     "dashboard": {
       "title": "Leads CRM",

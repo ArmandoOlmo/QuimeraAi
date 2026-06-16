@@ -8,16 +8,15 @@ import { useCRM } from '../../../contexts/crm';
 import { useAI } from '../../../contexts/ai';
 import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
-import { SettingsStatCard } from '../settings/SettingsStatCard';
 import { getSourceConfig, getLeadScoreLabel } from '../../../utils/leadScoring';
 import {
-    Menu, Plus, Search, Filter, MoreVertical,
+    Menu, Plus, Search,
     Mail, Phone, MessageSquare, Bot, LayoutGrid,
     DollarSign, CheckCircle2, XCircle, Clock,
     ArrowUpRight, Calendar, Trash2, MoveRight,
     Building2, Palette, Sparkles, Loader2, ThumbsUp,
     Smile, Table, List, Columns, Download, Upload, Edit, MapPin,
-    Globe, Briefcase, Linkedin, BookOpen, X, Save, Send, Users,
+    Globe, Briefcase, Linkedin, BookOpen, Save, Send, Users,
     Settings, Home, Car, Shield, LineChart, Heart, GraduationCap,
     ChevronDown, Pencil, Check
 } from 'lucide-react';
@@ -88,14 +87,23 @@ const INDUSTRY_ICONS: Record<string, React.ElementType> = {
 };
 
 const CARD_COLORS = [
-    { id: 'default', bg: 'bg-gradient-to-r from-background via-background/60 to-transparent', border: 'border-q-border', indicator: 'bg-slate-500' },
-    { id: 'blue', bg: 'bg-gradient-to-r from-blue-500/40 via-blue-500/20 to-transparent', border: 'border-blue-500/30', indicator: 'bg-blue-500' },
-    { id: 'green', bg: 'bg-gradient-to-r from-emerald-500/40 via-emerald-500/20 to-transparent', border: 'border-emerald-500/30', indicator: 'bg-emerald-500' },
-    { id: 'purple', bg: 'bg-gradient-to-r from-purple-500/40 via-purple-500/20 to-transparent', border: 'border-purple-500/30', indicator: 'bg-purple-500' },
-    { id: 'orange', bg: 'bg-gradient-to-r from-orange-500/40 via-orange-500/20 to-transparent', border: 'border-orange-500/30', indicator: 'bg-orange-500' },
-    { id: 'pink', bg: 'bg-gradient-to-r from-pink-500/40 via-pink-500/20 to-transparent', border: 'border-pink-500/30', indicator: 'bg-pink-500' },
-    { id: 'red', bg: 'bg-gradient-to-r from-red-500/40 via-red-500/20 to-transparent', border: 'border-red-500/30', indicator: 'bg-red-500' },
+    { id: 'default', indicator: 'bg-slate-500', accent: 'group-hover:border-slate-500/40' },
+    { id: 'blue', indicator: 'bg-blue-500', accent: 'group-hover:border-blue-500/40' },
+    { id: 'green', indicator: 'bg-emerald-500', accent: 'group-hover:border-emerald-500/40' },
+    { id: 'purple', indicator: 'bg-purple-500', accent: 'group-hover:border-purple-500/40' },
+    { id: 'orange', indicator: 'bg-orange-500', accent: 'group-hover:border-orange-500/40' },
+    { id: 'pink', indicator: 'bg-pink-500', accent: 'group-hover:border-pink-500/40' },
+    { id: 'red', indicator: 'bg-red-500', accent: 'group-hover:border-red-500/40' },
 ];
+
+const STAGE_ACCENT_CLASS: Record<LeadStatus, string> = {
+    new: 'bg-blue-500',
+    contacted: 'bg-yellow-500',
+    qualified: 'bg-purple-500',
+    negotiation: 'bg-orange-500',
+    won: 'bg-green-500',
+    lost: 'bg-red-500',
+};
 
 
 
@@ -148,31 +156,48 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
     };
 
     const currentTheme = CARD_COLORS.find(c => c.id === lead.color) || CARD_COLORS[0];
-    const scoreColor = (lead.aiScore || 0) > 75 ? 'bg-green-500' : (lead.aiScore || 0) > 40 ? 'bg-yellow-500' : 'bg-red-500';
+    const sourceConfig = getSourceConfig(lead.source);
+    const score = lead.leadScore || lead.aiScore || 0;
+    const scoreInfo = getLeadScoreLabel(score);
+    const hasScore = lead.leadScore !== undefined || lead.aiScore !== undefined;
+    const createdDate = lead.createdAt?.seconds
+        ? new Date(lead.createdAt.seconds * 1000).toLocaleDateString()
+        : t('common.justNow', 'Just now');
+    const conversationLines = lead.conversationTranscript?.split('\n').filter(line => line.trim()) || [];
+    const latestConversationLine = conversationLines
+        .slice()
+        .reverse()
+        .find(line => line.toLowerCase().includes('user:') || line.toLowerCase().includes('usuario:'))
+        ?.replace(/^(user:|usuario:)/i, '')
+        .trim();
+    const previewText = lead.aiAnalysis || latestConversationLine || lead.notes || '';
+    const statusAccent = STAGE_ACCENT_CLASS[lead.status] || currentTheme.indicator;
 
     return (
         <div
             draggable
             onDragStart={(e) => onDragStart(e, lead.id)}
             onClick={() => onClick(lead)}
-            className={`${currentTheme.bg} ${currentTheme.border} group relative p-3 sm:p-4 rounded-lg sm:rounded-xl border hover:shadow-lg transition-all cursor-grab active:cursor-grabbing mb-2 sm:mb-3 shadow-sm`}
+            className={`group relative mb-2.5 w-full min-w-0 overflow-visible rounded-lg border border-q-border/60 bg-q-surface/80 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-q-surface hover:shadow-md ${currentTheme.accent} cursor-grab active:cursor-grabbing`}
         >
+            <div className={`absolute inset-y-3 left-0 w-1 rounded-r-full ${statusAccent}`} aria-hidden="true" />
+
             {/* Delete Button - Top Right */}
             <button
                 onClick={(e) => {
                     e.stopPropagation();
                     onDelete(lead.id);
                 }}
-                className="absolute top-2 right-2 z-10 p-1 sm:p-1.5 rounded-full bg-q-surface/80 backdrop-blur-sm border border-q-border/50 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/30 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-md border border-transparent text-q-text-muted opacity-100 transition-all hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100"
                 title="Eliminar lead"
             >
-                <Trash2 size={12} className="sm:hidden" />
-                <Trash2 size={14} className="hidden sm:block" />
+                <Trash2 size={13} />
             </button>
+
             {/* Color Picker Popover */}
             {showPalette && (
                 <div
-                    className="absolute top-2 right-8 z-20 bg-popover border border-q-border rounded-lg shadow-xl p-1.5 sm:p-2 flex gap-1 sm:gap-1.5 animate-fade-in-up"
+                    className="absolute right-10 top-2 z-20 flex gap-1.5 rounded-lg border border-q-border bg-popover p-2 shadow-xl animate-fade-in-up"
                     onMouseDown={(e) => e.stopPropagation()}
                 >
                     {CARD_COLORS.map(c => (
@@ -189,14 +214,14 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
             {/* Emoji Picker Popover - Mobile optimized */}
             {showEmojiPicker && (
                 <div
-                    className="absolute top-8 right-0 sm:right-[-1rem] z-30 bg-popover border border-q-border rounded-lg shadow-xl p-2 sm:p-3 grid grid-cols-6 gap-1.5 sm:gap-2 animate-fade-in-up w-56 sm:w-72 max-h-48 sm:max-h-60 overflow-y-auto custom-scrollbar"
+                    className="absolute right-0 top-10 z-30 grid max-h-56 w-64 grid-cols-6 gap-1.5 overflow-y-auto rounded-lg border border-q-border bg-popover p-2 shadow-xl animate-fade-in-up custom-scrollbar sm:w-72 sm:p-3"
                     onMouseDown={(e) => e.stopPropagation()}
                 >
                     {EMOJI_MARKERS.slice(0, 24).map(e => (
                         <button
                             key={e}
                             onClick={(evt) => handleEmojiUpdate(evt, e)}
-                            className="text-base sm:text-xl hover:scale-125 transition-transform p-0.5 sm:p-1 hover:bg-secondary rounded-md flex justify-center items-center"
+                            className="flex items-center justify-center rounded-md p-1 text-lg transition-transform hover:scale-110 hover:bg-secondary"
                             title="Set Marker"
                         >
                             {e}
@@ -214,121 +239,96 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
 
             {/* Emoji Marker Badge */}
             {lead.emojiMarker && (
-                <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 z-20">
+                <div className="absolute -right-2 -top-2 z-20">
                     <button
                         onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); setShowPalette(false); }}
-                        className="h-6 w-6 sm:h-8 sm:w-8 flex items-center justify-center text-base sm:text-xl bg-q-surface rounded-full shadow-sm border border-q-border hover:scale-110 transition-transform"
+                        className="flex h-7 w-7 items-center justify-center rounded-full border border-q-border bg-q-surface text-base shadow-sm transition-transform hover:scale-105 sm:h-8 sm:w-8 sm:text-lg"
                     >
                         {lead.emojiMarker}
                     </button>
                 </div>
             )}
 
-            <div className="flex justify-between items-start mb-1.5 sm:mb-2 flex-wrap gap-1.5 sm:gap-2 pr-7 sm:pr-8">
-                <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                    {/* Source Badge */}
-                    {(() => {
-                        const sourceConfig = getSourceConfig(lead.source);
-                        return (
-                            <span
-                                className={`${sourceConfig.color} text-white text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-semibold flex items-center gap-0.5 sm:gap-1`}
-                                title={sourceConfig.label}
-                            >
-                                <span>{sourceConfig.icon}</span>
-                                <span className="hidden sm:inline">{sourceConfig.label}</span>
-                            </span>
-                        );
-                    })()}
-
-                    {/* Lead Score Badge */}
-                    {(lead.leadScore !== undefined || lead.aiScore !== undefined) && (() => {
-                        const score = lead.leadScore || lead.aiScore || 0;
-                        const scoreInfo = getLeadScoreLabel(score);
-                        return (
-                            <div
-                                className={`${scoreInfo.color} text-white text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-bold flex items-center gap-0.5 sm:gap-1`}
-                                title={`${scoreInfo.label}: ${score}/100`}
-                            >
-                                <span>{scoreInfo.emoji}</span>
-                                <span>{score}</span>
-                            </div>
-                        );
-                    })()}
-                </div>
-                {lead.value && lead.value > 0 && (
-                    <span className="text-[10px] sm:text-xs font-bold text-green-500 bg-green-500/10 px-1.5 sm:px-2 py-0.5 rounded-full">
-                        ${lead.value.toLocaleString()}
-                    </span>
-                )}
-            </div>
-
-            <h4 className="font-bold text-foreground text-xs sm:text-sm mb-0.5 line-clamp-1">{lead.name}</h4>
-            {lead.company && <p className="text-[10px] sm:text-xs text-q-text-muted mb-1 sm:mb-1.5 line-clamp-1">{lead.company}</p>}
-
-            {/* Customer Interest Preview - from AI Analysis */}
-            {lead.aiAnalysis && (
-                <p className="text-[9px] sm:text-[10px] text-purple-500/80 bg-purple-500/10 px-1.5 py-0.5 rounded mb-1.5 sm:mb-2 line-clamp-2 italic" title={lead.aiAnalysis}>
-                    💡 {lead.aiAnalysis.length > 60 ? lead.aiAnalysis.slice(0, 60) + '...' : lead.aiAnalysis}
-                </p>
-            )}
-
-            {/* Conversation Transcript Preview */}
-            {lead.conversationTranscript && (() => {
-                const messages = lead.conversationTranscript.split('\n').filter(line => line.trim());
-                const messageCount = messages.length;
-                const lastUserMessage = messages.reverse().find(msg =>
-                    msg.toLowerCase().includes('user:') ||
-                    msg.toLowerCase().includes('usuario:')
-                );
-                const preview = lastUserMessage
-                    ? lastUserMessage.replace(/^(user:|usuario:)/i, '').trim()
-                    : messages[0] || '';
-
-                return (
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 mb-1.5 sm:mb-2">
-                        <div className="flex items-center gap-1 mb-1">
-                            <MessageSquare size={10} className="text-blue-500 shrink-0" />
-                            <span className="text-[9px] sm:text-[10px] text-blue-500 font-semibold">
-                                Conversación ({messageCount} mensajes)
-                            </span>
+            <div className="min-w-0 pl-2 pr-7">
+                <div className="mb-2 flex min-w-0 items-start justify-between gap-2">
+                    <div className="min-w-0">
+                        <h4 className="truncate text-sm font-semibold leading-tight text-foreground">{lead.name}</h4>
+                        <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] text-q-text-muted">
+                            {lead.company ? (
+                                <>
+                                    <Building2 size={12} className="shrink-0" />
+                                    <span className="truncate">{lead.company}</span>
+                                </>
+                            ) : (
+                                <span className="truncate">{lead.email}</span>
+                            )}
                         </div>
-                        <p className="text-[8px] sm:text-[9px] text-q-text-muted line-clamp-2 italic pl-3.5">
-                            "{preview.length > 80 ? preview.slice(0, 80) + '...' : preview}"
-                        </p>
                     </div>
-                );
-            })()}
 
-            <div className="flex items-center justify-between mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-q-border/50">
-                <span className="text-[8px] sm:text-[10px] text-q-text-muted flex items-center">
-                    <Clock size={8} className="sm:hidden mr-0.5" />
-                    <Clock size={10} className="hidden sm:block mr-1" />
-                    {lead.createdAt && lead.createdAt.seconds
-                        ? new Date(lead.createdAt.seconds * 1000).toLocaleDateString()
-                        : 'Just now'}
-                </span>
-                {/* Mobile: Always show actions, Desktop: show on hover */}
-                <div className="flex gap-0.5 sm:gap-1 transition-opacity">
-                    <button
-                        className="p-1 sm:p-1.5 hover:bg-q-bg rounded-md text-q-text-muted hover:text-yellow-500 transition-colors"
-                        title={t('leads.dashboard.addEmoji')}
-                        onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); setShowPalette(false); }}
+                    {lead.value && lead.value > 0 && (
+                        <span className="shrink-0 rounded-md bg-green-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-green-500">
+                            ${lead.value.toLocaleString()}
+                        </span>
+                    )}
+                </div>
+
+                <div className="mb-2 flex min-w-0 items-center gap-1.5 overflow-hidden">
+                    <span
+                        className={`${sourceConfig.color} inline-flex min-w-0 max-w-[58%] items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-white`}
+                        title={sourceConfig.label}
                     >
-                        <Smile size={10} className="sm:hidden" />
-                        <Smile size={12} className="hidden sm:block" />
-                    </button>
-                    <button
-                        className="p-1 sm:p-1.5 hover:bg-q-bg rounded-md text-q-text-muted hover:text-primary transition-colors"
-                        title={t('leads.dashboard.changeColor')}
-                        onClick={(e) => { e.stopPropagation(); setShowPalette(!showPalette); setShowEmojiPicker(false); }}
-                    >
-                        <Palette size={10} className="sm:hidden" />
-                        <Palette size={12} className="hidden sm:block" />
-                    </button>
-                    <button className="p-1 sm:p-1.5 hover:bg-q-bg rounded-md text-q-text-muted hover:text-foreground transition-colors" title="Email">
-                        <Mail size={10} className="sm:hidden" />
-                        <Mail size={12} className="hidden sm:block" />
-                    </button>
+                        <span className="shrink-0">{sourceConfig.icon}</span>
+                        <span className="truncate">{sourceConfig.label}</span>
+                    </span>
+
+                    {hasScore && (
+                        <span
+                            className={`${scoreInfo.color} inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-white`}
+                            title={`${scoreInfo.label}: ${score}/100`}
+                        >
+                            <span>{scoreInfo.emoji}</span>
+                            <span>{score}</span>
+                        </span>
+                    )}
+
+                    {conversationLines.length > 0 && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-blue-500">
+                            <MessageSquare size={10} />
+                            {conversationLines.length}
+                        </span>
+                    )}
+                </div>
+
+                {previewText && (
+                    <p className="mb-2 line-clamp-2 rounded-md bg-secondary/30 px-2 py-1.5 text-[11px] leading-relaxed text-q-text-muted">
+                        {previewText}
+                    </p>
+                )}
+
+                <div className="flex min-w-0 items-center justify-between gap-2 border-t border-q-border/50 pt-2">
+                    <span className="flex min-w-0 items-center gap-1 truncate text-[10px] text-q-text-muted">
+                        <Clock size={11} className="shrink-0" />
+                        {createdDate}
+                    </span>
+                    <div className="flex shrink-0 gap-0.5 transition-opacity">
+                        <button
+                            className="rounded-md p-1.5 text-q-text-muted transition-colors hover:bg-secondary hover:text-yellow-500"
+                            title={t('leads.dashboard.addEmoji')}
+                            onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); setShowPalette(false); }}
+                        >
+                            <Smile size={13} />
+                        </button>
+                        <button
+                            className="rounded-md p-1.5 text-q-text-muted transition-colors hover:bg-secondary hover:text-primary"
+                            title={t('leads.dashboard.changeColor')}
+                            onClick={(e) => { e.stopPropagation(); setShowPalette(!showPalette); setShowEmojiPicker(false); }}
+                        >
+                            <Palette size={13} />
+                        </button>
+                        <button className="rounded-md p-1.5 text-q-text-muted transition-colors hover:bg-secondary hover:text-foreground" title="Email">
+                            <Mail size={13} />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -735,6 +735,109 @@ const LeadsDashboard: React.FC = () => {
         }
     };
 
+    const renderToolbarControls = () => (
+        <>
+            <div className="flex h-9 min-h-9 max-h-9 shrink-0 items-center gap-0.5 rounded-lg border border-q-border/60 bg-q-surface/70 p-0.5 sm:h-8 sm:min-h-8 sm:max-h-8">
+                <button
+                    onClick={() => setViewMode('kanban')}
+                    className={`no-min-touch flex h-8 w-8 min-h-8 min-w-8 max-h-8 max-w-8 shrink-0 items-center justify-center rounded-md p-0 transition-colors sm:h-7 sm:w-7 sm:min-h-7 sm:min-w-7 sm:max-h-7 sm:max-w-7 ${viewMode === 'kanban' ? 'quimera-status-card-accent-text bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)]' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
+                    title={t('leads.dashboard.kanbanView')}
+                >
+                    <Columns className="h-3.5 w-3.5" />
+                </button>
+                <button
+                    onClick={() => setViewMode('table')}
+                    className={`no-min-touch flex h-8 w-8 min-h-8 min-w-8 max-h-8 max-w-8 shrink-0 items-center justify-center rounded-md p-0 transition-colors sm:h-7 sm:w-7 sm:min-h-7 sm:min-w-7 sm:max-h-7 sm:max-w-7 ${viewMode === 'table' ? 'quimera-status-card-accent-text bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)]' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
+                    title={t('leads.dashboard.tableView')}
+                >
+                    <Table className="h-3.5 w-3.5" />
+                </button>
+                <button
+                    onClick={() => setViewMode('list')}
+                    className={`no-min-touch flex h-8 w-8 min-h-8 min-w-8 max-h-8 max-w-8 shrink-0 items-center justify-center rounded-md p-0 transition-colors sm:h-7 sm:w-7 sm:min-h-7 sm:min-w-7 sm:max-h-7 sm:max-w-7 ${viewMode === 'list' ? 'quimera-status-card-accent-text bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)]' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
+                    title={t('leads.dashboard.listView')}
+                >
+                    <List className="h-3.5 w-3.5" />
+                </button>
+            </div>
+
+            <button
+                onClick={handleExportCSV}
+                className="no-min-touch flex h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 shrink-0 items-center justify-center rounded-lg border border-q-border/60 bg-q-surface/70 p-0 text-q-text-secondary transition-all hover:bg-secondary hover:text-q-text sm:h-8 sm:w-8 sm:min-h-8 sm:min-w-8 sm:max-h-8 sm:max-w-8"
+                title={t('leads.dashboard.exportCsv')}
+            >
+                <Download className="h-3.5 w-3.5" />
+            </button>
+            <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="no-min-touch flex h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 shrink-0 items-center justify-center rounded-lg border border-q-border/60 bg-q-surface/70 p-0 text-q-text-secondary transition-all hover:bg-secondary hover:text-q-text sm:h-8 sm:w-8 sm:min-h-8 sm:min-w-8 sm:max-h-8 sm:max-w-8"
+                title={t('leads.import.title', 'Importar Leads')}
+            >
+                <Upload className="h-3.5 w-3.5" />
+            </button>
+
+            <CustomFieldsManager
+                customFieldsConfig={customFieldsConfig}
+                onSaveConfig={setCustomFieldsConfig}
+            />
+        </>
+    );
+
+    const renderIndustrySelector = () => {
+        const currentMeta = INDUSTRY_META.find(m => m.id === currentIndustry);
+        const CurrentIcon = currentMeta ? INDUSTRY_ICONS[currentMeta.icon] || Briefcase : Briefcase;
+
+        return (
+            <div className="relative shrink-0" ref={industryDropdownRef}>
+                <button
+                    onClick={() => setShowIndustryDropdown(!showIndustryDropdown)}
+                    className="no-min-touch flex h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 shrink-0 items-center justify-center rounded-lg border border-q-border/60 bg-q-surface/70 p-0 text-q-text-secondary transition-all hover:bg-secondary hover:text-q-text sm:h-8 sm:w-auto sm:min-h-8 sm:min-w-0 sm:max-h-8 sm:max-w-none sm:gap-1.5 sm:px-2"
+                    title={t('leads.industry.title')}
+                >
+                    <CurrentIcon size={14} className="quimera-status-card-accent-text shrink-0" />
+                    <span className="hidden max-w-[8rem] truncate text-[11px] font-medium sm:inline">
+                        {t(`leads.industry.${currentIndustry === 'auto_dealership' ? 'autoDealership' : currentIndustry === 'real_estate' ? 'realEstate' : currentIndustry}`)}
+                    </span>
+                    <ChevronDown size={12} className={`hidden shrink-0 transition-transform sm:block ${showIndustryDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showIndustryDropdown && (
+                    <div className="absolute left-0 top-full z-50 mt-2 w-[260px] rounded-xl border border-q-border bg-q-surface/95 p-2 shadow-2xl backdrop-blur-xl animate-fade-in-up">
+                        <p className="px-2 py-1.5 mb-1 text-[10px] font-bold uppercase tracking-wider text-q-text-muted">
+                            {t('leads.industry.title')}
+                        </p>
+                        {INDUSTRY_META.map(meta => {
+                            const Icon = INDUSTRY_ICONS[meta.icon] || Briefcase;
+                            const isActive = meta.id === currentIndustry;
+                            return (
+                                <button
+                                    key={meta.id}
+                                    onClick={() => handleIndustryChange(meta.id)}
+                                    className={`no-min-touch flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all ${
+                                        isActive
+                                            ? 'border border-primary/20 bg-primary/10 text-primary'
+                                            : 'text-foreground hover:bg-secondary/80'
+                                    }`}
+                                >
+                                    <Icon
+                                        size={14}
+                                        className={isActive ? 'quimera-dashboard-header-icon' : 'text-q-text-muted'}
+                                        strokeWidth={2}
+                                    />
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate text-xs font-semibold">{t(meta.labelKey)}</p>
+                                        <p className="truncate text-[10px] text-q-text-muted">{t(meta.descriptionKey)}</p>
+                                    </div>
+                                    {isActive && <Check size={14} className="shrink-0 text-primary" />}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     // --- AI Logic ---
     const handleAnalyzeLead = async () => {
         if (!selectedLead) return;
@@ -1002,164 +1105,53 @@ const LeadsDashboard: React.FC = () => {
     }
 
     return (
-        <div className="flex h-screen bg-q-bg text-foreground">
+        <div className="flex h-screen min-w-0 bg-q-bg text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden relative bg-q-bg">
-                {/* Header - Mobile optimized */}
- <header className="quimera-dashboard-header-bar h-auto min-h-[56px] px-3 sm:px-6 py-2 sm:py-0 sticky top-0 z-20 shrink-0">
-                    {/* Main header row */}
-                    <div className="flex items-center justify-between h-[52px] sm:h-14">
-                        <div className="flex items-center gap-2 sm:gap-4">
-                            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-lg transition-colors touch-manipulation">
+            <div className="flex-1 min-w-0 flex flex-col overflow-hidden relative bg-q-bg">
+                <header className="quimera-dashboard-header-bar h-auto min-h-[56px] px-3 sm:px-6 py-2 sm:py-0 sticky top-0 z-20 shrink-0">
+                    <div className="relative flex items-center justify-between gap-2 h-[52px] sm:h-14 min-w-0">
+                        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+                            <button onClick={() => setIsMobileMenuOpen(true)} className="no-min-touch lg:hidden flex h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 shrink-0 items-center justify-center rounded-lg p-0 text-q-text-muted transition-colors touch-manipulation hover:text-foreground hover:bg-secondary/80 active:bg-secondary sm:h-9 sm:w-9 sm:min-h-9 sm:min-w-9 sm:max-h-9 sm:max-w-9">
                                 <Menu className="w-5 h-5" />
                             </button>
-                            <div className="flex items-center gap-2 sm:gap-4">
-                                <div className="flex items-center gap-1.5 sm:gap-2">
-                                    <LayoutGrid className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
-                                    <h1 className="text-sm sm:text-lg font-semibold text-foreground">{t('leads.dashboard.title')}</h1>
-                                </div>
-
-                                {/* Industry Selector */}
-                                <div className="relative" ref={industryDropdownRef}>
-                                    <button
-                                        onClick={() => setShowIndustryDropdown(!showIndustryDropdown)}
-                                        className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-secondary/60 hover:bg-secondary border border-q-border/50 rounded-lg text-[10px] sm:text-xs font-medium text-q-text-muted hover:text-foreground transition-all"
-                                        title={t('leads.industry.title')}
-                                    >
-                                        {(() => {
-                                            const meta = INDUSTRY_META.find(m => m.id === currentIndustry);
-                                            const IconComp = meta ? INDUSTRY_ICONS[meta.icon] || Briefcase : Briefcase;
-                                            return <IconComp size={14} className="quimera-status-card-accent-text" />;
-                                        })()}
-                                        <span className="hidden sm:inline">{t(`leads.industry.${currentIndustry === 'auto_dealership' ? 'autoDealership' : currentIndustry === 'real_estate' ? 'realEstate' : currentIndustry}`)}</span>
-                                        <ChevronDown size={12} className={`transition-transform ${showIndustryDropdown ? 'rotate-180' : ''}`} />
-                                    </button>
-
-                                    {showIndustryDropdown && (
-                                        <div className="absolute top-full left-0 mt-2 w-[260px] bg-q-surface/95 backdrop-blur-xl border border-q-border rounded-xl shadow-2xl z-50 p-2 animate-fade-in-up">
-                                            <p className="text-[10px] font-bold text-q-text-muted uppercase tracking-wider px-2 py-1.5 mb-1">
-                                                {t('leads.industry.title')}
-                                            </p>
-                                            {INDUSTRY_META.map(meta => {
-                                                const Icon = INDUSTRY_ICONS[meta.icon] || Briefcase;
-                                                const isActive = meta.id === currentIndustry;
-                                                return (
-                                                    <button
-                                                        key={meta.id}
-                                                        onClick={() => handleIndustryChange(meta.id)}
-                                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all ${
-                                                            isActive
-                                                                ? 'bg-primary/10 text-primary border border-primary/20'
-                                                                : 'text-foreground hover:bg-secondary/80'
-                                                        }`}
-                                                    >
-                                                        <Icon
-                                                            size={14}
-                                                            className={isActive ? 'quimera-dashboard-header-icon' : 'text-q-text-muted'}
-                                                            strokeWidth={2}
-                                                        />
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-xs font-semibold truncate">{t(meta.labelKey)}</p>
-                                                            <p className="text-[10px] text-q-text-muted truncate">{t(meta.descriptionKey)}</p>
-                                                        </div>
-                                                        {isActive && <Check size={14} className="text-primary shrink-0" />}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="flex items-center bg-muted/50 p-0.5 sm:p-1 rounded-lg border border-q-border/50">
-                                    <button
-                                        onClick={() => setActiveTab('pipeline')}
-                                        className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${activeTab === 'pipeline' ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
-                                    >
-                                        {t('leads.dashboard.pipeline')}
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('library')}
-                                        className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${activeTab === 'library' ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`}
-                                    >
-                                        {t('leads.dashboard.library')}
-                                    </button>
+                            <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+                                <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+                                    <LayoutGrid className="w-5 h-5 shrink-0 quimera-dashboard-header-icon" strokeWidth={2} />
+                                    <h1 className="hidden truncate text-sm font-semibold text-foreground min-[430px]:block sm:block sm:text-lg">{t('leads.dashboard.title')}</h1>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-1 sm:gap-2">
+                        <div className="absolute left-1/2 top-1/2 flex h-9 -translate-x-1/2 -translate-y-1/2 items-center rounded-lg border border-q-border/50 bg-muted/50 p-0 sm:p-1 lg:h-auto">
+                            <button
+                                onClick={() => setActiveTab('pipeline')}
+                                className={`no-min-touch flex h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 items-center justify-center rounded-lg p-0 text-xs font-medium transition-all sm:h-7 sm:w-auto sm:min-h-7 sm:min-w-0 sm:max-h-7 sm:max-w-none sm:rounded-md sm:px-3 ${activeTab === 'pipeline' ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground hover:bg-q-surface-overlay/40'}`}
+                                title={t('leads.dashboard.pipeline')}
+                                aria-label={t('leads.dashboard.pipeline')}
+                            >
+                                <Columns className="h-4 w-4 sm:hidden" />
+                                <span className="hidden sm:inline">{t('leads.dashboard.pipeline')}</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('library')}
+                                className={`no-min-touch flex h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 items-center justify-center rounded-lg p-0 text-xs font-medium transition-all sm:h-7 sm:w-auto sm:min-h-7 sm:min-w-0 sm:max-h-7 sm:max-w-none sm:rounded-md sm:px-3 ${activeTab === 'library' ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground hover:bg-q-surface-overlay/40'}`}
+                                title={t('leads.dashboard.library')}
+                                aria-label={t('leads.dashboard.library')}
+                            >
+                                <BookOpen className="h-4 w-4 sm:hidden" />
+                                <span className="hidden sm:inline">{t('leads.dashboard.library')}</span>
+                            </button>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
                             {activeTab === 'pipeline' && (
                                 <>
-                                    {/* Stats Row (Hidden on mobile) */}
-                                    <div className="hidden lg:flex items-center gap-2 mr-2">
-                                        <SettingsStatCard
-                                            compact
-                                            label={t('leads.dashboard.pipelineValue')}
-                                            value={`$${stats.totalValue.toLocaleString()}`}
-                                            icon={DollarSign}
-                                        />
-                                        <SettingsStatCard
-                                            compact
-                                            label={t('leads.dashboard.conversionRate')}
-                                            value={`${stats.conversionRate}%`}
-                                            icon={ArrowUpRight}
-                                            valueClass="text-green-500"
-                                        />
-                                        <SettingsStatCard
-                                            compact
-                                            label={t('leads.dashboard.activeLeads')}
-                                            value={stats.activeLeads}
-                                            icon={Users}
-                                        />
-                                    </div>
-
-                                    {/* View Mode Selector - Compact on mobile */}
-                                    <div className="hidden sm:flex items-center gap-0.5 sm:gap-1">
-                                        <button
-                                            onClick={() => setViewMode('kanban')}
-                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'quimera-status-card-accent-text bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)]' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
-                                            title={t('leads.dashboard.kanbanView')}
-                                        >
-                                            <Columns className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => setViewMode('table')}
-                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'quimera-status-card-accent-text bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)]' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
-                                            title={t('leads.dashboard.tableView')}
-                                        >
-                                            <Table className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => setViewMode('list')}
-                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'quimera-status-card-accent-text bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)]' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
-                                            title={t('leads.dashboard.listView')}
-                                        >
-                                            <List className="w-4 h-4" />
-                                        </button>
-                                    </div>
-
-                                    {/* Search - Desktop only */}
-                                    <div className="hidden md:flex items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-2 min-w-[200px]">
-                                        <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
-                                        <input
-                                            type="text"
-                                            placeholder={t('leads.dashboard.search')}
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                                        />
-                                        {searchQuery && (
-                                            <button onClick={() => setSearchQuery('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
-                                                <X size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* Mobile Search Button — square, no bg */}
                                     <button
                                         onClick={() => setIsMobileSearchOpen(true)}
-                                        className="md:hidden h-8 w-8 flex items-center justify-center rounded-md text-q-text-muted hover:text-foreground transition-colors"
+                                        className={`no-min-touch flex h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 shrink-0 items-center justify-center rounded-lg p-0 transition-colors hover:bg-secondary sm:h-9 sm:w-9 sm:min-h-9 sm:min-w-9 sm:max-h-9 sm:max-w-9 ${searchQuery ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
+                                        title={t('leads.dashboard.search')}
+                                        aria-label={t('leads.dashboard.search')}
                                     >
                                         <Search className="w-4 h-4" />
                                     </button>
@@ -1172,89 +1164,58 @@ const LeadsDashboard: React.FC = () => {
                                         placeholder={t('leads.dashboard.search')}
                                     />
 
-                                    <div className="hidden sm:block">
-                                        <CustomFieldsManager
-                                            customFieldsConfig={customFieldsConfig}
-                                            onSaveConfig={setCustomFieldsConfig}
-                                        />
-                                    </div>
-                                    <button
-                                        onClick={handleExportCSV}
-                                        className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-md transition-all text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40"
-                                        title={t('leads.dashboard.exportCsv')}
-                                    >
-                                        <Download className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => setIsImportModalOpen(true)}
-                                        className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-md transition-all text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40"
-                                        title={t('leads.import.title', 'Importar Leads')}
-                                    >
-                                        <Upload className="w-4 h-4" />
-                                    </button>
                                     <button
                                         onClick={() => setIsAddModalOpen(true)}
-                                        className="quimera-guide-cta flex items-center justify-center gap-1 h-8 w-8 sm:w-auto sm:h-9 sm:px-3 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap"
+                                        className="no-min-touch flex h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 shrink-0 items-center justify-center gap-1 rounded-lg bg-primary p-0 text-xs font-medium text-primary-foreground whitespace-nowrap transition-opacity hover:opacity-90 sm:h-9 sm:w-auto sm:min-h-9 sm:min-w-0 sm:max-h-9 sm:max-w-none sm:px-3 sm:text-sm"
                                     >
                                         <Plus className="w-4 h-4" />
                                         <span className="hidden sm:inline">{t('leads.dashboard.addLead')}</span>
                                     </button>
                                 </>
                             )}
-                            <HeaderBackButton onClick={() => setView('dashboard')} />
+                            <HeaderBackButton onClick={() => setView('dashboard')} className="no-min-touch !h-9 !w-9 !min-h-9 !min-w-9 !max-h-9 !max-w-9 !p-0 sm:!h-9 sm:!w-9 sm:!min-h-9 sm:!min-w-9 sm:!max-h-9 sm:!max-w-9" />
                         </div>
                     </div>
 
-                    {/* Mobile stats bar - shows only on mobile when on pipeline tab */}
-                    {activeTab === 'pipeline' && (
-                        <div className="lg:hidden flex items-center gap-4 py-2 overflow-x-auto scrollbar-hide -mx-3 px-3">
-                            <div className="flex items-center gap-1.5 shrink-0">
-                                <DollarSign className="w-3.5 h-3.5 text-green-500" />
-                                <span className="text-xs font-bold text-foreground">${stats.totalValue.toLocaleString()}</span>
-                            </div>
-                            <div className="w-px h-4 bg-border shrink-0" />
-                            <div className="flex items-center gap-1.5 shrink-0">
-                                <ArrowUpRight className="w-3.5 h-3.5 text-green-500" />
-                                <span className="text-xs font-bold text-green-500">{stats.conversionRate}%</span>
-                            </div>
-                            <div className="w-px h-4 bg-border shrink-0" />
-                            <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="text-xs text-q-text-muted">Active:</span>
-                                <span className="text-xs font-bold text-foreground">{stats.activeLeads}</span>
-                            </div>
-
-                            {/* Mobile view mode selector — square icon-only, no bg */}
-                            <div className="sm:hidden flex items-center gap-0 ml-auto shrink-0">
-                                <button
-                                    onClick={() => setViewMode('kanban')}
-                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'text-q-accent' : 'text-q-text-muted hover:text-foreground'}`}
-                                >
-                                    <Columns className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('table')}
-                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'text-q-accent' : 'text-q-text-muted hover:text-foreground'}`}
-                                >
-                                    <Table className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-q-accent' : 'text-q-text-muted hover:text-foreground'}`}
-                                >
-                                    <List className="w-3.5 h-3.5" />
-                                </button>
-                            </div>
-                        </div>
-                    )}
                 </header>
+
+                {activeTab === 'pipeline' && (
+                    <div className="grid shrink-0 grid-cols-3 gap-2 border-b border-q-border/40 bg-q-bg/70 px-3 py-3 sm:gap-3 sm:px-6 sm:py-4">
+                        {[
+                            { label: t('leads.dashboard.pipelineValue'), value: `$${stats.totalValue.toLocaleString()}`, icon: DollarSign, valueClass: 'text-foreground' },
+                            { label: t('leads.dashboard.conversionRate'), value: `${stats.conversionRate}%`, icon: ArrowUpRight, valueClass: 'text-green-500' },
+                            { label: t('leads.dashboard.activeLeads'), value: stats.activeLeads, icon: Users, valueClass: 'text-foreground' },
+                        ].map((item) => {
+                            const Icon = item.icon;
+                            return (
+                                <div
+                                    key={item.label}
+                                    className="group relative min-h-[78px] min-w-0 overflow-hidden rounded-xl border border-q-border/60 bg-q-surface/80 p-2.5 transition-all duration-300 ease-out hover:border-q-border sm:min-h-[88px] md:min-h-[104px] md:rounded-2xl md:p-4"
+                                >
+                                    <div
+                                        className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 md:w-32 md:h-32 rounded-full blur-2xl group-hover:scale-110 transition-all duration-500"
+                                        aria-hidden="true"
+                                    />
+                                    <div className="relative z-10">
+                                        <Icon className="mb-1 h-4 w-4 quimera-dashboard-header-icon sm:h-5 sm:w-5" strokeWidth={2} />
+                                        <div className={`truncate text-base font-extrabold leading-none sm:text-xl md:text-3xl ${item.valueClass}`}>{item.value}</div>
+                                        <div className="mt-1 line-clamp-2 text-[8px] font-semibold uppercase tracking-wider text-q-text-muted leading-[1.05] sm:text-[10px] sm:leading-tight md:text-xs">
+                                            {item.label}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
 
                 {activeTab === 'library' ? (
                     <LeadsLibrary />
                 ) : (
-                    <>
+                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                         {/* Bulk Actions Bar - Mobile optimized */}
                         {selectedLeadIds.length > 0 && (
-                            <div className="sticky top-0 z-10 bg-primary text-primary-foreground px-3 sm:px-6 py-2 sm:py-3 border-b border-primary-foreground/20 animate-slide-down">
+                            <div className="shrink-0 z-10 bg-primary text-primary-foreground px-3 sm:px-6 py-2 sm:py-3 border-b border-primary-foreground/20 animate-slide-down">
                                 {/* Mobile layout */}
                                 <div className="sm:hidden">
                                     <div className="flex items-center justify-between mb-2">
@@ -1365,35 +1326,46 @@ const LeadsDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Filters Section - Mobile optimized */}
-                        <div className="px-3 sm:px-6 pt-3 sm:pt-4 relative z-[1]">
-                            {/* Mobile search bar removed, using MobileSearchModal instead */}
-                            <LeadsFilters
-                                filters={filters}
-                                onFiltersChange={setFilters}
-                                availableTags={availableTags}
-                            />
+                        <div className="relative z-[3] shrink-0 border-b border-q-border/30 bg-q-bg/70 px-3 py-2 sm:px-6 sm:py-2.5">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex min-w-0 items-start gap-2">
+                                        {renderIndustrySelector()}
+                                        <div className="min-w-0 flex-1">
+                                            <LeadsFilters
+                                                filters={filters}
+                                                onFiltersChange={setFilters}
+                                                availableTags={availableTags}
+                                                toolbarActions={renderToolbarControls()}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="hidden shrink-0 items-center gap-1 sm:flex sm:pt-0.5">
+                                    {renderToolbarControls()}
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Main Content Area */}
-                        <main className="flex-1 overflow-x-auto overflow-y-auto sm:overflow-y-hidden p-3 sm:p-6 pt-3 sm:pt-4 relative z-[2]">
+                        <main className="flex-1 min-h-0 min-w-0 overflow-hidden p-3 sm:p-5 relative z-[2]">
                             {viewMode === 'kanban' && (
-                                <>
+                                <div className="h-full min-h-0 min-w-0 overflow-x-auto overflow-y-hidden custom-scrollbar">
                                     {/* Mobile Kanban - Horizontal scroll with snap */}
-                                    <div className="sm:hidden flex min-h-[60vh] gap-3 overflow-x-auto snap-x snap-mandatory pb-24 -mx-3 px-3 scrollbar-hide">
+                                    <div className="sm:hidden flex h-full min-h-0 w-max gap-3 snap-x snap-mandatory pb-3">
                                         {LEAD_STAGES.map(stage => {
                                             const stageLeads = filteredLeads.filter(l => l.status === stage.id);
                                             return (
                                                 <div
                                                     key={stage.id}
-                                                    className="w-[85vw] min-w-[85vw] flex flex-col h-full rounded-xl bg-secondary/80 border border-q-border/50 snap-center"
+                                                    className="w-[86vw] min-w-[86vw] max-w-[86vw] flex flex-col h-full min-h-0 overflow-hidden rounded-xl bg-q-surface/70 border border-q-border/60 snap-center"
                                                     onDragOver={handleDragOver}
                                                     onDrop={(e) => handleDrop(e, stage.id)}
                                                 >
                                                     {/* Column Header - Editable */}
-                                                    <div className="p-3 flex items-center justify-between shrink-0 border-b border-q-border/30">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className={`w-2 h-2 rounded-full ${stage.color}`} />
+                                                    <div className="sticky top-0 z-10 p-3 flex items-center justify-between shrink-0 border-b border-q-border/30 bg-q-surface/95 backdrop-blur">
+                                                        <div className="flex min-w-0 items-center gap-2">
+                                                            <div className={`w-2 h-2 shrink-0 rounded-full ${stage.color}`} />
                                                             {editingStageId === stage.id ? (
                                                                 <input
                                                                     ref={stageInputRef}
@@ -1405,7 +1377,7 @@ const LeadsDashboard: React.FC = () => {
                                                                 />
                                                             ) : (
                                                                 <h3
-                                                                    className="font-bold text-xs text-foreground cursor-pointer hover:text-primary transition-colors group/stage"
+                                                                    className="truncate font-bold text-xs text-foreground cursor-pointer hover:text-primary transition-colors group/stage"
                                                                     onClick={() => { setEditingStageId(stage.id); setEditingStageLabel(stage.label); }}
                                                                     title={t('leads.crmSettings.editStageLabel')}
                                                                 >
@@ -1413,14 +1385,14 @@ const LeadsDashboard: React.FC = () => {
                                                                     <Pencil size={8} className="inline ml-1 opacity-0 group-hover/stage:opacity-60 transition-opacity" />
                                                                 </h3>
                                                             )}
-                                                            <span className="bg-q-bg px-1.5 py-0.5 rounded-full text-[10px] text-q-text-muted border border-q-border font-mono">
+                                                            <span className="shrink-0 bg-q-bg px-1.5 py-0.5 rounded-full text-[10px] text-q-text-muted border border-q-border font-mono">
                                                                 {stageLeads.length}
                                                             </span>
                                                         </div>
                                                     </div>
 
                                                     {/* Cards Container */}
-                                                    <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
+                                                    <div className="flex-1 min-h-0 overflow-y-auto p-2.5 custom-scrollbar">
                                                         {stageLeads.map(lead => (
                                                             <LeadCard
                                                                 key={lead.id}
@@ -1442,20 +1414,20 @@ const LeadsDashboard: React.FC = () => {
                                     </div>
 
                                     {/* Desktop Kanban */}
-                                    <div className="hidden sm:flex h-full gap-4 lg:gap-6 min-w-max">
+                                    <div className="hidden sm:flex h-full min-h-0 w-max gap-4 pb-2">
                                         {LEAD_STAGES.map(stage => {
                                             const stageLeads = filteredLeads.filter(l => l.status === stage.id);
                                             return (
                                                 <div
                                                     key={stage.id}
-                                                    className="w-[280px] lg:w-[320px] flex flex-col h-full rounded-2xl bg-secondary/80 border border-q-border/50"
+                                                    className="w-[288px] lg:w-[304px] shrink-0 flex flex-col h-full min-h-0 overflow-hidden rounded-xl bg-q-surface/70 border border-q-border/60"
                                                     onDragOver={handleDragOver}
                                                     onDrop={(e) => handleDrop(e, stage.id)}
                                                 >
                                                     {/* Column Header - Editable */}
-                                                    <div className="p-3 lg:p-4 flex items-center justify-between shrink-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className={`w-2.5 h-2.5 rounded-full ${stage.color}`} />
+                                                    <div className="sticky top-0 z-10 p-3 flex items-center justify-between gap-2 shrink-0 border-b border-q-border/30 bg-q-surface/95 backdrop-blur">
+                                                        <div className="flex min-w-0 items-center gap-2">
+                                                            <div className={`w-2.5 h-2.5 shrink-0 rounded-full ${stage.color}`} />
                                                             {editingStageId === stage.id ? (
                                                                 <input
                                                                     ref={stageInputRef}
@@ -1467,7 +1439,7 @@ const LeadsDashboard: React.FC = () => {
                                                                 />
                                                             ) : (
                                                                 <h3
-                                                                    className="font-bold text-sm text-foreground cursor-pointer hover:text-primary transition-colors group/stage"
+                                                                    className="truncate font-bold text-sm text-foreground cursor-pointer hover:text-primary transition-colors group/stage"
                                                                     onClick={() => { setEditingStageId(stage.id); setEditingStageLabel(stage.label); }}
                                                                     title={t('leads.crmSettings.editStageLabel')}
                                                                 >
@@ -1475,7 +1447,7 @@ const LeadsDashboard: React.FC = () => {
                                                                     <Pencil size={10} className="inline ml-1 opacity-0 group-hover/stage:opacity-60 transition-opacity" />
                                                                 </h3>
                                                             )}
-                                                            <span className="bg-q-bg px-2 py-0.5 rounded-full text-xs text-q-text-muted border border-q-border font-mono">
+                                                            <span className="shrink-0 bg-q-bg px-2 py-0.5 rounded-full text-xs text-q-text-muted border border-q-border font-mono">
                                                                 {stageLeads.length}
                                                             </span>
                                                         </div>
@@ -1489,7 +1461,7 @@ const LeadsDashboard: React.FC = () => {
                                                     </div>
 
                                                     {/* Cards Container */}
-                                                    <div className="flex-1 overflow-y-auto px-3 lg:px-4 pt-3 lg:pt-4 pb-4 custom-scrollbar">
+                                                    <div className="flex-1 min-h-0 overflow-y-auto p-2.5 custom-scrollbar">
                                                         {stageLeads.map(lead => (
                                                             <LeadCard
                                                                 key={lead.id}
@@ -1509,26 +1481,28 @@ const LeadsDashboard: React.FC = () => {
                                             );
                                         })}
                                     </div>
-                                </>
+                                </div>
                             )}
 
                             {viewMode === 'table' && (
-                                <LeadsTableView
-                                    leads={filteredLeads}
-                                    onLeadClick={(lead) => { setSelectedLead(lead); }}
-                                    onDelete={deleteLead}
-                                    selectedLeadIds={selectedLeadIds}
-                                    onToggleSelect={handleToggleSelect}
-                                    onToggleSelectAll={handleToggleSelectAll}
-                                    totalFilteredCount={filteredLeads.length}
-                                    allFilteredSelected={selectedLeadIds.length === filteredLeads.length && filteredLeads.length > 0}
-                                    onSelectAllFiltered={handleToggleSelectAll}
-                                    onClearSelection={() => setSelectedLeadIds([])}
-                                />
+                                <div className="h-full min-h-0 overflow-auto">
+                                    <LeadsTableView
+                                        leads={filteredLeads}
+                                        onLeadClick={(lead) => { setSelectedLead(lead); }}
+                                        onDelete={deleteLead}
+                                        selectedLeadIds={selectedLeadIds}
+                                        onToggleSelect={handleToggleSelect}
+                                        onToggleSelectAll={handleToggleSelectAll}
+                                        totalFilteredCount={filteredLeads.length}
+                                        allFilteredSelected={selectedLeadIds.length === filteredLeads.length && filteredLeads.length > 0}
+                                        onSelectAllFiltered={handleToggleSelectAll}
+                                        onClearSelection={() => setSelectedLeadIds([])}
+                                    />
+                                </div>
                             )}
 
                             {viewMode === 'list' && (
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                                <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 overflow-hidden">
                                     <LeadsListView
                                         leads={filteredLeads}
                                         selectedLeadId={selectedLead?.id || null}
@@ -1536,58 +1510,54 @@ const LeadsDashboard: React.FC = () => {
                                         selectedLeadIds={selectedLeadIds}
                                         onToggleSelect={handleToggleSelect}
                                     />
-                                    {selectedLead && (
-                                        <div className="bg-q-surface border border-q-border rounded-xl p-6 overflow-y-auto custom-scrollbar">
-                                            <h3 className="text-lg font-bold mb-4">Quick Preview</h3>
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="text-xs font-bold text-q-text-muted uppercase">Name</label>
-                                                    <p className="text-sm text-foreground">{selectedLead.name}</p>
-                                                </div>
-                                                <div>
-                                                    <label className="text-xs font-bold text-q-text-muted uppercase">Email</label>
-                                                    <p className="text-sm text-foreground">{selectedLead.email}</p>
-                                                </div>
-                                                {selectedLead.company && (
+                                    <div className="hidden min-h-0 overflow-y-auto rounded-xl border border-q-border/60 bg-q-surface/80 p-4 sm:p-6 custom-scrollbar lg:block">
+                                        {selectedLead ? (
+                                            <>
+                                                <h3 className="text-lg font-bold mb-4">Quick Preview</h3>
+                                                <div className="space-y-4">
                                                     <div>
-                                                        <label className="text-xs font-bold text-q-text-muted uppercase">Company</label>
-                                                        <p className="text-sm text-foreground">{selectedLead.company}</p>
+                                                        <label className="text-xs font-bold text-q-text-muted uppercase">Name</label>
+                                                        <p className="text-sm text-foreground">{selectedLead.name}</p>
                                                     </div>
-                                                )}
-                                                {selectedLead.value && (
                                                     <div>
-                                                        <label className="text-xs font-bold text-q-text-muted uppercase">Value</label>
-                                                        <p className="text-sm font-bold text-green-500">${selectedLead.value.toLocaleString()}</p>
+                                                        <label className="text-xs font-bold text-q-text-muted uppercase">Email</label>
+                                                        <p className="text-sm text-foreground">{selectedLead.email}</p>
                                                     </div>
-                                                )}
-                                                <button
-                                                    onClick={() => setSelectedLead(selectedLead)}
-                                                    className="w-full bg-primary text-primary-foreground py-2 rounded-lg font-bold hover:opacity-90"
-                                                >
-                                                    View Full Details
-                                                </button>
+                                                    {selectedLead.company && (
+                                                        <div>
+                                                            <label className="text-xs font-bold text-q-text-muted uppercase">Company</label>
+                                                            <p className="text-sm text-foreground">{selectedLead.company}</p>
+                                                        </div>
+                                                    )}
+                                                    {selectedLead.value && (
+                                                        <div>
+                                                            <label className="text-xs font-bold text-q-text-muted uppercase">Value</label>
+                                                            <p className="text-sm font-bold text-green-500">${selectedLead.value.toLocaleString()}</p>
+                                                        </div>
+                                                    )}
+                                                    <button
+                                                        onClick={() => setSelectedLead(selectedLead)}
+                                                        className="w-full bg-primary text-primary-foreground py-2 rounded-lg font-bold hover:opacity-90"
+                                                    >
+                                                        View Full Details
+                                                    </button>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="flex h-full min-h-[18rem] flex-col items-center justify-center text-center">
+                                                <Users className="mb-3 h-8 w-8 text-q-text-muted" />
+                                                <h3 className="text-sm font-semibold text-foreground">Quick Preview</h3>
+                                                <p className="mt-1 max-w-xs text-sm text-q-text-muted">
+                                                    Selecciona un lead para revisar sus datos principales sin abrir el detalle completo.
+                                                </p>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </main>
-                    </>
+                    </div>
                 )}
-
-                {/* Modals */}
-                {/* ... existing modals ... */}
-                {/* I need to make sure I don't cut off the modals if they are outside the main content */}
-                {/* The original code had modals at the end. I should check where they are. */}
-                {/* Wait, I can't see the end of the file in the previous view_file. */}
-                {/* I will assume the modals are after the main content. */}
-                {/* Let's close the fragment before the modals if they are there, or just close it at the end of the main content area. */}
-                {/* The view_file showed up to line 800. I need to be careful. */}
-                {/* I will use a safer approach: wrap the content I KNOW is there. */}
-
-                {/* Actually, I'll just wrap the Bulk Actions, Filters, and Main Content. */}
-                {/* The modals are likely at the bottom of the component. */}
-                {/* I'll check the end of the file first to be safe. */}
 
                 {/* Lead Detail Modal - Mobile optimized */}
                 <Modal

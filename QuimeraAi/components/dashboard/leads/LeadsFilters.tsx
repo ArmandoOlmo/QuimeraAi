@@ -20,6 +20,7 @@ interface LeadsFiltersProps {
     filters: LeadsFiltersState;
     onFiltersChange: (filters: LeadsFiltersState) => void;
     availableTags: string[];
+    toolbarActions?: React.ReactNode;
 }
 
 const LEAD_STATUSES: { id: LeadStatus; label: string; color: string }[] = [
@@ -84,11 +85,11 @@ const FilterButton: React.FC<{
     <button
         onClick={onClick}
         className={`
-            relative inline-flex items-center gap-1.5 rounded-lg text-xs font-medium
-            transition-all duration-150 whitespace-nowrap
+            no-min-touch relative inline-flex items-center gap-1 rounded-lg text-[11px] font-medium
+            transition-all duration-150 whitespace-nowrap shrink-0
             /* Mobile: icon-only, no border */
-            h-8 w-8 justify-center border-0 bg-transparent
-            sm:w-auto sm:h-auto sm:justify-start sm:px-2.5 sm:py-1.5 sm:border
+            h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 justify-center border border-q-border/60 bg-q-surface/70 p-0
+            sm:h-8 sm:min-h-8 sm:max-h-8 sm:w-auto sm:min-w-0 sm:max-w-none sm:justify-start sm:px-2 sm:py-0 sm:border
             ${isActive
                 ? 'text-primary sm:bg-primary sm:text-primary-foreground sm:border-primary sm:shadow-sm'
                 : 'text-q-text-muted hover:text-foreground sm:bg-secondary/50 sm:text-foreground sm:border-q-border sm:hover:bg-secondary sm:hover:border-primary/30'
@@ -99,7 +100,7 @@ const FilterButton: React.FC<{
         <span className="hidden sm:inline">{label}</span>
         {count !== undefined && count > 0 && (
             <span className={`
-                hidden sm:inline ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold
+                hidden sm:inline ml-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold
                 ${isActive ? 'bg-primary-foreground/20' : 'bg-primary/20 text-primary'}
             `}>
                 {count}
@@ -109,7 +110,7 @@ const FilterButton: React.FC<{
         {isActive && count !== undefined && count > 0 && (
             <span className="sm:hidden absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary" />
         )}
-        <ChevronDown size={12} className="ml-0.5 opacity-60 hidden sm:block" />
+        <ChevronDown size={11} className="ml-0.5 opacity-60 hidden sm:block" />
     </button>
 );
 
@@ -118,18 +119,18 @@ const ActiveFilterChip: React.FC<{
     label: string;
     onRemove: () => void;
 }> = ({ label, onRemove }) => (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[11px] font-medium rounded-full">
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-medium rounded-full">
         {label}
         <button
             onClick={onRemove}
-            className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+            className="no-min-touch hover:bg-primary/20 rounded-full p-0.5 transition-colors"
         >
             <X size={10} />
         </button>
     </span>
 );
 
-const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, availableTags }) => {
+const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, availableTags, toolbarActions }) => {
     const { t } = useTranslation();
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
@@ -186,28 +187,36 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     return (
-        <div className="space-y-2">
-            {/* Mobile: square icon-only toggle for filters — no text, no border */}
-            <div className="sm:hidden">
+        <div className="min-w-0 space-y-2">
+            {/* Mobile: fixed square filter toggle. */}
+            <div className="flex h-9 min-w-0 items-center gap-2 sm:hidden">
                 <button
                     onClick={() => setShowMobileFilters(!showMobileFilters)}
-                    className={`relative h-8 w-8 flex items-center justify-center rounded-md transition-colors ${showMobileFilters || activeFiltersCount > 0 ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
+                    className={`no-min-touch relative flex h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 shrink-0 items-center justify-center rounded-lg border border-q-border/60 bg-q-surface/70 p-0 transition-colors ${showMobileFilters || activeFiltersCount > 0 ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                 >
-                    <Filter size={16} />
+                    <Filter size={15} />
                     {activeFiltersCount > 0 && (
                         <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold bg-primary text-primary-foreground flex items-center justify-center">
                             {activeFiltersCount}
                         </span>
                     )}
                 </button>
+                {toolbarActions && (
+                    <div className="flex h-9 min-w-0 flex-1 items-center justify-end gap-1 overflow-x-auto scrollbar-hide">
+                        {toolbarActions}
+                    </div>
+                )}
             </div>
 
             {/* Toolbar de filtros — always visible on desktop, collapsible on mobile */}
-            <div className={`${showMobileFilters ? 'flex' : 'hidden'} sm:flex items-center gap-1 sm:gap-2 flex-wrap`}>
+            <div className={`${showMobileFilters ? 'flex' : 'hidden'} min-w-0 items-center gap-1 sm:flex sm:gap-2 flex-wrap`}>
                 {/* Icono de filtros — desktop only */}
-                <div className="hidden sm:flex items-center gap-1.5 text-q-text-muted pr-2 border-r border-q-border">
-                    <Filter size={14} />
-                    <span className="text-xs font-medium">{t('leads.filters.advancedFilters')}</span>
+                <div
+                    className="hidden sm:flex h-8 w-8 min-h-8 min-w-8 shrink-0 items-center justify-center rounded-lg border border-q-border/60 bg-q-surface/70 text-q-text-muted"
+                    title={t('leads.filters.advancedFilters')}
+                    aria-label={t('leads.filters.advancedFilters')}
+                >
+                    <Filter size={13} />
                 </div>
 
                 {/* Status Filter */}
@@ -230,7 +239,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                                 key={status.id}
                                 onClick={() => toggleStatus(status.id)}
                                 className={`
-                                    w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs
+                                    no-min-touch w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px]
                                     transition-colors text-left
                                     ${filters.statuses.includes(status.id)
                                         ? 'bg-primary/10 text-primary'
@@ -270,7 +279,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                                     key={source.id}
                                     onClick={() => toggleSource(source.id)}
                                     className={`
-                                        w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs
+                                        no-min-touch w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px]
                                         transition-colors text-left
                                         ${filters.sources.includes(source.id)
                                             ? 'bg-primary/10 text-primary'
@@ -311,7 +320,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                                     type="number"
                                     value={filters.valueRange.min}
                                     onChange={e => updateFilter('valueRange', { ...filters.valueRange, min: Number(e.target.value) })}
-                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             </div>
                             <div>
@@ -320,7 +329,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                                     type="number"
                                     value={filters.valueRange.max}
                                     onChange={e => updateFilter('valueRange', { ...filters.valueRange, max: Number(e.target.value) })}
-                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             </div>
                         </div>
@@ -351,7 +360,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                                     max="100"
                                     value={filters.scoreRange.min}
                                     onChange={e => updateFilter('scoreRange', { ...filters.scoreRange, min: Number(e.target.value) })}
-                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             </div>
                             <div>
@@ -362,7 +371,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                                     max="100"
                                     value={filters.scoreRange.max}
                                     onChange={e => updateFilter('scoreRange', { ...filters.scoreRange, max: Number(e.target.value) })}
-                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             </div>
                         </div>
@@ -392,7 +401,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                                     type="date"
                                     value={filters.dateRange.start}
                                     onChange={e => updateFilter('dateRange', { ...filters.dateRange, start: e.target.value })}
-                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             </div>
                             <div>
@@ -401,7 +410,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                                     type="date"
                                     value={filters.dateRange.end}
                                     onChange={e => updateFilter('dateRange', { ...filters.dateRange, end: e.target.value })}
-                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             </div>
                         </div>
@@ -430,7 +439,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                                     key={tag}
                                     onClick={() => toggleTag(tag)}
                                     className={`
-                                        w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs
+                                        no-min-touch w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px]
                                         transition-colors text-left
                                         ${filters.tags.includes(tag)
                                             ? 'bg-primary/10 text-primary'
@@ -453,7 +462,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                 {activeFiltersCount > 0 && (
                     <button
                         onClick={clearAllFilters}
-                        className="inline-flex items-center gap-1 px-2 py-1.5 text-xs text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="no-min-touch inline-flex h-8 items-center gap-1 px-2 text-[11px] text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                     >
                         <RotateCcw size={12} />
                         <span>{t('leads.filters.clearAll')}</span>

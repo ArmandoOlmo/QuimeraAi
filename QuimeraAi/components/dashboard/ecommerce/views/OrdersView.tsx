@@ -27,6 +27,9 @@ import type { StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
 import OrderDetailDrawer from '../components/OrderDetailDrawer';
 import { useEcommerceContext } from '../EcommerceDashboard';
+import { CatalogFilterBar, FilterChipRow } from '../../filters';
+
+type OrderStatusFilter = OrderStatus | 'all';
 
 const OrdersView: React.FC = () => {
     const { t } = useTranslation();
@@ -35,7 +38,7 @@ const OrdersView: React.FC = () => {
     const { orders, isLoading, updateOrderStatus, addTrackingInfo } = useOrders(user?.id || '', storeId);
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedStatus, setSelectedStatus] = useState<OrderStatus | ''>('');
+    const [selectedStatus, setSelectedStatus] = useState<OrderStatusFilter>('all');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [showDrawer, setShowDrawer] = useState(false);
 
@@ -48,7 +51,7 @@ const OrdersView: React.FC = () => {
                 order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 order.customerName.toLowerCase().includes(searchTerm.toLowerCase());
 
-            const matchesStatus = !selectedStatus || order.status === selectedStatus;
+            const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
 
             return matchesSearch && matchesStatus;
         });
@@ -117,97 +120,55 @@ const OrdersView: React.FC = () => {
                 </p>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <button
-                    onClick={() => setSelectedStatus('pending')}
-                    className={`p-4 rounded-xl border transition-colors ${selectedStatus === 'pending'
-                            ? 'bg-yellow-500/20 border-yellow-500/50'
-                            : 'bg-q-surface/50 border-q-border hover:bg-q-surface'
-                        }`}
-                >
-                    <div className="flex items-center gap-3">
-                        <Clock className="text-yellow-400" size={24} />
-                        <div className="text-left">
-                            <p className="text-2xl font-bold text-foreground">{stats.pending}</p>
-                            <p className="text-sm text-q-text-muted">{t('ecommerce.pending', 'Pendientes')}</p>
-                        </div>
-                    </div>
-                </button>
-
-                <button
-                    onClick={() => setSelectedStatus('paid')}
-                    className={`p-4 rounded-xl border transition-colors ${selectedStatus === 'paid'
-                            ? 'bg-green-500/20 border-green-500/50'
-                            : 'bg-q-surface/50 border-q-border hover:bg-q-surface'
-                        }`}
-                >
-                    <div className="flex items-center gap-3">
-                        <DollarSign className="text-green-400" size={24} />
-                        <div className="text-left">
-                            <p className="text-2xl font-bold text-foreground">{stats.paid}</p>
-                            <p className="text-sm text-q-text-muted">{t('ecommerce.paid', 'Pagados')}</p>
-                        </div>
-                    </div>
-                </button>
-
-                <button
-                    onClick={() => setSelectedStatus('shipped')}
-                    className={`p-4 rounded-xl border transition-colors ${selectedStatus === 'shipped'
-                            ? 'bg-purple-500/20 border-purple-500/50'
-                            : 'bg-q-surface/50 border-q-border hover:bg-q-surface'
-                        }`}
-                >
-                    <div className="flex items-center gap-3">
-                        <Truck className="text-purple-400" size={24} />
-                        <div className="text-left">
-                            <p className="text-2xl font-bold text-foreground">{stats.shipped}</p>
-                            <p className="text-sm text-q-text-muted">{t('ecommerce.shipped', 'Enviados')}</p>
-                        </div>
-                    </div>
-                </button>
-
-                <button
-                    onClick={() => setSelectedStatus('delivered')}
-                    className={`p-4 rounded-xl border transition-colors ${selectedStatus === 'delivered'
-                            ? 'bg-green-500/20 border-green-500/50'
-                            : 'bg-q-surface/50 border-q-border hover:bg-q-surface'
-                        }`}
-                >
-                    <div className="flex items-center gap-3">
-                        <CheckCircle className="text-green-400" size={24} />
-                        <div className="text-left">
-                            <p className="text-2xl font-bold text-foreground">{stats.delivered}</p>
-                            <p className="text-sm text-q-text-muted">{t('ecommerce.delivered', 'Entregados')}</p>
-                        </div>
-                    </div>
-                </button>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
-                    <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
-                    <input
-                        type="text"
-                        placeholder={t('ecommerce.searchOrders', 'Buscar por número, cliente o email...')}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="flex-1 bg-transparent outline-none text-sm min-w-0"
+            {/* Status Filter Chips */}
+            <CatalogFilterBar
+                filters={
+                    <FilterChipRow
+                        value={selectedStatus}
+                        onChange={(value) => setSelectedStatus(value as OrderStatusFilter)}
+                        options={[
+                            { id: 'all', label: t('ecommerce.all', 'Todos'), count: orders.length },
+                            {
+                                id: 'pending',
+                                label: t('ecommerce.pending', 'Pendientes'),
+                                count: stats.pending,
+                                color: 'gray',
+                            },
+                            {
+                                id: 'paid',
+                                label: t('ecommerce.paid', 'Pagados'),
+                                count: stats.paid,
+                                color: 'green',
+                            },
+                            {
+                                id: 'shipped',
+                                label: t('ecommerce.shipped', 'Enviados'),
+                                count: stats.shipped,
+                            },
+                            {
+                                id: 'delivered',
+                                label: t('ecommerce.delivered', 'Entregados'),
+                                count: stats.delivered,
+                                color: 'green',
+                            },
+                        ]}
                     />
-                    {searchTerm && (
-                        <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
-                            <X size={16} />
-                        </button>
-                    )}
-                </div>
+                }
+            />
 
-                {selectedStatus && (
-                    <button
-                        onClick={() => setSelectedStatus('')}
-                        className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors"
-                    >
-                        {t('ecommerce.clearFilter', 'Limpiar filtro')}
+            {/* Search */}
+            <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
+                <input
+                    type="text"
+                    placeholder={t('ecommerce.searchOrders', 'Buscar por número, cliente o email...')}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="flex-1 bg-transparent outline-none text-sm min-w-0"
+                />
+                {searchTerm && (
+                    <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
+                        <X size={16} />
                     </button>
                 )}
             </div>
@@ -220,7 +181,7 @@ const OrdersView: React.FC = () => {
                         {t('ecommerce.noOrders', 'No hay pedidos')}
                     </h3>
                     <p className="text-q-text-muted">
-                        {searchTerm || selectedStatus
+                        {searchTerm || selectedStatus !== 'all'
                             ? t('ecommerce.noOrdersFilter', 'No se encontraron pedidos con los filtros aplicados')
                             : t('ecommerce.noOrdersYet', 'Aún no has recibido ningún pedido')}
                     </p>

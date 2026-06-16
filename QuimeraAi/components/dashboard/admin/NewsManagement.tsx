@@ -4,7 +4,7 @@
  * Lista con filtros, acciones CRUD y preview
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNews } from '../../../contexts/news';
 import { useToast } from '../../../contexts/ToastContext';
@@ -40,6 +40,8 @@ import {
     Sparkles,
 } from 'lucide-react';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import { FilterChipRow } from '../filters';
+import type { FilterChipOption } from '../filters';
 import DashboardSidebar from '../DashboardSidebar';
 import NewsEditor from './NewsEditor';
 import AINewsStudio from './AINewsStudio';
@@ -66,7 +68,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
     // Local State
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<NewsStatus | ''>('');
+    const [statusFilter, setStatusFilter] = useState<NewsStatus | 'all'>('all');
     const [categoryFilter, setCategoryFilter] = useState<NewsCategory | ''>('');
     const [featuredFilter, setFeaturedFilter] = useState<boolean | ''>('');
     const [showFilters, setShowFilters] = useState(false);
@@ -92,7 +94,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                 return false;
             }
         }
-        if (statusFilter && item.status !== statusFilter) return false;
+        if (statusFilter !== 'all' && item.status !== statusFilter) return false;
         if (categoryFilter && item.category !== categoryFilter) return false;
         if (featuredFilter !== '' && item.featured !== featuredFilter) return false;
         return true;
@@ -191,12 +193,22 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
 
     const clearFilters = () => {
         setSearchQuery('');
-        setStatusFilter('');
+        setStatusFilter('all');
         setCategoryFilter('');
         setFeaturedFilter('');
     };
 
-    const hasFilters = searchQuery || statusFilter || categoryFilter || featuredFilter !== '';
+    const hasFilters = searchQuery || statusFilter !== 'all' || categoryFilter || featuredFilter !== '';
+
+    const statusFilterOptions = useMemo<FilterChipOption<NewsStatus | 'all'>[]>(() => [
+        { id: 'all', label: t('common.all', 'Todos'), count: newsItems.length },
+        ...Object.entries(NEWS_STATUS_LABELS).map(([value, label]) => ({
+            id: value as NewsStatus,
+            label: t(`superadmin.news.status.${value}`, label),
+            count: newsItems.filter((item) => item.status === value).length,
+            color: value === 'published' ? 'green' as const : 'gray' as const,
+        })),
+    ], [newsItems, t]);
 
     // Editor close handler
     const handleEditorClose = () => {
@@ -376,18 +388,11 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                     <label className="block text-xs text-q-text-secondary mb-1">
                                         {t('superadmin.news.filterStatus', 'Estado')}
                                     </label>
-                                    <select
+                                    <FilterChipRow
+                                        options={statusFilterOptions}
                                         value={statusFilter}
-                                        onChange={e => setStatusFilter(e.target.value as NewsStatus | '')}
-                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-q-accent"
-                                    >
-                                        <option value="">{t('common.all', 'Todos')}</option>
-                                        {Object.entries(NEWS_STATUS_LABELS).map(([value, label]) => (
-                                            <option key={value} value={value}>
-                                                {t(`superadmin.news.status.${value}`, label)}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        onChange={(value) => setStatusFilter(value as typeof statusFilter)}
+                                    />
                                 </div>
 
                                 {/* Category Filter */}
