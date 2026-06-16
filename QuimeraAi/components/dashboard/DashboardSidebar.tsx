@@ -95,6 +95,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const formattedCreditsUsed = creditsUsed.toLocaleString();
   const formattedCreditsLimit = creditsLimit.toLocaleString();
   const formattedCreditsRemaining = creditsRemaining.toLocaleString();
+  const creditsAvailablePercentage = creditsLimit > 0
+    ? Math.max(0, Math.min(Math.round((creditsRemaining / creditsLimit) * 100), 100))
+    : 0;
   const compactCreditsRemaining = new Intl.NumberFormat(undefined, {
     notation: 'compact',
     maximumFractionDigits: creditsRemaining >= 1000 ? 1 : 0,
@@ -921,7 +924,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   </div>
 
                   <ProgressBar3D
-                    percentage={creditsUsage?.percentage || 0}
+                    percentage={isLoadingCredits ? 0 : creditsAvailablePercentage}
                     color="var(--q-accent)"
                     size="md"
                   />
