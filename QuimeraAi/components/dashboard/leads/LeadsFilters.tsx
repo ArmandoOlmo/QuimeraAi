@@ -16,6 +16,8 @@ export interface LeadsFiltersState {
     dateRange: { start: string; end: string };
 }
 
+export const DEFAULT_LEAD_VALUE_RANGE_MAX = 1_000_000_000;
+
 interface LeadsFiltersProps {
     filters: LeadsFiltersState;
     onFiltersChange: (filters: LeadsFiltersState) => void;
@@ -177,7 +179,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
             search: '',
             statuses: [],
             sources: [],
-            valueRange: { min: 0, max: 1000000 },
+            valueRange: { min: 0, max: DEFAULT_LEAD_VALUE_RANGE_MAX },
             scoreRange: { min: 0, max: 100 },
             tags: [],
             dateRange: { start: '', end: '' }
@@ -188,7 +190,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
         filters.statuses.length +
         filters.sources.length +
         filters.tags.length +
-        (filters.valueRange.min > 0 || filters.valueRange.max < 1000000 ? 1 : 0) +
+        (filters.valueRange.min > 0 || filters.valueRange.max < DEFAULT_LEAD_VALUE_RANGE_MAX ? 1 : 0) +
         (filters.scoreRange.min > 0 || filters.scoreRange.max < 100 ? 1 : 0) +
         (filters.dateRange.start || filters.dateRange.end ? 1 : 0);
 
@@ -319,8 +321,8 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                         <FilterButton
                             icon={<DollarSign size={12} />}
                             label={t('leads.filters.dealValueRange')}
-                            count={filters.valueRange.min > 0 || filters.valueRange.max < 1000000 ? 1 : 0}
-                            isActive={filters.valueRange.min > 0 || filters.valueRange.max < 1000000}
+                            count={filters.valueRange.min > 0 || filters.valueRange.max < DEFAULT_LEAD_VALUE_RANGE_MAX ? 1 : 0}
+                            isActive={filters.valueRange.min > 0 || filters.valueRange.max < DEFAULT_LEAD_VALUE_RANGE_MAX}
                             onClick={() => { }}
                         />
                     }
@@ -522,10 +524,10 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                     ))}
 
                     {/* Value range chip */}
-                    {(filters.valueRange.min > 0 || filters.valueRange.max < 1000000) && (
+                    {(filters.valueRange.min > 0 || filters.valueRange.max < DEFAULT_LEAD_VALUE_RANGE_MAX) && (
                         <ActiveFilterChip
                             label={`$${filters.valueRange.min.toLocaleString()} - $${filters.valueRange.max.toLocaleString()}`}
-                            onRemove={() => updateFilter('valueRange', { min: 0, max: 1000000 })}
+                            onRemove={() => updateFilter('valueRange', { min: 0, max: DEFAULT_LEAD_VALUE_RANGE_MAX })}
                         />
                     )}
 

@@ -25,7 +25,7 @@ import Modal from '../../ui/Modal';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import LeadsTimeline from './LeadsTimeline';
 import LeadTasksList from './LeadTasksList';
-import LeadsFilters, { LeadsFiltersState } from './LeadsFilters';
+import LeadsFilters, { DEFAULT_LEAD_VALUE_RANGE_MAX, LeadsFiltersState } from './LeadsFilters';
 import LeadsTableView from './LeadsTableView';
 import LeadsListView from './LeadsListView';
 import CustomFieldsManager, { CustomFieldDefinition } from './CustomFieldsManager';
@@ -105,7 +105,7 @@ const STAGE_ACCENT_CLASS: Record<LeadStatus, string> = {
     lost: 'bg-red-500',
 };
 
-
+const LEGACY_DEFAULT_LEAD_VALUE_RANGE_MAX = 1_000_000;
 
 const EMOJI_MARKERS = [
     // Status & Priority
@@ -447,11 +447,23 @@ const LeadsDashboard: React.FC = () => {
         search: '',
         statuses: [],
         sources: [],
-        valueRange: { min: 0, max: 1000000 },
+        valueRange: { min: 0, max: DEFAULT_LEAD_VALUE_RANGE_MAX },
         scoreRange: { min: 0, max: 100 },
         tags: [],
         dateRange: { start: '', end: '' }
     });
+
+    useEffect(() => {
+        setFilters(prev => {
+            if (prev.valueRange.min === 0 && prev.valueRange.max === LEGACY_DEFAULT_LEAD_VALUE_RANGE_MAX) {
+                return {
+                    ...prev,
+                    valueRange: { min: 0, max: DEFAULT_LEAD_VALUE_RANGE_MAX },
+                };
+            }
+            return prev;
+        });
+    }, []);
 
     // Custom Fields Configuration
     const [customFieldsConfig, setCustomFieldsConfig] = useState<CustomFieldDefinition[]>([]);
@@ -771,7 +783,7 @@ const LeadsDashboard: React.FC = () => {
             <button
                 onClick={() => setIsImportModalOpen(true)}
                 className="no-min-touch flex h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 shrink-0 items-center justify-center rounded-lg border border-q-border/60 bg-q-surface/70 p-0 text-q-text-secondary transition-all hover:bg-secondary hover:text-q-text sm:h-8 sm:w-8 sm:min-h-8 sm:min-w-8 sm:max-h-8 sm:max-w-8"
-                title={t('leads.import.title', 'Importar Leads')}
+                title={t('leads.import.title')}
             >
                 <Upload className="h-3.5 w-3.5" />
             </button>

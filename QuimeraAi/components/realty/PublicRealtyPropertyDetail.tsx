@@ -5,7 +5,7 @@ import type { ThemeData } from '../../types';
 import type { RealtyListingsSectionData } from '../../types/realty';
 import { supabase } from '../../supabase';
 import { usePublicRealtyListings } from '../../hooks/usePublicRealtyListings';
-import { colorWithAlpha, formatRealtyPrice, REALTY_LEAD_SOURCE, REALTY_LEAD_TAG, resolveRealtyWebsiteColors } from '../../utils/realty';
+import { colorWithAlpha, formatRealtyPrice, REALTY_LEAD_SOURCE, resolveRealtyWebsiteColors } from '../../utils/realty';
 
 interface PublicRealtyPropertyDetailProps {
     projectId: string;
@@ -71,7 +71,6 @@ const PublicRealtyPropertyDetail: React.FC<PublicRealtyPropertyDetailProps> = ({
         try {
             const propertyOwnerId = property.userId || property.createdBy || ownerId;
             if (!propertyOwnerId) throw new Error('Missing owner for Realty lead.');
-            let crmLeadId: string | null = null;
             const leadMetadata = {
                 realtyLead: true,
                 realtyPropertyId: property.id,
@@ -83,32 +82,6 @@ const PublicRealtyPropertyDetail: React.FC<PublicRealtyPropertyDetailProps> = ({
                 message: form.message,
                 sourceComponent: 'realty-property-detail',
             };
-
-            if (property.tenantId) {
-                const crmInsert = await supabase
-                    .from('leads')
-                    .insert({
-                        tenant_id: property.tenantId,
-                        project_id: projectId,
-                        name: form.name,
-                        email: form.email,
-                        phone: form.phone,
-                        status: 'new',
-                        source: REALTY_LEAD_SOURCE,
-                        value: property.price || 0,
-                        tags: [REALTY_LEAD_TAG, 'website', `property:${property.id}`],
-                        notes: form.message || t('realty.detail.defaultLeadMessage', { title: property.title }),
-                        custom_data: leadMetadata,
-                    })
-                    .select('id')
-                    .maybeSingle();
-
-                if (crmInsert.error) {
-                    console.warn('[PublicRealtyPropertyDetail] CRM lead sync failed', crmInsert.error);
-                } else {
-                    crmLeadId = crmInsert.data?.id || null;
-                }
-            }
 
             const { error } = await supabase.from('property_leads').insert({
                 user_id: propertyOwnerId,
@@ -123,7 +96,6 @@ const PublicRealtyPropertyDetail: React.FC<PublicRealtyPropertyDetailProps> = ({
                 lead_type: 'buyer',
                 budget: property.price || null,
                 source: REALTY_LEAD_SOURCE,
-                crm_lead_id: crmLeadId,
                 metadata: leadMetadata,
             });
             if (error) throw error;

@@ -485,16 +485,16 @@ const PreviewStep: React.FC<{
                 <div className="border border-q-border rounded-xl p-4 bg-muted/20">
                     <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-2">
                         <Tag size={14} className="text-primary" />
-                        {t('leads.import.tagSection', 'Etiqueta de Importación')}
+                        {t('leads.import.tagSection')}
                     </h4>
                     <p className="text-xs text-q-text-muted mb-2">
-                        {t('leads.import.tagDescription', 'Esta etiqueta se asignará a todos los leads importados para identificarlos fácilmente.')}
+                        {t('leads.import.tagDescription')}
                     </p>
                     <input
                         type="text"
                         value={importTag}
                         onChange={(e) => onImportTagChange(e.target.value)}
-                        placeholder={t('leads.import.tagPlaceholder', 'Ej: Evento Miami 2026')}
+                        placeholder={t('leads.import.tagPlaceholder')}
                         className="w-full bg-q-bg border border-q-border rounded-lg px-3 py-2 text-sm outline-none focus:border-primary transition-colors"
                     />
                 </div>
