@@ -45,16 +45,20 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const tenantId = tenantContext?.currentTenant?.id;
+    const currentTenant = tenantContext?.currentTenant;
+    const tenantId = currentTenant?.id;
+    const isLoadingTenant = tenantContext?.isLoadingTenant ?? false;
 
     const loadUsage = useCallback(async () => {
         if (!tenantId) {
             setUsage(null);
+            setError(null);
             setIsLoading(false);
             return;
         }
 
         try {
+            setError(null);
             const { data, error } = await supabase
                 .from('subscriptions')
                 .select('plan_id, billing_cycle, status, current_period_end, stripe_customer_id, stripe_subscription_id, ai_credits_usage')
@@ -65,15 +69,21 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
                 throw error;
             }
 
-            const planKey: SubscriptionPlanId = (data?.plan_id as SubscriptionPlanId) || 'free';
+            const planKey: SubscriptionPlanId = (data?.plan_id as SubscriptionPlanId) || (currentTenant?.subscriptionPlan as SubscriptionPlanId) || 'free';
             const plan = SUBSCRIPTION_PLANS[planKey] || SUBSCRIPTION_PLANS.free;
             const status = data?.status || 'active';
             
             const aiUsage = data?.ai_credits_usage as any;
             const used = Number(aiUsage?.creditsUsed ?? aiUsage?.total_used ?? 0);
-            const limit = Number(aiUsage?.creditsIncluded ?? plan.limits.maxAiCredits ?? 0);
+            const tenantLimit = Number(currentTenant?.limits?.maxAiCredits);
+            const fallbackLimit = Number.isFinite(tenantLimit) && tenantLimit > 0
+                ? tenantLimit
+                : plan.limits.maxAiCredits ?? 0;
+            const limit = Number(aiUsage?.creditsIncluded ?? fallbackLimit);
             
-            const remaining = Math.max(0, limit - used);
+            const remaining = Number.isFinite(Number(aiUsage?.creditsRemaining))
+                ? Number(aiUsage.creditsRemaining)
+                : Math.max(0, limit - used);
             const percentage = limit > 0 ? Math.min(Math.round((used / limit) * 100), 100) : 0;
 
             setUsage({
@@ -99,7 +109,7 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [tenantId]);
+    }, [tenantId, currentTenant?.subscriptionPlan, currentTenant?.limits?.maxAiCredits]);
 
     // Cargar al montar y cuando cambie el tenant
     useEffect(() => {
@@ -167,12 +177,11 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
 
     return {
         usage,
-        isLoading: isLoading || loadingAuth,
+        isLoading: isLoading || loadingAuth || isLoadingTenant,
         error,
         refresh: loadUsage,
     };
 }
 
 export default useCreditsUsage;
-
 

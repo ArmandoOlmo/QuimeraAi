@@ -89,6 +89,19 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     creditsUsage?.requiresPayment ||
     ['expired', 'past_due', 'unpaid', 'incomplete', 'incomplete_expired', 'cancelled', 'canceled'].includes(creditsUsage?.status || '')
   );
+  const creditsUsed = creditsUsage?.used ?? 0;
+  const creditsLimit = creditsUsage?.limit ?? 0;
+  const creditsRemaining = creditsUsage?.remaining ?? 0;
+  const formattedCreditsUsed = creditsUsed.toLocaleString();
+  const formattedCreditsLimit = creditsLimit.toLocaleString();
+  const formattedCreditsRemaining = creditsRemaining.toLocaleString();
+  const compactCreditsRemaining = new Intl.NumberFormat(undefined, {
+    notation: 'compact',
+    maximumFractionDigits: creditsRemaining >= 1000 ? 1 : 0,
+  }).format(creditsRemaining);
+  const creditsTitle = isLoadingCredits
+    ? t('common.loading')
+    : `${formattedCreditsRemaining} ${t('dashboard.creditsRemaining', 'créditos restantes')} (${formattedCreditsUsed}/${formattedCreditsLimit})`;
 
   const handlePlanAttentionClick = () => {
     navigate(ROUTES.SETTINGS_SUBSCRIPTION);
@@ -818,6 +831,24 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             {/* Collapsible content wrapper */}
             <div className={`p-3 pb-4 md:p-4 md:pb-4 transition-all duration-300 ease-in-out ${isFooterCollapsed && !isCollapsed && (!isMobileOpen || isMobileOpen) ? 'pt-4' : ''}`}>
 
+              {isCollapsed && !isMobileOpen && (
+                <div className="mb-3 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setIsCollapsed(false)}
+                    className="flex h-11 w-11 flex-col items-center justify-center rounded-lg border border-q-border bg-muted text-primary transition-colors hover:border-primary hover:bg-secondary"
+                    title={creditsTitle}
+                    aria-label={creditsTitle}
+                    data-testid="sidebar-credits-compact"
+                  >
+                    <Zap size={16} className="flex-shrink-0 fill-current" aria-hidden="true" />
+                    <span className="mt-0.5 max-w-full px-0.5 text-[9px] font-bold leading-none">
+                      {isLoadingCredits ? '...' : compactCreditsRemaining}
+                    </span>
+                  </button>
+                </div>
+              )}
+
               {/* Theme + Language (single compact bar) - Collapsible */}
               <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isFooterCollapsed || (isCollapsed && !isMobileOpen)
                 ? 'max-h-0 opacity-0 mb-0'
@@ -873,10 +904,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isFooterCollapsed || (isCollapsed && !isMobileOpen)
                 ? 'max-h-0 opacity-0 mb-0'
                 : planNeedsAttention
-                  ? 'max-h-44 opacity-100 mb-3 md:mb-4'
-                  : 'max-h-28 opacity-100 mb-3 md:mb-4'
+                  ? 'max-h-52 opacity-100 mb-3 md:mb-4'
+                  : 'max-h-36 opacity-100 mb-3 md:mb-4'
                 }`}>
-                <div className="px-1">
+                <div className="px-1" data-testid="sidebar-credits-widget">
                   <div className="flex justify-between items-end mb-2 px-1">
                     <div className="flex items-center gap-1.5">
                       <Zap size={14} className="text-yellow-600 dark:text-yellow-400 black:text-yellow-400 fill-yellow-600 dark:fill-yellow-400 black:fill-yellow-400" />
@@ -885,7 +916,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       </span>
                     </div>
                     <span className="text-[10px] font-mono text-gray-500 dark:text-white/60">
-                      {isLoadingCredits ? '...' : `${creditsUsage?.used || 0}/${creditsUsage?.limit || 0}`}
+                      {isLoadingCredits ? '...' : `${formattedCreditsUsed}/${formattedCreditsLimit}`}
                     </span>
                   </div>
 
@@ -897,20 +928,19 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
                   <div className="mt-2 flex justify-between items-center px-1">
                     <span className="text-[10px] text-q-text-muted font-medium">{t('common.monthlyCredits')}</span>
-                    {!isOwner && (
-                      <button
-                        onClick={handleUpgradeClick}
-                        className="text-[11px] md:text-[10px] font-bold text-primary hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-2 -mr-2 touch-manipulation"
-                      >
-                        {t('common.upgrade')} →
-                      </button>
-                    )}
-                    {isOwner && (
-                      <span className="text-[10px] font-bold text-primary px-2">
-                        {(creditsUsage?.remaining || 0).toLocaleString()} {t('dashboard.creditsRemaining', 'restantes')}
-                      </span>
-                    )}
+                    <span className="text-[10px] font-bold text-primary px-2 text-right">
+                      {isLoadingCredits ? '...' : `${formattedCreditsRemaining} ${t('dashboard.creditsRemaining', 'restantes')}`}
+                    </span>
                   </div>
+
+                  {!isOwner && (
+                    <button
+                      onClick={handleUpgradeClick}
+                      className="mt-1 w-full text-right text-[11px] md:text-[10px] font-bold text-primary hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-1 touch-manipulation"
+                    >
+                      {t('common.upgrade')} →
+                    </button>
+                  )}
 
                   {planNeedsAttention && (
                     <button
