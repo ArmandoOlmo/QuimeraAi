@@ -6063,6 +6063,8 @@
       "overview": "Resumen",
       "properties": "Propiedades",
       "leads": "Leads",
+      "campaigns": "Campañas",
+      "openHouses": "Open Houses",
       "ai": "AI",
       "settings": "Configuración"
     },
@@ -6150,6 +6152,80 @@
       "email": "Email",
       "phone": "Teléfono",
       "property": "Propiedad"
+    },
+    "campaigns": {
+      "create": "Crear campaña",
+      "edit": "Editar campaña",
+      "defaultTitle": "Campaña para {{property}}",
+      "type": "Tipo de campaña",
+      "scheduledAt": "Fecha programada",
+      "content": "Contenido",
+      "contentPlaceholder": "Genera contenido con AI o pega copy listo para publicar.",
+      "preview": "Preview",
+      "copy": "Copiar",
+      "generateWithAi": "Generar con AI",
+      "save": "Guardar campaña",
+      "unscheduled": "Sin fecha",
+      "hasContent": "Con contenido",
+      "noContent": "Sin contenido guardado todavía.",
+      "emptyTitle": "Todavía no tienes campañas",
+      "emptyDescription": "Crea una campaña para promocionar una propiedad con AI.",
+      "aiDefaultPrompt": "Crea una campaña clara y accionable para captar leads calificados.",
+      "aiSaved": "La campaña AI fue generada y guardada.",
+      "copied": "Contenido de campaña copiado.",
+      "confirmDelete": "¿Eliminar esta campaña?",
+      "types": {
+        "just_listed": "Nuevo listing",
+        "open_house": "Open house",
+        "price_drop": "Baja de precio",
+        "luxury_showcase": "Showcase de lujo",
+        "investment_opportunity": "Oportunidad de inversión",
+        "rental_available": "Renta disponible",
+        "last_units": "Últimas unidades",
+        "seller_lead_magnet": "Captura de vendedores"
+      },
+      "status": {
+        "draft": "Borrador",
+        "scheduled": "Programada",
+        "active": "Activa",
+        "completed": "Completada",
+        "archived": "Archivada"
+      },
+      "errors": {
+        "propertyRequired": "Selecciona una propiedad antes de guardar o generar.",
+        "save": "No se pudo guardar la campaña.",
+        "delete": "No se pudo eliminar la campaña.",
+        "generate": "No se pudo generar la campaña con AI."
+      }
+    },
+    "openHouses": {
+      "create": "Crear Open House",
+      "edit": "Editar Open House",
+      "defaultTitle": "Open House",
+      "defaultTitleWithProperty": "Open House - {{property}}",
+      "startsAt": "Comienza",
+      "endsAt": "Termina",
+      "timezone": "Zona horaria",
+      "capacity": "Capacidad",
+      "registrationEnabled": "Registro público habilitado",
+      "notes": "Notas",
+      "save": "Guardar Open House",
+      "emptyTitle": "Todavía no tienes open houses",
+      "emptyDescription": "Programa una visita abierta para capturar compradores interesados.",
+      "confirmDelete": "¿Eliminar este open house?",
+      "registrationOn": "Registro activo",
+      "registrationOff": "Registro apagado",
+      "status": {
+        "scheduled": "Programado",
+        "active": "Activo",
+        "completed": "Completado",
+        "cancelled": "Cancelado"
+      },
+      "errors": {
+        "propertyRequired": "Selecciona una propiedad antes de guardar el open house.",
+        "save": "No se pudo guardar el open house.",
+        "delete": "No se pudo eliminar el open house."
+      }
     },
   "ai": {
     "title": "Asistente AI de Realty",
@@ -6305,7 +6381,14 @@
       "sent": "Solicitud enviada correctamente.",
       "sendError": "No se pudo enviar la solicitud.",
       "related": "Propiedades relacionadas",
-      "defaultLeadMessage": "Me interesa recibir información sobre {{title}}."
+      "defaultLeadMessage": "Me interesa recibir información sobre {{title}}.",
+      "openHouseTitle": "Open House",
+      "openHouseSubtitle": "Reserva tu espacio para visitar esta propiedad.",
+      "openHouseMessagePlaceholder": "Quiero registrarme para el open house...",
+      "registerOpenHouse": "Registrarme",
+      "openHouseRegistered": "Registro recibido correctamente.",
+      "openHouseRegisterError": "No se pudo completar el registro.",
+      "openHouseDefaultMessage": "Quiero registrarme para el open house de {{title}}."
     },
     "units": {
       "beds": "Habitaciones",

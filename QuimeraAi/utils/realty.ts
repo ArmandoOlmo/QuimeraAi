@@ -1,11 +1,16 @@
 import type { GlobalColors, ThemeData } from '../types/ui';
 import type { Lead, LeadStatus } from '../types/business';
 import type {
+    CampaignType,
+    PropertyCampaign,
+    PropertyOpenHouse,
     RealtyAiGeneration,
+    RealtyCampaignStatus,
     RealtyImage,
     RealtyListingScore,
     RealtyLead,
     RealtyModuleFlags,
+    RealtyOpenHouseStatus,
     RealtyProperty,
     RealtyPropertyStatus,
     RealtyPropertyType,
@@ -26,6 +31,18 @@ export const REALTY_LEAD_SOURCE = 'realty-website';
 export const realtyPropertyTypes: RealtyPropertyType[] = ['house', 'condo', 'apartment', 'townhouse', 'land', 'commercial'];
 export const realtyPropertyStatuses: RealtyPropertyStatus[] = ['draft', 'active', 'pending', 'sold', 'archived'];
 export const realtyLeadStatuses: LeadStatus[] = ['new', 'contacted', 'qualified', 'negotiation', 'won', 'lost'];
+export const realtyCampaignTypes: CampaignType[] = [
+    'just_listed',
+    'open_house',
+    'price_drop',
+    'luxury_showcase',
+    'investment_opportunity',
+    'rental_available',
+    'last_units',
+    'seller_lead_magnet',
+];
+export const realtyCampaignStatuses: RealtyCampaignStatus[] = ['draft', 'scheduled', 'active', 'completed', 'archived'];
+export const realtyOpenHouseStatuses: RealtyOpenHouseStatus[] = ['scheduled', 'active', 'completed', 'cancelled'];
 
 export const toRealtySlug = (value: string): string =>
     value
@@ -199,6 +216,21 @@ const normalizePropertyType = (value: unknown): RealtyPropertyType => {
 const normalizeTransactionType = (value: unknown): TransactionType => {
     const transactionType = String(value || 'sale');
     return ['sale', 'rent', 'lease'].includes(transactionType) ? transactionType as TransactionType : 'sale';
+};
+
+const normalizeCampaignType = (value: unknown): CampaignType => {
+    const type = String(value || 'just_listed');
+    return (realtyCampaignTypes as string[]).includes(type) ? type as CampaignType : 'just_listed';
+};
+
+const normalizeCampaignStatus = (value: unknown): RealtyCampaignStatus => {
+    const status = String(value || 'draft');
+    return (realtyCampaignStatuses as string[]).includes(status) ? status as RealtyCampaignStatus : 'draft';
+};
+
+const normalizeOpenHouseStatus = (value: unknown): RealtyOpenHouseStatus => {
+    const status = String(value || 'scheduled');
+    return (realtyOpenHouseStatuses as string[]).includes(status) ? status as RealtyOpenHouseStatus : 'scheduled';
 };
 
 export const normalizeRealtyLeadStatus = (status: unknown): LeadStatus => normalizeLeadStatus(status);
@@ -665,6 +697,90 @@ export const mapRealtyAiGenerationToRow = (
     metadata: generation.metadata || {},
     updated_at: new Date().toISOString(),
 });
+
+export const mapPropertyCampaignRow = (row: any): PropertyCampaign => ({
+    id: row.id,
+    userId: row.user_id || '',
+    tenantId: row.tenant_id ?? null,
+    projectId: row.project_id ?? null,
+    propertyId: row.property_id ?? null,
+    campaignType: normalizeCampaignType(row.campaign_type),
+    title: row.title || '',
+    status: normalizeCampaignStatus(row.status),
+    content: isRecord(row.content) ? row.content : {},
+    scheduledAt: row.scheduled_at || null,
+    metadata: isRecord(row.metadata) ? row.metadata : {},
+    createdAt: resolveRowTimestamp(row.created_at),
+    updatedAt: resolveRowTimestamp(row.updated_at || row.created_at),
+});
+
+export const mapPropertyCampaignToRow = (
+    campaign: Partial<PropertyCampaign>,
+    userId: string,
+    projectId: string,
+    tenantId?: string | null
+) => ({
+    user_id: userId,
+    tenant_id: tenantId || campaign.tenantId || null,
+    project_id: projectId,
+    property_id: campaign.propertyId || null,
+    campaign_type: normalizeCampaignType(campaign.campaignType),
+    title: campaign.title || '',
+    status: normalizeCampaignStatus(campaign.status),
+    content: isRecord(campaign.content) ? campaign.content : {},
+    scheduled_at: campaign.scheduledAt || null,
+    metadata: campaign.metadata || {},
+    updated_at: new Date().toISOString(),
+});
+
+export const mapPropertyOpenHouseRow = (row: any): PropertyOpenHouse => {
+    const metadata = isRecord(row.metadata) ? row.metadata : {};
+
+    return {
+        id: row.id,
+        userId: row.user_id || '',
+        tenantId: row.tenant_id ?? null,
+        projectId: row.project_id ?? null,
+        propertyId: row.property_id || '',
+        title: stringMeta(metadata.title),
+        startsAt: resolveRowTimestamp(row.starts_at),
+        endsAt: row.ends_at || null,
+        timezone: row.timezone || 'America/Puerto_Rico',
+        status: normalizeOpenHouseStatus(row.status),
+        notes: row.notes || null,
+        registrationEnabled: row.registration_enabled !== false,
+        metadata,
+        createdAt: resolveRowTimestamp(row.created_at),
+        updatedAt: resolveRowTimestamp(row.updated_at || row.created_at),
+    };
+};
+
+export const mapPropertyOpenHouseToRow = (
+    openHouse: Partial<PropertyOpenHouse>,
+    userId: string,
+    projectId: string,
+    tenantId?: string | null
+) => {
+    const metadata = {
+        ...(openHouse.metadata || {}),
+        ...(openHouse.title ? { title: openHouse.title } : {}),
+    };
+
+    return {
+        user_id: userId,
+        tenant_id: tenantId || openHouse.tenantId || null,
+        project_id: projectId,
+        property_id: openHouse.propertyId || null,
+        starts_at: openHouse.startsAt || new Date().toISOString(),
+        ends_at: openHouse.endsAt || null,
+        timezone: openHouse.timezone || 'America/Puerto_Rico',
+        status: normalizeOpenHouseStatus(openHouse.status),
+        notes: openHouse.notes || null,
+        registration_enabled: openHouse.registrationEnabled !== false,
+        metadata,
+        updated_at: new Date().toISOString(),
+    };
+};
 
 export const mapRealtyLeadRow = (row: any): RealtyLead => {
     const customData = isRecord(row.custom_data) ? row.custom_data : {};

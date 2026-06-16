@@ -3,11 +3,13 @@ import { useTranslation } from 'react-i18next';
 import {
     BarChart3,
     Building2,
+    CalendarDays,
     Check,
     Copy,
     Eye,
     Home,
     Loader2,
+    Megaphone,
     Menu,
     MessageSquare,
     Plus,
@@ -34,12 +36,18 @@ import { useRealtyAccess } from '../../../hooks/realty/useRealtyAccess';
 import { useRealtySuite } from '../../../hooks/realty/useRealtySuite';
 import type { LeadStatus } from '../../../types/business';
 import type {
+    CampaignType,
+    PropertyCampaign,
+    PropertyOpenHouse,
     RealtyAiLanguage,
+    RealtyCampaignAiOutput,
+    RealtyCampaignStatus,
     RealtyAiListingOutput,
     RealtyAiTone,
     RealtyImage,
     RealtyLead,
     RealtyListingScore,
+    RealtyOpenHouseStatus,
     RealtyProperty,
     RealtyPropertyStatus,
     RealtyPropertyType,
@@ -49,22 +57,28 @@ import {
     formatRealtyPrice,
     isRealtyCrmLead,
     mapCrmLeadToRealtyLead,
+    realtyCampaignStatuses,
+    realtyCampaignTypes,
     realtyLeadStatuses,
+    realtyOpenHouseStatuses,
     realtyPropertyStatuses,
     realtyPropertyTypes,
     toRealtySlug,
 } from '../../../utils/realty';
 import {
     buildRealtyAiPropertyPatch,
+    formatRealtyCampaignOutput,
     formatRealtyAiListingOutput,
+    generateRealtyCampaignContent,
     generateRealtyListingContent,
     getGeneratedRealtyFields,
+    normalizeRealtyCampaignOutput,
     REALTY_AI_DEFAULT_MODEL,
     REALTY_AI_MODELS,
     REALTY_AI_TONES,
 } from '../../../utils/realtyAiClient';
 
-type RealtyTab = 'overview' | 'properties' | 'leads' | 'ai' | 'settings';
+type RealtyTab = 'overview' | 'properties' | 'leads' | 'campaigns' | 'openHouses' | 'ai' | 'settings';
 
 const emptyProperty = (projectId: string, tenantId?: string | null, userId?: string | null): Partial<RealtyProperty> => ({
     projectId,
@@ -99,6 +113,29 @@ const getDateMs = (value: unknown) => {
     return new Date(String(value || 0)).getTime();
 };
 const cleanImageUrls = (urls: string[]) => urls.map(url => url.trim()).filter(Boolean);
+const getLocalTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Puerto_Rico';
+const toDatetimeLocalValue = (value?: string | null) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return '';
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return localDate.toISOString().slice(0, 16);
+};
+const fromDatetimeLocalValue = (value: string) => value ? new Date(value).toISOString() : null;
+const parseCampaignContentInput = (value: string): Record<string, unknown> => {
+    const trimmed = value.trim();
+    if (!trimmed) return {};
+    try {
+        const parsed = JSON.parse(trimmed);
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : { mainCopy: trimmed };
+    } catch {
+        return { mainCopy: trimmed };
+    }
+};
+const getCampaignPreview = (content?: Record<string, unknown>) => {
+    const normalized = normalizeRealtyCampaignOutput(content || {});
+    return normalized.mainCopy || normalized.socialPost || normalized.emailSubject || normalized.adHeadline || '';
+};
 
 const StatCard = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) => (
     <div className="min-w-0 rounded-xl border border-q-border bg-q-surface p-5 transition-colors hover:border-q-accent/40 md:p-6">
@@ -143,6 +180,17 @@ const RealtyDashboard: React.FC = () => {
         generatedFields: string[];
         mode: 'full' | 'fix';
     } | null>(null);
+    const [editingCampaign, setEditingCampaign] = useState<Partial<PropertyCampaign> | null>(null);
+    const [campaignContentInput, setCampaignContentInput] = useState('');
+    const [campaignPrompt, setCampaignPrompt] = useState('');
+    const [campaignAiResult, setCampaignAiResult] = useState<{
+        output: RealtyCampaignAiOutput;
+        prompt: string;
+        model: string;
+        generatedFields: string[];
+    } | null>(null);
+    const [isGeneratingCampaignAi, setIsGeneratingCampaignAi] = useState(false);
+    const [editingOpenHouse, setEditingOpenHouse] = useState<Partial<PropertyOpenHouse> | null>(null);
     const [isGeneratingAi, setIsGeneratingAi] = useState(false);
     const [isSavingAiGeneration, setIsSavingAiGeneration] = useState(false);
     const [lastAiSavedAt, setLastAiSavedAt] = useState<string | null>(null);
@@ -153,9 +201,11 @@ const RealtyDashboard: React.FC = () => {
         { id: 'overview' as const, label: t('realty.tabs.overview'), icon: BarChart3, visible: access.canView },
         { id: 'properties' as const, label: t('realty.tabs.properties'), icon: Building2, visible: access.canManageProperties },
         { id: 'leads' as const, label: t('realty.tabs.leads'), icon: Users, visible: access.canManageLeads },
+        { id: 'campaigns' as const, label: t('realty.tabs.campaigns'), icon: Megaphone, visible: access.canManageProperties || access.canManage },
+        { id: 'openHouses' as const, label: t('realty.tabs.openHouses'), icon: CalendarDays, visible: access.canManageProperties || access.canManage },
         { id: 'ai' as const, label: t('realty.tabs.ai'), icon: Sparkles, visible: access.canUseAi },
         { id: 'settings' as const, label: t('realty.tabs.settings'), icon: Settings, visible: access.canManageSettings },
-    ].filter(item => item.visible), [access.canManageLeads, access.canManageProperties, access.canManageSettings, access.canUseAi, access.canView, t]);
+    ].filter(item => item.visible), [access.canManage, access.canManageLeads, access.canManageProperties, access.canManageSettings, access.canUseAi, access.canView, t]);
 
     const displayProperties = suite.properties;
     const crmRealtyLeads = useMemo(
@@ -206,6 +256,205 @@ const RealtyDashboard: React.FC = () => {
     const getLeadPropertyTitle = (lead: RealtyLead) => {
         const metadataTitle = typeof lead.metadata?.propertyTitle === 'string' ? lead.metadata.propertyTitle : '';
         return metadataTitle || (lead.propertyId ? propertyTitleById.get(lead.propertyId) : '') || '';
+    };
+
+    const getPropertyTitle = (propertyId?: string | null) =>
+        propertyId ? propertyTitleById.get(propertyId) || t('realty.selectProperty') : t('realty.selectProperty');
+
+    const getOpenHouseTitle = (openHouse: Partial<PropertyOpenHouse>) =>
+        openHouse.title
+        || (typeof openHouse.metadata?.title === 'string' ? openHouse.metadata.title : '')
+        || (openHouse.propertyId ? getPropertyTitle(openHouse.propertyId) : t('realty.openHouses.defaultTitle'));
+
+    const startCreateCampaign = () => {
+        if (!activeProjectId) return;
+        const defaultProperty = displayProperties[0];
+        setEditingCampaign({
+            projectId: activeProjectId,
+            tenantId: currentTenantId,
+            userId: user?.id || '',
+            propertyId: defaultProperty?.id || null,
+            campaignType: 'just_listed',
+            title: defaultProperty ? t('realty.campaigns.defaultTitle', { property: defaultProperty.title }) : '',
+            status: 'draft',
+            content: {},
+            scheduledAt: null,
+            metadata: {},
+        });
+        setCampaignContentInput('');
+        setCampaignPrompt('');
+        setCampaignAiResult(null);
+        setLocalError(null);
+        setLocalWarning(null);
+    };
+
+    const startEditCampaign = (campaign: PropertyCampaign) => {
+        setEditingCampaign(campaign);
+        setCampaignContentInput(Object.keys(campaign.content || {}).length > 0 ? JSON.stringify(campaign.content, null, 2) : '');
+        setCampaignPrompt('');
+        setCampaignAiResult(null);
+        setLocalError(null);
+        setLocalWarning(null);
+    };
+
+    const saveCampaign = async () => {
+        if (!editingCampaign || !activeProjectId) return;
+        if (!editingCampaign.propertyId) {
+            setLocalError(t('realty.campaigns.errors.propertyRequired'));
+            return;
+        }
+        setLocalError(null);
+        try {
+            const content = parseCampaignContentInput(campaignContentInput);
+            await suite.saveCampaign({
+                ...editingCampaign,
+                projectId: activeProjectId,
+                tenantId: currentTenantId,
+                userId: user?.id || editingCampaign.userId,
+                title: editingCampaign.title || t('realty.campaigns.defaultTitle', { property: getPropertyTitle(editingCampaign.propertyId) }),
+                content,
+            });
+            setEditingCampaign(null);
+            setCampaignContentInput('');
+            setCampaignAiResult(null);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : t('realty.campaigns.errors.save');
+            setLocalError(message);
+        }
+    };
+
+    const generateCampaignAi = async () => {
+        if (!editingCampaign?.propertyId || !activeProjectId) {
+            setLocalError(t('realty.campaigns.errors.propertyRequired'));
+            return;
+        }
+        setLocalError(null);
+        setLocalWarning(null);
+        setIsGeneratingCampaignAi(true);
+        try {
+            const result = await generateRealtyCampaignContent({
+                projectId: activeProjectId,
+                propertyId: editingCampaign.propertyId,
+                campaignType: (editingCampaign.campaignType || 'just_listed') as CampaignType,
+                language: aiLanguage,
+                tone: aiTone,
+                userPrompt: campaignPrompt || t('realty.campaigns.aiDefaultPrompt'),
+                model: aiModel,
+            });
+            const nextCampaign = {
+                ...editingCampaign,
+                title: editingCampaign.title || result.output.title,
+                content: result.output as unknown as Record<string, unknown>,
+            };
+            const savedId = await suite.saveCampaign({
+                ...nextCampaign,
+                projectId: activeProjectId,
+                tenantId: currentTenantId,
+                userId: user?.id || editingCampaign.userId,
+            });
+            await suite.saveAiGeneration({
+                tenantId: currentTenantId,
+                projectId: activeProjectId,
+                propertyId: editingCampaign.propertyId,
+                userId: user?.id || null,
+                kind: 'social_post',
+                prompt: result.prompt,
+                output: JSON.stringify(result.output, null, 2),
+                metadata: {
+                    provider: 'openrouter',
+                    model: result.model,
+                    campaignType: editingCampaign.campaignType || 'just_listed',
+                    generatedFields: result.generatedFields,
+                },
+            });
+            setCampaignAiResult(result);
+            setCampaignContentInput(JSON.stringify(result.output, null, 2));
+            setEditingCampaign({ ...nextCampaign, id: savedId || editingCampaign.id });
+            setLocalWarning(t('realty.campaigns.aiSaved'));
+        } catch (err) {
+            const message = err instanceof Error ? err.message : t('realty.campaigns.errors.generate');
+            setLocalError(message);
+        } finally {
+            setIsGeneratingCampaignAi(false);
+        }
+    };
+
+    const copyCampaign = async (campaign?: Partial<PropertyCampaign>) => {
+        const content = campaign?.content || parseCampaignContentInput(campaignContentInput);
+        await navigator.clipboard.writeText(formatRealtyCampaignOutput(content));
+        setLocalWarning(t('realty.campaigns.copied'));
+    };
+
+    const deleteCampaign = async (campaignId: string) => {
+        if (!window.confirm(t('realty.campaigns.confirmDelete'))) return;
+        try {
+            await suite.deleteCampaign(campaignId);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : t('realty.campaigns.errors.delete');
+            setLocalError(message);
+        }
+    };
+
+    const startCreateOpenHouse = () => {
+        if (!activeProjectId) return;
+        const startsAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        startsAt.setMinutes(0, 0, 0);
+        const endsAt = new Date(startsAt.getTime() + 90 * 60 * 1000);
+        const defaultProperty = displayProperties[0];
+        setEditingOpenHouse({
+            projectId: activeProjectId,
+            tenantId: currentTenantId,
+            userId: user?.id || '',
+            propertyId: defaultProperty?.id || '',
+            title: defaultProperty ? t('realty.openHouses.defaultTitleWithProperty', { property: defaultProperty.title }) : t('realty.openHouses.defaultTitle'),
+            startsAt: startsAt.toISOString(),
+            endsAt: endsAt.toISOString(),
+            timezone: getLocalTimezone(),
+            status: 'scheduled',
+            notes: '',
+            registrationEnabled: true,
+            metadata: { capacity: 12 },
+        });
+        setLocalError(null);
+        setLocalWarning(null);
+    };
+
+    const startEditOpenHouse = (openHouse: PropertyOpenHouse) => {
+        setEditingOpenHouse(openHouse);
+        setLocalError(null);
+        setLocalWarning(null);
+    };
+
+    const saveOpenHouse = async () => {
+        if (!editingOpenHouse || !activeProjectId) return;
+        if (!editingOpenHouse.propertyId) {
+            setLocalError(t('realty.openHouses.errors.propertyRequired'));
+            return;
+        }
+        setLocalError(null);
+        try {
+            await suite.saveOpenHouse({
+                ...editingOpenHouse,
+                projectId: activeProjectId,
+                tenantId: currentTenantId,
+                userId: user?.id || editingOpenHouse.userId,
+                title: getOpenHouseTitle(editingOpenHouse),
+            });
+            setEditingOpenHouse(null);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : t('realty.openHouses.errors.save');
+            setLocalError(message);
+        }
+    };
+
+    const deleteOpenHouse = async (openHouseId: string) => {
+        if (!window.confirm(t('realty.openHouses.confirmDelete'))) return;
+        try {
+            await suite.deleteOpenHouse(openHouseId);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : t('realty.openHouses.errors.delete');
+            setLocalError(message);
+        }
     };
 
     const getScoreToneClass = (score: RealtyListingScore) => {
@@ -584,6 +833,145 @@ const RealtyDashboard: React.FC = () => {
         );
     };
 
+    const renderCampaignForm = () => {
+        if (!editingCampaign) return null;
+        const update = (patch: Partial<PropertyCampaign>) => setEditingCampaign(prev => ({ ...prev, ...patch }));
+        const selectedProperty = displayProperties.find(property => property.id === editingCampaign.propertyId);
+        const contentPreview = getCampaignPreview(parseCampaignContentInput(campaignContentInput));
+
+        return (
+            <div className="rounded-xl border border-q-border bg-q-surface p-5 md:p-6">
+                <div className="mb-6 flex items-center justify-between gap-4">
+                    <div>
+                        <h3 className="text-lg font-bold text-q-text">{editingCampaign.id ? t('realty.campaigns.edit') : t('realty.campaigns.create')}</h3>
+                        {selectedProperty && <p className="mt-1 text-sm text-q-text-secondary">{selectedProperty.title}</p>}
+                    </div>
+                    <button type="button" onClick={() => setEditingCampaign(null)} className="rounded-lg p-2 text-q-text-secondary hover:bg-q-surface-overlay hover:text-q-text"><X size={18} /></button>
+                </div>
+                <div className="grid gap-5 md:grid-cols-2">
+                    <Field label={t('realty.selectProperty')}>
+                        <DashboardSelect
+                            value={editingCampaign.propertyId || ''}
+                            onChange={value => update({ propertyId: value })}
+                            options={displayProperties.map(property => ({ value: property.id, label: property.title }))}
+                            placeholder={t('realty.selectProperty')}
+                        />
+                    </Field>
+                    <Field label={t('realty.campaigns.type')}>
+                        <DashboardSelect
+                            value={editingCampaign.campaignType || 'just_listed'}
+                            onChange={value => update({ campaignType: value as CampaignType })}
+                            options={realtyCampaignTypes.map(type => ({ value: type, label: t(`realty.campaigns.types.${type}`) }))}
+                        />
+                    </Field>
+                    <Field label={t('realty.form.title')}>
+                        <Input value={editingCampaign.title || ''} onChange={event => update({ title: event.target.value })} />
+                    </Field>
+                    <Field label={t('realty.form.status')}>
+                        <DashboardSelect
+                            value={editingCampaign.status || 'draft'}
+                            onChange={value => update({ status: value as RealtyCampaignStatus })}
+                            options={realtyCampaignStatuses.map(status => ({ value: status, label: t(`realty.campaigns.status.${status}`) }))}
+                        />
+                    </Field>
+                    <Field label={t('realty.campaigns.scheduledAt')}>
+                        <Input
+                            type="datetime-local"
+                            value={toDatetimeLocalValue(editingCampaign.scheduledAt)}
+                            onChange={event => update({ scheduledAt: fromDatetimeLocalValue(event.target.value) })}
+                        />
+                    </Field>
+                    <Field label={t('realty.ai.prompt')}>
+                        <Input value={campaignPrompt} onChange={event => setCampaignPrompt(event.target.value)} placeholder={t('realty.campaigns.aiDefaultPrompt')} />
+                    </Field>
+                    <Field className="md:col-span-2" label={t('realty.campaigns.content')}>
+                        <textarea
+                            rows={9}
+                            className="w-full rounded-md border border-q-border bg-transparent px-3 py-2.5 font-mono text-xs text-q-text outline-none focus:border-q-accent"
+                            value={campaignContentInput}
+                            onChange={event => setCampaignContentInput(event.target.value)}
+                            placeholder={t('realty.campaigns.contentPlaceholder')}
+                        />
+                    </Field>
+                </div>
+                {(contentPreview || campaignAiResult) && (
+                    <div className="mt-5 rounded-lg border border-q-border bg-q-bg p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{t('realty.campaigns.preview')}</p>
+                        <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-sm text-q-text">{contentPreview || formatRealtyCampaignOutput(campaignAiResult?.output || {})}</p>
+                    </div>
+                )}
+                <div className="mt-6 flex flex-wrap justify-end gap-3">
+                    <Button type="button" variant="secondary" onClick={() => setEditingCampaign(null)}>{t('common.cancel')}</Button>
+                    <Button type="button" variant="secondary" onClick={() => copyCampaign()} disabled={!campaignContentInput.trim()}><Copy size={16} />{t('realty.campaigns.copy')}</Button>
+                    <Button type="button" variant="secondary" onClick={generateCampaignAi} disabled={!editingCampaign.propertyId || isGeneratingCampaignAi}>
+                        {isGeneratingCampaignAi ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                        {t('realty.campaigns.generateWithAi')}
+                    </Button>
+                    <Button type="button" onClick={saveCampaign} disabled={suite.isSaving}><Save size={16} />{t('realty.campaigns.save')}</Button>
+                </div>
+            </div>
+        );
+    };
+
+    const renderOpenHouseForm = () => {
+        if (!editingOpenHouse) return null;
+        const update = (patch: Partial<PropertyOpenHouse>) => setEditingOpenHouse(prev => ({ ...prev, ...patch }));
+        const metadata = editingOpenHouse.metadata || {};
+        const capacity = typeof metadata.capacity === 'number' || typeof metadata.capacity === 'string' ? String(metadata.capacity) : '12';
+
+        return (
+            <div className="rounded-xl border border-q-border bg-q-surface p-5 md:p-6">
+                <div className="mb-6 flex items-center justify-between gap-4">
+                    <h3 className="text-lg font-bold text-q-text">{editingOpenHouse.id ? t('realty.openHouses.edit') : t('realty.openHouses.create')}</h3>
+                    <button type="button" onClick={() => setEditingOpenHouse(null)} className="rounded-lg p-2 text-q-text-secondary hover:bg-q-surface-overlay hover:text-q-text"><X size={18} /></button>
+                </div>
+                <div className="grid gap-5 md:grid-cols-2">
+                    <Field label={t('realty.selectProperty')}>
+                        <DashboardSelect
+                            value={editingOpenHouse.propertyId || ''}
+                            onChange={value => update({ propertyId: value })}
+                            options={displayProperties.map(property => ({ value: property.id, label: property.title }))}
+                            placeholder={t('realty.selectProperty')}
+                        />
+                    </Field>
+                    <Field label={t('realty.form.title')}>
+                        <Input value={getOpenHouseTitle(editingOpenHouse)} onChange={event => update({ title: event.target.value, metadata: { ...metadata, title: event.target.value } })} />
+                    </Field>
+                    <Field label={t('realty.openHouses.startsAt')}>
+                        <Input type="datetime-local" value={toDatetimeLocalValue(editingOpenHouse.startsAt)} onChange={event => update({ startsAt: fromDatetimeLocalValue(event.target.value) || new Date().toISOString() })} />
+                    </Field>
+                    <Field label={t('realty.openHouses.endsAt')}>
+                        <Input type="datetime-local" value={toDatetimeLocalValue(editingOpenHouse.endsAt)} onChange={event => update({ endsAt: fromDatetimeLocalValue(event.target.value) })} />
+                    </Field>
+                    <Field label={t('realty.openHouses.timezone')}>
+                        <Input value={editingOpenHouse.timezone || getLocalTimezone()} onChange={event => update({ timezone: event.target.value })} />
+                    </Field>
+                    <Field label={t('realty.openHouses.capacity')}>
+                        <Input type="number" value={capacity} onChange={event => update({ metadata: { ...metadata, capacity: Number(event.target.value) || 0 } })} />
+                    </Field>
+                    <Field label={t('realty.form.status')}>
+                        <DashboardSelect
+                            value={editingOpenHouse.status || 'scheduled'}
+                            onChange={value => update({ status: value as RealtyOpenHouseStatus })}
+                            options={realtyOpenHouseStatuses.map(status => ({ value: status, label: t(`realty.openHouses.status.${status}`) }))}
+                        />
+                    </Field>
+                    <label className="flex items-center gap-2 pt-6 text-sm font-medium text-q-text">
+                        <input type="checkbox" checked={editingOpenHouse.registrationEnabled !== false} onChange={event => update({ registrationEnabled: event.target.checked })} />
+                        {t('realty.openHouses.registrationEnabled')}
+                    </label>
+                    <Field className="md:col-span-2" label={t('realty.openHouses.notes')}>
+                        <textarea rows={4} className="w-full rounded-md border border-q-border bg-transparent px-3 py-2.5 text-sm text-q-text outline-none focus:border-q-accent" value={editingOpenHouse.notes || ''} onChange={event => update({ notes: event.target.value })} />
+                    </Field>
+                </div>
+                <div className="mt-6 flex justify-end gap-3">
+                    <Button type="button" variant="secondary" onClick={() => setEditingOpenHouse(null)}>{t('common.cancel')}</Button>
+                    <Button type="button" onClick={saveOpenHouse} disabled={suite.isSaving}><Save size={16} />{t('realty.openHouses.save')}</Button>
+                </div>
+            </div>
+        );
+    };
+
     const renderContent = () => {
         if (!activeProjectId) {
             return <EmptyPanel icon={Home} title={t('realty.empty.noProject')} description={t('realty.empty.noProjectDesc')} />;
@@ -664,6 +1052,107 @@ const RealtyDashboard: React.FC = () => {
                             </div>
                         );
                     })}
+                </div>
+            );
+        }
+
+        if (activeTab === 'campaigns') {
+            return (
+                <div className="space-y-5">
+                    {renderCampaignForm()}
+                    <div className="flex justify-end"><Button type="button" onClick={startCreateCampaign}><Plus size={16} />{t('realty.campaigns.create')}</Button></div>
+                    {suite.campaigns.length === 0 && !editingCampaign ? (
+                        <EmptyPanel icon={Megaphone} title={t('realty.campaigns.emptyTitle')} description={t('realty.campaigns.emptyDescription')} />
+                    ) : (
+                        <div className="grid gap-5 md:grid-cols-2">
+                            {suite.campaigns.map(campaign => {
+                                const scheduledAt = campaign.scheduledAt ? new Date(campaign.scheduledAt) : null;
+                                const scheduledLabel = scheduledAt && Number.isFinite(scheduledAt.getTime())
+                                    ? scheduledAt.toLocaleString(i18n.language?.startsWith('en') ? 'en-US' : 'es-US', { dateStyle: 'medium', timeStyle: 'short' })
+                                    : t('realty.campaigns.unscheduled');
+                                const preview = getCampaignPreview(campaign.content);
+                                return (
+                                    <div key={campaign.id} className="rounded-xl border border-q-border bg-q-surface p-5 transition-colors hover:border-q-accent/40">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{t(`realty.campaigns.types.${campaign.campaignType}`)}</p>
+                                                <h3 className="mt-1 truncate text-lg font-bold text-q-accent">{campaign.title}</h3>
+                                                <p className="mt-1 truncate text-sm text-q-text-secondary">{getPropertyTitle(campaign.propertyId)}</p>
+                                            </div>
+                                            <DashboardSelect
+                                                className="w-36 shrink-0"
+                                                value={campaign.status || 'draft'}
+                                                onChange={value => void suite.updateCampaignStatus(campaign.id, value as RealtyCampaignStatus)}
+                                                options={realtyCampaignStatuses.map(status => ({ value: status, label: t(`realty.campaigns.status.${status}`) }))}
+                                            />
+                                        </div>
+                                        <div className="mt-4 flex flex-wrap gap-2">
+                                            <span className="rounded-full bg-q-surface-overlay px-2 py-1 text-xs text-q-text-secondary">{scheduledLabel}</span>
+                                            {campaign.content && Object.keys(campaign.content).length > 0 && <span className="rounded-full bg-q-accent/10 px-2 py-1 text-xs text-q-accent">{t('realty.campaigns.hasContent')}</span>}
+                                        </div>
+                                        <p className="mt-4 min-h-12 line-clamp-3 text-sm leading-6 text-q-text-secondary">{preview || t('realty.campaigns.noContent')}</p>
+                                        <div className="mt-5 flex flex-wrap justify-end gap-2">
+                                            <Button type="button" size="sm" variant="secondary" onClick={() => copyCampaign(campaign)} disabled={!preview}><Copy size={15} />{t('realty.campaigns.copy')}</Button>
+                                            <Button type="button" size="sm" variant="secondary" onClick={() => startEditCampaign(campaign)}>{t('common.edit')}</Button>
+                                            <Button type="button" size="icon-sm" variant="ghost" onClick={() => deleteCampaign(campaign.id)}><Trash2 size={15} /></Button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        if (activeTab === 'openHouses') {
+            return (
+                <div className="space-y-5">
+                    {renderOpenHouseForm()}
+                    <div className="flex justify-end"><Button type="button" onClick={startCreateOpenHouse}><Plus size={16} />{t('realty.openHouses.create')}</Button></div>
+                    {suite.openHouses.length === 0 && !editingOpenHouse ? (
+                        <EmptyPanel icon={CalendarDays} title={t('realty.openHouses.emptyTitle')} description={t('realty.openHouses.emptyDescription')} />
+                    ) : (
+                        <div className="grid gap-5 md:grid-cols-2">
+                            {suite.openHouses.map(openHouse => {
+                                const startsAt = new Date(openHouse.startsAt);
+                                const endsAt = openHouse.endsAt ? new Date(openHouse.endsAt) : null;
+                                const startsLabel = Number.isFinite(startsAt.getTime())
+                                    ? startsAt.toLocaleString(i18n.language?.startsWith('en') ? 'en-US' : 'es-US', { dateStyle: 'medium', timeStyle: 'short' })
+                                    : openHouse.startsAt;
+                                const endsLabel = endsAt && Number.isFinite(endsAt.getTime())
+                                    ? endsAt.toLocaleTimeString(i18n.language?.startsWith('en') ? 'en-US' : 'es-US', { hour: 'numeric', minute: '2-digit' })
+                                    : '';
+                                return (
+                                    <div key={openHouse.id} className="rounded-xl border border-q-border bg-q-surface p-5 transition-colors hover:border-q-accent/40">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="min-w-0">
+                                                <h3 className="truncate text-lg font-bold text-q-accent">{getOpenHouseTitle(openHouse)}</h3>
+                                                <p className="mt-1 truncate text-sm text-q-text-secondary">{getPropertyTitle(openHouse.propertyId)}</p>
+                                            </div>
+                                            <DashboardSelect
+                                                className="w-36 shrink-0"
+                                                value={openHouse.status || 'scheduled'}
+                                                onChange={value => void suite.updateOpenHouseStatus(openHouse.id, value as RealtyOpenHouseStatus)}
+                                                options={realtyOpenHouseStatuses.map(status => ({ value: status, label: t(`realty.openHouses.status.${status}`) }))}
+                                            />
+                                        </div>
+                                        <div className="mt-4 flex flex-wrap gap-2">
+                                            <span className="rounded-full bg-q-surface-overlay px-2 py-1 text-xs text-q-text-secondary">{endsLabel ? `${startsLabel} - ${endsLabel}` : startsLabel}</span>
+                                            <span className={`rounded-full px-2 py-1 text-xs ${openHouse.registrationEnabled ? 'bg-q-success/10 text-q-success' : 'bg-q-surface-overlay text-q-text-secondary'}`}>
+                                                {openHouse.registrationEnabled ? t('realty.openHouses.registrationOn') : t('realty.openHouses.registrationOff')}
+                                            </span>
+                                        </div>
+                                        {openHouse.notes && <p className="mt-4 line-clamp-3 text-sm leading-6 text-q-text-secondary">{openHouse.notes}</p>}
+                                        <div className="mt-5 flex flex-wrap justify-end gap-2">
+                                            <Button type="button" size="sm" variant="secondary" onClick={() => startEditOpenHouse(openHouse)}>{t('common.edit')}</Button>
+                                            <Button type="button" size="icon-sm" variant="ghost" onClick={() => deleteOpenHouse(openHouse.id)}><Trash2 size={15} /></Button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             );
         }

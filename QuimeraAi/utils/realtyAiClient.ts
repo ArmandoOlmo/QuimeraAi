@@ -1,5 +1,7 @@
 import { supabase } from '../supabase';
 import type {
+    CampaignType,
+    RealtyCampaignAiOutput,
     RealtyAiLanguage,
     RealtyAiListingOutput,
     RealtyAiTone,
@@ -48,9 +50,89 @@ export interface RealtyAiGenerateResult {
     mode: 'full' | 'fix';
 }
 
+export interface RealtyCampaignAiGenerateInput {
+    projectId: string;
+    propertyId: string;
+    campaignType: CampaignType;
+    language: RealtyAiLanguage;
+    tone?: RealtyAiTone | string;
+    userPrompt?: string;
+    model?: string;
+}
+
+export interface RealtyCampaignAiGenerateResult {
+    success: true;
+    model: string;
+    prompt: string;
+    output: RealtyCampaignAiOutput;
+    generatedFields: string[];
+    provider: 'openrouter';
+}
+
 const toStringArray = (value: unknown): string[] => {
     if (!Array.isArray(value)) return [];
     return value.map(item => String(item || '').trim()).filter(Boolean);
+};
+
+export const normalizeRealtyCampaignOutput = (value: unknown): RealtyCampaignAiOutput => {
+    const record = value && typeof value === 'object' && !Array.isArray(value)
+        ? value as Record<string, unknown>
+        : {};
+
+    return {
+        title: String(record.title || '').trim(),
+        goal: String(record.goal || '').trim(),
+        audience: String(record.audience || '').trim(),
+        mainCopy: String(record.mainCopy || record.main_copy || '').trim(),
+        socialPost: String(record.socialPost || record.social_post || '').trim(),
+        emailSubject: String(record.emailSubject || record.email_subject || '').trim(),
+        emailBody: String(record.emailBody || record.email_body || '').trim(),
+        smsCopy: String(record.smsCopy || record.sms_copy || record.whatsAppCopy || record.whatsappCopy || '').trim(),
+        adHeadline: String(record.adHeadline || record.ad_headline || '').trim(),
+        adPrimaryText: String(record.adPrimaryText || record.ad_primary_text || '').trim(),
+        cta: String(record.cta || '').trim(),
+        hashtags: toStringArray(record.hashtags).map(item => item.startsWith('#') ? item : `#${item.replace(/^#+/, '')}`),
+    };
+};
+
+export const formatRealtyCampaignOutput = (output: Partial<RealtyCampaignAiOutput> | Record<string, unknown>): string => {
+    const normalized = normalizeRealtyCampaignOutput(output);
+    const sections = [
+        ['Title', normalized.title],
+        ['Goal', normalized.goal],
+        ['Audience', normalized.audience],
+        ['Main copy', normalized.mainCopy],
+        ['Social post', normalized.socialPost],
+        ['Email subject', normalized.emailSubject],
+        ['Email body', normalized.emailBody],
+        ['SMS/WhatsApp copy', normalized.smsCopy],
+        ['Ad headline', normalized.adHeadline],
+        ['Ad primary text', normalized.adPrimaryText],
+        ['CTA', normalized.cta],
+        ['Hashtags', normalized.hashtags.join(' ')],
+    ];
+
+    return sections
+        .filter(([, value]) => String(value || '').trim())
+        .map(([label, value]) => `${label}\n${value}`)
+        .join('\n\n');
+};
+
+export const getGeneratedRealtyCampaignFields = (output: RealtyCampaignAiOutput): string[] => {
+    const fields: string[] = [];
+    if (output.title) fields.push('title');
+    if (output.goal) fields.push('goal');
+    if (output.audience) fields.push('audience');
+    if (output.mainCopy) fields.push('mainCopy');
+    if (output.socialPost) fields.push('socialPost');
+    if (output.emailSubject) fields.push('emailSubject');
+    if (output.emailBody) fields.push('emailBody');
+    if (output.smsCopy) fields.push('smsCopy');
+    if (output.adHeadline) fields.push('adHeadline');
+    if (output.adPrimaryText) fields.push('adPrimaryText');
+    if (output.cta) fields.push('cta');
+    if (output.hashtags.length > 0) fields.push('hashtags');
+    return fields;
 };
 
 const normalizeFaq = (value: unknown) => {
@@ -166,6 +248,39 @@ export const generateRealtyListingContent = async (input: RealtyAiGenerateInput)
         generatedFields: Array.isArray(data.generatedFields) ? data.generatedFields : getGeneratedRealtyFields(output),
         provider: 'openrouter',
         mode: data.mode === 'fix' ? 'fix' : 'full',
+    };
+};
+
+export const generateRealtyCampaignContent = async (input: RealtyCampaignAiGenerateInput): Promise<RealtyCampaignAiGenerateResult> => {
+    const { data, error } = await supabase.functions.invoke('ai-proxy', {
+        body: {
+            action: 'realty_campaign_generate',
+            projectId: input.projectId,
+            propertyId: input.propertyId,
+            campaignType: input.campaignType,
+            language: input.language,
+            tone: input.tone || 'luxury',
+            userPrompt: input.userPrompt,
+            model: input.model || REALTY_AI_DEFAULT_MODEL,
+        },
+    });
+
+    if (error) {
+        throw new Error(error.message || 'Realty campaign AI generation failed');
+    }
+
+    if (!data?.success) {
+        throw new Error(data?.error || 'Realty campaign AI generation failed');
+    }
+
+    const output = normalizeRealtyCampaignOutput(data.output);
+    return {
+        success: true,
+        model: data.model || input.model || REALTY_AI_DEFAULT_MODEL,
+        prompt: data.prompt || input.userPrompt || '',
+        output,
+        generatedFields: Array.isArray(data.generatedFields) ? data.generatedFields : getGeneratedRealtyCampaignFields(output),
+        provider: 'openrouter',
     };
 };
 

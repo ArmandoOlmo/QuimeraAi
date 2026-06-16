@@ -6063,6 +6063,8 @@
       "overview": "Overview",
       "properties": "Properties",
       "leads": "Leads",
+      "campaigns": "Campaigns",
+      "openHouses": "Open Houses",
       "ai": "AI",
       "settings": "Settings"
     },
@@ -6150,6 +6152,80 @@
       "email": "Email",
       "phone": "Phone",
       "property": "Property"
+    },
+    "campaigns": {
+      "create": "Create campaign",
+      "edit": "Edit campaign",
+      "defaultTitle": "Campaign for {{property}}",
+      "type": "Campaign type",
+      "scheduledAt": "Scheduled date",
+      "content": "Content",
+      "contentPlaceholder": "Generate content with AI or paste ready-to-publish copy.",
+      "preview": "Preview",
+      "copy": "Copy",
+      "generateWithAi": "Generate with AI",
+      "save": "Save campaign",
+      "unscheduled": "Unscheduled",
+      "hasContent": "Has content",
+      "noContent": "No saved content yet.",
+      "emptyTitle": "You do not have campaigns yet",
+      "emptyDescription": "Create a campaign to promote a property with AI.",
+      "aiDefaultPrompt": "Create a clear, actionable campaign to capture qualified leads.",
+      "aiSaved": "The AI campaign was generated and saved.",
+      "copied": "Campaign content copied.",
+      "confirmDelete": "Delete this campaign?",
+      "types": {
+        "just_listed": "Just listed",
+        "open_house": "Open house",
+        "price_drop": "Price drop",
+        "luxury_showcase": "Luxury showcase",
+        "investment_opportunity": "Investment opportunity",
+        "rental_available": "Rental available",
+        "last_units": "Last units",
+        "seller_lead_magnet": "Seller lead magnet"
+      },
+      "status": {
+        "draft": "Draft",
+        "scheduled": "Scheduled",
+        "active": "Active",
+        "completed": "Completed",
+        "archived": "Archived"
+      },
+      "errors": {
+        "propertyRequired": "Select a property before saving or generating.",
+        "save": "The campaign could not be saved.",
+        "delete": "The campaign could not be deleted.",
+        "generate": "The AI campaign could not be generated."
+      }
+    },
+    "openHouses": {
+      "create": "Create Open House",
+      "edit": "Edit Open House",
+      "defaultTitle": "Open House",
+      "defaultTitleWithProperty": "Open House - {{property}}",
+      "startsAt": "Starts",
+      "endsAt": "Ends",
+      "timezone": "Timezone",
+      "capacity": "Capacity",
+      "registrationEnabled": "Public registration enabled",
+      "notes": "Notes",
+      "save": "Save Open House",
+      "emptyTitle": "You do not have open houses yet",
+      "emptyDescription": "Schedule an open house to capture interested buyers.",
+      "confirmDelete": "Delete this open house?",
+      "registrationOn": "Registration on",
+      "registrationOff": "Registration off",
+      "status": {
+        "scheduled": "Scheduled",
+        "active": "Active",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "errors": {
+        "propertyRequired": "Select a property before saving the open house.",
+        "save": "The open house could not be saved.",
+        "delete": "The open house could not be deleted."
+      }
     },
   "ai": {
     "title": "Realty AI assistant",
@@ -6305,7 +6381,14 @@
       "sent": "Request sent successfully.",
       "sendError": "The request could not be sent.",
       "related": "Related properties",
-      "defaultLeadMessage": "I am interested in receiving information about {{title}}."
+      "defaultLeadMessage": "I am interested in receiving information about {{title}}.",
+      "openHouseTitle": "Open House",
+      "openHouseSubtitle": "Reserve your spot to tour this property.",
+      "openHouseMessagePlaceholder": "I want to register for the open house...",
+      "registerOpenHouse": "Register",
+      "openHouseRegistered": "Registration received successfully.",
+      "openHouseRegisterError": "Registration could not be completed.",
+      "openHouseDefaultMessage": "I want to register for the open house at {{title}}."
     },
     "units": {
       "beds": "Bedrooms",

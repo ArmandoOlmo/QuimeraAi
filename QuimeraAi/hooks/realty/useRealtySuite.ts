@@ -1,15 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../supabase';
 import type {
+    PropertyCampaign,
+    PropertyOpenHouse,
     RealtyAiGeneration,
+    RealtyCampaignStatus,
     RealtyLead,
     RealtyMediaUploadResult,
     RealtyModuleFlags,
+    RealtyOpenHouseStatus,
     RealtyProperty,
     RealtyPropertyStatus,
 } from '../../types/realty';
 import {
     DEFAULT_REALTY_FLAGS,
+    mapPropertyCampaignRow,
+    mapPropertyCampaignToRow,
+    mapPropertyOpenHouseRow,
+    mapPropertyOpenHouseToRow,
     mapPropertyLeadRow,
     mapRealtyAiGenerationRow,
     mapRealtyAiGenerationToRow,
@@ -77,6 +85,8 @@ const resolveProjectFlags = (projectData: unknown): RealtyModuleFlags => {
 export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOptions) => {
     const [properties, setProperties] = useState<RealtyProperty[]>([]);
     const [leads, setLeads] = useState<RealtyLead[]>([]);
+    const [campaigns, setCampaigns] = useState<PropertyCampaign[]>([]);
+    const [openHouses, setOpenHouses] = useState<PropertyOpenHouse[]>([]);
     const [aiGenerations, setAiGenerations] = useState<RealtyAiGeneration[]>([]);
     const [flags, setFlags] = useState<RealtyModuleFlags>(DEFAULT_REALTY_FLAGS);
     const [isLoading, setIsLoading] = useState(true);
@@ -98,6 +108,8 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         if (!projectId) {
             setProperties([]);
             setLeads([]);
+            setCampaigns([]);
+            setOpenHouses([]);
             setAiGenerations([]);
             setIsLoading(false);
             return;
@@ -107,7 +119,7 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         setError(null);
 
         try {
-            const [propertiesResult, leadsResult, aiResult, projectResult] = await Promise.all([
+            const [propertiesResult, leadsResult, campaignsResult, openHousesResult, aiResult, projectResult] = await Promise.all([
                 supabase
                     .from('properties')
                     .select('*')
@@ -120,6 +132,18 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
                     .order('created_at', { ascending: false })
                     .limit(200),
                 supabase
+                    .from('property_campaigns')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('updated_at', { ascending: false })
+                    .limit(200),
+                supabase
+                    .from('property_open_houses')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('starts_at', { ascending: false })
+                    .limit(200),
+                supabase
                     .from('property_ai_generations')
                     .select('*')
                     .eq('project_id', projectId)
@@ -128,7 +152,7 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
                 supabase.from('projects').select('data, tenant_id').eq('id', projectId).maybeSingle(),
             ]);
 
-            const tableError = [propertiesResult.error, leadsResult.error, aiResult.error, projectResult.error].find(Boolean);
+            const tableError = [propertiesResult.error, leadsResult.error, campaignsResult.error, openHousesResult.error, aiResult.error, projectResult.error].find(Boolean);
             if (tableError) throw tableError;
 
             const propertyRows = propertiesResult.data || [];
@@ -154,12 +178,16 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
 
             setProperties(propertyRows.map((row: any) => mapRealtyPropertyRow(row, mediaByProperty.get(row.id) || [])));
             setLeads((leadsResult.data || []).map(mapPropertyLeadRow));
+            setCampaigns((campaignsResult.data || []).map(mapPropertyCampaignRow));
+            setOpenHouses((openHousesResult.data || []).map(mapPropertyOpenHouseRow));
             setAiGenerations((aiResult.data || []).map(mapRealtyAiGenerationRow));
             setFlags(resolveProjectFlags((projectResult.data as any)?.data));
         } catch (err: any) {
             if (isMissingTableError(err)) {
                 setProperties([]);
                 setLeads([]);
+                setCampaigns([]);
+                setOpenHouses([]);
                 setAiGenerations([]);
             } else {
                 console.error('[useRealtySuite] Error loading Realty Suite:', err);
@@ -402,6 +430,136 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         await loadAll();
     }, [loadAll]);
 
+    const saveCampaign = useCallback(async (campaign: Partial<PropertyCampaign>) => {
+        if (!projectId) return undefined;
+        if (!userId) throw new Error('User is required to save Realty campaigns.');
+        if (!campaign.propertyId) throw new Error('Property is required to save Realty campaigns.');
+
+        setIsSaving(true);
+        setError(null);
+        try {
+            const resolvedTenantId = await resolveTenantId();
+            const row = mapPropertyCampaignToRow(campaign, userId, projectId, resolvedTenantId);
+            let savedId = campaign.id || '';
+
+            if (campaign.id) {
+                const { data, error: updateError } = await supabase
+                    .from('property_campaigns')
+                    .update(row)
+                    .eq('id', campaign.id)
+                    .select('id')
+                    .single();
+                if (updateError) throw updateError;
+                savedId = data?.id || campaign.id;
+            } else {
+                const { data, error: insertError } = await supabase
+                    .from('property_campaigns')
+                    .insert({ ...row, created_at: new Date().toISOString() })
+                    .select('id')
+                    .single();
+                if (insertError) throw insertError;
+                savedId = data?.id || '';
+            }
+
+            await loadAll();
+            return savedId;
+        } catch (err: any) {
+            setError(formatRealtySupabaseError(err, 'Error saving Realty campaign'));
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [loadAll, projectId, resolveTenantId, userId]);
+
+    const deleteCampaign = useCallback(async (campaignId: string) => {
+        setIsSaving(true);
+        setError(null);
+        try {
+            const { error: deleteError } = await supabase.from('property_campaigns').delete().eq('id', campaignId);
+            if (deleteError) throw deleteError;
+            await loadAll();
+        } catch (err: any) {
+            setError(formatRealtySupabaseError(err, 'Error deleting Realty campaign'));
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [loadAll]);
+
+    const updateCampaignStatus = useCallback(async (campaignId: string, status: RealtyCampaignStatus) => {
+        const { error: updateError } = await supabase
+            .from('property_campaigns')
+            .update({ status, updated_at: new Date().toISOString() })
+            .eq('id', campaignId);
+        if (updateError) throw new Error(formatRealtySupabaseError(updateError, 'Error updating Realty campaign status'));
+        await loadAll();
+    }, [loadAll]);
+
+    const saveOpenHouse = useCallback(async (openHouse: Partial<PropertyOpenHouse>) => {
+        if (!projectId) return undefined;
+        if (!userId) throw new Error('User is required to save Realty open houses.');
+        if (!openHouse.propertyId) throw new Error('Property is required to save Realty open houses.');
+
+        setIsSaving(true);
+        setError(null);
+        try {
+            const resolvedTenantId = await resolveTenantId();
+            const row = mapPropertyOpenHouseToRow(openHouse, userId, projectId, resolvedTenantId);
+            let savedId = openHouse.id || '';
+
+            if (openHouse.id) {
+                const { data, error: updateError } = await supabase
+                    .from('property_open_houses')
+                    .update(row)
+                    .eq('id', openHouse.id)
+                    .select('id')
+                    .single();
+                if (updateError) throw updateError;
+                savedId = data?.id || openHouse.id;
+            } else {
+                const { data, error: insertError } = await supabase
+                    .from('property_open_houses')
+                    .insert({ ...row, created_at: new Date().toISOString() })
+                    .select('id')
+                    .single();
+                if (insertError) throw insertError;
+                savedId = data?.id || '';
+            }
+
+            await loadAll();
+            return savedId;
+        } catch (err: any) {
+            setError(formatRealtySupabaseError(err, 'Error saving Realty open house'));
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [loadAll, projectId, resolveTenantId, userId]);
+
+    const deleteOpenHouse = useCallback(async (openHouseId: string) => {
+        setIsSaving(true);
+        setError(null);
+        try {
+            const { error: deleteError } = await supabase.from('property_open_houses').delete().eq('id', openHouseId);
+            if (deleteError) throw deleteError;
+            await loadAll();
+        } catch (err: any) {
+            setError(formatRealtySupabaseError(err, 'Error deleting Realty open house'));
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [loadAll]);
+
+    const updateOpenHouseStatus = useCallback(async (openHouseId: string, status: RealtyOpenHouseStatus) => {
+        const { error: updateError } = await supabase
+            .from('property_open_houses')
+            .update({ status, updated_at: new Date().toISOString() })
+            .eq('id', openHouseId);
+        if (updateError) throw new Error(formatRealtySupabaseError(updateError, 'Error updating Realty open house status'));
+        await loadAll();
+    }, [loadAll]);
+
     const saveAiGeneration = useCallback(async (generation: Omit<RealtyAiGeneration, 'id' | 'createdAt'>) => {
         if (!generation.projectId) return;
         if (!userId) throw new Error('User is required to create Realty AI generations.');
@@ -422,6 +580,8 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         featuredProperties,
         leads,
         newLeads,
+        campaigns,
+        openHouses,
         aiGenerations,
         flags,
         isLoading,
@@ -434,6 +594,12 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         updatePropertyStatus,
         deleteProperty,
         updateLeadStatus,
+        saveCampaign,
+        deleteCampaign,
+        updateCampaignStatus,
+        saveOpenHouse,
+        deleteOpenHouse,
+        updateOpenHouseStatus,
         saveAiGeneration,
     };
 };

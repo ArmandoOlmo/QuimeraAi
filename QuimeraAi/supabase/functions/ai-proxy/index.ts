@@ -640,6 +640,24 @@ function normalizeRealtyListingOutput(value: unknown) {
     };
 }
 
+function normalizeRealtyCampaignOutput(value: unknown) {
+    const record = isPlainRecord(value) ? value : {};
+    return {
+        title: cleanString(record.title),
+        goal: cleanString(record.goal),
+        audience: cleanString(record.audience),
+        mainCopy: cleanString(record.mainCopy || record.main_copy),
+        socialPost: cleanString(record.socialPost || record.social_post),
+        emailSubject: cleanString(record.emailSubject || record.email_subject),
+        emailBody: cleanString(record.emailBody || record.email_body),
+        smsCopy: cleanString(record.smsCopy || record.sms_copy || record.whatsAppCopy || record.whatsappCopy),
+        adHeadline: cleanString(record.adHeadline || record.ad_headline),
+        adPrimaryText: cleanString(record.adPrimaryText || record.ad_primary_text),
+        cta: cleanString(record.cta),
+        hashtags: cleanStringArray(record.hashtags).map(tag => tag.startsWith('#') ? tag : `#${tag.replace(/^#+/, '')}`),
+    };
+}
+
 function realtyGeneratedFields(output: ReturnType<typeof normalizeRealtyListingOutput>): string[] {
     const fields: string[] = [];
     if (output.title) fields.push('title');
@@ -656,6 +674,23 @@ function realtyGeneratedFields(output: ReturnType<typeof normalizeRealtyListingO
     if (output.emailCopy) fields.push('emailCopy');
     if (output.smsCopy) fields.push('smsCopy');
     if (output.adCopy) fields.push('adCopy');
+    return fields;
+}
+
+function realtyCampaignGeneratedFields(output: ReturnType<typeof normalizeRealtyCampaignOutput>): string[] {
+    const fields: string[] = [];
+    if (output.title) fields.push('title');
+    if (output.goal) fields.push('goal');
+    if (output.audience) fields.push('audience');
+    if (output.mainCopy) fields.push('mainCopy');
+    if (output.socialPost) fields.push('socialPost');
+    if (output.emailSubject) fields.push('emailSubject');
+    if (output.emailBody) fields.push('emailBody');
+    if (output.smsCopy) fields.push('smsCopy');
+    if (output.adHeadline) fields.push('adHeadline');
+    if (output.adPrimaryText) fields.push('adPrimaryText');
+    if (output.cta) fields.push('cta');
+    if (output.hashtags.length > 0) fields.push('hashtags');
     return fields;
 }
 
@@ -682,6 +717,30 @@ function fallbackRealtyListingOutput(rawText: string, property: Record<string, u
         emailCopy: rawText,
         smsCopy: language === 'en' ? `Interested in ${title}? Reply to schedule a showing.` : `¿Te interesa ${title}? Responde para coordinar una visita.`,
         adCopy: base.slice(0, 180),
+    });
+}
+
+function fallbackRealtyCampaignOutput(rawText: string, property: Record<string, unknown>, campaignType: string, language: string) {
+    const title = cleanString(property.title) || (language === 'en' ? 'Featured property' : 'Propiedad destacada');
+    const city = cleanString(property.city);
+    const cta = language === 'en' ? 'Schedule a showing' : 'Agenda una visita';
+    const mainCopy = rawText || (language === 'en'
+        ? `${title}${city ? ` in ${city}` : ''} is available now. ${cta}.`
+        : `${title}${city ? ` en ${city}` : ''} está disponible ahora. ${cta}.`);
+
+    return normalizeRealtyCampaignOutput({
+        title: `${campaignType.replace(/_/g, ' ')}: ${title}`,
+        goal: language === 'en' ? 'Capture qualified property inquiries.' : 'Capturar compradores calificados.',
+        audience: language === 'en' ? 'Qualified buyers and active real estate prospects.' : 'Compradores calificados y prospectos activos.',
+        mainCopy,
+        socialPost: mainCopy.slice(0, 500),
+        emailSubject: language === 'en' ? `New opportunity: ${title}` : `Nueva oportunidad: ${title}`,
+        emailBody: mainCopy,
+        smsCopy: `${title}: ${cta}.`,
+        adHeadline: title.slice(0, 80),
+        adPrimaryText: mainCopy.slice(0, 220),
+        cta,
+        hashtags: ['#RealEstate', '#QuimeraRealty'],
     });
 }
 
@@ -742,6 +801,51 @@ Return exactly this JSON shape:
   "emailCopy": "",
   "smsCopy": "",
   "adCopy": ""
+}`;
+}
+
+function buildRealtyCampaignPrompt(args: {
+    property: Record<string, unknown>;
+    campaignType: string;
+    tone: string;
+    language: string;
+    userPrompt: string;
+}) {
+    const {
+        property,
+        campaignType,
+        tone,
+        language,
+        userPrompt,
+    } = args;
+
+    return `You are Quimera.ai's real estate campaign strategist.
+
+Return valid JSON only. Do not include markdown fences, commentary, fake testimonials, unavailable claims, or placeholders.
+Language: ${language === 'en' ? 'English' : 'Spanish'}
+Campaign type: ${campaignType}
+Tone: ${tone}
+
+Property data:
+${JSON.stringify(property, null, 2)}
+
+User instruction:
+${userPrompt || 'Create production-ready real estate campaign copy for this property.'}
+
+Return exactly this JSON shape:
+{
+  "title": "",
+  "goal": "",
+  "audience": "",
+  "mainCopy": "",
+  "socialPost": "",
+  "emailSubject": "",
+  "emailBody": "",
+  "smsCopy": "",
+  "adHeadline": "",
+  "adPrimaryText": "",
+  "cta": "",
+  "hashtags": []
 }`;
 }
 
@@ -875,6 +979,130 @@ async function handleRealtyListingGenerate(payload: Record<string, unknown>, req
     });
 }
 
+async function handleRealtyCampaignGenerate(payload: Record<string, unknown>, req: Request): Promise<Response> {
+    if (!OPENROUTER_API_KEY) {
+        return jsonResponse({ error: 'OPENROUTER_API_KEY is not configured in Supabase Edge Functions' }, { status: 500 });
+    }
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+        return jsonResponse({ error: 'Supabase service credentials are not configured' }, { status: 500 });
+    }
+
+    const authUserId = await getAuthenticatedUserId(req);
+    if (!authUserId) {
+        return jsonResponse({ error: 'Unauthorized Realty campaign AI request' }, { status: 401 });
+    }
+
+    const projectId = cleanString(payload.projectId);
+    const propertyId = cleanString(payload.propertyId);
+    const campaignType = cleanString(payload.campaignType) || 'just_listed';
+    const tone = cleanString(payload.tone) || 'luxury';
+    const language = cleanString(payload.language) === 'en' ? 'en' : 'es';
+    const userPrompt = cleanString(payload.userPrompt);
+    const model = cleanString(payload.model) || Deno.env.get('REALTY_AI_MODEL') || 'gemini-2.5-flash';
+
+    if (!isValidUuid(projectId) || !isValidUuid(propertyId)) {
+        return jsonResponse({ error: 'Invalid Realty campaign AI payload' }, { status: 400 });
+    }
+
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+        auth: { persistSession: false },
+    });
+
+    const { data: property, error: propertyError } = await admin
+        .from('properties')
+        .select('*')
+        .eq('id', propertyId)
+        .eq('project_id', projectId)
+        .maybeSingle();
+
+    if (propertyError) {
+        console.error('[ai-proxy] realty campaign property lookup error:', propertyError);
+        return jsonResponse({ error: 'Could not load Realty property' }, { status: 500 });
+    }
+
+    if (!property) {
+        return jsonResponse({ error: 'Realty property not found' }, { status: 404 });
+    }
+
+    let authorized = property.user_id === authUserId;
+    if (!authorized && property.tenant_id) {
+        const { data: membership, error: membershipError } = await admin
+            .from('tenant_members')
+            .select('tenant_id')
+            .eq('tenant_id', property.tenant_id)
+            .eq('user_id', authUserId)
+            .maybeSingle();
+
+        if (membershipError) {
+            console.error('[ai-proxy] realty campaign membership lookup error:', membershipError);
+            return jsonResponse({ error: 'Could not validate Realty permissions' }, { status: 500 });
+        }
+        authorized = Boolean(membership);
+    }
+
+    if (!authorized) {
+        return jsonResponse({ error: 'You do not have access to this Realty property' }, { status: 403 });
+    }
+
+    const prompt = buildRealtyCampaignPrompt({
+        property,
+        campaignType,
+        tone,
+        language,
+        userPrompt,
+    });
+    const orModel = mapModelToOpenRouter(model);
+
+    const orResponse = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
+        method: 'POST',
+        headers: openRouterHeaders(),
+        body: JSON.stringify({
+            model: orModel,
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You generate structured real estate campaign content for Quimera.ai. Return valid JSON only.',
+                },
+                { role: 'user', content: prompt },
+            ],
+            temperature: 0.65,
+            max_tokens: 4500,
+            response_format: { type: 'json_object' },
+        }),
+    });
+
+    if (!orResponse.ok) {
+        const errorText = await orResponse.text();
+        console.error(`[OpenRouter Realty Campaign] Error: ${orResponse.status} ${errorText}`);
+        return jsonResponse({ error: `OpenRouter API error: ${orResponse.status}`, details: errorText }, { status: orResponse.status });
+    }
+
+    const data = await orResponse.json();
+    const rawText = data.choices?.[0]?.message?.content || '';
+    const parsed = extractJsonObject(rawText);
+    const output = parsed
+        ? normalizeRealtyCampaignOutput(parsed)
+        : fallbackRealtyCampaignOutput(rawText, property, campaignType, language);
+    const generatedFields = realtyCampaignGeneratedFields(output);
+
+    return jsonResponse({
+        success: true,
+        model: orModel,
+        provider: 'openrouter',
+        prompt,
+        output,
+        generatedFields,
+        metadata: {
+            campaignType,
+            tone,
+            language,
+            tokensUsed: data.usage?.total_tokens ?? ((data.usage?.prompt_tokens || 0) + (data.usage?.completion_tokens || 0)),
+            finishReason: data.choices?.[0]?.finish_reason || null,
+            parsedJson: Boolean(parsed),
+        },
+    });
+}
+
 serve(async (req) => {
     // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
@@ -954,6 +1182,10 @@ serve(async (req) => {
 
         if (payload.action === 'realty_listing_generate') {
             return await handleRealtyListingGenerate(payload, req);
+        }
+
+        if (payload.action === 'realty_campaign_generate') {
+            return await handleRealtyCampaignGenerate(payload, req);
         }
 
         const { prompt, history, systemInstruction, model = 'gemini-2.5-flash', config = {}, images, referenceImages, tools } = payload;

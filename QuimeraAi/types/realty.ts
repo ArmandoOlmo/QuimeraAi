@@ -7,7 +7,22 @@ export type PropertyType = 'house' | 'condo' | 'apartment' | 'townhouse' | 'land
 export type TransactionType = 'sale' | 'rent' | 'lease';
 export type LeadStage = LeadStatus | 'showing_scheduled' | 'offer_made' | 'closed';
 export type LeadType = 'buyer' | 'seller' | 'renter' | 'investor' | 'agent' | 'other';
-export type CampaignType = 'social' | 'email' | 'ads' | 'print' | 'open_house' | 'other';
+export type CampaignType =
+    | 'just_listed'
+    | 'open_house'
+    | 'price_drop'
+    | 'luxury_showcase'
+    | 'investment_opportunity'
+    | 'rental_available'
+    | 'last_units'
+    | 'seller_lead_magnet'
+    | 'social'
+    | 'email'
+    | 'ads'
+    | 'print'
+    | 'other';
+export type RealtyCampaignStatus = 'draft' | 'scheduled' | 'active' | 'completed' | 'archived';
+export type RealtyOpenHouseStatus = 'scheduled' | 'active' | 'completed' | 'cancelled';
 export type RealtyPropertyStatus = PropertyStatus;
 export type RealtyPropertyType = PropertyType;
 export type RealtyLeadStatus = LeadStatus;
@@ -44,6 +59,21 @@ export interface RealtyAiListingOutput {
     emailCopy: string;
     smsCopy: string;
     adCopy: string;
+}
+
+export interface RealtyCampaignAiOutput {
+    title: string;
+    goal: string;
+    audience: string;
+    mainCopy: string;
+    socialPost: string;
+    emailSubject: string;
+    emailBody: string;
+    smsCopy: string;
+    adHeadline: string;
+    adPrimaryText: string;
+    cta: string;
+    hashtags: string[];
 }
 
 export interface RealtyListingScore {
@@ -292,7 +322,7 @@ export interface PropertyCampaign {
     propertyId?: string | null;
     campaignType: CampaignType;
     title: string;
-    status?: string;
+    status?: RealtyCampaignStatus | string;
     content?: Record<string, unknown>;
     scheduledAt?: ISODateString | null;
     metadata?: Record<string, unknown>;
@@ -306,10 +336,11 @@ export interface PropertyOpenHouse {
     projectId?: string | null;
     tenantId?: string | null;
     propertyId: string;
+    title?: string;
     startsAt: ISODateString;
     endsAt?: ISODateString | null;
     timezone?: string;
-    status?: string;
+    status?: RealtyOpenHouseStatus | string;
     notes?: string | null;
     registrationEnabled: boolean;
     metadata?: Record<string, unknown>;
@@ -321,6 +352,8 @@ export type Property = RealtyProperty;
 export type Agent = RealtyAgent;
 export type PropertyLeadRecord = PropertyLead;
 export type PropertyAiGenerationRecord = PropertyAiGeneration;
+export type RealtyCampaign = PropertyCampaign;
+export type RealtyOpenHouse = PropertyOpenHouse;
 
 export interface RealtyWebsiteColorConfig {
     background?: string;
