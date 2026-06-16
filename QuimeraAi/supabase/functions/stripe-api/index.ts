@@ -36,6 +36,20 @@ const CREDIT_PACKAGES: Record<string, { name: string; credits: number; price: nu
   pack_10000: { name: "10,000 Credits", credits: 10000, price: 200 },
 };
 
+const FALLBACK_PLAN_CREDIT_LIMITS: Record<string, number> = {
+  free: 60,
+  hobby: 500,
+  starter: 500,
+  pro: 500,
+  individual: 500,
+  agency: 2000,
+  agency_plus: 5000,
+  agency_starter: 2000,
+  agency_pro: 5000,
+  agency_scale: 15000,
+  enterprise: 25000,
+};
+
 const PUBLIC_ACTIONS = new Set([
   "agencyBilling-getPaymentLinkInfo",
   "agencyBilling-confirmClientPayment",
@@ -614,10 +628,16 @@ async function reactivateSubscription(userId: string, data: any) {
 }
 
 async function syncLocalSubscriptionFromStripe(tenantId: string, subscription: Stripe.Subscription) {
-  const planId = subscription.metadata?.planId || "free";
+  const inferredPlanId = await inferPlanId(subscription);
+  const planId = inferredPlanId || subscription.metadata?.planId || "free";
   const billingCycle = subscription.items.data[0]?.price.recurring?.interval === "year" ? "annually" : "monthly";
   const existing = await getLocalSubscription(tenantId);
-  const usage = await normalizedCreditsUsage(tenantId, planId, existing?.ai_credits_usage);
+  const usage = await normalizedCreditsUsage(tenantId, planId, existing?.ai_credits_usage, {
+    previousPlanId: existing?.plan_id,
+    currentPeriodStart: subscription.current_period_start,
+    currentPeriodEnd: subscription.current_period_end,
+    resetPeriod: shouldResetCreditsForPeriod(existing, subscription),
+  });
 
   const row = {
     tenant_id: tenantId,
@@ -652,31 +672,159 @@ async function syncLocalSubscriptionFromStripe(tenantId: string, subscription: S
     .eq("id", tenantId);
 }
 
-async function normalizedCreditsUsage(tenantId: string, planId: string, current: any) {
-  if (
-    current &&
-    typeof current.creditsIncluded === "number" &&
-    typeof current.creditsUsed === "number" &&
-    typeof current.creditsRemaining === "number"
-  ) {
-    return current;
+async function inferPlanId(subscription: Stripe.Subscription): Promise<string | null> {
+  const price = subscription.items.data[0]?.price;
+  if (!price) return null;
+
+  const { data: byMonthlyPrice } = await supabase
+    .from("subscription_plans")
+    .select("id")
+    .eq("stripe_price_id_monthly", price.id)
+    .maybeSingle();
+
+  if (byMonthlyPrice?.id) return byMonthlyPrice.id;
+
+  const { data: byAnnualPrice } = await supabase
+    .from("subscription_plans")
+    .select("id")
+    .eq("stripe_price_id_annually", price.id)
+    .maybeSingle();
+
+  if (byAnnualPrice?.id) return byAnnualPrice.id;
+
+  const productId = price.product;
+  if (!productId || typeof productId !== "string") return null;
+
+  const { data } = await supabase
+    .from("subscription_plans")
+    .select("id")
+    .eq("stripe_product_id", productId)
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+function shouldResetCreditsForPeriod(existing: any, subscription: Stripe.Subscription) {
+  const localPeriodStart = parseDateSeconds(existing?.current_period_start);
+  const stripePeriodStart = subscription.current_period_start || null;
+
+  return Boolean(
+    localPeriodStart &&
+    stripePeriodStart &&
+    localPeriodStart !== stripePeriodStart
+  );
+}
+
+function parseDateSeconds(value: unknown): number | null {
+  if (!value) return null;
+  if (typeof value === "number") return Math.floor(value);
+  const parsed = Date.parse(String(value));
+  if (!Number.isFinite(parsed)) return null;
+  return Math.floor(parsed / 1000);
+}
+
+async function getPlanCreditLimit(planId?: string | null): Promise<number | null> {
+  if (!planId) return null;
+
+  const plan = await getPlan(planId).catch((error) => {
+    console.warn(`[stripe-api] could not load credit limit for plan ${planId}:`, error.message);
+    return null;
+  });
+  const fromDb = Number(plan?.limits?.maxAiCredits);
+  if (Number.isFinite(fromDb) && fromDb >= 0) return fromDb;
+
+  return FALLBACK_PLAN_CREDIT_LIMITS[planId] ?? null;
+}
+
+async function getTenantPlanId(tenantId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("tenants")
+    .select("subscription_plan")
+    .eq("id", tenantId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn(`[stripe-api] could not load tenant plan for ${tenantId}:`, error.message);
+    return null;
   }
 
-  const plan = await getPlan(planId).catch(() => null);
-  const creditsIncluded = Number(plan?.limits?.maxAiCredits || 0);
-  const creditsUsed = Number(current?.creditsUsed || current?.total_used || 0);
+  return data?.subscription_plan || null;
+}
+
+async function resolvePreviousPlanCreditLimit(params: {
+  tenantId: string;
+  targetPlanId: string;
+  currentIncluded: number;
+  current: any;
+  previousPlanId?: string | null;
+}): Promise<number> {
+  const tenantPlanId = await getTenantPlanId(params.tenantId);
+  const candidates = [
+    typeof params.current?.planId === "string" ? params.current.planId : null,
+    params.previousPlanId,
+    tenantPlanId,
+  ].filter(Boolean) as string[];
+
+  for (const candidate of candidates) {
+    if (candidate === params.targetPlanId) continue;
+    const credits = await getPlanCreditLimit(candidate);
+    if (credits !== null) return credits;
+  }
+
+  for (const candidate of candidates) {
+    const credits = await getPlanCreditLimit(candidate);
+    if (credits !== null && credits <= params.currentIncluded) return credits;
+  }
+
+  const recordedBase = Number(params.current?.planCreditsIncluded);
+  if (Number.isFinite(recordedBase) && recordedBase >= 0) return recordedBase;
+
+  return Math.max(0, params.currentIncluded);
+}
+
+async function normalizedCreditsUsage(
+  tenantId: string,
+  planId: string,
+  current: any,
+  options: {
+    previousPlanId?: string | null;
+    currentPeriodStart?: number | null;
+    currentPeriodEnd?: number | null;
+    resetPeriod?: boolean;
+  } = {},
+) {
+  const planCreditsIncluded = await getPlanCreditLimit(planId) ?? 0;
   const now = Date.now();
+  const currentIncluded = Number(current?.creditsIncluded || 0);
+  const previousPlanCredits = await resolvePreviousPlanCreditLimit({
+    tenantId,
+    targetPlanId: planId,
+    currentIncluded,
+    current,
+    previousPlanId: options.previousPlanId,
+  });
+  const extraCredits = Math.max(0, currentIncluded - previousPlanCredits);
+  const creditsIncluded = planCreditsIncluded + extraCredits;
+  const creditsUsed = options.resetPeriod
+    ? 0
+    : Number(current?.creditsUsed || current?.total_used || 0);
+  const periodStartSeconds = options.currentPeriodStart || current?.periodStart?.seconds || Math.floor(now / 1000);
+  const periodEndSeconds = options.currentPeriodEnd || current?.periodEnd?.seconds || Math.floor((now + 30 * 24 * 60 * 60 * 1000) / 1000);
 
   return {
+    ...(current || {}),
     tenantId,
-    periodStart: { seconds: Math.floor(now / 1000), nanoseconds: 0 },
-    periodEnd: { seconds: Math.floor((now + 30 * 24 * 60 * 60 * 1000) / 1000), nanoseconds: 0 },
+    planId,
+    planCreditsIncluded,
+    periodStart: { seconds: periodStartSeconds, nanoseconds: 0 },
+    periodEnd: { seconds: periodEndSeconds, nanoseconds: 0 },
     creditsIncluded,
     creditsUsed,
     creditsRemaining: Math.max(0, creditsIncluded - creditsUsed),
     creditsOverage: Math.max(0, creditsUsed - creditsIncluded),
-    usageByOperation: current?.usageByOperation || {},
-    dailyUsage: Array.isArray(current?.dailyUsage) ? current.dailyUsage : [],
+    usageByOperation: options.resetPeriod ? {} : current?.usageByOperation || {},
+    dailyUsage: options.resetPeriod ? [] : Array.isArray(current?.dailyUsage) ? current.dailyUsage : [],
+    subClientsUsage: options.resetPeriod ? {} : current?.subClientsUsage,
     lastUpdated: { seconds: Math.floor(now / 1000), nanoseconds: 0 },
   };
 }
