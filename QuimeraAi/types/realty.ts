@@ -49,6 +49,11 @@ export interface RealtyImage {
     metadata?: Record<string, unknown>;
 }
 
+export interface RealtyMediaUploadResult extends RealtyImage {
+    bucket: 'property-media';
+    storagePath: string;
+}
+
 export interface RealtyProperty {
     id: string;
     tenantId?: string | null;

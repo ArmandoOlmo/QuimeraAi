@@ -21,13 +21,16 @@ Apply:
 supabase db push
 ```
 
-Migration:
+Migrations:
 
 ```text
 supabase/migrations/20260616000000_realty_suite_foundation.sql
+supabase/migrations/20260616001000_realty_suite_storage_rls_hardening.sql
 ```
 
-The migration aligns the existing `public.properties` table without dropping legacy columns, adds the Realty tables, enables RLS, grants Data API access for `anon` and `authenticated`, and creates storage policies.
+The foundation migration aligns the existing `public.properties` table without dropping legacy columns and adds the Realty tables. The hardening migration makes `user_id`, `project_id`, and `tenant_id` text for Realty data, matching the app's Firebase-style compatibility layer over Supabase Auth, moves the RLS helper to the private schema, recreates RLS/storage policies, adds required indexes, and creates the storage buckets.
+
+If the Supabase CLI is not available, apply both SQL files in order from the Supabase SQL editor or the deployment pipeline used for database migrations.
 
 ## Storage
 
@@ -51,7 +54,15 @@ Recommended storage path convention:
 <user_id>/<property_id>/<filename>
 ```
 
-`property-documents` remains owner-only by default.
+The Realty hook uploads property media to `property-media` using that path shape, stores the returned `storage_path` in `property_media`, and removes obsolete storage objects when property images are replaced or a property is deleted. The `property-documents` bucket remains private and owner-only.
+
+## RLS Behavior
+
+- Authenticated owners, project owners, tenant owners/members, and app admins can manage Realty records through `private.can_manage_realty_record`.
+- Public visitors can read only `properties` where `status = 'active'` and `public_enabled = true`.
+- Public visitors can read `property_media` only when the media row is attached to a public property.
+- Public visitors can insert `property_leads` only for a public property and only when the lead row references that property's owner.
+- `property_documents` and `property_ai_generations` have no public access.
 
 ## Runtime Tables
 

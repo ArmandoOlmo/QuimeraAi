@@ -15,10 +15,21 @@ import MediaGeneratorPanel from '../media-generator/MediaGeneratorPanel';
 import ImageDetailModal from './ImageDetailModal';
 import { isLegacyStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
 
+interface ImagePickerSelectedAsset {
+    id?: string;
+    name?: string;
+    url: string;
+    downloadURL?: string;
+    storagePath?: string;
+    type?: string;
+    size?: number;
+}
+
 interface ImagePickerProps {
     label: string;
     value: string;
     onChange: (url: string) => void;
+    onSelectAsset?: (asset: ImagePickerSelectedAsset) => void;
     /** Optional store ID to show product images */
     storeId?: string;
     /** When true, opens the modal immediately without showing the inline preview. 
@@ -48,7 +59,7 @@ interface ImagePickerProps {
     contentType?: string;
 }
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination: propDestination, adminCategory, hideUrlInput = true, generationContext = 'general', initialTab = 'library', portalContainer, contentId, contentType }) => {
+const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSelectAsset, storeId, defaultOpen = false, onClose, onRemove, destination: propDestination, adminCategory, hideUrlInput = true, generationContext = 'general', initialTab = 'library', portalContainer, contentId, contentType }) => {
     const { t } = useTranslation();
     const { activeProjectId, activeProject } = useProject();
 
@@ -131,7 +142,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         if (adminCategory) setSelectedAdminCategory(adminCategory);
     }, [adminCategory]);
 
-    const handleSelectImageUrl = async (urlValue: unknown) => {
+    const handleSelectImageUrl = async (urlValue: unknown, selectedAsset?: Partial<FileRecord>) => {
         const selectedImageUrl = normalizeImageUrl(urlValue);
         if (!selectedImageUrl) {
             showError('Esta imagen no tiene una URL valida.');
@@ -144,6 +155,22 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         }
 
         onChange(selectedImageUrl);
+
+        const resolvedAsset = selectedAsset
+            || mediaCtx?.mediaAssets.find(a => a.url === selectedImageUrl || a.downloadURL === selectedImageUrl)
+            || files.find(f => normalizeImageUrl(f.downloadURL) === selectedImageUrl);
+
+        if (resolvedAsset && onSelectAsset) {
+            onSelectAsset({
+                id: resolvedAsset.id,
+                name: resolvedAsset.name,
+                url: selectedImageUrl,
+                downloadURL: selectedImageUrl,
+                storagePath: resolvedAsset.storagePath || '',
+                type: resolvedAsset.type,
+                size: resolvedAsset.size,
+            });
+        }
 
         // Auto-track: register this image as used by the current content
         if (contentId && mediaCtx) {
@@ -495,7 +522,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                     return (
                                                         <div
                                                             key={file.id}
-                                                            onClick={() => handleSelectImageUrl(fileUrl)}
+                                                            onClick={() => handleSelectImageUrl(fileUrl, file)}
                                                             className={`aspect-square rounded-lg overflow-hidden border-2 group relative transition-all ${isLegacyImage ? 'cursor-not-allowed opacity-60 border-red-500/40' : 'cursor-pointer'} ${isSelected ? 'border-q-accent ring-2 ring-q-accent/50' : 'border-transparent hover:border-q-text-secondary'}`}
                                                         >
                                                             <img src={fileUrl} alt={file.name} className={`w-full h-full object-cover transition-transform ${isLegacyImage ? 'grayscale' : 'group-hover:scale-110'}`} />

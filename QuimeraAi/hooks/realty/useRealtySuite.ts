@@ -3,6 +3,7 @@ import { supabase } from '../../supabase';
 import type {
     RealtyAiGeneration,
     RealtyLead,
+    RealtyMediaUploadResult,
     RealtyModuleFlags,
     RealtyProperty,
     RealtyPropertyStatus,
@@ -25,6 +26,40 @@ interface UseRealtySuiteOptions {
 }
 
 const isMissingTableError = (error: any) => error?.code === 'PGRST205' || error?.code === '42P01';
+const PROPERTY_MEDIA_BUCKET = 'property-media';
+
+const isPermissionError = (error: any) => {
+    const message = String(error?.message || '');
+    return error?.code === '42501'
+        || error?.statusCode === '403'
+        || /row-level security|permission denied|not authorized|unauthorized/i.test(message);
+};
+
+const formatRealtySupabaseError = (error: any, fallback: string) => {
+    if (isPermissionError(error)) {
+        return 'No tienes permisos para esta accion de Realty. Verifica que el modulo este activo y que las policies RLS/storage esten aplicadas.';
+    }
+    return error?.message || fallback;
+};
+
+const sanitizeStorageFileName = (fileName: string) => {
+    const safeName = fileName
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9._-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 120);
+    return safeName || 'property-media';
+};
+
+const createPropertyMediaStoragePath = (userId: string, propertyId: string, file: File) => {
+    const timestamp = Date.now();
+    const safeName = sanitizeStorageFileName(file.name);
+    return `${userId}/${propertyId}/${timestamp}-${safeName}`;
+};
+
+const isManagedPropertyMediaPath = (path: string, ownerId: string, propertyId: string) =>
+    path.startsWith(`${ownerId}/${propertyId}/`);
 
 const resolveProjectFlags = (projectData: unknown): RealtyModuleFlags => {
     const data = projectData && typeof projectData === 'object' && !Array.isArray(projectData)
@@ -128,7 +163,7 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
                 setAiGenerations([]);
             } else {
                 console.error('[useRealtySuite] Error loading Realty Suite:', err);
-                setError(err.message || 'Error loading Realty Suite');
+                setError(formatRealtySupabaseError(err, 'Error loading Realty Suite'));
             }
         } finally {
             setIsLoading(false);
@@ -168,15 +203,78 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
             if (updateError) throw updateError;
         } catch (err: any) {
             setFlags(previousFlags);
-            setError(err.message || 'Error updating Realty module settings');
+            setError(formatRealtySupabaseError(err, 'Error updating Realty module settings'));
             throw err;
         } finally {
             setIsSaving(false);
         }
     }, [flags, projectId]);
 
+    const removePropertyMediaStorage = useCallback(async (paths: string[]) => {
+        const uniquePaths = Array.from(new Set(paths.filter(Boolean)));
+        if (uniquePaths.length === 0) return;
+
+        const { error: removeError } = await supabase.storage
+            .from(PROPERTY_MEDIA_BUCKET)
+            .remove(uniquePaths);
+
+        if (removeError) {
+            console.warn('[useRealtySuite] Could not remove Realty media storage objects:', removeError);
+        }
+    }, []);
+
+    const uploadPropertyMedia = useCallback(async (file: File, propertyId: string): Promise<RealtyMediaUploadResult> => {
+        if (!userId) throw new Error('User is required to upload Realty property media.');
+        if (!propertyId) throw new Error('Property is required to upload Realty property media.');
+
+        const storagePath = createPropertyMediaStoragePath(userId, propertyId, file);
+        const { error: uploadError } = await supabase.storage
+            .from(PROPERTY_MEDIA_BUCKET)
+            .upload(storagePath, file, {
+                contentType: file.type || undefined,
+                upsert: false,
+            });
+
+        if (uploadError) {
+            throw new Error(formatRealtySupabaseError(uploadError, 'Error uploading Realty property media'));
+        }
+
+        const { data } = supabase.storage.from(PROPERTY_MEDIA_BUCKET).getPublicUrl(storagePath);
+
+        return {
+            id: `property-media-${Date.now()}`,
+            url: data.publicUrl,
+            bucket: PROPERTY_MEDIA_BUCKET,
+            storagePath,
+            mediaType: file.type?.startsWith('video/') ? 'video' : 'image',
+            altText: file.name,
+            position: 0,
+            isPrimary: false,
+            metadata: {
+                fileName: file.name,
+                size: file.size,
+                type: file.type,
+            },
+        };
+    }, [userId]);
+
     const replacePropertyMedia = useCallback(async (property: RealtyProperty, images: RealtyProperty['images']) => {
         if (!userId) throw new Error('User is required to save Realty property media.');
+        const existingResult = await supabase
+            .from('property_media')
+            .select('storage_path')
+            .eq('property_id', property.id);
+        if (existingResult.error) throw existingResult.error;
+
+        const nextStoragePaths = new Set((images || []).map(image => image.storagePath).filter(Boolean) as string[]);
+        const obsoleteStoragePaths = (existingResult.data || [])
+            .map((row: any) => row.storage_path)
+            .filter((path: string | null): path is string =>
+                Boolean(path)
+                && !nextStoragePaths.has(path)
+                && isManagedPropertyMediaPath(path, userId, property.id)
+            );
+
         const { error: deleteError } = await supabase
             .from('property_media')
             .delete()
@@ -187,11 +285,16 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
             .filter(image => image.url)
             .map((image, index) => mapRealtyMediaToRow({ ...image, position: index, isPrimary: index === 0 }, property, index, userId));
 
-        if (rows.length === 0) return;
+        if (rows.length === 0) {
+            await removePropertyMediaStorage(obsoleteStoragePaths);
+            return;
+        }
 
         const { error: insertError } = await supabase.from('property_media').insert(rows);
         if (insertError) throw insertError;
-    }, [userId]);
+
+        await removePropertyMediaStorage(obsoleteStoragePaths);
+    }, [removePropertyMediaStorage, userId]);
 
     const saveProperty = useCallback(async (input: Partial<RealtyProperty>) => {
         if (!projectId) return;
@@ -243,7 +346,7 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
             }, images);
             await loadAll();
         } catch (err: any) {
-            setError(err.message || 'Error saving Realty property');
+            setError(formatRealtySupabaseError(err, 'Error saving Realty property'));
             throw err;
         } finally {
             setIsSaving(false);
@@ -264,23 +367,38 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         setIsSaving(true);
         setError(null);
         try {
+            const mediaResult = await supabase
+                .from('property_media')
+                .select('storage_path')
+                .eq('property_id', propertyId);
+            if (mediaResult.error) throw mediaResult.error;
+
+            const storagePaths = (mediaResult.data || [])
+                .map((row: any) => row.storage_path)
+                .filter((path: string | null): path is string =>
+                    Boolean(path)
+                    && Boolean(userId)
+                    && isManagedPropertyMediaPath(path, userId || '', propertyId)
+                );
+
             const { error: deleteError } = await supabase.from('properties').delete().eq('id', propertyId);
             if (deleteError) throw deleteError;
+            await removePropertyMediaStorage(storagePaths);
             await loadAll();
         } catch (err: any) {
-            setError(err.message || 'Error deleting Realty property');
+            setError(formatRealtySupabaseError(err, 'Error deleting Realty property'));
             throw err;
         } finally {
             setIsSaving(false);
         }
-    }, [loadAll]);
+    }, [loadAll, removePropertyMediaStorage]);
 
     const updateLeadStatus = useCallback(async (leadId: string, status: RealtyLead['status']) => {
         const { error: updateError } = await supabase
             .from('property_leads')
             .update({ stage: status, updated_at: new Date().toISOString() })
             .eq('id', leadId);
-        if (updateError) throw updateError;
+        if (updateError) throw new Error(formatRealtySupabaseError(updateError, 'Error updating Realty lead status'));
         await loadAll();
     }, [loadAll]);
 
@@ -294,7 +412,7 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
                 ...mapRealtyAiGenerationToRow(generation, userId, resolvedTenantId),
                 created_at: new Date().toISOString(),
             });
-        if (insertError) throw insertError;
+        if (insertError) throw new Error(formatRealtySupabaseError(insertError, 'Error saving Realty AI generation'));
         await loadAll();
     }, [loadAll, resolveTenantId, userId]);
 
@@ -312,6 +430,7 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         refetch: loadAll,
         upsertProjectModule,
         saveProperty,
+        uploadPropertyMedia,
         updatePropertyStatus,
         deleteProperty,
         updateLeadStatus,

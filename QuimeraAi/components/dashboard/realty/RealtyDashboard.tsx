@@ -32,7 +32,7 @@ import { useSafeTenant } from '../../../contexts/tenant';
 import { useRealtyAccess } from '../../../hooks/realty/useRealtyAccess';
 import { useRealtySuite } from '../../../hooks/realty/useRealtySuite';
 import type { LeadStatus } from '../../../types/business';
-import type { RealtyLead, RealtyProperty, RealtyPropertyStatus, RealtyPropertyType } from '../../../types/realty';
+import type { RealtyImage, RealtyLead, RealtyProperty, RealtyPropertyStatus, RealtyPropertyType } from '../../../types/realty';
 import { formatRealtyPrice, isRealtyCrmLead, mapCrmLeadToRealtyLead, realtyLeadStatuses, realtyPropertyStatuses, realtyPropertyTypes, toRealtySlug } from '../../../utils/realty';
 
 type RealtyTab = 'overview' | 'properties' | 'leads' | 'ai' | 'settings';
@@ -101,6 +101,7 @@ const RealtyDashboard: React.FC = () => {
     const [editingProperty, setEditingProperty] = useState<Partial<RealtyProperty> | null>(null);
     const [amenitiesInput, setAmenitiesInput] = useState('');
     const [propertyImageUrls, setPropertyImageUrls] = useState<string[]>([]);
+    const [propertyImageAssets, setPropertyImageAssets] = useState<Record<string, Partial<RealtyImage>>>({});
     const [aiPropertyId, setAiPropertyId] = useState('');
     const [aiPrompt, setAiPrompt] = useState('');
     const [aiOutput, setAiOutput] = useState('');
@@ -156,6 +157,7 @@ const RealtyDashboard: React.FC = () => {
         setEditingProperty(draft);
         setAmenitiesInput('');
         setPropertyImageUrls([]);
+        setPropertyImageAssets({});
         setLocalWarning(null);
         setLocalError(null);
     };
@@ -164,20 +166,41 @@ const RealtyDashboard: React.FC = () => {
         setEditingProperty(property);
         setAmenitiesInput((property.amenities || []).join('\n'));
         setPropertyImageUrls((property.images || []).map(image => image.url).filter(Boolean));
+        setPropertyImageAssets(Object.fromEntries((property.images || []).filter(image => image.url).map(image => [image.url, image])));
         setLocalWarning(null);
         setLocalError(null);
     };
 
-    const updatePropertyImage = (index: number, url: string) => {
+    const updatePropertyImage = (index: number, url: string, asset?: Partial<RealtyImage>) => {
+        const normalizedUrl = url.trim();
         setPropertyImageUrls(prev => {
             const next = [...prev];
-            next[index] = url;
+            next[index] = normalizedUrl;
             return next;
         });
+        if (normalizedUrl || asset?.storagePath) {
+            setPropertyImageAssets(prev => ({
+                ...prev,
+                [normalizedUrl]: {
+                    ...prev[normalizedUrl],
+                    ...asset,
+                    url: normalizedUrl,
+                    position: index,
+                },
+            }));
+        }
     };
 
     const removePropertyImage = (index: number) => {
+        const removedUrl = propertyImageUrls[index];
         setPropertyImageUrls(prev => prev.filter((_, itemIndex) => itemIndex !== index));
+        if (removedUrl) {
+            setPropertyImageAssets(prev => {
+                const next = { ...prev };
+                delete next[removedUrl];
+                return next;
+            });
+        }
     };
 
     const addPropertyImageSlot = () => {
@@ -190,7 +213,20 @@ const RealtyDashboard: React.FC = () => {
         setLocalWarning(null);
         try {
             const nextSlug = editingProperty.slug || toRealtySlug(editingProperty.title || '');
-            const nextImages = cleanImageUrls(propertyImageUrls).map((url, index) => ({ id: `image-${index}`, url, position: index, altText: editingProperty.title || '', isPrimary: index === 0 }));
+            const existingImagesByUrl = new Map((editingProperty.images || []).filter(image => image.url).map(image => [image.url, image]));
+            const nextImages = cleanImageUrls(propertyImageUrls).map((url, index) => {
+                const asset = propertyImageAssets[url] || existingImagesByUrl.get(url) || {};
+                return {
+                    id: asset.id || `image-${index}`,
+                    url,
+                    storagePath: asset.storagePath || null,
+                    mediaType: asset.mediaType || 'image',
+                    position: index,
+                    altText: editingProperty.title || asset.altText || '',
+                    isPrimary: index === 0,
+                    metadata: asset.metadata || {},
+                };
+            });
             if (editingProperty.status === 'active') {
                 const requiredMissing = [
                     !editingProperty.title?.trim() ? t('realty.form.title') : '',
@@ -225,6 +261,7 @@ const RealtyDashboard: React.FC = () => {
             });
             setEditingProperty(null);
             setPropertyImageUrls([]);
+            setPropertyImageAssets({});
         } catch (err: any) {
             setLocalError(err.message || t('realty.errors.saveProperty'));
         }
@@ -315,6 +352,20 @@ const RealtyDashboard: React.FC = () => {
                                     label={t('realty.form.imageSlot', { index: index + 1 })}
                                     value={imageUrl}
                                     onChange={(url) => updatePropertyImage(index, url)}
+                                    onSelectAsset={(asset) => updatePropertyImage(index, asset.url || asset.downloadURL || imageUrl, {
+                                        id: asset.id || `image-${index}`,
+                                        url: asset.url || asset.downloadURL || imageUrl,
+                                        storagePath: asset.storagePath || null,
+                                        mediaType: asset.type?.startsWith('video/') ? 'video' : 'image',
+                                        altText: asset.name || editingProperty.title || '',
+                                        metadata: {
+                                            source: 'image-picker',
+                                            assetId: asset.id,
+                                            fileName: asset.name,
+                                            size: asset.size,
+                                            type: asset.type,
+                                        },
+                                    })}
                                     onRemove={() => removePropertyImage(index)}
                                     destination="user"
                                     hideUrlInput
