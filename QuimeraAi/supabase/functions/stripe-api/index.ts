@@ -61,6 +61,11 @@ const PUBLIC_ACTIONS = new Set([
   "storeUsers-resetPassword",
 ]);
 
+const SERVICE_ROLE_ACTIONS = new Set([
+  "syncStripeSubscription",
+  "syncStripeSubscriptions",
+]);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -70,15 +75,27 @@ serve(async (req) => {
     const { action, ...payload } = await req.json();
     const isPublicAction = PUBLIC_ACTIONS.has(action) || (action === "createCheckoutSession" && !payload.planId);
     const authHeader = req.headers.get("Authorization");
+    const bearerToken = authHeader?.replace("Bearer ", "") || "";
+    const isServiceRoleRequest = Boolean(
+      bearerToken &&
+      bearerToken === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") &&
+      SERVICE_ROLE_ACTIONS.has(action)
+    );
+    const syncSecret = Deno.env.get("STRIPE_SYNC_SECRET");
+    const isSyncSecretRequest = Boolean(
+      syncSecret &&
+      req.headers.get("x-stripe-sync-secret") === syncSecret &&
+      SERVICE_ROLE_ACTIONS.has(action)
+    );
+    const isTrustedServerRequest = isServiceRoleRequest || isSyncSecretRequest;
     let user: any = null;
 
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const { data, error: authError } = await supabase.auth.getUser(token);
+    if (bearerToken && !isTrustedServerRequest) {
+      const { data, error: authError } = await supabase.auth.getUser(bearerToken);
       if (!authError && data.user) user = data.user;
     }
 
-    if (!isPublicAction && !user) throw new Error("Invalid or missing user token");
+    if (!isPublicAction && !user && !isTrustedServerRequest) throw new Error("Invalid or missing user token");
     let result;
 
     switch (action) {
@@ -99,6 +116,10 @@ serve(async (req) => {
         break;
       case "getSubscriptionDetails":
         result = await getSubscriptionDetails(user.id, payload);
+        break;
+      case "syncStripeSubscription":
+      case "syncStripeSubscriptions":
+        result = await syncStripeSubscriptions(user?.id, isTrustedServerRequest, payload);
         break;
       case "createOrUpdatePlan":
         result = await createOrUpdatePlan(user.id, payload);
@@ -565,6 +586,156 @@ async function getSubscriptionDetails(userId: string, data: any) {
   };
 }
 
+async function syncStripeSubscriptions(userId: string | undefined, isServiceRoleRequest: boolean, data: any) {
+  if (!isServiceRoleRequest) {
+    if (!userId) throw new Error("Invalid or missing user token");
+    await requirePlatformAdmin(userId);
+  }
+
+  const targets = await resolveStripeSyncTargets(data);
+  if (targets.length === 0) {
+    throw new Error("No local Stripe subscriptions matched the sync request");
+  }
+
+  const results = [];
+  for (const target of targets) {
+    const stripeSubscription = await stripe.subscriptions.retrieve(target.stripe_subscription_id, {
+      expand: ["items.data.price.product"],
+    });
+    const tenantId = target.tenant_id || await resolveTenantIdFromStripeSubscription(stripeSubscription);
+    if (!tenantId) {
+      results.push({
+        stripeSubscriptionId: target.stripe_subscription_id,
+        success: false,
+        error: "Could not resolve tenant for Stripe subscription",
+      });
+      continue;
+    }
+
+    const before = await getLocalSubscription(tenantId);
+    await syncLocalSubscriptionFromStripe(tenantId, stripeSubscription);
+    const after = await getLocalSubscription(tenantId);
+
+    results.push({
+      tenantId,
+      stripeSubscriptionId: stripeSubscription.id,
+      success: true,
+      before: summarizeSubscriptionForSync(before),
+      after: summarizeSubscriptionForSync(after),
+    });
+  }
+
+  return {
+    success: true,
+    count: results.length,
+    results,
+  };
+}
+
+async function resolveStripeSyncTargets(data: any): Promise<Array<{ tenant_id: string | null; stripe_subscription_id: string }>> {
+  if (data.subscriptionId) {
+    const { data: local } = await supabase
+      .from("subscriptions")
+      .select("tenant_id, stripe_subscription_id")
+      .eq("stripe_subscription_id", data.subscriptionId)
+      .maybeSingle();
+
+    return [{
+      tenant_id: local?.tenant_id || null,
+      stripe_subscription_id: data.subscriptionId,
+    }];
+  }
+
+  let query = supabase
+    .from("subscriptions")
+    .select("tenant_id, stripe_subscription_id, status")
+    .not("stripe_subscription_id", "is", null);
+
+  if (data.tenantId) {
+    query = query.eq("tenant_id", data.tenantId);
+  } else if (data.email) {
+    const { data: user } = await supabase
+      .from("users")
+      .select("id")
+      .ilike("email", data.email)
+      .maybeSingle();
+    if (!user?.id) return [];
+
+    const { data: memberships, error } = await supabase
+      .from("tenant_members")
+      .select("tenant_id")
+      .eq("user_id", user.id);
+    if (error) throw error;
+
+    const tenantIds = (memberships || []).map((membership: any) => membership.tenant_id).filter(Boolean);
+    if (tenantIds.length === 0) return [];
+    query = query.in("tenant_id", tenantIds);
+  } else if (data.allActive) {
+    query = query.in("status", ["active", "trial", "trialing", "past_due", "incomplete"]);
+  } else {
+    throw new Error("Provide email, tenantId, subscriptionId, or allActive=true");
+  }
+
+  const { data: rows, error } = await query;
+  if (error) throw error;
+
+  return (rows || [])
+    .filter((row: any) => row.stripe_subscription_id)
+    .map((row: any) => ({
+      tenant_id: row.tenant_id,
+      stripe_subscription_id: row.stripe_subscription_id,
+    }));
+}
+
+async function resolveTenantIdFromStripeSubscription(subscription: Stripe.Subscription): Promise<string | null> {
+  const metadataTenantId = subscription.metadata?.tenantId;
+  if (metadataTenantId && await tenantExists(metadataTenantId)) return metadataTenantId;
+
+  const { data: bySub } = await supabase
+    .from("subscriptions")
+    .select("tenant_id")
+    .eq("stripe_subscription_id", subscription.id)
+    .maybeSingle();
+  if (bySub?.tenant_id) return bySub.tenant_id;
+
+  const customerId = String(subscription.customer);
+  const { data: byCustomer } = await supabase
+    .from("subscriptions")
+    .select("tenant_id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle();
+  return byCustomer?.tenant_id || null;
+}
+
+async function tenantExists(tenantId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("tenants")
+    .select("id")
+    .eq("id", tenantId)
+    .maybeSingle();
+
+  return Boolean(data?.id);
+}
+
+function summarizeSubscriptionForSync(subscription: any) {
+  const usage = subscription?.ai_credits_usage || {};
+  return subscription
+    ? {
+      planId: subscription.plan_id,
+      status: subscription.status,
+      billingCycle: subscription.billing_cycle,
+      currentPeriodStart: subscription.current_period_start,
+      currentPeriodEnd: subscription.current_period_end,
+      creditsIncluded: usage.creditsIncluded,
+      creditsUsed: usage.creditsUsed,
+      creditsRemaining: usage.creditsRemaining,
+      planCreditsIncluded: usage.planCreditsIncluded,
+      usagePlanId: usage.planId,
+      lastUpdated: usage.lastUpdated,
+    }
+    : null;
+}
+
 async function updateSubscription(userId: string, data: any) {
   const { tenantId, newPlanId, billingCycle = "monthly" } = data;
   if (!newPlanId) throw new Error("newPlanId is required");
@@ -666,6 +837,7 @@ async function syncLocalSubscriptionFromStripe(tenantId: string, subscription: S
         stripeSubscriptionId: subscription.id,
         currentPeriodEnd: row.current_period_end,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        subscriptionStatus: row.status,
       },
       updated_at: new Date().toISOString(),
     })
@@ -692,7 +864,12 @@ async function inferPlanId(subscription: Stripe.Subscription): Promise<string | 
 
   if (byAnnualPrice?.id) return byAnnualPrice.id;
 
-  const productId = price.product;
+  if (await planExists(price.metadata?.planId)) return price.metadata.planId;
+
+  const expandedProduct = typeof price.product === "object" && price.product && !("deleted" in price.product)
+    ? price.product as Stripe.Product
+    : null;
+  const productId = typeof price.product === "string" ? price.product : expandedProduct?.id;
   if (!productId || typeof productId !== "string") return null;
 
   const { data } = await supabase
@@ -701,7 +878,32 @@ async function inferPlanId(subscription: Stripe.Subscription): Promise<string | 
     .eq("stripe_product_id", productId)
     .maybeSingle();
 
-  return data?.id || null;
+  if (data?.id) return data.id;
+
+  if (await planExists(expandedProduct?.metadata?.planId)) return expandedProduct!.metadata.planId;
+
+  const product = await stripe.products.retrieve(productId);
+  if (!product.deleted && await planExists(product.metadata?.planId)) {
+    return product.metadata.planId;
+  }
+
+  return null;
+}
+
+async function planExists(planId?: string | null): Promise<boolean> {
+  if (!planId) return false;
+
+  const { data, error } = await supabase
+    .from("subscription_plans")
+    .select("id")
+    .eq("id", planId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn(`[stripe-api] could not verify plan ${planId}:`, error.message);
+  }
+
+  return Boolean(data?.id || FALLBACK_PLAN_CREDIT_LIMITS[planId] !== undefined);
 }
 
 function shouldResetCreditsForPeriod(existing: any, subscription: Stripe.Subscription) {

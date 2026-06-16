@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
-import { AiAssistantConfig, Project } from '../../types';
+import { AiAssistantConfig, Project, AI_CREDIT_COSTS, type AiCreditOperation } from '../../types';
 import { useAuth } from '../core/AuthContext';
 import { getGoogleGenAI, syncApiKeyFromAiStudio, setCachedApiKey, fetchGoogleApiKey, getCachedApiKey } from '../../utils/genAiClient';
 import { generateImageViaProxy, generateContentViaProxy, extractTextFromResponse, shouldUseProxy } from '../../utils/geminiProxyClient';
@@ -98,6 +98,16 @@ const defaultAiAssistantConfig: AiAssistantConfig = {
     enableLiveVoice: false,
     voiceName: 'Zephyr'
 };
+
+function getImageCreditOperation(options?: {
+    model?: string;
+    resolution?: '1K' | '2K' | '4K';
+}): AiCreditOperation {
+    if (options?.resolution === '4K') return 'image_generation_ultra';
+    const model = options?.model?.toLowerCase() || '';
+    if (model.includes('fast')) return 'image_generation_fast';
+    return 'image_generation';
+}
 
 export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user, currentTenant } = useAuth();
@@ -563,6 +573,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         await logApiCall({
             endpoint: 'openrouter/videos',
             model: options.model,
+            feature: 'video_generation',
             promptTokens: prompt.length,
             completionTokens: 0,
             totalTokens: prompt.length,
@@ -648,6 +659,18 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         const startTime = Date.now();
 
         try {
+            const destination = options?.destination || 'user';
+            const shouldChargeCredits = destination === 'user';
+            const tenantId = shouldChargeCredits
+                ? await resolveProjectTenantId(options?.projectId, options?.tenantId)
+                : (options?.tenantId || null);
+            const creditOperation = getImageCreditOperation(options);
+            const imageCredits = AI_CREDIT_COSTS[creditOperation];
+
+            if (shouldChargeCredits && (!tenantId || !user?.id)) {
+                throw new Error('No se pudo validar el tenant para consumir créditos de imagen.');
+            }
+
             // Build enhanced prompt
             let enhancedPrompt = prompt;
             const hasRefs = (options?.referenceImages?.length ?? 0) > 0;
@@ -756,6 +779,22 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                         depthOfField: options?.depthOfField,
                         // Visual Identity Kit
                         aiPromptHints: options?.aiPromptHints,
+                        billing: shouldChargeCredits ? {
+                            tenantId,
+                            projectId: options?.projectId,
+                            userId: user?.id,
+                            operation: creditOperation,
+                            creditsUsed: imageCredits,
+                            description: `Generación de imagen (${options?.model || 'gemini-3.1-flash-image-preview'})`,
+                            metadata: {
+                                destination,
+                                resolution: options?.resolution || '1K',
+                                aspect_ratio: options?.aspectRatio,
+                                generation_context: options?.generationContext,
+                                has_reference_images: hasRefs,
+                                reference_images_count: options?.referenceImages?.length || 0,
+                            },
+                        } : { skip: true },
                     },
                     options?.projectId
                 );
@@ -763,6 +802,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                 await logApiCall({
                     endpoint: 'imagen/generate',
                     model: options?.model || 'imagen-4.0-nano-banana-002',
+                    feature: 'image_generation',
                     promptTokens: enhancedPrompt.length,
                     completionTokens: 0,
                     totalTokens: enhancedPrompt.length,
@@ -789,7 +829,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                         filename,
                         result.mimeType || 'image/jpeg',
                         enhancedPrompt,
-                        options
+                        { ...options, tenantId }
                     );
                 } catch (uploadError) {
                     console.error('[AIContext] Failed to upload generated image to Supabase, falling back to base64:', uploadError);
@@ -815,6 +855,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             await logApiCall({
                 endpoint: 'gemini/generateContent',
                 model: 'gemini-2.5-flash',
+                feature: 'image_generation',
                 promptTokens: enhancedPrompt.length,
                 completionTokens: 0,
                 totalTokens: enhancedPrompt.length,
@@ -837,7 +878,32 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                             const blob = new Blob([new Uint8Array(byteNumbers)], { type: mimeType });
                             const ext = mimeType.split('/')[1] || 'jpeg';
                             const filename = `ai-gen-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
-                            return await uploadGeneratedImageBlob(blob, filename, mimeType, enhancedPrompt, options);
+                            const imageUrl = await uploadGeneratedImageBlob(blob, filename, mimeType, enhancedPrompt, { ...options, tenantId });
+                            if (shouldChargeCredits && tenantId && user?.id) {
+                                const creditResult = await consumeCreditsWithPoolDetection(
+                                    tenantId,
+                                    user.id,
+                                    creditOperation,
+                                    {
+                                        projectId: options?.projectId,
+                                        model: options?.model || 'gemini-2.5-flash',
+                                        customCredits: imageCredits,
+                                        description: `Generación de imagen (${options?.model || 'gemini-2.5-flash'})`,
+                                        metadata: {
+                                            destination,
+                                            resolution: options?.resolution || '1K',
+                                            aspect_ratio: options?.aspectRatio,
+                                            generation_context: options?.generationContext,
+                                            direct_api_fallback: true,
+                                            saved_image_url: imageUrl,
+                                        },
+                                    }
+                                );
+                                if (!creditResult.success) {
+                                    throw new Error(creditResult.error || 'No se pudieron consumir los créditos de la generación de imagen.');
+                                }
+                            }
+                            return imageUrl;
                         } catch (uploadError) {
                             console.error('[AIContext] Failed to upload generated image to Supabase, falling back to base64:', uploadError);
                             return `data:${mimeType};base64,${part.inlineData.data}`;
@@ -851,6 +917,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             await logApiCall({
                 endpoint: 'imagen/generate',
                 model: 'imagen-4.0-nano-banana-002',
+                feature: 'image_generation',
                 promptTokens: prompt.length,
                 completionTokens: 0,
                 totalTokens: prompt.length,
@@ -885,6 +952,8 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             try {
                 const imageUrl = await generateImage(prompt, {
                     themeColors: `${project.theme.colorPrimary}, ${project.theme.colorSecondary}`,
+                    projectId: project.id,
+                    tenantId: (project as any).tenantId || (project as any).tenant_id || currentTenant || null,
                 });
                 generatedImages[path] = imageUrl;
                 onProgress(i + 1, total, path, imageUrl);
@@ -1004,6 +1073,7 @@ Enhanced prompt:`;
             await logApiCall({
                 endpoint: 'gemini/generateContent',
                 model: 'gemini-2.5-flash',
+                feature: 'prompt_enhancement',
                 promptTokens: systemPrompt.length,
                 completionTokens: 100,
                 totalTokens: systemPrompt.length + 100,

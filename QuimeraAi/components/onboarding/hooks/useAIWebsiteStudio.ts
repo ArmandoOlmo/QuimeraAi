@@ -1068,7 +1068,18 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                 text.trim(),
                 systemPrompt,
                 MODEL_CHAT,
-                { temperature: 1.0, thinkingLevel: 'medium', maxOutputTokens: 8192 },
+                {
+                    temperature: 1.0,
+                    thinkingLevel: 'medium',
+                    maxOutputTokens: 8192,
+                    billing: currentTenantId && user?.id ? {
+                        tenantId: currentTenantId,
+                        userId: user.id,
+                        operation: 'ai_assistant_request',
+                        description: 'AI Website Studio chat',
+                        metadata: { feature: 'ai-website-studio-chat' },
+                    } : { skip: true },
+                },
                 user?.id
             );
 
@@ -1096,7 +1107,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         } finally {
             setIsThinking(false);
         }
-    }, [isThinking, user, buildSystemPrompt, extractAndUpdateBrief]);
+    }, [isThinking, user, currentTenantId, buildSystemPrompt, extractAndUpdateBrief]);
 
     // Auto-scroll
     useEffect(() => {
@@ -1369,7 +1380,17 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                 contentPrompt,
                 'Generate complete website JSON data. Return ONLY valid JSON.',
                 MODEL_CHAT,
-                { temperature: 0.7, maxOutputTokens: 32768 },
+                {
+                    temperature: 0.7,
+                    maxOutputTokens: 32768,
+                    billing: currentTenantId ? {
+                        tenantId: currentTenantId,
+                        userId: user.id,
+                        operation: 'onboarding_complete',
+                        description: 'AI Website Studio content generation',
+                        metadata: { feature: 'ai-website-studio-content', project_id: finalProjectId },
+                    } : { skip: true },
+                },
                 user.id
             );
 

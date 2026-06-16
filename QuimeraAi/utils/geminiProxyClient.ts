@@ -59,10 +59,24 @@ export interface GeminiProxyConfig {
     topK?: number;
     topP?: number;
     maxOutputTokens?: number;
+    billing?: AiProxyBillingOptions;
     safetySettings?: Array<{
         category: string;
         threshold: string;
     }>;
+}
+
+export interface AiProxyBillingOptions {
+    tenantId?: string | null;
+    projectId?: string;
+    userId?: string;
+    operation?: string;
+    creditsUsed?: number;
+    credits?: number;
+    customCredits?: number;
+    description?: string;
+    metadata?: Record<string, any>;
+    skip?: boolean;
 }
 
 export interface GeminiProxyResponse {
@@ -132,6 +146,11 @@ function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function splitProxyConfig<T extends GeminiProxyConfig>(config: T): { modelConfig: Omit<T, 'billing'>; billing?: AiProxyBillingOptions } {
+    const { billing, ...modelConfig } = config;
+    return { modelConfig, billing };
+}
+
 /**
  * Generate content using the Gemini proxy
  * Includes automatic fallback from gemini-3 to gemini-2.5 on capacity errors
@@ -149,6 +168,7 @@ export async function generateContentViaProxy(
     const MAX_RETRIES = 3;
     // Apply Gemini 3 optimizations (temperature = 1.0)
     const optimizedConfig = applyGemini3Optimizations(model, config);
+    const { modelConfig, billing } = splitProxyConfig(optimizedConfig);
 
     try {
         const body: Record<string, any> = {
@@ -156,8 +176,9 @@ export async function generateContentViaProxy(
             prompt,
             userId,
             model,
-            config: optimizedConfig
+            config: modelConfig,
         };
+        if (billing) body.billing = billing;
         if (tools && tools.length > 0) body.tools = tools;
 
         const response = await callAiProxy(body);
@@ -250,6 +271,7 @@ export async function generateChatContentViaProxy(
     const MAX_RETRIES = 3;
     // Apply Gemini 3 optimizations (temperature = 1.0)
     const optimizedConfig = applyGemini3Optimizations(model, config);
+    const { modelConfig, billing } = splitProxyConfig(optimizedConfig);
 
     try {
         const body: Record<string, any> = {
@@ -260,10 +282,11 @@ export async function generateChatContentViaProxy(
             userId,
             model,
             config: {
-                ...optimizedConfig,
+                ...modelConfig,
                 thinkingLevel: config.thinkingLevel,
             }
         };
+        if (billing) body.billing = billing;
 
         const response = await callAiProxy(body);
 
@@ -373,6 +396,7 @@ export async function generateMultimodalContentViaProxy(
 ): Promise<GeminiProxyResponse> {
     // Apply Gemini 3 optimizations (temperature = 1.0)
     const optimizedConfig = applyGemini3Optimizations(model, config);
+    const { modelConfig, billing } = splitProxyConfig(optimizedConfig);
 
     try {
         // Validate images
@@ -386,8 +410,9 @@ export async function generateMultimodalContentViaProxy(
             images,  // Send images array to proxy
             userId,
             model,
-            config: optimizedConfig
+            config: modelConfig
         };
+        if (billing) body.billing = billing;
         if (tools && tools.length > 0) body.tools = tools;
 
         const response = await callAiProxy(body);
@@ -507,6 +532,7 @@ export interface ImageGenerationConfig {
     aspectRatio?: string;
     style?: string;
     resolution?: '1K' | '2K' | '4K';
+    billing?: AiProxyBillingOptions;
     // Quimera AI specific options
     model?: string;
     thinkingLevel?: string;
@@ -589,6 +615,7 @@ export async function generateImageViaProxy(
                 images: inlineReferenceImages && inlineReferenceImages.length > 0 ? inlineReferenceImages : undefined,
                 // Visual Identity Kit hints
                 aiPromptHints: config.aiPromptHints,
+                billing: config.billing,
                 // Visual controls
                 config: {
                     lighting: config.lighting,
@@ -734,8 +761,6 @@ export function shouldUseProxy(): boolean {
     // This ensures the API key is NEVER exposed in the browser
     return true;
 }
-
-
 
 
 

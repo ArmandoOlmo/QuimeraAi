@@ -305,7 +305,12 @@ async function inferPlanId(subscription: Stripe.Subscription): Promise<string | 
 
   if (byAnnualPrice?.id) return byAnnualPrice.id;
 
-  const productId = price.product;
+  if (await planExists(price.metadata?.planId)) return price.metadata.planId;
+
+  const expandedProduct = typeof price.product === "object" && price.product && !("deleted" in price.product)
+    ? price.product as Stripe.Product
+    : null;
+  const productId = typeof price.product === "string" ? price.product : expandedProduct?.id;
   if (!productId || typeof productId !== "string") return null;
 
   const { data } = await supabase
@@ -314,7 +319,32 @@ async function inferPlanId(subscription: Stripe.Subscription): Promise<string | 
     .eq("stripe_product_id", productId)
     .maybeSingle();
 
-  return data?.id || null;
+  if (data?.id) return data.id;
+
+  if (await planExists(expandedProduct?.metadata?.planId)) return expandedProduct!.metadata.planId;
+
+  const product = await stripe.products.retrieve(productId);
+  if (!product.deleted && await planExists(product.metadata?.planId)) {
+    return product.metadata.planId;
+  }
+
+  return null;
+}
+
+async function planExists(planId?: string | null): Promise<boolean> {
+  if (!planId) return false;
+
+  const { data, error } = await supabase
+    .from("subscription_plans")
+    .select("id")
+    .eq("id", planId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn(`[stripe-webhook] could not verify plan ${planId}:`, error.message);
+  }
+
+  return Boolean(data?.id || FALLBACK_PLAN_CREDIT_LIMITS[planId] !== undefined);
 }
 
 async function getLocalSubscription(tenantId: string) {

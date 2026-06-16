@@ -21,6 +21,28 @@ const CURATED_VIDEO_WHITELIST = [
     'google/gemini-omni-flash',
 ];
 
+const AI_CREDIT_COSTS: Record<string, number> = {
+    onboarding_complete: 60,
+    design_plan: 6,
+    content_generation: 1,
+    image_generation: 4,
+    image_generation_fast: 2,
+    image_generation_ultra: 8,
+    video_generation_seedance: 121,
+    video_generation_veo: 320,
+    video_generation_omni: 480,
+    chatbot_message: 1,
+    ai_assistant_request: 1,
+    ai_assistant_complex: 3,
+    product_description: 1,
+    seo_optimization: 2,
+    email_generation: 1,
+    translation: 1,
+};
+
+const BILLABLE_OPERATIONS = new Set(Object.keys(AI_CREDIT_COSTS));
+const SHARED_POOL_PLAN_IDS = new Set(['agency_starter', 'agency_pro', 'agency_scale']);
+
 function openRouterHeaders(): Record<string, string> {
     return {
         'Content-Type': 'application/json',
@@ -577,8 +599,443 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
+function httpError(message: string, status: number, details?: Record<string, unknown>): Error {
+    return Object.assign(new Error(message), { status, details });
+}
+
 function cleanString(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
+}
+
+function cleanUuid(value: unknown): string | null {
+    const cleaned = cleanString(value);
+    return isValidUuid(cleaned) ? cleaned : null;
+}
+
+function readRecordField(record: Record<string, unknown>, keys: string[]): unknown {
+    for (const key of keys) {
+        if (record[key] != null) return record[key];
+    }
+    return undefined;
+}
+
+function getBillingRecord(payload: Record<string, unknown>): Record<string, unknown> {
+    return isPlainRecord(payload.billing) ? payload.billing : {};
+}
+
+function shouldSkipBilling(payload: Record<string, unknown>): boolean {
+    const billing = getBillingRecord(payload);
+    return billing.skip === true || billing.enabled === false || payload.skipBilling === true;
+}
+
+function resolveCreditOperation(payload: Record<string, unknown>, isImageGen: boolean): string {
+    const billing = getBillingRecord(payload);
+    const explicitOperation = cleanString(readRecordField(billing, ['operation', 'creditOperation']));
+    if (BILLABLE_OPERATIONS.has(explicitOperation)) return explicitOperation;
+
+    if (isImageGen) {
+        const resolution = cleanString(payload.resolution || (isPlainRecord(payload.config) ? payload.config.resolution : undefined)).toUpperCase();
+        if (resolution === '4K') return 'image_generation_ultra';
+        return 'image_generation';
+    }
+
+    return 'content_generation';
+}
+
+function resolveCreditsUsed(payload: Record<string, unknown>, operation: string): number {
+    const billing = getBillingRecord(payload);
+    const explicitCredits = Number(readRecordField(billing, ['creditsUsed', 'credits', 'customCredits']));
+    if (Number.isFinite(explicitCredits) && explicitCredits > 0) {
+        return Math.ceil(explicitCredits);
+    }
+    return AI_CREDIT_COSTS[operation] || 1;
+}
+
+function mergeBillingMetadata(
+    payload: Record<string, unknown>,
+    operation: string,
+    creditsUsed: number,
+    model: string,
+    projectId: string | null,
+): Record<string, unknown> {
+    const billing = getBillingRecord(payload);
+    const billingMetadata = isPlainRecord(billing.metadata) ? billing.metadata : {};
+    const payloadMetadata = isPlainRecord(payload.metadata) ? payload.metadata : {};
+
+    return {
+        ...payloadMetadata,
+        ...billingMetadata,
+        project_id: projectId || cleanString(readRecordField(billing, ['projectId', 'project_id'])) || undefined,
+        model,
+        proxy_operation: operation,
+        quimera_credits: creditsUsed,
+        billing_source: 'ai-proxy',
+    };
+}
+
+async function resolveTenantIdFromProject(
+    admin: ReturnType<typeof createClient>,
+    projectId: string | null,
+): Promise<string | null> {
+    if (!projectId || !isValidUuid(projectId)) return null;
+
+    const { data, error } = await admin
+        .from('projects')
+        .select('tenant_id')
+        .eq('id', projectId)
+        .maybeSingle();
+
+    if (error) {
+        console.error('[ai-proxy] billing project tenant lookup error:', error);
+        throw httpError('Could not resolve project billing tenant', 500);
+    }
+
+    return cleanUuid(data?.tenant_id);
+}
+
+async function resolvePrimaryTenantForUser(
+    admin: ReturnType<typeof createClient>,
+    userId: string,
+): Promise<string | null> {
+    const { data, error } = await admin
+        .from('tenant_members')
+        .select('tenant_id')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+    if (error) {
+        console.error('[ai-proxy] billing primary tenant lookup error:', error);
+        throw httpError('Could not resolve user billing tenant', 500);
+    }
+
+    return cleanUuid(data?.tenant_id);
+}
+
+async function resolveCreditsPoolTenant(
+    admin: ReturnType<typeof createClient>,
+    tenantId: string,
+): Promise<{ poolTenantId: string; isSharedPool: boolean; agencyName?: string }> {
+    const { data: subscription } = await admin
+        .from('subscriptions')
+        .select('ai_credits_usage')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+
+    const parentTenantId = cleanUuid(subscription?.ai_credits_usage?.parentTenantId);
+    if (parentTenantId) {
+        const { data: parentTenant } = await admin
+            .from('tenants')
+            .select('name')
+            .eq('id', parentTenantId)
+            .maybeSingle();
+
+        return {
+            poolTenantId: parentTenantId,
+            isSharedPool: true,
+            agencyName: cleanString(parentTenant?.name) || undefined,
+        };
+    }
+
+    const { data: tenant, error: tenantError } = await admin
+        .from('tenants')
+        .select('owner_tenant_id')
+        .eq('id', tenantId)
+        .maybeSingle();
+
+    if (tenantError) {
+        console.error('[ai-proxy] billing tenant pool lookup error:', tenantError);
+        throw httpError('Could not resolve credits pool', 500);
+    }
+
+    const ownerTenantId = cleanUuid(tenant?.owner_tenant_id);
+    if (!ownerTenantId) return { poolTenantId: tenantId, isSharedPool: false };
+
+    const { data: parentTenant, error: parentError } = await admin
+        .from('tenants')
+        .select('name, subscription_plan')
+        .eq('id', ownerTenantId)
+        .maybeSingle();
+
+    if (parentError) {
+        console.error('[ai-proxy] billing parent tenant lookup error:', parentError);
+        throw httpError('Could not resolve credits pool parent', 500);
+    }
+
+    if (parentTenant && SHARED_POOL_PLAN_IDS.has(cleanString(parentTenant.subscription_plan))) {
+        return {
+            poolTenantId: ownerTenantId,
+            isSharedPool: true,
+            agencyName: cleanString(parentTenant.name) || undefined,
+        };
+    }
+
+    return { poolTenantId: tenantId, isSharedPool: false };
+}
+
+async function ensureTenantMembership(
+    admin: ReturnType<typeof createClient>,
+    tenantId: string,
+    userId: string,
+): Promise<void> {
+    const { data, error } = await admin
+        .from('tenant_members')
+        .select('tenant_id')
+        .eq('tenant_id', tenantId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (error) {
+        console.error('[ai-proxy] billing membership error:', error);
+        throw httpError('Could not validate tenant membership', 500);
+    }
+
+    if (!data) {
+        throw httpError('User is not a member of this tenant', 403);
+    }
+}
+
+async function loadCreditsUsage(
+    admin: ReturnType<typeof createClient>,
+    tenantId: string,
+): Promise<Record<string, unknown> | null> {
+    const { data, error } = await admin
+        .from('subscriptions')
+        .select('ai_credits_usage')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+
+    if (error) {
+        console.error('[ai-proxy] billing subscription error:', error);
+        throw httpError('Could not load credits usage', 500);
+    }
+
+    return isPlainRecord(data?.ai_credits_usage) ? data.ai_credits_usage : null;
+}
+
+async function resolveProxyBillingContext(
+    payload: Record<string, unknown>,
+    req: Request,
+    isImageGen: boolean,
+    model: string,
+): Promise<Record<string, unknown> | null> {
+    if (shouldSkipBilling(payload)) return null;
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
+
+    const billing = getBillingRecord(payload);
+    const hasExplicitBilling = Object.keys(billing).length > 0;
+    const projectId = cleanUuid(readRecordField(billing, ['projectId', 'project_id'])) ||
+        cleanUuid(payload.projectId) ||
+        cleanUuid(payload.project_id);
+    const explicitTenantId = cleanUuid(readRecordField(billing, ['tenantId', 'tenant_id'])) ||
+        cleanUuid(payload.tenantId) ||
+        cleanUuid(payload.tenant_id);
+    const hasBillableIdentifier = Boolean(explicitTenantId || projectId);
+
+    if (!hasExplicitBilling && !hasBillableIdentifier) return null;
+
+    const authUserId = await getAuthenticatedUserId(req);
+    if (!authUserId) {
+        if (hasExplicitBilling) {
+            throw httpError('Unauthorized billable AI request', 401);
+        }
+        return null;
+    }
+
+    const requestedUserId = cleanUuid(readRecordField(billing, ['userId', 'user_id'])) || cleanUuid(payload.userId);
+    if (requestedUserId && requestedUserId !== authUserId) {
+        throw httpError('Billing user does not match authenticated user', 403);
+    }
+
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+        auth: { persistSession: false },
+    });
+
+    let tenantId = explicitTenantId || await resolveTenantIdFromProject(admin, projectId);
+    if (!tenantId && hasExplicitBilling) {
+        tenantId = await resolvePrimaryTenantForUser(admin, authUserId);
+    }
+
+    if (!tenantId) return null;
+
+    const operation = resolveCreditOperation(payload, isImageGen);
+    const creditsUsed = resolveCreditsUsed(payload, operation);
+    const description = cleanString(readRecordField(billing, ['description'])) ||
+        (isImageGen ? 'Generación de imagen' : 'Generación de contenido IA');
+    const metadata = mergeBillingMetadata(payload, operation, creditsUsed, model, projectId);
+
+    return {
+        admin,
+        tenantId,
+        userId: authUserId,
+        operation,
+        creditsUsed,
+        description,
+        metadata,
+    };
+}
+
+async function assertCreditsAvailable(billingContext: Record<string, unknown>): Promise<void> {
+    const admin = billingContext.admin as ReturnType<typeof createClient>;
+    const tenantId = billingContext.tenantId as string;
+    const creditsUsed = Number(billingContext.creditsUsed);
+
+    await ensureTenantMembership(admin, tenantId, billingContext.userId as string);
+    const pool = await resolveCreditsPoolTenant(admin, tenantId);
+    const currentUsage = await loadCreditsUsage(admin, pool.poolTenantId);
+
+    if (currentUsage && typeof currentUsage.creditsRemaining === 'number' && currentUsage.creditsRemaining < creditsUsed) {
+        throw httpError('CREDITS_EXHAUSTED', 402, {
+            creditsRequired: creditsUsed,
+            creditsRemaining: currentUsage.creditsRemaining,
+            tenantId: pool.poolTenantId,
+        });
+    }
+}
+
+async function consumeResolvedCredits(billingContext: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const admin = billingContext.admin as ReturnType<typeof createClient>;
+    const requestedTenantId = billingContext.tenantId as string;
+    const userId = billingContext.userId as string;
+    const operation = billingContext.operation as string;
+    const creditsUsed = Number(billingContext.creditsUsed);
+    const description = billingContext.description as string;
+    const metadata = isPlainRecord(billingContext.metadata) ? billingContext.metadata : {};
+
+    await ensureTenantMembership(admin, requestedTenantId, userId);
+    const pool = await resolveCreditsPoolTenant(admin, requestedTenantId);
+    const billingTenantId = pool.poolTenantId;
+    const currentUsage = await loadCreditsUsage(admin, billingTenantId);
+
+    if (currentUsage && typeof currentUsage.creditsRemaining === 'number' && currentUsage.creditsRemaining < creditsUsed) {
+        throw httpError('CREDITS_EXHAUSTED', 402, {
+            creditsRequired: creditsUsed,
+            creditsRemaining: currentUsage.creditsRemaining,
+            tenantId: billingTenantId,
+        });
+    }
+
+    const txMetadata: Record<string, unknown> = {
+        ...metadata,
+        requested_tenant_id: requestedTenantId,
+        used_shared_pool: pool.isSharedPool,
+    };
+    if (pool.isSharedPool) {
+        txMetadata.sub_client_tenant_id = requestedTenantId;
+        txMetadata.pool_agency_name = pool.agencyName;
+    }
+
+    const { data: transaction, error: txError } = await admin
+        .from('ai_credits_transactions')
+        .insert({
+            tenant_id: billingTenantId,
+            user_id: userId,
+            operation,
+            credits_used: creditsUsed,
+            description,
+            metadata: txMetadata,
+        })
+        .select('id')
+        .single();
+
+    if (txError) {
+        console.error('[ai-proxy] billing transaction error:', txError);
+        throw httpError('Could not create credits transaction', 500);
+    }
+
+    if (!currentUsage) {
+        return {
+            transactionId: transaction.id,
+            creditsUsed,
+            creditsRemaining: 0,
+            tenantId: billingTenantId,
+            usedSharedPool: pool.isSharedPool,
+        };
+    }
+
+    const now = Date.now();
+    const today = new Date().toISOString().split('T')[0];
+    const usageByOperation = { ...(isPlainRecord(currentUsage.usageByOperation) ? currentUsage.usageByOperation : {}) };
+    usageByOperation[operation] = Number(usageByOperation[operation] || 0) + creditsUsed;
+
+    let dailyUsage = Array.isArray(currentUsage.dailyUsage) ? [...currentUsage.dailyUsage] : [];
+    const todayEntry = dailyUsage.find((item: { date?: string }) => item.date === today);
+    if (todayEntry) {
+        todayEntry.credits = Number(todayEntry.credits || 0) + creditsUsed;
+    } else {
+        dailyUsage.push({ date: today, credits: creditsUsed });
+        if (dailyUsage.length > 30) dailyUsage = dailyUsage.slice(-30);
+    }
+
+    const creditsIncluded = Number(currentUsage.creditsIncluded || 0);
+    const newCreditsUsed = Number(currentUsage.creditsUsed || 0) + creditsUsed;
+    const updatedUsage: Record<string, unknown> = {
+        ...currentUsage,
+        creditsUsed: newCreditsUsed,
+        creditsRemaining: Math.max(0, creditsIncluded - newCreditsUsed),
+        creditsOverage: Math.max(0, newCreditsUsed - creditsIncluded),
+        usageByOperation,
+        dailyUsage,
+        lastUpdated: { seconds: Math.floor(now / 1000), nanoseconds: 0 },
+    };
+
+    const projectId = cleanUuid(metadata.project_id);
+    if (projectId) {
+        const usageByProject = { ...(isPlainRecord(currentUsage.usageByProject) ? currentUsage.usageByProject : {}) };
+        const projectEntry = isPlainRecord(usageByProject[projectId]) ? usageByProject[projectId] as Record<string, unknown> : { creditsUsed: 0 };
+        updatedUsage.usageByProject = {
+            ...usageByProject,
+            [projectId]: {
+                ...projectEntry,
+                creditsUsed: Number(projectEntry.creditsUsed || 0) + creditsUsed,
+                lastUsed: { seconds: Math.floor(now / 1000), nanoseconds: 0 },
+            },
+        };
+    }
+
+    if (pool.isSharedPool && requestedTenantId !== billingTenantId) {
+        const { data: subClient } = await admin
+            .from('tenants')
+            .select('name')
+            .eq('id', requestedTenantId)
+            .maybeSingle();
+
+        const subClientsUsage = { ...(isPlainRecord(currentUsage.subClientsUsage) ? currentUsage.subClientsUsage : {}) };
+        const subClientEntry = isPlainRecord(subClientsUsage[requestedTenantId])
+            ? subClientsUsage[requestedTenantId] as Record<string, unknown>
+            : { tenantName: cleanString(subClient?.name) || 'Unknown', creditsUsed: 0 };
+
+        updatedUsage.isAgencyPool = true;
+        updatedUsage.subClientsUsage = {
+            ...subClientsUsage,
+            [requestedTenantId]: {
+                ...subClientEntry,
+                tenantName: cleanString(subClientEntry.tenantName) || cleanString(subClient?.name) || 'Unknown',
+                creditsUsed: Number(subClientEntry.creditsUsed || 0) + creditsUsed,
+                lastUpdated: { seconds: Math.floor(now / 1000), nanoseconds: 0 },
+            },
+        };
+    }
+
+    const { error: updateError } = await admin
+        .from('subscriptions')
+        .update({ ai_credits_usage: updatedUsage })
+        .eq('tenant_id', billingTenantId);
+
+    if (updateError) {
+        console.error('[ai-proxy] billing usage update error:', updateError);
+        throw httpError('Could not update credits usage', 500);
+    }
+
+    return {
+        transactionId: transaction.id,
+        creditsUsed,
+        creditsRemaining: Number(updatedUsage.creditsRemaining || 0),
+        tenantId: billingTenantId,
+        requestedTenantId,
+        usedSharedPool: pool.isSharedPool,
+    };
 }
 
 function cleanStringArray(value: unknown): string[] {
@@ -1198,6 +1655,10 @@ serve(async (req) => {
         const temperature = config.temperature ?? 0.7;
         const maxTokens = config.maxOutputTokens ?? 8192;
         const isImageGen = isImageModel(model);
+        const billingContext = await resolveProxyBillingContext(payload, req, isImageGen, orModel);
+        if (billingContext) {
+            await assertCreditsAvailable(billingContext);
+        }
 
         const messages: Array<{ role: string; content: string | any[] }> = [];
 
@@ -1339,6 +1800,8 @@ serve(async (req) => {
                 extractedImage = parts[1]; // Remove data URL prefix for consistency
             }
 
+            const billingResult = billingContext ? await consumeResolvedCredits(billingContext) : null;
+
             return new Response(
                 JSON.stringify({
                     success: true,
@@ -1346,7 +1809,8 @@ serve(async (req) => {
                     mimeType,
                     metadata: {
                         model: orModel,
-                        provider: 'openrouter'
+                        provider: 'openrouter',
+                        billing: billingResult,
                     }
                 }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -1388,6 +1852,11 @@ serve(async (req) => {
             text: text
         };
 
+        const billingResult = billingContext ? await consumeResolvedCredits(billingContext) : null;
+        if (billingResult) {
+            responseBody.metadata.billing = billingResult;
+        }
+
         return new Response(
             JSON.stringify(responseBody),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -1395,9 +1864,15 @@ serve(async (req) => {
 
     } catch (error) {
         console.error('Error handling AI proxy request:', error);
+        const status = typeof (error as { status?: unknown })?.status === 'number'
+            ? (error as { status: number }).status
+            : 400;
+        const details = isPlainRecord((error as { details?: unknown })?.details)
+            ? (error as { details: Record<string, unknown> }).details
+            : undefined;
         return new Response(
-            JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error', ...(details || {}) }),
+            { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
     }
 })
