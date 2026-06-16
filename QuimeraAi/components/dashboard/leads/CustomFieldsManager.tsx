@@ -1,9 +1,32 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LeadCustomField } from '../../../types';
-import { Plus, X, Settings, Save, Sparkles } from 'lucide-react';
+import {
+    BriefcaseBusiness,
+    CalendarDays,
+    Car,
+    Database,
+    Dumbbell,
+    GraduationCap,
+    Hammer,
+    Hash,
+    HeartPulse,
+    Home,
+    ListChecks,
+    Plus,
+    Save,
+    Settings,
+    ShieldCheck,
+    Sparkles,
+    SquareCheck,
+    Trash2,
+    Type,
+    Utensils,
+    WandSparkles,
+    X,
+    type LucideIcon
+} from 'lucide-react';
 import Modal from '../../ui/Modal';
-import { LEAD_FIELD_TEMPLATES } from '../../../data/leadFieldTemplates';
+import { LEAD_FIELD_TEMPLATES, type LeadFieldTemplateIcon } from '../../../data/leadFieldTemplates';
 
 interface CustomFieldsManagerProps {
     customFieldsConfig: CustomFieldDefinition[];
@@ -17,6 +40,26 @@ export interface CustomFieldDefinition {
     options?: string[]; // for select type
     required?: boolean;
 }
+
+const TEMPLATE_ICON_MAP: Record<LeadFieldTemplateIcon, LucideIcon> = {
+    home: Home,
+    briefcase: BriefcaseBusiness,
+    car: Car,
+    shield: ShieldCheck,
+    'graduation-cap': GraduationCap,
+    'heart-pulse': HeartPulse,
+    dumbbell: Dumbbell,
+    utensils: Utensils,
+    hammer: Hammer
+};
+
+const FIELD_TYPE_ICON_MAP: Record<CustomFieldDefinition['type'], LucideIcon> = {
+    text: Type,
+    number: Hash,
+    date: CalendarDays,
+    select: ListChecks,
+    checkbox: SquareCheck
+};
 
 const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsConfig, onSaveConfig }) => {
     const { t } = useTranslation();
@@ -50,10 +93,6 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
         setIsOpen(false);
     };
 
-    const handleUpdateFieldOptions = (fieldId: string, options: string[]) => {
-        setFields(fields.map(f => f.id === fieldId ? { ...f, options } : f));
-    };
-
     const handleApplyTemplate = (templateId: string) => {
         const template = LEAD_FIELD_TEMPLATES.find(t => t.id === templateId);
         if (!template) return;
@@ -76,122 +115,205 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                 <Settings size={14} />
             </button>
 
-            <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} maxWidth="max-w-2xl">
-                <div className="p-6 border-b border-q-border bg-secondary/10 flex justify-between items-center">
-                    <h3 className="font-bold text-lg">{t('leads.customFields.title')}</h3>
-                    <button onClick={() => setIsOpen(false)} className="text-q-text-muted hover:text-foreground">
-                        <X size={24} />
-                    </button>
-                </div>
-
-                <div className="p-6 space-y-6">
-                    {/* Industry Templates */}
-                    <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                            <Sparkles className="text-purple-500" size={16} />
-                            <h4 className="text-sm font-bold text-purple-500 uppercase">{t('leads.customFields.industryTemplates')}</h4>
+            <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} maxWidth="max-w-5xl">
+                <div className="flex min-h-0 flex-1 flex-col">
+                    <div className="flex items-start justify-between gap-4 border-b border-q-border bg-q-surface px-4 py-4 sm:px-6">
+                        <div className="flex min-w-0 items-start gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+                                <Settings size={18} />
+                            </div>
+                            <div className="min-w-0">
+                                <h3 className="text-base font-semibold text-q-text sm:text-lg">
+                                    {t('leads.customFields.title')}
+                                </h3>
+                                <p className="mt-1 max-w-2xl text-xs leading-5 text-q-text-muted sm:text-sm">
+                                    {t('leads.customFields.customFieldsHelpText')}
+                                </p>
+                            </div>
                         </div>
-                        <p className="text-xs text-q-text-muted mb-4">
-                            {t('leads.customFields.industryTemplatesDesc')}
-                        </p>
-                        <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto custom-scrollbar">
-                            {LEAD_FIELD_TEMPLATES.map(template => (
-                                <button
-                                    key={template.id}
-                                    onClick={() => handleApplyTemplate(template.id)}
-                                    className="p-3 border border-q-border rounded-lg hover:bg-secondary/50 transition-colors text-left group"
-                                >
-                                    <div className="text-2xl mb-1">{template.icon}</div>
-                                    <h5 className="font-bold text-xs mb-0.5 group-hover:text-primary transition-colors">{template.name}</h5>
-                                    <p className="text-[10px] text-q-text-muted">{template.fields.length} {t('leads.customFields.fields')}</p>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Existing Fields */}
-                    <div className="space-y-3">
-                        <h4 className="text-sm font-bold text-q-text-muted uppercase">{t('leads.customFields.existingFields')}</h4>
-                        {fields.length === 0 ? (
-                            <p className="text-sm text-q-text-muted italic">{t('leads.customFields.noFields')}</p>
-                        ) : (
-                            fields.map(field => (
-                                <div key={field.id} className="flex items-center gap-3 bg-secondary/20 p-3 rounded-lg border border-q-border">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="font-medium text-sm">{field.name}</span>
-                                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                                {field.type}
-                                            </span>
-                                        </div>
-                                        {field.type === 'select' && field.options && (
-                                            <div className="flex flex-wrap gap-1 mt-2">
-                                                {field.options.map((opt, idx) => (
-                                                    <span key={idx} className="text-xs bg-secondary px-2 py-0.5 rounded">
-                                                        {opt}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <button
-                                        onClick={() => handleRemoveField(field.id)}
-                                        className="p-2 hover:bg-red-500/10 rounded text-red-500 transition-colors"
-                                    >
-                                        <X size={16} />
-                                    </button>
-                                </div>
-                            ))
-                        )}
-                    </div>
-
-                    {/* Add New Field */}
-                    <div className="border-t border-q-border pt-6">
-                        <h4 className="text-sm font-bold text-q-text-muted uppercase mb-3">{t('leads.customFields.addNew')}</h4>
-                        <div className="grid grid-cols-12 gap-3">
-                            <input
-                                type="text"
-                                value={newFieldName}
-                                onChange={e => setNewFieldName(e.target.value)}
-                                placeholder={t('leads.customFields.fieldNamePlaceholder')}
-                                className="col-span-6 bg-secondary/20 border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
-                            />
-                            <select
-                                value={newFieldType}
-                                onChange={e => setNewFieldType(e.target.value as any)}
-                                className="col-span-4 bg-secondary/20 border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
-                            >
-                                <option value="text">{t('leads.customFields.types.text')}</option>
-                                <option value="number">{t('leads.customFields.types.number')}</option>
-                                <option value="date">{t('leads.customFields.types.date')}</option>
-                                <option value="select">{t('leads.customFields.types.select')}</option>
-                                <option value="checkbox">{t('leads.customFields.types.checkbox')}</option>
-                            </select>
-                            <button
-                                onClick={handleAddField}
-                                disabled={!newFieldName.trim()}
-                                className="col-span-2 bg-primary text-primary-foreground rounded px-3 py-2 text-sm font-bold hover:opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
-                            >
-                                <Plus size={14} />
-                                {t('leads.customFields.add')}
-                            </button>
-                        </div>
-                        <p className="text-xs text-q-text-muted mt-2">
-                            {t('leads.customFields.customFieldsHelpText')}
-                        </p>
-                    </div>
-
-                    {/* Save Button */}
-                    <div className="flex justify-end gap-2 pt-4 border-t border-q-border">
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="px-4 py-2 border border-q-border rounded hover:bg-secondary transition-colors"
+                            className="no-min-touch flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-q-border/70 bg-q-surface/80 text-q-text-muted transition-colors hover:bg-secondary hover:text-q-text"
+                            aria-label={t('common.close', 'Close')}
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
+
+                    <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
+                        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+                            <section className="space-y-4">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <h4 className="text-sm font-semibold uppercase tracking-wide text-q-text-muted">
+                                            {t('leads.customFields.existingFields')}
+                                        </h4>
+                                        <p className="mt-1 text-xs text-q-text-muted">
+                                            {fields.length} {t('leads.customFields.fields')}
+                                        </p>
+                                    </div>
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-q-border/70 bg-secondary/30 text-q-text-muted">
+                                        <Database size={16} />
+                                    </div>
+                                </div>
+
+                                {fields.length === 0 ? (
+                                    <div className="flex min-h-[180px] flex-col items-center justify-center rounded-xl border border-dashed border-q-border bg-secondary/10 p-6 text-center">
+                                        <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-lg border border-q-border/70 bg-q-surface text-q-text-muted">
+                                            <Database size={18} />
+                                        </div>
+                                        <p className="text-sm font-medium text-q-text">{t('leads.customFields.noFields')}</p>
+                                        <p className="mt-1 max-w-sm text-xs leading-5 text-q-text-muted">
+                                            {t('leads.customFields.industryTemplatesDesc')}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {fields.map(field => {
+                                            const FieldIcon = FIELD_TYPE_ICON_MAP[field.type];
+                                            return (
+                                                <div
+                                                    key={field.id}
+                                                    className="flex items-start gap-3 rounded-xl border border-q-border bg-secondary/10 p-3 transition-colors hover:bg-secondary/20"
+                                                >
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-q-border/70 bg-q-surface text-primary">
+                                                        <FieldIcon size={16} />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <span className="truncate text-sm font-semibold text-q-text">
+                                                                {field.name}
+                                                            </span>
+                                                            <span className="rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                                                                {t(`leads.customFields.types.${field.type}`)}
+                                                            </span>
+                                                        </div>
+                                                        {field.type === 'select' && field.options && (
+                                                            <div className="mt-2 flex flex-wrap gap-1.5">
+                                                                {field.options.map((opt, idx) => (
+                                                                    <span
+                                                                        key={idx}
+                                                                        className="rounded-md border border-q-border/70 bg-q-surface px-2 py-1 text-[11px] text-q-text-muted"
+                                                                    >
+                                                                        {opt}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleRemoveField(field.id)}
+                                                        className="no-min-touch flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-q-text-muted transition-colors hover:bg-destructive/10 hover:text-destructive"
+                                                        aria-label={t('common.delete', 'Delete')}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </section>
+
+                            <aside className="space-y-4">
+                                <section className="rounded-xl border border-q-border bg-secondary/10 p-4">
+                                    <div className="mb-3 flex items-start gap-3">
+                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+                                            <WandSparkles size={16} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h4 className="text-sm font-semibold uppercase tracking-wide text-q-text-muted">
+                                                {t('leads.customFields.industryTemplates')}
+                                            </h4>
+                                            <p className="mt-1 text-xs leading-5 text-q-text-muted">
+                                                {t('leads.customFields.industryTemplatesDesc')}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid max-h-[360px] gap-2 overflow-y-auto pr-1 custom-scrollbar sm:grid-cols-2 lg:grid-cols-1">
+                                        {LEAD_FIELD_TEMPLATES.map(template => {
+                                            const TemplateIcon = TEMPLATE_ICON_MAP[template.icon];
+                                            return (
+                                                <button
+                                                    key={template.id}
+                                                    onClick={() => handleApplyTemplate(template.id)}
+                                                    className="group flex items-start gap-3 rounded-lg border border-q-border bg-q-surface/70 p-3 text-left transition-colors hover:border-primary/35 hover:bg-secondary/35"
+                                                >
+                                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-q-border/70 bg-secondary/30 text-primary transition-colors group-hover:border-primary/30 group-hover:bg-primary/10">
+                                                        <TemplateIcon size={16} />
+                                                    </span>
+                                                    <span className="min-w-0 flex-1">
+                                                        <span className="block truncate text-sm font-semibold text-q-text transition-colors group-hover:text-primary">
+                                                            {template.name}
+                                                        </span>
+                                                        <span className="mt-0.5 block line-clamp-2 text-xs leading-5 text-q-text-muted">
+                                                            {template.description}
+                                                        </span>
+                                                        <span className="mt-2 inline-flex items-center gap-1 rounded-md border border-q-border/70 bg-secondary/20 px-2 py-0.5 text-[11px] font-medium text-q-text-muted">
+                                                            <Sparkles size={12} />
+                                                            {template.fields.length} {t('leads.customFields.fields')}
+                                                        </span>
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </section>
+
+                                <section className="rounded-xl border border-q-border bg-q-surface p-4">
+                                    <div className="mb-3 flex items-center gap-2">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+                                            <Plus size={15} />
+                                        </div>
+                                        <h4 className="text-sm font-semibold uppercase tracking-wide text-q-text-muted">
+                                            {t('leads.customFields.addNew')}
+                                        </h4>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <input
+                                            type="text"
+                                            value={newFieldName}
+                                            onChange={e => setNewFieldName(e.target.value)}
+                                            placeholder={t('leads.customFields.fieldNamePlaceholder')}
+                                            className="h-10 w-full rounded-lg border border-q-border bg-secondary/15 px-3 text-sm text-q-text outline-none transition-colors placeholder:text-q-text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                                        />
+                                        <select
+                                            value={newFieldType}
+                                            onChange={e => setNewFieldType(e.target.value as CustomFieldDefinition['type'])}
+                                            className="h-10 w-full rounded-lg border border-q-border bg-secondary/15 px-3 text-sm text-q-text outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                                        >
+                                            <option value="text">{t('leads.customFields.types.text')}</option>
+                                            <option value="number">{t('leads.customFields.types.number')}</option>
+                                            <option value="date">{t('leads.customFields.types.date')}</option>
+                                            <option value="select">{t('leads.customFields.types.select')}</option>
+                                            <option value="checkbox">{t('leads.customFields.types.checkbox')}</option>
+                                        </select>
+                                        <button
+                                            onClick={handleAddField}
+                                            disabled={!newFieldName.trim()}
+                                            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            <Plus size={15} />
+                                            {t('leads.customFields.add')}
+                                        </button>
+                                    </div>
+                                </section>
+                            </aside>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col-reverse gap-2 border-t border-q-border bg-q-surface px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="flex h-10 items-center justify-center rounded-lg border border-q-border bg-q-surface px-4 text-sm font-semibold text-q-text transition-colors hover:bg-secondary"
                         >
                             {t('common.cancel')}
                         </button>
                         <button
                             onClick={handleSave}
-                            className="px-4 py-2 bg-primary text-primary-foreground rounded font-bold hover:opacity-90 transition-colors flex items-center gap-2"
+                            className="flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90"
                         >
                             <Save size={16} />
                             {t('leads.customFields.saveConfig')}

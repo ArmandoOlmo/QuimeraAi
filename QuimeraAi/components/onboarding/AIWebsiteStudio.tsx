@@ -228,12 +228,12 @@ const AIWebsiteStudio: React.FC = () => {
                         {/* ── Input Bar — matches Email AI Studio pattern ── */}
                         <div className="border-t border-q-border/70 bg-q-bg/85 p-3 backdrop-blur-xl lg:p-5">
                             <div className="quimera-ai-launcher mx-auto max-w-3xl">
-                            <div className="flex items-center gap-2">
-                                {/* Voice button — fixed h-10 w-10 */}
+                            <div className="flex flex-shrink-0 items-center gap-2">
+                                {/* Voice button — fixed size-10 */}
                                 {studio.isVoiceActive ? (
                                     <button
                                         onClick={studio.stopVoiceSession}
-                                        className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
+                                        className="no-min-touch size-10 flex shrink-0 items-center justify-center rounded-xl p-0 bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all touch-manipulation"
                                         title={t('aiWebsiteStudio.chat.stopVoice')}
                                     >
                                         <MicOff className="w-4 h-4" />
@@ -242,7 +242,7 @@ const AIWebsiteStudio: React.FC = () => {
                                     <button
                                         onClick={studio.startVoiceSession}
                                         disabled={studio.isVoiceConnecting || studio.isGenerating}
-                                        className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-surface-overlay/40 text-q-text-secondary hover:text-q-accent hover:bg-primary/10 transition-all disabled:opacity-50"
+                                        className="no-min-touch size-10 flex shrink-0 items-center justify-center rounded-xl p-0 bg-q-surface-overlay/40 text-q-text-secondary hover:text-q-accent hover:bg-primary/10 transition-all disabled:opacity-50 touch-manipulation"
                                         title={t('aiWebsiteStudio.chat.startVoice')}
                                     >
                                         {studio.isVoiceConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
@@ -258,11 +258,11 @@ const AIWebsiteStudio: React.FC = () => {
                                     rows={1}
                                     className="flex-1 bg-transparent px-3 py-2.5 text-sm text-q-text placeholder:text-q-text-secondary/55 resize-none focus:outline-none min-h-[40px] max-h-[120px] transition-all disabled:opacity-40"
                                 />
-                                {/* Send button — fixed h-10 w-10 */}
+                                {/* Send button — fixed size-10 */}
                                 <button
                                     onClick={() => studio.sendMessage(studio.input)}
                                     disabled={!studio.input.trim() || studio.isThinking || studio.isVoiceActive || studio.isGenerating}
-                                    className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full bg-q-accent text-q-text-on-accent hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
+                                    className="no-min-touch size-10 flex shrink-0 items-center justify-center rounded-full p-0 bg-q-accent text-q-text-on-accent hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-30 disabled:hover:shadow-none touch-manipulation"
                                 >
                                     <Send className="w-4 h-4" />
                                 </button>

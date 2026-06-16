@@ -4,16 +4,27 @@ export interface LeadFieldTemplate {
     id: string;
     name: string;
     description: string;
-    icon: string;
+    icon: LeadFieldTemplateIcon;
     fields: Omit<CustomFieldDefinition, 'id'>[];
 }
+
+export type LeadFieldTemplateIcon =
+    | 'home'
+    | 'briefcase'
+    | 'car'
+    | 'shield'
+    | 'graduation-cap'
+    | 'heart-pulse'
+    | 'dumbbell'
+    | 'utensils'
+    | 'hammer';
 
 export const LEAD_FIELD_TEMPLATES: LeadFieldTemplate[] = [
     {
         id: 'real_estate',
         name: 'Real Estate / Inmobiliaria',
         description: 'Para agentes inmobiliarios y desarrolladores',
-        icon: '🏠',
+        icon: 'home',
         fields: [
             { name: 'Property Type', type: 'select', options: ['House', 'Apartment', 'Land', 'Commercial', 'Industrial'], required: false },
             { name: 'Min Budget', type: 'number', required: false },
@@ -31,7 +42,7 @@ export const LEAD_FIELD_TEMPLATES: LeadFieldTemplate[] = [
         id: 'b2b_saas',
         name: 'B2B SaaS',
         description: 'Para empresas de software y servicios',
-        icon: '💼',
+        icon: 'briefcase',
         fields: [
             { name: 'Company Size', type: 'select', options: ['1-10', '11-50', '51-200', '201-500', '500+'], required: false },
             { name: 'Decision Role', type: 'select', options: ['Decision Maker', 'Influencer', 'End User', 'Gatekeeper'], required: false },
@@ -48,7 +59,7 @@ export const LEAD_FIELD_TEMPLATES: LeadFieldTemplate[] = [
         id: 'automotive',
         name: 'Automotive',
         description: 'Para concesionarias y vendedores de autos',
-        icon: '🚗',
+        icon: 'car',
         fields: [
             { name: 'Vehicle Type', type: 'select', options: ['Sedan', 'SUV', 'Pickup', 'Sports', 'Electric', 'Hybrid'], required: false },
             { name: 'Preferred Brand', type: 'text', required: false },
@@ -66,7 +77,7 @@ export const LEAD_FIELD_TEMPLATES: LeadFieldTemplate[] = [
         id: 'insurance',
         name: 'Insurance',
         description: 'Para agentes de seguros',
-        icon: '🛡️',
+        icon: 'shield',
         fields: [
             { name: 'Insurance Type', type: 'select', options: ['Life', 'Auto', 'Home', 'Health', 'Business', 'Travel'], required: false },
             { name: 'Current Coverage', type: 'text', required: false },
@@ -82,7 +93,7 @@ export const LEAD_FIELD_TEMPLATES: LeadFieldTemplate[] = [
         id: 'education',
         name: 'Education',
         description: 'Para instituciones educativas y cursos',
-        icon: '🎓',
+        icon: 'graduation-cap',
         fields: [
             { name: 'Program of Interest', type: 'text', required: false },
             { name: 'Education Level', type: 'select', options: ['High School', 'Undergraduate', 'Graduate', 'Masters', 'PhD', 'Short Course'], required: false },
@@ -98,7 +109,7 @@ export const LEAD_FIELD_TEMPLATES: LeadFieldTemplate[] = [
         id: 'healthcare',
         name: 'Healthcare',
         description: 'Para clínicas, hospitales y servicios médicos',
-        icon: '⚕️',
+        icon: 'heart-pulse',
         fields: [
             { name: 'Service Type', type: 'select', options: ['Consultation', 'Surgery', 'Treatment', 'Emergency', 'Checkup'], required: false },
             { name: 'Specialty Required', type: 'text', required: false },
@@ -114,7 +125,7 @@ export const LEAD_FIELD_TEMPLATES: LeadFieldTemplate[] = [
         id: 'fitness',
         name: 'Fitness / Gym',
         description: 'Para gimnasios, entrenadores y estudios',
-        icon: '💪',
+        icon: 'dumbbell',
         fields: [
             { name: 'Fitness Goal', type: 'select', options: ['Weight Loss', 'Muscle Gain', 'Maintenance', 'Competition', 'Rehabilitation'], required: false },
             { name: 'Experience Level', type: 'select', options: ['Beginner', 'Intermediate', 'Advanced'], required: false },
@@ -129,7 +140,7 @@ export const LEAD_FIELD_TEMPLATES: LeadFieldTemplate[] = [
         id: 'events',
         name: 'Events / Catering',
         description: 'Para servicios de catering y eventos',
-        icon: '🍽️',
+        icon: 'utensils',
         fields: [
             { name: 'Event Type', type: 'select', options: ['Wedding', 'Corporate', 'Birthday', 'Anniversary', 'Other'], required: false },
             { name: 'Event Date', type: 'date', required: false },
@@ -146,7 +157,7 @@ export const LEAD_FIELD_TEMPLATES: LeadFieldTemplate[] = [
         id: 'construction',
         name: 'Construction',
         description: 'Para constructoras y contratistas',
-        icon: '🏗️',
+        icon: 'hammer',
         fields: [
             { name: 'Project Type', type: 'select', options: ['New Construction', 'Remodeling', 'Extension', 'Repair'], required: false },
             { name: 'Project Area', type: 'text', required: false },
@@ -160,4 +171,3 @@ export const LEAD_FIELD_TEMPLATES: LeadFieldTemplate[] = [
         ]
     }
 ];
-
