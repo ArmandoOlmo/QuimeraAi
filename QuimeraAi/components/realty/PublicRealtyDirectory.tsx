@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
     Bath,
     BedDouble,
+    ChevronDown,
     Eye,
     Filter,
     Grid3X3,
@@ -21,7 +22,7 @@ import {
 import type { ThemeData } from '../../types';
 import type { RealtyListingsSectionData, RealtyProperty, RealtyPropertyType, TransactionType } from '../../types/realty';
 import { usePublicRealtyListings, type PublicRealtySort } from '../../hooks/usePublicRealtyListings';
-import { colorWithAlpha, formatRealtyPrice, realtyPropertyTypes, resolveRealtyWebsiteColors } from '../../utils/realty';
+import { formatRealtyPrice, realtyPropertyTypes, resolveRealtyWebsiteColors } from '../../utils/realty';
 import { getAnimationClass, getAnimationDelay } from '../../utils/animations';
 
 interface PublicRealtyDirectoryProps {
@@ -74,6 +75,124 @@ const radiusClasses: Record<string, string> = {
     '2xl': 'rounded-2xl',
     full: 'rounded-3xl',
 };
+
+const cx = (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(' ');
+
+const directoryInputClass = 'h-10 w-full rounded-md border border-[var(--realty-border-soft)] bg-[var(--realty-surface-soft)] px-3 text-sm font-body text-[var(--realty-text)] outline-none transition-colors placeholder:text-[var(--realty-muted)] focus:border-[var(--realty-accent)] focus:ring-2 focus:ring-[var(--realty-accent-soft)]';
+
+interface DirectoryPanelProps {
+    children: React.ReactNode;
+    className?: string;
+    radiusClass?: string;
+}
+
+const DirectoryPanel = ({ children, className, radiusClass = 'rounded-xl' }: DirectoryPanelProps) => (
+    <div
+        className={cx(
+            'border border-[var(--realty-border-soft)] bg-[var(--realty-surface-soft)] shadow-[0_18px_60px_-36px_rgba(0,0,0,0.55)] backdrop-blur-2xl',
+            radiusClass,
+            className
+        )}
+    >
+        {children}
+    </div>
+);
+
+interface DirectoryButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+    variant?: 'primary' | 'secondary' | 'ghost';
+    radiusClass?: string;
+}
+
+const DirectoryButton = ({
+    children,
+    className,
+    radiusClass = 'rounded-md',
+    variant = 'secondary',
+    type = 'button',
+    ...props
+}: DirectoryButtonProps) => {
+    const variants = {
+        primary: 'border border-transparent bg-[var(--realty-button)] text-[var(--realty-button-text)] shadow-[0_14px_30px_-20px_var(--realty-button)] hover:brightness-105',
+        secondary: 'border border-[var(--realty-border-soft)] bg-[var(--realty-surface-soft)] text-[var(--realty-text)] hover:border-[var(--realty-accent)] hover:bg-[var(--realty-surface-strong)]',
+        ghost: 'border border-transparent bg-transparent text-[var(--realty-muted)] hover:bg-[var(--realty-accent-soft)] hover:text-[var(--realty-text)]',
+    };
+
+    return (
+        <button
+            type={type}
+            className={cx(
+                'inline-flex h-10 items-center justify-center gap-2 px-3 text-sm font-semibold font-button transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--realty-accent-soft)] disabled:pointer-events-none disabled:opacity-55',
+                variants[variant],
+                radiusClass,
+                className
+            )}
+            {...props}
+        >
+            {children}
+        </button>
+    );
+};
+
+interface DirectoryInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'className'> {
+    label: string;
+    icon?: React.ElementType;
+    className?: string;
+    inputClassName?: string;
+}
+
+const DirectoryInput = ({ label, icon: Icon, className, inputClassName, ...props }: DirectoryInputProps) => (
+    <label className={cx('block min-w-0', className)}>
+        <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] font-body text-[var(--realty-muted)]">{label}</span>
+        <span className="relative block">
+            {Icon && <Icon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--realty-muted)]" size={16} />}
+            <input
+                className={cx(directoryInputClass, Icon && 'pl-9', inputClassName)}
+                {...props}
+            />
+        </span>
+    </label>
+);
+
+interface DirectorySelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'className'> {
+    label: string;
+    className?: string;
+    selectClassName?: string;
+}
+
+const DirectorySelect = ({ label, className, selectClassName, children, ...props }: DirectorySelectProps) => (
+    <label className={cx('block min-w-0', className)}>
+        <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] font-body text-[var(--realty-muted)]">{label}</span>
+        <span className="relative block">
+            <select
+                className={cx(directoryInputClass, 'appearance-none pr-9', selectClassName)}
+                {...props}
+            >
+                {children}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--realty-muted)]" size={15} />
+        </span>
+    </label>
+);
+
+interface DirectoryChipProps {
+    children: React.ReactNode;
+    variant?: 'outline' | 'accent' | 'soft';
+    className?: string;
+}
+
+const DirectoryChip = ({ children, variant = 'outline', className }: DirectoryChipProps) => (
+    <span
+        className={cx(
+            'inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-bold uppercase tracking-[0.06em] font-body',
+            variant === 'accent' && 'bg-[var(--realty-accent)] text-[var(--realty-badge-text)]',
+            variant === 'soft' && 'bg-[var(--realty-accent-soft)] text-[var(--realty-accent)]',
+            variant === 'outline' && 'border border-[var(--realty-border-soft)] text-[var(--realty-muted)]',
+            className
+        )}
+    >
+        {children}
+    </span>
+);
 
 const getPreviewBasePath = () => {
     if (typeof window === 'undefined') return '';
@@ -247,179 +366,170 @@ const PublicRealtyDirectory: React.FC<PublicRealtyDirectoryProps> = ({
     const hasDirectoryAccess = flags.real_estate_enabled && flags.real_estate_public_directory_enabled;
     const showFeaturedSection = !filtersApplied && featuredProperties.length > 0;
 
-    const fieldBaseClass = 'h-11 w-full rounded-md border px-3 text-sm font-body outline-none transition-colors';
-    const fieldStyle = { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text };
-    const mutedPanelStyle = { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text };
+    const directoryThemeStyle = {
+        '--realty-bg': colors.background,
+        '--realty-bg-sticky': `color-mix(in srgb, ${colors.background} 92%, transparent)`,
+        '--realty-surface': colors.surface,
+        '--realty-card': colors.cardBackground,
+        '--realty-surface-soft': `color-mix(in srgb, ${colors.surface} 86%, transparent)`,
+        '--realty-surface-strong': `color-mix(in srgb, ${colors.surface} 96%, transparent)`,
+        '--realty-border': colors.border,
+        '--realty-border-soft': `color-mix(in srgb, ${colors.border} 74%, transparent)`,
+        '--realty-text': colors.text,
+        '--realty-muted': colors.textMuted,
+        '--realty-heading': colors.heading,
+        '--realty-accent': colors.accent,
+        '--realty-accent-soft': `color-mix(in srgb, ${colors.accent} 16%, transparent)`,
+        '--realty-secondary': colors.secondary,
+        '--realty-button': colors.buttonBackground,
+        '--realty-button-text': colors.buttonText,
+        '--realty-badge-text': colors.badgeText,
+        '--realty-price': colors.priceColor,
+        backgroundColor: colors.background,
+        color: colors.text,
+    } as React.CSSProperties;
 
     const filterPanel = (
         <div className="grid gap-3 lg:grid-cols-12">
-            <label className="lg:col-span-3">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide font-body" style={{ color: colors.textMuted }}>{t('realty.directory.keyword')}</span>
-                <div className="relative">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2" size={17} style={{ color: colors.textMuted }} />
-                    <input
-                        value={filters.search}
-                        onChange={event => updateFilter('search', event.target.value)}
-                        placeholder={t('realty.directory.searchPlaceholder')}
-                        className={`${fieldBaseClass} pl-10`}
-                        style={fieldStyle}
-                    />
-                </div>
-            </label>
+            <DirectoryInput
+                label={t('realty.directory.keyword')}
+                icon={Search}
+                value={filters.search}
+                onChange={event => updateFilter('search', event.target.value)}
+                placeholder={t('realty.directory.searchPlaceholder')}
+                className="lg:col-span-4"
+            />
 
-            <label className="lg:col-span-2">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide font-body" style={{ color: colors.textMuted }}>{t('realty.directory.city')}</span>
-                <input
-                    value={filters.city}
-                    onChange={event => updateFilter('city', event.target.value)}
-                    placeholder={t('realty.directory.cityPlaceholder')}
-                    className={fieldBaseClass}
-                    style={fieldStyle}
-                />
-            </label>
+            <DirectoryInput
+                label={t('realty.directory.city')}
+                value={filters.city}
+                onChange={event => updateFilter('city', event.target.value)}
+                placeholder={t('realty.directory.cityPlaceholder')}
+                className="lg:col-span-2"
+            />
 
-            <label className="lg:col-span-2">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide font-body" style={{ color: colors.textMuted }}>{t('realty.directory.propertyType')}</span>
-                <select
-                    value={filters.propertyType}
-                    onChange={event => updateFilter('propertyType', event.target.value as RealtyPropertyType | 'all')}
-                    className={fieldBaseClass}
-                    style={fieldStyle}
-                >
-                    <option value="all">{t('realty.directory.allTypes')}</option>
-                    {realtyPropertyTypes.map(type => (
-                        <option key={type} value={type}>{t(`realty.propertyTypes.${type}`)}</option>
-                    ))}
-                </select>
-            </label>
+            <DirectorySelect
+                label={t('realty.directory.propertyType')}
+                value={filters.propertyType}
+                onChange={event => updateFilter('propertyType', event.target.value as RealtyPropertyType | 'all')}
+                className="lg:col-span-2"
+            >
+                <option value="all">{t('realty.directory.allTypes')}</option>
+                {realtyPropertyTypes.map(type => (
+                    <option key={type} value={type}>{t(`realty.propertyTypes.${type}`)}</option>
+                ))}
+            </DirectorySelect>
 
-            <label className="lg:col-span-2">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide font-body" style={{ color: colors.textMuted }}>{t('realty.directory.transactionType')}</span>
-                <select
-                    value={filters.transactionType}
-                    onChange={event => updateFilter('transactionType', event.target.value as TransactionType | 'all')}
-                    className={fieldBaseClass}
-                    style={fieldStyle}
-                >
-                    <option value="all">{t('realty.directory.allTransactions')}</option>
-                    {transactionTypes.map(type => (
-                        <option key={type} value={type}>{t(`realty.transactionTypes.${type}`)}</option>
-                    ))}
-                </select>
-            </label>
+            <DirectorySelect
+                label={t('realty.directory.transactionType')}
+                value={filters.transactionType}
+                onChange={event => updateFilter('transactionType', event.target.value as TransactionType | 'all')}
+                className="lg:col-span-2"
+            >
+                <option value="all">{t('realty.directory.allTransactions')}</option>
+                {transactionTypes.map(type => (
+                    <option key={type} value={type}>{t(`realty.transactionTypes.${type}`)}</option>
+                ))}
+            </DirectorySelect>
 
-            <label className="lg:col-span-3">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide font-body" style={{ color: colors.textMuted }}>{t('realty.directory.sort')}</span>
-                <select
-                    value={filters.sort}
-                    onChange={event => updateFilter('sort', event.target.value as PublicRealtySort)}
-                    className={fieldBaseClass}
-                    style={fieldStyle}
-                >
-                    {sortOptions.map(option => (
-                        <option key={option} value={option}>{t(`realty.directory.sortOptions.${option}`)}</option>
-                    ))}
-                </select>
-            </label>
+            <DirectorySelect
+                label={t('realty.directory.sort')}
+                value={filters.sort}
+                onChange={event => updateFilter('sort', event.target.value as PublicRealtySort)}
+                className="lg:col-span-2"
+            >
+                {sortOptions.map(option => (
+                    <option key={option} value={option}>{t(`realty.directory.sortOptions.${option}`)}</option>
+                ))}
+            </DirectorySelect>
 
-            <label className="lg:col-span-2">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide font-body" style={{ color: colors.textMuted }}>{t('realty.directory.minPrice')}</span>
-                <input
-                    value={filters.minPrice}
-                    onChange={event => updateFilter('minPrice', event.target.value)}
-                    type="number"
-                    min="0"
-                    inputMode="numeric"
-                    className={fieldBaseClass}
-                    style={fieldStyle}
-                />
-            </label>
+            <DirectoryInput
+                label={t('realty.directory.minPrice')}
+                value={filters.minPrice}
+                onChange={event => updateFilter('minPrice', event.target.value)}
+                type="number"
+                min="0"
+                inputMode="numeric"
+                className="lg:col-span-2"
+            />
 
-            <label className="lg:col-span-2">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide font-body" style={{ color: colors.textMuted }}>{t('realty.directory.maxPrice')}</span>
-                <input
-                    value={filters.maxPrice}
-                    onChange={event => updateFilter('maxPrice', event.target.value)}
-                    type="number"
-                    min="0"
-                    inputMode="numeric"
-                    className={fieldBaseClass}
-                    style={fieldStyle}
-                />
-            </label>
+            <DirectoryInput
+                label={t('realty.directory.maxPrice')}
+                value={filters.maxPrice}
+                onChange={event => updateFilter('maxPrice', event.target.value)}
+                type="number"
+                min="0"
+                inputMode="numeric"
+                className="lg:col-span-2"
+            />
 
-            <label className="lg:col-span-2">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide font-body" style={{ color: colors.textMuted }}>{t('realty.directory.bedrooms')}</span>
-                <input
-                    value={filters.bedrooms}
-                    onChange={event => updateFilter('bedrooms', event.target.value)}
-                    placeholder={t('realty.directory.anyBeds')}
-                    type="number"
-                    min="0"
-                    inputMode="numeric"
-                    className={fieldBaseClass}
-                    style={fieldStyle}
-                />
-            </label>
+            <DirectoryInput
+                label={t('realty.directory.bedrooms')}
+                value={filters.bedrooms}
+                onChange={event => updateFilter('bedrooms', event.target.value)}
+                placeholder={t('realty.directory.anyBeds')}
+                type="number"
+                min="0"
+                inputMode="numeric"
+                className="lg:col-span-2"
+            />
 
-            <label className="lg:col-span-2">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide font-body" style={{ color: colors.textMuted }}>{t('realty.directory.bathrooms')}</span>
-                <input
-                    value={filters.bathrooms}
-                    onChange={event => updateFilter('bathrooms', event.target.value)}
-                    placeholder={t('realty.directory.anyBaths')}
-                    type="number"
-                    min="0"
-                    inputMode="numeric"
-                    className={fieldBaseClass}
-                    style={fieldStyle}
-                />
-            </label>
+            <DirectoryInput
+                label={t('realty.directory.bathrooms')}
+                value={filters.bathrooms}
+                onChange={event => updateFilter('bathrooms', event.target.value)}
+                placeholder={t('realty.directory.anyBaths')}
+                type="number"
+                min="0"
+                inputMode="numeric"
+                className="lg:col-span-2"
+            />
 
-            <label className="flex h-11 items-center gap-3 self-end rounded-md border px-3 lg:col-span-2" style={fieldStyle}>
+            <label className="flex h-10 items-center gap-3 self-end rounded-md border border-[var(--realty-border-soft)] bg-[var(--realty-surface-soft)] px-3 text-[var(--realty-text)] lg:col-span-2">
                 <input
                     type="checkbox"
                     checked={filters.featuredOnly}
                     onChange={event => updateFilter('featuredOnly', event.target.checked)}
-                    className="h-4 w-4 accent-current"
-                    style={{ color: colors.accent }}
+                    className="peer sr-only"
                 />
+                <span className="relative h-4 w-8 rounded-full bg-[var(--realty-border-soft)] transition-colors peer-checked:bg-[var(--realty-accent)] after:absolute after:left-0.5 after:top-0.5 after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-4" />
                 <span className="text-sm font-semibold font-body">{t('realty.directory.featuredOnly')}</span>
             </label>
 
-            <button
-                type="button"
+            <DirectoryButton
                 onClick={clearFilters}
-                className={`inline-flex h-11 items-center justify-center gap-2 border px-3 text-sm font-semibold font-button transition-opacity hover:opacity-80 lg:col-span-2 ${buttonRadius}`}
-                style={{ borderColor: colors.border, color: colors.accent, backgroundColor: 'transparent' }}
+                variant="ghost"
+                radiusClass={buttonRadius}
+                className="self-end lg:col-span-2"
             >
                 <RotateCcw size={15} />
                 {t('realty.directory.clearFilters')}
-            </button>
+            </DirectoryButton>
         </div>
     );
 
     const renderStats = (property: RealtyProperty) => (
-        <div className="grid grid-cols-3 gap-2 text-sm font-body" style={{ color: colors.textMuted }}>
-            <span className="inline-flex min-w-0 items-center gap-1"><BedDouble size={15} />{property.bedrooms || 0}</span>
-            <span className="inline-flex min-w-0 items-center gap-1"><Bath size={15} />{property.bathrooms || 0}</span>
-            <span className="inline-flex min-w-0 items-center gap-1"><Ruler size={15} />{(property.area || 0).toLocaleString(i18n.language)}</span>
+        <div className="grid grid-cols-3 gap-2 text-sm font-semibold font-body text-[var(--realty-muted)]">
+            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-md bg-[var(--realty-surface-soft)] px-2 py-1"><BedDouble size={14} />{property.bedrooms || 0}</span>
+            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-md bg-[var(--realty-surface-soft)] px-2 py-1"><Bath size={14} />{property.bathrooms || 0}</span>
+            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-md bg-[var(--realty-surface-soft)] px-2 py-1"><Ruler size={14} />{(property.area || 0).toLocaleString(i18n.language)}</span>
         </div>
     );
 
     const renderImage = (property: RealtyProperty, compact = false) => {
         const image = getPropertyImage(property);
         return (
-            <div className={`relative overflow-hidden ${compact ? 'aspect-[4/3] md:h-full md:aspect-auto' : 'aspect-[4/3]'}`} style={{ backgroundColor: colors.border }}>
+            <div className={cx('relative overflow-hidden bg-[var(--realty-surface-strong)]', compact ? 'aspect-[4/3] md:h-full md:aspect-auto' : 'aspect-[4/3]')}>
                 {image ? (
-                    <img src={image} alt={property.images?.[0]?.altText || property.title} className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" loading="lazy" />
+                    <img src={image} alt={property.images?.[0]?.altText || property.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" loading="lazy" />
                 ) : (
-                    <div className="flex h-full w-full items-center justify-center" style={{ color: colors.textMuted }}>
-                        <Home size={42} />
+                    <div className="flex h-full w-full items-center justify-center text-[var(--realty-muted)]">
+                        <Home size={38} />
                     </div>
                 )}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/45 to-transparent" />
                 {property.isFeatured && (
-                    <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold font-body" style={{ backgroundColor: colors.badgeBackground, color: colors.badgeText }}>
+                    <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[var(--realty-accent)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] font-body text-[var(--realty-badge-text)]">
                         <Star size={13} />
                         {t('realty.website.featured')}
                     </span>
@@ -430,12 +540,8 @@ const PublicRealtyDirectory: React.FC<PublicRealtyDirectoryProps> = ({
 
     const renderChips = (property: RealtyProperty) => (
         <div className="mt-3 flex flex-wrap gap-2">
-            <span className="rounded-full border px-3 py-1 text-xs font-semibold font-body" style={{ borderColor: colors.border, color: colors.textMuted }}>
-                {t(`realty.propertyTypes.${property.propertyType}`)}
-            </span>
-            <span className="rounded-full px-3 py-1 text-xs font-semibold font-body" style={{ backgroundColor: colors.secondary, color: colors.buttonText }}>
-                {t(`realty.transactionTypes.${property.transactionType || 'sale'}`)}
-            </span>
+            <DirectoryChip>{t(`realty.propertyTypes.${property.propertyType}`)}</DirectoryChip>
+            <DirectoryChip variant="soft">{t(`realty.transactionTypes.${property.transactionType || 'sale'}`)}</DirectoryChip>
         </div>
     );
 
@@ -444,10 +550,12 @@ const PublicRealtyDirectory: React.FC<PublicRealtyDirectoryProps> = ({
         return (
             <article
                 key={property.id}
-                className={`overflow-hidden border transition-transform duration-300 hover:-translate-y-1 ${cardRadius} ${animationClass}`}
+                className={cx(
+                    'group overflow-hidden border border-[var(--realty-border-soft)] bg-[var(--realty-card)] shadow-[0_16px_44px_-34px_rgba(0,0,0,0.65)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--realty-accent)] hover:shadow-[0_24px_70px_-42px_rgba(0,0,0,0.8)]',
+                    cardRadius,
+                    animationClass
+                )}
                 style={{
-                    borderColor: colors.border,
-                    backgroundColor: colors.surface,
                     animationDelay: animationClass ? getAnimationDelay(index) : undefined,
                 }}
             >
@@ -455,40 +563,30 @@ const PublicRealtyDirectory: React.FC<PublicRealtyDirectoryProps> = ({
                     {renderImage(property)}
                 </button>
                 <div className="p-5">
-                    <p className="text-2xl font-bold font-header" style={{ color: colors.priceColor }}>
+                    <p className="text-xl font-bold font-header text-[var(--realty-price)] md:text-2xl">
                         {formatRealtyPrice(property.price, i18n.language, property.currency)}
                     </p>
-                    <h2 className="mt-2 line-clamp-2 text-xl font-semibold font-header" style={{ color: colors.accent }}>
+                    <h2 className="mt-2 line-clamp-2 text-lg font-bold leading-snug font-header text-[var(--realty-accent)] md:text-xl">
                         {property.title}
                     </h2>
-                    <p className="mt-2 flex items-start gap-2 text-sm font-body" style={{ color: colors.textMuted }}>
+                    <p className="mt-2 flex items-start gap-2 text-sm leading-5 font-body text-[var(--realty-muted)]">
                         <MapPin size={15} className="mt-0.5 shrink-0" />
                         <span className="line-clamp-2">{getLocationLabel(property)}</span>
                     </p>
                     {renderChips(property)}
                     <div className="mt-4">{renderStats(property)}</div>
-                    <p className="mt-4 line-clamp-3 text-sm leading-6 font-body" style={{ color: colors.text }}>
+                    <p className="mt-4 line-clamp-3 text-sm leading-6 font-body text-[var(--realty-text)]">
                         {getShortDescription(property)}
                     </p>
-                    <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                        <button
-                            type="button"
-                            onClick={() => goToProperty(property)}
-                            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold font-button transition-opacity hover:opacity-90 ${buttonRadius}`}
-                            style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
-                        >
-                            <Eye size={16} />
-                            {t('realty.directory.viewDetails')}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => goToProperty(property)}
-                            className={`inline-flex items-center justify-center gap-2 border px-4 py-2.5 text-sm font-semibold font-button transition-opacity hover:opacity-80 ${buttonRadius}`}
-                            style={{ borderColor: colors.border, color: colors.accent }}
-                        >
-                            {t('realty.directory.contact')}
-                        </button>
-                    </div>
+                    <DirectoryButton
+                        onClick={() => goToProperty(property)}
+                        variant="primary"
+                        radiusClass={buttonRadius}
+                        className="mt-5 w-full"
+                    >
+                        <Eye size={16} />
+                        {t('realty.directory.viewDetails')}
+                    </DirectoryButton>
                 </div>
             </article>
         );
@@ -499,10 +597,12 @@ const PublicRealtyDirectory: React.FC<PublicRealtyDirectoryProps> = ({
         return (
             <article
                 key={property.id}
-                className={`grid gap-4 overflow-hidden border p-3 transition-transform duration-300 hover:-translate-y-0.5 md:grid-cols-[260px_minmax(0,1fr)_220px] ${cardRadius} ${animationClass}`}
+                className={cx(
+                    'group grid gap-4 overflow-hidden border border-[var(--realty-border-soft)] bg-[var(--realty-card)] p-3 shadow-[0_16px_44px_-36px_rgba(0,0,0,0.65)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--realty-accent)] md:grid-cols-[240px_minmax(0,1fr)_190px]',
+                    cardRadius,
+                    animationClass
+                )}
                 style={{
-                    borderColor: colors.border,
-                    backgroundColor: colors.surface,
                     animationDelay: animationClass ? getAnimationDelay(index) : undefined,
                 }}
             >
@@ -512,197 +612,210 @@ const PublicRealtyDirectory: React.FC<PublicRealtyDirectoryProps> = ({
                 <div className="min-w-0 p-1">
                     <div className="flex flex-wrap items-center gap-2">
                         {property.isFeatured && (
-                            <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold font-body" style={{ backgroundColor: colors.badgeBackground, color: colors.badgeText }}>
+                            <DirectoryChip variant="accent">
                                 <Star size={13} />
                                 {t('realty.website.featured')}
-                            </span>
+                            </DirectoryChip>
                         )}
                     </div>
-                    <h2 className="mt-2 text-xl font-semibold font-header" style={{ color: colors.accent }}>
+                    <h2 className="mt-2 line-clamp-2 text-xl font-bold leading-snug font-header text-[var(--realty-accent)]">
                         {property.title}
                     </h2>
-                    <p className="mt-2 flex items-start gap-2 text-sm font-body" style={{ color: colors.textMuted }}>
+                    <p className="mt-2 flex items-start gap-2 text-sm leading-5 font-body text-[var(--realty-muted)]">
                         <MapPin size={15} className="mt-0.5 shrink-0" />
                         <span>{getLocationLabel(property)}</span>
                     </p>
                     {renderChips(property)}
-                    <p className="mt-4 line-clamp-2 text-sm leading-6 font-body" style={{ color: colors.text }}>
+                    <p className="mt-4 line-clamp-2 text-sm leading-6 font-body text-[var(--realty-text)]">
                         {getShortDescription(property)}
                     </p>
                     <div className="mt-4 max-w-md">{renderStats(property)}</div>
                 </div>
                 <div className="flex flex-col justify-between gap-4 p-1 md:items-end">
-                    <p className="text-2xl font-bold font-header" style={{ color: colors.priceColor }}>
+                    <p className="text-2xl font-bold font-header text-[var(--realty-price)]">
                         {formatRealtyPrice(property.price, i18n.language, property.currency)}
                     </p>
-                    <div className="grid w-full gap-2">
-                        <button
-                            type="button"
-                            onClick={() => goToProperty(property)}
-                            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold font-button transition-opacity hover:opacity-90 ${buttonRadius}`}
-                            style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
-                        >
-                            <Eye size={16} />
-                            {t('realty.directory.viewDetails')}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => goToProperty(property)}
-                            className={`inline-flex items-center justify-center gap-2 border px-4 py-2.5 text-sm font-semibold font-button transition-opacity hover:opacity-80 ${buttonRadius}`}
-                            style={{ borderColor: colors.border, color: colors.accent }}
-                        >
-                            {t('realty.directory.contact')}
-                        </button>
-                    </div>
+                    <DirectoryButton
+                        onClick={() => goToProperty(property)}
+                        variant="primary"
+                        radiusClass={buttonRadius}
+                        className="w-full"
+                    >
+                        <Eye size={16} />
+                        {t('realty.directory.viewDetails')}
+                    </DirectoryButton>
                 </div>
             </article>
         );
     };
 
     return (
-        <section className="min-h-screen w-full font-body" style={{ backgroundColor: colors.background, color: colors.text }}>
-            <div className="border-b" style={{ borderColor: colors.border, backgroundColor: colors.background }}>
-                <div className="mx-auto max-w-7xl px-4 pb-10 pt-12 md:px-6 md:pb-14 md:pt-16">
-                    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+        <section
+            className="min-h-screen w-full bg-[var(--realty-bg)] font-body text-[var(--realty-text)]"
+            style={directoryThemeStyle}
+        >
+            <div className="border-b border-[var(--realty-border-soft)]">
+                <div className="mx-auto max-w-7xl px-4 pb-10 pt-10 md:px-6 md:pb-12 md:pt-14">
+                    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
                         <div className="max-w-3xl">
-                            <p className="mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide font-body" style={{ borderColor: colors.border, color: colors.accent }}>
+                            <p className="mb-4 inline-flex h-8 items-center gap-2 rounded-full border border-[var(--realty-border-soft)] bg-[var(--realty-surface-soft)] px-3 text-[11px] font-bold uppercase tracking-[0.08em] font-body text-[var(--realty-accent)]">
                                 <Sparkles size={14} />
-                                {t('realty.website.eyebrow')}
+                                {t('realty.directory.badge')}
                             </p>
-                            <h1 className="text-4xl font-bold leading-tight font-header md:text-5xl" style={{ color: colors.heading }}>
+                            <h1 className="max-w-3xl text-3xl font-bold leading-tight font-header text-[var(--realty-heading)] md:text-5xl">
                                 {data.title || t('realty.directory.heroTitle')}
                             </h1>
-                            <p className="mt-4 max-w-2xl text-base leading-7 font-body md:text-lg" style={{ color: colors.textMuted }}>
+                            <p className="mt-4 max-w-2xl text-base leading-7 font-body text-[var(--realty-muted)]">
                                 {data.subtitle || t('realty.directory.heroSubtitle')}
                             </p>
                         </div>
-                        <div className={`border p-5 ${cardRadius}`} style={mutedPanelStyle}>
+
+                        <DirectoryPanel radiusClass={cardRadius} className="p-5">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-11 w-11 items-center justify-center rounded-md" style={{ backgroundColor: colors.accent, color: colors.buttonText }}>
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-[var(--realty-accent)] text-[var(--realty-badge-text)]">
                                     <Home size={20} />
                                 </div>
-                                <div>
-                                    <p className="text-2xl font-bold font-header" style={{ color: colors.heading }}>{totalCount}</p>
-                                    <p className="text-sm font-body" style={{ color: colors.textMuted }}>{t('realty.directory.availableListings')}</p>
+                                <div className="min-w-0">
+                                    <p className="text-3xl font-bold leading-none font-header text-[var(--realty-heading)]">{totalCount}</p>
+                                    <p className="mt-1 text-sm font-semibold font-body text-[var(--realty-muted)]">{t('realty.directory.availableListings')}</p>
                                 </div>
                             </div>
-                            <div className="mt-5 border-t pt-4" style={{ borderColor: colors.border }}>
-                                <p className="text-sm leading-6 font-body" style={{ color: colors.textMuted }}>{t('realty.directory.mapComingSoon')}</p>
+                            <div className="mt-5 border-t border-[var(--realty-border-soft)] pt-4">
+                                <p className="text-sm leading-6 font-body text-[var(--realty-muted)]">{t('realty.directory.mapComingSoon')}</p>
                             </div>
-                        </div>
+                        </DirectoryPanel>
                     </div>
                 </div>
             </div>
 
-            <div className="sticky top-0 z-20 border-b backdrop-blur-xl" style={{ borderColor: colors.border, backgroundColor: colorWithAlpha(colors.background, 0.95, colors.background) }}>
+            <div className="sticky top-0 z-20 border-b border-[var(--realty-border-soft)] bg-[var(--realty-bg-sticky)] backdrop-blur-2xl">
                 <div className="mx-auto max-w-7xl px-4 py-4 md:px-6">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setShowMobileFilters(prev => !prev)}
-                                className={`inline-flex items-center justify-center gap-2 border px-3 py-2 text-sm font-semibold font-button lg:hidden ${buttonRadius}`}
-                                style={{ borderColor: colors.border, color: colors.text }}
-                            >
-                                {showMobileFilters ? <X size={16} /> : <SlidersHorizontal size={16} />}
-                                {t('realty.directory.mobileFilters')}
-                            </button>
-                            <button
-                                type="button"
-                                disabled
-                                title={t('realty.directory.mapComingSoon')}
-                                className={`inline-flex cursor-not-allowed items-center justify-center gap-2 border px-3 py-2 text-sm font-semibold opacity-60 font-button ${buttonRadius}`}
-                                style={{ borderColor: colors.border, color: colors.textMuted }}
-                            >
-                                <Map size={16} />
-                                {t('realty.directory.map')}
-                            </button>
-                        </div>
-                        <div className="flex items-center justify-between gap-3 lg:justify-end">
-                            <p className="text-sm font-semibold font-body" style={{ color: colors.textMuted }}>
-                                {t('realty.directory.resultCount', { count: totalCount })}
-                            </p>
-                            <div className="flex rounded-md border p-1" style={{ borderColor: colors.border, backgroundColor: colors.surface }}>
-                                <button
-                                    type="button"
-                                    aria-label={t('realty.directory.gridView')}
-                                    onClick={() => setViewMode('grid')}
-                                    className="rounded px-3 py-2 transition-colors"
-                                    style={{ backgroundColor: viewMode === 'grid' ? colors.accent : 'transparent', color: viewMode === 'grid' ? colors.buttonText : colors.textMuted }}
+                    <DirectoryPanel radiusClass="rounded-xl" className="p-3 md:p-4">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <DirectoryButton
+                                    onClick={() => setShowMobileFilters(prev => !prev)}
+                                    radiusClass={buttonRadius}
+                                    className="lg:hidden"
                                 >
-                                    <Grid3X3 size={16} />
-                                </button>
-                                <button
-                                    type="button"
-                                    aria-label={t('realty.directory.listView')}
-                                    onClick={() => setViewMode('list')}
-                                    className="rounded px-3 py-2 transition-colors"
-                                    style={{ backgroundColor: viewMode === 'list' ? colors.accent : 'transparent', color: viewMode === 'list' ? colors.buttonText : colors.textMuted }}
+                                    {showMobileFilters ? <X size={16} /> : <SlidersHorizontal size={16} />}
+                                    {t('realty.directory.mobileFilters')}
+                                </DirectoryButton>
+                                <DirectoryButton
+                                    disabled
+                                    title={t('realty.directory.mapComingSoon')}
+                                    variant="ghost"
+                                    radiusClass={buttonRadius}
+                                    className="cursor-not-allowed"
                                 >
-                                    <List size={16} />
-                                </button>
+                                    <Map size={16} />
+                                    {t('realty.directory.map')}
+                                </DirectoryButton>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-3 lg:justify-end">
+                                <p className="text-sm font-semibold font-body text-[var(--realty-muted)]">
+                                    {t('realty.directory.resultCount', { count: totalCount })}
+                                </p>
+                                <div className="flex rounded-md border border-[var(--realty-border-soft)] bg-[var(--realty-surface-soft)] p-1">
+                                    <button
+                                        type="button"
+                                        aria-label={t('realty.directory.gridView')}
+                                        onClick={() => setViewMode('grid')}
+                                        className={cx(
+                                            'inline-flex h-8 w-9 items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--realty-accent-soft)]',
+                                            viewMode === 'grid'
+                                                ? 'bg-[var(--realty-accent)] text-[var(--realty-badge-text)]'
+                                                : 'text-[var(--realty-muted)] hover:bg-[var(--realty-accent-soft)] hover:text-[var(--realty-text)]'
+                                        )}
+                                    >
+                                        <Grid3X3 size={15} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        aria-label={t('realty.directory.listView')}
+                                        onClick={() => setViewMode('list')}
+                                        className={cx(
+                                            'inline-flex h-8 w-9 items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--realty-accent-soft)]',
+                                            viewMode === 'list'
+                                                ? 'bg-[var(--realty-accent)] text-[var(--realty-badge-text)]'
+                                                : 'text-[var(--realty-muted)] hover:bg-[var(--realty-accent-soft)] hover:text-[var(--realty-text)]'
+                                        )}
+                                    >
+                                        <List size={15} />
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className={`${showMobileFilters ? 'mt-4 block' : 'hidden'} lg:mt-4 lg:block`}>
-                        {filterPanel}
-                    </div>
+                        <div className={cx(showMobileFilters ? 'mt-4 block' : 'hidden', 'lg:mt-4 lg:block')}>
+                            {filterPanel}
+                        </div>
+                    </DirectoryPanel>
                 </div>
             </div>
 
             <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-10">
                 {!hasDirectoryAccess ? (
-                    <div className={`border p-8 text-center ${cardRadius}`} style={mutedPanelStyle}>
-                        <Filter className="mx-auto mb-3" size={28} style={{ color: colors.textMuted }} />
-                        <h2 className="text-2xl font-bold font-header" style={{ color: colors.heading }}>{t('realty.directory.unavailableTitle')}</h2>
-                        <p className="mx-auto mt-2 max-w-xl text-sm leading-6 font-body" style={{ color: colors.textMuted }}>{t('realty.directory.unavailableDescription')}</p>
-                    </div>
+                    <DirectoryPanel radiusClass={cardRadius} className="p-8 text-center">
+                        <Filter className="mx-auto mb-3 text-[var(--realty-muted)]" size={28} />
+                        <h2 className="text-2xl font-bold font-header text-[var(--realty-heading)]">{t('realty.directory.unavailableTitle')}</h2>
+                        <p className="mx-auto mt-2 max-w-xl text-sm leading-6 font-body text-[var(--realty-muted)]">{t('realty.directory.unavailableDescription')}</p>
+                    </DirectoryPanel>
                 ) : error ? (
-                    <div className={`border p-8 text-center ${cardRadius}`} style={mutedPanelStyle}>
-                        <h2 className="text-2xl font-bold font-header" style={{ color: colors.heading }}>{t('realty.directory.errorTitle')}</h2>
-                        <p className="mx-auto mt-2 max-w-xl text-sm leading-6 font-body" style={{ color: colors.textMuted }}>{error}</p>
-                        <button
-                            type="button"
+                    <DirectoryPanel radiusClass={cardRadius} className="p-8 text-center">
+                        <h2 className="text-2xl font-bold font-header text-[var(--realty-heading)]">{t('realty.directory.errorTitle')}</h2>
+                        <p className="mx-auto mt-2 max-w-xl text-sm leading-6 font-body text-[var(--realty-muted)]">{error}</p>
+                        <DirectoryButton
                             onClick={() => { void refetch(); }}
-                            className={`mt-5 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold font-button ${buttonRadius}`}
-                            style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
+                            variant="primary"
+                            radiusClass={buttonRadius}
+                            className="mt-5"
                         >
                             <RotateCcw size={15} />
                             {t('realty.directory.retry')}
-                        </button>
-                    </div>
+                        </DirectoryButton>
+                    </DirectoryPanel>
                 ) : isLoading && properties.length === 0 ? (
                     <div className={viewMode === 'grid' ? 'grid gap-6 md:grid-cols-2 lg:grid-cols-3' : 'space-y-4'}>
                         {[0, 1, 2, 3, 4, 5].map(item => (
-                            <div key={item} className={`h-96 animate-pulse border ${cardRadius}`} style={{ borderColor: colors.border, backgroundColor: colors.surface }} />
+                            <DirectoryPanel key={item} radiusClass={cardRadius} className={cx('animate-pulse overflow-hidden', viewMode === 'grid' ? 'h-96' : 'h-52')}>
+                                <div className="h-1/2 bg-[var(--realty-surface-strong)]" />
+                                <div className="space-y-3 p-5">
+                                    <div className="h-5 w-2/3 rounded bg-[var(--realty-border-soft)]" />
+                                    <div className="h-4 w-5/6 rounded bg-[var(--realty-border-soft)]" />
+                                    <div className="h-4 w-1/2 rounded bg-[var(--realty-border-soft)]" />
+                                </div>
+                            </DirectoryPanel>
                         ))}
                     </div>
                 ) : properties.length === 0 ? (
-                    <div className={`border p-8 text-center ${cardRadius}`} style={mutedPanelStyle}>
-                        <Search className="mx-auto mb-3" size={28} style={{ color: colors.textMuted }} />
-                        <h2 className="text-2xl font-bold font-header" style={{ color: colors.heading }}>{t('realty.directory.emptyTitle')}</h2>
-                        <p className="mx-auto mt-2 max-w-xl text-sm leading-6 font-body" style={{ color: colors.textMuted }}>{t('realty.directory.emptyDescription')}</p>
-                        <button
-                            type="button"
-                            onClick={clearFilters}
-                            className={`mt-5 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold font-button ${buttonRadius}`}
-                            style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
-                        >
-                            <RotateCcw size={15} />
-                            {t('realty.directory.clearFilters')}
-                        </button>
-                    </div>
+                    <DirectoryPanel radiusClass={cardRadius} className="p-8 text-center">
+                        <Search className="mx-auto mb-3 text-[var(--realty-muted)]" size={28} />
+                        <h2 className="text-2xl font-bold font-header text-[var(--realty-heading)]">{t('realty.directory.emptyTitle')}</h2>
+                        <p className="mx-auto mt-2 max-w-xl text-sm leading-6 font-body text-[var(--realty-muted)]">{t('realty.directory.emptyDescription')}</p>
+                        {filtersApplied && (
+                            <DirectoryButton
+                                onClick={clearFilters}
+                                variant="primary"
+                                radiusClass={buttonRadius}
+                                className="mt-5"
+                            >
+                                <RotateCcw size={15} />
+                                {t('realty.directory.clearFilters')}
+                            </DirectoryButton>
+                        )}
+                    </DirectoryPanel>
                 ) : (
                     <>
                         {showFeaturedSection && (
                             <div className="mb-10">
                                 <div className="mb-4 flex items-center justify-between gap-4">
                                     <div>
-                                        <p className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wide font-body" style={{ color: colors.accent }}>
+                                        <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] font-body text-[var(--realty-accent)]">
                                             <Star size={15} />
                                             {t('realty.directory.featuredSection')}
                                         </p>
-                                        <h2 className="mt-1 text-2xl font-bold font-header" style={{ color: colors.heading }}>{t('realty.directory.featuredTitle')}</h2>
+                                        <h2 className="mt-1 text-2xl font-bold font-header text-[var(--realty-heading)]">{t('realty.directory.featuredTitle')}</h2>
                                     </div>
                                 </div>
                                 <div className="grid gap-6 md:grid-cols-3">
@@ -711,23 +824,18 @@ const PublicRealtyDirectory: React.FC<PublicRealtyDirectoryProps> = ({
                             </div>
                         )}
 
-                        <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                             <div>
-                                <h2 className="text-2xl font-bold font-header" style={{ color: colors.heading }}>{t('realty.directory.allListings')}</h2>
-                                <p className="mt-1 text-sm font-body" style={{ color: colors.textMuted }}>
+                                <h2 className="text-2xl font-bold font-header text-[var(--realty-heading)]">{t('realty.directory.allListings')}</h2>
+                                <p className="mt-1 text-sm font-body text-[var(--realty-muted)]">
                                     {filtersApplied ? t('realty.directory.filtersApplied') : t('realty.directory.browseAll')}
                                 </p>
                             </div>
                             {filtersApplied && (
-                                <button
-                                    type="button"
-                                    onClick={clearFilters}
-                                    className={`inline-flex items-center justify-center gap-2 border px-3 py-2 text-sm font-semibold font-button transition-opacity hover:opacity-80 ${buttonRadius}`}
-                                    style={{ borderColor: colors.border, color: colors.accent }}
-                                >
+                                <DirectoryButton onClick={clearFilters} variant="ghost" radiusClass={buttonRadius}>
                                     <RotateCcw size={15} />
                                     {t('realty.directory.clearFilters')}
-                                </button>
+                                </DirectoryButton>
                             )}
                         </div>
 

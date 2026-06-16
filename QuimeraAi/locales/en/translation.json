@@ -6359,6 +6359,7 @@
     },
     "directory": {
       "title": "Property directory",
+      "badge": "Realty Directory",
       "seoTitle": "Property directory | Quimera Realty",
       "seoDescription": "Explore active properties, filter by city, price, type, and open every listing detail.",
       "heroTitle": "Find the right property",
