@@ -6105,6 +6105,7 @@
       "price": "Precio",
       "address": "Dirección",
       "city": "Ciudad",
+      "slug": "Slug",
       "type": "Tipo",
       "status": "Estado",
       "bedrooms": "Habitaciones",
@@ -6212,7 +6213,11 @@
       "area": "ft²"
     },
     "errors": {
-      "saveProperty": "No se pudo guardar la propiedad."
+      "saveProperty": "No se pudo guardar la propiedad.",
+      "publishRequired": "Completa los campos requeridos antes de publicar: {{fields}}."
+    },
+    "warnings": {
+      "publishMissing": "Advertencia de publicación: revisa estos campos: {{fields}}."
     },
     "demo": {
       "ocean": {

@@ -6,7 +6,6 @@ import type { RealtyListingsSectionData } from '../../types/realty';
 import { supabase } from '../../supabase';
 import { usePublicRealtyListings } from '../../hooks/usePublicRealtyListings';
 import { colorWithAlpha, formatRealtyPrice, REALTY_LEAD_SOURCE, REALTY_LEAD_TAG, resolveRealtyWebsiteColors } from '../../utils/realty';
-import { createDemoRealtyListings, mergeRealtyPropertiesWithPendingDemos } from './realtyDemo';
 
 interface PublicRealtyPropertyDetailProps {
     projectId: string;
@@ -42,6 +41,7 @@ const navigateTo = (path: string) => {
 
 const PublicRealtyPropertyDetail: React.FC<PublicRealtyPropertyDetailProps> = ({
     projectId,
+    ownerId,
     propertySlug = '',
     data = {},
     colors: propColors,
@@ -53,10 +53,7 @@ const PublicRealtyPropertyDetail: React.FC<PublicRealtyPropertyDetailProps> = ({
 }) => {
     const { t, i18n } = useTranslation();
     const { properties, isLoading } = usePublicRealtyListings(projectId || null, { limitCount: 60, realtime: isPreviewMode });
-    const listings = useMemo(
-        () => mergeRealtyPropertiesWithPendingDemos(properties, createDemoRealtyListings(t)),
-        [properties, t]
-    );
+    const listings = properties;
     const property = useMemo(() => listings.find(item => item.slug === propertySlug) || listings[0], [listings, propertySlug]);
     const related = useMemo(() => listings.filter(item => item.id !== property?.id).slice(0, 3), [listings, property?.id]);
     const colors = resolveRealtyWebsiteColors({ ...data.colors, ...propColors }, globalColors || theme?.globalColors, theme);
@@ -72,29 +69,62 @@ const PublicRealtyPropertyDetail: React.FC<PublicRealtyPropertyDetailProps> = ({
         if (!property || !form.name || !form.email) return;
         setStatus('saving');
         try {
-            if (!property.tenantId) throw new Error('Missing tenant for Realty lead.');
-            const { error } = await supabase.from('leads').insert({
-                tenant_id: property.tenantId,
+            const propertyOwnerId = property.userId || property.createdBy || ownerId;
+            if (!propertyOwnerId) throw new Error('Missing owner for Realty lead.');
+            let crmLeadId: string | null = null;
+            const leadMetadata = {
+                realtyLead: true,
+                realtyPropertyId: property.id,
+                realtyPropertyTitle: property.title,
+                realtyPropertySlug: property.slug,
+                propertyId: property.id,
+                propertyTitle: property.title,
+                propertySlug: property.slug,
+                message: form.message,
+                sourceComponent: 'realty-property-detail',
+            };
+
+            if (property.tenantId) {
+                const crmInsert = await supabase
+                    .from('leads')
+                    .insert({
+                        tenant_id: property.tenantId,
+                        project_id: projectId,
+                        name: form.name,
+                        email: form.email,
+                        phone: form.phone,
+                        status: 'new',
+                        source: REALTY_LEAD_SOURCE,
+                        value: property.price || 0,
+                        tags: [REALTY_LEAD_TAG, 'website', `property:${property.id}`],
+                        notes: form.message || t('realty.detail.defaultLeadMessage', { title: property.title }),
+                        custom_data: leadMetadata,
+                    })
+                    .select('id')
+                    .maybeSingle();
+
+                if (crmInsert.error) {
+                    console.warn('[PublicRealtyPropertyDetail] CRM lead sync failed', crmInsert.error);
+                } else {
+                    crmLeadId = crmInsert.data?.id || null;
+                }
+            }
+
+            const { error } = await supabase.from('property_leads').insert({
+                user_id: propertyOwnerId,
+                tenant_id: property.tenantId || null,
                 project_id: projectId,
+                property_id: property.id,
                 name: form.name,
                 email: form.email,
-                phone: form.phone,
-                status: 'new',
+                phone: form.phone || null,
+                message: form.message || t('realty.detail.defaultLeadMessage', { title: property.title }),
+                stage: 'new',
+                lead_type: 'buyer',
+                budget: property.price || null,
                 source: REALTY_LEAD_SOURCE,
-                value: property.price || 0,
-                tags: [REALTY_LEAD_TAG, 'website', `property:${property.id}`],
-                notes: form.message || t('realty.detail.defaultLeadMessage', { title: property.title }),
-                custom_data: {
-                    realtyLead: true,
-                    realtyPropertyId: property.id,
-                    realtyPropertyTitle: property.title,
-                    realtyPropertySlug: property.slug,
-                    propertyId: property.id,
-                    propertyTitle: property.title,
-                    propertySlug: property.slug,
-                    message: form.message,
-                    sourceComponent: 'realty-property-detail',
-                },
+                crm_lead_id: crmLeadId,
+                metadata: leadMetadata,
             });
             if (error) throw error;
             setStatus('saved');

@@ -6,7 +6,6 @@ import type { RealtyListingsSectionData, RealtyProperty } from '../../types/real
 import { usePublicRealtyListings } from '../../hooks/usePublicRealtyListings';
 import { formatRealtyPrice, resolveRealtyWebsiteColors } from '../../utils/realty';
 import { getAnimationClass, getAnimationDelay } from '../../utils/animations';
-import { createDemoRealtyListings, mergeRealtyPropertiesWithPendingDemos } from './realtyDemo';
 
 interface PublicRealtyListingsSectionProps {
     data?: RealtyListingsSectionData;
@@ -181,10 +180,9 @@ const PublicRealtyListingsSection: React.FC<PublicRealtyListingsSectionProps> = 
     });
 
     const listings = useMemo(() => {
-        const merged = mergeRealtyPropertiesWithPendingDemos(properties, createDemoRealtyListings(t));
-        const filtered = data.featuredOnly ? merged.filter(property => property.isFeatured) : merged;
+        const filtered = data.featuredOnly ? properties.filter(property => property.isFeatured) : properties;
         return filtered.slice(0, maxItems);
-    }, [data.featuredOnly, maxItems, properties, t]);
+    }, [data.featuredOnly, maxItems, properties]);
 
     const colors = resolveRealtyWebsiteColors(data.colors, globalColors || theme?.globalColors, theme);
     const cardRadius = radiusClasses[data.cardBorderRadius || theme?.cardBorderRadius || 'md'] || radiusClasses.md;

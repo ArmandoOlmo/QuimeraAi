@@ -9,13 +9,12 @@ import type {
 } from '../../types/realty';
 import {
     DEFAULT_REALTY_FLAGS,
-    REALTY_AI_CONTENT_PREFIX,
-    REALTY_AI_POST_TAG,
-    REALTY_PROPERTY_POST_TAG,
-    mapRealtyLeadRow,
-    mapRealtyPostRow,
-    mapRealtyPropertyToPostRow,
-    serializeRealtyAiContent,
+    mapPropertyLeadRow,
+    mapRealtyAiGenerationRow,
+    mapRealtyAiGenerationToRow,
+    mapRealtyMediaToRow,
+    mapRealtyPropertyRow,
+    mapRealtyPropertyToRow,
     toRealtySlug,
 } from '../../utils/realty';
 
@@ -25,29 +24,18 @@ interface UseRealtySuiteOptions {
     userId?: string | null;
 }
 
-const projectTag = (projectId: string) => `project:${projectId}`;
+const isMissingTableError = (error: any) => error?.code === 'PGRST205' || error?.code === '42P01';
 
-const parseAiPostRow = (row: any): RealtyAiGeneration => {
-    let payload: any = {};
-    if (typeof row.content === 'string' && row.content.startsWith(REALTY_AI_CONTENT_PREFIX)) {
-        try {
-            payload = JSON.parse(row.content.slice(REALTY_AI_CONTENT_PREFIX.length).trim());
-        } catch {
-            payload = {};
-        }
-    }
+const resolveProjectFlags = (projectData: unknown): RealtyModuleFlags => {
+    const data = projectData && typeof projectData === 'object' && !Array.isArray(projectData)
+        ? projectData as Record<string, any>
+        : {};
+    const realtyModule = data.realtyModule || {};
 
     return {
-        id: row.id,
-        tenantId: row.tenant_id ?? null,
-        projectId: row.tags?.find((tag: string) => tag.startsWith('project:'))?.replace('project:', '') || '',
-        propertyId: payload.propertyId ?? null,
-        userId: row.user_id ?? null,
-        kind: payload.kind || 'listing_description',
-        prompt: payload.prompt || '',
-        output: payload.output || row.excerpt || '',
-        metadata: payload.metadata || {},
-        createdAt: row.created_at,
+        ...DEFAULT_REALTY_FLAGS,
+        ...((realtyModule.flags as Partial<RealtyModuleFlags>) || {}),
+        real_estate_enabled: realtyModule.enabled ?? realtyModule.flags?.real_estate_enabled ?? DEFAULT_REALTY_FLAGS.real_estate_enabled,
     };
 };
 
@@ -68,8 +56,8 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         if (tenantId) return tenantId;
         if (!projectId) return null;
         const { data } = await supabase.from('projects').select('tenant_id').eq('id', projectId).maybeSingle();
-        return data?.tenant_id || userId || null;
-    }, [projectId, tenantId, userId]);
+        return data?.tenant_id || null;
+    }, [projectId, tenantId]);
 
     const loadAll = useCallback(async () => {
         if (!projectId) {
@@ -84,43 +72,64 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         setError(null);
 
         try {
-            const [postsResult, leadsResult, aiResult, projectResult] = await Promise.all([
+            const [propertiesResult, leadsResult, aiResult, projectResult] = await Promise.all([
                 supabase
-                    .from('posts')
-                    .select('*')
-                    .contains('tags', [projectTag(projectId), REALTY_PROPERTY_POST_TAG])
-                    .order('updated_at', { ascending: false }),
-                supabase
-                    .from('leads')
+                    .from('properties')
                     .select('*')
                     .eq('project_id', projectId)
-                    .contains('tags', ['realty'])
-                    .order('created_at', { ascending: false })
-                    .limit(100),
+                    .order('updated_at', { ascending: false }),
                 supabase
-                    .from('posts')
+                    .from('property_leads')
                     .select('*')
-                    .contains('tags', [projectTag(projectId), REALTY_AI_POST_TAG])
+                    .eq('project_id', projectId)
                     .order('created_at', { ascending: false })
-                    .limit(20),
-                supabase.from('projects').select('data').eq('id', projectId).maybeSingle(),
+                    .limit(200),
+                supabase
+                    .from('property_ai_generations')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('created_at', { ascending: false })
+                    .limit(50),
+                supabase.from('projects').select('data, tenant_id').eq('id', projectId).maybeSingle(),
             ]);
 
-            const tableError = [postsResult.error, leadsResult.error, aiResult.error, projectResult.error].find(Boolean);
+            const tableError = [propertiesResult.error, leadsResult.error, aiResult.error, projectResult.error].find(Boolean);
             if (tableError) throw tableError;
 
-            const realtyModule = ((projectResult.data as any)?.data || {})?.realtyModule || {};
-            setProperties((postsResult.data || []).map(mapRealtyPostRow));
-            setLeads((leadsResult.data || []).map(mapRealtyLeadRow));
-            setAiGenerations((aiResult.data || []).map(parseAiPostRow));
-            setFlags({
-                ...DEFAULT_REALTY_FLAGS,
-                ...((realtyModule.flags as Partial<RealtyModuleFlags>) || {}),
-                real_estate_enabled: realtyModule.enabled ?? realtyModule.flags?.real_estate_enabled ?? DEFAULT_REALTY_FLAGS.real_estate_enabled,
+            const propertyRows = propertiesResult.data || [];
+            const propertyIds = propertyRows.map((property: any) => property.id).filter(Boolean);
+            let mediaRows: any[] = [];
+
+            if (propertyIds.length > 0) {
+                const mediaResult = await supabase
+                    .from('property_media')
+                    .select('*')
+                    .in('property_id', propertyIds)
+                    .order('position', { ascending: true });
+                if (mediaResult.error) throw mediaResult.error;
+                mediaRows = mediaResult.data || [];
+            }
+
+            const mediaByProperty = new Map<string, any[]>();
+            mediaRows.forEach(row => {
+                const current = mediaByProperty.get(row.property_id) || [];
+                current.push(row);
+                mediaByProperty.set(row.property_id, current);
             });
+
+            setProperties(propertyRows.map((row: any) => mapRealtyPropertyRow(row, mediaByProperty.get(row.id) || [])));
+            setLeads((leadsResult.data || []).map(mapPropertyLeadRow));
+            setAiGenerations((aiResult.data || []).map(mapRealtyAiGenerationRow));
+            setFlags(resolveProjectFlags((projectResult.data as any)?.data));
         } catch (err: any) {
-            console.error('[useRealtySuite] Error loading Realty Suite posts:', err);
-            setError(err.message || 'Error loading Realty Suite');
+            if (isMissingTableError(err)) {
+                setProperties([]);
+                setLeads([]);
+                setAiGenerations([]);
+            } else {
+                console.error('[useRealtySuite] Error loading Realty Suite:', err);
+                setError(err.message || 'Error loading Realty Suite');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -155,7 +164,7 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
                         },
                     },
                 })
-	                .eq('id', projectId);
+                .eq('id', projectId);
             if (updateError) throw updateError;
         } catch (err: any) {
             setFlags(previousFlags);
@@ -166,50 +175,101 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         }
     }, [flags, projectId]);
 
+    const replacePropertyMedia = useCallback(async (property: RealtyProperty, images: RealtyProperty['images']) => {
+        if (!userId) throw new Error('User is required to save Realty property media.');
+        const { error: deleteError } = await supabase
+            .from('property_media')
+            .delete()
+            .eq('property_id', property.id);
+        if (deleteError) throw deleteError;
+
+        const rows = (images || [])
+            .filter(image => image.url)
+            .map((image, index) => mapRealtyMediaToRow({ ...image, position: index, isPrimary: index === 0 }, property, index, userId));
+
+        if (rows.length === 0) return;
+
+        const { error: insertError } = await supabase.from('property_media').insert(rows);
+        if (insertError) throw insertError;
+    }, [userId]);
+
     const saveProperty = useCallback(async (input: Partial<RealtyProperty>) => {
         if (!projectId) return;
+        if (!userId) throw new Error('User is required to save Realty properties.');
         setIsSaving(true);
+        setError(null);
         try {
             const resolvedTenantId = await resolveTenantId();
-            if (!resolvedTenantId) throw new Error('Tenant is required to create Realty posts.');
+            const images = (input.images || []).filter(image => image.url);
             const normalized: Partial<RealtyProperty> = {
                 ...input,
                 tenantId: resolvedTenantId,
                 projectId,
-                createdBy: userId || input.createdBy,
+                userId,
+                createdBy: userId,
                 slug: input.slug || toRealtySlug(input.title || ''),
+                images,
             };
-            const row = mapRealtyPropertyToPostRow(normalized);
+            const row = mapRealtyPropertyToRow(normalized, userId, projectId, resolvedTenantId);
+            let savedId = input.id || '';
+
             if (input.id) {
                 const { error: updateError } = await supabase
-                    .from('posts')
+                    .from('properties')
                     .update(row)
                     .eq('id', input.id);
                 if (updateError) throw updateError;
             } else {
-                const { error: insertError } = await supabase
-                    .from('posts')
-                    .insert({ ...row, created_at: new Date().toISOString() });
+                const { data, error: insertError } = await supabase
+                    .from('properties')
+                    .insert({ ...row, created_at: new Date().toISOString() })
+                    .select('id')
+                    .single();
                 if (insertError) throw insertError;
+                savedId = data.id;
             }
+
+            await replacePropertyMedia({
+                ...(normalized as RealtyProperty),
+                id: savedId,
+                tenantId: resolvedTenantId,
+                projectId,
+                userId,
+                createdBy: userId,
+                title: normalized.title || '',
+                images,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            }, images);
             await loadAll();
+        } catch (err: any) {
+            setError(err.message || 'Error saving Realty property');
+            throw err;
         } finally {
             setIsSaving(false);
         }
-    }, [loadAll, projectId, resolveTenantId, userId]);
+    }, [loadAll, projectId, replacePropertyMedia, resolveTenantId, userId]);
 
     const updatePropertyStatus = useCallback((propertyId: string, status: RealtyPropertyStatus) => {
         const property = properties.find(item => item.id === propertyId);
         if (!property) return Promise.resolve();
-        return saveProperty({ ...property, status });
+        return saveProperty({
+            ...property,
+            status,
+            publicEnabled: status === 'active',
+        });
     }, [properties, saveProperty]);
 
     const deleteProperty = useCallback(async (propertyId: string) => {
         setIsSaving(true);
+        setError(null);
         try {
-            const { error: deleteError } = await supabase.from('posts').delete().eq('id', propertyId);
+            const { error: deleteError } = await supabase.from('properties').delete().eq('id', propertyId);
             if (deleteError) throw deleteError;
             await loadAll();
+        } catch (err: any) {
+            setError(err.message || 'Error deleting Realty property');
+            throw err;
         } finally {
             setIsSaving(false);
         }
@@ -217,8 +277,8 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
 
     const updateLeadStatus = useCallback(async (leadId: string, status: RealtyLead['status']) => {
         const { error: updateError } = await supabase
-            .from('leads')
-            .update({ status, updated_at: new Date().toISOString() })
+            .from('property_leads')
+            .update({ stage: status, updated_at: new Date().toISOString() })
             .eq('id', leadId);
         if (updateError) throw updateError;
         await loadAll();
@@ -226,26 +286,14 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
 
     const saveAiGeneration = useCallback(async (generation: Omit<RealtyAiGeneration, 'id' | 'createdAt'>) => {
         if (!generation.projectId) return;
+        if (!userId) throw new Error('User is required to create Realty AI generations.');
         const resolvedTenantId = await resolveTenantId();
-        if (!resolvedTenantId) throw new Error('Tenant is required to create Realty AI posts.');
-        const { error: insertError } = await supabase.from('posts').insert({
-            tenant_id: resolvedTenantId,
-            user_id: generation.userId ?? userId ?? null,
-            title: `Realty AI - ${generation.kind}`,
-            slug: toRealtySlug(`realty-ai-${generation.kind}-${Date.now()}`),
-            content: serializeRealtyAiContent(generation),
-            excerpt: generation.output.slice(0, 240),
-            category: 'realty-ai',
-            status: 'draft',
-            tags: [
-                projectTag(generation.projectId),
-                REALTY_AI_POST_TAG,
-                generation.propertyId ? `realty-property:${generation.propertyId}` : 'realty-property:none',
-            ],
-            is_featured: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-        });
+        const { error: insertError } = await supabase
+            .from('property_ai_generations')
+            .insert({
+                ...mapRealtyAiGenerationToRow(generation, userId, resolvedTenantId),
+                created_at: new Date().toISOString(),
+            });
         if (insertError) throw insertError;
         await loadAll();
     }, [loadAll, resolveTenantId, userId]);

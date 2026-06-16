@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import type { RealtyModuleFlags, RealtyProperty } from '../types/realty';
-import { DEFAULT_REALTY_FLAGS, mapRealtyPostRow, REALTY_PROPERTY_POST_TAG } from '../utils/realty';
+import { DEFAULT_REALTY_FLAGS, mapRealtyPropertyRow } from '../utils/realty';
 
 export interface UsePublicRealtyListingsOptions {
     limitCount?: number;
@@ -22,6 +22,8 @@ const sortListings = (properties: RealtyProperty[]) =>
         if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
         return new Date(String(b.updatedAt || 0)).getTime() - new Date(String(a.updatedAt || 0)).getTime();
     });
+
+const isMissingTableError = (error: any) => error?.code === 'PGRST205' || error?.code === '42P01';
 
 export const usePublicRealtyListings = (
     projectId: string | null,
@@ -74,18 +76,40 @@ export const usePublicRealtyListings = (
             }
 
             const { data, error: fetchError } = await supabase
-                .from('posts')
+                .from('properties')
                 .select('*')
-                .contains('tags', [`project:${projectId}`, REALTY_PROPERTY_POST_TAG])
-                .eq('status', 'published')
+                .eq('project_id', projectId)
+                .eq('status', 'active')
+                .eq('public_enabled', true)
                 .order('is_featured', { ascending: false })
                 .order('updated_at', { ascending: false })
                 .limit(limitCount * 2);
 
             if (fetchError) throw fetchError;
-            setProperties(applyFilters((data || []).map(mapRealtyPostRow)));
+            const propertyRows = data || [];
+            const propertyIds = propertyRows.map((property: any) => property.id).filter(Boolean);
+            let mediaRows: any[] = [];
+
+            if (propertyIds.length > 0) {
+                const mediaResult = await supabase
+                    .from('property_media')
+                    .select('*')
+                    .in('property_id', propertyIds)
+                    .order('position', { ascending: true });
+                if (mediaResult.error) throw mediaResult.error;
+                mediaRows = mediaResult.data || [];
+            }
+
+            const mediaByProperty = new Map<string, any[]>();
+            mediaRows.forEach(row => {
+                const current = mediaByProperty.get(row.property_id) || [];
+                current.push(row);
+                mediaByProperty.set(row.property_id, current);
+            });
+
+            setProperties(applyFilters(propertyRows.map((row: any) => mapRealtyPropertyRow(row, mediaByProperty.get(row.id) || []))));
         } catch (err: any) {
-            if (err?.code === 'PGRST205' || err?.code === '42P01') {
+            if (isMissingTableError(err)) {
                 setProperties([]);
             } else {
                 console.error('[usePublicRealtyListings] Error loading listings:', err);
@@ -105,10 +129,15 @@ export const usePublicRealtyListings = (
         if (!projectId || !realtime) return;
 
         const channel = supabase
-            .channel(`public_realty_posts_${projectId}_${Math.random().toString(36).slice(2)}`)
+            .channel(`public_realty_listings_${projectId}_${Math.random().toString(36).slice(2)}`)
             .on(
                 'postgres_changes',
-                { event: '*', schema: 'public', table: 'posts' },
+                { event: '*', schema: 'public', table: 'properties', filter: `project_id=eq.${projectId}` },
+                () => { refetch(); }
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'property_media' },
                 () => { refetch(); }
             )
             .subscribe();

@@ -6,7 +6,6 @@ import type { RealtyListingsSectionData, RealtyProperty, RealtyPropertyType } fr
 import { usePublicRealtyListings } from '../../hooks/usePublicRealtyListings';
 import { formatRealtyPrice, realtyPropertyTypes, resolveRealtyWebsiteColors } from '../../utils/realty';
 import { getAnimationClass, getAnimationDelay } from '../../utils/animations';
-import { createDemoRealtyListings, mergeRealtyPropertiesWithPendingDemos } from './realtyDemo';
 
 interface PublicRealtyDirectoryPageProps {
     projectId: string;
@@ -47,10 +46,7 @@ const PublicRealtyDirectoryPage: React.FC<PublicRealtyDirectoryPageProps> = ({ p
         realtime: isPreviewMode,
     });
     const colors = resolveRealtyWebsiteColors(data.colors, globalColors || theme?.globalColors, theme);
-    const listings = useMemo(
-        () => mergeRealtyPropertiesWithPendingDemos(properties, createDemoRealtyListings(t)),
-        [properties, t]
-    );
+    const listings = properties;
 
     const [query, setQuery] = useState('');
     const [type, setType] = useState<RealtyPropertyType | 'all'>('all');

@@ -1699,6 +1699,7 @@ const LandingPageContent: React.FC = () => {
         {!showArticleLoading && !activePost && !activeCategorySlug && activePropertySlug && activeProjectId && (
           <PropertyDetailSection
             projectId={activeProjectId}
+            ownerId={activeProject?.userId || undefined}
             propertySlug={activePropertySlug}
             theme={theme}
             globalColors={theme.globalColors}

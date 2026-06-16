@@ -1,9 +1,15 @@
 import type { AnimationType } from './ui';
-import type { StoredTimestamp } from './ecommerce';
 import type { LeadStatus } from './business';
 
-export type RealtyPropertyStatus = 'draft' | 'active' | 'pending' | 'sold' | 'archived';
-export type RealtyPropertyType = 'house' | 'condo' | 'apartment' | 'townhouse' | 'land' | 'commercial';
+export type ISODateString = string;
+export type PropertyStatus = 'draft' | 'active' | 'pending' | 'sold' | 'archived';
+export type PropertyType = 'house' | 'condo' | 'apartment' | 'townhouse' | 'land' | 'commercial';
+export type TransactionType = 'sale' | 'rent' | 'lease';
+export type LeadStage = LeadStatus | 'showing_scheduled' | 'offer_made' | 'closed';
+export type LeadType = 'buyer' | 'seller' | 'renter' | 'investor' | 'agent' | 'other';
+export type CampaignType = 'social' | 'email' | 'ads' | 'print' | 'open_house' | 'other';
+export type RealtyPropertyStatus = PropertyStatus;
+export type RealtyPropertyType = PropertyType;
 export type RealtyLeadStatus = LeadStatus;
 
 export type RealtyPermissionKey =
@@ -28,52 +34,76 @@ export interface RealtyModuleSettings {
     enabled: boolean;
     flags: RealtyModuleFlags;
     settings?: Record<string, unknown>;
-    createdAt?: StoredTimestamp;
-    updatedAt?: StoredTimestamp;
+    createdAt?: ISODateString;
+    updatedAt?: ISODateString;
 }
 
 export interface RealtyImage {
     id: string;
     url: string;
+    storagePath?: string | null;
+    mediaType?: 'image' | 'video' | 'tour' | 'document' | string;
     altText?: string;
     position: number;
+    isPrimary?: boolean;
+    metadata?: Record<string, unknown>;
 }
 
 export interface RealtyProperty {
     id: string;
     tenantId?: string | null;
     projectId: string;
+    userId?: string | null;
     createdBy?: string | null;
     title: string;
     slug: string;
     description: string;
+    descriptionShort?: string;
+    descriptionLong?: string;
     price: number;
     currency: string;
+    transactionType?: TransactionType;
     address: string;
+    addressLine1?: string;
+    addressLine2?: string;
     city: string;
     state?: string;
     country?: string;
     zipCode?: string;
+    postalCode?: string;
     propertyType: RealtyPropertyType;
     status: RealtyPropertyStatus;
     bedrooms: number;
     bathrooms: number;
+    halfBathrooms?: number;
     area: number;
     areaUnit: 'sqft' | 'sqm';
     lotSize?: number;
+    lotSqft?: number;
     parkingSpaces?: number;
     yearBuilt?: number;
+    hoaFee?: number;
+    taxes?: number;
     latitude?: number;
     longitude?: number;
     amenities: string[];
+    features?: string[];
+    highlights?: string[];
     images: RealtyImage[];
+    mainImageUrl?: string;
     videoUrl?: string;
     virtualTourUrl?: string;
+    agentId?: string | null;
+    seoTitle?: string;
+    seoDescription?: string;
+    listingScore?: number;
+    leadCount?: number;
     isFeatured: boolean;
-    publishedAt?: StoredTimestamp;
+    publicEnabled?: boolean;
+    publishedAt?: ISODateString | null;
     metadata?: Record<string, unknown>;
-    createdAt: StoredTimestamp;
-    updatedAt: StoredTimestamp;
+    createdAt: ISODateString;
+    updatedAt: ISODateString;
 }
 
 export interface RealtyLead {
@@ -88,10 +118,12 @@ export interface RealtyLead {
     preferredDate?: string;
     budget?: number;
     status: RealtyLeadStatus;
+    leadType?: LeadType;
+    crmLeadId?: string | null;
     source: 'manual' | 'website' | 'ai' | 'import';
     metadata?: Record<string, unknown>;
-    createdAt: StoredTimestamp;
-    updatedAt: StoredTimestamp;
+    createdAt: ISODateString;
+    updatedAt: ISODateString;
 }
 
 export interface RealtyAgent {
@@ -105,6 +137,9 @@ export interface RealtyAgent {
     photoUrl?: string;
     licenseNumber?: string;
     bio?: string;
+    metadata?: Record<string, unknown>;
+    createdAt?: ISODateString;
+    updatedAt?: ISODateString;
 }
 
 export interface RealtyAiGeneration {
@@ -117,8 +152,128 @@ export interface RealtyAiGeneration {
     prompt: string;
     output: string;
     metadata?: Record<string, unknown>;
-    createdAt: StoredTimestamp;
+    createdAt: ISODateString;
+    updatedAt?: ISODateString;
 }
+
+export interface RealEstateProfile {
+    id: string;
+    userId: string;
+    projectId?: string | null;
+    tenantId?: string | null;
+    brokerageName?: string | null;
+    licenseNumber?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    website?: string | null;
+    settings?: Record<string, unknown>;
+    createdAt: ISODateString;
+    updatedAt: ISODateString;
+}
+
+export interface PropertyMedia extends RealtyImage {
+    userId: string;
+    projectId?: string | null;
+    tenantId?: string | null;
+    propertyId: string;
+    createdAt: ISODateString;
+    updatedAt: ISODateString;
+}
+
+export interface PropertyDocument {
+    id: string;
+    userId: string;
+    projectId?: string | null;
+    tenantId?: string | null;
+    propertyId: string;
+    fileName: string;
+    fileUrl?: string | null;
+    storagePath?: string | null;
+    documentType?: string;
+    isPrivate: boolean;
+    metadata?: Record<string, unknown>;
+    createdAt: ISODateString;
+    updatedAt: ISODateString;
+}
+
+export interface PropertyLead {
+    id: string;
+    userId: string;
+    projectId?: string | null;
+    tenantId?: string | null;
+    propertyId: string;
+    name: string;
+    email: string;
+    phone?: string | null;
+    message?: string | null;
+    stage: LeadStage;
+    leadType: LeadType;
+    preferredDate?: ISODateString | null;
+    budget?: number | null;
+    source: string;
+    crmLeadId?: string | null;
+    metadata?: Record<string, unknown>;
+    createdAt: ISODateString;
+    updatedAt: ISODateString;
+}
+
+export interface PropertyLeadEvent {
+    id: string;
+    userId: string;
+    projectId?: string | null;
+    tenantId?: string | null;
+    propertyId?: string | null;
+    propertyLeadId: string;
+    eventType: string;
+    note?: string | null;
+    metadata?: Record<string, unknown>;
+    createdAt: ISODateString;
+    updatedAt: ISODateString;
+}
+
+export interface PropertyAiGeneration extends RealtyAiGeneration {
+    userId: string;
+    projectId: string;
+    tenantId?: string | null;
+}
+
+export interface PropertyCampaign {
+    id: string;
+    userId: string;
+    projectId?: string | null;
+    tenantId?: string | null;
+    propertyId?: string | null;
+    campaignType: CampaignType;
+    title: string;
+    status?: string;
+    content?: Record<string, unknown>;
+    scheduledAt?: ISODateString | null;
+    metadata?: Record<string, unknown>;
+    createdAt: ISODateString;
+    updatedAt: ISODateString;
+}
+
+export interface PropertyOpenHouse {
+    id: string;
+    userId: string;
+    projectId?: string | null;
+    tenantId?: string | null;
+    propertyId: string;
+    startsAt: ISODateString;
+    endsAt?: ISODateString | null;
+    timezone?: string;
+    status?: string;
+    notes?: string | null;
+    registrationEnabled: boolean;
+    metadata?: Record<string, unknown>;
+    createdAt: ISODateString;
+    updatedAt: ISODateString;
+}
+
+export type Property = RealtyProperty;
+export type Agent = RealtyAgent;
+export type PropertyLeadRecord = PropertyLead;
+export type PropertyAiGenerationRecord = PropertyAiGeneration;
 
 export interface RealtyWebsiteColorConfig {
     background?: string;

@@ -34,7 +34,6 @@ import { useRealtySuite } from '../../../hooks/realty/useRealtySuite';
 import type { LeadStatus } from '../../../types/business';
 import type { RealtyLead, RealtyProperty, RealtyPropertyStatus, RealtyPropertyType } from '../../../types/realty';
 import { formatRealtyPrice, isRealtyCrmLead, mapCrmLeadToRealtyLead, realtyLeadStatuses, realtyPropertyStatuses, realtyPropertyTypes, toRealtySlug } from '../../../utils/realty';
-import { createDemoRealtyLeads, createDemoRealtyListings, isDemoRealtyLead, isDemoRealtyProperty, mergeRealtyPropertiesWithPendingDemos } from '../../realty/realtyDemo';
 
 type RealtyTab = 'overview' | 'properties' | 'leads' | 'ai' | 'settings';
 
@@ -106,6 +105,7 @@ const RealtyDashboard: React.FC = () => {
     const [aiPrompt, setAiPrompt] = useState('');
     const [aiOutput, setAiOutput] = useState('');
     const [localError, setLocalError] = useState<string | null>(null);
+    const [localWarning, setLocalWarning] = useState<string | null>(null);
 
     const tabs = useMemo(() => [
         { id: 'overview' as const, label: t('realty.tabs.overview'), icon: BarChart3, visible: access.canView },
@@ -115,36 +115,27 @@ const RealtyDashboard: React.FC = () => {
         { id: 'settings' as const, label: t('realty.tabs.settings'), icon: Settings, visible: access.canManageSettings },
     ].filter(item => item.visible), [access.canManageLeads, access.canManageProperties, access.canManageSettings, access.canUseAi, access.canView, t]);
 
-    const demoProperties = useMemo(() => {
-        if (!activeProjectId) return [];
-        return createDemoRealtyListings(t).map(property => ({
-            ...property,
-            projectId: activeProjectId,
-            tenantId: currentTenantId,
-            createdBy: user?.id || null,
-        }));
-    }, [activeProjectId, currentTenantId, t, user?.id]);
-    const displayProperties = useMemo(
-        () => mergeRealtyPropertiesWithPendingDemos(suite.properties, demoProperties),
-        [demoProperties, suite.properties]
-    );
-    const demoLeads = useMemo(() => {
-        if (!activeProjectId) return [];
-        return createDemoRealtyLeads(
-            t,
-            displayProperties,
-            activeProjectId,
-            currentTenantId
-        );
-    }, [activeProjectId, currentTenantId, displayProperties, t]);
+    const displayProperties = suite.properties;
     const crmRealtyLeads = useMemo(
         () => crm.leads.filter(isRealtyCrmLead).map(mapCrmLeadToRealtyLead),
         [crm.leads]
     );
-    const displayLeads = useMemo(
-        () => [...crmRealtyLeads, ...demoLeads].sort((a, b) => getDateMs(b.createdAt) - getDateMs(a.createdAt)),
-        [crmRealtyLeads, demoLeads]
-    );
+    const suiteLeadIds = useMemo(() => new Set(suite.leads.map(lead => lead.id)), [suite.leads]);
+    const displayLeads = useMemo(() => {
+        const crmIdsSyncedToSuite = new Set(
+            suite.leads
+                .map(lead => lead.crmLeadId || (typeof lead.metadata?.sourceLeadId === 'string' ? lead.metadata.sourceLeadId : ''))
+                .filter(Boolean)
+        );
+        const suiteIdentityKeys = new Set(
+            suite.leads.map(lead => `${lead.email.toLowerCase()}::${lead.propertyId || ''}`)
+        );
+        const unsyncedCrmLeads = crmRealtyLeads.filter(lead => {
+            if (crmIdsSyncedToSuite.has(lead.id)) return false;
+            return !suiteIdentityKeys.has(`${lead.email.toLowerCase()}::${lead.propertyId || ''}`);
+        });
+        return [...suite.leads, ...unsyncedCrmLeads].sort((a, b) => getDateMs(b.createdAt) - getDateMs(a.createdAt));
+    }, [crmRealtyLeads, suite.leads]);
     const displayNewLeads = displayLeads.filter(lead => lead.status === 'new');
     const propertyTitleById = useMemo(
         () => new Map(displayProperties.map(property => [property.id, property.title])),
@@ -165,27 +156,16 @@ const RealtyDashboard: React.FC = () => {
         setEditingProperty(draft);
         setAmenitiesInput('');
         setPropertyImageUrls([]);
+        setLocalWarning(null);
+        setLocalError(null);
     };
 
     const startEdit = (property: RealtyProperty) => {
-        if (isDemoRealtyProperty(property)) {
-            const { id, createdAt, updatedAt, ...demoDraft } = property;
-            setEditingProperty({
-                ...demoDraft,
-                projectId: activeProjectId || property.projectId,
-                tenantId: currentTenantId,
-                createdBy: user?.id || property.createdBy,
-                metadata: {
-                    ...demoDraft.metadata,
-                    demoId: id,
-                    demoSlug: property.slug,
-                },
-            });
-        } else {
-            setEditingProperty(property);
-        }
+        setEditingProperty(property);
         setAmenitiesInput((property.amenities || []).join('\n'));
         setPropertyImageUrls((property.images || []).map(image => image.url).filter(Boolean));
+        setLocalWarning(null);
+        setLocalError(null);
     };
 
     const updatePropertyImage = (index: number, url: string) => {
@@ -207,15 +187,41 @@ const RealtyDashboard: React.FC = () => {
     const saveProperty = async () => {
         if (!editingProperty || !activeProjectId) return;
         setLocalError(null);
+        setLocalWarning(null);
         try {
+            const nextSlug = editingProperty.slug || toRealtySlug(editingProperty.title || '');
+            const nextImages = cleanImageUrls(propertyImageUrls).map((url, index) => ({ id: `image-${index}`, url, position: index, altText: editingProperty.title || '', isPrimary: index === 0 }));
+            if (editingProperty.status === 'active') {
+                const requiredMissing = [
+                    !editingProperty.title?.trim() ? t('realty.form.title') : '',
+                    !nextSlug ? t('realty.form.slug') : '',
+                    !editingProperty.propertyType ? t('realty.form.type') : '',
+                ].filter(Boolean);
+                const recommendedMissing = [
+                    !editingProperty.price ? t('realty.form.price') : '',
+                    nextImages.length === 0 ? t('realty.form.images') : '',
+                    !editingProperty.description?.trim() ? t('realty.form.description') : '',
+                ].filter(Boolean);
+
+                if (requiredMissing.length > 0) {
+                    setLocalError(t('realty.errors.publishRequired', { fields: requiredMissing.join(', ') }));
+                    setLocalWarning(t('realty.warnings.publishMissing', { fields: [...requiredMissing, ...recommendedMissing].join(', ') }));
+                    return;
+                }
+
+                if (recommendedMissing.length > 0) {
+                    setLocalWarning(t('realty.warnings.publishMissing', { fields: recommendedMissing.join(', ') }));
+                }
+            }
+
             await suite.saveProperty({
                 ...editingProperty,
                 projectId: activeProjectId,
                 tenantId: currentTenantId,
                 createdBy: user?.id || editingProperty.createdBy,
-                slug: editingProperty.slug || toRealtySlug(editingProperty.title || ''),
+                slug: nextSlug,
                 amenities: parseLines(amenitiesInput),
-                images: cleanImageUrls(propertyImageUrls).map((url, index) => ({ id: `image-${index}`, url, position: index, altText: editingProperty.title || '' })),
+                images: nextImages,
             });
             setEditingProperty(null);
             setPropertyImageUrls([]);
@@ -345,9 +351,7 @@ const RealtyDashboard: React.FC = () => {
                     {renderPropertyForm()}
                     <div className="flex justify-end"><Button type="button" onClick={startCreate}><Plus size={16} />{t('realty.properties.create')}</Button></div>
                     <div className="grid gap-5">
-                        {displayProperties.map(property => {
-                            const isDemo = isDemoRealtyProperty(property);
-                            return (
+                        {displayProperties.map(property => (
                             <div key={property.id} className="rounded-xl border border-q-border bg-q-surface p-4 transition-colors hover:border-q-accent/40 md:p-5">
                                 <div className="grid gap-4 md:grid-cols-[96px_minmax(0,1fr)_auto] md:items-center">
                                     <div className="h-20 overflow-hidden rounded-lg bg-q-surface-overlay">
@@ -357,20 +361,18 @@ const RealtyDashboard: React.FC = () => {
                                         <div className="flex flex-wrap items-center gap-2">
                                             <h3 className="truncate font-bold text-q-accent">{property.title}</h3>
                                             <span className="rounded-full bg-q-surface-overlay px-2 py-0.5 text-xs text-q-text-secondary">{t(`realty.status.${property.status}`)}</span>
-                                            {isDemo && <span className="rounded-full bg-q-surface-overlay px-2 py-0.5 text-xs text-q-text-secondary">{t('realty.website.demo')}</span>}
                                             {property.isFeatured && <span className="rounded-full bg-q-accent/15 px-2 py-0.5 text-xs text-q-accent">{t('realty.website.featured')}</span>}
                                         </div>
                                         <p className="mt-1 text-sm text-q-text-secondary">{formatRealtyPrice(property.price, i18n.language, property.currency)} · {[property.address, property.city].filter(Boolean).join(', ')}</p>
                                     </div>
                                     <div className="flex flex-wrap gap-2 md:justify-end">
-                                        <Button type="button" size="sm" variant="secondary" onClick={() => startEdit(property)}>{isDemo ? t('realty.actions.useDemo') : t('common.edit')}</Button>
-                                        {!isDemo && <Button type="button" size="sm" variant="secondary" onClick={() => suite.updatePropertyStatus(property.id, property.status === 'active' ? 'draft' : 'active')}>{property.status === 'active' ? t('realty.actions.unpublish') : t('realty.actions.publish')}</Button>}
-                                        {!isDemo && <Button type="button" size="icon-sm" variant="ghost" onClick={() => suite.deleteProperty(property.id)}><Trash2 size={15} /></Button>}
+                                        <Button type="button" size="sm" variant="secondary" onClick={() => startEdit(property)}>{t('common.edit')}</Button>
+                                        <Button type="button" size="sm" variant="secondary" onClick={() => suite.updatePropertyStatus(property.id, property.status === 'active' ? 'draft' : 'active')}>{property.status === 'active' ? t('realty.actions.unpublish') : t('realty.actions.publish')}</Button>
+                                        <Button type="button" size="icon-sm" variant="ghost" onClick={() => suite.deleteProperty(property.id)}><Trash2 size={15} /></Button>
                                     </div>
                                 </div>
                             </div>
-                        );
-                        })}
+                        ))}
                     </div>
                 </div>
             );
@@ -380,14 +382,13 @@ const RealtyDashboard: React.FC = () => {
             return (
                 <div className="rounded-xl border border-q-border bg-q-surface">
                     {displayLeads.length === 0 ? <EmptyPanel icon={Users} title={t('realty.empty.noLeads')} description={t('realty.empty.noLeadsDesc')} /> : displayLeads.map(lead => {
-                        const isDemo = isDemoRealtyLead(lead);
                         const propertyTitle = getLeadPropertyTitle(lead);
+                        const isSuiteLead = suiteLeadIds.has(lead.id);
                         return (
                             <div key={lead.id} className="grid gap-4 border-b border-q-border p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_13rem] md:items-start md:p-5">
                                 <div className="min-w-0">
                                     <div className="flex flex-wrap items-center gap-2">
                                         <p className="font-bold text-q-accent">{lead.name}</p>
-                                        {isDemo && <span className="rounded-full bg-q-surface-overlay px-2 py-0.5 text-xs text-q-text-secondary">{t('realty.website.demo')}</span>}
                                     </div>
                                     <p className="mt-1 text-sm text-q-text-secondary">{lead.email} {lead.phone ? `· ${lead.phone}` : ''}</p>
                                     {propertyTitle && <p className="mt-1 text-xs text-q-text-secondary">{t('realty.leads.property')}: <span className="font-medium text-q-accent">{propertyTitle}</span></p>}
@@ -396,8 +397,13 @@ const RealtyDashboard: React.FC = () => {
                                 <DashboardSelect
                                     className="w-full md:w-52"
                                     value={lead.status}
-                                    disabled={isDemo}
-                                    onChange={value => crm.updateLeadStatus(lead.id, value as LeadStatus)}
+                                    onChange={value => {
+                                        if (isSuiteLead) {
+                                            void suite.updateLeadStatus(lead.id, value as LeadStatus);
+                                        } else {
+                                            void crm.updateLeadStatus(lead.id, value as LeadStatus);
+                                        }
+                                    }}
                                     options={realtyLeadStatuses.map(status => ({ value: status, label: t(`realty.leadStatus.${status}`) }))}
                                 />
                             </div>
@@ -476,7 +482,7 @@ const RealtyDashboard: React.FC = () => {
                     <div className="rounded-xl border border-q-border bg-q-surface p-5 md:p-6">
                         <h2 className="font-bold text-q-text">{t('realty.overview.recentLeads')}</h2>
                         <div className="mt-5 space-y-3">
-                            {displayLeads.slice(0, 4).map(lead => <div key={lead.id} className="rounded-lg border border-q-border p-4"><div className="flex min-w-0 flex-wrap items-center gap-2"><p className="min-w-0 truncate text-sm font-medium text-q-accent">{lead.name}</p>{isDemoRealtyLead(lead) && <span className="shrink-0 rounded-full bg-q-surface-overlay px-2 py-0.5 text-xs text-q-text-secondary">{t('realty.website.demo')}</span>}</div><p className="mt-1 truncate text-xs text-q-text-secondary">{lead.email}</p></div>)}
+                            {displayLeads.slice(0, 4).map(lead => <div key={lead.id} className="rounded-lg border border-q-border p-4"><p className="min-w-0 truncate text-sm font-medium text-q-accent">{lead.name}</p><p className="mt-1 truncate text-xs text-q-text-secondary">{lead.email}</p></div>)}
                             {displayLeads.length === 0 && <p className="text-sm text-q-text-secondary">{t('realty.empty.noLeadsDesc')}</p>}
                         </div>
                     </div>
@@ -533,6 +539,9 @@ const RealtyDashboard: React.FC = () => {
                 <div className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
                     {(suite.error || localError) && (
                         <div className="mb-4 rounded-lg border border-q-error/30 bg-q-error/10 p-3 text-sm text-q-error">{localError || suite.error}</div>
+                    )}
+                    {localWarning && (
+                        <div className="mb-4 rounded-lg border border-q-warning/30 bg-q-warning/10 p-3 text-sm text-q-warning">{localWarning}</div>
                     )}
                     {renderContent()}
                 </div>

@@ -6105,6 +6105,7 @@
       "price": "Price",
       "address": "Address",
       "city": "City",
+      "slug": "Slug",
       "type": "Type",
       "status": "Status",
       "bedrooms": "Bedrooms",
@@ -6212,7 +6213,11 @@
       "area": "sqft"
     },
     "errors": {
-      "saveProperty": "The property could not be saved."
+      "saveProperty": "The property could not be saved.",
+      "publishRequired": "Complete required fields before publishing: {{fields}}."
+    },
+    "warnings": {
+      "publishMissing": "Publishing warning: review these fields: {{fields}}."
     },
     "demo": {
       "ocean": {

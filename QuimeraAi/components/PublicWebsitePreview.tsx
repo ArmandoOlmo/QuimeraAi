@@ -1861,6 +1861,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       return (
         <PropertyDetailSection
           projectId={storeProjectId || ''}
+          ownerId={project?.userId || undefined}
           propertySlug={propertySlug}
           theme={theme}
           globalColors={theme?.globalColors as Record<string, string> | undefined}
