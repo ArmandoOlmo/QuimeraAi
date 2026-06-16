@@ -582,25 +582,25 @@ const SubscriptionSettings: React.FC = () => {
                         const gradient = PLAN_GRADIENTS[plan.id] || PLAN_GRADIENTS.free;
 
                         return (
-                            <div
-                                key={plan.id}
-                                className={`relative flex flex-col overflow-hidden transition-all duration-300 ${settingsPanelClass} ${isCurrentPlan
-                                    ? 'border-[color-mix(in_srgb,var(--quimera-status-accent-from)_40%,transparent)] bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_8%,transparent)]'
-                                    : isRecommended
-                                        ? 'border-amber-500/50'
-                                        : 'hover:border-q-border'
-                                    }`}
-                            >
-                                {/* Recommended badge */}
+                            <div key={plan.id} className="relative">
+                                {/* Recommended badge — outside overflow-hidden card so it isn't clipped */}
                                 {isRecommended && !isCurrentPlan && (
-                                    <div className="absolute -top-0 left-1/2 -translate-x-1/2 z-10 -translate-y-1/2">
-                                        <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full">
+                                    <div className="absolute top-0 left-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
+                                        <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full shadow-md">
                                             <Star size={11} />
                                             {t('settings.subscription.recommended', 'Recomendado')}
                                         </span>
                                     </div>
                                 )}
 
+                                <div
+                                    className={`relative flex flex-col overflow-hidden transition-all duration-300 ${settingsPanelClass} ${isCurrentPlan
+                                        ? 'border-[color-mix(in_srgb,var(--quimera-status-accent-from)_40%,transparent)] bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_8%,transparent)]'
+                                        : isRecommended
+                                            ? 'border-amber-500/50'
+                                            : 'hover:border-q-border'
+                                        }`}
+                                >
                                 {/* Gradient top strip */}
                                 <div className={`h-1.5 bg-gradient-to-r ${gradient}`} />
 
@@ -695,6 +695,7 @@ const SubscriptionSettings: React.FC = () => {
                                             )}
                                         </button>
                                     )}
+                                </div>
                                 </div>
                             </div>
                         );
