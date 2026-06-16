@@ -1097,6 +1097,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         data={mergedData.realEstateListings}
                         theme={theme}
                         globalColors={globalColors as Record<string, string>}
+                        isPreviewMode={isPreview}
+                        onNavigate={handleLinkNavigation}
                     />
                 );
 

@@ -55,6 +55,7 @@ import SectionBackground from './ui/SectionBackground';
 import Products from './Products';
 import Separator from './Separator';
 import RealEstateListingsSection from './realty/PublicRealtyListingsSection';
+import PropertyDirectoryPage from './realty/PublicRealtyDirectoryPage';
 import RestaurantReservation from './RestaurantReservation';
 import PropertyDetailSection from './realty/PublicRealtyPropertyDetail';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData, ThemeData } from '../types';
@@ -131,7 +132,7 @@ const LandingPageContent: React.FC = () => {
   };
   const componentOrder = (isEditorMode ? editorContext?.componentOrder : projectContext?.componentOrder) || projectContext?.componentOrder;
   const sectionVisibility = (isEditorMode ? editorContext?.sectionVisibility : projectContext?.sectionVisibility) || projectContext?.sectionVisibility;
-  const { activeProjectId, activeProject, pages, activePage, setActivePage, addPage } = projectContext || {};
+  const { activeProjectId, activeProject, pages, activePage, setActivePage } = projectContext || {};
 
   const { cmsPosts, isLoadingCMS, menus, categories } = useCMS();
   const { componentStatus, customComponents, componentStyles: rawComponentStyles } = useAdmin();
@@ -141,6 +142,7 @@ const LandingPageContent: React.FC = () => {
   const [isRouting, setIsRouting] = useState(false);
   const [blogSlugNotFound, setBlogSlugNotFound] = useState(false);
   const [activePropertySlug, setActivePropertySlug] = useState<string | null>(null);
+  const [showRealtyDirectory, setShowRealtyDirectory] = useState(false);
 
   // Navigation guard: prevents handleNavigation (hashchange/popstate listener)
   // from running redundantly after handleLinkNavigation already handled the event.
@@ -269,6 +271,7 @@ const LandingPageContent: React.FC = () => {
       setIsRouting(false);
       setBlogSlugNotFound(false);
       setActivePropertySlug(null);
+      setShowRealtyDirectory(false);
 
       // ========================================
       // REAL PATH ROUTING (Shopify/Wix style)
@@ -333,6 +336,13 @@ const LandingPageContent: React.FC = () => {
         return;
       }
 
+      if (path === '/listados' || path === '/listados/') {
+        setActivePage(null);
+        setShowRealtyDirectory(true);
+        window.scrollTo(0, 0);
+        return;
+      }
+
       // Multi-page routing: match clean page slugs such as /listados
       // IMPORTANT: Only match non-home pages here. For the root path (/),
       // we fall through to the "root path" handler below.
@@ -351,23 +361,6 @@ const LandingPageContent: React.FC = () => {
             window.scrollTo(0, 0);
             return;
           }
-        }
-
-        if (path === '/listados' || path === '/listados/') {
-          // Check if a listing page already exists to avoid duplicates
-          const existingListingPage = pages.find(p => 
-            p.slug === '/listados' || p.slug === 'listados'
-          );
-          if (existingListingPage) {
-            setActivePage(existingListingPage.id);
-            window.scrollTo(0, 0);
-          } else {
-            addPage('real-estate-listings').then(pageId => {
-              setActivePage(pageId);
-              window.scrollTo(0, 0);
-            });
-          }
-          return;
         }
 
         // Root path with multi-page: ensure home page is active
@@ -442,7 +435,7 @@ const LandingPageContent: React.FC = () => {
       window.removeEventListener('hashchange', handleNavigation);
       window.removeEventListener('popstate', handleNavigation);
     };
-  }, [addPage, cmsPosts, isLoadingCMS, pages, setActivePage]);
+  }, [cmsPosts, isLoadingCMS, pages, setActivePage]);
 
   const handleBackToHome = () => {
     window.history.pushState({}, '', '/');
@@ -450,6 +443,7 @@ const LandingPageContent: React.FC = () => {
     setActiveCategorySlug(null);
     setBlogSlugNotFound(false);
     setActivePropertySlug(null);
+    setShowRealtyDirectory(false);
     setStoreView({ type: 'none' });
     // Reset multi-page active page to home (or null for legacy projects)
     const homePage = pages.find(page => page.isHomePage);
@@ -460,24 +454,28 @@ const LandingPageContent: React.FC = () => {
   // Store navigation handlers - use real paths
   const handleNavigateToStore = useCallback(() => {
     window.history.pushState({}, '', '/tienda');
+    setShowRealtyDirectory(false);
     setStoreView({ type: 'store' });
     window.scrollTo(0, 0);
   }, []);
 
   const handleNavigateToCategory = useCallback((categorySlug: string) => {
     window.history.pushState({}, '', `/tienda/categoria/${categorySlug}`);
+    setShowRealtyDirectory(false);
     setStoreView({ type: 'category', slug: categorySlug });
     window.scrollTo(0, 0);
   }, []);
 
   const handleNavigateToProduct = useCallback((productSlug: string) => {
     window.history.pushState({}, '', `/tienda/producto/${productSlug}`);
+    setShowRealtyDirectory(false);
     setStoreView({ type: 'product', slug: productSlug });
     window.scrollTo(0, 0);
   }, []);
 
   const handleNavigateToCheckout = useCallback(() => {
     window.history.pushState({}, '', '/checkout');
+    setShowRealtyDirectory(false);
     setStoreView({ type: 'checkout' });
     window.scrollTo(0, 0);
   }, []);
@@ -496,6 +494,7 @@ const LandingPageContent: React.FC = () => {
     setStoreView({ type: 'none' });
     setBlogSlugNotFound(false);
     setActivePropertySlug(null);
+    setShowRealtyDirectory(false);
 
     // Home page
     if (href === '/' || href === '') {
@@ -629,7 +628,16 @@ const LandingPageContent: React.FC = () => {
     // so the user stays inside the same editor canvas.
     if (href.startsWith('/listados/') && href !== '/listados/' && href !== '/listados') {
       const slug = href.replace('/listados/', '').replace(/\/$/, '');
+      setShowRealtyDirectory(false);
       setActivePropertySlug(slug);
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    if (href === '/listados' || href === '/listados/') {
+      setActivePage(null);
+      setShowRealtyDirectory(true);
+      window.history.pushState({}, '', '/listados');
       window.scrollTo(0, 0);
       return;
     }
@@ -655,31 +663,13 @@ const LandingPageContent: React.FC = () => {
       }
     }
 
-    if (href === '/listados' || href === '/listados/') {
-      setActivePropertySlug(null);
-      // Check if a listing page already exists to avoid duplicates
-      const existingListingPage = pages.find(p => 
-        p.slug === '/listados' || p.slug === 'listados'
-      );
-      if (existingListingPage) {
-        setActivePage(existingListingPage.id);
-        window.scrollTo(0, 0);
-      } else {
-        addPage('real-estate-listings').then(pageId => {
-          setActivePage(pageId);
-          window.scrollTo(0, 0);
-        });
-      }
-      return;
-    }
-
     // Fallback: try to scroll to element by ID
     const id = href.replace(/^\//, '').replace(/\/$/, '');
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [activePage, addPage, cmsPosts, pages, setActivePage]);
+  }, [activePage, cmsPosts, pages, setActivePage]);
 
   // Check if we're showing a store view
   const isStoreViewActive = storeView.type !== 'none';
@@ -1206,6 +1196,16 @@ const LandingPageContent: React.FC = () => {
         />
       </SectionBackground>
     ),
+    propertyDirectory: (
+      <PropertyDirectoryPage
+        data={mergedRealEstateListingsData || data.realEstateListings}
+        projectId={activeProjectId || ''}
+        isPreviewMode={isEditorMode}
+        theme={theme}
+        globalColors={theme.globalColors}
+        onNavigate={handleLinkNavigation}
+      />
+    ),
     // Store settings is a config section, not a visual component
     storeSettings: null,
     // CMS Feed section - renders blog posts grid
@@ -1585,7 +1585,7 @@ const LandingPageContent: React.FC = () => {
       <Header
         {...mergedHeaderData}
         links={headerLinks}
-        forceSolid={isStoreViewActive || Boolean(activePropertySlug) || Boolean(activePage?.sections?.includes('propertyDetail') || activePage?.sections?.includes('propertyDirectory'))}
+        forceSolid={isStoreViewActive || showRealtyDirectory || Boolean(activePropertySlug) || Boolean(activePage?.sections?.includes('propertyDetail') || activePage?.sections?.includes('propertyDirectory'))}
         showCart={storefrontProducts.length > 0 && isAnyEcommerceComponentEnabled}
         cartItemCount={cart.itemCount}
         onCartClick={cart.toggleCart}
@@ -1709,6 +1709,18 @@ const LandingPageContent: React.FC = () => {
               setActivePropertySlug(slug);
               window.scrollTo(0, 0);
             }}
+          />
+        )}
+
+        {/* 3.6. Real Estate Directory View */}
+        {!showArticleLoading && !activePost && !activeCategorySlug && !activePropertySlug && showRealtyDirectory && activeProjectId && (
+          <PropertyDirectoryPage
+            projectId={activeProjectId}
+            data={mergedRealEstateListingsData || data.realEstateListings}
+            isPreviewMode={isEditorMode}
+            theme={theme}
+            globalColors={theme.globalColors}
+            onNavigate={handleLinkNavigation}
           />
         )}
 
@@ -1925,7 +1937,7 @@ const LandingPageContent: React.FC = () => {
         )}
 
         {/* 7. Home View (Sections) - Only show when not in article, category, or store view */}
-        {!isArticleHash && !activePost && !activeCategorySlug && !activePropertySlug && !isStoreViewActive && (
+        {!isArticleHash && !activePost && !activeCategorySlug && !activePropertySlug && !showRealtyDirectory && !isStoreViewActive && (
           <>
             {effectiveComponentOrder
               .filter(key => {

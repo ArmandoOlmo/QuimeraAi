@@ -938,25 +938,6 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return;
       }
 
-      // ========================================
-      // MULTI-PAGE ROUTING (pages from project.pages)
-      // ========================================
-      if (project?.pages && project.pages.length > 0) {
-        const pathSlug = path.replace(/^\//, '').replace(/\/$/, '');
-        const matchedPage = project.pages.find(p => {
-          const pageSlug = (p.slug || '').replace(/^\//, '').replace(/\/$/, '');
-          return pageSlug === pathSlug && !p.isHomePage;
-        });
-        if (matchedPage) {
-          console.log('[PublicWebsitePreview] handleNavigation - Found page:', matchedPage.title, matchedPage.slug);
-          setActivePost(null);
-          setStoreView({ type: 'none' });
-          setActivePage(matchedPage);
-          window.scrollTo(0, 0);
-          return;
-        }
-      }
-
       if (path === '/listados' || path === '/listados/') {
         const now = new Date().toISOString();
         setActivePost(null);
@@ -978,6 +959,25 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         } as SitePage);
         window.scrollTo(0, 0);
         return;
+      }
+
+      // ========================================
+      // MULTI-PAGE ROUTING (pages from project.pages)
+      // ========================================
+      if (project?.pages && project.pages.length > 0) {
+        const pathSlug = path.replace(/^\//, '').replace(/\/$/, '');
+        const matchedPage = project.pages.find(p => {
+          const pageSlug = (p.slug || '').replace(/^\//, '').replace(/\/$/, '');
+          return pageSlug === pathSlug && !p.isHomePage;
+        });
+        if (matchedPage) {
+          console.log('[PublicWebsitePreview] handleNavigation - Found page:', matchedPage.title, matchedPage.slug);
+          setActivePost(null);
+          setStoreView({ type: 'none' });
+          setActivePage(matchedPage);
+          window.scrollTo(0, 0);
+          return;
+        }
       }
 
       // ========================================
@@ -1243,6 +1243,32 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       return;
     }
 
+    if (href === '/listados' || href === '/listados/') {
+      const now = new Date().toISOString();
+      const runtimePage: SitePage = {
+        id: 'page-real-estate-listings-runtime',
+        title: 'Listados',
+        slug: '/listados',
+        type: 'static',
+        sections: ['header', 'propertyDirectory', 'footer'],
+        sectionData: {
+          realEstateListings: (project?.data as any)?.realEstateListings,
+        },
+        seo: { title: 'Listados', description: 'Explora propiedades disponibles' },
+        showInNavigation: true,
+        navigationOrder: 25,
+        createdAt: now,
+        updatedAt: now,
+      };
+      setActivePost(null);
+      setStoreView({ type: 'none' });
+      setActivePage(runtimePage);
+      updateBrowserUrl('/listados');
+      updatePageSEO({ title: 'Listados', description: 'Explora propiedades disponibles', type: 'website', path: '/listados' });
+      window.scrollTo(0, 0);
+      return;
+    }
+
     // External URLs - check if they match current domain
     if (href.startsWith('http://') || href.startsWith('https://')) {
       const currentOrigin = window.location.origin;
@@ -1277,32 +1303,6 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         window.scrollTo(0, 0);
         return;
       }
-    }
-
-    if (href === '/listados' || href === '/listados/') {
-      const now = new Date().toISOString();
-      const runtimePage: SitePage = {
-        id: 'page-real-estate-listings-runtime',
-        title: 'Listados',
-        slug: '/listados',
-        type: 'static',
-        sections: ['header', 'propertyDirectory', 'footer'],
-        sectionData: {
-          realEstateListings: (project?.data as any)?.realEstateListings,
-        },
-        seo: { title: 'Listados', description: 'Explora propiedades disponibles' },
-        showInNavigation: true,
-        navigationOrder: 25,
-        createdAt: now,
-        updatedAt: now,
-      };
-      setActivePost(null);
-      setStoreView({ type: 'none' });
-      setActivePage(runtimePage);
-      updateBrowserUrl('/listados');
-      updatePageSEO({ title: 'Listados', description: 'Explora propiedades disponibles', type: 'website', path: '/listados' });
-      window.scrollTo(0, 0);
-      return;
     }
 
     // Fallback: try to scroll to element by ID (for anchor navigation like #features)
@@ -1851,6 +1851,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           data={mergedData.realEstateListings}
           theme={theme}
           globalColors={theme?.globalColors as Record<string, string> | undefined}
+          isPreviewMode={isEditorPreviewRoute}
+          onNavigate={handleLinkNavigation}
         />
       );
     }
