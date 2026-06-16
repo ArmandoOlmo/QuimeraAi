@@ -4,10 +4,10 @@ import {
     BarChart3,
     Building2,
     Check,
+    Copy,
     Eye,
     Home,
     Loader2,
-    Mail,
     Menu,
     MessageSquare,
     Plus,
@@ -16,6 +16,7 @@ import {
     Sparkles,
     Trash2,
     Users,
+    Wand2,
     X,
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
@@ -32,8 +33,36 @@ import { useSafeTenant } from '../../../contexts/tenant';
 import { useRealtyAccess } from '../../../hooks/realty/useRealtyAccess';
 import { useRealtySuite } from '../../../hooks/realty/useRealtySuite';
 import type { LeadStatus } from '../../../types/business';
-import type { RealtyImage, RealtyLead, RealtyProperty, RealtyPropertyStatus, RealtyPropertyType } from '../../../types/realty';
-import { formatRealtyPrice, isRealtyCrmLead, mapCrmLeadToRealtyLead, realtyLeadStatuses, realtyPropertyStatuses, realtyPropertyTypes, toRealtySlug } from '../../../utils/realty';
+import type {
+    RealtyAiLanguage,
+    RealtyAiListingOutput,
+    RealtyAiTone,
+    RealtyImage,
+    RealtyLead,
+    RealtyListingScore,
+    RealtyProperty,
+    RealtyPropertyStatus,
+    RealtyPropertyType,
+} from '../../../types/realty';
+import {
+    calculateRealtyListingScore,
+    formatRealtyPrice,
+    isRealtyCrmLead,
+    mapCrmLeadToRealtyLead,
+    realtyLeadStatuses,
+    realtyPropertyStatuses,
+    realtyPropertyTypes,
+    toRealtySlug,
+} from '../../../utils/realty';
+import {
+    buildRealtyAiPropertyPatch,
+    formatRealtyAiListingOutput,
+    generateRealtyListingContent,
+    getGeneratedRealtyFields,
+    REALTY_AI_DEFAULT_MODEL,
+    REALTY_AI_MODELS,
+    REALTY_AI_TONES,
+} from '../../../utils/realtyAiClient';
 
 type RealtyTab = 'overview' | 'properties' | 'leads' | 'ai' | 'settings';
 
@@ -104,7 +133,19 @@ const RealtyDashboard: React.FC = () => {
     const [propertyImageAssets, setPropertyImageAssets] = useState<Record<string, Partial<RealtyImage>>>({});
     const [aiPropertyId, setAiPropertyId] = useState('');
     const [aiPrompt, setAiPrompt] = useState('');
-    const [aiOutput, setAiOutput] = useState('');
+    const [aiTone, setAiTone] = useState<RealtyAiTone>('luxury');
+    const [aiLanguage, setAiLanguage] = useState<RealtyAiLanguage>(i18n.language?.startsWith('en') ? 'en' : 'es');
+    const [aiModel, setAiModel] = useState(REALTY_AI_DEFAULT_MODEL);
+    const [aiResult, setAiResult] = useState<{
+        output: RealtyAiListingOutput;
+        prompt: string;
+        model: string;
+        generatedFields: string[];
+        mode: 'full' | 'fix';
+    } | null>(null);
+    const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+    const [isSavingAiGeneration, setIsSavingAiGeneration] = useState(false);
+    const [lastAiSavedAt, setLastAiSavedAt] = useState<string | null>(null);
     const [localError, setLocalError] = useState<string | null>(null);
     const [localWarning, setLocalWarning] = useState<string | null>(null);
 
@@ -143,12 +184,50 @@ const RealtyDashboard: React.FC = () => {
         [displayProperties]
     );
     const displayActiveProperties = displayProperties.filter(property => property.status === 'active');
-    const displayFeaturedProperties = displayProperties.filter(property => property.isFeatured);
     const selectedAiProperty = displayProperties.find(property => property.id === aiPropertyId) || displayProperties[0];
+    const propertyScores = useMemo(
+        () => new Map(displayProperties.map(property => [property.id, calculateRealtyListingScore(property)])),
+        [displayProperties]
+    );
+    const averageListingScore = displayProperties.length > 0
+        ? Math.round(displayProperties.reduce((total, property) => total + (propertyScores.get(property.id)?.score || 0), 0) / displayProperties.length)
+        : 0;
+    const selectedAiScore = selectedAiProperty ? propertyScores.get(selectedAiProperty.id) || calculateRealtyListingScore(selectedAiProperty) : null;
+    const latestSavedGeneration = useMemo(() => {
+        const source = suite.aiGenerations.find(generation => generation.propertyId === selectedAiProperty?.id) || suite.aiGenerations[0];
+        if (!source?.output) return '';
+        try {
+            return JSON.stringify(JSON.parse(source.output), null, 2);
+        } catch {
+            return source.output;
+        }
+    }, [selectedAiProperty?.id, suite.aiGenerations]);
 
     const getLeadPropertyTitle = (lead: RealtyLead) => {
         const metadataTitle = typeof lead.metadata?.propertyTitle === 'string' ? lead.metadata.propertyTitle : '';
         return metadataTitle || (lead.propertyId ? propertyTitleById.get(lead.propertyId) : '') || '';
+    };
+
+    const getScoreToneClass = (score: RealtyListingScore) => {
+        if (score.grade === 'excellent') return 'border-q-success/30 bg-q-success/10 text-q-success';
+        if (score.grade === 'good') return 'border-q-accent/30 bg-q-accent/10 text-q-accent';
+        if (score.grade === 'needs_work') return 'border-q-warning/30 bg-q-warning/10 text-q-warning';
+        return 'border-q-error/30 bg-q-error/10 text-q-error';
+    };
+
+    const translateScoreField = (field: string) => t(`realty.score.fields.${field}`, field);
+    const translateRecommendation = (key: string) => t(`realty.score.recommendations.${key}`, key);
+
+    const fieldsWithExistingContent = (property: RealtyProperty, output: RealtyAiListingOutput) => {
+        const fields: string[] = [];
+        if (output.title && property.title) fields.push(t('realty.form.title'));
+        if (output.descriptionShort && property.descriptionShort) fields.push(t('realty.ai.fields.descriptionShort'));
+        if (output.descriptionLong && (property.descriptionLong || property.description)) fields.push(t('realty.form.description'));
+        if (output.highlights.length > 0 && (property.highlights || []).length > 0) fields.push(t('realty.ai.fields.highlights'));
+        if (output.features.length > 0 && (property.features || []).length > 0) fields.push(t('realty.ai.fields.features'));
+        if (output.seoTitle && property.seoTitle) fields.push(t('realty.ai.fields.seoTitle'));
+        if (output.seoDescription && property.seoDescription) fields.push(t('realty.ai.fields.seoDescription'));
+        return fields;
     };
 
     const startCreate = () => {
@@ -267,20 +346,45 @@ const RealtyDashboard: React.FC = () => {
         }
     };
 
-    const generateAiCopy = async () => {
-        if (!selectedAiProperty || !activeProjectId) return;
-        const prompt = aiPrompt || t('realty.ai.defaultPrompt');
-        const output = t('realty.ai.generatedListing', {
-            title: selectedAiProperty.title,
-            city: selectedAiProperty.city,
-            price: formatRealtyPrice(selectedAiProperty.price, i18n.language, selectedAiProperty.currency),
-            beds: selectedAiProperty.bedrooms,
-            baths: selectedAiProperty.bathrooms,
-            area: selectedAiProperty.area.toLocaleString(),
-            description: selectedAiProperty.description,
-            prompt,
-        });
-        setAiOutput(output);
+    const generateAiCopy = async (mode: 'full' | 'fix' = 'full', propertyOverride?: RealtyProperty) => {
+        const targetProperty = propertyOverride || selectedAiProperty;
+        if (!targetProperty || !activeProjectId) return;
+        setLocalError(null);
+        setLocalWarning(null);
+        setLastAiSavedAt(null);
+        setIsGeneratingAi(true);
+        try {
+            const score = propertyScores.get(targetProperty.id) || calculateRealtyListingScore(targetProperty);
+            const result = await generateRealtyListingContent({
+                projectId: activeProjectId,
+                propertyId: targetProperty.id,
+                tone: aiTone,
+                language: aiLanguage,
+                userPrompt: aiPrompt || t('realty.ai.defaultPrompt'),
+                model: aiModel,
+                mode,
+                score,
+            });
+            setAiPropertyId(targetProperty.id);
+            setAiResult({
+                output: result.output,
+                prompt: result.prompt,
+                model: result.model,
+                generatedFields: result.generatedFields,
+                mode: result.mode,
+            });
+        } catch (err) {
+            const message = err instanceof Error ? err.message : t('realty.ai.errors.generate');
+            setLocalError(message);
+        } finally {
+            setIsGeneratingAi(false);
+        }
+    };
+
+    const saveAiGeneration = async () => {
+        if (!aiResult || !selectedAiProperty || !activeProjectId) return;
+        setIsSavingAiGeneration(true);
+        setLocalError(null);
         try {
             await suite.saveAiGeneration({
                 tenantId: currentTenantId,
@@ -288,19 +392,72 @@ const RealtyDashboard: React.FC = () => {
                 propertyId: selectedAiProperty.id,
                 userId: user?.id || null,
                 kind: 'listing_description',
-                prompt,
-                output,
-                metadata: { source: 'realty-dashboard' },
+                prompt: aiResult.prompt,
+                output: JSON.stringify(aiResult.output, null, 2),
+                metadata: {
+                    tone: aiTone,
+                    language: aiLanguage,
+                    model: aiResult.model,
+                    provider: 'openrouter',
+                    generatedFields: aiResult.generatedFields.length > 0 ? aiResult.generatedFields : getGeneratedRealtyFields(aiResult.output),
+                    mode: aiResult.mode,
+                },
             });
+            setLastAiSavedAt(new Date().toISOString());
         } catch (err) {
-            console.warn('[RealtyDashboard] Could not persist AI output', err);
+            const message = err instanceof Error ? err.message : t('realty.ai.errors.save');
+            setLocalError(message);
+        } finally {
+            setIsSavingAiGeneration(false);
         }
+    };
+
+    const copyAiOutput = async () => {
+        if (!aiResult) return;
+        await navigator.clipboard.writeText(formatRealtyAiListingOutput(aiResult.output));
+        setLocalWarning(t('realty.ai.copied'));
+    };
+
+    const applyAiContentToProperty = async () => {
+        if (!aiResult || !selectedAiProperty) return;
+        setLocalError(null);
+        setLocalWarning(null);
+        try {
+            const existingFields = fieldsWithExistingContent(selectedAiProperty, aiResult.output);
+            const overwriteExisting = existingFields.length === 0
+                ? true
+                : window.confirm(t('realty.ai.confirmOverwrite', { fields: existingFields.join(', ') }));
+            if (!overwriteExisting && existingFields.length > 0) return;
+            const patch = buildRealtyAiPropertyPatch(selectedAiProperty, aiResult.output, overwriteExisting);
+            await suite.saveProperty({
+                ...patch,
+                listingScore: calculateRealtyListingScore(patch).score,
+            });
+            setLocalWarning(t('realty.ai.applied'));
+        } catch (err) {
+            const message = err instanceof Error ? err.message : t('realty.ai.errors.apply');
+            setLocalError(message);
+        }
+    };
+
+    const fixPropertyWithAi = (property: RealtyProperty) => {
+        setAiPropertyId(property.id);
+        setActiveTab('ai');
+        void generateAiCopy('fix', property);
     };
 
     const renderPropertyForm = () => {
         if (!editingProperty) return null;
         const update = (patch: Partial<RealtyProperty>) => setEditingProperty(prev => ({ ...prev, ...patch }));
         const imageSlots = propertyImageUrls.length > 0 ? propertyImageUrls : [''];
+        const editingScore = calculateRealtyListingScore({
+            ...editingProperty,
+            amenities: parseLines(amenitiesInput),
+            images: cleanImageUrls(propertyImageUrls).map((url, index) => ({ id: `preview-${index}`, url, position: index })),
+        });
+        const savedEditingProperty = editingProperty.id
+            ? displayProperties.find(property => property.id === editingProperty.id)
+            : null;
 
         return (
             <div className="rounded-xl border border-q-border bg-q-surface p-5 md:p-6">
@@ -340,6 +497,48 @@ const RealtyDashboard: React.FC = () => {
                     <Field className="md:col-span-2" label={t('realty.form.amenities')}>
                         <textarea rows={3} className="w-full rounded-md border border-q-border bg-transparent px-3 py-2.5 text-sm text-q-text outline-none focus:border-q-accent" value={amenitiesInput} onChange={event => setAmenitiesInput(event.target.value)} />
                     </Field>
+                    <div className="rounded-lg border border-q-border bg-q-bg p-4 md:col-span-2">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p className="text-sm font-bold text-q-text">{t('realty.score.title')}</p>
+                                <p className="mt-1 text-xs text-q-text-secondary">{t(`realty.score.grade.${editingScore.grade}`)}</p>
+                            </div>
+                            <span className={`rounded-full border px-3 py-1 text-sm font-bold ${getScoreToneClass(editingScore)}`}>{editingScore.score}%</span>
+                        </div>
+                        {(editingScore.missingRequired.length > 0 || editingScore.missingRecommended.length > 0) && (
+                            <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                {editingScore.missingRequired.length > 0 && (
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-wider text-q-error">{t('realty.score.required')}</p>
+                                        <ul className="mt-2 space-y-1 text-sm text-q-text-secondary">
+                                            {editingScore.missingRequired.map(field => <li key={field}>• {translateScoreField(field)}</li>)}
+                                        </ul>
+                                    </div>
+                                )}
+                                {editingScore.missingRecommended.length > 0 && (
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-wider text-q-warning">{t('realty.score.recommended')}</p>
+                                        <ul className="mt-2 space-y-1 text-sm text-q-text-secondary">
+                                            {editingScore.missingRecommended.slice(0, 6).map(field => <li key={field}>• {translateScoreField(field)}</li>)}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {editingScore.recommendations.length > 0 && (
+                            <div className="mt-4">
+                                <p className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{t('realty.score.recommendationsTitle')}</p>
+                                <ul className="mt-2 space-y-1 text-sm text-q-text-secondary">
+                                    {editingScore.recommendations.slice(0, 4).map(item => <li key={item}>• {translateRecommendation(item)}</li>)}
+                                </ul>
+                            </div>
+                        )}
+                        <div className="mt-4 flex justify-end">
+                            <Button type="button" size="sm" variant="secondary" disabled={!savedEditingProperty || isGeneratingAi} onClick={() => savedEditingProperty && fixPropertyWithAi(savedEditingProperty)}>
+                                <Wand2 size={15} />{t('realty.ai.fixWithAi')}
+                            </Button>
+                        </div>
+                    </div>
                     <div className="space-y-4 md:col-span-2">
                         <div className="flex items-center justify-between gap-4">
                             <span className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{t('realty.form.images')}</span>
@@ -402,28 +601,33 @@ const RealtyDashboard: React.FC = () => {
                     {renderPropertyForm()}
                     <div className="flex justify-end"><Button type="button" onClick={startCreate}><Plus size={16} />{t('realty.properties.create')}</Button></div>
                     <div className="grid gap-5">
-                        {displayProperties.map(property => (
-                            <div key={property.id} className="rounded-xl border border-q-border bg-q-surface p-4 transition-colors hover:border-q-accent/40 md:p-5">
-                                <div className="grid gap-4 md:grid-cols-[96px_minmax(0,1fr)_auto] md:items-center">
-                                    <div className="h-20 overflow-hidden rounded-lg bg-q-surface-overlay">
-                                        {property.images?.[0]?.url ? <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-q-text-muted"><Home size={24} /></div>}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <h3 className="truncate font-bold text-q-accent">{property.title}</h3>
-                                            <span className="rounded-full bg-q-surface-overlay px-2 py-0.5 text-xs text-q-text-secondary">{t(`realty.status.${property.status}`)}</span>
-                                            {property.isFeatured && <span className="rounded-full bg-q-accent/15 px-2 py-0.5 text-xs text-q-accent">{t('realty.website.featured')}</span>}
+                        {displayProperties.map(property => {
+                            const score = propertyScores.get(property.id) || calculateRealtyListingScore(property);
+                            return (
+                                <div key={property.id} className="rounded-xl border border-q-border bg-q-surface p-4 transition-colors hover:border-q-accent/40 md:p-5">
+                                    <div className="grid gap-4 md:grid-cols-[96px_minmax(0,1fr)_auto] md:items-center">
+                                        <div className="h-20 overflow-hidden rounded-lg bg-q-surface-overlay">
+                                            {property.images?.[0]?.url ? <img src={property.images[0].url} alt={property.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-q-text-muted"><Home size={24} /></div>}
                                         </div>
-                                        <p className="mt-1 text-sm text-q-text-secondary">{formatRealtyPrice(property.price, i18n.language, property.currency)} · {[property.address, property.city].filter(Boolean).join(', ')}</p>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2 md:justify-end">
-                                        <Button type="button" size="sm" variant="secondary" onClick={() => startEdit(property)}>{t('common.edit')}</Button>
-                                        <Button type="button" size="sm" variant="secondary" onClick={() => suite.updatePropertyStatus(property.id, property.status === 'active' ? 'draft' : 'active')}>{property.status === 'active' ? t('realty.actions.unpublish') : t('realty.actions.publish')}</Button>
-                                        <Button type="button" size="icon-sm" variant="ghost" onClick={() => suite.deleteProperty(property.id)}><Trash2 size={15} /></Button>
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <h3 className="truncate font-bold text-q-accent">{property.title}</h3>
+                                                <span className="rounded-full bg-q-surface-overlay px-2 py-0.5 text-xs text-q-text-secondary">{t(`realty.status.${property.status}`)}</span>
+                                                <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${getScoreToneClass(score)}`}>{t('realty.score.badge', { score: score.score })}</span>
+                                                {property.isFeatured && <span className="rounded-full bg-q-accent/15 px-2 py-0.5 text-xs text-q-accent">{t('realty.website.featured')}</span>}
+                                            </div>
+                                            <p className="mt-1 text-sm text-q-text-secondary">{formatRealtyPrice(property.price, i18n.language, property.currency)} · {[property.address, property.city].filter(Boolean).join(', ')}</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 md:justify-end">
+                                            <Button type="button" size="sm" variant="secondary" onClick={() => startEdit(property)}>{t('common.edit')}</Button>
+                                            <Button type="button" size="sm" variant="secondary" onClick={() => fixPropertyWithAi(property)} disabled={isGeneratingAi}><Wand2 size={15} />{t('realty.ai.fixWithAi')}</Button>
+                                            <Button type="button" size="sm" variant="secondary" onClick={() => suite.updatePropertyStatus(property.id, property.status === 'active' ? 'draft' : 'active')}>{property.status === 'active' ? t('realty.actions.unpublish') : t('realty.actions.publish')}</Button>
+                                            <Button type="button" size="icon-sm" variant="ghost" onClick={() => suite.deleteProperty(property.id)}><Trash2 size={15} /></Button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             );
@@ -465,6 +669,7 @@ const RealtyDashboard: React.FC = () => {
         }
 
         if (activeTab === 'ai') {
+            const aiOutputText = aiResult ? formatRealtyAiListingOutput(aiResult.output) : latestSavedGeneration;
             return (
                 <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
                     <div className="rounded-xl border border-q-border bg-q-surface p-5 md:p-6">
@@ -478,17 +683,83 @@ const RealtyDashboard: React.FC = () => {
                                     placeholder={t('realty.selectProperty')}
                                 />
                             </Field>
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                                <Field label={t('realty.ai.tone')}>
+                                    <DashboardSelect
+                                        value={aiTone}
+                                        onChange={value => setAiTone(value as RealtyAiTone)}
+                                        options={REALTY_AI_TONES.map(tone => ({ value: tone, label: t(`realty.ai.tones.${tone}`) }))}
+                                    />
+                                </Field>
+                                <Field label={t('realty.ai.language')}>
+                                    <DashboardSelect
+                                        value={aiLanguage}
+                                        onChange={value => setAiLanguage(value as RealtyAiLanguage)}
+                                        options={[
+                                            { value: 'es', label: t('realty.ai.languages.es') },
+                                            { value: 'en', label: t('realty.ai.languages.en') },
+                                        ]}
+                                    />
+                                </Field>
+                            </div>
+                            <Field label={t('realty.ai.model')}>
+                                <DashboardSelect
+                                    value={aiModel}
+                                    onChange={setAiModel}
+                                    options={REALTY_AI_MODELS.map(model => ({ value: model.value, label: model.label }))}
+                                />
+                            </Field>
                             <Field label={t('realty.ai.prompt')}>
                                 <textarea rows={5} className="w-full rounded-md border border-q-border bg-transparent px-3 py-2.5 text-sm text-q-text outline-none focus:border-q-accent" value={aiPrompt} onChange={event => setAiPrompt(event.target.value)} placeholder={t('realty.ai.defaultPrompt')} />
                             </Field>
-                            <Button type="button" onClick={generateAiCopy} disabled={!selectedAiProperty}><Sparkles size={16} />{t('realty.ai.generate')}</Button>
+                            {selectedAiScore && (
+                                <div className="rounded-lg border border-q-border bg-q-bg p-4">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span className="text-sm font-semibold text-q-text">{t('realty.score.title')}</span>
+                                        <span className={`rounded-full border px-2 py-0.5 text-xs font-bold ${getScoreToneClass(selectedAiScore)}`}>{selectedAiScore.score}%</span>
+                                    </div>
+                                    {selectedAiScore.recommendations.length > 0 && (
+                                        <ul className="mt-3 space-y-1 text-xs text-q-text-secondary">
+                                            {selectedAiScore.recommendations.slice(0, 3).map(item => <li key={item}>• {translateRecommendation(item)}</li>)}
+                                        </ul>
+                                    )}
+                                </div>
+                            )}
+                            <div className="flex flex-wrap gap-2">
+                                <Button type="button" onClick={() => generateAiCopy('full')} disabled={!selectedAiProperty || isGeneratingAi}>
+                                    {isGeneratingAi ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                                    {t('realty.ai.generate')}
+                                </Button>
+                                <Button type="button" variant="secondary" onClick={() => generateAiCopy('fix')} disabled={!selectedAiProperty || isGeneratingAi}>
+                                    <Wand2 size={16} />{t('realty.ai.fixWithAi')}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                     <div className="rounded-xl border border-q-border bg-q-surface p-5 md:p-6">
-                        <h3 className="font-bold text-q-text">{t('realty.ai.output')}</h3>
-                        <div className="mt-5 min-h-64 whitespace-pre-wrap rounded-lg border border-q-border bg-q-bg p-4 text-sm leading-6 text-q-text">
-                            {aiOutput || suite.aiGenerations[0]?.output || t('realty.ai.empty')}
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h3 className="font-bold text-q-text">{t('realty.ai.output')}</h3>
+                                {aiResult && <p className="mt-1 text-xs text-q-text-secondary">{t('realty.ai.generatedWith', { model: aiResult.model })}</p>}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <Button type="button" size="sm" variant="secondary" onClick={copyAiOutput} disabled={!aiResult}><Copy size={15} />{t('realty.ai.copyOutput')}</Button>
+                                <Button type="button" size="sm" variant="secondary" onClick={saveAiGeneration} disabled={!aiResult || isSavingAiGeneration}>
+                                    {isSavingAiGeneration ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+                                    {t('realty.ai.saveGeneration')}
+                                </Button>
+                                <Button type="button" size="sm" onClick={applyAiContentToProperty} disabled={!aiResult || suite.isSaving}><Check size={15} />{t('realty.ai.applyToProperty')}</Button>
+                            </div>
                         </div>
+                        {lastAiSavedAt && <p className="mt-3 text-xs text-q-success">{t('realty.ai.saved')}</p>}
+                        <div className="mt-5 min-h-64 whitespace-pre-wrap rounded-lg border border-q-border bg-q-bg p-4 text-sm leading-6 text-q-text">
+                            {aiOutputText || t('realty.ai.empty')}
+                        </div>
+                        {aiResult && aiResult.generatedFields.length > 0 && (
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                {aiResult.generatedFields.map(field => <span key={field} className="rounded-full bg-q-accent/10 px-2 py-1 text-xs text-q-accent">{t(`realty.ai.fields.${field}`, field)}</span>)}
+                            </div>
+                        )}
                     </div>
                 </div>
             );
@@ -521,7 +792,7 @@ const RealtyDashboard: React.FC = () => {
                     <StatCard icon={Building2} label={t('realty.metrics.properties')} value={displayProperties.length} />
                     <StatCard icon={Eye} label={t('realty.metrics.active')} value={displayActiveProperties.length} />
                     <StatCard icon={Users} label={t('realty.metrics.leads')} value={displayNewLeads.length} />
-                    <StatCard icon={Mail} label={t('realty.metrics.featured')} value={displayFeaturedProperties.length} />
+                    <StatCard icon={Sparkles} label={t('realty.metrics.qualityScore')} value={`${averageListingScore}%`} />
                 </div>
                 <div className="grid gap-5 lg:grid-cols-2">
                     <div className="rounded-xl border border-q-border bg-q-surface p-5 md:p-6">

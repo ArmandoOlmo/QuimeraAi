@@ -573,6 +573,308 @@ function imageInputToUrl(input: unknown): string | null {
     return null;
 }
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function cleanString(value: unknown): string {
+    return typeof value === 'string' ? value.trim() : '';
+}
+
+function cleanStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) return [];
+    return value.map(item => cleanString(item)).filter(Boolean);
+}
+
+function extractJsonObject(text: string): Record<string, unknown> | null {
+    const cleaned = text
+        .replace(/^```(?:json)?/i, '')
+        .replace(/```$/i, '')
+        .trim();
+
+    try {
+        const parsed = JSON.parse(cleaned);
+        return isPlainRecord(parsed) ? parsed : null;
+    } catch {
+        const start = cleaned.indexOf('{');
+        const end = cleaned.lastIndexOf('}');
+        if (start === -1 || end === -1 || end <= start) return null;
+        try {
+            const parsed = JSON.parse(cleaned.slice(start, end + 1));
+            return isPlainRecord(parsed) ? parsed : null;
+        } catch {
+            return null;
+        }
+    }
+}
+
+function normalizeRealtyFaq(value: unknown): Array<{ question: string; answer: string }> {
+    if (!Array.isArray(value)) return [];
+    return value
+        .map(item => {
+            if (!isPlainRecord(item)) return null;
+            const question = cleanString(item.question);
+            const answer = cleanString(item.answer);
+            return question && answer ? { question, answer } : null;
+        })
+        .filter((item): item is { question: string; answer: string } => Boolean(item));
+}
+
+function normalizeRealtyListingOutput(value: unknown) {
+    const record = isPlainRecord(value) ? value : {};
+    return {
+        title: cleanString(record.title),
+        descriptionShort: cleanString(record.descriptionShort || record.description_short),
+        descriptionLong: cleanString(record.descriptionLong || record.description_long || record.description),
+        highlights: cleanStringArray(record.highlights),
+        features: cleanStringArray(record.features),
+        amenitiesCopy: cleanString(record.amenitiesCopy || record.amenities_copy),
+        cta: cleanString(record.cta),
+        faq: normalizeRealtyFaq(record.faq),
+        seoTitle: cleanString(record.seoTitle || record.seo_title),
+        seoDescription: cleanString(record.seoDescription || record.seo_description),
+        socialPost: cleanString(record.socialPost || record.social_post),
+        emailCopy: cleanString(record.emailCopy || record.email_copy),
+        smsCopy: cleanString(record.smsCopy || record.sms_copy || record.whatsAppCopy || record.whatsappCopy),
+        adCopy: cleanString(record.adCopy || record.ad_copy),
+    };
+}
+
+function realtyGeneratedFields(output: ReturnType<typeof normalizeRealtyListingOutput>): string[] {
+    const fields: string[] = [];
+    if (output.title) fields.push('title');
+    if (output.descriptionShort) fields.push('descriptionShort');
+    if (output.descriptionLong) fields.push('descriptionLong');
+    if (output.highlights.length > 0) fields.push('highlights');
+    if (output.features.length > 0) fields.push('features');
+    if (output.amenitiesCopy) fields.push('amenitiesCopy');
+    if (output.cta) fields.push('cta');
+    if (output.faq.length > 0) fields.push('faq');
+    if (output.seoTitle) fields.push('seoTitle');
+    if (output.seoDescription) fields.push('seoDescription');
+    if (output.socialPost) fields.push('socialPost');
+    if (output.emailCopy) fields.push('emailCopy');
+    if (output.smsCopy) fields.push('smsCopy');
+    if (output.adCopy) fields.push('adCopy');
+    return fields;
+}
+
+function fallbackRealtyListingOutput(rawText: string, property: Record<string, unknown>, language: string) {
+    const title = cleanString(property.title) || (language === 'en' ? 'Featured property' : 'Propiedad destacada');
+    const city = cleanString(property.city);
+    const description = cleanString(property.description_long || property.description || property.description_short || rawText);
+    const base = description || (language === 'en'
+        ? `${title}${city ? ` in ${city}` : ''} is ready for a stronger listing presentation.`
+        : `${title}${city ? ` en ${city}` : ''} está lista para una presentación comercial más fuerte.`);
+
+    return normalizeRealtyListingOutput({
+        title,
+        descriptionShort: base.slice(0, 220),
+        descriptionLong: base,
+        highlights: cleanStringArray(property.highlights).slice(0, 4),
+        features: cleanStringArray(property.features).slice(0, 6),
+        amenitiesCopy: cleanStringArray(property.amenities).join(', '),
+        cta: language === 'en' ? 'Request a private showing today.' : 'Solicita una visita privada hoy.',
+        faq: [],
+        seoTitle: title,
+        seoDescription: base.slice(0, 155),
+        socialPost: rawText.slice(0, 500),
+        emailCopy: rawText,
+        smsCopy: language === 'en' ? `Interested in ${title}? Reply to schedule a showing.` : `¿Te interesa ${title}? Responde para coordinar una visita.`,
+        adCopy: base.slice(0, 180),
+    });
+}
+
+function buildRealtyListingPrompt(args: {
+    property: Record<string, unknown>;
+    tone: string;
+    language: string;
+    userPrompt: string;
+    mode: string;
+    missingRequired: string[];
+    missingRecommended: string[];
+    recommendations: string[];
+}) {
+    const {
+        property,
+        tone,
+        language,
+        userPrompt,
+        mode,
+        missingRequired,
+        missingRecommended,
+        recommendations,
+    } = args;
+
+    return `You are Quimera.ai's real estate listing copy generator.
+
+Return valid JSON only. Do not include markdown fences, commentary, or placeholders.
+Language: ${language === 'en' ? 'English' : 'Spanish'}
+Tone: ${tone}
+Mode: ${mode === 'fix' ? 'Fix only missing or weak fields. Leave strong existing fields empty unless a replacement is clearly needed.' : 'Generate a complete reusable listing content package.'}
+
+Property data:
+${JSON.stringify(property, null, 2)}
+
+Listing quality gaps:
+- Missing required: ${missingRequired.length ? missingRequired.join(', ') : 'none'}
+- Missing recommended: ${missingRecommended.length ? missingRecommended.join(', ') : 'none'}
+- Recommendations: ${recommendations.length ? recommendations.join(', ') : 'none'}
+
+User instruction:
+${userPrompt || 'Create production-ready real estate marketing copy for this property.'}
+
+Return exactly this JSON shape:
+{
+  "title": "",
+  "descriptionShort": "",
+  "descriptionLong": "",
+  "highlights": [],
+  "features": [],
+  "amenitiesCopy": "",
+  "cta": "",
+  "faq": [
+    { "question": "", "answer": "" }
+  ],
+  "seoTitle": "",
+  "seoDescription": "",
+  "socialPost": "",
+  "emailCopy": "",
+  "smsCopy": "",
+  "adCopy": ""
+}`;
+}
+
+async function handleRealtyListingGenerate(payload: Record<string, unknown>, req: Request): Promise<Response> {
+    if (!OPENROUTER_API_KEY) {
+        return jsonResponse({ error: 'OPENROUTER_API_KEY is not configured in Supabase Edge Functions' }, { status: 500 });
+    }
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+        return jsonResponse({ error: 'Supabase service credentials are not configured' }, { status: 500 });
+    }
+
+    const authUserId = await getAuthenticatedUserId(req);
+    if (!authUserId) {
+        return jsonResponse({ error: 'Unauthorized Realty AI request' }, { status: 401 });
+    }
+
+    const projectId = cleanString(payload.projectId);
+    const propertyId = cleanString(payload.propertyId);
+    const tone = cleanString(payload.tone) || 'luxury';
+    const language = cleanString(payload.language) === 'en' ? 'en' : 'es';
+    const userPrompt = cleanString(payload.userPrompt);
+    const mode = cleanString(payload.mode) === 'fix' ? 'fix' : 'full';
+    const model = cleanString(payload.model) || Deno.env.get('REALTY_AI_MODEL') || 'gemini-2.5-flash';
+    const missingRequired = cleanStringArray(payload.missingRequired);
+    const missingRecommended = cleanStringArray(payload.missingRecommended);
+    const recommendations = cleanStringArray(payload.recommendations);
+
+    if (!isValidUuid(projectId) || !isValidUuid(propertyId)) {
+        return jsonResponse({ error: 'Invalid Realty AI payload' }, { status: 400 });
+    }
+
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+        auth: { persistSession: false },
+    });
+
+    const { data: property, error: propertyError } = await admin
+        .from('properties')
+        .select('*')
+        .eq('id', propertyId)
+        .eq('project_id', projectId)
+        .maybeSingle();
+
+    if (propertyError) {
+        console.error('[ai-proxy] realty property lookup error:', propertyError);
+        return jsonResponse({ error: 'Could not load Realty property' }, { status: 500 });
+    }
+
+    if (!property) {
+        return jsonResponse({ error: 'Realty property not found' }, { status: 404 });
+    }
+
+    let authorized = property.user_id === authUserId;
+    if (!authorized && property.tenant_id) {
+        const { data: membership, error: membershipError } = await admin
+            .from('tenant_members')
+            .select('tenant_id')
+            .eq('tenant_id', property.tenant_id)
+            .eq('user_id', authUserId)
+            .maybeSingle();
+
+        if (membershipError) {
+            console.error('[ai-proxy] realty membership lookup error:', membershipError);
+            return jsonResponse({ error: 'Could not validate Realty permissions' }, { status: 500 });
+        }
+        authorized = Boolean(membership);
+    }
+
+    if (!authorized) {
+        return jsonResponse({ error: 'You do not have access to this Realty property' }, { status: 403 });
+    }
+
+    const prompt = buildRealtyListingPrompt({
+        property,
+        tone,
+        language,
+        userPrompt,
+        mode,
+        missingRequired,
+        missingRecommended,
+        recommendations,
+    });
+    const orModel = mapModelToOpenRouter(model);
+
+    const orResponse = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
+        method: 'POST',
+        headers: openRouterHeaders(),
+        body: JSON.stringify({
+            model: orModel,
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You generate structured real estate listing content for Quimera.ai. Return valid JSON only.',
+                },
+                { role: 'user', content: prompt },
+            ],
+            temperature: mode === 'fix' ? 0.35 : 0.65,
+            max_tokens: 5000,
+            response_format: { type: 'json_object' },
+        }),
+    });
+
+    if (!orResponse.ok) {
+        const errorText = await orResponse.text();
+        console.error(`[OpenRouter Realty] Error: ${orResponse.status} ${errorText}`);
+        return jsonResponse({ error: `OpenRouter API error: ${orResponse.status}`, details: errorText }, { status: orResponse.status });
+    }
+
+    const data = await orResponse.json();
+    const rawText = data.choices?.[0]?.message?.content || '';
+    const parsed = extractJsonObject(rawText);
+    const output = parsed
+        ? normalizeRealtyListingOutput(parsed)
+        : fallbackRealtyListingOutput(rawText, property, language);
+    const generatedFields = realtyGeneratedFields(output);
+
+    return jsonResponse({
+        success: true,
+        model: orModel,
+        provider: 'openrouter',
+        mode,
+        prompt,
+        output,
+        generatedFields,
+        metadata: {
+            tone,
+            language,
+            tokensUsed: data.usage?.total_tokens ?? ((data.usage?.prompt_tokens || 0) + (data.usage?.completion_tokens || 0)),
+            finishReason: data.choices?.[0]?.finish_reason || null,
+            parsedJson: Boolean(parsed),
+        },
+    });
+}
+
 serve(async (req) => {
     // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
@@ -648,6 +950,10 @@ serve(async (req) => {
             const userId = (await getAuthenticatedUserId(req)) || 'anonymous';
             const analysis = await analyzeWebsiteUrl(url, userId);
             return jsonResponse(analysis);
+        }
+
+        if (payload.action === 'realty_listing_generate') {
+            return await handleRealtyListingGenerate(payload, req);
         }
 
         const { prompt, history, systemInstruction, model = 'gemini-2.5-flash', config = {}, images, referenceImages, tools } = payload;

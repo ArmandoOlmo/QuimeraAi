@@ -3,6 +3,7 @@ import type { Lead, LeadStatus } from '../types/business';
 import type {
     RealtyAiGeneration,
     RealtyImage,
+    RealtyListingScore,
     RealtyLead,
     RealtyModuleFlags,
     RealtyProperty,
@@ -246,6 +247,165 @@ export const mapCrmLeadToRealtyLead = (lead: Lead): RealtyLead => {
     };
 };
 
+const hasText = (value: unknown, minLength = 1) =>
+    typeof value === 'string' && value.trim().length >= minLength;
+
+const hasArrayItems = (value: unknown, minItems = 1) =>
+    Array.isArray(value) && value.filter(item => typeof item === 'string' && item.trim()).length >= minItems;
+
+const hasMetadataText = (metadata: unknown, key: string, minLength = 1) =>
+    isRecord(metadata) && hasText(metadata[key], minLength);
+
+export function calculateRealtyListingScore(property: Partial<RealtyProperty>): RealtyListingScore {
+    const checks: Array<{
+        key: string;
+        weight: number;
+        required: boolean;
+        passed: boolean;
+        recommendation: string;
+    }> = [
+        {
+            key: 'title',
+            weight: 8,
+            required: true,
+            passed: hasText(property.title, 5),
+            recommendation: 'add_title',
+        },
+        {
+            key: 'slug',
+            weight: 5,
+            required: true,
+            passed: hasText(property.slug, 3),
+            recommendation: 'add_slug',
+        },
+        {
+            key: 'price',
+            weight: 8,
+            required: true,
+            passed: Number(property.price || 0) > 0,
+            recommendation: 'add_price',
+        },
+        {
+            key: 'propertyType',
+            weight: 5,
+            required: true,
+            passed: hasText(property.propertyType),
+            recommendation: 'add_property_type',
+        },
+        {
+            key: 'transactionType',
+            weight: 5,
+            required: true,
+            passed: hasText(property.transactionType),
+            recommendation: 'add_transaction_type',
+        },
+        {
+            key: 'location',
+            weight: 7,
+            required: true,
+            passed: hasText(property.address || property.addressLine1) && hasText(property.city),
+            recommendation: 'add_location',
+        },
+        {
+            key: 'basicStats',
+            weight: 8,
+            required: true,
+            passed: Number(property.bedrooms || 0) > 0 && Number(property.bathrooms || 0) > 0 && Number(property.area || 0) > 0,
+            recommendation: 'add_basic_stats',
+        },
+        {
+            key: 'description',
+            weight: 12,
+            required: true,
+            passed: hasText(property.descriptionLong || property.description, 120),
+            recommendation: 'expand_description',
+        },
+        {
+            key: 'images',
+            weight: 12,
+            required: true,
+            passed: Boolean(property.mainImageUrl) || (Array.isArray(property.images) && property.images.some(image => hasText(image?.url))),
+            recommendation: 'add_images',
+        },
+        {
+            key: 'amenities',
+            weight: 5,
+            required: false,
+            passed: hasArrayItems(property.amenities, 3),
+            recommendation: 'add_amenities',
+        },
+        {
+            key: 'highlights',
+            weight: 5,
+            required: false,
+            passed: hasArrayItems(property.highlights, 3),
+            recommendation: 'add_highlights',
+        },
+        {
+            key: 'features',
+            weight: 4,
+            required: false,
+            passed: hasArrayItems(property.features, 3),
+            recommendation: 'add_features',
+        },
+        {
+            key: 'seoTitle',
+            weight: 4,
+            required: false,
+            passed: hasText(property.seoTitle, 20),
+            recommendation: 'add_seo_title',
+        },
+        {
+            key: 'seoDescription',
+            weight: 4,
+            required: false,
+            passed: hasText(property.seoDescription, 80),
+            recommendation: 'add_seo_description',
+        },
+        {
+            key: 'cta',
+            weight: 3,
+            required: false,
+            passed: hasMetadataText(property.metadata, 'cta', 10),
+            recommendation: 'add_cta',
+        },
+        {
+            key: 'publicEnabled',
+            weight: 3,
+            required: false,
+            passed: Boolean(property.publicEnabled),
+            recommendation: 'enable_public_listing',
+        },
+        {
+            key: 'statusActive',
+            weight: 2,
+            required: false,
+            passed: property.status === 'active',
+            recommendation: 'publish_listing',
+        },
+    ];
+
+    const score = Math.min(100, Math.round(checks.reduce((total, check) => total + (check.passed ? check.weight : 0), 0)));
+    const grade: RealtyListingScore['grade'] = score >= 85
+        ? 'excellent'
+        : score >= 70
+            ? 'good'
+            : score >= 45
+                ? 'needs_work'
+                : 'poor';
+    const missingRequired = checks.filter(check => check.required && !check.passed).map(check => check.key);
+    const missingRecommended = checks.filter(check => !check.required && !check.passed).map(check => check.key);
+    const recommendations = checks.filter(check => !check.passed).map(check => check.recommendation);
+
+    return {
+        score,
+        grade,
+        missingRequired,
+        missingRecommended,
+        recommendations,
+    };
+}
+
 export const mapRealtyMediaRow = (row: any): RealtyImage & {
     userId?: string | null;
     tenantId?: string | null;
@@ -355,6 +515,18 @@ export const mapRealtyPropertyToRow = (
     const addressLine1 = property.addressLine1 || property.address || '';
     const postalCode = property.postalCode || property.zipCode || '';
     const mainImageUrl = property.mainImageUrl || images[0]?.url || null;
+    const listingScore = calculateRealtyListingScore({
+        ...property,
+        description: descriptionLong,
+        descriptionLong,
+        address: addressLine1,
+        addressLine1,
+        postalCode,
+        zipCode: postalCode,
+        images,
+        mainImageUrl: mainImageUrl || undefined,
+        status,
+    }).score;
 
     return {
         user_id: userId,
@@ -401,7 +573,7 @@ export const mapRealtyPropertyToRow = (
         agent_id: property.agentId || null,
         seo_title: property.seoTitle || null,
         seo_description: property.seoDescription || null,
-        listing_score: property.listingScore ?? 0,
+        listing_score: listingScore,
         is_featured: Boolean(property.isFeatured),
         public_enabled: status === 'active' ? property.publicEnabled ?? true : property.publicEnabled ?? false,
         published_at: status === 'active' ? (property.publishedAt || new Date().toISOString()) : null,

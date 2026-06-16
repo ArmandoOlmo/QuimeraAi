@@ -11,6 +11,48 @@ export type CampaignType = 'social' | 'email' | 'ads' | 'print' | 'open_house' |
 export type RealtyPropertyStatus = PropertyStatus;
 export type RealtyPropertyType = PropertyType;
 export type RealtyLeadStatus = LeadStatus;
+export type RealtyAiTone =
+    | 'luxury'
+    | 'family'
+    | 'investment'
+    | 'modern'
+    | 'beach'
+    | 'urban'
+    | 'commercial'
+    | 'rental'
+    | 'new_development';
+export type RealtyAiLanguage = 'es' | 'en';
+export type RealtyListingGrade = 'excellent' | 'good' | 'needs_work' | 'poor';
+
+export interface RealtyFaqItem {
+    question: string;
+    answer: string;
+}
+
+export interface RealtyAiListingOutput {
+    title: string;
+    descriptionShort: string;
+    descriptionLong: string;
+    highlights: string[];
+    features: string[];
+    amenitiesCopy: string;
+    cta: string;
+    faq: RealtyFaqItem[];
+    seoTitle: string;
+    seoDescription: string;
+    socialPost: string;
+    emailCopy: string;
+    smsCopy: string;
+    adCopy: string;
+}
+
+export interface RealtyListingScore {
+    score: number;
+    grade: RealtyListingGrade;
+    missingRequired: string[];
+    missingRecommended: string[];
+    recommendations: string[];
+}
 
 export type RealtyPermissionKey =
     | 'real_estate.view'

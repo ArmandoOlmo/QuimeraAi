@@ -6066,11 +6066,12 @@
       "ai": "AI",
       "settings": "Configuración"
     },
-    "metrics": {
-      "properties": "Propiedades",
-      "active": "Activas",
-      "leads": "Leads nuevos",
-      "featured": "Destacadas"
+  "metrics": {
+    "properties": "Propiedades",
+    "active": "Activas",
+    "leads": "Leads nuevos",
+    "featured": "Destacadas",
+    "qualityScore": "Calidad promedio"
     },
     "access": {
       "enabled": "Activo",
@@ -6150,15 +6151,114 @@
       "phone": "Teléfono",
       "property": "Propiedad"
     },
-    "ai": {
-      "title": "Asistente AI de Realty",
-      "defaultPrompt": "Genera copy premium para esta propiedad.",
-      "prompt": "Instrucción",
-      "generate": "Generar copy",
-      "output": "Resultado",
-      "empty": "El resultado de AI aparecerá aquí.",
-      "generatedListing": "{{title}} en {{city}}\n\n{{price}} · {{beds}} habitaciones · {{baths}} baños · {{area}} ft²\n\n{{description}}\n\nEnfoque solicitado: {{prompt}}\n\nPróximo paso: agenda una visita o solicita más información desde el formulario del listing."
+  "ai": {
+    "title": "Asistente AI de Realty",
+    "defaultPrompt": "Genera copy premium para esta propiedad.",
+    "prompt": "Instrucción",
+    "tone": "Tono",
+    "language": "Idioma",
+    "model": "Modelo",
+    "generate": "Generar copy",
+    "fixWithAi": "Fix with AI",
+    "applyToProperty": "Aplicar a propiedad",
+    "saveGeneration": "Guardar generación",
+    "copyOutput": "Copiar salida",
+    "copied": "Salida AI copiada al portapapeles.",
+    "applied": "Contenido AI aplicado a la propiedad.",
+    "saved": "Generación guardada.",
+    "generatedWith": "Generado con {{model}}",
+    "confirmOverwrite": "AI puede reemplazar contenido existente en: {{fields}}. ¿Quieres continuar?",
+    "output": "Resultado",
+    "empty": "El resultado de AI aparecerá aquí.",
+    "tones": {
+      "luxury": "Lujo",
+      "family": "Familiar",
+      "investment": "Inversión",
+      "modern": "Moderno",
+      "beach": "Playa",
+      "urban": "Urbano",
+      "commercial": "Comercial",
+      "rental": "Renta",
+      "new_development": "Nuevo desarrollo"
     },
+    "languages": {
+      "es": "Español",
+      "en": "Inglés"
+    },
+    "fields": {
+      "title": "Título",
+      "descriptionShort": "Descripción corta",
+      "descriptionLong": "Descripción larga",
+      "highlights": "Highlights",
+      "features": "Características",
+      "amenitiesCopy": "Copy de amenidades",
+      "cta": "CTA",
+      "faq": "FAQ",
+      "seoTitle": "SEO title",
+      "seoDescription": "SEO description",
+      "socialPost": "Post social",
+      "emailCopy": "Email",
+      "smsCopy": "WhatsApp/SMS",
+      "adCopy": "Anuncio"
+    },
+    "errors": {
+      "generate": "No se pudo generar contenido AI.",
+      "save": "No se pudo guardar la generación AI.",
+      "apply": "No se pudo aplicar el contenido AI."
+    },
+    "generatedListing": "{{title}} en {{city}}\n\n{{price}} · {{beds}} habitaciones · {{baths}} baños · {{area}} ft²\n\n{{description}}\n\nEnfoque solicitado: {{prompt}}\n\nPróximo paso: agenda una visita o solicita más información desde el formulario del listing."
+  },
+  "score": {
+    "title": "Listing Quality Score",
+    "badge": "{{score}}% score",
+    "required": "Requerido",
+    "recommended": "Recomendado",
+    "recommendationsTitle": "Recomendaciones",
+    "grade": {
+      "excellent": "Excelente",
+      "good": "Bueno",
+      "needs_work": "Necesita trabajo",
+      "poor": "Pobre"
+    },
+    "fields": {
+      "title": "Título",
+      "slug": "Slug",
+      "price": "Precio",
+      "propertyType": "Tipo de propiedad",
+      "transactionType": "Tipo de transacción",
+      "location": "Dirección y ciudad",
+      "basicStats": "Habitaciones, baños y área",
+      "description": "Descripción larga",
+      "images": "Imágenes o imagen principal",
+      "amenities": "Amenidades",
+      "highlights": "Highlights",
+      "features": "Características",
+      "seoTitle": "SEO title",
+      "seoDescription": "SEO description",
+      "cta": "CTA",
+      "publicEnabled": "Listing público",
+      "statusActive": "Estado activo"
+    },
+    "recommendations": {
+      "add_title": "Añade un título descriptivo y vendible.",
+      "add_slug": "Define un slug limpio para la URL pública.",
+      "add_price": "Añade un precio válido.",
+      "add_property_type": "Selecciona el tipo de propiedad.",
+      "add_transaction_type": "Define si es venta, renta o lease.",
+      "add_location": "Completa dirección y ciudad.",
+      "add_basic_stats": "Completa habitaciones, baños y área.",
+      "expand_description": "Amplía la descripción con detalles comerciales.",
+      "add_images": "Añade una imagen principal desde el banco de imágenes.",
+      "add_amenities": "Añade al menos tres amenidades.",
+      "add_highlights": "Añade highlights claros para escaneo rápido.",
+      "add_features": "Añade características específicas de la propiedad.",
+      "add_seo_title": "Crea un SEO title orientado a búsqueda.",
+      "add_seo_description": "Crea una SEO description de 80 a 155 caracteres.",
+      "add_cta": "Añade un CTA claro para captar leads.",
+      "enable_public_listing": "Activa el listing público cuando esté listo.",
+      "publish_listing": "Publica la propiedad cuando complete los campos clave."
+    }
+  },
     "settings": {
       "title": "Activación del módulo",
       "moduleEnabled": "Realty habilitado para este proyecto",
