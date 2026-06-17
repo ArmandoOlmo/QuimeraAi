@@ -7,6 +7,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 
 import { supabase } from '../../supabase';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { signInWithGoogle as signInWithGoogleProvider } from '../../utils/googleAuth';
 import { toCompatUser, type User as CompatUser } from '../../utils/compatData';
 import { UserDocument, UserRole, RolePermissions, IndividualRole, AgencyRole } from '../../types';
 import { getPermissions, isOwner, determineRole } from '../../constants/roles';
@@ -215,11 +216,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const signInWithGoogle = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: { redirectTo: window.location.origin },
-        });
-        if (error) throw error;
+        await signInWithGoogleProvider();
     };
 
     const sendMagicLink = async (email: string, redirectTo?: string) => {
@@ -267,7 +264,6 @@ export const useAuth = (): AuthContextType => {
 export const useSafeAuth = (): AuthContextType | null => {
     return useContext(AuthContext) || null;
 };
-
 
 
 

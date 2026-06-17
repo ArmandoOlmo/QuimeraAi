@@ -10,7 +10,7 @@
 
 import { isLegacyStorageUrl as isLegacyRemoteStorageUrl } from './imageUrl';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://auth.quimera.ai';
 
 /**
  * Check if a URL points to old remote storage that should no longer be rendered directly.

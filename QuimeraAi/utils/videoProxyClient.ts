@@ -11,7 +11,7 @@ import type {
 import { CURATED_VIDEO_MODELS, resolveOmniModelId } from '../constants/curatedVideoModels';
 import { supabase } from '../supabase';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://auth.quimera.ai';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const AI_PROXY_URL = import.meta.env.VITE_VIDEO_PROXY_URL ||
     import.meta.env.VITE_AI_PROXY_URL ||

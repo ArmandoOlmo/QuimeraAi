@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../supabase';
+import { signInWithGoogle } from '../utils/googleAuth';
 import { Eye, EyeOff, ArrowRight, ArrowLeft, Zap, Layout, Palette, CheckCircle, Image as ImageIcon, MessageSquare, BarChart3 } from 'lucide-react';
 import LanguageSelector from './ui/LanguageSelector';
 
@@ -50,13 +51,8 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
         setError('');
         setIsLoading(true);
         try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: window.location.origin
-                }
-            });
-            if (error) throw error;
+            const { redirected } = await signInWithGoogle();
+            if (!redirected) setIsLoading(false);
         } catch (err: any) {
             setError(t('auth.errors.googleSignInFailed') + ' (' + err.message + ')');
             setIsLoading(false);
@@ -600,4 +596,3 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
 };
 
 export default ModernAuth;
-

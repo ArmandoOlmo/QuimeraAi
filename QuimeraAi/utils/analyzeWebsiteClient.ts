@@ -5,7 +5,7 @@
 
 import { supabase } from '../supabase';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://auth.quimera.ai';
 const AI_PROXY_URL = import.meta.env.VITE_AI_PROXY_URL ||
     import.meta.env.VITE_VIDEO_PROXY_URL ||
     `${SUPABASE_URL}/functions/v1/ai-proxy`;

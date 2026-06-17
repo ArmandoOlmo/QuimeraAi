@@ -37,7 +37,7 @@ export const syncApiKeyFromAiStudio = async (): Promise<string | null> => {
 export const fetchGoogleApiKey = async (): Promise<string> => {
     if (cachedApiKey) return cachedApiKey;
 
-    const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+    const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://auth.quimera.ai';
     const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
     const AI_PROXY_URL = `${SUPABASE_URL}/functions/v1/ai-proxy`;
     const { data: sessionData } = await supabase.auth.getSession();

@@ -8,7 +8,7 @@
 import { supabase } from '../supabase';
 
 // Configuration — Use Supabase Edge Function (OpenRouter) instead of Supabase Cloud Function
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://auth.quimera.ai';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const AI_PROXY_URL = import.meta.env.VITE_AI_PROXY_URL ||
     import.meta.env.VITE_VIDEO_PROXY_URL ||
@@ -779,7 +779,6 @@ export function shouldUseProxy(): boolean {
     // This ensures the API key is NEVER exposed in the browser
     return true;
 }
-
 
 
 

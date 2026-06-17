@@ -5,7 +5,7 @@
  * Routes through OpenRouter for AI, no Supabase dependency.
  */
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://auth.quimera.ai';
 const VOICE_PROXY_BASE_URL = `${SUPABASE_URL}/functions/v1`;
 
 export interface TTSOptions {
@@ -136,5 +136,4 @@ export function createAudioPlayer(base64Audio: string, mimeType: string = 'audio
 export function isAudioPlaying(audio: HTMLAudioElement): boolean {
     return !audio.paused && !audio.ended && audio.currentTime > 0;
 }
-
 

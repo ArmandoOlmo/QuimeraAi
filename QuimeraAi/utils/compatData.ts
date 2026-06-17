@@ -692,9 +692,8 @@ export async function sendEmailVerification() {
 }
 
 export async function signInWithPopup() {
-    const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-    if (error) throw error;
-    return data;
+    const { signInWithGoogle } = await import('./googleAuth');
+    return signInWithGoogle();
 }
 
 export function getAnalytics(_app?: unknown) {

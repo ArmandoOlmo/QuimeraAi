@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { sanitizeHtml } from '../utils/sanitize';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../supabase';
+import { signInWithGoogle } from '../utils/googleAuth';
 
 import { Eye, EyeOff, ArrowRight, Zap, Layout, Image as ImageIcon, Sparkles, CheckCircle, X, PlayCircle, Hexagon, ChevronDown, HelpCircle } from 'lucide-react';
 import LanguageSelector from './ui/LanguageSelector';
@@ -114,13 +115,8 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
         setError('');
         setIsLoading(true);
         try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: window.location.origin
-                }
-            });
-            if (error) throw error;
+            const { redirected } = await signInWithGoogle();
+            if (!redirected) setIsLoading(false);
         } catch (err: any) {
             setError(t('auth.errors.googleSignInFailed') + ' (' + err.message + ')');
             setIsLoading(false);

@@ -7,7 +7,7 @@
 
 import { KnowledgeLink } from '../types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://auth.quimera.ai';
 const EXTRACT_URL = import.meta.env.VITE_EXTRACT_CONTENT_URL ||
     `${SUPABASE_URL}/functions/v1/knowledge-extractContent`;
 
