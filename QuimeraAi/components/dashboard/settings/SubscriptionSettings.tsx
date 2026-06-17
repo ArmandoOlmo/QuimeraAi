@@ -360,7 +360,10 @@ const SubscriptionSettings: React.FC = () => {
         ? allPlans[currentPlanIndex + 1]?.id
         : null;
 
-    const usagePercentage = usage?.percentage || 0;
+    const isUnlimitedUsage = Boolean(usage?.isUnlimited);
+    const usagePercentage = isUnlimitedUsage ? 100 : usage?.percentage || 0;
+    const creditsLimitDisplay = isUnlimitedUsage ? '∞' : usage?.limit || 0;
+    const creditsRemainingDisplay = isUnlimitedUsage ? '∞' : usage?.remaining || 0;
 
     return (
         <div className="space-y-6">
@@ -398,7 +401,7 @@ const SubscriptionSettings: React.FC = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <SettingsStatCard
                                     label={t('settings.subscription.aiCredits', 'Créditos IA')}
-                                    value={currentPlan.limits.maxAiCredits.toLocaleString()}
+                                    value={isUnlimitedUsage ? '∞' : currentPlan.limits.maxAiCredits.toLocaleString()}
                                     icon={Sparkles}
                                 />
                                 <SettingsStatCard
@@ -467,7 +470,7 @@ const SubscriptionSettings: React.FC = () => {
                                             {t('settings.subscription.used', 'Usado')}: <span className="font-semibold text-foreground">{usage?.used || 0}</span>
                                         </span>
                                         <span className="text-q-text-muted">
-                                            {t('settings.subscription.limit', 'Límite')}: <span className="font-semibold text-foreground">{usage?.limit || 0}</span>
+                                            {t('settings.subscription.limit', 'Límite')}: <span className="font-semibold text-foreground">{creditsLimitDisplay}</span>
                                         </span>
                                     </div>
 
@@ -480,7 +483,7 @@ const SubscriptionSettings: React.FC = () => {
                                             className="text-lg font-bold"
                                             style={{ color: usage?.color || 'var(--quimera-status-accent-from)' }}
                                         >
-                                            {usage?.remaining || 0}
+                                            {creditsRemainingDisplay}
                                         </span>
                                     </div>
 

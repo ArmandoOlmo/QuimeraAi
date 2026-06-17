@@ -70,6 +70,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   // Check role first (most reliable), then email-based owner check as fallback
   const userRole = userDocument?.role;
   const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
+  const hasUnlimitedCredits = creditsUsage?.isUnlimited || isOwner;
 
   const { navigate, path } = useRouter();
   const tenantContext = useSafeTenant();
@@ -95,16 +96,27 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const formattedCreditsUsed = creditsUsed.toLocaleString();
   const formattedCreditsLimit = creditsLimit.toLocaleString();
   const formattedCreditsRemaining = creditsRemaining.toLocaleString();
-  const creditsAvailablePercentage = creditsLimit > 0
-    ? Math.max(0, Math.min(Math.round((creditsRemaining / creditsLimit) * 100), 100))
-    : 0;
-  const compactCreditsRemaining = new Intl.NumberFormat(undefined, {
+  const unlimitedCreditsLabel = t('common.unlimited', 'Ilimitado');
+  const displayCreditsUsed = hasUnlimitedCredits ? '∞' : formattedCreditsUsed;
+  const displayCreditsLimit = hasUnlimitedCredits ? '∞' : formattedCreditsLimit;
+  const displayCreditsRemaining = hasUnlimitedCredits ? unlimitedCreditsLabel : formattedCreditsRemaining;
+  const creditsRemainingLabel = hasUnlimitedCredits
+    ? unlimitedCreditsLabel
+    : `${displayCreditsRemaining} ${t('dashboard.creditsRemaining', 'restantes')}`;
+  const creditsAvailablePercentage = hasUnlimitedCredits
+    ? 100
+    : creditsLimit > 0
+      ? Math.max(0, Math.min(Math.round((creditsRemaining / creditsLimit) * 100), 100))
+      : 0;
+  const compactCreditsRemaining = hasUnlimitedCredits ? '∞' : new Intl.NumberFormat(undefined, {
     notation: 'compact',
     maximumFractionDigits: creditsRemaining >= 1000 ? 1 : 0,
   }).format(creditsRemaining);
   const creditsTitle = isLoadingCredits
     ? t('common.loading')
-    : `${formattedCreditsRemaining} ${t('dashboard.creditsRemaining', 'créditos restantes')} (${formattedCreditsUsed}/${formattedCreditsLimit})`;
+    : hasUnlimitedCredits
+      ? `${unlimitedCreditsLabel} (${displayCreditsUsed}/${displayCreditsLimit})`
+      : `${formattedCreditsRemaining} ${t('dashboard.creditsRemaining', 'créditos restantes')} (${formattedCreditsUsed}/${formattedCreditsLimit})`;
 
   const handlePlanAttentionClick = () => {
     navigate(ROUTES.SETTINGS_SUBSCRIPTION);
@@ -919,7 +931,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       </span>
                     </div>
                     <span className="text-[10px] font-mono text-gray-500 dark:text-white/60">
-                      {isLoadingCredits ? '...' : `${formattedCreditsUsed}/${formattedCreditsLimit}`}
+                      {isLoadingCredits ? '...' : `${displayCreditsUsed}/${displayCreditsLimit}`}
                     </span>
                   </div>
 
@@ -932,7 +944,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   <div className="mt-2 flex justify-between items-center px-1">
                     <span className="text-[10px] text-q-text-muted font-medium">{t('common.monthlyCredits')}</span>
                     <span className="text-[10px] font-bold text-primary px-2 text-right">
-                      {isLoadingCredits ? '...' : `${formattedCreditsRemaining} ${t('dashboard.creditsRemaining', 'restantes')}`}
+                      {isLoadingCredits ? '...' : creditsRemainingLabel}
                     </span>
                   </div>
 

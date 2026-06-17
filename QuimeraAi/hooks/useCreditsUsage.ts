@@ -29,6 +29,7 @@ export interface CreditsUsageData {
     isNearLimit: boolean;
     hasExceededLimit: boolean;
     requiresPayment: boolean;
+    isUnlimited: boolean;
 }
 
 interface UseCreditsUsageReturn {
@@ -39,7 +40,7 @@ interface UseCreditsUsageReturn {
 }
 
 export function useCreditsUsage(): UseCreditsUsageReturn {
-    const { loadingAuth } = useAuth();
+    const { loadingAuth, userDocument, isUserOwner } = useAuth();
     const tenantContext = useSafeTenant();
     const [usage, setUsage] = useState<CreditsUsageData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -48,6 +49,8 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
     const currentTenant = tenantContext?.currentTenant;
     const tenantId = currentTenant?.id;
     const isLoadingTenant = tenantContext?.isLoadingTenant ?? false;
+    const userRole = userDocument?.role;
+    const isUnlimitedCreditsUser = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
 
     const loadUsage = useCallback(async () => {
         if (!tenantId) {
@@ -69,9 +72,10 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
                 throw error;
             }
 
-            const planKey: SubscriptionPlanId = (data?.plan_id as SubscriptionPlanId) || (currentTenant?.subscriptionPlan as SubscriptionPlanId) || 'free';
+            const subscriptionPlanKey: SubscriptionPlanId = (data?.plan_id as SubscriptionPlanId) || (currentTenant?.subscriptionPlan as SubscriptionPlanId) || 'free';
+            const planKey: SubscriptionPlanId = isUnlimitedCreditsUser ? 'enterprise' : subscriptionPlanKey;
             const plan = SUBSCRIPTION_PLANS[planKey] || SUBSCRIPTION_PLANS.free;
-            const status = data?.status || 'active';
+            const status = isUnlimitedCreditsUser ? 'active' : data?.status || 'active';
             
             const aiUsage = data?.ai_credits_usage as any;
             const used = Number(aiUsage?.creditsUsed ?? aiUsage?.total_used ?? 0);
@@ -79,12 +83,18 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
             const fallbackLimit = Number.isFinite(tenantLimit) && tenantLimit > 0
                 ? tenantLimit
                 : plan.limits.maxAiCredits ?? 0;
-            const limit = Number(aiUsage?.creditsIncluded ?? fallbackLimit);
+            const limit = isUnlimitedCreditsUser
+                ? plan.limits.maxAiCredits
+                : Number(aiUsage?.creditsIncluded ?? fallbackLimit);
             
-            const remaining = Number.isFinite(Number(aiUsage?.creditsRemaining))
+            const remaining = isUnlimitedCreditsUser
+                ? limit
+                : Number.isFinite(Number(aiUsage?.creditsRemaining))
                 ? Number(aiUsage.creditsRemaining)
                 : Math.max(0, limit - used);
-            const percentage = limit > 0 ? Math.min(Math.round((used / limit) * 100), 100) : 0;
+            const percentage = isUnlimitedCreditsUser
+                ? 0
+                : limit > 0 ? Math.min(Math.round((used / limit) * 100), 100) : 0;
 
             setUsage({
                 used,
@@ -99,9 +109,10 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
                 stripeCustomerId: data?.stripe_customer_id,
                 stripeSubscriptionId: data?.stripe_subscription_id,
                 color: getUsageColor(percentage),
-                isNearLimit: percentage >= 80 && percentage < 100,
-                hasExceededLimit: percentage >= 100,
-                requiresPayment: ['past_due', 'unpaid', 'incomplete', 'incomplete_expired'].includes(status),
+                isNearLimit: !isUnlimitedCreditsUser && percentage >= 80 && percentage < 100,
+                hasExceededLimit: !isUnlimitedCreditsUser && percentage >= 100,
+                requiresPayment: !isUnlimitedCreditsUser && ['past_due', 'unpaid', 'incomplete', 'incomplete_expired'].includes(status),
+                isUnlimited: isUnlimitedCreditsUser,
             });
         } catch (err: any) {
             console.error('Error fetching credits usage:', err);
@@ -109,7 +120,7 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [tenantId, currentTenant?.subscriptionPlan, currentTenant?.limits?.maxAiCredits]);
+    }, [tenantId, currentTenant?.subscriptionPlan, currentTenant?.limits?.maxAiCredits, isUnlimitedCreditsUser]);
 
     // Cargar al montar y cuando cambie el tenant
     useEffect(() => {
@@ -184,4 +195,3 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
 }
 
 export default useCreditsUsage;
-
