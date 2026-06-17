@@ -1,4 +1,4 @@
-import type { PageSection } from './ui';
+import type { GlobalColors, PageSection } from './ui';
 import type { ColorBrief, ColorCandidate } from './colorSystem';
 
 export type WebsitePlanSource = 'chat' | 'imported-url' | 'mixed';
@@ -15,14 +15,7 @@ export interface WebsitePlanBusinessProfile {
 }
 
 export interface WebsitePlanBrandProfile {
-    colors: {
-        primary: string;
-        secondary?: string;
-        accent?: string;
-        background?: string;
-        surface?: string;
-        text?: string;
-    };
+    colors: Partial<GlobalColors> & Pick<GlobalColors, 'primary'>;
     fonts?: string[];
     visualStyle?: string;
     logoUrl?: string;
