@@ -21,7 +21,7 @@ import { useAIWebsiteStudio, BusinessBrief, GenerationPhase, GenerationEvent } f
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
 import ColorControl from '../ui/ColorControl';
-import { PageSection } from '../../types/ui';
+import { FontFamily, PageSection } from '../../types/ui';
 import ImagePicker from '../ui/ImagePicker';
 import FontFamilyPicker from '../ui/FontFamilyPicker';
 import { SortableComponentChips } from '../ui/SortableComponentChips';
@@ -401,7 +401,7 @@ const BriefPanel: React.FC<{
     onAddReferenceImage: (base64: string) => void;
     onRemoveReferenceImage: (index: number) => void;
     onUpdateColor: (colorKey: string, newColor: string) => void;
-    onUpdateFont: (fontKey: 'header' | 'body' | 'button', newFont: string) => void;
+    onUpdateFont: (fontKey: 'header' | 'body' | 'button', newFont: FontFamily) => void;
     onToggleComponent: (component: PageSection) => void;
     onSetComponents: (components: PageSection[]) => void;
     availableComponents: { key: PageSection; label: string }[];
@@ -551,8 +551,9 @@ const BriefPanel: React.FC<{
                         <div key={key} className="flex flex-col gap-1">
                             <span className="text-[10px] text-q-text-secondary uppercase">{key}</span>
                             <FontFamilyPicker
+                                label=""
                                 value={brief.fontPairing[key]}
-                                onChange={(val) => onUpdateFont(key, val as any)}
+                                onChange={(val) => onUpdateFont(key, val)}
                             />
                         </div>
                     ))}

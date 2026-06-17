@@ -86,7 +86,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
             if (status === 'error') return 0;
             // Active phase — compute based on overall progress
             if (!generationProgress) return 0;
-            const overall = generationProgress.progress || 0;
+            const overall = generationProgress.contentProgress || 0;
             if (targetPhase === 'content') return Math.min(100, Math.round((overall / 35) * 100));
             if (targetPhase === 'images') {
                 const total = generationProgress.imagesTotal || 1;
@@ -376,7 +376,6 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
 };
 
 export default Step7Generation;
-
 
 
 

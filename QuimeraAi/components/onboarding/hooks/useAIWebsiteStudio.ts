@@ -28,7 +28,7 @@ import { Conversation, Role } from '@elevenlabs/client';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { getGoogleGenAI } from '../../../utils/genAiClient';
 import { generateComponentColorMappings, generateHeroWaveGradientColors, readableTextOn } from '../../ui/GlobalStylesControl';
-import { generateAiAssistantConfig, GlobalColors } from '../../../utils/chatbotConfigGenerator';
+import { generateAiAssistantConfig, GlobalColors as ChatbotGlobalColors } from '../../../utils/chatbotConfigGenerator';
 import { generatePagesFromLegacyProject } from '../../../utils/legacyMigration';
 import { extractHeroImage } from '../../../contexts/project/ProjectContext';
 import { analyzeWebsite } from '../../../utils/analyzeWebsiteClient';
@@ -90,7 +90,7 @@ export interface BusinessBrief {
     hasEcommerce: boolean;
     ecommerceType?: string;
     colorPalette: { primary: string; secondary: string; accent: string; background: string; surface: string; text: string; };
-    fontPairing: { header: string; body: string; button: string; };
+    fontPairing: FontPairing;
     suggestedComponents: PageSection[];
     readinessScore: number;
     missingFields: string[];
@@ -1240,7 +1240,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         };
         planForGeneration = applyColorExpertToPlan(planForGeneration);
 
-        const planColors = planForGeneration.brandProfile.colors || {};
+        const planColors = planForGeneration.brandProfile.colors;
         const planFonts = planForGeneration.brandProfile.fonts || [];
         const briefForFontSelection: BusinessBrief = {
             ...businessBrief,
@@ -1509,7 +1509,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             }];
 
             // Build AI Assistant config
-            const chatbotGlobalColors: GlobalColors = {
+            const chatbotGlobalColors: ChatbotGlobalColors = {
                 primary: globalColors.primary, secondary: globalColors.secondary,
                 accent: globalColors.accent, background: globalColors.background,
                 surface: globalColors.surface, text: globalColors.text, border: globalColors.border,
@@ -1915,7 +1915,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         }));
     }, []);
 
-    const updateBriefFont = useCallback((fontKey: 'header' | 'body' | 'button', newFont: string) => {
+    const updateBriefFont = useCallback((fontKey: 'header' | 'body' | 'button', newFont: FontFamily) => {
         setBusinessBrief(prev => ({
             ...prev,
             fontPairing: { ...prev.fontPairing, [fontKey]: newFont },
