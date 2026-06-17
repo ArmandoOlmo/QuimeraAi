@@ -8,6 +8,7 @@ import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles, Newspaper, Home, Utensils, AlertTriangle } from 'lucide-react';
 import LanguageSelector from '../ui/LanguageSelector';
+import { AppButton } from '../ui/system';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import ProjectSwitcher from './ProjectSwitcher';
 import ProgressBar3D from '../ui/ProgressBar3D';
@@ -828,9 +829,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
             {/* Footer Toggle Button - Small circle at top center */}
             {(!isCollapsed || isMobileOpen) && (
-              <button
+              <AppButton
+                variant="icon"
+                size="icon-sm"
                 onClick={() => setIsFooterCollapsed(!isFooterCollapsed)}
-                className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 w-6 bg-q-surface border border-q-border rounded-full flex items-center justify-center text-q-text-muted hover:text-foreground hover:border-primary transition-all shadow-md"
+                className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 !size-6 !h-6 !w-6 !rounded-full !p-0 !bg-q-surface border border-q-border flex items-center justify-center !text-q-text-muted hover:!text-foreground hover:border-primary transition-all shadow-md"
                 style={{ height: '24px', minHeight: '24px' }}
                 aria-label={isFooterCollapsed ? t('common.expandFooter', 'Expandir') : t('common.collapseFooter', 'Colapsar')}
                 aria-expanded={!isFooterCollapsed}
@@ -840,7 +843,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   className={`transition-transform duration-200 ${isFooterCollapsed ? 'rotate-180' : 'rotate-0'}`}
                   aria-hidden="true"
                 />
-              </button>
+              </AppButton>
             )}
 
             {/* Collapsible content wrapper */}
@@ -848,10 +851,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
               {isCollapsed && !isMobileOpen && (
                 <div className="mb-3 flex justify-center">
-                  <button
-                    type="button"
+                  <AppButton
+                    variant="secondary"
+                    size="icon-md"
                     onClick={() => setIsCollapsed(false)}
-                    className="flex h-11 w-11 flex-col items-center justify-center rounded-lg border border-q-border bg-muted text-primary transition-colors hover:border-primary hover:bg-secondary"
+                    className="flex !h-11 !w-11 flex-col items-center justify-center rounded-lg border border-q-border !bg-muted !p-0 !text-primary transition-colors hover:border-primary hover:!bg-secondary"
                     title={creditsTitle}
                     aria-label={creditsTitle}
                     data-testid="sidebar-credits-compact"
@@ -860,7 +864,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     <span className="mt-0.5 max-w-full px-0.5 text-[9px] font-bold leading-none">
                       {isLoadingCredits ? '...' : compactCreditsRemaining}
                     </span>
-                  </button>
+                  </AppButton>
                 </div>
               )}
 
@@ -872,42 +876,48 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 <div className="flex items-center justify-between gap-2 bg-muted p-1.5 rounded-xl border border-q-border">
                   {/* Theme */}
                   <div className="flex items-center gap-1">
-                    <button
+                    <AppButton
+                      variant="icon"
+                      size="icon-md"
                       onClick={() => setThemeMode('light')}
-                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${themeMode === 'light'
-                        ? 'bg-q-bg text-primary shadow-sm'
-                        : 'text-q-text-muted hover:text-foreground hover:bg-q-bg/40'
+                      className={`!size-9 !h-9 !w-9 !rounded-lg !p-0 flex items-center justify-center transition-all ${themeMode === 'light'
+                        ? '!bg-q-bg !text-primary shadow-sm'
+                        : '!text-q-text-muted hover:!text-foreground hover:!bg-q-bg/40'
                         }`}
                       title={t('common.lightMode')}
                       aria-label={t('common.lightMode')}
                       aria-pressed={themeMode === 'light'}
                     >
                       <Sun size={16} />
-                    </button>
-                    <button
+                    </AppButton>
+                    <AppButton
+                      variant="icon"
+                      size="icon-md"
                       onClick={() => setThemeMode('dark')}
-                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${themeMode === 'dark'
-                        ? 'bg-q-surface text-primary shadow-sm border border-q-border'
-                        : 'text-q-text-muted hover:text-foreground hover:bg-q-bg/40'
+                      className={`!size-9 !h-9 !w-9 !rounded-lg !p-0 flex items-center justify-center transition-all ${themeMode === 'dark'
+                        ? '!bg-q-surface !text-primary shadow-sm border border-q-border'
+                        : '!text-q-text-muted hover:!text-foreground hover:!bg-q-bg/40'
                         }`}
                       title={t('common.darkMode')}
                       aria-label={t('common.darkMode')}
                       aria-pressed={themeMode === 'dark'}
                     >
                       <Moon size={16} />
-                    </button>
-                    <button
+                    </AppButton>
+                    <AppButton
+                      variant="icon"
+                      size="icon-md"
                       onClick={() => setThemeMode('black')}
-                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${themeMode === 'black'
-                        ? 'bg-q-surface text-primary border border-primary/30 shadow-sm shadow-primary/20'
-                        : 'text-q-text-muted hover:text-foreground hover:bg-q-bg/40'
+                      className={`!size-9 !h-9 !w-9 !rounded-lg !p-0 flex items-center justify-center transition-all ${themeMode === 'black'
+                        ? '!bg-q-surface !text-primary border border-primary/30 shadow-sm shadow-primary/20'
+                        : '!text-q-text-muted hover:!text-foreground hover:!bg-q-bg/40'
                         }`}
                       title={t('common.blackMode')}
                       aria-label={t('common.blackMode')}
                       aria-pressed={themeMode === 'black'}
                     >
                       <Circle size={16} fill="currentColor" />
-                    </button>
+                    </AppButton>
                   </div>
 
                   {/* Language */}
@@ -949,18 +959,22 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   </div>
 
                   {!isOwner && (
-                    <button
+                    <AppButton
+                      variant="ghost"
+                      size="sm"
                       onClick={handleUpgradeClick}
-                      className="mt-1 w-full text-right text-[11px] md:text-[10px] font-bold text-primary hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-1 touch-manipulation"
+                      className="mt-1 w-full !h-auto justify-end !bg-transparent !p-1 text-right text-[11px] md:text-[10px] font-bold text-primary hover:!bg-transparent hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors touch-manipulation"
                     >
                       {t('common.upgrade')} →
-                    </button>
+                    </AppButton>
                   )}
 
                   {planNeedsAttention && (
-                    <button
+                    <AppButton
+                      variant="danger"
+                      size="md"
                       onClick={handlePlanAttentionClick}
-                      className="group mt-2 w-full rounded-lg border border-red-300/20 bg-gradient-to-r from-red-600 via-orange-600 to-red-600 bg-[length:200%_100%] px-2.5 py-2 text-left text-white shadow-sm shadow-red-500/20 transition-all duration-500 hover:bg-right hover:shadow-red-500/30"
+                      className="group mt-2 w-full !h-auto justify-start !whitespace-normal rounded-lg border border-red-300/20 !bg-gradient-to-r from-red-600 via-orange-600 to-red-600 bg-[length:200%_100%] !px-2.5 !py-2 text-left !text-white shadow-sm shadow-red-500/20 transition-all duration-500 hover:bg-right hover:shadow-red-500/30"
                     >
                       <span className="flex items-center gap-2">
                         <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-white/25 backdrop-blur-sm transition-colors group-hover:bg-white/35">
@@ -975,7 +989,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                           </span>
                         </span>
                       </span>
-                    </button>
+                    </AppButton>
                   )}
                 </div>
               </div>
@@ -1005,13 +1019,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
                 <div className={`${isCollapsed && !isMobileOpen ? '' : 'flex flex-col gap-1'}`}>
                   {(!isCollapsed || isMobileOpen) && (
-                    <button
+                    <AppButton
+                      variant="ghost"
+                      size="sm"
                       onClick={handleSignOut}
-                      className="p-2.5 md:p-1.5 -mr-1 text-q-text-muted hover:text-destructive active:text-destructive transition-colors touch-manipulation active:scale-95"
+                      className="!h-auto !w-auto !bg-transparent !p-2.5 md:!p-1.5 -mr-1 text-q-text-muted hover:!bg-transparent hover:text-destructive active:text-destructive transition-colors touch-manipulation active:scale-95"
                       aria-label={t('auth.logout')}
                     >
                       <LogOut size={18} className="md:w-4 md:h-4" aria-hidden="true" />
-                    </button>
+                    </AppButton>
                   )}
                 </div>
               </div>
