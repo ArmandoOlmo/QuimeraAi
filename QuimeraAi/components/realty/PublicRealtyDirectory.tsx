@@ -4,6 +4,7 @@ import {
     Bath,
     BedDouble,
     ChevronDown,
+    CircleAlert,
     Eye,
     Filter,
     Grid3X3,
@@ -763,6 +764,7 @@ const PublicRealtyDirectory: React.FC<PublicRealtyDirectoryProps> = ({
                     </DirectoryPanel>
                 ) : error ? (
                     <DirectoryPanel radiusClass={cardRadius} className="p-8 text-center">
+                        <CircleAlert className="mx-auto mb-3 text-[var(--realty-accent)]" size={28} />
                         <h2 className="text-2xl font-bold font-header text-[var(--realty-heading)]">{t('realty.directory.errorTitle')}</h2>
                         <p className="mx-auto mt-2 max-w-xl text-sm leading-6 font-body text-[var(--realty-muted)]">{error}</p>
                         <DirectoryButton
