@@ -118,22 +118,77 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
             .toUpperCase()
             .slice(0, 2);
     };
+    const emptyCreateButtonClasses = [
+        'flex items-center gap-2 w-full p-2 rounded-lg',
+        'bg-q-accent/10 border border-q-accent/30 border-dashed',
+        'text-q-accent hover:bg-q-accent/20 transition-colors',
+        className,
+    ].filter(Boolean).join(' ');
+    const loadingClasses = ['flex items-center gap-2 p-2', className].filter(Boolean).join(' ');
+    const loadingIconClasses = 'w-8 h-8 rounded-lg bg-q-surface-overlay animate-pulse';
+    const loadingTextWrapClasses = 'flex-1 space-y-1';
+    const singleTenantClasses = ['flex items-center gap-2 p-2', className].filter(Boolean).join(' ');
+    const tenantAvatarClasses = 'w-8 h-8 rounded-lg bg-gradient-to-br from-q-accent/80 to-q-accent flex items-center justify-center text-white text-xs font-bold shadow-sm';
+    const triggerClasses = [
+        'flex items-center gap-2 w-full p-2 rounded-lg',
+        'bg-q-surface hover:bg-q-surface-elevated/50 border border-q-border',
+        'transition-all duration-200',
+        isOpen ? 'ring-2 ring-q-accent/50' : '',
+        isLoading ? 'opacity-50 cursor-wait' : '',
+    ].filter(Boolean).join(' ');
+    const triggerAvatarClasses = `${tenantAvatarClasses} flex-shrink-0`;
+    const triggerTextWrapClasses = 'flex-1 min-w-0 text-left';
+    const tenantTextWrapClasses = 'flex-1 min-w-0';
+    const triggerTitleClasses = 'text-sm font-semibold text-q-text truncate';
+    const roleWrapClasses = 'flex items-center gap-1';
+    const roleTextClasses = 'text-xs text-q-text-muted';
+    const chevronClasses = [
+        'text-q-text-muted transition-transform duration-200 flex-shrink-0',
+        isOpen ? 'rotate-180' : '',
+    ].filter(Boolean).join(' ');
+    const dropdownClasses = [
+        'absolute z-50 mt-2 py-1',
+        'bg-q-surface-elevated border border-q-border rounded-xl shadow-xl',
+        'animate-in fade-in-0 zoom-in-95 duration-200',
+        collapsed ? 'left-full ml-2 top-0' : 'left-0 right-0',
+        collapsed ? 'w-64' : 'w-full',
+    ].join(' ');
+    const dropdownHeaderClasses = 'px-3 py-2 border-b border-q-border';
+    const dropdownHeaderTitleClasses = 'text-xs font-semibold text-q-text-muted uppercase tracking-wider';
+    const listClasses = 'max-h-64 overflow-y-auto py-1';
+    const workspaceItemClasses = (isActive: boolean) => [
+        'flex items-center gap-3 w-full px-3 py-2.5',
+        'hover:bg-q-surface-overlay/50 transition-colors',
+        isActive ? 'bg-q-accent/10' : '',
+    ].filter(Boolean).join(' ');
+    const workspaceItemAvatarClasses = (isActive: boolean) => [
+        'w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0',
+        isActive
+            ? 'bg-gradient-to-br from-q-accent to-q-accent/80 shadow-md shadow-q-accent/30'
+            : 'bg-gradient-to-br from-q-text-muted/60 to-q-text-muted/40',
+    ].join(' ');
+    const workspaceItemTextClasses = 'flex-1 min-w-0 text-left';
+    const workspaceItemTitleClasses = (isActive: boolean) => [
+        'text-sm font-medium truncate',
+        isActive ? 'text-q-accent' : 'text-q-text',
+    ].join(' ');
+    const workspaceMetaClasses = 'flex items-center gap-1.5';
+    const clientBadgeClasses = 'text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-500';
+    const activeIndicatorClasses = 'text-q-accent flex-shrink-0';
+    const dividerClasses = 'border-t border-q-border my-1';
+    const actionButtonClasses = 'flex items-center gap-2 w-full px-3 py-2.5 text-q-accent hover:bg-q-accent/10 transition-colors';
+    const actionLabelClasses = 'text-sm font-medium';
 
     // If no tenants at all, show a create workspace button
     if (!isLoadingTenant && userTenants.length === 0) {
         return (
             <button
                 onClick={handleCreateWorkspace}
-                className={`
-                    flex items-center gap-2 w-full p-2 rounded-lg
-                    bg-q-accent/10 border border-q-accent/30 border-dashed
-                    text-q-accent hover:bg-q-accent/20 transition-colors
-                    ${className}
-                `}
+                className={emptyCreateButtonClasses}
             >
                 <Plus size={18} />
                 {!collapsed && (
-                    <span className="text-sm font-medium">
+                    <span className={actionLabelClasses}>
                         {t('workspace.create', 'Crear Workspace')}
                     </span>
                 )}
@@ -144,10 +199,10 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
     // Loading state
     if (isLoadingTenant) {
         return (
-            <div className={`flex items-center gap-2 p-2 ${className}`}>
-                <div className="w-8 h-8 rounded-lg bg-q-surface-overlay animate-pulse" />
+            <div className={loadingClasses}>
+                <div className={loadingIconClasses} />
                 {!collapsed && (
-                    <div className="flex-1 space-y-1">
+                    <div className={loadingTextWrapClasses}>
                         <div className="h-4 w-20 bg-q-surface-overlay rounded animate-pulse" />
                         <div className="h-3 w-12 bg-q-surface-overlay rounded animate-pulse" />
                     </div>
@@ -159,9 +214,9 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
     // Single tenant - no switcher needed, just show current
     if (userTenants.length === 1) {
         return (
-            <div className={`flex items-center gap-2 p-2 ${className}`}>
+            <div className={singleTenantClasses}>
                 {/* Tenant avatar */}
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-q-accent/80 to-q-accent flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                <div className={tenantAvatarClasses}>
                     {currentTenant?.branding?.logoUrl ? (
                         <img
                             src={currentTenant.branding.logoUrl}
@@ -173,13 +228,13 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                     )}
                 </div>
                 {!collapsed && (
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-q-text truncate">
+                    <div className={tenantTextWrapClasses}>
+                        <p className={triggerTitleClasses}>
                             {currentTenant?.name}
                         </p>
-                        <div className="flex items-center gap-1">
+                        <div className={roleWrapClasses}>
                             {currentRole && getRoleIcon(currentRole)}
-                            <span className="text-xs text-q-text-muted">
+                            <span className={roleTextClasses}>
                                 {currentRole ? AGENCY_ROLE_LABELS[currentRole] : ''}
                             </span>
                         </div>
@@ -196,18 +251,12 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 disabled={isLoading}
-                className={`
-                    flex items-center gap-2 w-full p-2 rounded-lg
-                    bg-q-surface hover:bg-q-surface-elevated/50 border border-q-border
-                    transition-all duration-200
-                    ${isOpen ? 'ring-2 ring-q-accent/50' : ''}
-                    ${isLoading ? 'opacity-50 cursor-wait' : ''}
-                `}
+                className={triggerClasses}
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
             >
                 {/* Tenant avatar */}
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-q-accent/80 to-q-accent flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0">
+                <div className={triggerAvatarClasses}>
                     {currentTenant?.branding?.logoUrl ? (
                         <img
                             src={currentTenant.branding.logoUrl}
@@ -221,22 +270,20 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
 
                 {!collapsed && (
                     <>
-                        <div className="flex-1 min-w-0 text-left">
-                            <p className="text-sm font-semibold text-q-text truncate">
+                        <div className={triggerTextWrapClasses}>
+                            <p className={triggerTitleClasses}>
                                 {currentTenant?.name}
                             </p>
-                            <div className="flex items-center gap-1">
+                            <div className={roleWrapClasses}>
                                 {currentRole && getRoleIcon(currentRole)}
-                                <span className="text-xs text-q-text-muted">
+                                <span className={roleTextClasses}>
                                     {currentRole ? AGENCY_ROLE_LABELS[currentRole] : ''}
                                 </span>
                             </div>
                         </div>
                         <ChevronDown
                             size={16}
-                            className={`text-q-text-muted transition-transform duration-200 flex-shrink-0 ${
-                                isOpen ? 'rotate-180' : ''
-                            }`}
+                            className={chevronClasses}
                         />
                     </>
                 )}
@@ -245,24 +292,18 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
             {/* Dropdown Menu */}
             {isOpen && (
                 <div
-                    className={`
-                        absolute z-50 mt-2 py-1
-                        bg-q-surface-elevated border border-q-border rounded-xl shadow-xl
-                        animate-in fade-in-0 zoom-in-95 duration-200
-                        ${collapsed ? 'left-full ml-2 top-0' : 'left-0 right-0'}
-                        ${collapsed ? 'w-64' : 'w-full'}
-                    `}
+                    className={dropdownClasses}
                     role="listbox"
                 >
                     {/* Header */}
-                    <div className="px-3 py-2 border-b border-q-border">
-                        <p className="text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                    <div className={dropdownHeaderClasses}>
+                        <p className={dropdownHeaderTitleClasses}>
                             {t('workspace.selectWorkspace', 'Seleccionar Workspace')}
                         </p>
                     </div>
 
                     {/* Tenant List */}
-                    <div className="max-h-64 overflow-y-auto py-1">
+                    <div className={listClasses}>
                         {userTenants.map((membership) => {
                             const tenant = membership.tenant;
                             const isActive = tenant?.id === currentTenant?.id;
@@ -271,22 +312,12 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                                 <button
                                     key={membership.id}
                                     onClick={() => tenant && handleSwitchTenant(tenant.id)}
-                                    className={`
-                                        flex items-center gap-3 w-full px-3 py-2.5
-                                        hover:bg-q-surface-overlay/50 transition-colors
-                                        ${isActive ? 'bg-q-accent/10' : ''}
-                                    `}
+                                    className={workspaceItemClasses(isActive)}
                                     role="option"
                                     aria-selected={isActive}
                                 >
                                     {/* Tenant avatar */}
-                                    <div className={`
-                                        w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0
-                                        ${isActive
-                                            ? 'bg-gradient-to-br from-q-accent to-q-accent/80 shadow-md shadow-q-accent/30'
-                                            : 'bg-gradient-to-br from-q-text-muted/60 to-q-text-muted/40'
-                                        }
-                                    `}>
+                                    <div className={workspaceItemAvatarClasses(isActive)}>
                                         {tenant?.branding?.logoUrl ? (
                                             <img
                                                 src={tenant.branding.logoUrl}
@@ -299,19 +330,17 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                                     </div>
 
                                     {/* Tenant info */}
-                                    <div className="flex-1 min-w-0 text-left">
-                                        <p className={`text-sm font-medium truncate ${
-                                            isActive ? 'text-q-accent' : 'text-q-text'
-                                        }`}>
+                                    <div className={workspaceItemTextClasses}>
+                                        <p className={workspaceItemTitleClasses(isActive)}>
                                             {tenant?.name}
                                         </p>
-                                        <div className="flex items-center gap-1.5">
+                                        <div className={workspaceMetaClasses}>
                                             {getRoleIcon(membership.role)}
-                                            <span className="text-xs text-q-text-muted">
+                                            <span className={roleTextClasses}>
                                                 {AGENCY_ROLE_LABELS[membership.role]}
                                             </span>
                                             {tenant?.type === 'agency_client' && (
-                                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-500">
+                                                <span className={clientBadgeClasses}>
                                                     Cliente
                                                 </span>
                                             )}
@@ -320,7 +349,7 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
 
                                     {/* Active indicator */}
                                     {isActive && (
-                                        <Check size={16} className="text-q-accent flex-shrink-0" />
+                                        <Check size={16} className={activeIndicatorClasses} />
                                     )}
                                 </button>
                             );
@@ -330,13 +359,13 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                     {/* Create new workspace */}
                     {onCreateWorkspace && (
                         <>
-                            <div className="border-t border-q-border my-1" />
+                            <div className={dividerClasses} />
                             <button
                                 onClick={handleCreateWorkspace}
-                                className="flex items-center gap-2 w-full px-3 py-2.5 text-q-accent hover:bg-q-accent/10 transition-colors"
+                                className={actionButtonClasses}
                             >
                                 <Plus size={18} />
-                                <span className="text-sm font-medium">
+                                <span className={actionLabelClasses}>
                                     {t('workspace.createNew', 'Crear nuevo workspace')}
                                 </span>
                             </button>
@@ -349,7 +378,6 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
 };
 
 export default WorkspaceSwitcher;
-
 
 
 
