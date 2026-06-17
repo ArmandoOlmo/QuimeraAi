@@ -1,20 +1,32 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+    AlertCircle,
     BarChart3,
+    Bath,
+    BedDouble,
     Building2,
     CalendarDays,
     Check,
+    CheckCircle2,
     Copy,
     Eye,
+    FileText,
     Home,
+    ImageIcon,
+    Link,
+    ListChecks,
     Loader2,
+    MapPin,
     Megaphone,
     Menu,
     MessageSquare,
     Plus,
+    Ruler,
     Save,
+    Search,
     Settings,
+    ShieldCheck,
     Sparkles,
     Trash2,
     Users,
@@ -51,6 +63,7 @@ import type {
     RealtyProperty,
     RealtyPropertyStatus,
     RealtyPropertyType,
+    TransactionType,
 } from '../../../types/realty';
 import {
     calculateRealtyListingScore,
@@ -87,25 +100,55 @@ const emptyProperty = (projectId: string, tenantId?: string | null, userId?: str
     title: '',
     slug: '',
     description: '',
+    descriptionShort: '',
+    descriptionLong: '',
     price: 0,
     currency: 'USD',
+    transactionType: 'sale',
     address: '',
+    addressLine1: '',
+    addressLine2: '',
     city: '',
     state: '',
     country: 'US',
     zipCode: '',
+    postalCode: '',
     propertyType: 'house',
     status: 'draft',
     bedrooms: 3,
     bathrooms: 2,
+    halfBathrooms: 0,
     area: 1500,
     areaUnit: 'sqft',
+    lotSize: undefined,
+    lotSqft: undefined,
+    parkingSpaces: 0,
+    yearBuilt: undefined,
+    hoaFee: undefined,
+    taxes: undefined,
     amenities: [],
+    features: [],
+    highlights: [],
     images: [],
+    videoUrl: '',
+    virtualTourUrl: '',
+    seoTitle: '',
+    seoDescription: '',
     isFeatured: false,
+    publicEnabled: false,
+    metadata: {},
 });
 
 const parseLines = (value: string) => value.split('\n').map(item => item.trim()).filter(Boolean);
+const parseUniqueLines = (value: string) => {
+    const seen = new Set<string>();
+    return parseLines(value).filter(item => {
+        const key = item.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+};
 const getDateMs = (value: unknown) => {
     if (value && typeof value === 'object' && 'seconds' in value && typeof (value as { seconds?: unknown }).seconds === 'number') {
         return (value as { seconds: number }).seconds * 1000;
@@ -136,6 +179,21 @@ const getCampaignPreview = (content?: Record<string, unknown>) => {
     const normalized = normalizeRealtyCampaignOutput(content || {});
     return normalized.mainCopy || normalized.socialPost || normalized.emailSubject || normalized.adHeadline || '';
 };
+const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
+    Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+const getMetadataText = (metadata: unknown, key: string) =>
+    isPlainRecord(metadata) && typeof metadata[key] === 'string' ? metadata[key] : '';
+const stringifyFaqInput = (metadata: unknown) => {
+    if (!isPlainRecord(metadata) || !Array.isArray(metadata.faq) || metadata.faq.length === 0) return '';
+    return JSON.stringify(metadata.faq, null, 2);
+};
+const parseOptionalNumber = (value: string): number | undefined => {
+    if (value.trim() === '') return undefined;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+};
+const getPropertyLocation = (property: Partial<RealtyProperty>) =>
+    [property.addressLine1 || property.address, property.city, property.state].filter(Boolean).join(', ');
 
 const StatCard = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) => (
     <div className="min-w-0 rounded-xl border border-q-border bg-q-surface p-5 transition-colors hover:border-q-accent/40 md:p-6">
@@ -166,6 +224,9 @@ const RealtyDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<RealtyTab>('overview');
     const [editingProperty, setEditingProperty] = useState<Partial<RealtyProperty> | null>(null);
     const [amenitiesInput, setAmenitiesInput] = useState('');
+    const [featuresInput, setFeaturesInput] = useState('');
+    const [highlightsInput, setHighlightsInput] = useState('');
+    const [faqInput, setFaqInput] = useState('');
     const [propertyImageUrls, setPropertyImageUrls] = useState<string[]>([]);
     const [propertyImageAssets, setPropertyImageAssets] = useState<Record<string, Partial<RealtyImage>>>({});
     const [aiPropertyId, setAiPropertyId] = useState('');
@@ -484,6 +545,9 @@ const RealtyDashboard: React.FC = () => {
         const draft = emptyProperty(activeProjectId, currentTenantId, user?.id || null);
         setEditingProperty(draft);
         setAmenitiesInput('');
+        setFeaturesInput('');
+        setHighlightsInput('');
+        setFaqInput('');
         setPropertyImageUrls([]);
         setPropertyImageAssets({});
         setLocalWarning(null);
@@ -493,6 +557,9 @@ const RealtyDashboard: React.FC = () => {
     const startEdit = (property: RealtyProperty) => {
         setEditingProperty(property);
         setAmenitiesInput((property.amenities || []).join('\n'));
+        setFeaturesInput((property.features || []).join('\n'));
+        setHighlightsInput((property.highlights || []).join('\n'));
+        setFaqInput(stringifyFaqInput(property.metadata));
         setPropertyImageUrls((property.images || []).map(image => image.url).filter(Boolean));
         setPropertyImageAssets(Object.fromEntries((property.images || []).filter(image => image.url).map(image => [image.url, image])));
         setLocalWarning(null);
@@ -531,6 +598,27 @@ const RealtyDashboard: React.FC = () => {
         }
     };
 
+    const setPrimaryPropertyImage = (index: number) => {
+        setPropertyImageUrls(prev => {
+            const next = [...prev];
+            const [selected] = next.splice(index, 1);
+            if (!selected) return prev;
+            return [selected, ...next];
+        });
+    };
+
+    const updatePropertyImageAltText = (url: string, altText: string) => {
+        if (!url) return;
+        setPropertyImageAssets(prev => ({
+            ...prev,
+            [url]: {
+                ...prev[url],
+                url,
+                altText,
+            },
+        }));
+    };
+
     const addPropertyImageSlot = () => {
         setPropertyImageUrls(prev => prev.length === 0 ? ['', ''] : [...prev, '']);
     };
@@ -550,44 +638,71 @@ const RealtyDashboard: React.FC = () => {
                     storagePath: asset.storagePath || null,
                     mediaType: asset.mediaType || 'image',
                     position: index,
-                    altText: editingProperty.title || asset.altText || '',
+                    altText: asset.altText || editingProperty.title || '',
                     isPrimary: index === 0,
                     metadata: asset.metadata || {},
                 };
             });
-            if (editingProperty.status === 'active') {
-                const requiredMissing = [
-                    !editingProperty.title?.trim() ? t('realty.form.title') : '',
-                    !nextSlug ? t('realty.form.slug') : '',
-                    !editingProperty.propertyType ? t('realty.form.type') : '',
-                ].filter(Boolean);
-                const recommendedMissing = [
-                    !editingProperty.price ? t('realty.form.price') : '',
-                    nextImages.length === 0 ? t('realty.form.images') : '',
-                    !editingProperty.description?.trim() ? t('realty.form.description') : '',
-                ].filter(Boolean);
 
-                if (requiredMissing.length > 0) {
-                    setLocalError(t('realty.errors.publishRequired', { fields: requiredMissing.join(', ') }));
-                    setLocalWarning(t('realty.warnings.publishMissing', { fields: [...requiredMissing, ...recommendedMissing].join(', ') }));
+            const nextMetadata: Record<string, unknown> = { ...(editingProperty.metadata || {}) };
+            if (faqInput.trim()) {
+                try {
+                    const parsedFaq = JSON.parse(faqInput);
+                    if (!Array.isArray(parsedFaq)) throw new Error('FAQ must be an array.');
+                    nextMetadata.faq = parsedFaq;
+                } catch {
+                    setLocalError(t('realty.errors.invalidFaqJson'));
                     return;
                 }
-
-                if (recommendedMissing.length > 0) {
-                    setLocalWarning(t('realty.warnings.publishMissing', { fields: recommendedMissing.join(', ') }));
-                }
+            } else {
+                delete nextMetadata.faq;
             }
 
-            await suite.saveProperty({
+            const nextDescriptionLong = editingProperty.descriptionLong || editingProperty.description || '';
+            const propertyToSave: Partial<RealtyProperty> = {
                 ...editingProperty,
                 projectId: activeProjectId,
                 tenantId: currentTenantId,
                 createdBy: user?.id || editingProperty.createdBy,
                 slug: nextSlug,
-                amenities: parseLines(amenitiesInput),
+                address: editingProperty.addressLine1 || editingProperty.address || '',
+                addressLine1: editingProperty.addressLine1 || editingProperty.address || '',
+                zipCode: editingProperty.postalCode || editingProperty.zipCode || '',
+                postalCode: editingProperty.postalCode || editingProperty.zipCode || '',
+                description: nextDescriptionLong,
+                descriptionLong: nextDescriptionLong,
+                amenities: parseUniqueLines(amenitiesInput),
+                features: parseUniqueLines(featuresInput),
+                highlights: parseUniqueLines(highlightsInput),
                 images: nextImages,
-            });
+                mainImageUrl: nextImages[0]?.url || editingProperty.mainImageUrl || '',
+                metadata: nextMetadata,
+            };
+
+            const nextScore = calculateRealtyListingScore(propertyToSave);
+            if (propertyToSave.status === 'active' || propertyToSave.publicEnabled === true) {
+                if (nextScore.missingRequired.length > 0) {
+                    const requiredMissing = nextScore.missingRequired.map(translateScoreField);
+                    setLocalError(t('realty.errors.publishRequired', { fields: requiredMissing.join(', ') }));
+                    setLocalWarning(t('realty.warnings.publishMissing', {
+                        fields: [...nextScore.missingRequired, ...nextScore.missingRecommended].map(translateScoreField).join(', '),
+                    }));
+                    return;
+                }
+
+                if (nextScore.missingRecommended.length > 0) {
+                    setLocalWarning(t('realty.warnings.publishMissing', {
+                        fields: nextScore.missingRecommended.map(translateScoreField).join(', '),
+                    }));
+                }
+            }
+
+            await suite.saveProperty(propertyToSave);
             setEditingProperty(null);
+            setAmenitiesInput('');
+            setFeaturesInput('');
+            setHighlightsInput('');
+            setFaqInput('');
             setPropertyImageUrls([]);
             setPropertyImageAssets({});
         } catch (err: any) {
@@ -695,139 +810,410 @@ const RealtyDashboard: React.FC = () => {
         void generateAiCopy('fix', property);
     };
 
-    const renderPropertyForm = () => {
+    const renderAdvancedPropertyForm = () => {
         if (!editingProperty) return null;
         const update = (patch: Partial<RealtyProperty>) => setEditingProperty(prev => ({ ...prev, ...patch }));
+        const metadata = isPlainRecord(editingProperty.metadata) ? editingProperty.metadata : {};
+        const updateMetadataText = (key: string, value: string) => {
+            const nextMetadata: Record<string, unknown> = { ...metadata, [key]: value };
+            if (!value.trim()) delete nextMetadata[key];
+            update({ metadata: nextMetadata });
+        };
         const imageSlots = propertyImageUrls.length > 0 ? propertyImageUrls : [''];
-        const editingScore = calculateRealtyListingScore({
+        const cleanPreviewImages = cleanImageUrls(propertyImageUrls);
+        const previewImages = cleanPreviewImages.map((url, index) => ({
+            id: `preview-${index}`,
+            url,
+            position: index,
+            altText: propertyImageAssets[url]?.altText || editingProperty.title || '',
+        }));
+        const previewProperty: Partial<RealtyProperty> = {
             ...editingProperty,
-            amenities: parseLines(amenitiesInput),
-            images: cleanImageUrls(propertyImageUrls).map((url, index) => ({ id: `preview-${index}`, url, position: index })),
-        });
+            address: editingProperty.addressLine1 || editingProperty.address || '',
+            addressLine1: editingProperty.addressLine1 || editingProperty.address || '',
+            postalCode: editingProperty.postalCode || editingProperty.zipCode || '',
+            zipCode: editingProperty.postalCode || editingProperty.zipCode || '',
+            description: editingProperty.descriptionLong || editingProperty.description || '',
+            descriptionLong: editingProperty.descriptionLong || editingProperty.description || '',
+            amenities: parseUniqueLines(amenitiesInput),
+            features: parseUniqueLines(featuresInput),
+            highlights: parseUniqueLines(highlightsInput),
+            images: previewImages,
+            mainImageUrl: previewImages[0]?.url || editingProperty.mainImageUrl || '',
+            metadata,
+        };
+        const editingScore = calculateRealtyListingScore(previewProperty);
         const savedEditingProperty = editingProperty.id
             ? displayProperties.find(property => property.id === editingProperty.id)
             : null;
+        const isPublicationRequested = editingProperty.status === 'active' || editingProperty.publicEnabled === true;
+        const primaryImage = previewImages[0]?.url || '';
+        const location = getPropertyLocation(previewProperty);
+        const publicListingPath = previewProperty.slug ? `/listados/${previewProperty.slug}` : '';
+        const previewListingPath = activeProjectId && previewProperty.slug ? `/preview/${activeProjectId}/listados/${previewProperty.slug}` : '';
 
         return (
-            <div className="rounded-xl border border-q-border bg-q-surface p-5 md:p-6">
-                <div className="mb-6 flex items-center justify-between gap-4">
-                    <h3 className="text-lg font-bold text-q-text">{editingProperty.id ? t('realty.properties.edit') : t('realty.properties.create')}</h3>
-                    <button type="button" onClick={() => setEditingProperty(null)} className="rounded-lg p-2 text-q-text-secondary hover:bg-q-surface-overlay hover:text-q-text"><X size={18} /></button>
-                </div>
-                <div className="grid gap-5 md:grid-cols-2">
-                    <Field label={t('realty.form.title')}><Input value={editingProperty.title || ''} onChange={event => update({ title: event.target.value, slug: toRealtySlug(event.target.value) })} /></Field>
-                    <Field label={t('realty.form.price')}><Input type="number" value={editingProperty.price || 0} onChange={event => update({ price: Number(event.target.value) })} /></Field>
-                    <Field label={t('realty.form.address')}><Input value={editingProperty.address || ''} onChange={event => update({ address: event.target.value })} /></Field>
-                    <Field label={t('realty.form.city')}><Input value={editingProperty.city || ''} onChange={event => update({ city: event.target.value })} /></Field>
-                    <Field label={t('realty.form.type')}>
-                        <DashboardSelect
-                            value={editingProperty.propertyType || 'house'}
-                            onChange={value => update({ propertyType: value as RealtyPropertyType })}
-                            options={realtyPropertyTypes.map(type => ({ value: type, label: t(`realty.propertyTypes.${type}`) }))}
-                        />
-                    </Field>
-                    <Field label={t('realty.form.status')}>
-                        <DashboardSelect
-                            value={editingProperty.status || 'draft'}
-                            onChange={value => update({ status: value as RealtyPropertyStatus })}
-                            options={realtyPropertyStatuses.map(status => ({ value: status, label: t(`realty.status.${status}`) }))}
-                        />
-                    </Field>
-                    <Field label={t('realty.form.bedrooms')}><Input type="number" value={editingProperty.bedrooms || 0} onChange={event => update({ bedrooms: Number(event.target.value) })} /></Field>
-                    <Field label={t('realty.form.bathrooms')}><Input type="number" value={editingProperty.bathrooms || 0} onChange={event => update({ bathrooms: Number(event.target.value) })} /></Field>
-                    <Field label={t('realty.form.area')}><Input type="number" value={editingProperty.area || 0} onChange={event => update({ area: Number(event.target.value) })} /></Field>
-                    <label className="flex items-center gap-2 pt-6 text-sm font-medium text-q-text">
-                        <input type="checkbox" checked={Boolean(editingProperty.isFeatured)} onChange={event => update({ isFeatured: event.target.checked })} />
-                        {t('realty.form.featured')}
-                    </label>
-                    <Field className="md:col-span-2" label={t('realty.form.description')}>
-                        <textarea rows={4} className="w-full rounded-md border border-q-border bg-transparent px-3 py-2.5 text-sm text-q-text outline-none focus:border-q-accent" value={editingProperty.description || ''} onChange={event => update({ description: event.target.value })} />
-                    </Field>
-                    <Field className="md:col-span-2" label={t('realty.form.amenities')}>
-                        <textarea rows={3} className="w-full rounded-md border border-q-border bg-transparent px-3 py-2.5 text-sm text-q-text outline-none focus:border-q-accent" value={amenitiesInput} onChange={event => setAmenitiesInput(event.target.value)} />
-                    </Field>
-                    <div className="rounded-lg border border-q-border bg-q-bg p-4 md:col-span-2">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <p className="text-sm font-bold text-q-text">{t('realty.score.title')}</p>
-                                <p className="mt-1 text-xs text-q-text-secondary">{t(`realty.score.grade.${editingScore.grade}`)}</p>
-                            </div>
-                            <span className={`rounded-full border px-3 py-1 text-sm font-bold ${getScoreToneClass(editingScore)}`}>{editingScore.score}%</span>
+            <div className="space-y-5">
+                <div className="rounded-xl border border-q-border bg-q-surface p-5 md:p-6">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="min-w-0">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{t('realty.editor.propertyEditor')}</p>
+                            <h3 className="mt-1 text-xl font-bold text-q-text">{editingProperty.id ? t('realty.properties.edit') : t('realty.properties.create')}</h3>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-q-text-secondary">{t('realty.editor.editorDescription')}</p>
                         </div>
-                        {(editingScore.missingRequired.length > 0 || editingScore.missingRecommended.length > 0) && (
-                            <div className="mt-4 grid gap-3 md:grid-cols-2">
-                                {editingScore.missingRequired.length > 0 && (
-                                    <div>
-                                        <p className="text-xs font-semibold uppercase tracking-wider text-q-error">{t('realty.score.required')}</p>
-                                        <ul className="mt-2 space-y-1 text-sm text-q-text-secondary">
-                                            {editingScore.missingRequired.map(field => <li key={field}>• {translateScoreField(field)}</li>)}
-                                        </ul>
+                        <div className="flex flex-wrap gap-2">
+                            {savedEditingProperty && (
+                                <Button type="button" variant="secondary" size="sm" onClick={() => { setAiPropertyId(savedEditingProperty.id); setActiveTab('ai'); }}>
+                                    <Sparkles size={15} />{t('realty.editor.generateAiCopy')}
+                                </Button>
+                            )}
+                            <button type="button" onClick={() => setEditingProperty(null)} className="rounded-lg p-2 text-q-text-secondary hover:bg-q-surface-overlay hover:text-q-text"><X size={18} /></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+                    <div className="space-y-5">
+                        <PropertyEditorSection icon={FileText} eyebrow={t('realty.editor.section')} title={t('realty.editor.basicInfo')} description={t('realty.editor.basicInfoDescription')}>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <PropertyEditorField label={t('realty.form.title')}>
+                                    <PropertyEditorInput value={editingProperty.title || ''} onChange={event => update({ title: event.target.value, slug: toRealtySlug(event.target.value) })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.slug')}>
+                                    <PropertyEditorInput value={editingProperty.slug || ''} onChange={event => update({ slug: toRealtySlug(event.target.value) })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.price')}>
+                                    <PropertyEditorInput type="number" value={editingProperty.price ?? ''} onChange={event => update({ price: Number(event.target.value) || 0 })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.currency')}>
+                                    <PropertyEditorInput value={editingProperty.currency || 'USD'} onChange={event => update({ currency: event.target.value.toUpperCase().slice(0, 3) })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.transactionType')}>
+                                    <DashboardSelect
+                                        value={editingProperty.transactionType || 'sale'}
+                                        onChange={value => update({ transactionType: value as TransactionType })}
+                                        options={['sale', 'rent', 'lease'].map(type => ({ value: type, label: t(`realty.transactionTypes.${type}`) }))}
+                                    />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.type')}>
+                                    <DashboardSelect
+                                        value={editingProperty.propertyType || 'house'}
+                                        onChange={value => update({ propertyType: value as RealtyPropertyType })}
+                                        options={realtyPropertyTypes.map(type => ({ value: type, label: t(`realty.propertyTypes.${type}`) }))}
+                                    />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.status')}>
+                                    <DashboardSelect
+                                        value={editingProperty.status || 'draft'}
+                                        onChange={value => update({ status: value as RealtyPropertyStatus })}
+                                        options={realtyPropertyStatuses.map(status => ({ value: status, label: t(`realty.status.${status}`) }))}
+                                    />
+                                </PropertyEditorField>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <PropertyEditorToggle label={t('realty.form.featured')} checked={Boolean(editingProperty.isFeatured)} onChange={value => update({ isFeatured: value })} />
+                                    <PropertyEditorToggle label={t('realty.form.publicEnabled')} checked={Boolean(editingProperty.publicEnabled)} onChange={value => update({ publicEnabled: value })} />
+                                </div>
+                            </div>
+                        </PropertyEditorSection>
+
+                        <PropertyEditorSection icon={MapPin} eyebrow={t('realty.editor.section')} title={t('realty.editor.location')} description={t('realty.editor.locationDescription')}>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <PropertyEditorField label={t('realty.form.addressLine1')}>
+                                    <PropertyEditorInput value={editingProperty.addressLine1 || editingProperty.address || ''} onChange={event => update({ addressLine1: event.target.value, address: event.target.value })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.addressLine2')}>
+                                    <PropertyEditorInput value={editingProperty.addressLine2 || ''} onChange={event => update({ addressLine2: event.target.value })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.city')}>
+                                    <PropertyEditorInput value={editingProperty.city || ''} onChange={event => update({ city: event.target.value })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.state')}>
+                                    <PropertyEditorInput value={editingProperty.state || ''} onChange={event => update({ state: event.target.value })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.country')}>
+                                    <PropertyEditorInput value={editingProperty.country || ''} onChange={event => update({ country: event.target.value })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.postalCode')}>
+                                    <PropertyEditorInput value={editingProperty.postalCode || editingProperty.zipCode || ''} onChange={event => update({ postalCode: event.target.value, zipCode: event.target.value })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.latitude')}>
+                                    <PropertyEditorInput type="number" value={editingProperty.latitude ?? ''} onChange={event => update({ latitude: parseOptionalNumber(event.target.value) })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.longitude')}>
+                                    <PropertyEditorInput type="number" value={editingProperty.longitude ?? ''} onChange={event => update({ longitude: parseOptionalNumber(event.target.value) })} />
+                                </PropertyEditorField>
+                            </div>
+                        </PropertyEditorSection>
+
+                        <PropertyEditorSection icon={Ruler} eyebrow={t('realty.editor.section')} title={t('realty.editor.propertyFacts')} description={t('realty.editor.propertyFactsDescription')}>
+                            <div className="grid gap-4 md:grid-cols-3">
+                                <PropertyEditorField label={t('realty.form.bedrooms')}>
+                                    <PropertyEditorInput type="number" value={editingProperty.bedrooms ?? ''} onChange={event => update({ bedrooms: Number(event.target.value) || 0 })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.bathrooms')}>
+                                    <PropertyEditorInput type="number" value={editingProperty.bathrooms ?? ''} onChange={event => update({ bathrooms: Number(event.target.value) || 0 })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.halfBathrooms')}>
+                                    <PropertyEditorInput type="number" value={editingProperty.halfBathrooms ?? ''} onChange={event => update({ halfBathrooms: parseOptionalNumber(event.target.value) })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.area')}>
+                                    <PropertyEditorInput type="number" value={editingProperty.area ?? ''} onChange={event => update({ area: Number(event.target.value) || 0 })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.areaUnit')}>
+                                    <DashboardSelect
+                                        value={editingProperty.areaUnit || 'sqft'}
+                                        onChange={value => update({ areaUnit: value as RealtyProperty['areaUnit'] })}
+                                        options={[{ value: 'sqft', label: 'sqft' }, { value: 'sqm', label: 'sqm' }]}
+                                    />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.lotSize')}>
+                                    <PropertyEditorInput type="number" value={editingProperty.lotSize ?? editingProperty.lotSqft ?? ''} onChange={event => {
+                                        const lotSize = parseOptionalNumber(event.target.value);
+                                        update({ lotSize, lotSqft: lotSize });
+                                    }} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.parkingSpaces')}>
+                                    <PropertyEditorInput type="number" value={editingProperty.parkingSpaces ?? ''} onChange={event => update({ parkingSpaces: parseOptionalNumber(event.target.value) })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.yearBuilt')}>
+                                    <PropertyEditorInput type="number" value={editingProperty.yearBuilt ?? ''} onChange={event => update({ yearBuilt: parseOptionalNumber(event.target.value) })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.hoaFee')}>
+                                    <PropertyEditorInput type="number" value={editingProperty.hoaFee ?? ''} onChange={event => update({ hoaFee: parseOptionalNumber(event.target.value) })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.taxes')}>
+                                    <PropertyEditorInput type="number" value={editingProperty.taxes ?? ''} onChange={event => update({ taxes: parseOptionalNumber(event.target.value) })} />
+                                </PropertyEditorField>
+                            </div>
+                        </PropertyEditorSection>
+
+                        <PropertyEditorSection icon={MessageSquare} eyebrow={t('realty.editor.section')} title={t('realty.editor.content')} description={t('realty.editor.contentDescription')}>
+                            <div className="grid gap-4">
+                                <PropertyEditorField label={t('realty.form.descriptionShort')} description={t('realty.editor.descriptionShortHelp')}>
+                                    <PropertyEditorTextarea rows={3} value={editingProperty.descriptionShort || ''} onChange={event => update({ descriptionShort: event.target.value })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.descriptionLong')}>
+                                    <PropertyEditorTextarea rows={7} value={editingProperty.descriptionLong || editingProperty.description || ''} onChange={event => update({ descriptionLong: event.target.value, description: event.target.value })} />
+                                </PropertyEditorField>
+                                <div className="grid gap-4 lg:grid-cols-3">
+                                    <PropertyEditorField label={t('realty.form.highlights')} description={t('realty.editor.onePerLine')}>
+                                        <PropertyEditorTextarea rows={5} value={highlightsInput} onChange={event => setHighlightsInput(event.target.value)} />
+                                    </PropertyEditorField>
+                                    <PropertyEditorField label={t('realty.form.features')} description={t('realty.editor.onePerLine')}>
+                                        <PropertyEditorTextarea rows={5} value={featuresInput} onChange={event => setFeaturesInput(event.target.value)} />
+                                    </PropertyEditorField>
+                                    <PropertyEditorField label={t('realty.form.amenities')} description={t('realty.editor.onePerLine')}>
+                                        <PropertyEditorTextarea rows={5} value={amenitiesInput} onChange={event => setAmenitiesInput(event.target.value)} />
+                                    </PropertyEditorField>
+                                </div>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <PropertyEditorField label={t('realty.form.videoUrl')}>
+                                        <PropertyEditorInput value={editingProperty.videoUrl || ''} onChange={event => update({ videoUrl: event.target.value })} />
+                                    </PropertyEditorField>
+                                    <PropertyEditorField label={t('realty.form.virtualTourUrl')}>
+                                        <PropertyEditorInput value={editingProperty.virtualTourUrl || ''} onChange={event => update({ virtualTourUrl: event.target.value })} />
+                                    </PropertyEditorField>
+                                </div>
+                            </div>
+                        </PropertyEditorSection>
+
+                        <PropertyEditorSection icon={Search} eyebrow={t('realty.editor.section')} title={t('realty.editor.seoMarketing')} description={t('realty.editor.seoMarketingDescription')}>
+                            <div className="grid gap-4">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <PropertyEditorField label={t('realty.form.seoTitle')}>
+                                        <PropertyEditorInput value={editingProperty.seoTitle || ''} onChange={event => update({ seoTitle: event.target.value })} />
+                                    </PropertyEditorField>
+                                    <PropertyEditorField label={t('realty.form.cta')}>
+                                        <PropertyEditorInput value={getMetadataText(metadata, 'cta')} onChange={event => updateMetadataText('cta', event.target.value)} />
+                                    </PropertyEditorField>
+                                </div>
+                                <PropertyEditorField label={t('realty.form.seoDescription')}>
+                                    <PropertyEditorTextarea rows={3} value={editingProperty.seoDescription || ''} onChange={event => update({ seoDescription: event.target.value })} />
+                                </PropertyEditorField>
+                                <PropertyEditorField label={t('realty.form.faq')} description={t('realty.editor.faqJsonHelp')}>
+                                    <PropertyEditorTextarea rows={5} value={faqInput} onChange={event => setFaqInput(event.target.value)} placeholder={t('realty.editor.faqPlaceholder')} />
+                                </PropertyEditorField>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <PropertyEditorField label={t('realty.form.socialPost')}>
+                                        <PropertyEditorTextarea rows={4} value={getMetadataText(metadata, 'socialPost')} onChange={event => updateMetadataText('socialPost', event.target.value)} />
+                                    </PropertyEditorField>
+                                    <PropertyEditorField label={t('realty.form.emailCopy')}>
+                                        <PropertyEditorTextarea rows={4} value={getMetadataText(metadata, 'emailCopy')} onChange={event => updateMetadataText('emailCopy', event.target.value)} />
+                                    </PropertyEditorField>
+                                    <PropertyEditorField label={t('realty.form.smsCopy')}>
+                                        <PropertyEditorTextarea rows={4} value={getMetadataText(metadata, 'smsCopy')} onChange={event => updateMetadataText('smsCopy', event.target.value)} />
+                                    </PropertyEditorField>
+                                    <PropertyEditorField label={t('realty.form.adCopy')}>
+                                        <PropertyEditorTextarea rows={4} value={getMetadataText(metadata, 'adCopy')} onChange={event => updateMetadataText('adCopy', event.target.value)} />
+                                    </PropertyEditorField>
+                                </div>
+                            </div>
+                        </PropertyEditorSection>
+
+                        <PropertyEditorSection icon={ImageIcon} eyebrow={t('realty.editor.section')} title={t('realty.editor.media')} description={t('realty.editor.mediaDescription')}>
+                            {cleanPreviewImages.length > 0 && (
+                                <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                    {cleanPreviewImages.map((imageUrl, index) => (
+                                        <button
+                                            key={`${imageUrl}-${index}`}
+                                            type="button"
+                                            onClick={() => setPrimaryPropertyImage(index)}
+                                            className={`group overflow-hidden rounded-xl border text-left transition-colors ${index === 0 ? 'border-q-accent bg-q-accent/10' : 'border-q-border bg-q-bg hover:border-q-accent/40'}`}
+                                        >
+                                            <div className="aspect-[4/3] overflow-hidden bg-q-surface-overlay">
+                                                <img src={imageUrl} alt={propertyImageAssets[imageUrl]?.altText || editingProperty.title || ''} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                                            </div>
+                                            <div className="flex items-center justify-between gap-2 px-3 py-2">
+                                                <span className="truncate text-xs font-semibold text-q-text">{index === 0 ? t('realty.editor.mainImage') : t('realty.form.imageSlot', { index: index + 1 })}</span>
+                                                {index === 0 && <CheckCircle2 size={14} className="text-q-accent" />}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            <div className="mb-4 flex items-center justify-between gap-4">
+                                <span className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{t('realty.form.images')}</span>
+                                <Button type="button" size="sm" variant="secondary" onClick={addPropertyImageSlot}><Plus size={15} />{t('realty.actions.addImage')}</Button>
+                            </div>
+                            <div className="grid gap-5 md:grid-cols-2">
+                                {imageSlots.map((imageUrl, index) => (
+                                    <div key={`${index}-${imageUrl || 'empty'}`} className="space-y-3 rounded-xl border border-q-border bg-q-bg p-4">
+                                        <ImagePicker
+                                            label={t('realty.form.imageSlot', { index: index + 1 })}
+                                            value={imageUrl}
+                                            onChange={(url) => updatePropertyImage(index, url)}
+                                            onSelectAsset={(asset) => updatePropertyImage(index, asset.url || asset.downloadURL || imageUrl, {
+                                                id: asset.id || `image-${index}`,
+                                                url: asset.url || asset.downloadURL || imageUrl,
+                                                storagePath: asset.storagePath || null,
+                                                mediaType: asset.type?.startsWith('video/') ? 'video' : 'image',
+                                                altText: asset.name || editingProperty.title || '',
+                                                metadata: {
+                                                    source: 'image-picker',
+                                                    assetId: asset.id,
+                                                    fileName: asset.name,
+                                                    size: asset.size,
+                                                    type: asset.type,
+                                                },
+                                            })}
+                                            onRemove={() => removePropertyImage(index)}
+                                            destination="user"
+                                            hideUrlInput
+                                            generationContext="general"
+                                            contentId={editingProperty.id}
+                                            contentType="realty-property"
+                                        />
+                                        {imageUrl && (
+                                            <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                                                <PropertyEditorField label={t('realty.form.altText')}>
+                                                    <PropertyEditorInput value={propertyImageAssets[imageUrl]?.altText || ''} onChange={event => updatePropertyImageAltText(imageUrl, event.target.value)} />
+                                                </PropertyEditorField>
+                                                <Button type="button" size="sm" variant="secondary" onClick={() => setPrimaryPropertyImage(index)} disabled={index === 0}>
+                                                    <ImageIcon size={15} />{t('realty.editor.setMainImage')}
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                                {editingScore.missingRecommended.length > 0 && (
-                                    <div>
-                                        <p className="text-xs font-semibold uppercase tracking-wider text-q-warning">{t('realty.score.recommended')}</p>
-                                        <ul className="mt-2 space-y-1 text-sm text-q-text-secondary">
-                                            {editingScore.missingRecommended.slice(0, 6).map(field => <li key={field}>• {translateScoreField(field)}</li>)}
-                                        </ul>
-                                    </div>
+                                ))}
+                            </div>
+                        </PropertyEditorSection>
+                    </div>
+
+                    <aside className="space-y-5 xl:sticky xl:top-4 xl:self-start">
+                        <div className="overflow-hidden rounded-xl border border-q-border bg-q-surface">
+                            <div className="aspect-[4/3] bg-q-surface-overlay">
+                                {primaryImage ? (
+                                    <img src={primaryImage} alt={editingProperty.title || t('realty.editor.previewCard')} className="h-full w-full object-cover" />
+                                ) : (
+                                    <div className="flex h-full items-center justify-center text-q-text-muted"><Home size={34} /></div>
                                 )}
                             </div>
-                        )}
-                        {editingScore.recommendations.length > 0 && (
-                            <div className="mt-4">
-                                <p className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{t('realty.score.recommendationsTitle')}</p>
-                                <ul className="mt-2 space-y-1 text-sm text-q-text-secondary">
-                                    {editingScore.recommendations.slice(0, 4).map(item => <li key={item}>• {translateRecommendation(item)}</li>)}
-                                </ul>
+                            <div className="p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{t('realty.editor.previewCard')}</p>
+                                        <h4 className="mt-1 line-clamp-2 font-bold text-q-accent">{previewProperty.title || t('realty.properties.create')}</h4>
+                                    </div>
+                                    <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-bold ${getScoreToneClass(editingScore)}`}>{editingScore.score}%</span>
+                                </div>
+                                <p className="mt-3 text-lg font-bold text-q-text">{formatRealtyPrice(Number(previewProperty.price || 0), i18n.language, previewProperty.currency || 'USD')}</p>
+                                {location && <p className="mt-1 line-clamp-2 text-sm text-q-text-secondary">{location}</p>}
+                                <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-q-text-secondary">
+                                    <PropertyEditorMetric icon={BedDouble} label={t('realty.form.bedrooms')} value={previewProperty.bedrooms || 0} />
+                                    <PropertyEditorMetric icon={Bath} label={t('realty.form.bathrooms')} value={previewProperty.bathrooms || 0} />
+                                    <PropertyEditorMetric icon={Ruler} label={t('realty.form.area')} value={previewProperty.area || 0} />
+                                </div>
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    {previewProperty.propertyType && <span className="rounded-full bg-q-surface-overlay px-2 py-1 text-xs text-q-text-secondary">{t(`realty.propertyTypes.${previewProperty.propertyType}`)}</span>}
+                                    {previewProperty.transactionType && <span className="rounded-full bg-q-surface-overlay px-2 py-1 text-xs text-q-text-secondary">{t(`realty.transactionTypes.${previewProperty.transactionType}`)}</span>}
+                                    {previewProperty.isFeatured && <span className="rounded-full bg-q-accent/15 px-2 py-1 text-xs text-q-accent">{t('realty.website.featured')}</span>}
+                                </div>
+                                <div className="mt-4 grid gap-2">
+                                    <Button type="button" size="sm" variant="secondary" disabled={!previewListingPath} onClick={() => previewListingPath && window.open(previewListingPath, '_blank', 'noopener,noreferrer')}>
+                                        <Eye size={15} />{t('realty.editor.previewDetail')}
+                                    </Button>
+                                    <Button type="button" size="sm" variant="secondary" disabled={!publicListingPath || previewProperty.status !== 'active' || !previewProperty.publicEnabled} onClick={() => publicListingPath && window.open(publicListingPath, '_blank', 'noopener,noreferrer')}>
+                                        <Link size={15} />{t('realty.editor.viewPublicListing')}
+                                    </Button>
+                                </div>
                             </div>
-                        )}
-                        <div className="mt-4 flex justify-end">
-                            <Button type="button" size="sm" variant="secondary" disabled={!savedEditingProperty || isGeneratingAi} onClick={() => savedEditingProperty && fixPropertyWithAi(savedEditingProperty)}>
-                                <Wand2 size={15} />{t('realty.ai.fixWithAi')}
+                        </div>
+
+                        <PropertyEditorSection icon={ListChecks} eyebrow={t('realty.editor.publicationChecklist')} title={t('realty.score.title')} compact>
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-sm font-bold text-q-text">{t(`realty.score.grade.${editingScore.grade}`)}</p>
+                                    <p className="mt-1 text-xs text-q-text-secondary">{isPublicationRequested ? t('realty.editor.publicationMode') : t('realty.editor.draftSaved')}</p>
+                                </div>
+                                <span className={`rounded-full border px-3 py-1 text-sm font-bold ${getScoreToneClass(editingScore)}`}>{editingScore.score}%</span>
+                            </div>
+                            {(editingScore.missingRequired.length > 0 || editingScore.missingRecommended.length > 0) && (
+                                <div className="mt-4 space-y-4">
+                                    {editingScore.missingRequired.length > 0 && (
+                                        <PropertyEditorChecklist icon={AlertCircle} title={t('realty.editor.missingRequiredFields')} toneClass="text-q-error" items={editingScore.missingRequired.map(translateScoreField)} />
+                                    )}
+                                    {editingScore.missingRecommended.length > 0 && (
+                                        <PropertyEditorChecklist icon={ShieldCheck} title={t('realty.editor.recommendedImprovements')} toneClass="text-q-warning" items={editingScore.missingRecommended.slice(0, 8).map(translateScoreField)} />
+                                    )}
+                                </div>
+                            )}
+                            {editingScore.recommendations.length > 0 && (
+                                <div className="mt-4 rounded-lg border border-q-border bg-q-bg p-3">
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{t('realty.score.recommendationsTitle')}</p>
+                                    <ul className="mt-2 space-y-1 text-xs leading-5 text-q-text-secondary">
+                                        {editingScore.recommendations.slice(0, 5).map(item => <li key={item}>• {translateRecommendation(item)}</li>)}
+                                    </ul>
+                                </div>
+                            )}
+                            <div className="mt-4 grid gap-2">
+                                <Button type="button" size="sm" variant="secondary" disabled={!savedEditingProperty || isGeneratingAi} onClick={() => savedEditingProperty && fixPropertyWithAi(savedEditingProperty)}>
+                                    <Wand2 size={15} />{t('realty.ai.fixWithAi')}
+                                </Button>
+                                <Button type="button" size="sm" variant="secondary" disabled={!savedEditingProperty} onClick={() => savedEditingProperty && (setAiPropertyId(savedEditingProperty.id), setActiveTab('ai'))}>
+                                    <Sparkles size={15} />{t('realty.editor.generateAiCopy')}
+                                </Button>
+                                <Button type="button" size="sm" variant="secondary" disabled={!aiResult || !savedEditingProperty || selectedAiProperty?.id !== savedEditingProperty.id || suite.isSaving} onClick={applyAiContentToProperty}>
+                                    <Check size={15} />{t('realty.ai.applyToProperty')}
+                                </Button>
+                            </div>
+                        </PropertyEditorSection>
+                    </aside>
+                </div>
+
+                <div className="sticky bottom-0 z-10 -mx-4 border-t border-q-border bg-q-bg/90 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-2 text-xs text-q-text-secondary">
+                            {isPublicationRequested ? <AlertCircle size={14} className={editingScore.missingRequired.length ? 'text-q-warning' : 'text-q-success'} /> : <CheckCircle2 size={14} className="text-q-success" />}
+                            <span>{isPublicationRequested ? t('realty.editor.publicationChecklist') : t('realty.editor.draftSaved')}</span>
+                        </div>
+                        <div className="flex justify-end gap-3">
+                            <Button type="button" variant="secondary" onClick={() => setEditingProperty(null)}>{t('common.cancel')}</Button>
+                            <Button type="button" onClick={saveProperty} disabled={suite.isSaving}>
+                                {suite.isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                                {t('realty.form.save')}
                             </Button>
                         </div>
                     </div>
-                    <div className="space-y-4 md:col-span-2">
-                        <div className="flex items-center justify-between gap-4">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{t('realty.form.images')}</span>
-                            <Button type="button" size="sm" variant="secondary" onClick={addPropertyImageSlot}><Plus size={15} />{t('realty.actions.addImage')}</Button>
-                        </div>
-                        <div className="grid gap-5 md:grid-cols-2">
-                            {imageSlots.map((imageUrl, index) => (
-                                <ImagePicker
-                                    key={`${index}-${imageUrl || 'empty'}`}
-                                    label={t('realty.form.imageSlot', { index: index + 1 })}
-                                    value={imageUrl}
-                                    onChange={(url) => updatePropertyImage(index, url)}
-                                    onSelectAsset={(asset) => updatePropertyImage(index, asset.url || asset.downloadURL || imageUrl, {
-                                        id: asset.id || `image-${index}`,
-                                        url: asset.url || asset.downloadURL || imageUrl,
-                                        storagePath: asset.storagePath || null,
-                                        mediaType: asset.type?.startsWith('video/') ? 'video' : 'image',
-                                        altText: asset.name || editingProperty.title || '',
-                                        metadata: {
-                                            source: 'image-picker',
-                                            assetId: asset.id,
-                                            fileName: asset.name,
-                                            size: asset.size,
-                                            type: asset.type,
-                                        },
-                                    })}
-                                    onRemove={() => removePropertyImage(index)}
-                                    destination="user"
-                                    hideUrlInput
-                                    generationContext="general"
-                                    contentId={editingProperty.id}
-                                    contentType="realty-property"
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </div>
-                <div className="mt-6 flex justify-end gap-3">
-                    <Button type="button" variant="secondary" onClick={() => setEditingProperty(null)}>{t('common.cancel')}</Button>
-                    <Button type="button" onClick={saveProperty} disabled={suite.isSaving}><Save size={16} />{t('realty.form.save')}</Button>
                 </div>
             </div>
         );
@@ -986,7 +1372,7 @@ const RealtyDashboard: React.FC = () => {
         if (activeTab === 'properties') {
             return (
                 <div className="space-y-5">
-                    {renderPropertyForm()}
+                    {renderAdvancedPropertyForm()}
                     <div className="flex justify-end"><Button type="button" onClick={startCreate}><Plus size={16} />{t('realty.properties.create')}</Button></div>
                     <div className="grid gap-5">
                         {displayProperties.map(property => {
@@ -1366,6 +1752,118 @@ const Field = ({ label, children, className = '' }: { label: string; children: R
         <span className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{label}</span>
         {children}
     </label>
+);
+
+const PropertyEditorSection = ({
+    icon: Icon,
+    eyebrow,
+    title,
+    description,
+    children,
+    compact = false,
+}: {
+    icon: React.ElementType;
+    eyebrow: string;
+    title: string;
+    description?: string;
+    children: React.ReactNode;
+    compact?: boolean;
+}) => (
+    <section className={`rounded-xl border border-q-border bg-q-surface ${compact ? 'p-4' : 'p-5 md:p-6'}`}>
+        <div className={compact ? 'mb-4 flex items-start gap-3' : 'mb-5 flex items-start gap-3'}>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-q-border bg-q-bg text-q-accent">
+                <Icon size={17} />
+            </div>
+            <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{eyebrow}</p>
+                <h4 className="mt-1 font-bold text-q-text">{title}</h4>
+                {description && <p className="mt-1 text-sm leading-6 text-q-text-secondary">{description}</p>}
+            </div>
+        </div>
+        {children}
+    </section>
+);
+
+const PropertyEditorField = ({
+    label,
+    description,
+    children,
+    className = '',
+}: {
+    label: string;
+    description?: string;
+    children: React.ReactNode;
+    className?: string;
+}) => (
+    <label className={`block space-y-2 ${className}`}>
+        <span className="text-xs font-semibold uppercase tracking-wider text-q-text-secondary">{label}</span>
+        {children}
+        {description && <span className="block text-xs leading-5 text-q-text-muted">{description}</span>}
+    </label>
+);
+
+const PropertyEditorInput = ({ className = '', ...props }: React.ComponentProps<typeof Input>) => (
+    <Input className={`h-10 bg-q-bg/50 ${className}`} {...props} />
+);
+
+const PropertyEditorTextarea = ({ className = '', ...props }: React.ComponentProps<'textarea'>) => (
+    <textarea
+        className={`w-full rounded-md border border-q-border bg-q-bg/50 px-3 py-2.5 text-sm leading-6 text-q-text outline-none transition-colors placeholder:text-q-text-muted focus:border-q-accent focus:ring-2 focus:ring-q-accent/20 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+        {...props}
+    />
+);
+
+const PropertyEditorToggle = ({
+    label,
+    checked,
+    onChange,
+}: {
+    label: string;
+    checked: boolean;
+    onChange: (value: boolean) => void;
+}) => (
+    <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`flex min-h-10 items-center justify-between gap-3 rounded-md border border-q-border px-3 py-2 text-left text-sm transition-colors ${checked ? 'bg-q-accent/10 text-q-text' : 'bg-q-bg/50 text-q-text-secondary hover:text-q-text'}`}
+    >
+        <span className="min-w-0 font-medium">{label}</span>
+        <span className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors`}>
+            <span className={`${checked ? 'translate-x-4' : 'translate-x-0'} absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform`} />
+        </span>
+    </button>
+);
+
+const PropertyEditorMetric = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) => (
+    <div className="rounded-lg border border-q-border bg-q-bg p-2">
+        <Icon size={14} className="text-q-accent" />
+        <p className="mt-1 truncate text-[11px] uppercase tracking-wider text-q-text-muted">{label}</p>
+        <p className="mt-0.5 font-bold text-q-text">{value}</p>
+    </div>
+);
+
+const PropertyEditorChecklist = ({
+    icon: Icon,
+    title,
+    items,
+    toneClass,
+}: {
+    icon: React.ElementType;
+    title: string;
+    items: string[];
+    toneClass: string;
+}) => (
+    <div>
+        <div className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wider ${toneClass}`}>
+            <Icon size={14} />
+            <span>{title}</span>
+        </div>
+        <ul className="mt-2 space-y-1 text-xs leading-5 text-q-text-secondary">
+            {items.map(item => <li key={item}>• {item}</li>)}
+        </ul>
+    </div>
 );
 
 const ToggleRow = ({ label, checked, onChange, disabled = false }: { label: string; checked: boolean; onChange: (value: boolean) => void | Promise<void>; disabled?: boolean }) => (
