@@ -497,12 +497,12 @@ The clean editor treatment also applies to every application surface: Dashboard,
 - Decorative copy may still use punctuation or arrows when it is content, not an interactive control.
 
 ### Headers & Sidebars
-- Internal app headers use a consistent 56px height, bottom border, quiet background, and left-to-right order: mobile sidebar button, section icon/title, contextual controls, primary actions, back button.
+- Internal app headers use a consistent 56px height, bottom border, quiet background, and left-to-right order: mobile sidebar button, section icon/title, contextual controls, primary actions, and a back button only on secondary/detail views.
 - Header identity is uniform everywhere: one Lucide section icon followed by one title. The section icon uses 20px on dense app surfaces or 24px only when the existing header already has that scale; titles use the same `text-lg font-semibold text-foreground` treatment, or `text-editor-text-primary` on editor/admin dark surfaces.
-- Every internal app header must include the shared `HeaderBackButton` on the far right side. Do not place the back button on the left side or hide it behind page-specific controls.
-- The back button uses Lucide `ArrowLeft`, visible `Volver` text, 36px height, 12px horizontal padding, muted text, a subtle secondary background, a light border, and the same hover state everywhere.
-- Mobile menu buttons and sidebar toggles sit on the left beside the title. The back button stays in the right action area so users always find it in the same place.
-- Header action icons use Lucide only, align in the same right action group, and keep 16-20px sizing with consistent 8-12px gaps. Do not mix icon-only back buttons, text-only back links, or page-specific boxed variants.
+- Secondary/detail app headers should use the shared `HeaderBackButton` in the right action area. Primary home surfaces such as Dashboard Home should not show a back button.
+- The back button uses Lucide `ArrowLeft`, 36px height, muted text/icon, a subtle secondary or surface background, a light border, and the same hover state everywhere.
+- Mobile menu buttons and sidebar toggles sit on the left beside the title. When present, the back button stays in the right action area so users always find it in the same place.
+- Header action icons use Lucide only, align in the same right action group, and keep 16-20px sizing with consistent 8-12px gaps. Do not mix local text-only back links or page-specific boxed variants.
 - Header icons are 20-24px for section identity and 16-20px for actions. Use the same muted/default and primary/active color logic as the sidebar.
 - Sidebars use Lucide icons only, 18px for navigation rows, compact 8-12px row padding, and one active-state treatment: accent-tinted background, primary text/icon, no heavy shadow.
 - Do not create page-specific back buttons unless wrapping the shared `HeaderBackButton`; icon-only back buttons are not allowed in app headers.
