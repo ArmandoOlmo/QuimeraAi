@@ -124,6 +124,67 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
     };
 
     const activeProjectThumbnailUrl = getDynamicThumbnailUrl(activeProject);
+    const emptyCreateButtonClasses = [
+        'flex items-center rounded-lg',
+        'bg-q-accent/10 border border-q-accent/30 border-dashed',
+        'text-q-accent hover:bg-q-accent/20 transition-colors',
+        collapsed ? 'w-10 h-10 justify-center mx-auto' : 'gap-2 w-full p-2',
+        className,
+    ].filter(Boolean).join(' ');
+    const loadingClasses = ['flex items-center gap-2 p-2', className].filter(Boolean).join(' ');
+    const loadingIconClasses = 'w-8 h-8 rounded-lg bg-q-surface-overlay animate-pulse';
+    const loadingTextWrapClasses = 'flex-1 space-y-1';
+    const triggerClasses = [
+        'flex items-center gap-2 transition-all duration-200',
+        collapsed
+            ? 'w-10 h-10 justify-center mx-auto rounded-lg hover:bg-q-surface-elevated/50'
+            : 'w-full p-2 rounded-lg bg-q-surface hover:bg-q-surface-elevated/50 border border-q-border',
+        isOpen && !collapsed ? 'ring-2 ring-q-accent/50' : '',
+        isLoading ? 'opacity-50 cursor-wait' : '',
+    ].filter(Boolean).join(' ');
+    const triggerIconWrapClasses = 'w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/80 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0 overflow-hidden';
+    const triggerTextWrapClasses = 'flex-1 min-w-0 text-left';
+    const triggerTitleClasses = 'text-sm font-semibold text-q-text truncate';
+    const chevronClasses = [
+        'text-q-text-muted transition-transform duration-200 flex-shrink-0',
+        isOpen ? 'rotate-180' : '',
+    ].filter(Boolean).join(' ');
+    const dropdownClasses = [
+        'absolute z-50 mt-2 py-1',
+        'bg-q-surface-elevated border border-q-border rounded-xl shadow-xl',
+        'animate-in fade-in-0 zoom-in-95 duration-200',
+        collapsed ? 'left-full ml-2 top-0' : 'left-0 right-0',
+        collapsed ? 'w-72' : 'w-full min-w-[280px]',
+    ].join(' ');
+    const dropdownHeaderClasses = 'px-3 py-2 border-b border-q-border';
+    const dropdownHeaderTitleClasses = 'text-xs font-semibold text-q-text-muted uppercase tracking-wider';
+    const searchSectionClasses = 'px-3 py-2 border-b border-q-border';
+    const searchInputWrapClasses = 'flex items-center gap-2 bg-q-surface-overlay/50 rounded-lg px-2 py-1.5';
+    const searchIconClasses = 'text-q-text-muted flex-shrink-0';
+    const searchInputClasses = 'flex-1 bg-transparent outline-none text-sm min-w-0';
+    const searchClearButtonClasses = 'text-q-text-muted hover:text-q-text';
+    const listClasses = 'max-h-64 overflow-y-auto py-1';
+    const emptyStateClasses = 'px-3 py-4 text-center text-sm text-q-text-muted';
+    const itemClasses = (isActive: boolean) => [
+        'flex items-center gap-3 w-full px-3 py-2.5',
+        'hover:bg-q-surface-overlay/50 transition-colors',
+        isActive ? 'bg-q-accent/10' : '',
+    ].filter(Boolean).join(' ');
+    const itemIconClasses = (isActive: boolean) => [
+        'w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden',
+        isActive
+            ? 'bg-gradient-to-br from-q-accent to-q-accent/80 shadow-md shadow-q-accent/30'
+            : 'bg-gradient-to-br from-q-text-muted/60 to-q-text-muted/40',
+    ].join(' ');
+    const itemTextClasses = 'flex-1 min-w-0 text-left';
+    const itemTitleClasses = (isActive: boolean) => [
+        'text-sm font-medium truncate',
+        isActive ? 'text-q-accent' : 'text-q-text',
+    ].join(' ');
+    const activeIndicatorClasses = 'text-q-accent flex-shrink-0';
+    const dividerClasses = 'border-t border-q-border my-1';
+    const actionButtonClasses = 'flex items-center gap-2 w-full px-3 py-2.5 text-q-accent hover:bg-q-accent/10 transition-colors';
+    const actionLabelClasses = 'text-sm font-medium';
 
     const getStatusBadge = (status: string) => {
         if (status === 'Published') {
@@ -147,20 +208,11 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
         return (
             <button
                 onClick={handleCreateProject}
-                className={`
-                    flex items-center rounded-lg
-                    bg-q-accent/10 border border-q-accent/30 border-dashed
-                    text-q-accent hover:bg-q-accent/20 transition-colors
-                    ${collapsed
-                        ? 'w-10 h-10 justify-center mx-auto'
-                        : 'gap-2 w-full p-2'
-                    }
-                    ${className}
-                `}
+                className={emptyCreateButtonClasses}
             >
                 <Plus size={18} />
                 {!collapsed && (
-                    <span className="text-sm font-medium">
+                    <span className={actionLabelClasses}>
                         {t('project.createNew', 'Crear nuevo proyecto')}
                     </span>
                 )}
@@ -171,10 +223,10 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
     // Loading state
     if (isLoadingProjects) {
         return (
-            <div className={`flex items-center gap-2 p-2 ${className}`}>
-                <div className="w-8 h-8 rounded-lg bg-q-surface-overlay animate-pulse" />
+            <div className={loadingClasses}>
+                <div className={loadingIconClasses} />
                 {!collapsed && (
-                    <div className="flex-1 space-y-1">
+                    <div className={loadingTextWrapClasses}>
                         <div className="h-4 w-20 bg-q-surface-overlay rounded animate-pulse" />
                         <div className="h-3 w-12 bg-q-surface-overlay rounded animate-pulse" />
                     </div>
@@ -190,21 +242,13 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 disabled={isLoading}
-                className={`
-                    flex items-center gap-2 transition-all duration-200
-                    ${collapsed
-                        ? 'w-10 h-10 justify-center mx-auto rounded-lg hover:bg-q-surface-elevated/50'
-                        : 'w-full p-2 rounded-lg bg-q-surface hover:bg-q-surface-elevated/50 border border-q-border'
-                    }
-                    ${isOpen && !collapsed ? 'ring-2 ring-q-accent/50' : ''}
-                    ${isLoading ? 'opacity-50 cursor-wait' : ''}
-                `}
+                className={triggerClasses}
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
                 title={collapsed ? (resolveProjectName(activeProject?.name) || t('project.noProject', 'Sin proyecto')) : undefined}
             >
                 {/* Project avatar */}
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/80 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0 overflow-hidden">
+                <div className={triggerIconWrapClasses}>
                     {activeProjectThumbnailUrl ? (
                         <img
                             src={activeProjectThumbnailUrl}
@@ -220,16 +264,15 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
 
                 {!collapsed && (
                     <>
-                        <div className="flex-1 min-w-0 text-left">
-                            <p className="text-sm font-semibold text-q-text truncate">
+                        <div className={triggerTextWrapClasses}>
+                            <p className={triggerTitleClasses}>
                                 {resolveProjectName(activeProject?.name) || t('project.noProject', 'Sin proyecto')}
                             </p>
                             {activeProject && getStatusBadge(activeProject.status)}
                         </div>
                         <ChevronDown
                             size={16}
-                            className={`text-q-text-muted transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''
-                                }`}
+                            className={chevronClasses}
                         />
                     </>
                 )}
@@ -238,39 +281,33 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
             {/* Dropdown Menu */}
             {isOpen && (
                 <div
-                    className={`
-                        absolute z-50 mt-2 py-1
-                        bg-q-surface-elevated border border-q-border rounded-xl shadow-xl
-                        animate-in fade-in-0 zoom-in-95 duration-200
-                        ${collapsed ? 'left-full ml-2 top-0' : 'left-0 right-0'}
-                        ${collapsed ? 'w-72' : 'w-full min-w-[280px]'}
-                    `}
+                    className={dropdownClasses}
                     role="listbox"
                 >
                     {/* Header */}
-                    <div className="px-3 py-2 border-b border-q-border">
-                        <p className="text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                    <div className={dropdownHeaderClasses}>
+                        <p className={dropdownHeaderTitleClasses}>
                             {t('project.selectProject', 'Seleccionar Proyecto')}
                         </p>
                     </div>
 
                     {/* Search */}
                     {userProjects.length > 5 && (
-                        <div className="px-3 py-2 border-b border-q-border">
-                            <div className="flex items-center gap-2 bg-q-surface-overlay/50 rounded-lg px-2 py-1.5">
-                                <Search size={14} className="text-q-text-muted flex-shrink-0" />
+                        <div className={searchSectionClasses}>
+                            <div className={searchInputWrapClasses}>
+                                <Search size={14} className={searchIconClasses} />
                                 <input
                                     ref={searchInputRef}
                                     type="text"
                                     placeholder={t('project.search', 'Buscar proyectos...')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="flex-1 bg-transparent outline-none text-sm min-w-0"
+                                    className={searchInputClasses}
                                 />
                                 {searchQuery && (
                                     <button
                                         onClick={() => setSearchQuery('')}
-                                        className="text-q-text-muted hover:text-q-text"
+                                        className={searchClearButtonClasses}
                                     >
                                         <X size={14} />
                                     </button>
@@ -280,9 +317,9 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                     )}
 
                     {/* Project List */}
-                    <div className="max-h-64 overflow-y-auto py-1">
+                    <div className={listClasses}>
                         {filteredProjects.length === 0 ? (
-                            <div className="px-3 py-4 text-center text-sm text-q-text-muted">
+                            <div className={emptyStateClasses}>
                                 {searchQuery
                                     ? t('cms.noProjectsFound', 'No se encontraron proyectos')
                                     : t('project.noProject', 'Sin proyecto')}
@@ -296,22 +333,12 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                                     <button
                                         key={project.id}
                                         onClick={() => handleSwitchProject(project.id)}
-                                        className={`
-                                            flex items-center gap-3 w-full px-3 py-2.5
-                                            hover:bg-q-surface-overlay/50 transition-colors
-                                            ${isActive ? 'bg-q-accent/10' : ''}
-                                        `}
+                                        className={itemClasses(isActive)}
                                         role="option"
                                         aria-selected={isActive}
                                     >
                                         {/* Project avatar */}
-                                        <div className={`
-                                            w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden
-                                            ${isActive
-                                                ? 'bg-gradient-to-br from-q-accent to-q-accent/80 shadow-md shadow-q-accent/30'
-                                                : 'bg-gradient-to-br from-q-text-muted/60 to-q-text-muted/40'
-                                            }
-                                        `}>
+                                        <div className={itemIconClasses(isActive)}>
                                             {thumbnailUrl ? (
                                                 <img
                                                     src={thumbnailUrl}
@@ -324,9 +351,8 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                                         </div>
 
                                         {/* Project info */}
-                                        <div className="flex-1 min-w-0 text-left">
-                                            <p className={`text-sm font-medium truncate ${isActive ? 'text-q-accent' : 'text-q-text'
-                                                }`}>
+                                        <div className={itemTextClasses}>
+                                            <p className={itemTitleClasses(isActive)}>
                                                 {resolveProjectName(project.name)}
                                             </p>
                                             {getStatusBadge(project.status)}
@@ -334,7 +360,7 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
 
                                         {/* Active indicator */}
                                         {isActive && (
-                                            <Check size={16} className="text-q-accent flex-shrink-0" />
+                                            <Check size={16} className={activeIndicatorClasses} />
                                         )}
                                     </button>
                                 );
@@ -345,13 +371,13 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                     {/* Create new project */}
                     {onCreateProject && (
                         <>
-                            <div className="border-t border-q-border my-1" />
+                            <div className={dividerClasses} />
                             <button
                                 onClick={handleCreateProject}
-                                className="flex items-center gap-2 w-full px-3 py-2.5 text-q-accent hover:bg-q-accent/10 transition-colors"
+                                className={actionButtonClasses}
                             >
                                 <Plus size={18} />
-                                <span className="text-sm font-medium">
+                                <span className={actionLabelClasses}>
                                     {t('project.createNew', 'Crear nuevo proyecto')}
                                 </span>
                             </button>
