@@ -20,6 +20,7 @@ import DashboardDraggableSection from './DashboardDraggableSection';
 import FileHistory from './FileHistory';
 import WebsitesView from './WebsitesView';
 import FirstVisitWelcomeBanner from './FirstVisitWelcomeBanner';
+import { PageContainer } from '../ui/system';
 
 // Section Content Components
 import DashboardProjectsSection, { ProjectsViewAllAction } from './DashboardProjectsSection';
@@ -147,15 +148,14 @@ const Dashboard: React.FC = () => {
                     id="main-content"
                     className={`flex-1 overflow-y-auto scroll-smooth ${
                         isDashboard
-                            ? 'quimera-dashboard-home-bg p-3 sm:p-6 lg:p-8'
+                            ? 'quimera-dashboard-home-bg'
                             : 'p-3 sm:p-6 lg:p-8'
                     }`}
                     role="main"
                 >
-                    <div className="relative z-[1] max-w-7xl mx-auto space-y-6 lg:space-y-10">
-
-                        {/* ─── Dashboard Home View ─────────────────────────────────── */}
-                        {isDashboard && (
+                    {/* ─── Dashboard Home View ─────────────────────────────────── */}
+                    {isDashboard ? (
+                        <PageContainer className="relative z-[1] space-y-6 !px-3 !py-3 sm:!px-6 sm:!py-6 lg:!px-8 lg:!py-8 lg:space-y-10">
                             <motion.div
                                 className="relative space-y-6 lg:space-y-10"
                                 initial={shouldReduceMotion ? false : 'hidden'}
@@ -226,20 +226,22 @@ const Dashboard: React.FC = () => {
                                     })}
                                 </motion.div>
                             </motion.div>
-                        )}
+                        </PageContainer>
+                    ) : (
+                        <div className="relative z-[1] max-w-7xl mx-auto space-y-6 lg:space-y-10">
+                            {/* ─── Websites View ───────────────────────────────────────── */}
+                            {isWebsites && <WebsitesView filters={filters} />}
 
-                        {/* ─── Websites View ───────────────────────────────────────── */}
-                        {isWebsites && <WebsitesView filters={filters} />}
-
-                        {/* ─── Assets View ─────────────────────────────────────────── */}
-                        {isAssets && (
-                            <section className="h-full flex flex-col">
-                                <div className="flex-1">
-                                    <FileHistory variant="full" />
-                                </div>
-                            </section>
-                        )}
-                    </div>
+                            {/* ─── Assets View ─────────────────────────────────────────── */}
+                            {isAssets && (
+                                <section className="h-full flex flex-col">
+                                    <div className="flex-1">
+                                        <FileHistory variant="full" />
+                                    </div>
+                                </section>
+                            )}
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

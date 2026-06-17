@@ -4,6 +4,7 @@ import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import RecentLeads from './RecentLeads';
 import { Users } from 'lucide-react';
+import { AppButton } from '../ui/system';
 
 /**
  * DashboardLeadsSection
@@ -24,12 +25,14 @@ export const LeadsViewAllAction: React.FC = () => {
     const { navigate } = useRouter();
 
     return (
-        <button
+        <AppButton
+            variant="ghost"
+            size="sm"
             onClick={() => navigate(ROUTES.LEADS)}
-            className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center"
+            className="!h-auto gap-0 !p-0 text-sm font-semibold !text-yellow-400 hover:!bg-transparent hover:!text-yellow-300"
         >
-            {t('dashboard.viewAll', 'Ver todos')} <Users size={14} className="ml-1" />
-        </button>
+            {t('dashboard.viewAll', 'Ver todos')} <Users className="ml-1 size-3.5" />
+        </AppButton>
     );
 };
 
