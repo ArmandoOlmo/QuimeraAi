@@ -12,6 +12,7 @@ import LanguageSelector from '../ui/LanguageSelector';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import ProjectSwitcher from './ProjectSwitcher';
 import ProgressBar3D from '../ui/ProgressBar3D';
+import { AppButton, AppCard } from '../ui/system';
 import { useSafeTenant } from '../../contexts/tenant';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
@@ -784,9 +785,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
             {/* Footer Toggle Button - Small circle at top center */}
             {(!isCollapsed || isMobileOpen) && (
-              <button
+              <AppButton
+                type="button"
                 onClick={() => setIsFooterCollapsed(!isFooterCollapsed)}
-                className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 w-6 bg-card border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
+                variant="icon"
+                size="icon-sm"
+                className="absolute -top-3 left-1/2 z-10 size-6 -translate-x-1/2 rounded-full border border-border bg-card text-muted-foreground shadow-md hover:border-primary hover:bg-card hover:text-foreground [&_svg]:size-3.5"
                 style={{ height: '24px', minHeight: '24px' }}
                 aria-label={isFooterCollapsed ? t('common.expandFooter', 'Expandir') : t('common.collapseFooter', 'Colapsar')}
                 aria-expanded={!isFooterCollapsed}
@@ -796,7 +800,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   className={`transition-transform duration-200 ${isFooterCollapsed ? 'rotate-180' : 'rotate-0'}`}
                   aria-hidden="true"
                 />
-              </button>
+              </AppButton>
             )}
 
             {/* Collapsible content wrapper */}
@@ -807,12 +811,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 ? 'max-h-0 opacity-0 mb-0'
                 : 'max-h-20 opacity-100 mb-3'
                 }`}>
-                <div className="flex items-center justify-between gap-2 bg-muted p-1.5 rounded-xl border border-border">
+                <AppCard variant="muted" className="flex items-center justify-between gap-2 rounded-xl p-1.5">
                   {/* Theme */}
                   <div className="flex items-center gap-1">
-                    <button
+                    <AppButton
+                      type="button"
                       onClick={() => setThemeMode('light')}
-                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${themeMode === 'light'
+                      variant="icon"
+                      size="icon-md"
+                      className={`h-9 w-9 rounded-lg ${themeMode === 'light'
                         ? 'bg-background text-primary shadow-sm'
                         : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
                         }`}
@@ -821,10 +828,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       aria-pressed={themeMode === 'light'}
                     >
                       <Sun size={16} />
-                    </button>
-                    <button
+                    </AppButton>
+                    <AppButton
+                      type="button"
                       onClick={() => setThemeMode('dark')}
-                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${themeMode === 'dark'
+                      variant="icon"
+                      size="icon-md"
+                      className={`h-9 w-9 rounded-lg ${themeMode === 'dark'
                         ? 'bg-card text-primary shadow-sm border border-border'
                         : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
                         }`}
@@ -833,10 +843,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       aria-pressed={themeMode === 'dark'}
                     >
                       <Moon size={16} />
-                    </button>
-                    <button
+                    </AppButton>
+                    <AppButton
+                      type="button"
                       onClick={() => setThemeMode('black')}
-                      className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${themeMode === 'black'
+                      variant="icon"
+                      size="icon-md"
+                      className={`h-9 w-9 rounded-lg ${themeMode === 'black'
                         ? 'bg-card text-primary border border-primary/30 shadow-sm shadow-primary/20'
                         : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
                         }`}
@@ -845,12 +858,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       aria-pressed={themeMode === 'black'}
                     >
                       <Circle size={16} fill="currentColor" />
-                    </button>
+                    </AppButton>
                   </div>
 
                   {/* Language */}
                   <LanguageSelector className="w-[110px]" variant="sidebar" />
-                </div>
+                </AppCard>
               </div>
 
               {/* REFINED PRO PLAN WIDGET - Collapsible */}
@@ -858,7 +871,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 ? 'max-h-0 opacity-0 mb-0'
                 : 'max-h-28 opacity-100 mb-3 md:mb-4'
                 }`}>
-                <div className="px-1">
+                <AppCard variant="muted" className="p-2">
                   <div className="flex justify-between items-end mb-2 px-1">
                     <div className="flex items-center gap-1.5">
                       <Zap size={14} className="text-yellow-600 dark:text-yellow-400 black:text-yellow-400 fill-yellow-600 dark:fill-yellow-400 black:fill-yellow-400" />
@@ -880,12 +893,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   <div className="mt-2 flex justify-between items-center px-1">
                     <span className="text-[10px] text-muted-foreground font-medium">{t('common.monthlyCredits')}</span>
                     {!isOwner && (
-                      <button
+                      <AppButton
+                        type="button"
                         onClick={handleUpgradeClick}
-                        className="text-[11px] md:text-[10px] font-bold text-primary hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-2 -mr-2 touch-manipulation"
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto -mr-2 rounded-md px-2 py-1 text-[11px] font-bold text-primary hover:bg-transparent hover:text-yellow-600 touch-manipulation dark:hover:text-yellow-400 md:text-[10px]"
                       >
                         {t('common.upgrade')} →
-                      </button>
+                      </AppButton>
                     )}
                     {isOwner && (
                       <span className="text-[10px] font-bold text-primary px-2">
@@ -893,7 +909,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       </span>
                     )}
                   </div>
-                </div>
+                </AppCard>
               </div>
 
               {/* User Profile Section - Always visible */}
@@ -921,13 +937,16 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
                 <div className={`${isCollapsed && !isMobileOpen ? '' : 'flex flex-col gap-1'}`}>
                   {(!isCollapsed || isMobileOpen) && (
-                    <button
+                    <AppButton
+                      type="button"
                       onClick={handleSignOut}
-                      className="p-2.5 md:p-1.5 -mr-1 text-muted-foreground hover:text-destructive active:text-destructive transition-colors touch-manipulation active:scale-95"
+                      variant="icon"
+                      size="icon-md"
+                      className="-mr-1 p-2.5 text-muted-foreground hover:bg-transparent hover:text-destructive active:scale-95 active:text-destructive touch-manipulation md:p-1.5 [&_svg]:size-4"
                       aria-label={t('auth.logout')}
                     >
                       <LogOut size={18} className="md:w-4 md:h-4" aria-hidden="true" />
-                    </button>
+                    </AppButton>
                   )}
                 </div>
               </div>
