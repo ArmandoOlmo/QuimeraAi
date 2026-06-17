@@ -26,6 +26,7 @@ import DashboardProjectsSection, { ProjectsViewAllAction } from './DashboardProj
 import DashboardTemplatesSection from './DashboardTemplatesSection';
 import DashboardLeadsSection, { LeadsViewAllAction } from './DashboardLeadsSection';
 import DashboardNewsSection from './DashboardNewsSection';
+import { AppCard, PageContainer } from '../ui/system';
 import {
     dashboardContainerVariants,
     dashboardItemVariants,
@@ -145,17 +146,12 @@ const Dashboard: React.FC = () => {
 
                 <main
                     id="main-content"
-                    className={`flex-1 overflow-y-auto scroll-smooth ${
-                        isDashboard
-                            ? 'quimera-dashboard-home-bg p-3 sm:p-6 lg:p-8'
-                            : 'p-3 sm:p-6 lg:p-8'
-                    }`}
+                    className={`flex-1 overflow-y-auto scroll-smooth ${isDashboard ? 'quimera-dashboard-home-bg' : 'p-3 sm:p-6 lg:p-8'}`}
                     role="main"
                 >
-                    <div className="relative z-[1] max-w-7xl mx-auto space-y-6 lg:space-y-10">
-
-                        {/* ─── Dashboard Home View ─────────────────────────────────── */}
-                        {isDashboard && (
+                    {/* ─── Dashboard Home View ─────────────────────────────────── */}
+                    {isDashboard ? (
+                        <PageContainer className="relative z-[1] space-y-6 lg:space-y-10">
                             <motion.div
                                 className="relative space-y-6 lg:space-y-10"
                                 initial={shouldReduceMotion ? false : 'hidden'}
@@ -199,47 +195,51 @@ const Dashboard: React.FC = () => {
                                 )}
 
                                 {/* Draggable Dashboard Sections */}
-                                <motion.div className="quimera-dashboard-section-deck relative z-[1] space-y-6 lg:space-y-8" variants={dashboardItemVariants}>
-                                    {sectionOrder.map((sectionId, index) => {
-                                        const config = sectionConfig[sectionId];
-                                        return (
-                                            <motion.div
-                                                key={sectionId}
-                                                initial={shouldReduceMotion ? false : { opacity: 0, y: 28, scale: 0.97, filter: 'blur(8px)' }}
-                                                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                                                transition={getDashboardSectionTransition(index)}
-                                            >
-                                                <DashboardDraggableSection
-                                                    sectionId={sectionId}
-                                                    title={config.title}
-                                                    icon={config.icon}
-                                                    isCollapsed={config.isCollapsed}
-                                                    onToggleCollapse={config.onToggle}
-                                                    wrapperClasses={getWrapperClasses(sectionId)}
-                                                    dragHandlers={dragHandlers}
-                                                    rightAction={config.rightAction}
+                                <motion.div className="relative z-[1]" variants={dashboardItemVariants}>
+                                    <AppCard className="quimera-dashboard-section-deck space-y-6 lg:space-y-8">
+                                        {sectionOrder.map((sectionId, index) => {
+                                            const config = sectionConfig[sectionId];
+                                            return (
+                                                <motion.div
+                                                    key={sectionId}
+                                                    initial={shouldReduceMotion ? false : { opacity: 0, y: 28, scale: 0.97, filter: 'blur(8px)' }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                                                    transition={getDashboardSectionTransition(index)}
                                                 >
-                                                    {config.content}
-                                                </DashboardDraggableSection>
-                                            </motion.div>
-                                        );
-                                    })}
+                                                    <DashboardDraggableSection
+                                                        sectionId={sectionId}
+                                                        title={config.title}
+                                                        icon={config.icon}
+                                                        isCollapsed={config.isCollapsed}
+                                                        onToggleCollapse={config.onToggle}
+                                                        wrapperClasses={getWrapperClasses(sectionId)}
+                                                        dragHandlers={dragHandlers}
+                                                        rightAction={config.rightAction}
+                                                    >
+                                                        {config.content}
+                                                    </DashboardDraggableSection>
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </AppCard>
                                 </motion.div>
                             </motion.div>
-                        )}
+                        </PageContainer>
+                    ) : (
+                        <div className="relative z-[1] max-w-7xl mx-auto space-y-6 lg:space-y-10">
+                            {/* ─── Websites View ───────────────────────────────────────── */}
+                            {isWebsites && <WebsitesView filters={filters} />}
 
-                        {/* ─── Websites View ───────────────────────────────────────── */}
-                        {isWebsites && <WebsitesView filters={filters} />}
-
-                        {/* ─── Assets View ─────────────────────────────────────────── */}
-                        {isAssets && (
-                            <section className="h-full flex flex-col">
-                                <div className="flex-1">
-                                    <FileHistory variant="full" />
-                                </div>
-                            </section>
-                        )}
-                    </div>
+                            {/* ─── Assets View ─────────────────────────────────────────── */}
+                            {isAssets && (
+                                <section className="h-full flex flex-col">
+                                    <div className="flex-1">
+                                        <FileHistory variant="full" />
+                                    </div>
+                                </section>
+                            )}
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

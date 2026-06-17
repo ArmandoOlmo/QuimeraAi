@@ -15,6 +15,7 @@ import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import DashboardStatusCards from './DashboardStatusCards';
 import { dashboardContainerVariants, dashboardItemVariants } from './dashboardMotion';
 import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Plus, Sparkles } from 'lucide-react';
+import { AppButton } from '../ui/system';
 
 interface DashboardWelcomeProps {
     allUserProjectsCount: number;
@@ -234,14 +235,17 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                         {t('dashboard.createWithAI')}
                     </label>
                     <div className="flex items-start gap-2">
-                        <button
+                        <AppButton
                             type="button"
                             onClick={() => handleOpenAIStudio()}
-                            className="mt-0.5 h-9 w-9 flex-shrink-0 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/60 transition-colors"
+                            variant="icon"
+                            size="icon-md"
+                            className="mt-0.5 h-9 w-9 flex-shrink-0 rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/60"
                             title={t('dashboard.createWithAI')}
+                            aria-label={t('dashboard.createWithAI')}
                         >
                             <Plus size={17} />
-                        </button>
+                        </AppButton>
                         <textarea
                             id="dashboard-ai-prompt"
                             value={aiPrompt}
@@ -261,30 +265,38 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                         />
                     </div>
                     <div className="flex items-center justify-between gap-3 pt-2">
-                        <button
+                        <AppButton
                             type="button"
                             onClick={() => handleOpenAIStudio()}
-                            className="inline-flex min-w-0 items-center gap-2 rounded-full border border-q-border/70 bg-q-surface-overlay/35 px-3 py-1.5 text-xs font-medium text-q-text-secondary transition-colors hover:border-q-accent/50 hover:bg-q-accent/10 hover:text-q-text"
+                            variant="outline"
+                            size="sm"
+                            leftIcon={<Sparkles size={13} className="text-q-accent" />}
+                            className="min-w-0 rounded-full border-q-border/70 bg-q-surface-overlay/35 px-3 py-1.5 text-xs font-medium text-q-text-secondary hover:border-q-accent/50 hover:bg-q-accent/10 hover:text-q-text"
                         >
-                            <Sparkles size={13} className="text-q-accent" />
                             <span className="truncate">Web Design Studio</span>
-                        </button>
+                        </AppButton>
                         <div className="flex flex-shrink-0 items-center gap-2">
-                            <button
+                            <AppButton
                                 type="button"
                                 onClick={() => handleOpenAIStudio(undefined, true)}
-                                className="no-min-touch size-9 flex shrink-0 items-center justify-center rounded-full p-0 text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/60 transition-colors touch-manipulation"
+                                variant="icon"
+                                size="icon-md"
+                                className="no-min-touch size-9 shrink-0 rounded-full p-0 text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/60 touch-manipulation"
                                 title={t('aiWebsiteStudio.chat.startVoice', 'Iniciar voz')}
+                                aria-label={t('aiWebsiteStudio.chat.startVoice', 'Iniciar voz')}
                             >
                                 <Mic size={16} />
-                            </button>
-                            <button
+                            </AppButton>
+                            <AppButton
                                 type="submit"
-                                className="no-min-touch size-9 flex shrink-0 items-center justify-center rounded-full p-0 bg-q-accent text-q-text-on-accent shadow-lg shadow-q-accent/20 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-q-accent/40 touch-manipulation"
+                                variant="icon"
+                                size="icon-md"
+                                className="no-min-touch size-9 shrink-0 rounded-full bg-q-accent p-0 text-q-text-on-accent shadow-lg shadow-q-accent/20 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-q-accent/40 touch-manipulation"
                                 title={t('dashboard.createWithAI')}
+                                aria-label={t('dashboard.createWithAI')}
                             >
                                 <ArrowUp size={17} />
-                            </button>
+                            </AppButton>
                         </div>
                     </div>
                 </form>
