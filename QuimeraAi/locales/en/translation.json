@@ -6422,8 +6422,19 @@
     },
     "detail": {
       "notFound": "Property not found",
+      "notFoundDescription": "This listing is unavailable or no longer active.",
       "backToListings": "Back to listings",
+      "propertyOverview": "Property overview",
+      "propertyFacts": "Property facts",
       "description": "Description",
+      "highlights": "Highlights",
+      "features": "Features",
+      "amenities": "Amenities",
+      "faq": "FAQ",
+      "halfBathrooms": "Half baths",
+      "hoaFee": "HOA",
+      "taxes": "Taxes",
+      "scrollToContact": "Request information",
       "contactTitle": "Request information",
       "contactSubtitle": "Send your details and the team will follow up.",
       "messagePlaceholder": "I am interested in this property...",
@@ -6439,7 +6450,10 @@
       "registerOpenHouse": "Register",
       "openHouseRegistered": "Registration received successfully.",
       "openHouseRegisterError": "Registration could not be completed.",
-      "openHouseDefaultMessage": "I want to register for the open house at {{title}}."
+      "openHouseDefaultMessage": "I want to register for the open house at {{title}}.",
+      "capacity": "{{count}} spots",
+      "leadPrivacyNote": "Your information will only be used to follow up on this property.",
+      "similarListings": "Similar listings"
     },
     "units": {
       "beds": "Bedrooms",

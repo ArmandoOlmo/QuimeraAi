@@ -6422,8 +6422,19 @@
     },
     "detail": {
       "notFound": "Propiedad no encontrada",
+      "notFoundDescription": "Este listing no está disponible o ya no está activo.",
       "backToListings": "Volver a listados",
+      "propertyOverview": "Resumen de la propiedad",
+      "propertyFacts": "Datos de la propiedad",
       "description": "Descripción",
+      "highlights": "Destacados",
+      "features": "Características",
+      "amenities": "Amenidades",
+      "faq": "Preguntas frecuentes",
+      "halfBathrooms": "Medios baños",
+      "hoaFee": "HOA",
+      "taxes": "Impuestos",
+      "scrollToContact": "Solicitar información",
       "contactTitle": "Solicitar información",
       "contactSubtitle": "Envía tus datos y el equipo te dará seguimiento.",
       "messagePlaceholder": "Me interesa esta propiedad...",
@@ -6439,7 +6450,10 @@
       "registerOpenHouse": "Registrarme",
       "openHouseRegistered": "Registro recibido correctamente.",
       "openHouseRegisterError": "No se pudo completar el registro.",
-      "openHouseDefaultMessage": "Quiero registrarme para el open house de {{title}}."
+      "openHouseDefaultMessage": "Quiero registrarme para el open house de {{title}}.",
+      "capacity": "{{count}} espacios",
+      "leadPrivacyNote": "Tu información se usará solo para dar seguimiento a esta propiedad.",
+      "similarListings": "Listings similares"
     },
     "units": {
       "beds": "Habitaciones",
