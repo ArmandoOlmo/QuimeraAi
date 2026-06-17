@@ -432,6 +432,36 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     const hasAccess = hasFeatureAccess(item.requiredFeature);
     const isLocked = !isLoadingPlan && !hasAccess && item.requiredFeature;
     const minPlanRequired = isLocked ? getMinPlanForFeature(item.requiredFeature) : '';
+    const navItemButtonClasses = [
+      'group relative mb-1 flex items-center rounded-lg px-3 py-2 transition-all duration-200 touch-manipulation',
+      'min-h-[40px] md:min-h-[36px] md:px-3 md:py-2',
+      'active:scale-[0.98] md:active:scale-100',
+      showExpanded ? 'w-full' : 'mx-auto w-12 justify-center',
+      isLocked
+        ? 'text-q-text-muted/60 hover:bg-secondary/50'
+        : isActive
+          ? showExpanded
+            ? 'bg-primary text-white font-bold'
+            : 'text-primary dark:text-primary'
+          : showExpanded
+            ? 'text-q-text-muted hover:bg-secondary/80 md:hover:bg-secondary hover:text-foreground active:bg-secondary'
+            : 'text-q-text-muted hover:text-foreground',
+      item.disabled ? 'opacity-50 cursor-not-allowed' : '',
+      item.isFixed ? '' : 'cursor-pointer',
+    ].filter(Boolean).join(' ');
+    const dragHandleClasses = [
+      'hidden md:block absolute left-0 top-1/2 -translate-y-1/2 p-1',
+      'cursor-grab active:cursor-grabbing opacity-0 group-hover/drag:opacity-100 transition-opacity',
+    ].join(' ');
+    const iconClasses = [
+      showExpanded ? (item.isFixed ? 'mr-3' : 'md:ml-5 mr-3') : '',
+      'flex-shrink-0 transition-all',
+      isLocked ? 'opacity-50' : '',
+    ].filter(Boolean).join(' ');
+    const labelClasses = [
+      'text-[15px] md:text-sm font-medium whitespace-nowrap overflow-hidden transition-all flex-1 text-left',
+      isLocked ? 'opacity-60' : '',
+    ].filter(Boolean).join(' ');
 
     const handleNavClick = () => {
       // If locked, show upgrade modal instead of navigating
@@ -471,30 +501,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
         <button
           onClick={handleNavClick}
           disabled={item.disabled}
-          className={`
-            group flex items-center transition-all duration-200 relative touch-manipulation
-            min-h-[40px] md:min-h-[36px]
-            py-2 px-3 md:py-2 md:px-3 mb-1 md:mb-1
-            active:scale-[0.98] md:active:scale-100
-            ${showExpanded
-              ? 'w-full rounded-lg'
-              : 'justify-center w-12 mx-auto rounded-lg'
-            }
-            ${isLocked
-              ? 'text-q-text-muted/60 hover:bg-secondary/50'
-              : isActive
-                ? (showExpanded
-                  ? 'bg-primary text-white font-bold'
-                  : 'text-primary dark:text-primary'
-                )
-                : (showExpanded
-                  ? 'text-q-text-muted hover:bg-secondary/80 md:hover:bg-secondary hover:text-foreground active:bg-secondary'
-                  : 'text-q-text-muted hover:text-foreground'
-                )
-            }
-            ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}
-            ${item.isFixed ? '' : 'cursor-pointer'}
-          `}
+          className={navItemButtonClasses}
           aria-label={isLocked ? `${item.label} (${t('common.upgrade')})` : item.label}
           aria-current={isActive ? 'page' : undefined}
           title={!showExpanded ? (isLocked ? `${item.label} - ${t('common.upgrade')}` : item.label) : undefined}
@@ -504,7 +511,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             <div
               {...attributes}
               {...listeners}
-              className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 p-1 cursor-grab active:cursor-grabbing opacity-0 group-hover/drag:opacity-100 transition-opacity"
+              className={dragHandleClasses}
             >
               <GripVertical size={16} className="text-q-text-muted" />
             </div>
@@ -513,16 +520,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           <Icon
             size={22}
             strokeWidth={isActive ? 2.5 : 2}
-            className={`
-              ${showExpanded ? (item.isFixed ? 'mr-3' : 'md:ml-5 mr-3') : ''} 
-              flex-shrink-0 transition-all
-              ${isLocked ? 'opacity-50' : ''}
-            `}
+            className={iconClasses}
             aria-hidden="true"
           />
 
           {showExpanded && (
-            <span className={`text-[15px] md:text-sm font-medium whitespace-nowrap overflow-hidden transition-all flex-1 text-left ${isLocked ? 'opacity-60' : ''}`}>
+            <span className={labelClasses}>
               {item.label}
             </span>
           )}
