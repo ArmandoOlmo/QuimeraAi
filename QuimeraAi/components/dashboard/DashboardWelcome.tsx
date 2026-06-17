@@ -284,7 +284,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                 size="icon-md"
                                 type="button"
                                 onClick={() => handleOpenAIStudio(undefined, true)}
-                                className="no-min-touch size-9 flex shrink-0 items-center justify-center rounded-full p-0 text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/60 transition-colors touch-manipulation"
+                                className="no-min-touch !size-9 !h-9 !w-9 !min-w-9 flex shrink-0 items-center justify-center !rounded-full !p-0 text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/60 transition-colors touch-manipulation"
                                 title={t('aiWebsiteStudio.chat.startVoice', 'Iniciar voz')}
                             >
                                 <Mic className="size-4" />
@@ -293,7 +293,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                 variant="primary"
                                 size="icon-md"
                                 type="submit"
-                                className="no-min-touch size-9 flex shrink-0 items-center justify-center rounded-full p-0 bg-q-accent text-q-text-on-accent shadow-lg shadow-q-accent/20 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-q-accent/40 touch-manipulation"
+                                className="no-min-touch !size-9 !h-9 !w-9 !min-w-9 flex shrink-0 items-center justify-center !rounded-full !p-0 bg-q-accent text-q-text-on-accent shadow-lg shadow-q-accent/20 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-q-accent/40 touch-manipulation"
                                 title={t('dashboard.createWithAI')}
                             >
                                 <ArrowUp className="size-[17px]" />
