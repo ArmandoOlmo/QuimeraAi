@@ -556,6 +556,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     );
   };
 
+  const sidebarSectionButtonClasses = 'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-q-text-muted hover:bg-secondary/50 hover:text-foreground transition-all duration-200';
+  const sidebarSectionIconLabelClasses = 'flex items-center gap-2';
+  const sidebarSectionLabelClasses = 'text-xs font-bold uppercase tracking-wider';
+  const sidebarSectionChevronClasses = (isSectionCollapsed: boolean) =>
+    `transition-transform duration-200 ${isSectionCollapsed ? '-rotate-90' : 'rotate-0'}`;
+  const sidebarNestedListClasses = (isSectionCollapsed: boolean) =>
+    `overflow-hidden transition-all duration-300 ease-in-out ${isSectionCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`;
+  const sidebarNestedListInnerClasses = 'pl-2 border-l border-q-border ml-4 mt-1';
+
   return (
     <>
       {/* Mobile Overlay - Enhanced with blur and tap feedback */}
@@ -703,23 +712,22 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     <div className="mt-3">
                       <button
                         onClick={() => toggleSection('websites')}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-q-text-muted hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
+                        className={sidebarSectionButtonClasses}
                         aria-expanded={!collapsedSections.websites}
                       >
-                        <div className="flex items-center gap-2">
+                        <div className={sidebarSectionIconLabelClasses}>
                           <Globe size={18} className="flex-shrink-0" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t('dashboard.websitesSection')}</span>
+                          <span className={sidebarSectionLabelClasses}>{t('dashboard.websitesSection')}</span>
                         </div>
                         <ChevronDown
                           size={16}
-                          className={`transition-transform duration-200 ${collapsedSections.websites ? '-rotate-90' : 'rotate-0'}`}
+                          className={sidebarSectionChevronClasses(collapsedSections.websites)}
                         />
                       </button>
                       <div
-                        className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.websites ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
-                          }`}
+                        className={sidebarNestedListClasses(collapsedSections.websites)}
                       >
-                        <div className="pl-2 border-l border-q-border ml-4 mt-1">
+                        <div className={sidebarNestedListInnerClasses}>
                           {websiteItems.filter(isItemAccessible).map((item, index) => (
                             <SortableNavItem key={item.id} item={item} index={index + 1} />
                           ))}
@@ -731,23 +739,22 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       <div className="mt-3">
                         <button
                           onClick={() => toggleSection('ecommerce')}
-                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-q-text-muted hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
+                          className={sidebarSectionButtonClasses}
                           aria-expanded={!collapsedSections.ecommerce}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className={sidebarSectionIconLabelClasses}>
                             <ShoppingBag size={18} className="flex-shrink-0" />
-                            <span className="text-xs font-bold uppercase tracking-wider">{t('dashboard.ecommerceSection')}</span>
+                            <span className={sidebarSectionLabelClasses}>{t('dashboard.ecommerceSection')}</span>
                           </div>
                           <ChevronDown
                             size={16}
-                            className={`transition-transform duration-200 ${collapsedSections.ecommerce ? '-rotate-90' : 'rotate-0'}`}
+                            className={sidebarSectionChevronClasses(collapsedSections.ecommerce)}
                           />
                         </button>
                         <div
-                          className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.ecommerce ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
-                            }`}
+                          className={sidebarNestedListClasses(collapsedSections.ecommerce)}
                         >
-                          <div className="pl-2 border-l border-q-border ml-4 mt-1">
+                          <div className={sidebarNestedListInnerClasses}>
                             {ecommerceItems.filter(isItemAccessible).map((item, index) => (
                               <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + 1} />
                             ))}
@@ -761,23 +768,22 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       <div className="mt-3">
                         <button
                           onClick={() => toggleSection('tools')}
-                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-q-text-muted hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
+                          className={sidebarSectionButtonClasses}
                           aria-expanded={!collapsedSections.tools}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className={sidebarSectionIconLabelClasses}>
                             <Wrench size={18} className="flex-shrink-0" />
-                            <span className="text-xs font-bold uppercase tracking-wider">{t('dashboard.toolsSection')}</span>
+                            <span className={sidebarSectionLabelClasses}>{t('dashboard.toolsSection')}</span>
                           </div>
                           <ChevronDown
                             size={16}
-                            className={`transition-transform duration-200 ${collapsedSections.tools ? '-rotate-90' : 'rotate-0'}`}
+                            className={sidebarSectionChevronClasses(collapsedSections.tools)}
                           />
                         </button>
                         <div
-                          className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.tools ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
-                            }`}
+                          className={sidebarNestedListClasses(collapsedSections.tools)}
                         >
-                          <div className="pl-2 border-l border-q-border ml-4 mt-1">
+                          <div className={sidebarNestedListInnerClasses}>
                             {toolsItems.filter(isItemAccessible).map((item, index) => (
                               <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + ecommerceItems.length + 1} />
                             ))}
