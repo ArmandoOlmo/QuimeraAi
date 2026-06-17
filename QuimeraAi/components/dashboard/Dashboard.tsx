@@ -27,6 +27,7 @@ import DashboardProjectsSection, { ProjectsViewAllAction } from './DashboardProj
 import DashboardTemplatesSection, { TemplatesSizeToggle } from './DashboardTemplatesSection';
 import DashboardLeadsSection, { LeadsViewAllAction } from './DashboardLeadsSection';
 import DashboardNewsSection from './DashboardNewsSection';
+import { AppCard, PageContainer } from '../ui/system';
 
 // Icons
 import { LayoutGrid, LayoutTemplate, Users, Newspaper } from 'lucide-react';
@@ -140,35 +141,38 @@ const Dashboard: React.FC = () => {
                     onNavigateBack={() => goBack()}
                 />
 
-                <main id="main-content" className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth" role="main">
-                    <div className="max-w-7xl mx-auto space-y-10">
+                <main
+                    id="main-content"
+                    className={`flex-1 overflow-y-auto scroll-smooth ${isDashboard ? '' : 'p-6 lg:p-8'}`}
+                    role="main"
+                >
+                    {/* ─── Dashboard Home View ─────────────────────────────────── */}
+                    {isDashboard ? (
+                        <PageContainer className="space-y-10">
+                            {/* Welcome / Hero Section */}
+                            <DashboardWelcome allUserProjectsCount={filters.allUserProjects.length} />
 
-                        {/* ─── Dashboard Home View ─────────────────────────────────── */}
-                        {isDashboard && (
-                            <>
-                                {/* Welcome / Hero Section */}
-                                <DashboardWelcome allUserProjectsCount={filters.allUserProjects.length} />
+                            {/* First Visit Welcome Banner */}
+                            <FirstVisitWelcomeBanner hasProjects={filters.allUserProjects.length > 0} />
 
-                                {/* First Visit Welcome Banner */}
-                                <FirstVisitWelcomeBanner hasProjects={filters.allUserProjects.length > 0} />
+                            {/* Help Guide / Instructions */}
+                            {showInstructions && (
+                                <div className="w-full animate-fade-in-up">
+                                    <DashboardHelpGuide
+                                        onClose={dismissInstructions}
+                                        hasProjects={filters.allUserProjects.length > 0}
+                                        hasPublished={domains.some(
+                                            (d) => d.status === 'active' || d.status === 'deployed',
+                                        )}
+                                        hasDomain={domains.length > 0}
+                                        hasCMSContent={cmsPosts.length > 0}
+                                        onCreateProject={() => setIsOnboardingOpen(true)}
+                                    />
+                                </div>
+                            )}
 
-                                {/* Help Guide / Instructions */}
-                                {showInstructions && (
-                                    <div className="w-full animate-fade-in-up">
-                                        <DashboardHelpGuide
-                                            onClose={dismissInstructions}
-                                            hasProjects={filters.allUserProjects.length > 0}
-                                            hasPublished={domains.some(
-                                                (d) => d.status === 'active' || d.status === 'deployed',
-                                            )}
-                                            hasDomain={domains.length > 0}
-                                            hasCMSContent={cmsPosts.length > 0}
-                                            onCreateProject={() => setIsOnboardingOpen(true)}
-                                        />
-                                    </div>
-                                )}
-
-                                {/* Draggable Dashboard Sections */}
+                            {/* Draggable Dashboard Sections */}
+                            <AppCard className="space-y-10 p-4 lg:p-6">
                                 {sectionOrder.map((sectionId) => {
                                     const config = sectionConfig[sectionId];
                                     return (
@@ -187,21 +191,23 @@ const Dashboard: React.FC = () => {
                                         </DashboardDraggableSection>
                                     );
                                 })}
-                            </>
-                        )}
+                            </AppCard>
+                        </PageContainer>
+                    ) : (
+                        <div className="max-w-7xl mx-auto space-y-10">
+                            {/* ─── Websites View ───────────────────────────────────────── */}
+                            {isWebsites && <WebsitesView filters={filters} />}
 
-                        {/* ─── Websites View ───────────────────────────────────────── */}
-                        {isWebsites && <WebsitesView filters={filters} />}
-
-                        {/* ─── Assets View ─────────────────────────────────────────── */}
-                        {isAssets && (
-                            <section className="h-full flex flex-col">
-                                <div className="flex-1">
-                                    <FileHistory variant="full" />
-                                </div>
-                            </section>
-                        )}
-                    </div>
+                            {/* ─── Assets View ─────────────────────────────────────────── */}
+                            {isAssets && (
+                                <section className="h-full flex flex-col">
+                                    <div className="flex-1">
+                                        <FileHistory variant="full" />
+                                    </div>
+                                </section>
+                            )}
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

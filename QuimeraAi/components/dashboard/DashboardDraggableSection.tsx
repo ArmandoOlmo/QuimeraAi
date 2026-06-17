@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { GripVertical, ChevronDown } from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 import type { DashboardSectionId, DragHandlers } from '../../hooks/useDashboardSections';
+import { SectionHeader } from '../ui/system';
 
 interface DashboardDraggableSectionProps {
     sectionId: DashboardSectionId;
@@ -60,25 +61,17 @@ const DashboardDraggableSection: React.FC<DashboardDraggableSectionProps> = ({
             onDragLeave={dragHandlers.handleDragLeave}
         >
             <section className={sectionId === 'projects' ? 'relative z-[1]' : 'w-full'}>
-                <div className={`flex items-center justify-between ${isCollapsed ? 'mb-0' : 'mb-6'}`}>
-                    <div className="flex items-center gap-0">
-                        {dragHandle}
-                        <button
-                            onClick={onToggleCollapse}
-                            className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
-                            aria-expanded={!isCollapsed}
-                        >
-                            <Icon className="text-primary" size={24} />
-                            {title}
-                            <ChevronDown
-                                size={20}
-                                className={`text-muted-foreground transition-transform duration-300 ${
-                                    isCollapsed ? '-rotate-90' : 'rotate-0'
-                                }`}
-                            />
-                        </button>
-                    </div>
-                    {!isCollapsed && rightAction}
+                <div className={`flex items-center ${isCollapsed ? 'mb-0' : 'mb-6'}`}>
+                    {dragHandle}
+                    <SectionHeader
+                        title={<span className="text-2xl font-bold">{title}</span>}
+                        icon={<Icon className="text-primary" size={24} />}
+                        collapsible
+                        isCollapsed={isCollapsed}
+                        onToggle={onToggleCollapse}
+                        action={!isCollapsed ? rightAction : undefined}
+                        className="min-w-0 flex-1 items-center"
+                    />
                 </div>
 
                 {!isCollapsed && <div className="animate-fade-in-up">{children}</div>}

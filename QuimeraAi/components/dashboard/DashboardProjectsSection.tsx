@@ -9,6 +9,7 @@ import ProjectCard from './ProjectCard';
 import ProjectCardSkeleton from './ProjectCardSkeleton';
 import EmptyState from './EmptyState';
 import { Plus, Search, Globe } from 'lucide-react';
+import { AppButton } from '../ui/system';
 
 interface DashboardProjectsSectionProps {
     userProjects: any[];
@@ -111,12 +112,16 @@ export const ProjectsViewAllAction: React.FC = () => {
     if (allUserProjects.length === 0) return null;
 
     return (
-        <button
+        <AppButton
+            type="button"
             onClick={() => navigate(ROUTES.WEBSITES)}
-            className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center"
+            variant="ghost"
+            size="sm"
+            rightIcon={<Globe size={14} />}
+            className="h-auto gap-1 px-0 py-0 text-sm font-semibold text-primary hover:bg-transparent hover:text-primary/80"
         >
-            {t('dashboard.viewAll')} <Globe size={14} className="ml-1" />
-        </button>
+            {t('dashboard.viewAll')}
+        </AppButton>
     );
 };
 
