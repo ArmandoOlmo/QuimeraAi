@@ -12,12 +12,15 @@ interface AdminViewLayoutProps {
 
 const AdminViewLayout: React.FC<AdminViewLayoutProps> = ({ title, onBack, children, noPadding = false, icon }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const layoutClasses = 'flex h-screen bg-q-bg text-q-text';
+  const shellClasses = 'flex-1 flex flex-col overflow-hidden relative';
+  const contentClasses = ['flex-1 overflow-auto', noPadding ? '' : 'p-6'].filter(Boolean).join(' ');
 
   return (
-    <div className="flex h-screen bg-q-bg text-q-text">
+    <div className={layoutClasses}>
       <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      <div className={shellClasses}>
         <AdminPageHeader
           title={title}
           icon={icon}
@@ -26,7 +29,7 @@ const AdminViewLayout: React.FC<AdminViewLayoutProps> = ({ title, onBack, childr
         />
 
         {/* Content */}
-        <main className={`flex-1 overflow-auto ${noPadding ? '' : 'p-6'}`}>
+        <main className={contentClasses}>
           {children}
         </main>
       </div>
