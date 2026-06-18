@@ -50,6 +50,17 @@ const USER_NEWS_LIST_COLUMNS = `
   updated_by
 `;
 
+const USER_NEWS_IMAGE_COLUMNS = `
+  id,
+  image_url
+`;
+
+const getLightweightImageUrl = (value: unknown): string | null => {
+  const url = getUsableImageUrl(value);
+  if (!url || url.startsWith('data:') || url.length > 4096) return null;
+  return url;
+};
+
 // =============================================================================
 // PROVIDER
 // =============================================================================
@@ -392,6 +403,28 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (newsError) throw newsError;
 
+      const imageUrlsById = new Map<string, string>();
+      try {
+        const { data: imageRows, error: imageError } = await supabase
+          .from(TABLES.NEWS)
+          .select(USER_NEWS_IMAGE_COLUMNS)
+          .eq('status', 'published')
+          .not('image_url', 'is', null)
+          .not('image_url', 'ilike', 'data:%')
+          .order('created_at', { ascending: false });
+
+        if (imageError) {
+          console.warn('[NewsContext] Could not fetch lightweight news images:', imageError.message);
+        } else {
+          (imageRows || []).forEach(row => {
+            const imageUrl = getLightweightImageUrl(row.image_url);
+            if (imageUrl) imageUrlsById.set(row.id, imageUrl);
+          });
+        }
+      } catch (imageErr) {
+        console.warn('[NewsContext] Could not fetch lightweight news images:', imageErr);
+      }
+
       const items = (newsData || []).map(item => ({
         ...item,
         body: item.content,
@@ -402,7 +435,7 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updatedAt: item.updated_at,
         publishAt: item.publish_at,
         expireAt: item.expire_at,
-        imageUrl: null,
+        imageUrl: imageUrlsById.get(item.id) || null,
         linkUrl: item.link_url,
         linkText: item.link_text,
         createdBy: item.created_by,
