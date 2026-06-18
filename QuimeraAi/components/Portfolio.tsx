@@ -335,7 +335,12 @@ const Portfolio: React.FC<PortfolioProps> = ({
 
   const title = resolveText(rawTitle);
   const description = resolveText(rawDescription);
-  const items = (rawItems || []).map(item => ({
+  const rawItemList = Array.isArray(rawItems)
+    ? rawItems
+    : rawItems && typeof rawItems === 'object'
+      ? Object.values(rawItems)
+      : [];
+  const items = rawItemList.filter((item): item is PortfolioItem => Boolean(item && typeof item === 'object')).map(item => ({
     ...item,
     title: resolveText(item.title),
     description: resolveText(item.description),

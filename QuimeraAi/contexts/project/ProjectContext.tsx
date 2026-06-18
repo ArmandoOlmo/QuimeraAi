@@ -269,17 +269,17 @@ const mapSupabaseRowToProjectSummary = (row: Record<string, any>): Project => {
     const isDeleted = row.isDeleted === true;
     const summaryThumbnailUrl = resolveSummaryThumbnailUrl(row, project);
     const summaryHeroSection = getSummaryHeroSection(project.componentOrder);
+    const summaryComponentOrder = summaryThumbnailUrl ? [summaryHeroSection] as PageSection[] : [] as PageSection[];
+    const summarySectionVisibility = summaryThumbnailUrl
+        ? { [summaryHeroSection]: true } as Record<PageSection, boolean>
+        : {} as Record<PageSection, boolean>;
 
     return {
         ...project,
         thumbnailUrl: summaryThumbnailUrl || project.thumbnailUrl,
         data: buildSummaryProjectData(summaryThumbnailUrl, summaryHeroSection),
-        componentOrder: hasItems(project.componentOrder)
-            ? project.componentOrder
-            : summaryThumbnailUrl
-                ? [summaryHeroSection] as PageSection[]
-                : initialData.componentOrder as PageSection[],
-        sectionVisibility: project.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>,
+        componentOrder: summaryComponentOrder,
+        sectionVisibility: summarySectionVisibility,
         [SUMMARY_PROJECT_FLAG]: true,
         ...(deletedAt ? { deletedAt } : {}),
         ...(deletedBy ? { deletedBy } : {}),
@@ -577,6 +577,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoadRef = useRef(true);
     const projectsRef = useRef<Project[]>([]);
+    const hydratingSummaryProjectIdRef = useRef<string | null>(null);
     // CRITICAL: Ref to track the active project ID synchronously for auto-save validation.
     // Unlike state, refs are updated immediately and avoid React batching issues.
     const activeProjectIdRef = useRef<string | null>(activeProjectId);
@@ -1014,6 +1015,32 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             router.navigate(`/editor/${projectId}`);
         }
     }, [user, currentTenantId]);
+
+    useEffect(() => {
+        if (
+            isLoadingProjects ||
+            !user ||
+            !activeProjectId ||
+            !activeProject ||
+            !isSummaryProject(activeProject) ||
+            hydratingSummaryProjectIdRef.current === activeProjectId
+        ) {
+            return;
+        }
+
+        hydratingSummaryProjectIdRef.current = activeProjectId;
+        console.log('[ProjectContext] Hydrating active summary project:', activeProject.name);
+
+        loadProject(activeProjectId, false, false)
+            .catch(error => {
+                console.error('[ProjectContext] Error hydrating active summary project:', error);
+            })
+            .finally(() => {
+                if (hydratingSummaryProjectIdRef.current === activeProjectId) {
+                    hydratingSummaryProjectIdRef.current = null;
+                }
+            });
+    }, [isLoadingProjects, user, activeProjectId, activeProject, loadProject]);
 
     // Helper to deeply remove undefined values (Supabase doesn't accept undefined at any level)
     const removeUndefinedValues = (obj: any): any => {
