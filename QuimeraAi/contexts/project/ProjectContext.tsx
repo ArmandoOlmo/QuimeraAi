@@ -22,7 +22,7 @@ import { useSafeUndo } from '../undo/UndoContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 import { extractActiveHeroImage } from '../../utils/thumbnailHelper';
 import { mapSupabaseRowToProject, resolveProjectMenus } from '../../utils/mapSupabaseProject';
-import { isLegacyStorageUrl } from '../../utils/imageUrl';
+import { isLegacyStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
 
 export interface ProjectUndoState {
     data: PageData | null;
@@ -43,36 +43,89 @@ const normalizeProject = (project: Project): Project => {
 
 const SUMMARY_PROJECT_FLAG = '__quimeraSummaryProject';
 
-const PROJECT_LIST_COLUMNS = `
-    id,
-    tenant_id,
-    user_id,
-    name,
-    thumbnail_url,
-    favicon_url,
-    status,
-    theme,
-    brand_identity,
-    component_order,
-    section_visibility,
-    pages,
-    menus,
-    ai_assistant_config,
-    seo_config,
-    crm_config,
-    is_archived,
-    created_at,
-    last_updated,
-    categories,
-    published_at,
-    description,
-    category,
-    tags,
-    industries,
-    deletedAt:data->deletedAt,
-    deletedBy:data->deletedBy,
-    isDeleted:data->isDeleted
-`;
+const PROJECT_LIST_COLUMNS = [
+    'id',
+    'tenant_id',
+    'user_id',
+    'name',
+    'thumbnail_url',
+    'favicon_url',
+    'status',
+    'theme',
+    'brand_identity',
+    'component_order',
+    'section_visibility',
+    'menus',
+    'ai_assistant_config',
+    'seo_config',
+    'crm_config',
+    'is_archived',
+    'created_at',
+    'last_updated',
+    'categories',
+    'published_at',
+    'description',
+    'category',
+    'tags',
+    'industries',
+    'heroImageUrl:data->hero->>imageUrl',
+    'heroBackgroundImage:data->hero->>backgroundImage',
+    'heroBackgroundImageUrl:data->hero->>backgroundImageUrl',
+    'heroSplitImageUrl:data->heroSplit->>imageUrl',
+    'heroSplitBackgroundImage:data->heroSplit->>backgroundImage',
+    'heroSplitBackgroundImageUrl:data->heroSplit->>backgroundImageUrl',
+    'heroGalleryImageUrl:data->heroGallery->>imageUrl',
+    'heroGalleryBackgroundImage:data->heroGallery->>backgroundImage',
+    'heroGalleryBackgroundImageUrl:data->heroGallery->>backgroundImageUrl',
+    'heroWaveImageUrl:data->heroWave->>imageUrl',
+    'heroWaveBackgroundImage:data->heroWave->>backgroundImage',
+    'heroWaveBackgroundImageUrl:data->heroWave->>backgroundImageUrl',
+    'heroNovaImageUrl:data->heroNova->>imageUrl',
+    'heroNovaBackgroundImage:data->heroNova->>backgroundImage',
+    'heroNovaBackgroundImageUrl:data->heroNova->>backgroundImageUrl',
+    'heroLeadImageUrl:data->heroLead->>imageUrl',
+    'heroLeadBackgroundImage:data->heroLead->>backgroundImage',
+    'heroLeadBackgroundImageUrl:data->heroLead->>backgroundImageUrl',
+    'heroLuminaImageUrl:data->heroLumina->>imageUrl',
+    'heroLuminaBackgroundImage:data->heroLumina->>backgroundImage',
+    'heroLuminaBackgroundImageUrl:data->heroLumina->>backgroundImageUrl',
+    'heroNeonImageUrl:data->heroNeon->>imageUrl',
+    'heroNeonBackgroundImage:data->heroNeon->>backgroundImage',
+    'heroNeonBackgroundImageUrl:data->heroNeon->>backgroundImageUrl',
+    'heroQuimeraImageUrl:data->heroQuimera->>imageUrl',
+    'heroQuimeraBackgroundImage:data->heroQuimera->>backgroundImage',
+    'heroQuimeraBackgroundImageUrl:data->heroQuimera->>backgroundImageUrl',
+    'homeHeroImageUrl:pages->0->sectionData->hero->>imageUrl',
+    'homeHeroBackgroundImage:pages->0->sectionData->hero->>backgroundImage',
+    'homeHeroBackgroundImageUrl:pages->0->sectionData->hero->>backgroundImageUrl',
+    'homeHeroSplitImageUrl:pages->0->sectionData->heroSplit->>imageUrl',
+    'homeHeroSplitBackgroundImage:pages->0->sectionData->heroSplit->>backgroundImage',
+    'homeHeroSplitBackgroundImageUrl:pages->0->sectionData->heroSplit->>backgroundImageUrl',
+    'homeHeroGalleryImageUrl:pages->0->sectionData->heroGallery->>imageUrl',
+    'homeHeroGalleryBackgroundImage:pages->0->sectionData->heroGallery->>backgroundImage',
+    'homeHeroGalleryBackgroundImageUrl:pages->0->sectionData->heroGallery->>backgroundImageUrl',
+    'homeHeroWaveImageUrl:pages->0->sectionData->heroWave->>imageUrl',
+    'homeHeroWaveBackgroundImage:pages->0->sectionData->heroWave->>backgroundImage',
+    'homeHeroWaveBackgroundImageUrl:pages->0->sectionData->heroWave->>backgroundImageUrl',
+    'homeHeroNovaImageUrl:pages->0->sectionData->heroNova->>imageUrl',
+    'homeHeroNovaBackgroundImage:pages->0->sectionData->heroNova->>backgroundImage',
+    'homeHeroNovaBackgroundImageUrl:pages->0->sectionData->heroNova->>backgroundImageUrl',
+    'homeHeroLeadImageUrl:pages->0->sectionData->heroLead->>imageUrl',
+    'homeHeroLeadBackgroundImage:pages->0->sectionData->heroLead->>backgroundImage',
+    'homeHeroLeadBackgroundImageUrl:pages->0->sectionData->heroLead->>backgroundImageUrl',
+    'homeHeroLuminaImageUrl:pages->0->sectionData->heroLumina->>imageUrl',
+    'homeHeroLuminaBackgroundImage:pages->0->sectionData->heroLumina->>backgroundImage',
+    'homeHeroLuminaBackgroundImageUrl:pages->0->sectionData->heroLumina->>backgroundImageUrl',
+    'homeHeroNeonImageUrl:pages->0->sectionData->heroNeon->>imageUrl',
+    'homeHeroNeonBackgroundImage:pages->0->sectionData->heroNeon->>backgroundImage',
+    'homeHeroNeonBackgroundImageUrl:pages->0->sectionData->heroNeon->>backgroundImageUrl',
+    'homeHeroQuimeraImageUrl:pages->0->sectionData->heroQuimera->>imageUrl',
+    'homeHeroQuimeraBackgroundImage:pages->0->sectionData->heroQuimera->>backgroundImage',
+    'homeHeroQuimeraBackgroundImageUrl:pages->0->sectionData->heroQuimera->>backgroundImageUrl',
+    'deletedAt:data->deletedAt',
+    'deletedBy:data->deletedBy',
+    'isDeleted:data->isDeleted',
+].join(',');
 
 // Helper to get the correct projects collection path
 // Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
@@ -128,22 +181,103 @@ const hasItems = <T,>(value: T[] | undefined | null): value is T[] => Array.isAr
 const isSummaryProject = (project: Project | null | undefined): boolean =>
     Boolean(project && (project as any)[SUMMARY_PROJECT_FLAG]);
 
-const buildSummaryProjectData = (thumbnailUrl?: string | null): PageData =>
-    (thumbnailUrl ? { hero: { imageUrl: thumbnailUrl } } : {}) as PageData;
+const isHeroSectionName = (section: string): boolean =>
+    section === 'hero' || /^hero[A-Z]/.test(section);
+
+const getSummaryHeroSection = (componentOrder?: PageSection[] | null): PageSection =>
+    componentOrder?.find(section => isHeroSectionName(section)) || 'hero';
+
+const getLightweightProjectImageUrl = (value: unknown): string | null => {
+    const url = normalizeImageUrl(value);
+    if (!url || url === '#' || url.startsWith('data:') || url.length > 4096) return null;
+    return url;
+};
+
+const SUMMARY_THUMBNAIL_FIELDS = [
+    'heroImageUrl',
+    'heroBackgroundImage',
+    'heroBackgroundImageUrl',
+    'heroSplitImageUrl',
+    'heroSplitBackgroundImage',
+    'heroSplitBackgroundImageUrl',
+    'heroGalleryImageUrl',
+    'heroGalleryBackgroundImage',
+    'heroGalleryBackgroundImageUrl',
+    'heroWaveImageUrl',
+    'heroWaveBackgroundImage',
+    'heroWaveBackgroundImageUrl',
+    'heroNovaImageUrl',
+    'heroNovaBackgroundImage',
+    'heroNovaBackgroundImageUrl',
+    'heroLeadImageUrl',
+    'heroLeadBackgroundImage',
+    'heroLeadBackgroundImageUrl',
+    'heroLuminaImageUrl',
+    'heroLuminaBackgroundImage',
+    'heroLuminaBackgroundImageUrl',
+    'heroNeonImageUrl',
+    'heroNeonBackgroundImage',
+    'heroNeonBackgroundImageUrl',
+    'heroQuimeraImageUrl',
+    'heroQuimeraBackgroundImage',
+    'heroQuimeraBackgroundImageUrl',
+    'homeHeroImageUrl',
+    'homeHeroBackgroundImage',
+    'homeHeroBackgroundImageUrl',
+    'homeHeroSplitImageUrl',
+    'homeHeroSplitBackgroundImage',
+    'homeHeroSplitBackgroundImageUrl',
+    'homeHeroGalleryImageUrl',
+    'homeHeroGalleryBackgroundImage',
+    'homeHeroGalleryBackgroundImageUrl',
+    'homeHeroWaveImageUrl',
+    'homeHeroWaveBackgroundImage',
+    'homeHeroWaveBackgroundImageUrl',
+    'homeHeroNovaImageUrl',
+    'homeHeroNovaBackgroundImage',
+    'homeHeroNovaBackgroundImageUrl',
+    'homeHeroLeadImageUrl',
+    'homeHeroLeadBackgroundImage',
+    'homeHeroLeadBackgroundImageUrl',
+    'homeHeroLuminaImageUrl',
+    'homeHeroLuminaBackgroundImage',
+    'homeHeroLuminaBackgroundImageUrl',
+    'homeHeroNeonImageUrl',
+    'homeHeroNeonBackgroundImage',
+    'homeHeroNeonBackgroundImageUrl',
+    'homeHeroQuimeraImageUrl',
+    'homeHeroQuimeraBackgroundImage',
+    'homeHeroQuimeraBackgroundImageUrl',
+] as const;
+
+const resolveSummaryThumbnailUrl = (row: Record<string, any>, project: Project): string | null => {
+    for (const field of SUMMARY_THUMBNAIL_FIELDS) {
+        const url = getLightweightProjectImageUrl(row[field]);
+        if (url) return url;
+    }
+
+    return getLightweightProjectImageUrl(project.thumbnailUrl);
+};
+
+const buildSummaryProjectData = (thumbnailUrl: string | null, heroSection: PageSection): PageData =>
+    (thumbnailUrl ? { [heroSection]: { imageUrl: thumbnailUrl } } : {}) as PageData;
 
 const mapSupabaseRowToProjectSummary = (row: Record<string, any>): Project => {
     const project = normalizeProject(mapSupabaseRowToProject(row));
     const deletedAt = typeof row.deletedAt === 'string' ? row.deletedAt : undefined;
     const deletedBy = typeof row.deletedBy === 'string' ? row.deletedBy : undefined;
     const isDeleted = row.isDeleted === true;
+    const summaryThumbnailUrl = resolveSummaryThumbnailUrl(row, project);
+    const summaryHeroSection = getSummaryHeroSection(project.componentOrder);
 
     return {
         ...project,
-        data: buildSummaryProjectData(project.thumbnailUrl),
+        thumbnailUrl: summaryThumbnailUrl || project.thumbnailUrl,
+        data: buildSummaryProjectData(summaryThumbnailUrl, summaryHeroSection),
         componentOrder: hasItems(project.componentOrder)
             ? project.componentOrder
-            : project.thumbnailUrl
-                ? ['hero'] as PageSection[]
+            : summaryThumbnailUrl
+                ? [summaryHeroSection] as PageSection[]
                 : initialData.componentOrder as PageSection[],
         sectionVisibility: project.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>,
         [SUMMARY_PROJECT_FLAG]: true,
