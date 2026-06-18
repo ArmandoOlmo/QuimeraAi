@@ -41,6 +41,39 @@ const normalizeProject = (project: Project): Project => {
     return project;
 };
 
+const SUMMARY_PROJECT_FLAG = '__quimeraSummaryProject';
+
+const PROJECT_LIST_COLUMNS = `
+    id,
+    tenant_id,
+    user_id,
+    name,
+    thumbnail_url,
+    favicon_url,
+    status,
+    theme,
+    brand_identity,
+    component_order,
+    section_visibility,
+    pages,
+    menus,
+    ai_assistant_config,
+    seo_config,
+    crm_config,
+    is_archived,
+    created_at,
+    last_updated,
+    categories,
+    published_at,
+    description,
+    category,
+    tags,
+    industries,
+    deletedAt:data->deletedAt,
+    deletedBy:data->deletedBy,
+    isDeleted:data->isDeleted
+`;
+
 // Helper to get the correct projects collection path
 // Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
 
@@ -91,6 +124,34 @@ export const sanitizeForStorage = <T extends unknown>(obj: T): T => {
 };
 
 const hasItems = <T,>(value: T[] | undefined | null): value is T[] => Array.isArray(value) && value.length > 0;
+
+const isSummaryProject = (project: Project | null | undefined): boolean =>
+    Boolean(project && (project as any)[SUMMARY_PROJECT_FLAG]);
+
+const buildSummaryProjectData = (thumbnailUrl?: string | null): PageData =>
+    (thumbnailUrl ? { hero: { imageUrl: thumbnailUrl } } : {}) as PageData;
+
+const mapSupabaseRowToProjectSummary = (row: Record<string, any>): Project => {
+    const project = normalizeProject(mapSupabaseRowToProject(row));
+    const deletedAt = typeof row.deletedAt === 'string' ? row.deletedAt : undefined;
+    const deletedBy = typeof row.deletedBy === 'string' ? row.deletedBy : undefined;
+    const isDeleted = row.isDeleted === true;
+
+    return {
+        ...project,
+        data: buildSummaryProjectData(project.thumbnailUrl),
+        componentOrder: hasItems(project.componentOrder)
+            ? project.componentOrder
+            : project.thumbnailUrl
+                ? ['hero'] as PageSection[]
+                : initialData.componentOrder as PageSection[],
+        sectionVisibility: project.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>,
+        [SUMMARY_PROJECT_FLAG]: true,
+        ...(deletedAt ? { deletedAt } : {}),
+        ...(deletedBy ? { deletedBy } : {}),
+        ...(isDeleted ? { isDeleted } : {}),
+    } as Project;
+};
 
 const isInitialCatalogOrder = (order: PageSection[]): boolean =>
     order.length === initialData.componentOrder.length &&
@@ -506,12 +567,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 
                 const { data: userSnapshot } = await supabase
                     .from('projects')
-                    .select('*')
+                    .select(PROJECT_LIST_COLUMNS)
                     .eq('user_id', userId)
                     .is('tenant_id', null)
                     .order('last_updated', { ascending: false });
                 
-                const personalProjects = (userSnapshot || []).map(row => normalizeProject(mapSupabaseRowToProject(row)));
+                const personalProjects = (userSnapshot || []).map(row => mapSupabaseRowToProjectSummary(row));
                 allUserProjects = [...personalProjects];
 
             } catch (err) {
@@ -524,11 +585,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     
                     const { data: tenantSnapshot } = await supabase
                         .from('projects')
-                        .select('*')
+                        .select(PROJECT_LIST_COLUMNS)
                         .eq('tenant_id', tenantId)
                         .order('last_updated', { ascending: false });
                     
-                    const tenantProjects = (tenantSnapshot || []).map(row => normalizeProject(mapSupabaseRowToProject(row)));
+                    const tenantProjects = (tenantSnapshot || []).map(row => mapSupabaseRowToProjectSummary(row));
                     allUserProjects = [...allUserProjects, ...tenantProjects];
 
                 } catch (err) {
@@ -609,7 +670,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (!isLoadingProjects && projects.length > 0 && activeProjectId && !activeProject) {
                 // We have a stored activeProjectId but the project isn't loaded yet
                 const storedProject = projects.find(p => p.id === activeProjectId);
-                if (storedProject && !data) {
+                if (storedProject && !data && !isSummaryProject(storedProject)) {
                     // Project exists and we don't have data loaded - restore it
                     console.log('[ProjectContext] Restoring project from localStorage:', storedProject.name);
 
@@ -659,6 +720,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     setTimeout(() => {
                         isInitialLoadRef.current = false;
                     }, 1500);
+                } else if (storedProject && isSummaryProject(storedProject)) {
+                    console.log('[ProjectContext] Stored project is a summary; waiting for explicit full load:', storedProject.name);
                 } else if (!storedProject) {
                     // Stored project no longer exists - clear it
                     console.log('[ProjectContext] Stored project no longer exists, clearing');
@@ -678,9 +741,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Use projectOverride if provided (useful for newly created projects not yet in state)
         let project = projectOverride || projectsRef.current.find(p => p.id === projectId);
 
-        // If project not found locally, try to load it from Supabase
-        if (!project && user) {
-            console.log('[ProjectContext] Project not in state, attempting to load from Supabase...');
+        // If project is not local or only has list metadata, load the full row before editor handoff.
+        if ((!project || isSummaryProject(project)) && user) {
+            console.log('[ProjectContext] Project needs full Supabase load...');
             try {
                 // Try loading from user's projects
                 
@@ -694,10 +757,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     project = normalizeProject(mapSupabaseRowToProject(projectSnap));
 
                     console.log('[ProjectContext] Loaded project from Supabase:', project.name);
-                    // Add to local state
+                    // Add or replace local summary state with the full project.
                     setProjects(prev => {
-                        if (prev.find(p => p.id === projectId)) return prev;
-                        return [project!, ...prev];
+                        let replaced = false;
+                        const next = prev.map(p => {
+                            if (p.id !== projectId) return p;
+                            replaced = true;
+                            return project!;
+                        });
+                        return replaced ? next : [project!, ...prev];
                     });
                 } else {
                     // Try loading from templates
@@ -717,8 +785,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
                         console.log('[ProjectContext] Loaded template from Supabase:', project.name);
                         setProjects(prev => {
-                            if (prev.find(p => p.id === projectId)) return prev;
-                            return [project!, ...prev];
+                            let replaced = false;
+                            const next = prev.map(p => {
+                                if (p.id !== projectId) return p;
+                                replaced = true;
+                                return project!;
+                            });
+                            return replaced ? next : [project!, ...prev];
                         });
                     }
                 }
@@ -727,7 +800,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             }
         }
 
-        if (!project) {
+        if (!project || isSummaryProject(project)) {
             console.error("[ProjectContext] Project not found:", projectId);
             console.error("[ProjectContext] Available project IDs:", projectsRef.current.map(p => p.id));
             // Always redirect to dashboard if a requested project is missing to prevent infinite loading screens
@@ -858,6 +931,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         const project = projectsRef.current.find(p => p.id === activeProjectId);
         if (!project) return;
+        if (isSummaryProject(project)) {
+            console.warn('[ProjectContext] saveProject skipped: active project is only a dashboard summary', {
+                activeProjectId,
+            });
+            return;
+        }
 
         const isTemplate = project.status === 'Template';
         const now = new Date().toISOString();

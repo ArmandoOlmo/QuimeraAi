@@ -24,6 +24,32 @@ const TABLES = {
   USER_STATES: 'news_user_states',
 };
 
+const USER_NEWS_LIST_COLUMNS = `
+  id,
+  title,
+  excerpt,
+  content,
+  category,
+  status,
+  priority,
+  featured,
+  link_url,
+  link_text,
+  tags,
+  video_url,
+  language,
+  translation_group,
+  targeting,
+  views,
+  clicks,
+  publish_at,
+  expire_at,
+  created_at,
+  updated_at,
+  created_by,
+  updated_by
+`;
+
 // =============================================================================
 // PROVIDER
 // =============================================================================
@@ -360,7 +386,7 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // 1. Fetch published news
       const { data: newsData, error: newsError } = await supabase
         .from(TABLES.NEWS)
-        .select('*')
+        .select(USER_NEWS_LIST_COLUMNS)
         .eq('status', 'published')
         .order('created_at', { ascending: false });
 
@@ -376,7 +402,7 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updatedAt: item.updated_at,
         publishAt: item.publish_at,
         expireAt: item.expire_at,
-        imageUrl: getUsableImageUrl(item.image_url),
+        imageUrl: null,
         linkUrl: item.link_url,
         linkText: item.link_text,
         createdBy: item.created_by,
