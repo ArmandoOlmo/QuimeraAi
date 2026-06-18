@@ -26,6 +26,7 @@ import ImagePicker from '../ui/ImagePicker';
 import FontFamilyPicker from '../ui/FontFamilyPicker';
 import { SortableComponentChips } from '../ui/SortableComponentChips';
 import { WebsitePlanReview } from './WebsitePlanReview';
+import { GeneratedWebsitePreview } from './GeneratedWebsitePreview';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -93,7 +94,7 @@ const AIWebsiteStudio: React.FC = () => {
     const handleClose = () => {
         // Block close only during active generation — allow when done
         const isDone = studio.generationPhase?.phase === 'done';
-        if (studio.isGenerating && !isDone) return;
+        if ((studio.isGenerating && !isDone) || studio.isSavingGeneratedProject) return;
         studio.stopVoiceSession();
         setIsOnboardingOpen(false);
     };
@@ -108,7 +109,7 @@ const AIWebsiteStudio: React.FC = () => {
     return (
         <div className="fixed inset-0 z-[9999] flex items-stretch justify-stretch bg-q-bg" style={{ animation: 'aws-fadeIn 0.25s ease' }}>
             {/* Backdrop click — hidden on mobile since it's full-page */}
-            <div className="absolute inset-0 hidden lg:block" onClick={studio.isGenerating ? undefined : handleClose} />
+            <div className="absolute inset-0 hidden lg:block" onClick={studio.isGenerating || studio.isSavingGeneratedProject ? undefined : handleClose} />
 
             {/* Modal Container — fullscreen clean workspace */}
             <div
@@ -134,22 +135,24 @@ const AIWebsiteStudio: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-1 lg:gap-2 flex-shrink-0">
                         {/* Mobile brief toggle — compact icon-only on small, label on med */}
-                        <button
-                            onClick={() => setIsMobileBriefOpen(!isMobileBriefOpen)}
-                            className="lg:hidden h-8 w-8 sm:w-auto sm:px-3 rounded-lg text-q-text-secondary text-xs hover:text-q-accent hover:bg-primary/10 transition-colors flex items-center justify-center sm:justify-start gap-1.5"
-                        >
-                            <LayoutTemplate size={15} />
-                            <span className="hidden sm:inline">{t('aiWebsiteStudio.brief')}</span>
-                            {studio.businessBrief.readinessScore > 0 && (
-                                <span className="hidden sm:inline ml-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 text-q-accent text-[10px] font-bold">
-                                    {studio.businessBrief.readinessScore}%
-                                </span>
-                            )}
-                        </button>
+                        {!studio.generatedProject && (
+                            <button
+                                onClick={() => setIsMobileBriefOpen(!isMobileBriefOpen)}
+                                className="lg:hidden h-8 w-8 sm:w-auto sm:px-3 rounded-lg text-q-text-secondary text-xs hover:text-q-accent hover:bg-primary/10 transition-colors flex items-center justify-center sm:justify-start gap-1.5"
+                            >
+                                <LayoutTemplate size={15} />
+                                <span className="hidden sm:inline">{t('aiWebsiteStudio.brief')}</span>
+                                {studio.businessBrief.readinessScore > 0 && (
+                                    <span className="hidden sm:inline ml-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 text-q-accent text-[10px] font-bold">
+                                        {studio.businessBrief.readinessScore}%
+                                    </span>
+                                )}
+                            </button>
+                        )}
                         {/* Import website — icon-only on mobile, label on desktop */}
                         <button
                             onClick={() => studio.setShowUrlModal(true)}
-                            disabled={studio.isExtracting || studio.isGenerating || studio.isAccessLoading}
+                            disabled={studio.isExtracting || studio.isGenerating || studio.isSavingGeneratedProject || studio.isAccessLoading}
                             className="h-8 w-8 lg:w-auto lg:px-3 flex items-center justify-center lg:justify-start gap-1.5 rounded-lg text-q-accent hover:bg-primary/10 lg:bg-primary/10 text-xs font-medium lg:hover:bg-primary/20 transition-colors disabled:opacity-40"
                             title={t('aiWebsiteStudio.extraction.buttonLabel')}
                         >
@@ -159,7 +162,8 @@ const AIWebsiteStudio: React.FC = () => {
                         {/* Reset — bare icon */}
                         <button
                             onClick={() => { studio.stopVoiceSession(); studio.initStudio(); }}
-                            className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 transition-colors"
+                            disabled={studio.isGenerating || studio.isSavingGeneratedProject}
+                            className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 transition-colors disabled:opacity-30"
                             title={t('aiWebsiteStudio.reset')}
                         >
                             <RefreshCcw className="w-4 h-4" />
@@ -167,7 +171,7 @@ const AIWebsiteStudio: React.FC = () => {
                         {/* Close */}
                         <button
                             onClick={handleClose}
-                            disabled={studio.isGenerating}
+                            disabled={studio.isGenerating || studio.isSavingGeneratedProject}
                             className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 transition-colors disabled:opacity-30"
                         >
                             <X size={18} />
@@ -175,6 +179,17 @@ const AIWebsiteStudio: React.FC = () => {
                     </div>
                 </div>
 
+                {studio.generatedProject ? (
+                    <GeneratedWebsitePreview
+                        project={studio.generatedProject}
+                        isSaving={studio.isSavingGeneratedProject}
+                        saveError={studio.generatedProjectSaveError}
+                        onSaveAndOpen={studio.saveGeneratedProjectAndOpenEditor}
+                        onRegenerate={studio.regenerateGeneratedWebsite}
+                        onBackToPlan={studio.returnToPlanFromGeneratedPreview}
+                    />
+                ) : (
+                    <>
                 {/* ── Body ── */}
                 <div className="flex flex-1 min-h-0 relative">
                     {/* LEFT: Chat Panel */}
@@ -334,6 +349,8 @@ const AIWebsiteStudio: React.FC = () => {
                         onConfirm={studio.confirmWebsitePlan}
                         onClose={studio.returnToChatFromPlanReview}
                     />
+                )}
+                    </>
                 )}
             </div>
 
