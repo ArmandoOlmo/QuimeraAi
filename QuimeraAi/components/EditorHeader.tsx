@@ -4,15 +4,17 @@ import { useUI } from '../contexts/core/UIContext';
 import { useProject } from '../contexts/project';
 import { PreviewDevice } from '../types';
 import { useRouter } from '../hooks/useRouter';
+import { useToast } from '../contexts/ToastContext';
 // Replaced non-existent 'Cube' icon with 'Box'.
-import { Menu, Monitor, Tablet, Smartphone, LayoutDashboard, Check, CloudUpload, Box, Globe } from 'lucide-react';
+import { Menu, Monitor, Tablet, Smartphone, LayoutDashboard, Check, CloudUpload, Box, Globe, Download } from 'lucide-react';
 import HeaderBackButton from './ui/HeaderBackButton';
 
 const EditorHeader: React.FC = () => {
   const { t } = useTranslation();
   const { isSidebarOpen, setIsSidebarOpen, previewDevice, setPreviewDevice, previewOrientation, setPreviewOrientation, setView } = useUI();
-  const { activeProject, renameActiveProject, saveProject, publishProject, isEditingTemplate, exitTemplateEditor } = useProject();
+  const { activeProject, renameActiveProject, saveProject, publishProject, exportProjectAsHtml, isEditingTemplate, exitTemplateEditor } = useProject();
   const { goBack } = useRouter();
+  const { success: showSuccess, error: showError } = useToast();
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [projectName, setProjectName] = useState(activeProject?.name || t('editor.untitledProject'));
@@ -70,6 +72,21 @@ const EditorHeader: React.FC = () => {
       exitTemplateEditor();
     } else {
       setView('dashboard');
+    }
+  };
+
+  const handleExportHtmlClick = () => {
+    if (!activeProject) {
+      showError(t('editor.exportHtmlNoProject', 'No hay proyecto activo para exportar.'));
+      return;
+    }
+
+    try {
+      exportProjectAsHtml();
+      showSuccess(t('editor.exportHtmlSuccess', 'HTML exportado correctamente.'));
+    } catch (error) {
+      console.error('[EditorHeader] Error exporting HTML:', error);
+      showError(t('editor.exportHtmlError', 'No se pudo exportar el HTML.'));
     }
   };
 
@@ -159,6 +176,19 @@ const EditorHeader: React.FC = () => {
 
         {/* RIGHT SECTION - Actions */}
         <div className="flex items-center gap-2">
+          {/* Export HTML Button */}
+          <button
+            title={t('editor.exportHtml', 'Exportar HTML')}
+            onClick={handleExportHtmlClick}
+            disabled={!activeProject}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden lg:inline">
+              {t('editor.exportHtml', 'Exportar HTML')}
+            </span>
+          </button>
+
           {/* Save Button */}
           <button
             title={saveState === 'idle' ? t('editor.saveChanges') : t('editor.saved')}
