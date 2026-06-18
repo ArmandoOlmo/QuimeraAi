@@ -22,7 +22,7 @@ import { useSafeUndo } from '../undo/UndoContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 import { extractActiveHeroImage } from '../../utils/thumbnailHelper';
 import { mapSupabaseRowToProject, resolveProjectMenus } from '../../utils/mapSupabaseProject';
-import { isLegacyStorageUrl } from '../../utils/imageUrl';
+import { isLegacyStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
 
 export interface ProjectUndoState {
     data: PageData | null;
@@ -40,6 +40,92 @@ const normalizeProject = (project: Project): Project => {
     }
     return project;
 };
+
+const SUMMARY_PROJECT_FLAG = '__quimeraSummaryProject';
+
+const PROJECT_LIST_COLUMNS = [
+    'id',
+    'tenant_id',
+    'user_id',
+    'name',
+    'thumbnail_url',
+    'favicon_url',
+    'status',
+    'theme',
+    'brand_identity',
+    'component_order',
+    'section_visibility',
+    'menus',
+    'ai_assistant_config',
+    'seo_config',
+    'crm_config',
+    'is_archived',
+    'created_at',
+    'last_updated',
+    'categories',
+    'published_at',
+    'description',
+    'category',
+    'tags',
+    'industries',
+    'heroImageUrl:data->hero->>imageUrl',
+    'heroBackgroundImage:data->hero->>backgroundImage',
+    'heroBackgroundImageUrl:data->hero->>backgroundImageUrl',
+    'heroSplitImageUrl:data->heroSplit->>imageUrl',
+    'heroSplitBackgroundImage:data->heroSplit->>backgroundImage',
+    'heroSplitBackgroundImageUrl:data->heroSplit->>backgroundImageUrl',
+    'heroGalleryImageUrl:data->heroGallery->>imageUrl',
+    'heroGalleryBackgroundImage:data->heroGallery->>backgroundImage',
+    'heroGalleryBackgroundImageUrl:data->heroGallery->>backgroundImageUrl',
+    'heroWaveImageUrl:data->heroWave->>imageUrl',
+    'heroWaveBackgroundImage:data->heroWave->>backgroundImage',
+    'heroWaveBackgroundImageUrl:data->heroWave->>backgroundImageUrl',
+    'heroNovaImageUrl:data->heroNova->>imageUrl',
+    'heroNovaBackgroundImage:data->heroNova->>backgroundImage',
+    'heroNovaBackgroundImageUrl:data->heroNova->>backgroundImageUrl',
+    'heroLeadImageUrl:data->heroLead->>imageUrl',
+    'heroLeadBackgroundImage:data->heroLead->>backgroundImage',
+    'heroLeadBackgroundImageUrl:data->heroLead->>backgroundImageUrl',
+    'heroLuminaImageUrl:data->heroLumina->>imageUrl',
+    'heroLuminaBackgroundImage:data->heroLumina->>backgroundImage',
+    'heroLuminaBackgroundImageUrl:data->heroLumina->>backgroundImageUrl',
+    'heroNeonImageUrl:data->heroNeon->>imageUrl',
+    'heroNeonBackgroundImage:data->heroNeon->>backgroundImage',
+    'heroNeonBackgroundImageUrl:data->heroNeon->>backgroundImageUrl',
+    'heroQuimeraImageUrl:data->heroQuimera->>imageUrl',
+    'heroQuimeraBackgroundImage:data->heroQuimera->>backgroundImage',
+    'heroQuimeraBackgroundImageUrl:data->heroQuimera->>backgroundImageUrl',
+    'homeHeroImageUrl:pages->0->sectionData->hero->>imageUrl',
+    'homeHeroBackgroundImage:pages->0->sectionData->hero->>backgroundImage',
+    'homeHeroBackgroundImageUrl:pages->0->sectionData->hero->>backgroundImageUrl',
+    'homeHeroSplitImageUrl:pages->0->sectionData->heroSplit->>imageUrl',
+    'homeHeroSplitBackgroundImage:pages->0->sectionData->heroSplit->>backgroundImage',
+    'homeHeroSplitBackgroundImageUrl:pages->0->sectionData->heroSplit->>backgroundImageUrl',
+    'homeHeroGalleryImageUrl:pages->0->sectionData->heroGallery->>imageUrl',
+    'homeHeroGalleryBackgroundImage:pages->0->sectionData->heroGallery->>backgroundImage',
+    'homeHeroGalleryBackgroundImageUrl:pages->0->sectionData->heroGallery->>backgroundImageUrl',
+    'homeHeroWaveImageUrl:pages->0->sectionData->heroWave->>imageUrl',
+    'homeHeroWaveBackgroundImage:pages->0->sectionData->heroWave->>backgroundImage',
+    'homeHeroWaveBackgroundImageUrl:pages->0->sectionData->heroWave->>backgroundImageUrl',
+    'homeHeroNovaImageUrl:pages->0->sectionData->heroNova->>imageUrl',
+    'homeHeroNovaBackgroundImage:pages->0->sectionData->heroNova->>backgroundImage',
+    'homeHeroNovaBackgroundImageUrl:pages->0->sectionData->heroNova->>backgroundImageUrl',
+    'homeHeroLeadImageUrl:pages->0->sectionData->heroLead->>imageUrl',
+    'homeHeroLeadBackgroundImage:pages->0->sectionData->heroLead->>backgroundImage',
+    'homeHeroLeadBackgroundImageUrl:pages->0->sectionData->heroLead->>backgroundImageUrl',
+    'homeHeroLuminaImageUrl:pages->0->sectionData->heroLumina->>imageUrl',
+    'homeHeroLuminaBackgroundImage:pages->0->sectionData->heroLumina->>backgroundImage',
+    'homeHeroLuminaBackgroundImageUrl:pages->0->sectionData->heroLumina->>backgroundImageUrl',
+    'homeHeroNeonImageUrl:pages->0->sectionData->heroNeon->>imageUrl',
+    'homeHeroNeonBackgroundImage:pages->0->sectionData->heroNeon->>backgroundImage',
+    'homeHeroNeonBackgroundImageUrl:pages->0->sectionData->heroNeon->>backgroundImageUrl',
+    'homeHeroQuimeraImageUrl:pages->0->sectionData->heroQuimera->>imageUrl',
+    'homeHeroQuimeraBackgroundImage:pages->0->sectionData->heroQuimera->>backgroundImage',
+    'homeHeroQuimeraBackgroundImageUrl:pages->0->sectionData->heroQuimera->>backgroundImageUrl',
+    'deletedAt:data->deletedAt',
+    'deletedBy:data->deletedBy',
+    'isDeleted:data->isDeleted',
+].join(',');
 
 // Helper to get the correct projects collection path
 // Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
@@ -91,6 +177,115 @@ export const sanitizeForStorage = <T extends unknown>(obj: T): T => {
 };
 
 const hasItems = <T,>(value: T[] | undefined | null): value is T[] => Array.isArray(value) && value.length > 0;
+
+const isSummaryProject = (project: Project | null | undefined): boolean =>
+    Boolean(project && (project as any)[SUMMARY_PROJECT_FLAG]);
+
+const isHeroSectionName = (section: string): boolean =>
+    section === 'hero' || /^hero[A-Z]/.test(section);
+
+const getSummaryHeroSection = (componentOrder?: PageSection[] | null): PageSection =>
+    componentOrder?.find(section => isHeroSectionName(section)) || 'hero';
+
+const getLightweightProjectImageUrl = (value: unknown): string | null => {
+    const url = normalizeImageUrl(value);
+    if (!url || url === '#' || url.startsWith('data:') || url.length > 4096) return null;
+    return url;
+};
+
+const SUMMARY_THUMBNAIL_FIELDS = [
+    'heroImageUrl',
+    'heroBackgroundImage',
+    'heroBackgroundImageUrl',
+    'heroSplitImageUrl',
+    'heroSplitBackgroundImage',
+    'heroSplitBackgroundImageUrl',
+    'heroGalleryImageUrl',
+    'heroGalleryBackgroundImage',
+    'heroGalleryBackgroundImageUrl',
+    'heroWaveImageUrl',
+    'heroWaveBackgroundImage',
+    'heroWaveBackgroundImageUrl',
+    'heroNovaImageUrl',
+    'heroNovaBackgroundImage',
+    'heroNovaBackgroundImageUrl',
+    'heroLeadImageUrl',
+    'heroLeadBackgroundImage',
+    'heroLeadBackgroundImageUrl',
+    'heroLuminaImageUrl',
+    'heroLuminaBackgroundImage',
+    'heroLuminaBackgroundImageUrl',
+    'heroNeonImageUrl',
+    'heroNeonBackgroundImage',
+    'heroNeonBackgroundImageUrl',
+    'heroQuimeraImageUrl',
+    'heroQuimeraBackgroundImage',
+    'heroQuimeraBackgroundImageUrl',
+    'homeHeroImageUrl',
+    'homeHeroBackgroundImage',
+    'homeHeroBackgroundImageUrl',
+    'homeHeroSplitImageUrl',
+    'homeHeroSplitBackgroundImage',
+    'homeHeroSplitBackgroundImageUrl',
+    'homeHeroGalleryImageUrl',
+    'homeHeroGalleryBackgroundImage',
+    'homeHeroGalleryBackgroundImageUrl',
+    'homeHeroWaveImageUrl',
+    'homeHeroWaveBackgroundImage',
+    'homeHeroWaveBackgroundImageUrl',
+    'homeHeroNovaImageUrl',
+    'homeHeroNovaBackgroundImage',
+    'homeHeroNovaBackgroundImageUrl',
+    'homeHeroLeadImageUrl',
+    'homeHeroLeadBackgroundImage',
+    'homeHeroLeadBackgroundImageUrl',
+    'homeHeroLuminaImageUrl',
+    'homeHeroLuminaBackgroundImage',
+    'homeHeroLuminaBackgroundImageUrl',
+    'homeHeroNeonImageUrl',
+    'homeHeroNeonBackgroundImage',
+    'homeHeroNeonBackgroundImageUrl',
+    'homeHeroQuimeraImageUrl',
+    'homeHeroQuimeraBackgroundImage',
+    'homeHeroQuimeraBackgroundImageUrl',
+] as const;
+
+const resolveSummaryThumbnailUrl = (row: Record<string, any>, project: Project): string | null => {
+    for (const field of SUMMARY_THUMBNAIL_FIELDS) {
+        const url = getLightweightProjectImageUrl(row[field]);
+        if (url) return url;
+    }
+
+    return getLightweightProjectImageUrl(project.thumbnailUrl);
+};
+
+const buildSummaryProjectData = (thumbnailUrl: string | null, heroSection: PageSection): PageData =>
+    (thumbnailUrl ? { [heroSection]: { imageUrl: thumbnailUrl } } : {}) as PageData;
+
+const mapSupabaseRowToProjectSummary = (row: Record<string, any>): Project => {
+    const project = normalizeProject(mapSupabaseRowToProject(row));
+    const deletedAt = typeof row.deletedAt === 'string' ? row.deletedAt : undefined;
+    const deletedBy = typeof row.deletedBy === 'string' ? row.deletedBy : undefined;
+    const isDeleted = row.isDeleted === true;
+    const summaryThumbnailUrl = resolveSummaryThumbnailUrl(row, project);
+    const summaryHeroSection = getSummaryHeroSection(project.componentOrder);
+    const summaryComponentOrder = summaryThumbnailUrl ? [summaryHeroSection] as PageSection[] : [] as PageSection[];
+    const summarySectionVisibility = summaryThumbnailUrl
+        ? { [summaryHeroSection]: true } as Record<PageSection, boolean>
+        : {} as Record<PageSection, boolean>;
+
+    return {
+        ...project,
+        thumbnailUrl: summaryThumbnailUrl || project.thumbnailUrl,
+        data: buildSummaryProjectData(summaryThumbnailUrl, summaryHeroSection),
+        componentOrder: summaryComponentOrder,
+        sectionVisibility: summarySectionVisibility,
+        [SUMMARY_PROJECT_FLAG]: true,
+        ...(deletedAt ? { deletedAt } : {}),
+        ...(deletedBy ? { deletedBy } : {}),
+        ...(isDeleted ? { isDeleted } : {}),
+    } as Project;
+};
 
 const isInitialCatalogOrder = (order: PageSection[]): boolean =>
     order.length === initialData.componentOrder.length &&
@@ -382,6 +577,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoadRef = useRef(true);
     const projectsRef = useRef<Project[]>([]);
+    const hydratingSummaryProjectIdRef = useRef<string | null>(null);
     // CRITICAL: Ref to track the active project ID synchronously for auto-save validation.
     // Unlike state, refs are updated immediately and avoid React batching issues.
     const activeProjectIdRef = useRef<string | null>(activeProjectId);
@@ -506,12 +702,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 
                 const { data: userSnapshot } = await supabase
                     .from('projects')
-                    .select('*')
+                    .select(PROJECT_LIST_COLUMNS)
                     .eq('user_id', userId)
                     .is('tenant_id', null)
                     .order('last_updated', { ascending: false });
                 
-                const personalProjects = (userSnapshot || []).map(row => normalizeProject(mapSupabaseRowToProject(row)));
+                const personalProjects = (userSnapshot || []).map(row => mapSupabaseRowToProjectSummary(row));
                 allUserProjects = [...personalProjects];
 
             } catch (err) {
@@ -524,11 +720,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     
                     const { data: tenantSnapshot } = await supabase
                         .from('projects')
-                        .select('*')
+                        .select(PROJECT_LIST_COLUMNS)
                         .eq('tenant_id', tenantId)
                         .order('last_updated', { ascending: false });
                     
-                    const tenantProjects = (tenantSnapshot || []).map(row => normalizeProject(mapSupabaseRowToProject(row)));
+                    const tenantProjects = (tenantSnapshot || []).map(row => mapSupabaseRowToProjectSummary(row));
                     allUserProjects = [...allUserProjects, ...tenantProjects];
 
                 } catch (err) {
@@ -609,7 +805,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (!isLoadingProjects && projects.length > 0 && activeProjectId && !activeProject) {
                 // We have a stored activeProjectId but the project isn't loaded yet
                 const storedProject = projects.find(p => p.id === activeProjectId);
-                if (storedProject && !data) {
+                if (storedProject && !data && !isSummaryProject(storedProject)) {
                     // Project exists and we don't have data loaded - restore it
                     console.log('[ProjectContext] Restoring project from localStorage:', storedProject.name);
 
@@ -659,6 +855,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     setTimeout(() => {
                         isInitialLoadRef.current = false;
                     }, 1500);
+                } else if (storedProject && isSummaryProject(storedProject)) {
+                    console.log('[ProjectContext] Stored project is a summary; waiting for explicit full load:', storedProject.name);
                 } else if (!storedProject) {
                     // Stored project no longer exists - clear it
                     console.log('[ProjectContext] Stored project no longer exists, clearing');
@@ -678,9 +876,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Use projectOverride if provided (useful for newly created projects not yet in state)
         let project = projectOverride || projectsRef.current.find(p => p.id === projectId);
 
-        // If project not found locally, try to load it from Supabase
-        if (!project && user) {
-            console.log('[ProjectContext] Project not in state, attempting to load from Supabase...');
+        // If project is not local or only has list metadata, load the full row before editor handoff.
+        if ((!project || isSummaryProject(project)) && user) {
+            console.log('[ProjectContext] Project needs full Supabase load...');
             try {
                 // Try loading from user's projects
                 
@@ -694,10 +892,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     project = normalizeProject(mapSupabaseRowToProject(projectSnap));
 
                     console.log('[ProjectContext] Loaded project from Supabase:', project.name);
-                    // Add to local state
+                    // Add or replace local summary state with the full project.
                     setProjects(prev => {
-                        if (prev.find(p => p.id === projectId)) return prev;
-                        return [project!, ...prev];
+                        let replaced = false;
+                        const next = prev.map(p => {
+                            if (p.id !== projectId) return p;
+                            replaced = true;
+                            return project!;
+                        });
+                        return replaced ? next : [project!, ...prev];
                     });
                 } else {
                     // Try loading from templates
@@ -717,8 +920,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
                         console.log('[ProjectContext] Loaded template from Supabase:', project.name);
                         setProjects(prev => {
-                            if (prev.find(p => p.id === projectId)) return prev;
-                            return [project!, ...prev];
+                            let replaced = false;
+                            const next = prev.map(p => {
+                                if (p.id !== projectId) return p;
+                                replaced = true;
+                                return project!;
+                            });
+                            return replaced ? next : [project!, ...prev];
                         });
                     }
                 }
@@ -727,7 +935,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             }
         }
 
-        if (!project) {
+        if (!project || isSummaryProject(project)) {
             console.error("[ProjectContext] Project not found:", projectId);
             console.error("[ProjectContext] Available project IDs:", projectsRef.current.map(p => p.id));
             // Always redirect to dashboard if a requested project is missing to prevent infinite loading screens
@@ -808,6 +1016,32 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [user, currentTenantId]);
 
+    useEffect(() => {
+        if (
+            isLoadingProjects ||
+            !user ||
+            !activeProjectId ||
+            !activeProject ||
+            !isSummaryProject(activeProject) ||
+            hydratingSummaryProjectIdRef.current === activeProjectId
+        ) {
+            return;
+        }
+
+        hydratingSummaryProjectIdRef.current = activeProjectId;
+        console.log('[ProjectContext] Hydrating active summary project:', activeProject.name);
+
+        loadProject(activeProjectId, false, false)
+            .catch(error => {
+                console.error('[ProjectContext] Error hydrating active summary project:', error);
+            })
+            .finally(() => {
+                if (hydratingSummaryProjectIdRef.current === activeProjectId) {
+                    hydratingSummaryProjectIdRef.current = null;
+                }
+            });
+    }, [isLoadingProjects, user, activeProjectId, activeProject, loadProject]);
+
     // Helper to deeply remove undefined values (Supabase doesn't accept undefined at any level)
     const removeUndefinedValues = (obj: any): any => {
         if (obj === undefined) return undefined;
@@ -858,6 +1092,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         const project = projectsRef.current.find(p => p.id === activeProjectId);
         if (!project) return;
+        if (isSummaryProject(project)) {
+            console.warn('[ProjectContext] saveProject skipped: active project is only a dashboard summary', {
+                activeProjectId,
+            });
+            return;
+        }
 
         const isTemplate = project.status === 'Template';
         const now = new Date().toISOString();

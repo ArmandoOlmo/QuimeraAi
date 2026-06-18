@@ -24,6 +24,61 @@ const TABLES = {
   USER_STATES: 'news_user_states',
 };
 
+const USER_NEWS_LIST_COLUMNS = [
+  'id',
+  'title',
+  'excerpt',
+  'content',
+  'category',
+  'status',
+  'priority',
+  'featured',
+  'link_url',
+  'link_text',
+  'tags',
+  'video_url',
+  'language',
+  'translation_group',
+  'targeting',
+  'views',
+  'clicks',
+  'publish_at',
+  'expire_at',
+  'created_at',
+  'updated_at',
+  'created_by',
+  'updated_by',
+].join(',');
+
+const USER_NEWS_IMAGE_COLUMNS = ['id', 'image_url'].join(',');
+
+type UserNewsListRow = Record<string, any> & {
+  id: string;
+  content?: string | null;
+  link_url?: string | null;
+  link_text?: string | null;
+  tags?: string[] | null;
+  video_url?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  publish_at?: string | null;
+  expire_at?: string | null;
+  created_by?: string | null;
+  updated_by?: string | null;
+  translation_group?: string | null;
+};
+
+type UserNewsImageRow = {
+  id: string;
+  image_url: unknown;
+};
+
+const getLightweightImageUrl = (value: unknown): string | null => {
+  const url = getUsableImageUrl(value);
+  if (!url || url.startsWith('data:') || url.length > 4096) return null;
+  return url;
+};
+
 // =============================================================================
 // PROVIDER
 // =============================================================================
@@ -72,7 +127,7 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         createdBy: item.created_by,
         updatedBy: item.updated_by,
         translationGroup: item.translation_group,
-      })) as NewsItem[];
+      })) as unknown as NewsItem[];
 
       // Apply filters client-side
       if (filters) {
@@ -360,13 +415,35 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // 1. Fetch published news
       const { data: newsData, error: newsError } = await supabase
         .from(TABLES.NEWS)
-        .select('*')
+        .select(USER_NEWS_LIST_COLUMNS)
         .eq('status', 'published')
         .order('created_at', { ascending: false });
 
       if (newsError) throw newsError;
 
-      const items = (newsData || []).map(item => ({
+      const imageUrlsById = new Map<string, string>();
+      try {
+        const { data: imageRows, error: imageError } = await supabase
+          .from(TABLES.NEWS)
+          .select(USER_NEWS_IMAGE_COLUMNS)
+          .eq('status', 'published')
+          .not('image_url', 'is', null)
+          .not('image_url', 'ilike', 'data:%')
+          .order('created_at', { ascending: false });
+
+        if (imageError) {
+          console.warn('[NewsContext] Could not fetch lightweight news images:', imageError.message);
+        } else {
+          ((imageRows || []) as unknown as UserNewsImageRow[]).forEach(row => {
+            const imageUrl = getLightweightImageUrl(row.image_url);
+            if (imageUrl) imageUrlsById.set(row.id, imageUrl);
+          });
+        }
+      } catch (imageErr) {
+        console.warn('[NewsContext] Could not fetch lightweight news images:', imageErr);
+      }
+
+      const items = ((newsData || []) as unknown as UserNewsListRow[]).map(item => ({
         ...item,
         body: item.content,
         cta: item.link_url || item.link_text ? { label: item.link_text || '', url: item.link_url || '' } : undefined,
@@ -376,13 +453,13 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updatedAt: item.updated_at,
         publishAt: item.publish_at,
         expireAt: item.expire_at,
-        imageUrl: getUsableImageUrl(item.image_url),
+        imageUrl: imageUrlsById.get(item.id) || null,
         linkUrl: item.link_url,
         linkText: item.link_text,
         createdBy: item.created_by,
         updatedBy: item.updated_by,
         translationGroup: item.translation_group,
-      })) as NewsItem[];
+      })) as unknown as NewsItem[];
 
       // 2. Fetch user states
       const { data: statesData, error: statesError } = await supabase
