@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { GoogleMap, Marker, useJsApiLoader, Libraries } from '@react-google-maps/api';
 import { MapData, BorderRadiusSize, CornerGradientConfig } from '../types';
 import { MapPin, Navigation, Phone, Mail, Clock } from 'lucide-react';
@@ -17,6 +17,63 @@ interface BusinessMapProps extends MapData {
 const containerStyle = {
     width: '100%',
     height: '100%',
+};
+
+const isValidGoogleMapsApiKey = (value?: string) => {
+    const key = value?.trim();
+    if (!key) return false;
+    return key.length > 20 && !/your_|placeholder|api_key|google_maps_api_key/i.test(key);
+};
+
+interface GoogleMapEmbedProps {
+    apiKey: string;
+    center: { lat: number; lng: number };
+    zoom?: number;
+    options: google.maps.MapOptions;
+    loadingText: string;
+    renderFallback: () => React.ReactNode;
+}
+
+const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
+    apiKey,
+    center,
+    zoom,
+    options,
+    loadingText,
+    renderFallback,
+}) => {
+    const { isLoaded, loadError } = useJsApiLoader({
+        id: 'google-map-script',
+        googleMapsApiKey: apiKey,
+        libraries,
+    } as any);
+
+    if (loadError) {
+        console.error('Google Maps load error:', loadError);
+        return <>{renderFallback()}</>;
+    }
+
+    if (!isLoaded) {
+        return (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                <div className="text-center">
+                    <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500" />
+                    <p className="text-gray-500">{loadingText}</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={center}
+            zoom={zoom}
+            options={options}
+        >
+            <Marker position={center} />
+        </GoogleMap>
+    );
 };
 
 // Estilos de mapa profesionales
@@ -98,24 +155,22 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     const locationLabel = t('components.map.locationLabel', 'Location');
     const navigateText = t('components.map.navigate', 'Navigate');
     const hoursLabel = t('components.map.hours', 'Hours');
+    const openInMapsText = t('components.map.openInMaps', 'Open in Google Maps');
+    const mapFallbackText = t(
+        'components.map.fallbackNotice',
+        'Interactive map unavailable. Open the address in Google Maps for directions.'
+    );
     
     // Only load Google Maps if we have a valid API key (not a placeholder)
-    const hasValidApiKey = apiKey && apiKey.trim().length > 20 && !apiKey.includes('your_') && !apiKey.includes('placeholder') && !apiKey.includes('api_key');
+    const hasValidApiKey = isValidGoogleMapsApiKey(apiKey);
     
     const finalHeight = height || (mapVariant === 'modern' ? 500 : 400);
 
-    const { isLoaded, loadError } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: hasValidApiKey ? apiKey : '',
-        libraries: libraries,
-    } as any);
-    
-    // Log load error for debugging
-    if (loadError) {
-        console.error('Google Maps load error:', loadError);
-    }
-
-    const center = useMemo(() => ({ lat: lat || 40.7128, lng: lng || -74.0060 }), [lat, lng]);
+    const hasCoordinates = typeof lat === 'number' && typeof lng === 'number' && (lat !== 0 || lng !== 0);
+    const center = useMemo(() => ({
+        lat: hasCoordinates ? lat! : 40.7128,
+        lng: hasCoordinates ? lng! : -74.0060,
+    }), [hasCoordinates, lat, lng]);
 
     const getPadding = (size: string) => {
         switch (size) {
@@ -168,33 +223,8 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         fullscreenControl: true,
     }), [mapVariant]);
 
-    const mapLat = lat || 40.7128;
-    const mapLng = lng || -74.0060;
-    const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${mapLat},${mapLng}`;
-
-    // Reusable OSM iframe for fallback rendering
-    const renderOsmIframe = (iframeHeight?: string) => (
-        <iframe
-            title={title || 'Location Map'}
-            width="100%"
-            height={iframeHeight || '100%'}
-            style={{ border: 0 }}
-            loading="lazy"
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapLng - 0.02},${mapLat - 0.015},${mapLng + 0.02},${mapLat + 0.015}&layer=mapnik&marker=${mapLat},${mapLng}`}
-        />
-    );
-
-    // Reusable Google Map render
-    const renderGoogleMap = () => (
-        <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={center}
-            zoom={zoom}
-            options={options}
-        >
-            <Marker position={center} />
-        </GoogleMap>
-    );
+    const mapQuery = address?.trim() || (hasCoordinates ? `${lat},${lng}` : title || locationLabel);
+    const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
 
     // Reusable contact info items for info cards
     const renderContactInfo = (textColor: string, accentColor: string, small = false) => {
@@ -232,20 +262,92 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         );
     };
 
-    // Shared map renderer (Google or OSM fallback)
-    const renderMapEmbed = () => {
-        if (!hasValidApiKey || loadError) return renderOsmIframe();
-        if (!isLoaded) {
-            return (
-                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                    <div className="text-center">
-                        <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
-                        <p className="text-gray-500">{loadingText}</p>
+    const renderStaticMapFallback = () => {
+        const accentColor = colors?.accent || primaryColor;
+        const fallbackBackground = colors?.cardBackground || colors?.background || '#f8fafc';
+        const fallbackText = colors?.text || '#334155';
+        const fallbackHeading = mapColors.heading || fallbackText;
+
+        return (
+            <div
+                className="relative flex h-full min-h-[320px] w-full items-center justify-center overflow-hidden p-4 sm:p-6"
+                style={{ backgroundColor: fallbackBackground }}
+            >
+                <div
+                    className="absolute inset-0 opacity-45"
+                    style={{
+                        backgroundImage: `
+                            linear-gradient(90deg, ${accentColor}22 1px, transparent 1px),
+                            linear-gradient(0deg, ${accentColor}18 1px, transparent 1px)
+                        `,
+                        backgroundSize: '34px 34px',
+                    }}
+                />
+                <div
+                    className="absolute left-[12%] top-[22%] h-px w-[76%] rotate-[-14deg]"
+                    style={{ backgroundColor: `${accentColor}33` }}
+                />
+                <div
+                    className="absolute bottom-[24%] left-[8%] h-px w-[86%] rotate-[10deg]"
+                    style={{ backgroundColor: `${accentColor}29` }}
+                />
+                <div
+                    className="relative flex w-full max-w-sm flex-col items-center rounded-2xl border p-5 text-center shadow-xl backdrop-blur"
+                    style={{
+                        backgroundColor: `${fallbackBackground}F2`,
+                        borderColor: `${accentColor}33`,
+                        color: fallbackText,
+                    }}
+                >
+                    <div
+                        className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                        style={{ backgroundColor: `${accentColor}18`, color: accentColor }}
+                    >
+                        <MapPin className="h-7 w-7" />
                     </div>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] opacity-70">
+                        {locationLabel}
+                    </p>
+                    <h3 className="mb-2 text-lg font-bold leading-tight font-header" style={{ color: fallbackHeading }}>
+                        {title || locationLabel}
+                    </h3>
+                    {address && (
+                        <p className="mb-4 text-sm leading-relaxed opacity-80">
+                            {address}
+                        </p>
+                    )}
+                    <a
+                        href={directionsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all hover:scale-[1.02] sm:w-auto"
+                        style={{ backgroundColor: mapColors.buttonBackground, color: mapColors.buttonText }}
+                        aria-label={`${openInMapsText}: ${mapQuery}`}
+                    >
+                        <Navigation className="h-4 w-4" />
+                        {openInMapsText}
+                    </a>
+                    <p className="mt-3 text-xs leading-relaxed opacity-60">
+                        {mapFallbackText}
+                    </p>
                 </div>
-            );
-        }
-        return renderGoogleMap();
+            </div>
+        );
+    };
+
+    // Shared map renderer. The Google script is never mounted without a valid key.
+    const renderMapEmbed = () => {
+        if (!hasValidApiKey) return renderStaticMapFallback();
+        return (
+            <GoogleMapEmbed
+                apiKey={apiKey!.trim()}
+                center={center}
+                zoom={zoom}
+                options={options}
+                loadingText={loadingText}
+                renderFallback={renderStaticMapFallback}
+            />
+        );
     };
 
     const renderContent = () => {
