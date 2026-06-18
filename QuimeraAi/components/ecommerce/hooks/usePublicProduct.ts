@@ -1,22 +1,11 @@
 /**
  * usePublicProduct Hook
- * Hook para obtener un producto desde la colección pública del storefront
+ * Hook para obtener un producto desde el storefront público.
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { 
-    doc, 
-    getDoc, 
-    collection, 
-    query, 
-    where, 
-    limit, 
-    getDocs,
-    orderBy 
-} from '@/utils/compatData';
-import { db } from '@/utils/compatData';
+import { supabase } from '../../../supabase';
 
-// Types
 export interface PublicProductImage {
     id: string;
     url: string;
@@ -55,18 +44,18 @@ export interface PublicProduct {
     compareAtPrice?: number;
     images: PublicProductImage[];
     categoryId?: string;
-    categoryName?: string;          // Populated category name
+    categoryName?: string;
     tags?: string[];
     variants?: PublicProductVariant[];
     trackInventory: boolean;
     inStock: boolean;
     lowStock: boolean;
-    isFeatured?: boolean;           // Is this a featured product
+    isFeatured?: boolean;
     seoTitle?: string;
     seoDescription?: string;
     storeId: string;
     userId: string;
-    reviewStats?: ReviewStats;      // Review statistics
+    reviewStats?: ReviewStats;
     averageRating?: number;
     reviewCount?: number;
     createdAt?: any;
@@ -81,9 +70,42 @@ export interface UsePublicProductReturn {
     refetch: () => Promise<void>;
 }
 
-/**
- * Hook para obtener un producto público por slug o ID
- */
+const mapPublicProduct = (row: any, storeId: string): PublicProduct => {
+    const data = row.data && typeof row.data === 'object' && !Array.isArray(row.data) ? row.data : {};
+    const quantity = Number(row.quantity ?? data.quantity ?? 0);
+    const lowStockThreshold = Number(row.low_stock_threshold ?? data.lowStockThreshold ?? 5);
+    const images = row.images ?? data.images ?? [];
+    const variants = row.variants ?? data.variants ?? [];
+
+    return {
+        id: row.id ?? data.id,
+        name: row.name ?? data.name ?? '',
+        slug: row.slug ?? data.slug ?? '',
+        description: row.description ?? data.description ?? '',
+        shortDescription: row.short_description ?? data.shortDescription,
+        price: Number(row.price ?? data.price ?? 0),
+        compareAtPrice: row.compare_at_price != null ? Number(row.compare_at_price) : data.compareAtPrice,
+        images,
+        categoryId: row.category_id ?? data.categoryId,
+        categoryName: data.categoryName,
+        tags: row.tags ?? data.tags ?? [],
+        variants,
+        trackInventory: row.track_inventory ?? data.trackInventory ?? true,
+        inStock: row.quantity != null ? quantity > 0 : data.inStock ?? (quantity > 0),
+        lowStock: data.lowStock ?? (quantity <= lowStockThreshold),
+        isFeatured: row.is_featured ?? data.isFeatured,
+        seoTitle: data.metaTitle ?? data.seoTitle,
+        seoDescription: data.metaDescription ?? data.seoDescription,
+        storeId,
+        userId: data.userId ?? '',
+        reviewStats: data.reviewStats,
+        averageRating: data.averageRating,
+        reviewCount: data.reviewCount,
+        createdAt: row.created_at ?? data.createdAt,
+        updatedAt: row.updated_at ?? data.updatedAt ?? row.created_at,
+    };
+};
+
 export const usePublicProduct = (
     storeId: string,
     slugOrId: string
@@ -92,6 +114,34 @@ export const usePublicProduct = (
     const [relatedProducts, setRelatedProducts] = useState<PublicProduct[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const fetchRelatedProducts = useCallback(async (categoryId: string | undefined, currentProductId: string) => {
+        if (!categoryId || !storeId) {
+            setRelatedProducts([]);
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from('store_products')
+                .select('*')
+                .eq('store_id', storeId)
+                .eq('status', 'active')
+                .limit(20);
+
+            if (error) throw error;
+
+            const related = (data || [])
+                .map((row) => mapPublicProduct(row, storeId))
+                .filter((item) => item.id !== currentProductId && item.categoryId === categoryId && item.inStock)
+                .slice(0, 4);
+
+            setRelatedProducts(related);
+        } catch (err) {
+            console.error('Error fetching related products:', err);
+            setRelatedProducts([]);
+        }
+    }, [storeId]);
 
     const fetchProduct = useCallback(async () => {
         if (!storeId || !slugOrId) {
@@ -103,73 +153,51 @@ export const usePublicProduct = (
         setError(null);
 
         try {
-            const productsRef = collection(db, 'publicStores', storeId, 'products');
-            
-            // First try to find by slug
-            const slugQuery = query(
-                productsRef,
-                where('slug', '==', slugOrId),
-                limit(1)
-            );
-            
-            let productDoc = await getDocs(slugQuery);
-            
-            // If not found by slug, try by ID
-            if (productDoc.empty) {
-                const idDoc = await getDoc(doc(productsRef, slugOrId));
-                if (idDoc.exists()) {
-                    const data = idDoc.data() as PublicProduct;
-                    setProduct({ ...data, id: idDoc.id });
-                    await fetchRelatedProducts(data.categoryId, idDoc.id);
-                } else {
-                    setError('Producto no encontrado');
-                    setProduct(null);
-                }
-            } else {
-                const data = productDoc.docs[0].data() as PublicProduct;
-                setProduct({ ...data, id: productDoc.docs[0].id });
-                await fetchRelatedProducts(data.categoryId, productDoc.docs[0].id);
+            let { data, error } = await supabase
+                .from('store_products')
+                .select('*')
+                .eq('store_id', storeId)
+                .eq('slug', slugOrId)
+                .limit(1)
+                .maybeSingle();
+
+            if (error) throw error;
+
+            if (!data) {
+                const byId = await supabase
+                    .from('store_products')
+                    .select('*')
+                    .eq('store_id', storeId)
+                    .eq('id', slugOrId)
+                    .limit(1)
+                    .maybeSingle();
+
+                if (byId.error) throw byId.error;
+                data = byId.data;
             }
+
+            if (!data) {
+                setError('Producto no encontrado');
+                setProduct(null);
+                setRelatedProducts([]);
+                return;
+            }
+
+            const mapped = mapPublicProduct(data, storeId);
+            setProduct(mapped);
+            await fetchRelatedProducts(mapped.categoryId, mapped.id);
         } catch (err: any) {
             console.error('Error fetching product:', err);
             setError(err.message || 'Error al cargar el producto');
             setProduct(null);
+            setRelatedProducts([]);
         } finally {
             setIsLoading(false);
         }
-    }, [storeId, slugOrId]);
-
-    const fetchRelatedProducts = async (categoryId: string | undefined, currentProductId: string) => {
-        if (!categoryId) {
-            setRelatedProducts([]);
-            return;
-        }
-
-        try {
-            const productsRef = collection(db, 'publicStores', storeId, 'products');
-            const relatedQuery = query(
-                productsRef,
-                where('categoryId', '==', categoryId),
-                where('inStock', '==', true),
-                orderBy('updatedAt', 'desc'),
-                limit(5) // Get 5 to filter out current product
-            );
-
-            const relatedDocs = await getDocs(relatedQuery);
-            const related = relatedDocs.docs
-                .map(doc => ({ ...doc.data(), id: doc.id } as PublicProduct))
-                .filter(p => p.id !== currentProductId)
-                .slice(0, 4); // Limit to 4 related products
-
-            setRelatedProducts(related);
-        } catch (err) {
-            console.error('Error fetching related products:', err);
-            setRelatedProducts([]);
-        }
-    };
+    }, [storeId, slugOrId, fetchRelatedProducts]);
 
     useEffect(() => {
-        fetchProduct();
+        void fetchProduct();
     }, [fetchProduct]);
 
     return {
@@ -181,9 +209,6 @@ export const usePublicProduct = (
     };
 };
 
-/**
- * Hook para obtener la categoría de un producto
- */
 export const usePublicCategory = (storeId: string, categoryId: string | undefined) => {
     const [category, setCategory] = useState<{ id: string; name: string; slug: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -197,26 +222,34 @@ export const usePublicCategory = (storeId: string, categoryId: string | undefine
 
         const fetchCategory = async () => {
             try {
-                const categoryDoc = await getDoc(
-                    doc(db, 'publicStores', storeId, 'categories', categoryId)
-                );
-                
-                if (categoryDoc.exists()) {
-                    const data = categoryDoc.data();
+                const { data, error } = await supabase
+                    .from('store_categories')
+                    .select('id, data')
+                    .eq('store_id', storeId)
+                    .eq('id', categoryId)
+                    .limit(1)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (data) {
                     setCategory({
-                        id: categoryDoc.id,
-                        name: data.name,
-                        slug: data.slug,
+                        id: data.id,
+                        name: data.data?.name || '',
+                        slug: data.data?.slug || '',
                     });
+                } else {
+                    setCategory(null);
                 }
             } catch (err) {
                 console.error('Error fetching category:', err);
+                setCategory(null);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchCategory();
+        void fetchCategory();
     }, [storeId, categoryId]);
 
     return { category, isLoading };

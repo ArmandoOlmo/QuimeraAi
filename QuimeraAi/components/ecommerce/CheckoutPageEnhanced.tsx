@@ -39,10 +39,11 @@ import {
     CheckCircle2,
     Wallet,
 } from 'lucide-react';
-import { doc, getDoc, collection, addDoc, serverTimestamp } from '@/utils/compatData';
+import { doc, getDoc } from '@/utils/compatData';
 import { db } from '@/utils/compatData';
 import { supabase } from '../../supabase';
-import { CartItem, Address, Order, StoreSettings } from '../../types/ecommerce';
+import { CartItem, StoreSettings } from '../../types/ecommerce';
+import CheckoutPage, { CheckoutOrderData } from './CheckoutPage';
 
 // =============================================================================
 // TYPES
@@ -79,6 +80,33 @@ interface ShippingOption {
 }
 
 type CheckoutStep = 'information' | 'shipping' | 'payment';
+
+const STOREFRONT_API_FUNCTION = 'storefront-api';
+
+const randomOrderToken = (prefix = 'ord_') => {
+    const bytes = new Uint8Array(24);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        crypto.getRandomValues(bytes);
+        const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
+        return `${prefix}${btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')}`;
+    }
+    return `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+};
+
+const sha256Hex = async (value: string) => {
+    if (typeof crypto === 'undefined' || !crypto.subtle) return value;
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+};
+
+const randomUuid = () =>
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (char) =>
+            (Number(char) ^ Math.random() * 16 >> Number(char) / 4).toString(16)
+        );
+
+const normalizeCurrency = (currency?: string) => (currency || 'USD').toUpperCase();
 
 // =============================================================================
 // STRIPE CHECKOUT FORM (Inner component with Stripe hooks)
@@ -368,6 +396,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                 setIsProcessing(false);
             } else {
                 // Payment successful without redirect
+                localStorage.removeItem(`cart_${storeId}`);
                 onSuccess(orderId, orderAccessToken);
             }
         } catch (err: any) {
@@ -986,7 +1015,6 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [stripePromise, setStripePromise] = useState<any>(null);
-    const [clientSecret, setClientSecret] = useState<string | null>(null);
     const [currentStep, setCurrentStep] = useState<CheckoutStep>('information');
 
     // Form data
@@ -1116,9 +1144,18 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
                     publicStoreData?.stripePublishableKey ||
                     import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
-                if (publishableKey) {
+                const stripeIsReady = Boolean(
+                    publishableKey &&
+                    settingsData?.stripeEnabled &&
+                    settingsData?.stripeConnectAccountId &&
+                    settingsData?.stripeConnectChargesEnabled
+                );
+
+                if (stripeIsReady) {
                     const stripe = loadStripe(publishableKey);
                     setStripePromise(stripe);
+                } else {
+                    setStripePromise(null);
                 }
 
                 // Get cart from localStorage for now (can be enhanced with Supabase)
@@ -1198,6 +1235,159 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
         });
     }, [storeId, onNavigateToStore]);
 
+    const handleSubmitCashOrder = useCallback(async (
+        orderData: CheckoutOrderData
+    ): Promise<{ success: boolean; orderId?: string; error?: string }> => {
+        if (orderData.paymentMethod !== 'cod') {
+            return { success: false, error: 'Metodo de pago no disponible para esta tienda' };
+        }
+
+        if (!storeSettings?.cashOnDeliveryEnabled) {
+            return { success: false, error: 'Pago contra entrega no esta habilitado' };
+        }
+
+        try {
+            const result = await supabase.functions.invoke(STOREFRONT_API_FUNCTION, {
+                body: {
+                    action: 'createStoreCashOrder',
+                    storeId,
+                    items: cartItems.map((item) => ({
+                        productId: item.productId,
+                        variantId: item.variantId || null,
+                        quantity: item.quantity,
+                    })),
+                    shippingMethodId: selectedShipping?.id || shippingOptions[0]?.id || 'standard',
+                    idempotencyKey: `cod_${storeId}_${Date.now()}`,
+                    customerEmail: orderData.customerEmail.toLowerCase(),
+                    customerName: orderData.customerName,
+                    customerPhone: orderData.customerPhone || null,
+                    shippingAddress: orderData.shippingAddress,
+                    billingAddress: orderData.billingAddress || orderData.shippingAddress,
+                    notes: orderData.notes || null,
+                },
+            });
+
+            if (result.error) throw result.error;
+            const data = result.data?.data || result.data;
+            if (!data?.success || !data?.orderId) {
+                throw new Error(data?.error || 'Error al crear el pedido');
+            }
+
+            localStorage.removeItem(`cart_${storeId}`);
+            onSuccess(data.orderId, data.orderAccessToken);
+            return { success: true, orderId: data.orderId };
+        } catch (serverErr: any) {
+            console.warn('Server cash order failed, falling back to restricted client insert:', serverErr);
+
+            try {
+                const now = new Date().toISOString();
+                const orderId = randomUuid();
+                const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+                const orderAccessToken = randomOrderToken();
+                const orderAccessTokenHash = await sha256Hex(orderAccessToken);
+                const currency = normalizeCurrency(storeSettings.currency);
+                const paymentStatus = 'pending';
+                const orderStatus = 'confirmed';
+                const fulfillmentStatus = 'unfulfilled';
+                const resolvedShippingCost = selectedShipping?.price ?? shippingOptions[0]?.price ?? 0;
+                const shippingMethod = selectedShipping?.name || shippingOptions[0]?.name || 'Envio estandar';
+                const totalAmount = Math.max(0, subtotal - discountAmount + resolvedShippingCost + taxAmount);
+                const canonicalItems = cartItems.map((item) => ({
+                    productId: item.productId,
+                    variantId: item.variantId || null,
+                    name: item.variantName ? `${item.productName || item.name} - ${item.variantName}` : item.productName || item.name,
+                    productName: item.productName || item.name,
+                    variantName: item.variantName || null,
+                    imageUrl: item.imageUrl || item.image || null,
+                    quantity: item.quantity,
+                    unitPrice: item.price,
+                    totalPrice: item.price * item.quantity,
+                }));
+
+                const publicOrderData = {
+                    orderNumber,
+                    customerEmail: orderData.customerEmail.toLowerCase(),
+                    customerName: orderData.customerName,
+                    customerPhone: orderData.customerPhone || null,
+                    items: canonicalItems,
+                    subtotal,
+                    discount: discountAmount,
+                    discountAmount,
+                    discountCode: discountCode || null,
+                    shippingCost: resolvedShippingCost,
+                    taxAmount,
+                    total: totalAmount,
+                    currency,
+                    shippingAddress: orderData.shippingAddress,
+                    billingAddress: orderData.billingAddress || orderData.shippingAddress,
+                    status: orderStatus,
+                    paymentStatus,
+                    fulfillmentStatus,
+                    paymentMethod: 'cod',
+                    shippingMethod,
+                    notes: orderData.notes || null,
+                    orderAccessTokenHash,
+                    createdAt: now,
+                    updatedAt: now,
+                };
+
+                const { error } = await supabase
+                    .from('store_orders')
+                    .insert({
+                        id: orderId,
+                        store_id: storeId,
+                        project_id: storeId,
+                        order_number: orderNumber,
+                        customer_email: publicOrderData.customerEmail,
+                        customer_name: publicOrderData.customerName,
+                        customer_phone: publicOrderData.customerPhone,
+                        items: canonicalItems,
+                        subtotal,
+                        discount: discountAmount,
+                        discount_code: discountCode || null,
+                        discount_amount: discountAmount,
+                        shipping_cost: resolvedShippingCost,
+                        tax_amount: taxAmount,
+                        total: totalAmount,
+                        currency,
+                        shipping_address: orderData.shippingAddress,
+                        billing_address: orderData.billingAddress || orderData.shippingAddress,
+                        status: orderStatus,
+                        payment_status: paymentStatus,
+                        fulfillment_status: fulfillmentStatus,
+                        payment_method: 'cod',
+                        shipping_method: shippingMethod,
+                        notes: orderData.notes || null,
+                        customer_notes: orderData.notes || null,
+                        data: publicOrderData,
+                        created_at: now,
+                        updated_at: now,
+                    });
+
+                if (error) throw error;
+                localStorage.removeItem(`cart_${storeId}`);
+                onSuccess(orderId, orderAccessToken);
+                return { success: true, orderId };
+            } catch (err: any) {
+                console.error('Error creating cash order:', err);
+                return { success: false, error: err.message || 'Error al crear el pedido' };
+            }
+        }
+    }, [
+        cartItems,
+        discountAmount,
+        discountCode,
+        onSuccess,
+        selectedShipping?.id,
+        selectedShipping?.name,
+        selectedShipping?.price,
+        shippingOptions,
+        storeId,
+        storeSettings,
+        subtotal,
+        taxAmount,
+    ]);
+
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -1229,6 +1419,29 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
                     </button>
                 </div>
             </div>
+        );
+    }
+
+    const fallbackShippingCost = selectedShipping?.price ?? shippingOptions[0]?.price ?? 0;
+    const cashOnDeliveryEnabled = Boolean(storeSettings?.cashOnDeliveryEnabled);
+
+    if (!stripePromise && cashOnDeliveryEnabled) {
+        return (
+            <CheckoutPage
+                items={cartItems}
+                subtotal={subtotal}
+                discountCode={discountCode}
+                discountAmount={discountAmount}
+                shippingCost={fallbackShippingCost}
+                taxAmount={taxAmount}
+                onBack={onBack}
+                onSubmitOrder={handleSubmitCashOrder}
+                currencySymbol={storeSettings?.currencySymbol || '$'}
+                primaryColor={storeSettings?.storefrontTheme?.primaryColor || '#6366f1'}
+                storeName={storeSettings?.storeName || 'Tienda'}
+                requiresShipping={storeSettings?.requireShippingAddress !== false}
+                availablePaymentMethods={['cod']}
+            />
         );
     }
 
@@ -1311,10 +1524,3 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
 };
 
 export default CheckoutPageEnhanced;
-
-
-
-
-
-
-

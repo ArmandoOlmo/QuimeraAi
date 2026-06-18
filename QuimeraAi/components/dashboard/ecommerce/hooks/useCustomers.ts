@@ -76,7 +76,8 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
 
         fetchCustomers();
 
-        const channel = supabase.channel('store_customers_changes')
+        const channelName = `store_customers_changes:${effectiveStoreId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -92,7 +93,7 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
     }, [userId, effectiveStoreId, fetchCustomers]);
 
@@ -333,4 +334,3 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
         getMarketingCustomers,
     };
 };
-

@@ -285,7 +285,7 @@ const ReviewsView: React.FC = () => {
                     <FilterChipRow
                         options={statusFilterOptions}
                         value={statusFilter}
-                        onChange={setStatusFilter}
+                        onChange={(value) => setStatusFilter(value as StatusFilter)}
                     />
 
                     {/* Product Filter */}

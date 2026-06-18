@@ -519,10 +519,13 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     .update({
       status: "processing",
       payment_status: "paid",
+      paid_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       data: {
         ...(order.data || {}),
         status: "processing",
         paymentStatus: "paid",
+        paidAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
     })
@@ -537,6 +540,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
     .from("store_orders")
     .update({
       payment_status: "failed",
+      updated_at: new Date().toISOString(),
       data: {
         ...(order.data || {}),
         paymentStatus: "failed",

@@ -122,7 +122,8 @@ export const useStoreSettings = (userId: string, storeId?: string) => {
 
         fetchSettings();
 
-        const channel = supabase.channel('store_settings_changes')
+        const channelName = `store_settings_changes:${effectiveStoreId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -138,7 +139,7 @@ export const useStoreSettings = (userId: string, storeId?: string) => {
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
     }, [userId, effectiveStoreId, fetchSettings]);
 
@@ -495,4 +496,3 @@ export const useStoreSettings = (userId: string, storeId?: string) => {
 
 // Export helper functions for use in components
 export { adjustColorBrightness, getContrastColor, hexToRgb, rgbToHex };
-

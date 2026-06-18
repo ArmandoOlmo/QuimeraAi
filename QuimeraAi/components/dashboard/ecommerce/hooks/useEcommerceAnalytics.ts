@@ -112,22 +112,24 @@ export const useEcommerceAnalytics = (
     useEffect(() => {
         if (!effectiveStoreId) return;
 
-        const ordersChannel = supabase.channel('analytics_orders_changes')
+        const suffix = `${effectiveStoreId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+
+        const ordersChannel = supabase.channel(`analytics_orders_changes:${suffix}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'store_orders', filter: `project_id=eq.${effectiveStoreId}` }, () => fetchOrders())
             .subscribe();
 
-        const productsChannel = supabase.channel('analytics_products_changes')
+        const productsChannel = supabase.channel(`analytics_products_changes:${suffix}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'store_products', filter: `project_id=eq.${effectiveStoreId}` }, () => fetchProducts())
             .subscribe();
 
-        const customersChannel = supabase.channel('analytics_customers_changes')
+        const customersChannel = supabase.channel(`analytics_customers_changes:${suffix}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'store_customers', filter: `project_id=eq.${effectiveStoreId}` }, () => fetchCustomers())
             .subscribe();
 
         return () => {
-            supabase.removeChannel(ordersChannel);
-            supabase.removeChannel(productsChannel);
-            supabase.removeChannel(customersChannel);
+            void supabase.removeChannel(ordersChannel);
+            void supabase.removeChannel(productsChannel);
+            void supabase.removeChannel(customersChannel);
         };
     }, [effectiveStoreId, fetchOrders, fetchProducts, fetchCustomers]);
 
@@ -388,4 +390,3 @@ export const useEcommerceAnalytics = (
         compareWithPreviousPeriod,
     };
 };
-

@@ -14,6 +14,15 @@ interface UseProductsOptions {
     lowStock?: boolean;
 }
 
+const fallbackUuid = () => '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (char) =>
+    (Number(char) ^ Math.random() * 16 >> Number(char) / 4).toString(16)
+);
+
+const newId = () =>
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : fallbackUuid();
+
 export const useProducts = (userId: string, storeId?: string, options?: UseProductsOptions) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -68,8 +77,8 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
 
         fetchProducts();
 
-        // Realtime subscription
-        const channel = supabase.channel('store_products_changes')
+        const channelName = `store_products_changes:${effectiveStoreId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -85,7 +94,7 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
     }, [userId, effectiveStoreId, fetchProducts]);
 
@@ -98,6 +107,47 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/(^-|-$)/g, '');
     };
+
+    const toPublicProductData = (
+        productId: string,
+        product: Partial<Product>,
+        slug: string,
+        images: ProductImage[],
+        now: string
+    ) => ({
+        id: productId,
+        name: product.name || '',
+        slug,
+        description: product.description || '',
+        shortDescription: product.shortDescription || '',
+        price: product.price || 0,
+        compareAtPrice: product.compareAtPrice || null,
+        costPrice: product.costPrice || null,
+        currency: product.currency || 'USD',
+        sku: product.sku || null,
+        barcode: product.barcode || null,
+        quantity: product.quantity ?? 0,
+        trackInventory: product.trackInventory ?? true,
+        lowStockThreshold: product.lowStockThreshold ?? 5,
+        images,
+        categoryId: product.categoryId || null,
+        tags: product.tags || [],
+        hasVariants: product.hasVariants || false,
+        variants: product.variants || [],
+        options: product.options || [],
+        status: product.status || 'draft',
+        isDigital: product.isDigital || false,
+        isFeatured: product.isFeatured || false,
+        inStock: (product.quantity ?? 0) > 0,
+        lowStock: (product.quantity ?? 0) <= (product.lowStockThreshold || 5),
+        weight: product.weight || null,
+        weightUnit: product.weightUnit || 'kg',
+        storeId: effectiveStoreId,
+        userId,
+        createdAt: product.createdAt || now,
+        updatedAt: now,
+        publishedAt: product.status === 'active' ? now : undefined,
+    });
 
     // Upload product image
     const uploadImage = useCallback(
@@ -151,6 +201,8 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             const { libraryImageUrls, ...cleanProductData } = productData;
 
             const slug = generateSlug(cleanProductData.name);
+            const productId = newId();
+            const now = new Date().toISOString();
 
             const dbData = mapProductToDB({
                 ...cleanProductData,
@@ -158,9 +210,14 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
                 images: [],
             });
 
+            dbData.id = productId;
             dbData.project_id = effectiveStoreId;
+            dbData.store_id = effectiveStoreId;
+            dbData.created_at = now;
+            dbData.updated_at = now;
+            dbData.data = toPublicProductData(productId, cleanProductData, slug, [], now);
 
-            const { data: insertedProduct, error: insertError } = await supabase
+            const { error: insertError } = await supabase
                 .from('store_products')
                 .insert(dbData)
                 .select()
@@ -168,7 +225,6 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
 
             if (insertError) throw insertError;
 
-            const productId = insertedProduct.id;
             const allImages: ProductImage[] = [];
             let position = 0;
 
@@ -195,15 +251,16 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
 
             // Update product with all images
             if (allImages.length > 0) {
+                const publicData = toPublicProductData(productId, cleanProductData, slug, allImages, new Date().toISOString());
                 await supabase
                     .from('store_products')
-                    .update({ images: allImages })
+                    .update({ images: allImages, data: publicData })
                     .eq('id', productId);
             }
 
             return productId;
         },
-        [effectiveStoreId, uploadImage]
+        [effectiveStoreId, uploadImage, userId]
     );
 
     // Update product
@@ -216,16 +273,18 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             // Extract library image URLs from updates
             const { libraryImageUrls, ...cleanUpdates } = updates;
 
-            const updateData = mapProductToDB(cleanUpdates);
-
-            // Update slug if name changed
-            if (cleanUpdates.name) {
-                updateData.slug = generateSlug(cleanUpdates.name);
-            }
-
             // Fetch current product to merge images
             const currentProduct = products.find((p) => p.id === productId);
             if (!currentProduct) return;
+
+            const updateData = mapProductToDB(cleanUpdates);
+
+            // Update slug if name changed
+            let nextSlug = currentProduct.slug;
+            if (cleanUpdates.name) {
+                nextSlug = generateSlug(cleanUpdates.name);
+                updateData.slug = nextSlug;
+            }
 
             const existingImages = currentProduct.images || [];
             let position = existingImages.length;
@@ -256,9 +315,20 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             }
 
             // Combine existing and new images
+            let nextImages = existingImages;
             if (newImages.length > 0) {
-                updateData.images = [...existingImages, ...newImages];
+                nextImages = [...existingImages, ...newImages];
+                updateData.images = nextImages;
             }
+            const now = new Date().toISOString();
+            const nextProduct = {
+                ...currentProduct,
+                ...cleanUpdates,
+                slug: nextSlug || currentProduct.slug,
+                images: nextImages,
+                updatedAt: now,
+            };
+            updateData.data = toPublicProductData(productId, nextProduct, nextProduct.slug, nextImages, now);
 
             const { error: updateError } = await supabase
                 .from('store_products')
@@ -267,7 +337,7 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
 
             if (updateError) throw updateError;
         },
-        [products, uploadImage]
+        [products, uploadImage, effectiveStoreId, userId]
     );
 
     // Delete product
@@ -364,4 +434,3 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
         getLowStockProducts,
     };
 };
-

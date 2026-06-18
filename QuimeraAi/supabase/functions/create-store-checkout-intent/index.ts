@@ -59,17 +59,32 @@ serve(async (req) => {
             throw new Error('Store not found');
         }
 
-        const ownerId = storeInfo.user_id;
+        const publicStoreData = storeInfo.data || {};
+        const ownerId = storeInfo.user_id || publicStoreData.userId || publicStoreData.user_id;
+        const projectId = publicStoreData.projectId || publicStoreData.project_id || storeId;
 
         // Fetch store settings
-        const { data: storeSettingsRecord } = await supabaseClient
+        const { data: storeSettingsRecord, error: settingsError } = await supabaseClient
             .from('store_settings')
-            .select('data')
-            .eq('store_id', storeId)
-            .eq('id', 'main')
-            .single();
+            .select('*')
+            .eq('project_id', projectId)
+            .maybeSingle();
 
-        const storeSettings = (storeSettingsRecord?.data as any) || {};
+        if (settingsError) throw settingsError;
+        if (!storeSettingsRecord) throw new Error('Store settings not found');
+
+        const settingsData = (storeSettingsRecord?.data as any) || {};
+        const storeSettings = {
+            ...settingsData,
+            stripeEnabled: storeSettingsRecord.stripe_enabled ?? settingsData.stripeEnabled,
+            stripeConnectAccountId: storeSettingsRecord.stripe_connect_account_id ?? settingsData.stripeConnectAccountId,
+            stripeConnectChargesEnabled: storeSettingsRecord.stripe_connect_charges_enabled ?? settingsData.stripeConnectChargesEnabled,
+            currency: storeSettingsRecord.currency ?? settingsData.currency,
+            shippingZones: storeSettingsRecord.shipping_zones ?? settingsData.shippingZones ?? [],
+            freeShippingThreshold: storeSettingsRecord.free_shipping_threshold ?? settingsData.freeShippingThreshold,
+            taxEnabled: storeSettingsRecord.tax_enabled ?? settingsData.taxEnabled,
+            taxRate: storeSettingsRecord.tax_rate ?? settingsData.taxRate,
+        };
         const currency = (storeSettings.currency || 'usd').toLowerCase();
         const connectedAccountId = storeSettings.stripeConnectAccountId;
 
@@ -86,16 +101,28 @@ serve(async (req) => {
             // Fetch product
             const { data: productRecord } = await supabaseClient
                 .from('store_products')
-                .select('data')
+                .select('*')
                 .eq('store_id', storeId)
                 .eq('id', item.productId)
-                .single();
+                .maybeSingle();
 
-            if (!productRecord || !productRecord.data) {
+            if (!productRecord) {
                 throw new Error(`Product ${item.productId} not found`);
             }
 
-            const productData = productRecord.data as any;
+            const rawProductData = (productRecord.data as any) || {};
+            const productData = {
+                ...rawProductData,
+                id: productRecord.id,
+                name: productRecord.name ?? rawProductData.name,
+                status: productRecord.status ?? rawProductData.status,
+                price: Number(productRecord.price ?? rawProductData.price ?? 0),
+                quantity: Number(productRecord.quantity ?? rawProductData.quantity ?? 0),
+                trackInventory: productRecord.track_inventory ?? rawProductData.trackInventory,
+                hasVariants: productRecord.has_variants ?? rawProductData.hasVariants,
+                variants: productRecord.variants ?? rawProductData.variants ?? [],
+                images: productRecord.images ?? rawProductData.images ?? [],
+            };
             if (productData.status !== 'active') {
                 throw new Error(`Product ${productData.name} is not available`);
             }
@@ -170,13 +197,19 @@ serve(async (req) => {
         // Check if order already exists in Supabase
         const { data: existingOrder } = await supabaseClient
             .from('store_orders')
-            .select('data')
-            .eq('id', orderId)
-            .eq('store_id', storeId)
-            .single();
+            .select('*')
+            .eq('project_id', projectId)
+            .eq('order_number', orderId)
+            .maybeSingle();
 
-        if (existingOrder && existingOrder.data) {
-            const orderData = existingOrder.data as any;
+        if (existingOrder) {
+            const orderData = {
+                ...existingOrder,
+                ...((existingOrder.data as any) || {}),
+                cartHash: (existingOrder.data as any)?.cartHash || existingOrder.cart_hash,
+                stripe: (existingOrder.data as any)?.stripe || existingOrder.stripe,
+                total: existingOrder.total ?? (existingOrder.data as any)?.total,
+            };
             if (orderData.cartHash !== cartHash) {
                 throw new Error('Checkout already exists for a different cart. Refresh checkout and try again.');
             }
@@ -260,6 +293,33 @@ serve(async (req) => {
             .insert({
                 id: orderId,
                 store_id: storeId,
+                user_id: ownerId,
+                project_id: projectId,
+                order_number: orderId,
+                customer_email: orderData.customerEmail,
+                customer_name: orderData.customerName,
+                customer_phone: orderData.customerPhone,
+                subtotal: orderData.subtotal,
+                discount: orderData.discount,
+                discount_amount: orderData.discountAmount,
+                shipping_cost: orderData.shippingCost,
+                tax_amount: orderData.taxAmount,
+                total: orderData.total,
+                currency: orderData.currency.toUpperCase(),
+                items: orderData.items,
+                pricing: orderData.pricing,
+                checkout_idempotency_key: orderData.checkoutIdempotencyKey,
+                cart_hash: orderData.cartHash,
+                stripe: orderData.stripe,
+                shipping_address: orderData.shippingAddress,
+                billing_address: orderData.billingAddress,
+                status: 'pending',
+                payment_status: 'pending',
+                fulfillment_status: 'unfulfilled',
+                payment_method: 'stripe',
+                payment_intent_id: paymentIntent.id,
+                shipping_method: orderData.shippingMethod,
+                notes: orderData.notes,
                 data: orderData
             });
 

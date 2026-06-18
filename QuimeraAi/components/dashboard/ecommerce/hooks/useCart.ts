@@ -15,9 +15,10 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
     const { persistToSupabase = true } = options;
     
     const effectiveStoreId = storeId || '';
+    const cartId = effectiveStoreId && userId ? `${effectiveStoreId}:${userId}` : userId;
 
     const [cart, setCart] = useState<Cart>({
-        id: userId,
+        id: cartId,
         userId,
         storeId,
         items: [],
@@ -30,20 +31,18 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
 
     // Load cart from Supabase
     useEffect(() => {
-        if (!userId || !persistToSupabase) {
+        if (!userId || !effectiveStoreId || !persistToSupabase) {
             setIsLoading(false);
             return;
         }
 
         const fetchCart = async () => {
             setIsLoading(true);
-            let query = supabase.from('store_carts').select('*').eq('user_id', userId);
-            
-            if (effectiveStoreId) {
-                query = query.eq('project_id', effectiveStoreId);
-            }
-
-            const { data, error } = await query.maybeSingle();
+            const { data, error } = await supabase
+                .from('store_carts')
+                .select('*')
+                .eq('id', cartId)
+                .maybeSingle();
 
             if (error) {
                 console.error('Error loading cart:', error);
@@ -52,7 +51,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
                 setCart({
                     id: data.id,
                     userId: data.user_id,
-                    storeId: data.project_id,
+                    storeId: data.store_id || data.project_id,
                     items: data.items as CartItem[],
                     subtotal: Number(data.subtotal),
                     discountCode: data.discount_code,
@@ -63,7 +62,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
             } else {
                 // Initialize empty cart state
                 setCart({
-                    id: userId,
+                    id: cartId,
                     userId,
                     storeId: effectiveStoreId,
                     items: [],
@@ -78,11 +77,10 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
         fetchCart();
 
         // Real-time listener for cart changes
-        const channelFilter = effectiveStoreId 
-            ? `project_id=eq.${effectiveStoreId}` 
-            : `user_id=eq.${userId}`;
+        const channelFilter = `store_id=eq.${effectiveStoreId}`;
 
-        const channel = supabase.channel(`store_carts_${userId}`)
+        const channelName = `store_carts:${effectiveStoreId}:${userId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on('postgres_changes', { 
                 event: '*', 
                 schema: 'public', 
@@ -94,7 +92,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
                     setCart({
                         id: data.id,
                         userId: data.user_id,
-                        storeId: data.project_id,
+                        storeId: data.store_id || data.project_id,
                         items: data.items as CartItem[],
                         subtotal: Number(data.subtotal),
                         discountCode: data.discount_code,
@@ -104,7 +102,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
                     });
                 } else if (payload.eventType === 'DELETE') {
                     setCart({
-                        id: userId,
+                        id: cartId,
                         userId,
                         storeId: effectiveStoreId,
                         items: [],
@@ -117,18 +115,20 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
-    }, [userId, effectiveStoreId, persistToSupabase]);
+    }, [userId, effectiveStoreId, cartId, persistToSupabase]);
 
     // Save cart to Supabase
     const saveCart = useCallback(async (updatedCart: Cart) => {
-        if (!persistToSupabase) return;
+        if (!persistToSupabase || !userId || !effectiveStoreId) return;
 
         try {
             const upsertData = {
+                id: cartId,
                 user_id: updatedCart.userId,
-                project_id: updatedCart.storeId || null,
+                store_id: effectiveStoreId,
+                project_id: effectiveStoreId,
                 items: updatedCart.items,
                 subtotal: updatedCart.subtotal,
                 discount_code: updatedCart.discountCode || null,
@@ -138,14 +138,14 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
 
             const { error } = await supabase
                 .from('store_carts')
-                .upsert(upsertData, { onConflict: 'user_id,project_id' }); // Require an index/unique constraint later
+                .upsert(upsertData, { onConflict: 'id' });
 
             if (error) throw error;
         } catch (err: any) {
             console.error('Error saving cart:', err);
             setError(err.message);
         }
-    }, [persistToSupabase]);
+    }, [cartId, effectiveStoreId, persistToSupabase, userId]);
 
     // Calculate subtotal
     const calculateSubtotal = useCallback((items: CartItem[]): number => {
@@ -250,7 +250,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
     // Clear cart
     const clearCart = useCallback(async () => {
         const emptyCart: Cart = {
-            id: userId,
+            id: cartId,
             userId,
             storeId,
             items: [],
@@ -263,16 +263,12 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
 
         if (persistToSupabase) {
             try {
-                let query = supabase.from('store_carts').delete().eq('user_id', userId);
-                if (effectiveStoreId) {
-                    query = query.eq('project_id', effectiveStoreId);
-                }
-                await query;
+                await supabase.from('store_carts').delete().eq('id', cartId);
             } catch (err: any) {
                 console.error('Error clearing cart:', err);
             }
         }
-    }, [userId, storeId, effectiveStoreId, cart.createdAt, persistToSupabase]);
+    }, [cartId, userId, storeId, cart.createdAt, persistToSupabase]);
 
     // Apply discount code
     const applyDiscount = useCallback(async (discountCode: string, discountAmount: number) => {

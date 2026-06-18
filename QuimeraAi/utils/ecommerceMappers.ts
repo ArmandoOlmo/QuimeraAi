@@ -2,35 +2,50 @@ import { Product, Category, Customer, Order, OrderItem, Review, Discount, Discou
 import { StoreUser, StoreUserRole, StoreUserStatus, UserSegment, SegmentType, UserActivity, ActivityType } from '../types/storeUsers';
 import { toStoredTimestamp } from './supabaseMappers';
 
-export const mapProductFromDB = (row: any): Product => ({
-    id: row.id,
-    name: row.name,
-    slug: row.slug,
-    description: row.description,
-    shortDescription: row.short_description,
-    price: Number(row.price || 0),
-    compareAtPrice: row.compare_at_price ? Number(row.compare_at_price) : undefined,
-    costPrice: row.cost_price ? Number(row.cost_price) : undefined,
-    currency: row.currency,
-    sku: row.sku,
-    barcode: row.barcode,
-    quantity: Number(row.quantity || 0),
-    trackInventory: row.track_inventory,
-    lowStockThreshold: row.low_stock_threshold,
-    images: row.images || [],
-    tags: row.tags || [],
-    hasVariants: row.has_variants,
-    variants: row.variants || [],
-    options: row.options || [],
-    status: row.status,
-    isDigital: row.is_digital,
-    isFeatured: row.is_featured,
-    weight: row.weight ? Number(row.weight) : undefined,
-    weightUnit: row.weight_unit,
-    categoryId: row.category_id,
-    createdAt: toStoredTimestamp(row.created_at),
-    updatedAt: toStoredTimestamp(row.updated_at),
-});
+const dataFor = (row: any): Record<string, any> => row?.data || {};
+const valueFor = (row: any, snakeKey: string, camelKey: string = snakeKey): any =>
+    row?.[snakeKey] ?? dataFor(row)[camelKey];
+const optionalTimestamp = (value: any): StoredTimestamp | undefined => value ? toStoredTimestamp(value) : undefined;
+
+export const mapProductFromDB = (row: any): Product => {
+    const data = dataFor(row);
+    const quantity = Number(valueFor(row, 'quantity') ?? 0);
+    const lowStockThreshold = valueFor(row, 'low_stock_threshold', 'lowStockThreshold') ?? 5;
+
+    return {
+        id: row.id || data.id,
+        name: valueFor(row, 'name') || '',
+        slug: valueFor(row, 'slug') || '',
+        description: valueFor(row, 'description') || '',
+        shortDescription: valueFor(row, 'short_description', 'shortDescription'),
+        price: Number(valueFor(row, 'price') ?? 0),
+        compareAtPrice: valueFor(row, 'compare_at_price', 'compareAtPrice') != null
+            ? Number(valueFor(row, 'compare_at_price', 'compareAtPrice'))
+            : undefined,
+        costPrice: valueFor(row, 'cost_price', 'costPrice') != null
+            ? Number(valueFor(row, 'cost_price', 'costPrice'))
+            : undefined,
+        currency: valueFor(row, 'currency') || 'USD',
+        sku: valueFor(row, 'sku') || undefined,
+        barcode: valueFor(row, 'barcode') || undefined,
+        quantity,
+        trackInventory: valueFor(row, 'track_inventory', 'trackInventory') ?? true,
+        lowStockThreshold,
+        images: valueFor(row, 'images') || [],
+        tags: valueFor(row, 'tags') || [],
+        hasVariants: valueFor(row, 'has_variants', 'hasVariants') ?? false,
+        variants: valueFor(row, 'variants') || [],
+        options: valueFor(row, 'options') || [],
+        status: valueFor(row, 'status') || 'draft',
+        isDigital: valueFor(row, 'is_digital', 'isDigital') ?? false,
+        isFeatured: valueFor(row, 'is_featured', 'isFeatured') ?? false,
+        weight: valueFor(row, 'weight') != null ? Number(valueFor(row, 'weight')) : undefined,
+        weightUnit: valueFor(row, 'weight_unit', 'weightUnit') || 'kg',
+        categoryId: valueFor(row, 'category_id', 'categoryId') || undefined,
+        createdAt: toStoredTimestamp(row.created_at || data.createdAt),
+        updatedAt: toStoredTimestamp(row.updated_at || data.updatedAt),
+    };
+};
 
 export const mapProductToDB = (product: Partial<Product>): any => {
     const data: any = {};
@@ -62,15 +77,15 @@ export const mapProductToDB = (product: Partial<Product>): any => {
 };
 
 export const mapCategoryFromDB = (row: any): Category => ({
-    id: row.id,
-    name: row.name,
-    slug: row.slug,
-    description: row.description,
-    imageUrl: row.image_url,
-    parentId: row.parent_id,
-    position: row.position,
-    createdAt: toStoredTimestamp(row.created_at),
-    updatedAt: toStoredTimestamp(row.updated_at),
+    id: row.id || dataFor(row).id,
+    name: valueFor(row, 'name') || '',
+    slug: valueFor(row, 'slug') || '',
+    description: valueFor(row, 'description') || undefined,
+    imageUrl: valueFor(row, 'image_url', 'imageUrl') || dataFor(row).image || undefined,
+    parentId: valueFor(row, 'parent_id', 'parentId') || undefined,
+    position: valueFor(row, 'position') ?? dataFor(row).order ?? 0,
+    createdAt: toStoredTimestamp(row.created_at || dataFor(row).createdAt),
+    updatedAt: toStoredTimestamp(row.updated_at || dataFor(row).updatedAt),
 });
 
 export const mapCategoryToDB = (category: Partial<Category>): any => {
@@ -85,46 +100,48 @@ export const mapCategoryToDB = (category: Partial<Category>): any => {
 };
 
 export const mapOrderFromDB = (row: any): Order => ({
-    id: row.id,
-    orderNumber: row.order_number,
-    customerId: row.customer_id,
-    customerEmail: row.customer_email,
-    customerName: row.customer_name,
-    customerPhone: row.customer_phone,
-    items: row.items || [],
-    subtotal: Number(row.subtotal || 0),
-    discount: Number(row.discount || 0),
-    discountCode: row.discount_code,
-    discountAmount: row.discount_amount ? Number(row.discount_amount) : undefined,
-    shippingCost: Number(row.shipping_cost || 0),
-    taxAmount: Number(row.tax_amount || 0),
-    total: Number(row.total || 0),
-    currency: row.currency,
-    pricing: row.pricing,
-    checkoutIdempotencyKey: row.checkout_idempotency_key,
-    cartHash: row.cart_hash,
-    stripe: row.stripe,
-    shippingAddress: row.shipping_address,
-    billingAddress: row.billing_address,
-    status: row.status,
-    paymentStatus: row.payment_status,
-    fulfillmentStatus: row.fulfillment_status,
-    paymentMethod: row.payment_method,
-    paymentIntentId: row.payment_intent_id,
-    paidAt: toStoredTimestamp(row.paid_at),
-    shippingMethod: row.shipping_method,
-    trackingNumber: row.tracking_number,
-    trackingUrl: row.tracking_url,
-    carrier: row.carrier,
-    shippedAt: toStoredTimestamp(row.shipped_at),
-    deliveredAt: toStoredTimestamp(row.delivered_at),
-    notes: row.notes,
-    customerNotes: row.customer_notes,
-    internalNotes: row.internal_notes,
-    createdAt: toStoredTimestamp(row.created_at),
-    updatedAt: toStoredTimestamp(row.updated_at),
-    cancelledAt: toStoredTimestamp(row.cancelled_at),
-    refundedAt: toStoredTimestamp(row.refunded_at),
+    id: row.id || dataFor(row).id,
+    orderNumber: valueFor(row, 'order_number', 'orderNumber') || '',
+    customerId: valueFor(row, 'customer_id', 'customerId') || undefined,
+    customerEmail: valueFor(row, 'customer_email', 'customerEmail') || '',
+    customerName: valueFor(row, 'customer_name', 'customerName') || '',
+    customerPhone: valueFor(row, 'customer_phone', 'customerPhone') || undefined,
+    items: valueFor(row, 'items') || [],
+    subtotal: Number(valueFor(row, 'subtotal') ?? 0),
+    discount: Number(valueFor(row, 'discount') ?? 0),
+    discountCode: valueFor(row, 'discount_code', 'discountCode') || undefined,
+    discountAmount: valueFor(row, 'discount_amount', 'discountAmount') != null
+        ? Number(valueFor(row, 'discount_amount', 'discountAmount'))
+        : undefined,
+    shippingCost: Number(valueFor(row, 'shipping_cost', 'shippingCost') ?? 0),
+    taxAmount: Number(valueFor(row, 'tax_amount', 'taxAmount') ?? 0),
+    total: Number(valueFor(row, 'total') ?? 0),
+    currency: valueFor(row, 'currency') || 'USD',
+    pricing: valueFor(row, 'pricing'),
+    checkoutIdempotencyKey: valueFor(row, 'checkout_idempotency_key', 'checkoutIdempotencyKey'),
+    cartHash: valueFor(row, 'cart_hash', 'cartHash'),
+    stripe: valueFor(row, 'stripe'),
+    shippingAddress: valueFor(row, 'shipping_address', 'shippingAddress'),
+    billingAddress: valueFor(row, 'billing_address', 'billingAddress'),
+    status: valueFor(row, 'status') || 'pending',
+    paymentStatus: valueFor(row, 'payment_status', 'paymentStatus') || 'pending',
+    fulfillmentStatus: valueFor(row, 'fulfillment_status', 'fulfillmentStatus') || 'unfulfilled',
+    paymentMethod: valueFor(row, 'payment_method', 'paymentMethod') || '',
+    paymentIntentId: valueFor(row, 'payment_intent_id', 'paymentIntentId') || undefined,
+    paidAt: optionalTimestamp(valueFor(row, 'paid_at', 'paidAt')),
+    shippingMethod: valueFor(row, 'shipping_method', 'shippingMethod') || undefined,
+    trackingNumber: valueFor(row, 'tracking_number', 'trackingNumber') || undefined,
+    trackingUrl: valueFor(row, 'tracking_url', 'trackingUrl') || undefined,
+    carrier: valueFor(row, 'carrier') || undefined,
+    shippedAt: optionalTimestamp(valueFor(row, 'shipped_at', 'shippedAt')),
+    deliveredAt: optionalTimestamp(valueFor(row, 'delivered_at', 'deliveredAt')),
+    notes: valueFor(row, 'notes') || undefined,
+    customerNotes: valueFor(row, 'customer_notes', 'customerNotes') || undefined,
+    internalNotes: valueFor(row, 'internal_notes', 'internalNotes') || undefined,
+    createdAt: toStoredTimestamp(row.created_at || dataFor(row).createdAt),
+    updatedAt: toStoredTimestamp(row.updated_at || dataFor(row).updatedAt),
+    cancelledAt: optionalTimestamp(valueFor(row, 'cancelled_at', 'cancelledAt')),
+    refundedAt: optionalTimestamp(valueFor(row, 'refunded_at', 'refundedAt')),
 });
 
 export const mapOrderToDB = (order: Partial<Order>): any => {
@@ -173,7 +190,7 @@ export const mapCustomerFromDB = (row: any): Customer => ({
     phone: row.phone,
     totalOrders: Number(row.total_orders || 0),
     totalSpent: Number(row.total_spent || 0),
-    lastOrderAt: toStoredTimestamp(row.last_order_at),
+    lastOrderAt: optionalTimestamp(row.last_order_at),
     defaultShippingAddress: row.default_shipping_address,
     defaultBillingAddress: row.default_billing_address,
     addresses: row.addresses || [],
@@ -205,6 +222,7 @@ export const mapCustomerToDB = (customer: Partial<Customer>): any => {
 export const mapReviewFromDB = (row: any): Review => ({
     id: row.id,
     productId: row.product_id,
+    productName: row.product_name,
     customerName: row.customer_name,
     customerEmail: row.customer_email,
     rating: row.rating,
@@ -213,8 +231,9 @@ export const mapReviewFromDB = (row: any): Review => ({
     verifiedPurchase: row.verified_purchase,
     status: row.status,
     helpfulVotes: row.helpful_votes,
+    images: row.images || [],
     adminResponse: row.admin_response,
-    adminResponseAt: toStoredTimestamp(row.admin_response_at), // Not in original DB schema, but map if present
+    adminResponseAt: optionalTimestamp(row.admin_response_at),
     createdAt: toStoredTimestamp(row.created_at),
     updatedAt: toStoredTimestamp(row.updated_at),
 });
@@ -222,6 +241,7 @@ export const mapReviewFromDB = (row: any): Review => ({
 export const mapReviewToDB = (review: Partial<Review>): any => {
     const data: any = {};
     if (review.productId !== undefined) data.product_id = review.productId;
+    if (review.productName !== undefined) data.product_name = review.productName;
     if (review.customerName !== undefined) data.customer_name = review.customerName;
     if (review.customerEmail !== undefined) data.customer_email = review.customerEmail;
     if (review.rating !== undefined) data.rating = review.rating;
@@ -230,6 +250,7 @@ export const mapReviewToDB = (review: Partial<Review>): any => {
     if (review.verifiedPurchase !== undefined) data.verified_purchase = review.verifiedPurchase;
     if (review.status !== undefined) data.status = review.status;
     if (review.helpfulVotes !== undefined) data.helpful_votes = review.helpfulVotes;
+    if (review.images !== undefined) data.images = review.images;
     if (review.adminResponse !== undefined) data.admin_response = review.adminResponse;
     return data;
 };
@@ -240,7 +261,11 @@ export const mapDiscountFromDB = (row: any): Discount => ({
     type: row.type as DiscountType,
     value: Number(row.value || 0),
     appliesTo: row.applies_to || 'all',
-    customerEligibility: row.customer_eligibility || 'all',
+    productIds: row.product_ids || [],
+    categoryIds: row.category_ids || [],
+    minimumQuantity: row.minimum_quantity,
+    maxUsesPerCustomer: row.max_uses_per_customer,
+    customerEligibility: row.customer_eligibility || 'everyone',
     canCombine: row.can_combine ?? false,
     isAutomatic: row.is_automatic ?? false,
     minimumPurchase: row.minimum_purchase ? Number(row.minimum_purchase) : undefined,
@@ -258,42 +283,59 @@ export const mapDiscountToDB = (discount: Partial<Discount>): any => {
     if (discount.code !== undefined) data.code = discount.code;
     if (discount.type !== undefined) data.type = discount.type;
     if (discount.value !== undefined) data.value = discount.value;
+    if (discount.appliesTo !== undefined) data.applies_to = discount.appliesTo;
+    if (discount.productIds !== undefined) data.product_ids = discount.productIds;
+    if (discount.categoryIds !== undefined) data.category_ids = discount.categoryIds;
     if (discount.minimumPurchase !== undefined) data.minimum_purchase = discount.minimumPurchase;
+    if (discount.minimumQuantity !== undefined) data.minimum_quantity = discount.minimumQuantity;
     if (discount.maxUses !== undefined) data.max_uses = discount.maxUses;
+    if (discount.maxUsesPerCustomer !== undefined) data.max_uses_per_customer = discount.maxUsesPerCustomer;
     if (discount.usedCount !== undefined) data.used_count = discount.usedCount;
+    if (discount.customerEligibility !== undefined) data.customer_eligibility = discount.customerEligibility;
+    if (discount.canCombine !== undefined) data.can_combine = discount.canCombine;
+    if (discount.isAutomatic !== undefined) data.is_automatic = discount.isAutomatic;
     if (discount.isActive !== undefined) data.is_active = discount.isActive;
     // Timestamps are handled separately
     return data;
 };
 
 export const mapStoreSettingsFromDB = (row: any): StoreSettings => ({
-    storeName: row.store_name,
-    storeEmail: row.store_email,
-    storePhone: row.store_phone,
-    storeLogo: row.store_logo,
-    currency: row.currency,
-    currencySymbol: row.currency_symbol,
-    storefrontTheme: row.storefront_theme,
-    taxEnabled: row.tax_enabled,
-    taxRate: Number(row.tax_rate),
-    taxName: row.tax_name,
-    taxIncluded: row.tax_included,
-    taxIncludedInPrice: row.tax_included, // Some overlap
-    shippingZones: row.shipping_zones || [],
-    stripeEnabled: row.stripe_enabled,
-    paypalEnabled: row.paypal_enabled,
-    cashOnDeliveryEnabled: row.cash_on_delivery_enabled,
-    stripeConnectAccountId: row.stripe_connect_account_id,
-    stripeConnectStatus: row.stripe_connect_status,
-    stripeConnectChargesEnabled: row.stripe_connect_charges_enabled,
-    stripeConnectPayoutsEnabled: row.stripe_connect_payouts_enabled,
-    stripeConnectDetailsSubmitted: row.stripe_connect_details_submitted,
-    orderNotificationEmail: row.order_notification_email,
-    lowStockNotifications: row.low_stock_notifications,
-    lowStockThreshold: row.low_stock_threshold,
-    requirePhone: row.require_phone,
-    requireShippingAddress: row.require_shipping_address,
-    isActive: row.is_active ?? true,
+    storeName: valueFor(row, 'store_name', 'storeName') || '',
+    storeEmail: valueFor(row, 'store_email', 'storeEmail') || '',
+    storePhone: valueFor(row, 'store_phone', 'storePhone') || undefined,
+    storeLogo: valueFor(row, 'store_logo', 'storeLogo') || undefined,
+    currency: valueFor(row, 'currency') || 'USD',
+    currencySymbol: valueFor(row, 'currency_symbol', 'currencySymbol') || '$',
+    storefrontTheme: valueFor(row, 'storefront_theme', 'storefrontTheme'),
+    taxEnabled: valueFor(row, 'tax_enabled', 'taxEnabled') ?? false,
+    taxRate: Number(valueFor(row, 'tax_rate', 'taxRate') ?? 0),
+    taxName: valueFor(row, 'tax_name', 'taxName') || 'Tax',
+    taxIncluded: valueFor(row, 'tax_included', 'taxIncluded') ?? false,
+    taxIncludedInPrice: valueFor(row, 'tax_included', 'taxIncludedInPrice') ?? false,
+    shippingZones: valueFor(row, 'shipping_zones', 'shippingZones') || [],
+    freeShippingThreshold: Number(valueFor(row, 'free_shipping_threshold', 'freeShippingThreshold') ?? 0),
+    stripeEnabled: valueFor(row, 'stripe_enabled', 'stripeEnabled') ?? false,
+    stripePublishableKey: valueFor(row, 'stripe_publishable_key', 'stripePublishableKey') || undefined,
+    paypalEnabled: valueFor(row, 'paypal_enabled', 'paypalEnabled') ?? false,
+    paypalClientId: valueFor(row, 'paypal_client_id', 'paypalClientId') || undefined,
+    cashOnDeliveryEnabled: valueFor(row, 'cash_on_delivery_enabled', 'cashOnDeliveryEnabled') ?? true,
+    stripeConnectAccountId: valueFor(row, 'stripe_connect_account_id', 'stripeConnectAccountId') || undefined,
+    stripeConnectStatus: valueFor(row, 'stripe_connect_status', 'stripeConnectStatus'),
+    stripeConnectChargesEnabled: valueFor(row, 'stripe_connect_charges_enabled', 'stripeConnectChargesEnabled') ?? false,
+    stripeConnectPayoutsEnabled: valueFor(row, 'stripe_connect_payouts_enabled', 'stripeConnectPayoutsEnabled') ?? false,
+    stripeConnectDetailsSubmitted: valueFor(row, 'stripe_connect_details_submitted', 'stripeConnectDetailsSubmitted') ?? false,
+    orderNotificationEmail: valueFor(row, 'order_notification_email', 'orderNotificationEmail') || '',
+    lowStockNotifications: valueFor(row, 'low_stock_notifications', 'lowStockNotifications') ?? true,
+    lowStockThreshold: valueFor(row, 'low_stock_threshold', 'lowStockThreshold') ?? 5,
+    notifyOnNewOrder: valueFor(row, 'notify_on_new_order', 'notifyOnNewOrder') ?? true,
+    notifyOnLowStock: valueFor(row, 'notify_on_low_stock', 'notifyOnLowStock') ?? true,
+    sendOrderConfirmation: valueFor(row, 'send_order_confirmation', 'sendOrderConfirmation') ?? true,
+    sendShippingNotification: valueFor(row, 'send_shipping_notification', 'sendShippingNotification') ?? true,
+    requirePhone: valueFor(row, 'require_phone', 'requirePhone') ?? false,
+    requireShippingAddress: valueFor(row, 'require_shipping_address', 'requireShippingAddress') ?? true,
+    termsAndConditionsUrl: valueFor(row, 'terms_and_conditions_url', 'termsAndConditionsUrl') || undefined,
+    privacyPolicyUrl: valueFor(row, 'privacy_policy_url', 'privacyPolicyUrl') || undefined,
+    isActive: valueFor(row, 'is_active', 'isActive') ?? true,
     createdAt: toStoredTimestamp(row.created_at),
     updatedAt: toStoredTimestamp(row.updated_at),
 });
@@ -312,8 +354,11 @@ export const mapStoreSettingsToDB = (settings: Partial<StoreSettings>): any => {
     if (settings.taxName !== undefined) data.tax_name = settings.taxName;
     if (settings.taxIncluded !== undefined) data.tax_included = settings.taxIncluded;
     if (settings.shippingZones !== undefined) data.shipping_zones = settings.shippingZones;
+    if (settings.freeShippingThreshold !== undefined) data.free_shipping_threshold = settings.freeShippingThreshold;
     if (settings.stripeEnabled !== undefined) data.stripe_enabled = settings.stripeEnabled;
+    if (settings.stripePublishableKey !== undefined) data.stripe_publishable_key = settings.stripePublishableKey;
     if (settings.paypalEnabled !== undefined) data.paypal_enabled = settings.paypalEnabled;
+    if (settings.paypalClientId !== undefined) data.paypal_client_id = settings.paypalClientId;
     if (settings.cashOnDeliveryEnabled !== undefined) data.cash_on_delivery_enabled = settings.cashOnDeliveryEnabled;
     if (settings.stripeConnectAccountId !== undefined) data.stripe_connect_account_id = settings.stripeConnectAccountId;
     if (settings.stripeConnectStatus !== undefined) data.stripe_connect_status = settings.stripeConnectStatus;
@@ -323,8 +368,14 @@ export const mapStoreSettingsToDB = (settings: Partial<StoreSettings>): any => {
     if (settings.orderNotificationEmail !== undefined) data.order_notification_email = settings.orderNotificationEmail;
     if (settings.lowStockNotifications !== undefined) data.low_stock_notifications = settings.lowStockNotifications;
     if (settings.lowStockThreshold !== undefined) data.low_stock_threshold = settings.lowStockThreshold;
+    if (settings.notifyOnNewOrder !== undefined) data.notify_on_new_order = settings.notifyOnNewOrder;
+    if (settings.notifyOnLowStock !== undefined) data.notify_on_low_stock = settings.notifyOnLowStock;
+    if (settings.sendOrderConfirmation !== undefined) data.send_order_confirmation = settings.sendOrderConfirmation;
+    if (settings.sendShippingNotification !== undefined) data.send_shipping_notification = settings.sendShippingNotification;
     if (settings.requirePhone !== undefined) data.require_phone = settings.requirePhone;
     if (settings.requireShippingAddress !== undefined) data.require_shipping_address = settings.requireShippingAddress;
+    if (settings.termsAndConditionsUrl !== undefined) data.terms_and_conditions_url = settings.termsAndConditionsUrl;
+    if (settings.privacyPolicyUrl !== undefined) data.privacy_policy_url = settings.privacyPolicyUrl;
     if (settings.isActive !== undefined) data.is_active = settings.isActive;
     return data;
 };

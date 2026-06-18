@@ -45,7 +45,7 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
             // Un "store" está vinculado a un "project". Validamos si el proyecto existe
             const { data: projectData, error: projectError } = await supabase
                 .from('projects')
-                .select('id, name, created_at, updated_at, user_id')
+                .select('id, name, created_at, last_updated, user_id')
                 .eq('id', effectiveStoreId)
                 .single();
 
@@ -62,7 +62,7 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
                 id: projectData.id,
                 name: projectData.name,
                 createdAt: projectData.created_at,
-                updatedAt: projectData.updated_at,
+                updatedAt: projectData.last_updated,
                 isActive: true, // Asumimos que si el proyecto existe, la tienda está activa
                 ownerId: projectData.user_id,
             };
@@ -71,6 +71,23 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
             setIsInitialized(true);
             setError(null);
             console.log('✅ Ecommerce store loaded via Project:', effectiveStoreId);
+
+            const { error: publicStoreError } = await supabase
+                .from('public_stores')
+                .upsert({
+                    id: effectiveStoreId,
+                    user_id: projectData.user_id,
+                    data: {
+                        id: effectiveStoreId,
+                        projectId: effectiveStoreId,
+                        userId: projectData.user_id,
+                        name: projectData.name,
+                        updatedAt: new Date().toISOString(),
+                    },
+                    created_at: projectData.created_at,
+                }, { onConflict: 'id' });
+
+            if (publicStoreError) throw publicStoreError;
             
             // Validamos que haya un store_settings inicializado, si no, lo inicializamos silenciosamente
             const { count, error: settingsError } = await supabase
@@ -85,6 +102,7 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
                         project_id: effectiveStoreId,
                         store_name: projectData.name,
                         store_email: '', // Requires manual configuration
+                        is_active: true,
                     });
             }
 
@@ -119,7 +137,5 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
 };
 
 export default useEcommerceStore;
-
-
 
 

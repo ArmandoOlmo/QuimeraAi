@@ -110,7 +110,8 @@ export const useProjectEcommerce = (
 
         fetchConfig();
 
-        const channel = supabase.channel('project_ecommerce_changes')
+        const channelName = `project_ecommerce_changes:${projectId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -126,7 +127,7 @@ export const useProjectEcommerce = (
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
     }, [userId, projectId, fetchConfig]);
 
@@ -153,16 +154,41 @@ export const useProjectEcommerce = (
                     .from('store_settings')
                     .update({ is_active: true })
                     .eq('project_id', projectId);
+
+                const { data: pData } = await supabase
+                    .from('projects')
+                    .select('name, user_id')
+                    .eq('id', projectId)
+                    .single();
+
+                const { error: publicStoreError } = await supabase
+                    .from('public_stores')
+                    .upsert({
+                        id: projectId,
+                        user_id: pData?.user_id || userId,
+                        data: {
+                            id: projectId,
+                            projectId,
+                            userId: pData?.user_id || userId,
+                            name: pData?.name || projectName || 'Mi Proyecto',
+                            updatedAt: new Date().toISOString(),
+                        },
+                        created_at: new Date().toISOString(),
+                    }, { onConflict: 'id' });
+
+                if (publicStoreError) throw publicStoreError;
             } else {
                 // Determine project name
                 let finalProjectName = projectName;
+                let projectOwnerId = userId;
                 if (!finalProjectName) {
                     const { data: pData } = await supabase
                         .from('projects')
-                        .select('name')
+                        .select('name, user_id')
                         .eq('id', projectId)
                         .single();
                     finalProjectName = pData?.name || 'Mi Proyecto';
+                    projectOwnerId = pData?.user_id || userId;
                 }
 
                 await supabase
@@ -171,8 +197,31 @@ export const useProjectEcommerce = (
                         project_id: projectId,
                         store_name: `Tienda - ${finalProjectName}`,
                         store_email: '', // Requires configuration later
+                        cash_on_delivery_enabled: true,
+                        notify_on_new_order: true,
+                        notify_on_low_stock: true,
+                        send_order_confirmation: true,
+                        send_shipping_notification: true,
+                        require_shipping_address: true,
                         is_active: true,
                     });
+
+                const { error: publicStoreError } = await supabase
+                    .from('public_stores')
+                    .upsert({
+                        id: projectId,
+                        user_id: projectOwnerId,
+                        data: {
+                            id: projectId,
+                            projectId,
+                            userId: projectOwnerId,
+                            name: finalProjectName,
+                            updatedAt: new Date().toISOString(),
+                        },
+                        created_at: new Date().toISOString(),
+                    }, { onConflict: 'id' });
+
+                if (publicStoreError) throw publicStoreError;
             }
 
             console.log('✅ Ecommerce enabled for project:', projectId);
@@ -287,9 +336,6 @@ export const useProjectsWithEcommerce = (userId: string) => {
 };
 
 export default useProjectEcommerce;
-
-
-
 
 
 

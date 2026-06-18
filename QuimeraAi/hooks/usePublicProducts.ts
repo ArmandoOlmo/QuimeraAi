@@ -90,10 +90,10 @@ export const usePublicProducts = (
         setError(null);
 
         try {
-            // Query from store_products (hybrid schema: flat id/store_id + JSONB data)
+            // Query from store_products (hybrid schema: flat columns + JSONB data)
             const { data, error } = await supabase
                 .from('store_products')
-                .select('id, store_id, data')
+                .select('*')
                 .eq('store_id', storeId)
                 .limit(limitCount * 2); // Fetch more to account for filtering
 
@@ -104,25 +104,27 @@ export const usePublicProducts = (
             if (data) {
                 fetchedProducts = data.map((doc: any) => {
                     const d = doc.data || {};
+                    const quantity = Number(doc.quantity ?? d.quantity ?? 0);
                     return {
                         id: doc.id,
-                        name: d.name || '',
-                        description: d.shortDescription || d.description || '',
-                        price: d.price || 0,
-                        compareAtPrice: d.compareAtPrice,
-                        image: d.images?.[0]?.url || d.images?.[0] || null,
-                        category: d.categoryId,
-                        inStock: d.quantity == null ? true : d.quantity > 0,
+                        name: doc.name || d.name || '',
+                        description: doc.short_description || d.shortDescription || doc.description || d.description || '',
+                        price: Number(doc.price ?? d.price ?? 0),
+                        compareAtPrice: doc.compare_at_price != null ? Number(doc.compare_at_price) : d.compareAtPrice,
+                        image: (doc.images || d.images)?.[0]?.url || (doc.images || d.images)?.[0] || null,
+                        category: doc.category_id || d.categoryId,
+                        inStock: doc.quantity != null ? quantity > 0 : d.inStock ?? (quantity > 0),
                         rating: d.averageRating,
                         reviewCount: d.reviewCount,
-                        slug: d.slug,
-                        updatedAt: d.updatedAt,
+                        slug: doc.slug || d.slug,
+                        updatedAt: doc.updated_at || d.updatedAt,
+                        status: doc.status || d.status,
                     };
                 });
             }
 
             // Client-side filtering for inStock
-            fetchedProducts = fetchedProducts.filter(p => p.inStock !== false);
+            fetchedProducts = fetchedProducts.filter((p: any) => p.inStock !== false && (p.status || 'active') === 'active');
 
             // Filter by category (client-side)
             if (categoryId) {
@@ -200,7 +202,7 @@ export const usePublicProducts = (
 
         return () => {
             isMounted = false;
-            supabase.removeChannel(subscription);
+            void supabase.removeChannel(subscription);
         };
     }, [storeId, realtime, fetchProducts]);
 
@@ -214,8 +216,6 @@ export const usePublicProducts = (
 };
 
 export default usePublicProducts;
-
-
 
 
 

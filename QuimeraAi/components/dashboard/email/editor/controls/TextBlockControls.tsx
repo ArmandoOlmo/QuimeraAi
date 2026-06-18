@@ -99,9 +99,9 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
     // Sync external value changes (e.g. AI-generated content)
     useEffect(() => {
         if (editor && value !== editor.getHTML()) {
-            editor.commands.setContent(value || '', false);
+            editor.commands.setContent(value || '', { emitUpdate: false });
         }
-    }, [value]);
+    }, [editor, value]);
 
     const openLinkModal = useCallback(() => {
         if (!editor) return;

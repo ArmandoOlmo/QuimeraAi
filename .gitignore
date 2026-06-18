@@ -55,3 +55,4 @@ QUIBO_DEPLOYMENT_INFO.md
 **/serviceAccount*.json
 **/*-credentials.json
 users.json
+.vercel

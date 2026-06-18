@@ -4,18 +4,9 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-    collection,
-    doc,
-    setDoc,
-    deleteDoc,
-    getDocs,
-    query,
-    where,
-    serverTimestamp,
-    onSnapshot,
-} from '@/utils/compatData';
-import { db } from '@/utils/compatData';
+import { supabase } from '../../../supabase';
+
+const STOREFRONT_API_FUNCTION = 'storefront-api';
 
 // Types
 export interface StockNotificationRequest {
@@ -45,6 +36,22 @@ export interface UseStockNotificationReturn {
 }
 
 const STORAGE_KEY = 'quimera_stock_notifications';
+
+const toStoredTimestamp = (value?: string | null) => ({
+    seconds: value ? Math.floor(new Date(value).getTime() / 1000) : Math.floor(Date.now() / 1000),
+    nanoseconds: 0,
+});
+
+const mapNotificationRow = (row: any): StockNotificationRequest => ({
+    id: row.id,
+    productId: row.product_id,
+    productName: row.product_name,
+    productSlug: row.product_slug,
+    productImage: row.product_image || undefined,
+    email: row.email,
+    notified: row.notified ?? false,
+    createdAt: toStoredTimestamp(row.created_at),
+});
 
 export const useStockNotification = (storeId: string): UseStockNotificationReturn => {
     const [subscriptions, setSubscriptions] = useState<StockNotificationRequest[]>([]);
@@ -84,27 +91,37 @@ export const useStockNotification = (storeId: string): UseStockNotificationRetur
 
         setIsLoading(true);
 
-        const notificationsRef = collection(db, 'publicStores', storeId, 'stockNotifications');
-        const q = query(notificationsRef, where('email', '==', email.toLowerCase()));
+        let active = true;
+        const normalizedEmail = email.toLowerCase();
 
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                const data = snapshot.docs.map((doc) => ({
-                    ...doc.data(),
-                    id: doc.id,
-                })) as StockNotificationRequest[];
-                setSubscriptions(data);
-                setIsLoading(false);
-            },
-            (err) => {
-                console.error('Error loading stock notifications:', err);
-                setError(err.message);
-                setIsLoading(false);
+        const fetchSubscriptions = async () => {
+            const result = await supabase.functions.invoke(STOREFRONT_API_FUNCTION, {
+                body: {
+                    action: 'storeStockNotifications-list',
+                    storeId,
+                    email: normalizedEmail,
+                },
+            });
+
+            if (!active) return;
+
+            if (result.error || result.data?.error) {
+                const message = result.error?.message || result.data?.error || 'Error al cargar notificaciones';
+                console.error('Error loading stock notifications:', result.error || result.data?.error);
+                setError(message);
+            } else {
+                const data = result.data?.data || result.data;
+                setSubscriptions((data?.notifications || []).map(mapNotificationRow));
+                setError(null);
             }
-        );
+            setIsLoading(false);
+        };
 
-        return () => unsubscribe();
+        void fetchSubscriptions();
+
+        return () => {
+            active = false;
+        };
     }, [storeId, getStoredEmail]);
 
     // Check if subscribed
@@ -141,27 +158,43 @@ export const useStockNotification = (storeId: string): UseStockNotificationRetur
             }
 
             try {
-                const notificationId = `${productId}_${normalizedEmail.replace(/[^a-z0-9]/g, '_')}`;
-                const notificationRef = doc(
-                    db,
-                    'publicStores',
-                    storeId,
-                    'stockNotifications',
-                    notificationId
-                );
-
-                await setDoc(notificationRef, {
-                    productId,
-                    productName,
-                    productSlug,
-                    productImage: productImage || null,
-                    email: normalizedEmail,
-                    notified: false,
-                    createdAt: serverTimestamp(),
+                const notificationId = `${storeId}_${productId}_${normalizedEmail.replace(/[^a-z0-9]/g, '_')}`;
+                const result = await supabase.functions.invoke(STOREFRONT_API_FUNCTION, {
+                    body: {
+                        action: 'storeStockNotifications-subscribe',
+                        storeId,
+                        productId,
+                        productName,
+                        productSlug,
+                        productImage,
+                        email: normalizedEmail,
+                    },
                 });
+
+                if (result.error || result.data?.error) {
+                    throw new Error(result.error?.message || result.data?.error || 'Error al suscribirse');
+                }
 
                 // Save email for future use
                 saveStoredEmail(normalizedEmail);
+                setSubscriptions((prev) => {
+                    if (prev.some((item) => item.productId === productId && item.email === normalizedEmail)) {
+                        return prev;
+                    }
+                    return [
+                        {
+                            id: notificationId,
+                            productId,
+                            productName,
+                            productSlug,
+                            productImage,
+                            email: normalizedEmail,
+                            notified: false,
+                            createdAt: toStoredTimestamp(),
+                        },
+                        ...prev,
+                    ];
+                });
 
                 return { success: true };
             } catch (err: any) {
@@ -178,17 +211,23 @@ export const useStockNotification = (storeId: string): UseStockNotificationRetur
             const email = getStoredEmail();
             if (!storeId || !email) return;
 
-            const notificationId = `${productId}_${email.replace(/[^a-z0-9]/g, '_')}`;
-            const notificationRef = doc(
-                db,
-                'publicStores',
-                storeId,
-                'stockNotifications',
-                notificationId
-            );
+            const notificationId = `${storeId}_${productId}_${email.replace(/[^a-z0-9]/g, '_')}`;
 
             try {
-                await deleteDoc(notificationRef);
+                const normalizedEmail = email.toLowerCase();
+                const result = await supabase.functions.invoke(STOREFRONT_API_FUNCTION, {
+                    body: {
+                        action: 'storeStockNotifications-unsubscribe',
+                        storeId,
+                        productId,
+                        email: normalizedEmail,
+                    },
+                });
+
+                if (result.error || result.data?.error) {
+                    throw new Error(result.error?.message || result.data?.error || 'Error al cancelar la suscripcion');
+                }
+                setSubscriptions((prev) => prev.filter((item) => item.id !== notificationId));
             } catch (err) {
                 console.error('Error unsubscribing:', err);
             }
@@ -207,11 +246,6 @@ export const useStockNotification = (storeId: string): UseStockNotificationRetur
 };
 
 export default useStockNotification;
-
-
-
-
-
 
 
 

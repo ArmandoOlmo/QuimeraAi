@@ -30,7 +30,7 @@ import AutomationsTab from './email-hub/views/AutomationsTab';
 import AIStudioTab from './email-hub/views/AIStudioTab';
 
 // Types
-import type { UserEmailTab, ConfirmModalState, UserEmailCampaign } from './email-hub/types';
+import type { UserEmailTab, UserEmailCampaign } from './email-hub/types';
 import { formatDate, getStatusColor, getStatusIcon } from './email-hub/helpers';
 import type { CampaignStatus } from '../../../types/email';
 
@@ -56,7 +56,6 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
     // ── Tab & UI state ──────────────────────────────────────────────────────
     const [activeTab, setActiveTab] = useState<UserEmailTab>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({ show: false, title: '', message: '', onConfirm: () => {} });
 
     // ── Campaign detail / editor state ──────────────────────────────────────
     const [showDetailPanel, setShowDetailPanel] = useState(false);
@@ -73,7 +72,7 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
     const aiStudio = useUserAIEmailStudio(data, activeTab, userId, projectId, projectName);
 
     const {
-        isLoading, stats, campaigns, audiences, logs, automations, monthlyData,
+        isLoading, stats, campaigns, audiences, automations, monthlyData,
     } = data;
 
     const {
@@ -84,11 +83,20 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
         handleStartBlank, handleDuplicateCampaign, handleDeleteCampaign,
         handleUpdateCampaignStatus, handleUpdateCampaignAudience,
         showTestEmailModal, setShowTestEmailModal, testEmail, setTestEmail, handleSendTestEmail, sendingTest,
+        testSendError, testSendSuccess,
+        showSendConfirmModal, setShowSendConfirmModal, sendingCampaignId, handleSendCampaign,
+        sendCampaignError, sendCampaignSuccess,
         showCreateAutomation, setShowCreateAutomation, selectedTemplate, setSelectedTemplate,
         newAutomation, setNewAutomation, editingAutomationId, setEditingAutomationId,
         createAutomation, updateAutomation, duplicateAutomation, toggleAutomationStatus,
         deleteAutomation, openEditAutomation,
+        confirmModal, setConfirmModal,
     } = actions;
+
+    const sendingCampaign = useMemo(
+        () => campaigns.find(c => c.id === sendingCampaignId) || null,
+        [campaigns, sendingCampaignId]
+    );
 
     // ── Tab definitions ─────────────────────────────────────────────────────
     const tabs: { id: UserEmailTab; label: string; icon: React.ReactNode; count?: number }[] = [
@@ -354,10 +362,39 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                     <div className="bg-q-bg border border-q-border w-full max-w-sm rounded-2xl shadow-2xl p-6" onClick={e => e.stopPropagation()}>
                         <h3 className="text-lg font-bold text-q-text mb-4">{t('email.hub.campaigns.testEmailModal.title')}</h3>
                         <input type="email" value={testEmail} onChange={e => setTestEmail(e.target.value)} placeholder={t('email.hub.campaigns.testEmailModal.placeholder')} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50 mb-4" />
+                        {testSendError && <p className="text-sm text-red-400 mb-3">{testSendError}</p>}
+                        {testSendSuccess && <p className="text-sm text-green-400 mb-3">{testSendSuccess}</p>}
                         <div className="flex gap-3">
                             <button onClick={() => setShowTestEmailModal(false)} className="flex-1 px-4 py-2.5 text-sm text-q-text-secondary border border-q-border rounded-xl hover:bg-q-surface-overlay transition-colors">{t('email.hub.campaigns.testEmailModal.cancel')}</button>
                             <button onClick={() => handleSendTestEmail()} disabled={!testEmail || sendingTest} className="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl disabled:opacity-50 transition-all">
                                 {sendingTest ? <Loader2 size={16} className="animate-spin mx-auto" /> : t('email.hub.campaigns.testEmailModal.send')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Send Campaign Confirmation Modal */}
+            {showSendConfirmModal && sendingCampaign && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowSendConfirmModal(false)}>
+                    <div className="bg-q-bg border border-q-border w-full max-w-md rounded-2xl shadow-2xl p-6" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-q-text mb-2">{t('email.hub.campaigns.sendConfirmModal.title', 'Enviar campaña')}</h3>
+                        <p className="text-sm text-q-text-secondary mb-4">{t('email.hub.campaigns.sendConfirmModal.confirmMessage', 'Confirma el envío de esta campaña a su audiencia seleccionada.')}</p>
+                        <div className="bg-q-surface border border-q-border rounded-xl p-4 mb-4 space-y-1">
+                            <p className="text-sm text-q-text font-medium">{sendingCampaign.name}</p>
+                            <p className="text-xs text-q-text-secondary">{sendingCampaign.subject}</p>
+                            <p className="text-xs text-q-text-secondary">
+                                {sendingCampaign.audienceType === 'segment'
+                                    ? audiences.find(a => a.id === sendingCampaign.audienceSegmentId)?.name || t('email.hub.campaigns.detailPanel.segment')
+                                    : t('email.hub.campaigns.detailPanel.allContacts')}
+                            </p>
+                        </div>
+                        {sendCampaignError && <p className="text-sm text-red-400 mb-3">{sendCampaignError}</p>}
+                        {sendCampaignSuccess && <p className="text-sm text-green-400 mb-3">{sendCampaignSuccess}</p>}
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowSendConfirmModal(false)} className="flex-1 px-4 py-2.5 text-sm text-q-text-secondary border border-q-border rounded-xl hover:bg-q-surface-overlay transition-colors">{t('email.hub.confirm.cancel')}</button>
+                            <button onClick={handleSendCampaign} className="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors">
+                                {t('email.hub.campaigns.detailPanel.sendCampaign')}
                             </button>
                         </div>
                     </div>
@@ -646,7 +683,7 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                         <h3 className="text-lg font-bold text-q-text text-center mb-2">{confirmModal.title}</h3>
                         <p className="text-sm text-q-text-secondary text-center mb-6 leading-relaxed">{confirmModal.message}</p>
                         <div className="flex gap-3">
-                            <button onClick={() => setConfirmModal(null)} className="flex-1 px-4 py-2 border border-q-border rounded-lg text-sm hover:bg-q-surface-overlay transition">{t('email.hub.confirm.cancel')}</button>
+                            <button onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))} className="flex-1 px-4 py-2 border border-q-border rounded-lg text-sm hover:bg-q-surface-overlay transition">{t('email.hub.confirm.cancel')}</button>
                             <button onClick={confirmModal.onConfirm} className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 transition">{t('email.hub.confirm.confirm')}</button>
                         </div>
                     </div>

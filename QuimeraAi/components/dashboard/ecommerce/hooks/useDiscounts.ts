@@ -54,7 +54,8 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
 
         fetchDiscounts();
 
-        const channel = supabase.channel('store_discounts_changes')
+        const channelName = `store_discounts_changes:${effectiveStoreId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -70,7 +71,7 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
     }, [userId, effectiveStoreId, fetchDiscounts]);
 
@@ -318,4 +319,3 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
         generateCode,
     };
 };
-

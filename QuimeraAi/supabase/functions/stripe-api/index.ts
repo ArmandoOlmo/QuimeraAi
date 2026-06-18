@@ -54,8 +54,13 @@ const PUBLIC_ACTIONS = new Set([
   "agencyBilling-getPaymentLinkInfo",
   "agencyBilling-confirmClientPayment",
   "createStoreCheckoutIntent",
+  "createStoreCashOrder",
   "getStoreOrderStatus",
   "trackOrder",
+  "markStoreReviewHelpful",
+  "storeStockNotifications-list",
+  "storeStockNotifications-subscribe",
+  "storeStockNotifications-unsubscribe",
   "storeUsers-create",
   "storeUsers-recordLogin",
   "storeUsers-resetPassword",
@@ -163,9 +168,24 @@ serve(async (req) => {
       case "createStoreCheckoutIntent":
         result = await createStoreCheckoutIntent(payload);
         break;
+      case "createStoreCashOrder":
+        result = await createStoreCashOrder(payload);
+        break;
       case "getStoreOrderStatus":
       case "trackOrder":
         result = await getStoreOrderStatus(payload);
+        break;
+      case "markStoreReviewHelpful":
+        result = await markStoreReviewHelpful(payload);
+        break;
+      case "storeStockNotifications-list":
+        result = await listStoreStockNotifications(payload);
+        break;
+      case "storeStockNotifications-subscribe":
+        result = await subscribeStoreStockNotification(payload);
+        break;
+      case "storeStockNotifications-unsubscribe":
+        result = await unsubscribeStoreStockNotification(payload);
         break;
       case "storeUsers-create":
         result = await createStoreUser(payload);
@@ -1216,8 +1236,10 @@ async function getStoreContext(storeId: string) {
     stripeConnectDetailsSubmitted: settingsRow.stripe_connect_details_submitted ?? settingsRow.data?.stripeConnectDetailsSubmitted,
     stripeConnectStatus: settingsRow.stripe_connect_status || settingsRow.data?.stripeConnectStatus,
     stripeEnabled: settingsRow.stripe_enabled ?? settingsRow.data?.stripeEnabled,
+    cashOnDeliveryEnabled: settingsRow.cash_on_delivery_enabled ?? settingsRow.data?.cashOnDeliveryEnabled,
     currency: settingsRow.currency || settingsRow.data?.currency || "USD",
     shippingZones: settingsRow.shipping_zones || settingsRow.data?.shippingZones || [],
+    freeShippingThreshold: settingsRow.free_shipping_threshold ?? settingsRow.data?.freeShippingThreshold,
     taxEnabled: settingsRow.tax_enabled ?? settingsRow.data?.taxEnabled,
     taxRate: Number(settingsRow.tax_rate ?? settingsRow.data?.taxRate ?? 0),
     storeName: settingsRow.store_name || settingsRow.data?.storeName || "Store",
@@ -1284,14 +1306,16 @@ async function buildStoreOrder(data: any) {
     shippingMethodId,
     idempotencyKey = randomToken("checkout_"),
     notes,
+    paymentMethod = "stripe",
   } = data;
 
   const context = await getStoreContext(storeId);
   const { projectId, ownerId, settings } = context;
   const currency = String(settings.currency || "USD").toLowerCase();
   const connectedAccountId = settings.stripeConnectAccountId;
+  const isStripePayment = paymentMethod === "stripe";
 
-  if (!settings.stripeEnabled || !connectedAccountId || !settings.stripeConnectChargesEnabled) {
+  if (isStripePayment && (!settings.stripeEnabled || !connectedAccountId || !settings.stripeConnectChargesEnabled)) {
     throw new Error("Store is not ready to accept payments");
   }
 
@@ -1335,7 +1359,14 @@ async function buildStoreOrder(data: any) {
   let shippingTotal = 0;
   let shippingMethodName = "Standard";
   const zones = Array.isArray(settings.shippingZones) ? settings.shippingZones : [];
-  const allRates = zones.flatMap((zone: any) => zone.rates || []);
+  const configuredRates = zones.flatMap((zone: any) => zone.rates || []);
+  const allRates = configuredRates.length > 0
+    ? configuredRates
+    : [
+      { id: "standard", name: "Envio Estandar", price: 99 },
+      { id: "express", name: "Envio Express", price: 199 },
+      { id: "overnight", name: "Entrega al Siguiente Dia", price: 349 },
+    ];
   const selectedRate = allRates.find((rate: any) => rate.id === shippingMethodId) || allRates[0];
   if (selectedRate) {
     shippingTotal = Number(selectedRate.price || 0);
@@ -1378,10 +1409,10 @@ async function buildStoreOrder(data: any) {
       currency,
       shippingAddress,
       billingAddress: billingAddress || shippingAddress,
-      status: "pending",
+      status: isStripePayment ? "pending" : "confirmed",
       paymentStatus: "pending",
       fulfillmentStatus: "unfulfilled",
-      paymentMethod: "stripe",
+      paymentMethod,
       shippingMethod: shippingMethodName,
       notes: notes || null,
       checkoutIdempotencyKey: idempotencyKey,
@@ -1437,6 +1468,14 @@ async function createStoreCheckoutIntent(data: any) {
 
   const orderData = {
     ...order.data,
+    pricing: {
+      subtotal: order.data.subtotal,
+      discountTotal: 0,
+      shippingTotal: order.data.shippingCost,
+      taxTotal: order.data.taxAmount,
+      platformFeeTotal: platformFee / 100,
+      total: order.data.total,
+    },
     stripe: {
       paymentIntentId: paymentIntent.id,
       connectedAccountId: order.connectedAccountId,
@@ -1456,10 +1495,16 @@ async function createStoreCheckoutIntent(data: any) {
       customer_phone: orderData.customerPhone,
       subtotal: orderData.subtotal,
       discount: 0,
+      discount_amount: orderData.discountAmount,
       shipping_cost: orderData.shippingCost,
       tax_amount: orderData.taxAmount,
       total: orderData.total,
       currency: orderData.currency.toUpperCase(),
+      items: orderData.items,
+      pricing: orderData.pricing,
+      checkout_idempotency_key: orderData.checkoutIdempotencyKey,
+      cart_hash: orderData.cartHash,
+      stripe: orderData.stripe,
       shipping_address: orderData.shippingAddress,
       billing_address: orderData.billingAddress,
       status: "pending",
@@ -1467,6 +1512,7 @@ async function createStoreCheckoutIntent(data: any) {
       fulfillment_status: "unfulfilled",
       payment_method: "stripe",
       payment_intent_id: paymentIntent.id,
+      shipping_method: orderData.shippingMethod,
       notes: orderData.notes,
       data: orderData,
     })
@@ -1482,6 +1528,77 @@ async function createStoreCheckoutIntent(data: any) {
     orderNumber: order.orderNumber,
     orderAccessToken: order.accessToken,
     total: orderData.total,
+    cartHash: order.cartHash,
+  };
+}
+
+async function createStoreCashOrder(data: any) {
+  const context = await getStoreContext(data.storeId);
+  if (!context.settings.cashOnDeliveryEnabled) {
+    throw new Error("Cash on delivery is not enabled for this store");
+  }
+
+  const order = await buildStoreOrder({
+    ...data,
+    paymentMethod: "cod",
+    idempotencyKey: data.idempotencyKey || randomToken("cod_"),
+  });
+
+  const orderData = {
+    ...order.data,
+    pricing: {
+      subtotal: order.data.subtotal,
+      discountTotal: 0,
+      shippingTotal: order.data.shippingCost,
+      taxTotal: order.data.taxAmount,
+      platformFeeTotal: 0,
+      total: order.data.total,
+    },
+  };
+
+  const { data: inserted, error } = await supabase
+    .from("store_orders")
+    .insert({
+      store_id: order.context.storeId,
+      user_id: order.ownerId,
+      project_id: order.projectId,
+      order_number: order.orderNumber,
+      customer_email: orderData.customerEmail,
+      customer_name: orderData.customerName,
+      customer_phone: orderData.customerPhone,
+      subtotal: orderData.subtotal,
+      discount: 0,
+      discount_amount: orderData.discountAmount,
+      shipping_cost: orderData.shippingCost,
+      tax_amount: orderData.taxAmount,
+      total: orderData.total,
+      currency: orderData.currency.toUpperCase(),
+      items: orderData.items,
+      pricing: orderData.pricing,
+      checkout_idempotency_key: orderData.checkoutIdempotencyKey,
+      cart_hash: orderData.cartHash,
+      shipping_address: orderData.shippingAddress,
+      billing_address: orderData.billingAddress,
+      status: "confirmed",
+      payment_status: "pending",
+      fulfillment_status: "unfulfilled",
+      payment_method: "cod",
+      shipping_method: orderData.shippingMethod,
+      notes: orderData.notes,
+      customer_notes: orderData.notes,
+      data: orderData,
+    })
+    .select("id, order_number, total")
+    .single();
+
+  if (error) throw error;
+
+  return {
+    success: true,
+    orderId: inserted.id,
+    orderNumber: inserted.order_number || order.orderNumber,
+    orderAccessToken: order.accessToken,
+    total: Number(inserted.total ?? orderData.total ?? 0),
     cartHash: order.cartHash,
   };
 }
@@ -1516,6 +1633,7 @@ async function createStoreCheckoutSession(data: any) {
 
 async function getStoreOrderStatus(data: any) {
   const { storeId, orderId, orderAccessToken, token } = data;
+  const email = String(data.email || data.customerEmail || "").trim().toLowerCase();
   let query = supabase.from("store_orders").select("*");
   if (orderId) query = query.eq("id", orderId);
   else if (data.orderNumber) query = query.eq("order_number", data.orderNumber);
@@ -1528,24 +1646,153 @@ async function getStoreOrderStatus(data: any) {
 
   const orderData = order.data || order;
   const accessHash = orderData.orderAccessTokenHash;
-  if (accessHash && (await sha256(orderAccessToken || token || "")) !== accessHash) {
-    throw new Error("Invalid order token");
+  const providedToken = orderAccessToken || token || "";
+  const tokenMatches = Boolean(accessHash && providedToken && (await sha256(providedToken)) === accessHash);
+  const emailMatches = Boolean(email && String(order.customer_email || orderData.customerEmail || "").toLowerCase() === email);
+
+  if (accessHash && !tokenMatches && !emailMatches) {
+    throw new Error("Invalid order token or email");
+  }
+
+  if (!accessHash && !emailMatches) {
+    throw new Error("Order email is required");
   }
 
   return {
     id: order.id,
+    storeId: order.store_id || orderData.storeId,
     orderNumber: order.order_number || orderData.orderNumber,
     status: order.status || orderData.status,
     paymentStatus: order.payment_status || orderData.paymentStatus,
     fulfillmentStatus: order.fulfillment_status || orderData.fulfillmentStatus,
+    customerEmail: order.customer_email || orderData.customerEmail,
+    customerName: order.customer_name || orderData.customerName,
+    customerPhone: order.customer_phone || orderData.customerPhone,
     total: Number(order.total ?? orderData.total ?? 0),
+    subtotal: Number(order.subtotal ?? orderData.subtotal ?? 0),
+    discountAmount: Number(order.discount_amount ?? orderData.discountAmount ?? 0),
+    shippingCost: Number(order.shipping_cost ?? orderData.shippingCost ?? 0),
+    taxAmount: Number(order.tax_amount ?? orderData.taxAmount ?? 0),
     currency: order.currency || orderData.currency || "USD",
     items: orderData.items || [],
+    shippingAddress: order.shipping_address || orderData.shippingAddress,
+    billingAddress: order.billing_address || orderData.billingAddress,
+    paymentMethod: order.payment_method || orderData.paymentMethod,
+    shippingMethod: order.shipping_method || orderData.shippingMethod,
     trackingNumber: order.tracking_number || orderData.trackingNumber,
     trackingUrl: order.tracking_url || orderData.trackingUrl,
     carrier: order.carrier || orderData.carrier,
     createdAt: order.created_at || orderData.createdAt,
+    updatedAt: order.updated_at || orderData.updatedAt || order.created_at || orderData.createdAt,
   };
+}
+
+async function markStoreReviewHelpful(data: any) {
+  const { storeId, reviewId } = data;
+  if (!storeId || !reviewId) throw new Error("storeId and reviewId are required");
+
+  const { data: review, error: fetchError } = await supabase
+    .from("store_reviews")
+    .select("id, project_id, status, helpful_votes")
+    .eq("id", reviewId)
+    .eq("project_id", storeId)
+    .eq("status", "approved")
+    .maybeSingle();
+
+  if (fetchError) throw fetchError;
+  if (!review) throw new Error("Review not found");
+
+  const { data: updated, error } = await supabase
+    .from("store_reviews")
+    .update({ helpful_votes: Number(review.helpful_votes || 0) + 1, updated_at: nowIso() })
+    .eq("id", reviewId)
+    .eq("project_id", storeId)
+    .select("id, helpful_votes")
+    .single();
+
+  if (error) throw error;
+  return { success: true, reviewId: updated.id, helpfulVotes: Number(updated.helpful_votes || 0) };
+}
+
+function normalizeEmail(email: string) {
+  return String(email || "").trim().toLowerCase();
+}
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function stockNotificationId(storeId: string, productId: string, email: string) {
+  return `${storeId}_${productId}_${email.replace(/[^a-z0-9]/g, "_")}`;
+}
+
+async function listStoreStockNotifications(data: any) {
+  const storeId = String(data.storeId || "");
+  const email = normalizeEmail(data.email);
+  if (!storeId || !isValidEmail(email)) throw new Error("storeId and a valid email are required");
+
+  const { data: notifications, error } = await supabase
+    .from("store_stock_notifications")
+    .select("*")
+    .eq("store_id", storeId)
+    .eq("email", email)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return { success: true, notifications: notifications || [] };
+}
+
+async function subscribeStoreStockNotification(data: any) {
+  const storeId = String(data.storeId || "");
+  const productId = String(data.productId || "");
+  const email = normalizeEmail(data.email);
+  if (!storeId || !productId || !isValidEmail(email)) {
+    throw new Error("storeId, productId and a valid email are required");
+  }
+
+  const context = await getStoreContext(storeId);
+  const product = await getStoreProduct(context.projectId, productId);
+  if (product.status !== "active") throw new Error("Product is not available");
+
+  const payload = {
+    id: stockNotificationId(storeId, productId, email),
+    store_id: context.projectId,
+    project_id: context.projectId,
+    product_id: productId,
+    product_name: data.productName || product.name,
+    product_slug: data.productSlug || productId,
+    product_image: data.productImage || product.images?.[0]?.url || product.images?.[0] || null,
+    email,
+    notified: false,
+    updated_at: nowIso(),
+  };
+
+  const { data: notification, error } = await supabase
+    .from("store_stock_notifications")
+    .upsert(payload, { onConflict: "id" })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return { success: true, notification };
+}
+
+async function unsubscribeStoreStockNotification(data: any) {
+  const storeId = String(data.storeId || "");
+  const productId = String(data.productId || "");
+  const email = normalizeEmail(data.email);
+  if (!storeId || !productId || !isValidEmail(email)) {
+    throw new Error("storeId, productId and a valid email are required");
+  }
+
+  const { error } = await supabase
+    .from("store_stock_notifications")
+    .delete()
+    .eq("id", stockNotificationId(storeId, productId, email))
+    .eq("store_id", storeId);
+
+  if (error) throw error;
+  return { success: true };
 }
 
 async function createRefund(userId: string, data: any) {
@@ -2026,7 +2273,8 @@ async function createStoreUser(data: any) {
     }
   }
 
-  const { data: user, error } = await supabase.from("store_users").upsert({
+  const storeUserPayload = {
+    ...(authUserId ? { id: authUserId } : {}),
     project_id: projectId,
     email: normalizedEmail,
     display_name: displayName || [firstName, lastName].filter(Boolean).join(" ") || normalizedEmail,
@@ -2035,7 +2283,12 @@ async function createStoreUser(data: any) {
     phone: phone || null,
     metadata: { ...metadata, authUserId },
     last_login_at: nowIso(),
-  }, { onConflict: "project_id,email" }).select("*").single();
+  };
+
+  const { data: user, error } = await supabase.from("store_users").upsert(
+    storeUserPayload,
+    { onConflict: "project_id,email" },
+  ).select("*").single();
   if (error) throw error;
   return { success: true, user };
 }

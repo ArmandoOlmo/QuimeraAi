@@ -6,7 +6,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../../supabase';
 import { Category } from '../../../../types/ecommerce';
-import { mapCategoryFromDB, mapCategoryToDB } from '../../../../utils/ecommerceMappers';
+import { mapCategoryFromDB } from '../../../../utils/ecommerceMappers';
+
+const fallbackUuid = () => '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (char) =>
+    (Number(char) ^ Math.random() * 16 >> Number(char) / 4).toString(16)
+);
+
+const newId = () =>
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : fallbackUuid();
 
 export const useCategories = (userId: string, storeId?: string) => {
     const [categories, setCategories] = useState<Category[]>([]);
@@ -22,14 +31,16 @@ export const useCategories = (userId: string, storeId?: string) => {
         const { data, error: fetchError } = await supabase
             .from('store_categories')
             .select('*')
-            .eq('project_id', effectiveStoreId)
-            .order('position', { ascending: true });
+            .eq('project_id', effectiveStoreId);
 
         if (fetchError) {
             console.error('Error fetching categories:', fetchError);
             setError(fetchError.message);
         } else {
-            setCategories((data || []).map(mapCategoryFromDB));
+            const mappedCategories = (data || [])
+                .map(mapCategoryFromDB)
+                .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+            setCategories(mappedCategories);
             setError(null);
         }
         setIsLoading(false);
@@ -43,7 +54,8 @@ export const useCategories = (userId: string, storeId?: string) => {
 
         fetchCategories();
 
-        const channel = supabase.channel('store_categories_changes')
+        const channelName = `store_categories_changes:${effectiveStoreId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -59,7 +71,7 @@ export const useCategories = (userId: string, storeId?: string) => {
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
     }, [userId, effectiveStoreId, fetchCategories]);
 
@@ -78,14 +90,25 @@ export const useCategories = (userId: string, storeId?: string) => {
         async (categoryData: Omit<Category, 'id' | 'createdAt' | 'updatedAt' | 'slug' | 'position'>): Promise<string> => {
             const position = categories.length;
             const slug = generateSlug(categoryData.name);
-
-            const dbData = mapCategoryToDB({
+            const categoryId = newId();
+            const now = new Date().toISOString();
+            const publicData = {
+                id: categoryId,
                 ...categoryData,
                 slug,
                 position,
-            });
+                createdAt: now,
+                updatedAt: now,
+            };
 
-            dbData.project_id = effectiveStoreId;
+            const dbData = {
+                id: categoryId,
+                store_id: effectiveStoreId,
+                project_id: effectiveStoreId,
+                data: publicData,
+                created_at: now,
+                updated_at: now,
+            };
 
             const { data: insertedDoc, error } = await supabase
                 .from('store_categories')
@@ -102,20 +125,29 @@ export const useCategories = (userId: string, storeId?: string) => {
     // Update category
     const updateCategory = useCallback(
         async (categoryId: string, updates: Partial<Category>) => {
-            const updateData = mapCategoryToDB(updates);
-
-            if (updates.name) {
-                updateData.slug = generateSlug(updates.name);
-            }
+            const currentCategory = categories.find((category) => category.id === categoryId);
+            const now = new Date().toISOString();
+            const nextCategory = {
+                ...currentCategory,
+                ...updates,
+                id: categoryId,
+                slug: updates.name ? generateSlug(updates.name) : updates.slug || currentCategory?.slug || '',
+                position: updates.position ?? currentCategory?.position ?? 0,
+                updatedAt: now,
+            };
 
             const { error } = await supabase
                 .from('store_categories')
-                .update(updateData)
-                .eq('id', categoryId);
+                .update({
+                    data: nextCategory,
+                    updated_at: now,
+                })
+                .eq('id', categoryId)
+                .eq('project_id', effectiveStoreId);
 
             if (error) throw error;
         },
-        []
+        [categories, effectiveStoreId]
     );
 
     // Delete category
@@ -124,24 +156,33 @@ export const useCategories = (userId: string, storeId?: string) => {
             const { error } = await supabase
                 .from('store_categories')
                 .delete()
-                .eq('id', categoryId);
+                .eq('id', categoryId)
+                .eq('project_id', effectiveStoreId);
 
             if (error) throw error;
         },
-        []
+        [effectiveStoreId]
     );
 
     // Reorder categories
     const reorderCategories = useCallback(
         async (orderedIds: string[]) => {
-            // Because Supabase doesn't have a direct 'bulk update multiple rows with different values' 
-            // easily via the JS client, we can do multiple updates or use a database function.
-            // Using Promise.all for updates since it's an admin op and categories count is usually small.
             const promises = orderedIds.map((id, index) => {
+                const currentCategory = categories.find((category) => category.id === id);
+                const now = new Date().toISOString();
                 return supabase
                     .from('store_categories')
-                    .update({ position: index })
-                    .eq('id', id);
+                    .update({
+                        data: {
+                            ...currentCategory,
+                            id,
+                            position: index,
+                            updatedAt: now,
+                        },
+                        updated_at: now,
+                    })
+                    .eq('id', id)
+                    .eq('project_id', effectiveStoreId);
             });
 
             const results = await Promise.all(promises);
@@ -150,7 +191,7 @@ export const useCategories = (userId: string, storeId?: string) => {
                 throw errors[0].error;
             }
         },
-        []
+        [categories, effectiveStoreId]
     );
 
     // Get category by ID
@@ -197,4 +238,3 @@ export const useCategories = (userId: string, storeId?: string) => {
         getCategoryTree,
     };
 };
-

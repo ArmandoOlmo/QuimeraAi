@@ -236,18 +236,24 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
     const campaignStatusCounts = useMemo(() => ({
         all: campaigns.length,
         draft: campaigns.filter((c) => c.status === 'draft').length,
+        pending: campaigns.filter((c) => c.status === 'pending').length,
+        approved: campaigns.filter((c) => c.status === 'approved').length,
         scheduled: campaigns.filter((c) => c.status === 'scheduled').length,
         sending: campaigns.filter((c) => c.status === 'sending').length,
         sent: campaigns.filter((c) => c.status === 'sent').length,
+        cancelled: campaigns.filter((c) => c.status === 'cancelled').length,
         paused: campaigns.filter((c) => c.status === 'paused').length,
     }), [campaigns]);
 
     const statusFilterOptions = useMemo<FilterChipOption<CampaignStatus | 'all'>[]>(() => [
         { id: 'all', label: t('email.allStatuses', 'Todos los estados'), count: campaignStatusCounts.all },
         { id: 'draft', label: t('email.draft', 'Borrador'), count: campaignStatusCounts.draft, color: 'gray' },
+        { id: 'pending', label: t('email.pending', 'Pendiente'), count: campaignStatusCounts.pending },
+        { id: 'approved', label: t('email.approved', 'Aprobada'), count: campaignStatusCounts.approved, color: 'green' },
         { id: 'scheduled', label: t('email.scheduled', 'Programada'), count: campaignStatusCounts.scheduled },
         { id: 'sending', label: t('email.sending', 'Enviando'), count: campaignStatusCounts.sending },
         { id: 'sent', label: t('email.sent', 'Enviada'), count: campaignStatusCounts.sent, color: 'green' },
+        { id: 'cancelled', label: t('email.cancelled', 'Cancelada'), count: campaignStatusCounts.cancelled, color: 'gray' },
         { id: 'paused', label: t('email.paused', 'Pausada'), count: campaignStatusCounts.paused, color: 'gray' },
     ], [t, campaignStatusCounts]);
 
@@ -259,6 +265,8 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
             sent: { label: 'Enviada', color: 'bg-green-500/20 text-green-400', icon: CheckCircle },
             cancelled: { label: 'Cancelada', color: 'bg-red-500/20 text-red-400', icon: XCircle },
             paused: { label: 'Pausada', color: 'bg-orange-500/20 text-orange-400', icon: Pause },
+            pending: { label: 'Pendiente', color: 'bg-amber-500/20 text-amber-400', icon: Clock },
+            approved: { label: 'Aprobada', color: 'bg-emerald-500/20 text-emerald-400', icon: CheckCircle },
         };
 
         const config = statusConfig[status || 'draft'];
@@ -650,7 +658,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                     <FilterChipRow
                         options={statusFilterOptions}
                         value={statusFilter}
-                        onChange={setStatusFilter}
+                        onChange={(value) => setStatusFilter(value)}
                     />
                 }
             />

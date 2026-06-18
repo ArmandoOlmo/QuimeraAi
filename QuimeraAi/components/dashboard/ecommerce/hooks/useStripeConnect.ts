@@ -117,7 +117,8 @@ export const useStripeConnect = (userId: string, storeId: string) => {
 
         fetchStatus();
 
-        const channel = supabase.channel('store_settings_stripe_connect')
+        const channelName = `store_settings_stripe_connect:${storeId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -148,7 +149,7 @@ export const useStripeConnect = (userId: string, storeId: string) => {
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
     }, [storeId]);
 
@@ -380,7 +381,6 @@ export const useStripeConnect = (userId: string, storeId: string) => {
         openDashboard,
     };
 };
-
 
 
 

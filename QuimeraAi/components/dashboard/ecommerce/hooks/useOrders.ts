@@ -73,7 +73,8 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
 
         fetchOrders();
 
-        const channel = supabase.channel('store_orders_changes')
+        const channelName = `store_orders_changes:${effectiveStoreId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -89,7 +90,7 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
     }, [userId, effectiveStoreId, fetchOrders]);
 
@@ -146,6 +147,18 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
             });
 
             dbData.project_id = effectiveStoreId;
+            dbData.store_id = effectiveStoreId;
+            dbData.user_id = userId;
+            dbData.data = {
+                ...orderData,
+                orderNumber,
+                discount: orderData.discount || 0,
+                status: 'pending',
+                paymentStatus: 'pending',
+                fulfillmentStatus: 'unfulfilled',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
 
             const { data: insertedOrder, error } = await supabase
                 .from('store_orders')
@@ -156,7 +169,7 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
             if (error) throw error;
             return insertedOrder.id;
         },
-        [effectiveStoreId, generateOrderNumber]
+        [effectiveStoreId, generateOrderNumber, userId]
     );
 
     // Update order status
@@ -315,4 +328,3 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
         generateOrderNumber,
     };
 };
-

@@ -78,9 +78,10 @@ const StockAlertsView: React.FC = () => {
             setIsLoading(false);
         };
 
-        fetchSubscribers();
+        void fetchSubscribers();
 
-        const channel = supabase.channel('stock_notifications_changes')
+        const channelName = `stock_notifications_changes:${storeId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -90,13 +91,13 @@ const StockAlertsView: React.FC = () => {
                     filter: `project_id=eq.${storeId}`
                 },
                 () => {
-                    fetchSubscribers();
+                    void fetchSubscribers();
                 }
             )
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
     }, [storeId]);
 

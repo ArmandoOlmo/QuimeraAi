@@ -83,7 +83,8 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
 
         fetchUsers();
 
-        const channel = supabase.channel('store_users_changes')
+        const channelName = `store_users_changes:${storeId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -99,7 +100,7 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
     }, [storeId, fetchUsers]);
 
@@ -123,7 +124,8 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
 
         fetchSegments();
 
-        const channel = supabase.channel('store_user_segments_changes')
+        const channelName = `store_user_segments_changes:${storeId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -139,7 +141,7 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
     }, [storeId, fetchSegments]);
 
@@ -618,7 +620,6 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
 };
 
 export default useStoreUsers;
-
 
 
 

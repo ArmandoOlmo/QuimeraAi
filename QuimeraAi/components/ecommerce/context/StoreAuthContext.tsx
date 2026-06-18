@@ -7,14 +7,11 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import {
     signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    sendPasswordResetEmail,
     signOut,
     onAuthStateChanged,
     User as StoreAuthUser,
 } from '@/utils/compatData';
-import { doc, getDoc, collection, query, where, getDocs } from '@/utils/compatData';
-import { auth, db } from '@/utils/compatData';
+import { auth } from '@/utils/compatData';
 import { supabase } from '../../../supabase';
 import { StoreUser, StoreAuthContextType, StoreAuthState } from '../../../types/storeUsers';
 
@@ -24,6 +21,37 @@ interface StoreAuthProviderProps {
 }
 
 const StoreAuthContext = createContext<StoreAuthContextType | null>(null);
+
+const timestampFromIso = (value?: string | null) => ({
+    seconds: value ? Math.floor(new Date(value).getTime() / 1000) : Math.floor(Date.now() / 1000),
+    nanoseconds: 0,
+});
+
+const mapStoreUserRow = (row: any): StoreUser => ({
+    id: row.id,
+    email: row.email,
+    displayName: row.display_name || row.email,
+    firstName: row.first_name || undefined,
+    lastName: row.last_name || undefined,
+    photoURL: row.photo_url || undefined,
+    phone: row.phone || undefined,
+    role: row.role || 'customer',
+    status: row.status || 'active',
+    segments: row.segments || [],
+    tags: row.tags || [],
+    customerId: row.customer_id || undefined,
+    totalOrders: Number(row.total_orders || 0),
+    totalSpent: Number(row.total_spent || 0),
+    averageOrderValue: Number(row.average_order_value || 0),
+    lastLoginAt: row.last_login_at ? timestampFromIso(row.last_login_at) as any : undefined,
+    lastOrderAt: row.last_order_at ? timestampFromIso(row.last_order_at) as any : undefined,
+    createdAt: timestampFromIso(row.created_at) as any,
+    updatedAt: timestampFromIso(row.updated_at) as any,
+    metadata: row.metadata || { source: 'self_register' },
+    acceptsMarketing: row.accepts_marketing,
+    preferredLanguage: row.preferred_language || undefined,
+    internalNotes: row.internal_notes || undefined,
+});
 
 export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
     storeId,
@@ -41,19 +69,15 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
     // Fetch store user data from Supabase.
     const fetchStoreUser = useCallback(async (email: string): Promise<StoreUser | null> => {
         try {
-            const usersRef = collection(db, `storeUsers/${storeId}/users`);
-            const q = query(usersRef, where('email', '==', email.toLowerCase()));
-            const snapshot = await getDocs(q);
+            const { data, error } = await supabase
+                .from('store_users')
+                .select('*')
+                .eq('project_id', storeId)
+                .eq('email', email.toLowerCase())
+                .maybeSingle();
 
-            if (snapshot.empty) {
-                return null;
-            }
-
-            const userDoc = snapshot.docs[0];
-            return {
-                id: userDoc.id,
-                ...userDoc.data(),
-            } as StoreUser;
+            if (error) throw error;
+            return data ? mapStoreUserRow(data) : null;
         } catch (error) {
             console.error('Error fetching store user:', error);
             return null;
@@ -126,27 +150,37 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
         try {
-            // First check if user exists in this store
+            await signInWithEmailAndPassword(auth, email, password);
+
+            // After auth, RLS can verify if the user belongs to this store.
             const storeUser = await fetchStoreUser(email);
 
             if (!storeUser) {
+                await signOut(auth);
                 throw new Error('No existe una cuenta con este email en esta tienda');
             }
 
             if (storeUser.status === 'banned') {
+                await signOut(auth);
                 throw new Error('Tu cuenta ha sido suspendida. Contacta al soporte.');
             }
 
             if (storeUser.status === 'inactive') {
+                await signOut(auth);
                 throw new Error('Tu cuenta está inactiva. Contacta al soporte.');
             }
-
-            await signInWithEmailAndPassword(auth, email, password);
 
             // Record login (async, don't wait)
             supabase.functions.invoke('stripe-api', {
                 body: { action: 'storeUsers-recordLogin', storeId, email }
             }).catch(console.error);
+
+            setState({
+                user: storeUser,
+                isLoading: false,
+                isAuthenticated: true,
+                error: null,
+            });
 
         } catch (error: any) {
             let errorMessage = 'Error al iniciar sesión';
@@ -245,14 +279,14 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
     // Reset Password
     const resetPassword = useCallback(async (email: string): Promise<void> => {
         try {
-            // First check if user exists in this store
-            const storeUser = await fetchStoreUser(email);
-
-            if (!storeUser) {
-                throw new Error('No existe una cuenta con este email en esta tienda');
-            }
-
-            await sendPasswordResetEmail(auth, email);
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: {
+                    action: 'storeUsers-resetPassword',
+                    storeId,
+                    email,
+                },
+            });
+            if (result.error) throw result.error;
         } catch (error: any) {
             let errorMessage = 'Error al enviar el email de recuperación';
 
@@ -264,7 +298,7 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
 
             throw new Error(errorMessage);
         }
-    }, [fetchStoreUser]);
+    }, [storeId]);
 
     // Update Profile
     const updateProfile = useCallback(async (updates: Partial<StoreUser>): Promise<void> => {
@@ -326,9 +360,6 @@ export const useStoreAuthOptional = (): StoreAuthContextType | null => {
 };
 
 export default StoreAuthContext;
-
-
-
 
 
 

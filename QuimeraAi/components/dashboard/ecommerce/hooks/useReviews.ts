@@ -83,7 +83,8 @@ export const useReviews = (
 
         fetchReviews();
 
-        const channel = supabase.channel('store_reviews_changes')
+        const channelName = `store_reviews_changes:${effectiveStoreId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        const channel = supabase.channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -99,7 +100,7 @@ export const useReviews = (
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            void supabase.removeChannel(channel);
         };
     }, [userId, effectiveStoreId, fetchReviews]);
 
@@ -166,13 +167,12 @@ export const useReviews = (
     // Respond to review
     const respondToReview = useCallback(async (reviewId: string, response: string) => {
         try {
-            // Update the record; custom `admin_response_at` isn't native to the old schema but we can
-            // rely on standard triggers or map if we had added it. We'll just update the response for now.
-            // (Wait, I added adminResponseAt to the mapper just in case, but let's see if we should save it.
-            //  In supabase DB schema, we don't have `admin_response_at`. So just `admin_response`.)
             const { error } = await supabase
                 .from('store_reviews')
-                .update({ admin_response: response })
+                .update({
+                    admin_response: response,
+                    admin_response_at: new Date().toISOString(),
+                })
                 .eq('id', reviewId);
 
             if (error) throw error;
@@ -212,4 +212,3 @@ export const useReviews = (
 };
 
 export default useReviews;
-

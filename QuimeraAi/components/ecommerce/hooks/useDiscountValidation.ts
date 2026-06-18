@@ -5,9 +5,9 @@ import { getTimestampSeconds, timestampToDate } from '../../../utils/timestampUt
  */
 
 import { useState, useCallback } from 'react';
-import { collection, query, where, getDocs, doc, getDoc } from '@/utils/compatData';
-import { db } from '@/utils/compatData';
+import { supabase } from '../../../supabase';
 import { Discount, CartItem, DiscountType } from '../../../types/ecommerce';
+import { mapDiscountFromDB } from '../../../utils/ecommerceMappers';
 
 // Types
 export interface DiscountValidationResult {
@@ -211,17 +211,18 @@ export const useDiscountValidation = (storeId: string): UseDiscountValidationRet
             setError(null);
 
             try {
-                // Fetch discount from Supabase
-                const discountsRef = collection(db, 'publicStores', storeId, 'discounts');
-                const q = query(
-                    discountsRef,
-                    where('code', '==', code.toUpperCase().trim()),
-                    where('isActive', '==', true)
-                );
+                const { data, error } = await supabase
+                    .from('store_discounts')
+                    .select('*')
+                    .eq('project_id', storeId)
+                    .eq('code', code.toUpperCase().trim())
+                    .eq('is_active', true)
+                    .limit(1)
+                    .maybeSingle();
 
-                const snapshot = await getDocs(q);
+                if (error) throw error;
 
-                if (snapshot.empty) {
+                if (!data) {
                     const result: DiscountValidationResult = {
                         valid: false,
                         discountAmount: 0,
@@ -232,8 +233,7 @@ export const useDiscountValidation = (storeId: string): UseDiscountValidationRet
                     return result;
                 }
 
-                const discountDoc = snapshot.docs[0];
-                const discount = { ...discountDoc.data(), id: discountDoc.id } as Discount;
+                const discount = mapDiscountFromDB(data);
 
                 // Validate discount
                 const validationResult = applyDiscount(discount, cart);
@@ -390,7 +390,6 @@ export const useDiscountValidation = (storeId: string): UseDiscountValidationRet
 };
 
 export default useDiscountValidation;
-
 
 
 
