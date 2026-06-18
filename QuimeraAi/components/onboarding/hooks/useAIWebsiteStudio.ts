@@ -123,7 +123,13 @@ const createEmptyBrief = (): BusinessBrief => ({
     description: '',
     tagline: '',
     services: [],
-    contactInfo: {},
+    contactInfo: {
+        email: '',
+        phone: '',
+        address: '',
+        businessHours: '',
+        instagram: '',
+    },
     hasEcommerce: false,
     colorPalette: { primary: '#6366f1', secondary: '#8b5cf6', accent: '#f59e0b', background: '#0f0f14', surface: '#1a1a24', text: '#e4e4e7' },
     fontPairing: { header: 'playfair-display', body: 'inter', button: 'inter' },
@@ -132,6 +138,224 @@ const createEmptyBrief = (): BusinessBrief => ({
     missingFields: ['businessName', 'industry', 'description'],
     referenceImageContext: '',
 });
+
+type ContactInfo = BusinessBrief['contactInfo'];
+
+const BRIEF_PLACEHOLDER_PATTERN = /^(?:\[?GENERATE_TEXT\]?|\.\.\.|n\/a|none|null|undefined|no email|no phone|not detected|no detectado|sin email|sin telefono|sin teléfono)$/i;
+const CORE_BRIEF_FIELDS = ['businessName', 'industry', 'description'] as const;
+const BRIEF_FIELD_ALIASES: Record<string, string> = {
+    name: 'businessName',
+    businessname: 'businessName',
+    'business name': 'businessName',
+    negocio: 'businessName',
+    'nombre del negocio': 'businessName',
+    industry: 'industry',
+    industria: 'industry',
+    description: 'description',
+    descripcion: 'description',
+    descripcionnegocio: 'description',
+    'descripcion negocio': 'description',
+    'business description': 'description',
+    services: 'services',
+    service: 'services',
+    servicios: 'services',
+    email: 'contactInfo.email',
+    mail: 'contactInfo.email',
+    phone: 'contactInfo.phone',
+    telefono: 'contactInfo.phone',
+    teléfono: 'contactInfo.phone',
+    telephone: 'contactInfo.phone',
+    address: 'contactInfo.address',
+    direccion: 'contactInfo.address',
+    dirección: 'contactInfo.address',
+    location: 'contactInfo.address',
+    ubicacion: 'contactInfo.address',
+    ubicación: 'contactInfo.address',
+    hours: 'contactInfo.businessHours',
+    horario: 'contactInfo.businessHours',
+    horarios: 'contactInfo.businessHours',
+    businesshours: 'contactInfo.businessHours',
+    'business hours': 'contactInfo.businessHours',
+    instagram: 'contactInfo.instagram',
+    ig: 'contactInfo.instagram',
+};
+const GENERATION_RELEVANT_MISSING_FIELDS = new Set<string>([
+    ...CORE_BRIEF_FIELDS,
+    'services',
+    'contactInfo.email',
+    'contactInfo.phone',
+    'contactInfo.address',
+    'contactInfo.businessHours',
+    'contactInfo.instagram',
+]);
+
+function cleanBriefTextValue(value: unknown): string | undefined {
+    if (typeof value !== 'string') return undefined;
+    const trimmed = value.trim();
+    if (!trimmed || BRIEF_PLACEHOLDER_PATTERN.test(trimmed)) return undefined;
+    return trimmed;
+}
+
+function normalizeInstagram(value: unknown): string | undefined {
+    const cleaned = cleanBriefTextValue(value);
+    if (!cleaned) return undefined;
+
+    const urlMatch = cleaned.match(/instagram\.com\/([A-Za-z0-9._]+)/i);
+    const rawHandle = urlMatch?.[1] || cleaned.replace(/^instagram\s*[:@]?\s*/i, '').replace(/^ig\s*[:@]?\s*/i, '');
+    const handle = rawHandle.replace(/^@/, '').split(/[/?#\s]/)[0].replace(/[^A-Za-z0-9._]/g, '');
+    return handle ? `@${handle}` : undefined;
+}
+
+function cleanContactInfo(contactInfo?: Partial<ContactInfo> | null): ContactInfo {
+    if (!contactInfo || typeof contactInfo !== 'object') return {};
+
+    const cleaned: ContactInfo = {};
+    const email = cleanBriefTextValue(contactInfo.email);
+    const phone = cleanBriefTextValue(contactInfo.phone);
+    const address = cleanBriefTextValue(contactInfo.address);
+    const city = cleanBriefTextValue(contactInfo.city);
+    const state = cleanBriefTextValue(contactInfo.state);
+    const country = cleanBriefTextValue(contactInfo.country);
+    const businessHours = cleanBriefTextValue(contactInfo.businessHours);
+    const facebook = cleanBriefTextValue(contactInfo.facebook);
+    const instagram = normalizeInstagram(contactInfo.instagram);
+    const twitter = cleanBriefTextValue(contactInfo.twitter);
+    const tiktok = cleanBriefTextValue(contactInfo.tiktok);
+
+    if (email) cleaned.email = email;
+    if (phone) cleaned.phone = phone;
+    if (address) cleaned.address = address;
+    if (city) cleaned.city = city;
+    if (state) cleaned.state = state;
+    if (country) cleaned.country = country;
+    if (businessHours) cleaned.businessHours = businessHours;
+    if (facebook) cleaned.facebook = facebook;
+    if (instagram) cleaned.instagram = instagram;
+    if (twitter) cleaned.twitter = twitter;
+    if (tiktok) cleaned.tiktok = tiktok;
+
+    return cleaned;
+}
+
+function preferDetailedContactValue(existing?: string, incoming?: string): string | undefined {
+    const cleanedExisting = cleanBriefTextValue(existing);
+    const cleanedIncoming = cleanBriefTextValue(incoming);
+
+    if (!cleanedExisting) return cleanedIncoming;
+    if (!cleanedIncoming) return cleanedExisting;
+    return cleanedIncoming.length >= cleanedExisting.length ? cleanedIncoming : cleanedExisting;
+}
+
+function mergeContactInfo(existing?: Partial<ContactInfo> | null, incoming?: Partial<ContactInfo> | null): ContactInfo {
+    const cleanedExisting = cleanContactInfo(existing);
+    const cleanedIncoming = cleanContactInfo(incoming);
+
+    return {
+        ...cleanedExisting,
+        ...cleanedIncoming,
+        address: preferDetailedContactValue(cleanedExisting.address, cleanedIncoming.address),
+        businessHours: preferDetailedContactValue(cleanedExisting.businessHours, cleanedIncoming.businessHours),
+    };
+}
+
+function hasBriefValue(value: unknown): boolean {
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'string') return Boolean(cleanBriefTextValue(value));
+    return Boolean(value);
+}
+
+function getBriefPathValue(brief: BusinessBrief, path: string): unknown {
+    return path.split('.').reduce<unknown>((current, key) => {
+        if (!current || typeof current !== 'object') return undefined;
+        return (current as Record<string, unknown>)[key];
+    }, brief);
+}
+
+function normalizeMissingFieldPath(field: unknown): string | undefined {
+    const cleaned = cleanBriefTextValue(field);
+    if (!cleaned) return undefined;
+
+    const path = cleaned.replace(/^businessBrief\./i, '').replace(/^brief\./i, '').trim();
+    const aliasKey = path.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+    const compactAliasKey = aliasKey.replace(/\s+/g, '');
+
+    return BRIEF_FIELD_ALIASES[aliasKey] || BRIEF_FIELD_ALIASES[compactAliasKey] || path;
+}
+
+function normalizeBriefCompletion(brief: BusinessBrief): BusinessBrief {
+    const normalized: BusinessBrief = {
+        ...brief,
+        businessName: cleanBriefTextValue(brief.businessName) || '',
+        industry: cleanBriefTextValue(brief.industry) || '',
+        subIndustry: cleanBriefTextValue(brief.subIndustry),
+        description: cleanBriefTextValue(brief.description) || '',
+        tagline: cleanBriefTextValue(brief.tagline) || '',
+        services: brief.services
+            .map(service => ({
+                name: cleanBriefTextValue(service.name) || '',
+                description: cleanBriefTextValue(service.description) || '',
+            }))
+            .filter(service => service.name),
+        contactInfo: mergeContactInfo(brief.contactInfo),
+        missingFields: [],
+    };
+
+    const missing = new Set<string>();
+    for (const field of brief.missingFields || []) {
+        const normalizedField = normalizeMissingFieldPath(field);
+        if (!normalizedField || !GENERATION_RELEVANT_MISSING_FIELDS.has(normalizedField)) continue;
+        if (!hasBriefValue(getBriefPathValue(normalized, normalizedField))) missing.add(normalizedField);
+    }
+    for (const field of CORE_BRIEF_FIELDS) {
+        if (!hasBriefValue(normalized[field])) missing.add(field);
+    }
+
+    let calculatedScore = 0;
+    if (hasBriefValue(normalized.businessName)) calculatedScore += 15;
+    if (hasBriefValue(normalized.industry)) calculatedScore += 15;
+    if (hasBriefValue(normalized.description)) calculatedScore += 20;
+    if (normalized.services.length > 0) calculatedScore += 10;
+    if (hasBriefValue(normalized.tagline)) calculatedScore += 5;
+    if (hasBriefValue(normalized.contactInfo.phone)) calculatedScore += 10;
+    if (hasBriefValue(normalized.contactInfo.address)) calculatedScore += 10;
+    if (hasBriefValue(normalized.contactInfo.businessHours)) calculatedScore += 8;
+    if (hasBriefValue(normalized.contactInfo.instagram) || hasBriefValue(normalized.contactInfo.email)) calculatedScore += 7;
+    if (normalized.suggestedComponents.length > 0) calculatedScore += 5;
+
+    const missingFields = Array.from(missing);
+    let readinessScore = Math.max(brief.readinessScore || 0, calculatedScore);
+    if (missingFields.length === 0 && readinessScore >= 70) readinessScore = Math.max(readinessScore, 80);
+
+    return {
+        ...normalized,
+        readinessScore: Math.min(100, Math.round(readinessScore)),
+        missingFields,
+    };
+}
+
+function extractContactDetailsFromText(text: string): ContactInfo {
+    const contactInfo: ContactInfo = {};
+    const email = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
+    const phone = text.match(/(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/)?.[0];
+    const instagramUrl = text.match(/instagram\.com\/([A-Za-z0-9._]+)/i)?.[0];
+    const instagramLabel = text.match(/(?:instagram|ig)\s*[:@]?\s*(@?[A-Za-z0-9._]{2,30})/i)?.[1];
+    const instagramHandle = text.match(/(^|[\s(])@([A-Za-z0-9._]{2,30})(?=$|[\s),.;])/i)?.[2];
+    const addressLabel = text.match(/(?:direcci[oó]n|address|ubicaci[oó]n|estamos en|located at)\s*:?\s*([^\n.]+)/i)?.[1];
+    const streetAddress = text.match(/\b(?:\d{1,6}\s+(?:Calle|Ave\.?|Avenida|Road|Rd\.?|Street|St\.?|Boulevard|Blvd\.?)\s+[^\n.]+|(?:Calle|Ave\.?|Avenida|Road|Rd\.?|Street|St\.?|Boulevard|Blvd\.?)\s+[^\n.]*?\d{1,6}[^\n.]*)/i)?.[0];
+    const hoursLabel = text.match(/(?:horario|horarios|business hours|hours)\s*:?\s*([^\n.]+)/i)?.[1];
+    const hoursPattern = text.match(/((?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|lun|mar|mi[eé]|jue|vie|s[aá]b|dom|monday|tuesday|wednesday|thursday|friday|saturday|sunday)[^\n.]{0,140}?\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?|am|pm)?\s*(?:-|–|—|a|to)\s*\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?|am|pm)?)/i)?.[1];
+
+    if (email) contactInfo.email = email;
+    if (phone) contactInfo.phone = phone.replace(/\s+/g, ' ').trim();
+    if (instagramUrl || instagramLabel || instagramHandle) {
+        const normalized = normalizeInstagram(instagramUrl || instagramLabel || instagramHandle);
+        if (normalized) contactInfo.instagram = normalized;
+    }
+    if (addressLabel || streetAddress) contactInfo.address = (addressLabel || streetAddress || '').trim();
+    if (hoursLabel || hoursPattern) contactInfo.businessHours = (hoursLabel || hoursPattern || '').trim();
+
+    return cleanContactInfo(contactInfo);
+}
 
 // ── ALL_SECTIONS constant ───────────────────────────────────────────────────
 const ALL_SECTIONS: PageSection[] = [
@@ -668,7 +892,8 @@ export function useAIWebsiteStudio() {
 
     // ── Computed ─────────────────────────────────────────────────────────────
     const isAccessLoading = isLoadingServices || planAccess.isLoading;
-    const canGenerate = businessBrief.readinessScore >= 70 && !isGenerating && !isAccessLoading;
+    const shouldBlockGenerationForAccess = isLoadingServices && accessibleComponentRegistry.length === 0;
+    const canGenerate = businessBrief.readinessScore >= 70 && businessBrief.missingFields.length === 0 && !isGenerating && !shouldBlockGenerationForAccess;
 
     // ═════════════════════════════════════════════════════════════════════════
     // SYSTEM PROMPT
@@ -968,16 +1193,33 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             const normalizedSuggestedComponents = briefData.suggestedComponents && Array.isArray(briefData.suggestedComponents)
                 ? filterAllowedComponents(briefData.suggestedComponents as PageSection[])
                 : null;
+            const briefBusinessName = cleanBriefTextValue(briefData.businessName);
+            const briefIndustry = cleanBriefTextValue(briefData.industry);
+            const briefSubIndustry = cleanBriefTextValue(briefData.subIndustry);
+            const briefDescription = cleanBriefTextValue(briefData.description);
+            const briefTagline = cleanBriefTextValue(briefData.tagline);
+            const briefReferenceImageContext = cleanBriefTextValue(briefData.referenceImageContext);
+            const cleanedContactInfo = cleanContactInfo(briefData.contactInfo);
+            const hasCleanedContactInfo = Object.keys(cleanedContactInfo).length > 0;
+            const cleanedServicesList = Array.isArray(briefData.services)
+                ? briefData.services
+                    .map((service: any) => ({
+                        name: cleanBriefTextValue(service?.name) || '',
+                        description: cleanBriefTextValue(service?.description) || '',
+                    }))
+                    .filter((service: { name: string; description: string }) => service.name)
+                : [];
+            const cleanedServices = cleanedServicesList.length > 0 ? cleanedServicesList : null;
 
             setBusinessBrief(prev => {
                 const updated = { ...prev };
-                if (briefData.businessName) updated.businessName = briefData.businessName;
-                if (briefData.industry) updated.industry = briefData.industry;
-                if (briefData.subIndustry) updated.subIndustry = briefData.subIndustry;
-                if (briefData.description) updated.description = briefData.description;
-                if (briefData.tagline) updated.tagline = briefData.tagline;
-                if (briefData.services && Array.isArray(briefData.services)) updated.services = briefData.services;
-                if (briefData.contactInfo) updated.contactInfo = { ...prev.contactInfo, ...briefData.contactInfo };
+                if (briefBusinessName) updated.businessName = briefBusinessName;
+                if (briefIndustry) updated.industry = briefIndustry;
+                if (briefSubIndustry) updated.subIndustry = briefSubIndustry;
+                if (briefDescription) updated.description = briefDescription;
+                if (briefTagline) updated.tagline = briefTagline;
+                if (cleanedServices) updated.services = cleanedServices;
+                if (hasCleanedContactInfo) updated.contactInfo = mergeContactInfo(prev.contactInfo, cleanedContactInfo);
                 if (briefData.hasEcommerce !== undefined) updated.hasEcommerce = briefData.hasEcommerce;
                 if (briefData.ecommerceType) updated.ecommerceType = briefData.ecommerceType;
                 if (briefData.colorPalette) updated.colorPalette = { ...prev.colorPalette, ...briefData.colorPalette };
@@ -989,8 +1231,8 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                 }
                 if (typeof briefData.readinessScore === 'number') updated.readinessScore = briefData.readinessScore;
                 if (briefData.missingFields && Array.isArray(briefData.missingFields)) updated.missingFields = briefData.missingFields;
-                if (briefData.referenceImageContext) updated.referenceImageContext = briefData.referenceImageContext;
-                return updated;
+                if (briefReferenceImageContext) updated.referenceImageContext = briefReferenceImageContext;
+                return normalizeBriefCompletion(updated);
             });
 
             setWebsitePlan(prevPlan => {
@@ -1000,13 +1242,13 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                     ...prevPlan,
                     businessProfile: {
                         ...prevPlan.businessProfile,
-                        businessName: briefData.businessName || prevPlan.businessProfile.businessName,
-                        industry: briefData.industry || prevPlan.businessProfile.industry,
-                        description: briefData.description || prevPlan.businessProfile.description,
-                        tagline: briefData.tagline || prevPlan.businessProfile.tagline,
-                        services: Array.isArray(briefData.services) ? briefData.services : prevPlan.businessProfile.services,
-                        contactInfo: briefData.contactInfo
-                            ? { ...prevPlan.businessProfile.contactInfo, ...briefData.contactInfo }
+                        businessName: briefBusinessName || prevPlan.businessProfile.businessName,
+                        industry: briefIndustry || prevPlan.businessProfile.industry,
+                        description: briefDescription || prevPlan.businessProfile.description,
+                        tagline: briefTagline || prevPlan.businessProfile.tagline,
+                        services: cleanedServices || prevPlan.businessProfile.services,
+                        contactInfo: hasCleanedContactInfo
+                            ? mergeContactInfo(prevPlan.businessProfile.contactInfo, cleanedContactInfo)
                             : prevPlan.businessProfile.contactInfo,
                         hasEcommerce: briefData.hasEcommerce !== undefined ? briefData.hasEcommerce : prevPlan.businessProfile.hasEcommerce,
                     },
@@ -1050,6 +1292,28 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         return text.replace(/<!--BRIEF:[\s\S]*?-->/g, '').trim();
     }, [accessibleComponentRegistry, filterAllowedComponents]);
 
+    const applyUserTextBriefPatch = useCallback((text: string) => {
+        const extractedContactInfo = extractContactDetailsFromText(text);
+        if (Object.keys(extractedContactInfo).length === 0) return;
+
+        setBusinessBrief(prev => normalizeBriefCompletion({
+            ...prev,
+            contactInfo: mergeContactInfo(prev.contactInfo, extractedContactInfo),
+        }));
+
+        setWebsitePlan(prevPlan => {
+            if (!prevPlan) return prevPlan;
+            const contactInfo = mergeContactInfo(prevPlan.businessProfile.contactInfo, extractedContactInfo);
+            return {
+                ...prevPlan,
+                businessProfile: {
+                    ...prevPlan.businessProfile,
+                    contactInfo,
+                },
+            };
+        });
+    }, []);
+
     // ═════════════════════════════════════════════════════════════════════════
     // SEND MESSAGE
     // ═════════════════════════════════════════════════════════════════════════
@@ -1061,6 +1325,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         setMessages(prev => [...prev, userMsg]);
         setInput('');
         setIsThinking(true);
+        applyUserTextBriefPatch(text.trim());
 
         historyRef.current.push({ role: 'user', text: text.trim() });
 
@@ -1115,7 +1380,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         } finally {
             setIsThinking(false);
         }
-    }, [isThinking, user, currentTenantId, buildSystemPrompt, extractAndUpdateBrief]);
+    }, [isThinking, user, currentTenantId, buildSystemPrompt, extractAndUpdateBrief, applyUserTextBriefPatch]);
 
     // Auto-scroll
     useEffect(() => {
@@ -1227,7 +1492,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
     // ═════════════════════════════════════════════════════════════════════════
 
     const runGeneration = useCallback(async (planOverride?: WebsitePlan) => {
-        if (isGeneratingRef.current || !user || isAccessLoading) return;
+        if (isGeneratingRef.current || !user || shouldBlockGenerationForAccess) return;
         isGeneratingRef.current = true;
         setIsGenerating(true);
         setGeneratedProject(null);
@@ -1758,10 +2023,10 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             isGeneratingRef.current = false;
             setIsGenerating(false);
         }
-    }, [businessBrief, websitePlan, accessibleComponentRegistry, isAccessLoading, user, currentTenantId, t, generateImage, i18n.language]);
+    }, [businessBrief, websitePlan, accessibleComponentRegistry, shouldBlockGenerationForAccess, user, currentTenantId, t, generateImage, i18n.language]);
 
     const startGeneration = useCallback(() => {
-        if (!user || isGeneratingRef.current || isAccessLoading) return;
+        if (!user || isGeneratingRef.current || shouldBlockGenerationForAccess) return;
         const basePlan = websitePlan || createWebsitePlanFromBrief(businessBrief, accessibleComponentRegistry);
         const selectedComponents = sanitizeComponentOrder(
             basePlan.componentPlan.map(item => item.component).length > 0
@@ -1779,7 +2044,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         });
         setWebsitePlan(normalizedPlan);
         setShowPlanReview(true);
-    }, [accessibleComponentRegistry, businessBrief, isAccessLoading, user, websitePlan]);
+    }, [accessibleComponentRegistry, businessBrief, shouldBlockGenerationForAccess, user, websitePlan]);
 
     const commitWebsitePlanToBrief = useCallback((plan: WebsitePlan, selectedComponentsOverride?: PageSection[]) => {
         const selectedComponents = selectedComponentsOverride || sanitizeComponentOrder(
@@ -1855,7 +2120,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
     }, [commitWebsitePlanToBrief, websitePlan]);
 
     const confirmWebsitePlan = useCallback(async (plan: WebsitePlan) => {
-        if (isAccessLoading) return;
+        if (shouldBlockGenerationForAccess) return;
         const selectedComponents = sanitizeComponentOrder(
             plan.componentPlan.map(item => item.component),
             accessibleComponentRegistry
@@ -1889,7 +2154,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         commitWebsitePlanToBrief(normalizedPlan, selectedComponents);
         setShowPlanReview(false);
         await runGeneration(normalizedPlan);
-    }, [accessibleComponentRegistry, commitWebsitePlanToBrief, isAccessLoading, runGeneration]);
+    }, [accessibleComponentRegistry, commitWebsitePlanToBrief, shouldBlockGenerationForAccess, runGeneration]);
 
     const saveGeneratedProjectAndOpenEditor = useCallback(async () => {
         if (!generatedProject || isSavingGeneratedProjectRef.current) return;
