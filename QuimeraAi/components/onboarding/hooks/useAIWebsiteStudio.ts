@@ -32,7 +32,7 @@ import { generateAiAssistantConfig, GlobalColors as ChatbotGlobalColors } from '
 import { generatePagesFromLegacyProject } from '../../../utils/legacyMigration';
 import { extractHeroImage } from '../../../contexts/project/ProjectContext';
 import { analyzeWebsite } from '../../../utils/analyzeWebsiteClient';
-import { FontFamily, PageSection, SitePage } from '../../../types';
+import { FontFamily, PageSection, Project, SitePage } from '../../../types';
 import { resolveFontFamily } from '../../../utils/fontLoader';
 import { usePlanAccess } from '../../../hooks/usePlanFeatures';
 import { useServiceAvailability } from '../../../hooks/useServiceAvailability';
@@ -648,6 +648,10 @@ export function useAIWebsiteStudio() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [generationPhase, setGenerationPhase] = useState<GenerationPhase | null>(null);
     const isGeneratingRef = useRef(false);
+    const [generatedProject, setGeneratedProject] = useState<Project | null>(null);
+    const [isSavingGeneratedProject, setIsSavingGeneratedProject] = useState(false);
+    const [generatedProjectSaveError, setGeneratedProjectSaveError] = useState<string | null>(null);
+    const isSavingGeneratedProjectRef = useRef(false);
 
     // ── Voice state ─────────────────────────────────────────────────────────
     const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -800,7 +804,11 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         setWebsitePlan(null);
         setShowPlanReview(false);
         setGenerationPhase(null);
+        setGeneratedProject(null);
+        setGeneratedProjectSaveError(null);
         setIsGenerating(false);
+        setIsSavingGeneratedProject(false);
+        isSavingGeneratedProjectRef.current = false;
 
         const systemContext = buildSystemPrompt();
         historyRef.current = [
@@ -1222,6 +1230,8 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         if (isGeneratingRef.current || !user || isAccessLoading) return;
         isGeneratingRef.current = true;
         setIsGenerating(true);
+        setGeneratedProject(null);
+        setGeneratedProjectSaveError(null);
 
         let planForGeneration = planOverride || websitePlan || createWebsitePlanFromBrief(businessBrief, accessibleComponentRegistry);
         const plannedComponents = planForGeneration.componentPlan.map(item => item.component);
@@ -1704,8 +1714,8 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             // ══════════════════════════════════════════════════════════════════
             // PHASE 6: Final project update with images (95-100%)
             // ══════════════════════════════════════════════════════════════════
-            addEvent('save', `Saving final website with ${completed} images...`);
-            setGenerationPhase(prev => prev ? { ...prev, phase: 'finalizing', progress: 95, currentStep: 'Saving final website...' } : prev);
+            addEvent('save', `Preparing final preview with ${completed} images...`);
+            setGenerationPhase(prev => prev ? { ...prev, phase: 'finalizing', progress: 95, currentStep: 'Preparing final preview...' } : prev);
 
             // Build the complete project object
             const fullProject = {
@@ -1723,45 +1733,23 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                 menus: projectMenus,
                 aiAssistantConfig: stateUpdates.aiAssistantConfig,
                 generatedWith: 'AI Website Studio',
-            } as any;
+            } as Project;
 
-            // Perform single atomic save to Supabase
-            try {
-                await Promise.race([
-                    addNewProject(fullProject),
-                    new Promise<void>((_, reject) => setTimeout(() => reject(new Error('Final save timeout')), 30000)),
-                ]);
-            } catch (finalSaveErr) {
-                console.warn('[AIWebsiteStudio] Final save failed:', finalSaveErr);
-                throw new Error('Failed to save the website to the database. Please try again.');
-            }
+            setGeneratedProject(fullProject);
+            addEvent('done', 'Website preview ready!');
+            setGenerationPhase(prev => prev ? { ...prev, phase: 'done', progress: 100, currentStep: 'Website preview ready!' } : prev);
 
-            addEvent('done', 'Website created successfully!');
-            setGenerationPhase(prev => prev ? { ...prev, phase: 'done', progress: 100, currentStep: 'Website created successfully!' } : prev);
+            if (isDev) console.log('[AIWebsiteStudio] Website preview ready.');
 
-            if (isDev) console.log('[AIWebsiteStudio] Website created successfully!');
-
-            const successMsg = t('aiWebsiteStudio.generation.success', {
-                sections: Object.keys(finalData).length,
-                images: completed,
-            });
+            const successMsg = isSpanish
+                ? `Tu website esta listo para revisar. Generamos ${Object.keys(finalData).length} secciones y ${completed} imagenes.`
+                : `Your website is ready to review. We generated ${Object.keys(finalData).length} sections and ${completed} images.`;
             setMessages(prev => [...prev, { role: 'model', text: successMsg, timestamp: Date.now() }]);
-
-            // ══════════════════════════════════════════════════════════════════
-            // AUTO-CLOSE: Close the modal and reload the project into active editor
-            // so the user sees the website immediately without a manual refresh.
-            // ══════════════════════════════════════════════════════════════════
-            setTimeout(() => {
-                // Reload the project into the active editor with fresh data
-                loadProject(finalProjectId, false, true, fullProject);
-                // Close the onboarding modal & clear generation overlay
-                setGenerationPhase(null);
-                setIsOnboardingOpen(false);
-            }, 3000);
 
         } catch (error) {
             console.error('[AIWebsiteStudio] Generation failed:', error);
             setGenerationPhase(null);
+            setGeneratedProject(null);
             const errorMsg = t('aiWebsiteStudio.generation.error', {
                 error: error instanceof Error ? error.message : String(error),
             });
@@ -1770,7 +1758,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             isGeneratingRef.current = false;
             setIsGenerating(false);
         }
-    }, [businessBrief, websitePlan, accessibleComponentRegistry, isAccessLoading, user, currentTenantId, t, generateImage, addNewProject, i18n.language, loadProject, setIsOnboardingOpen]);
+    }, [businessBrief, websitePlan, accessibleComponentRegistry, isAccessLoading, user, currentTenantId, t, generateImage, i18n.language]);
 
     const startGeneration = useCallback(() => {
         if (!user || isGeneratingRef.current || isAccessLoading) return;
@@ -1903,6 +1891,53 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         await runGeneration(normalizedPlan);
     }, [accessibleComponentRegistry, commitWebsitePlanToBrief, isAccessLoading, runGeneration]);
 
+    const saveGeneratedProjectAndOpenEditor = useCallback(async () => {
+        if (!generatedProject || isSavingGeneratedProjectRef.current) return;
+
+        isSavingGeneratedProjectRef.current = true;
+        setIsSavingGeneratedProject(true);
+        setGeneratedProjectSaveError(null);
+
+        try {
+            await Promise.race([
+                addNewProject(generatedProject),
+                new Promise<void>((_, reject) => setTimeout(() => reject(new Error('Final save timeout')), 30000)),
+            ]);
+
+            loadProject(generatedProject.id, false, true, generatedProject);
+            setGeneratedProject(null);
+            setGenerationPhase(null);
+            setIsOnboardingOpen(false);
+        } catch (finalSaveErr) {
+            console.warn('[AIWebsiteStudio] Final save failed:', finalSaveErr);
+            setGeneratedProjectSaveError(
+                finalSaveErr instanceof Error
+                    ? finalSaveErr.message
+                    : 'Failed to save the website to the database. Please try again.'
+            );
+        } finally {
+            isSavingGeneratedProjectRef.current = false;
+            setIsSavingGeneratedProject(false);
+        }
+    }, [addNewProject, generatedProject, loadProject, setIsOnboardingOpen]);
+
+    const regenerateGeneratedWebsite = useCallback(async () => {
+        if (isGeneratingRef.current || isSavingGeneratedProjectRef.current) return;
+        const planForRegeneration = websitePlan || undefined;
+        setGeneratedProject(null);
+        setGeneratedProjectSaveError(null);
+        setGenerationPhase(null);
+        await runGeneration(planForRegeneration);
+    }, [runGeneration, websitePlan]);
+
+    const returnToPlanFromGeneratedPreview = useCallback(() => {
+        if (isSavingGeneratedProjectRef.current) return;
+        setGeneratedProject(null);
+        setGeneratedProjectSaveError(null);
+        setGenerationPhase(null);
+        if (websitePlan) setShowPlanReview(true);
+    }, [websitePlan]);
+
     // ═════════════════════════════════════════════════════════════════════════
     // PUBLIC API
     // ═════════════════════════════════════════════════════════════════════════
@@ -1968,7 +2003,9 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         // Reference Images
         referenceImages, addReferenceImage, removeReferenceImage,
         // Generation
-        isGenerating, generationPhase, canGenerate, isAccessLoading, startGeneration, confirmWebsitePlan,
+        isGenerating, generationPhase, generatedProject, isSavingGeneratedProject, generatedProjectSaveError,
+        canGenerate, isAccessLoading, startGeneration, confirmWebsitePlan,
+        saveGeneratedProjectAndOpenEditor, regenerateGeneratedWebsite, returnToPlanFromGeneratedPreview,
         // Website extraction
         showUrlModal, setShowUrlModal, isExtracting, extractWebsiteData,
         // Init
