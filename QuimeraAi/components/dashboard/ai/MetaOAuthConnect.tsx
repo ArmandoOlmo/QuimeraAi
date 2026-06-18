@@ -67,8 +67,21 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
         setShowAssetSelector(true);
     };
 
-    // Render disconnected state
-    if (!isConnected && status !== 'connecting') {
+    // Render loading state
+    if (isLoading && !isConnected && status !== 'connecting') {
+        return (
+            <div className="bg-q-surface border border-q-border rounded-2xl p-6">
+                <div className="flex items-center justify-center py-8">
+                    <Loader2 size={32} className="animate-spin text-q-text-muted" />
+                </div>
+            </div>
+        );
+    }
+
+    // Render disconnected/connecting state
+    if (!isConnected) {
+        const isConnecting = status === 'connecting';
+
         return (
             <div className="bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10 border border-blue-500/20 rounded-2xl p-6 animate-fade-in-up">
                 {/* Header */}
@@ -125,10 +138,10 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                 {/* Connect Button */}
                 <button
                     onClick={connect}
-                    disabled={isLoading || status === 'connecting'}
+                    disabled={isLoading || isConnecting}
                     className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                    {status === 'connecting' ? (
+                    {isConnecting ? (
                         <>
                             <Loader2 size={18} className="animate-spin" />
                             Conectando...
@@ -145,17 +158,6 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                 <p className="text-[10px] text-q-text-muted text-center mt-3">
                     Serás redirigido a Meta para autorizar el acceso
                 </p>
-            </div>
-        );
-    }
-
-    // Render loading state
-    if (isLoading && !isConnected) {
-        return (
-            <div className="bg-q-surface border border-q-border rounded-2xl p-6">
-                <div className="flex items-center justify-center py-8">
-                    <Loader2 size={32} className="animate-spin text-q-text-muted" />
-                </div>
             </div>
         );
     }
@@ -512,7 +514,6 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
 };
 
 export default MetaOAuthConnect;
-
 
 
 

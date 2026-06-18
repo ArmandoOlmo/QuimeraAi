@@ -90,13 +90,31 @@ export const useSocialChat = (projectId: string, userId?: string) => {
                         const messagesQuery = query(
                             messagesRef,
                             where('projectId', '==', projectId),
-                            where('channel', '==', data.channel),
+                            where('conversationId', '==', docSnap.id),
                             orderBy('timestamp', 'desc'),
                             limit(1)
                         );
                         
                         const messagesSnap = await getDocs(messagesQuery);
                         lastMessage = messagesSnap.docs[0]?.data() as SocialMessage | undefined;
+
+                        if (!lastMessage) {
+                            const legacyMessagesQuery = query(
+                                messagesRef,
+                                where('projectId', '==', projectId),
+                                where('channel', '==', data.channel),
+                                orderBy('timestamp', 'desc'),
+                                limit(50)
+                            );
+                            const legacyMessagesSnap = await getDocs(legacyMessagesQuery);
+                            lastMessage = legacyMessagesSnap.docs
+                                .map(doc => ({ id: doc.id, ...doc.data() } as SocialMessage))
+                                .find(msg =>
+                                    msg.conversationId === docSnap.id ||
+                                    msg.senderId === data.participantId ||
+                                    msg.recipientId === data.participantId
+                                );
+                        }
                     } catch (msgError) {
                         // Silently handle errors fetching last message
                         console.debug('[useSocialChat] Could not fetch last message:', msgError);
@@ -157,21 +175,39 @@ export const useSocialChat = (projectId: string, userId?: string) => {
             const messagesQuery = query(
                 messagesRef,
                 where('projectId', '==', projectId),
-                where('channel', '==', channel),
+                where('conversationId', '==', conversationId),
                 orderBy('timestamp', 'asc'),
                 limit(100)
             );
 
             const snapshot = await getDocs(messagesQuery);
-            const messages: SocialMessage[] = snapshot.docs
-                .filter(doc => {
-                    const data = doc.data();
-                    return data.senderId === participantId || data.recipientId === participantId;
-                })
+            let messages: SocialMessage[] = snapshot.docs
                 .map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 } as SocialMessage));
+
+            if (messages.length === 0) {
+                const legacyMessagesQuery = query(
+                    messagesRef,
+                    where('projectId', '==', projectId),
+                    where('channel', '==', channel),
+                    orderBy('timestamp', 'asc'),
+                    limit(100)
+                );
+
+                const legacySnapshot = await getDocs(legacyMessagesQuery);
+                messages = legacySnapshot.docs
+                    .map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    } as SocialMessage))
+                    .filter(msg =>
+                        msg.conversationId === conversationId ||
+                        msg.senderId === participantId ||
+                        msg.recipientId === participantId
+                    );
+            }
 
             // Find and update the conversation
             const conversation = conversations.find(c => c.id === conversationId);
@@ -209,6 +245,7 @@ export const useSocialChat = (projectId: string, userId?: string) => {
             // Store message locally first
             const messagesRef = collection(db, 'socialMessages');
             await addDoc(messagesRef, {
+                conversationId,
                 projectId,
                 channel,
                 direction: 'outbound',
@@ -461,4 +498,3 @@ export const useSocialChat = (projectId: string, userId?: string) => {
 };
 
 export default useSocialChat;
-

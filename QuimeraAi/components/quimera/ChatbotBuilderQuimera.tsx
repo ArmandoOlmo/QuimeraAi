@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Database, FileText, PaintBucket, MessageSquare, Settings, Sparkles, Wand2, Plus, Type, UploadCloud } from 'lucide-react';
+import { Database, FileText, PaintBucket, MessageSquare, Settings, Sparkles, Wand2, Plus, Type, UploadCloud, type LucideIcon } from 'lucide-react';
 
 interface ChatbotBuilderQuimeraProps {
     title?: string;
@@ -24,7 +24,7 @@ interface ChatbotBuilderQuimeraProps {
     imagePosition?: 'left' | 'right';
 }
 
-const iconMap: Record<string, React.FC<{ className?: string }>> = {
+const iconMap: Record<string, LucideIcon> = {
     Database, FileText, PaintBucket, MessageSquare, Settings, Sparkles, Wand2
 };
 

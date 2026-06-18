@@ -15,7 +15,7 @@ import { Modality, LiveServerMessage } from '@google/genai';
 import { useSafeAdmin } from '../contexts/admin';
 import { LandingChatbotConfig, defaultLandingChatbotConfig, LandingChatMessage, LandingChatbotColors, defaultChatbotColors } from '../types/landingChatbot';
 import { savePlatformLead } from '../services/platformLeadService';
-import { isProxyMode, getGoogleGenAI } from '../utils/genAiClient';
+import { getGoogleGenAI } from '../utils/genAiClient';
 import { generateContentViaProxy, extractTextFromResponse } from '../utils/geminiProxyClient';
 
 // =============================================================================
@@ -420,56 +420,29 @@ Personalidad:
 
         try {
             const systemPrompt = buildSystemPrompt();
-            const conversationHistory = messages.map(m => ({
-                role: m.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: m.content }]
-            }));
-
             let responseText = '';
 
-            if (isProxyMode()) {
-                // Use proxy for AI calls
-                // Build a full prompt with system instructions and conversation history
-                const conversationContext = messages.map(m =>
-                    `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.content}`
-                ).join('\n');
+            // Text generation is always routed through the secure Supabase Edge Function.
+            const conversationContext = messages.map(m =>
+                `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.content}`
+            ).join('\n');
 
-                const fullPrompt = `${systemPrompt}
+            const fullPrompt = `${systemPrompt}
 
 ${conversationContext ? `Historial de conversación:\n${conversationContext}\n\n` : ''}Usuario: ${userMessage}
 
 Asistente:`;
 
-                const result = await generateContentViaProxy(
-                    'quimera-chat-landing', // Use pattern that's allowed in Cloud Function
-                    fullPrompt,
-                    'gemini-3-flash-preview',
-                    {
-                        temperature: config.behavior.temperature,
-                        maxOutputTokens: config.behavior.maxTokens,
-                    }
-                );
-                responseText = extractTextFromResponse(result) || 'Lo siento, no pude procesar tu mensaje.';
-            } else {
-                // Use direct API
-                const genAI = await getGoogleGenAI();
-                if (!genAI) {
-                    throw new Error('API key not configured');
+            const result = await generateContentViaProxy(
+                'quimera-chat-landing',
+                fullPrompt,
+                'gemini-3-flash-preview',
+                {
+                    temperature: config.behavior.temperature,
+                    maxOutputTokens: config.behavior.maxTokens,
                 }
-                const model = genAI.getGenerativeModel({
-                    model: 'gemini-3-flash-preview',
-                    systemInstruction: systemPrompt
-                });
-                const chat = model.startChat({
-                    history: conversationHistory,
-                    generationConfig: {
-                        temperature: config.behavior.temperature,
-                        maxOutputTokens: config.behavior.maxTokens,
-                    }
-                });
-                const result = await chat.sendMessage(userMessage);
-                responseText = result.response.text() || 'Lo siento, no pude procesar tu mensaje.';
-            }
+            );
+            responseText = extractTextFromResponse(result) || 'Lo siento, no pude procesar tu mensaje.';
 
             const assistantMessage: Message = {
                 id: generateMessageId(),

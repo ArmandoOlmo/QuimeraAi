@@ -183,7 +183,7 @@ interface Integration {
     category: LinkCategory;
     platform: string;
     color: string;
-    linkType?: string;
+    linkType?: LinkType;
 }
 
 const INTEGRATIONS: Integration[] = [
@@ -2317,6 +2317,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     specialInstructions: '',
                                     faqs: [],
                                     knowledgeDocuments: [],
+                                    knowledgeLinks: [],
                                     widgetColor: theme.buttonColor,
                                     isActive: true,
                                     leadCaptureEnabled: false,

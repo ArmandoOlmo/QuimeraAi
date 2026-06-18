@@ -1,14 +1,8 @@
 /**
  * Knowledge Document Uploader
  * 
- * NOTE: PDF extraction uses the Vision API which requires direct API access
- * or an extended proxy that supports file uploads. The current proxy only 
- * supports text-based requests.
- * 
  * Text files (.txt, .md, .csv, .html) are extracted directly without API calls.
- * PDFs require the Vision API for text extraction.
- * 
- * TODO: Extend the Gemini proxy to support multimodal (file + text) requests
+ * PDF upload is intentionally hidden until the Gemini proxy supports file uploads.
  */
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +15,6 @@ interface KnowledgeDocumentUploaderProps {
 }
 
 const SUPPORTED_TYPES = [
-    { ext: '.pdf', mime: 'application/pdf', label: 'PDF' },
     { ext: '.txt', mime: 'text/plain', label: 'Text' },
     { ext: '.md', mime: 'text/markdown', label: 'Markdown' },
     { ext: '.csv', mime: 'text/csv', label: 'CSV' },
@@ -35,77 +28,23 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
 
     const extractTextFromFile = async (file: File): Promise<string> => {
         const fileType = file.type;
+        const fileName = file.name.toLowerCase();
+        const isSupportedTextFile = fileType.startsWith('text/') ||
+            SUPPORTED_TYPES.some(type => fileName.endsWith(type.ext));
 
-        // For text-based files, read directly
-        if (fileType.startsWith('text/') || fileType === 'application/pdf') {
+        if (isSupportedTextFile) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const content = e.target?.result as string;
-
-                    // For PDFs, we'll use Gemini API to extract text
-                    if (fileType === 'application/pdf') {
-                        extractPDFWithGemini(file).then(resolve).catch(reject);
-                    } else {
-                        resolve(content);
-                    }
+                    resolve(content);
                 };
                 reader.onerror = reject;
-
-                if (fileType === 'application/pdf') {
-                    reader.readAsDataURL(file);
-                } else {
-                    reader.readAsText(file);
-                }
+                reader.readAsText(file);
             });
         }
 
         throw new Error('Unsupported file type');
-    };
-
-    const extractPDFWithGemini = async (_file: File): Promise<string> => {
-        // PDF extraction requires Vision API which needs proxy extension to support file uploads
-        // For now, return an error message prompting manual text input
-        console.warn('⚠️ PDF extraction requires Vision API proxy extension.');
-        throw new Error(
-            'La extracción de texto de PDFs está temporalmente deshabilitada. ' +
-            'Por favor, copia y pega el contenido del documento manualmente, ' +
-            'o usa archivos de texto (.txt, .md) en su lugar.'
-        );
-
-        /* 
-        // Original implementation (requires Vision API with direct access):
-        try {
-            const ai = await getGoogleGenAI();
-            
-            // Convert file to base64
-            const base64Data = await new Promise<string>((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const result = e.target?.result as string;
-                    const base64 = result.split(',')[1];
-                    resolve(base64);
-                };
-                reader.readAsDataURL(file);
-            });
-
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: [{
-                    role: 'user',
-                    parts: [
-                        { inlineData: { mimeType: file.type, data: base64Data } },
-                        { text: 'Extract all text content from this document.' }
-                    ]
-                }]
-            });
-
-            return response?.text || '';
-        } catch (error) {
-            console.error('Error extracting PDF with Gemini:', error);
-            throw error;
-        }
-        */
     };
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -281,4 +220,3 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
 };
 
 export default KnowledgeDocumentUploader;
-

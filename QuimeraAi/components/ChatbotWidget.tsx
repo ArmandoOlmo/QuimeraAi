@@ -25,6 +25,17 @@ import { useSafeTenant } from '../contexts/tenant';
 import { useRouter } from '../hooks/useRouter';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || 'https://quimera.ai/api/widget').replace(/\/$/, '');
+
+function parseAppointmentDate(value: any, fallback?: Date): Date {
+    if (value instanceof Date) return value;
+    if (value?.seconds) return new Date(value.seconds * 1000);
+    if (typeof value === 'string' || typeof value === 'number') {
+        const parsed = new Date(value);
+        if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
+    return fallback || new Date();
+}
 
 async function getSupabaseAccessToken(): Promise<string | null> {
     const { data: { session } } = await supabase.auth.getSession();
@@ -68,6 +79,9 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const componentOrder = editorContext?.componentOrder || projectContext?.componentOrder || standaloneProject?.componentOrder || [];
     const sectionVisibility = editorContext?.sectionVisibility || projectContext?.sectionVisibility || standaloneProject?.sectionVisibility || {};
     const view = editorContext?.view || 'preview';
+    const projectIdForApi = activeProject?.id || standaloneProject?.id || '';
+    const ownerIdForApi = activeProject?.userId || standaloneProject?.userId;
+    const widgetApiProjectId = ownerIdForApi && projectIdForApi ? `${ownerIdForApi}_${projectIdForApi}` : projectIdForApi;
 
     // Data source: standaloneConfig (public pages) or editorContext (editor)
     const rawConfig = standaloneConfig || editorContext?.aiAssistantConfig || projectContext?.activeProject?.aiAssistantConfig || data?.chatbot || { isActive: false } as AiAssistantConfig;
@@ -254,9 +268,44 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     // Load appointments when chat opens
     useEffect(() => {
         const loadAppointments = async () => {
-            if (!user || !activeProject?.id || !isOpen) return;
+            if (!activeProject?.id || !isOpen) return;
 
             try {
+                if (!user) {
+                    if (!widgetApiProjectId) return;
+                    const response = await fetch(`${WIDGET_API_BASE_URL}/${encodeURIComponent(widgetApiProjectId)}/appointments`);
+                    if (!response.ok) {
+                        console.warn('[ChatbotWidget] Public appointment availability unavailable:', response.status);
+                        return;
+                    }
+
+                    const payload = await response.json();
+                    const now = new Date();
+                    const appointmentSlots: AppointmentSlot[] = (payload.appointments || [])
+                        .map((item: any) => {
+                            const startDate = parseAppointmentDate(item.startDate);
+                            const endDate = parseAppointmentDate(item.endDate, new Date(startDate.getTime() + 60 * 60000));
+
+                            return {
+                                id: item.id,
+                                title: item.title || 'Reservado',
+                                startDate,
+                                endDate,
+                                status: item.status || 'scheduled',
+                            };
+                        })
+                        .filter((item: AppointmentSlot) =>
+                            item.startDate >= now &&
+                            !Number.isNaN(item.startDate.getTime()) &&
+                            !Number.isNaN(item.endDate.getTime()) &&
+                            item.status !== 'cancelled'
+                        );
+
+                    setAppointments(appointmentSlots);
+                    console.log('[ChatbotWidget] 📅 Loaded public appointment availability:', appointmentSlots.length);
+                    return;
+                }
+
                 const dataHelpers = await getDataModules();
                 if (!dataHelpers) {
                     console.warn('[ChatbotWidget] Data helpers unavailable, skipping appointment load');
@@ -271,15 +320,16 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
                 snapshot.forEach((docSnap: any) => {
                     const data = docSnap.data();
-                    const startDate = data.startDate?.seconds
-                        ? new Date(data.startDate.seconds * 1000)
-                        : new Date();
-                    const endDate = data.endDate?.seconds
-                        ? new Date(data.endDate.seconds * 1000)
-                        : new Date(startDate.getTime() + 60 * 60000);
+                    const startDate = parseAppointmentDate(data.startDate);
+                    const endDate = parseAppointmentDate(data.endDate, new Date(startDate.getTime() + 60 * 60000));
 
                     // Only include future appointments
-                    if (startDate >= now && data.status !== 'cancelled') {
+                    if (
+                        startDate >= now &&
+                        !Number.isNaN(startDate.getTime()) &&
+                        !Number.isNaN(endDate.getTime()) &&
+                        data.status !== 'cancelled'
+                    ) {
                         appointmentSlots.push({
                             id: docSnap.id,
                             title: data.title || 'Cita',
@@ -298,7 +348,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         };
 
         loadAppointments();
-    }, [user, activeProject?.id, isOpen]);
+    }, [user, activeProject?.id, isOpen, widgetApiProjectId]);
 
     // Detect current section in viewport
     useEffect(() => {
@@ -364,18 +414,11 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
         // Fallback: Save via API when in standalone mode (public site)
         // This matches EmbedWidget behavior and avoids Supabase permission issues
-        const projectId = activeProject?.id || standaloneProject?.id;
+        const projectId = projectIdForApi;
 
         if (projectId) {
             try {
                 console.log('[ChatbotWidget] 🌐 specific API lead capture (standalone mode)');
-
-                // Always use production API for reliability across domains
-                const apiUrl = 'https://quimera.ai/api/widget';
-                
-                // Use userId_projectId format if available to help the API find it
-                const ownerId = activeProject?.userId || standaloneProject?.userId;
-                const apiProjectId = ownerId ? `${ownerId}_${projectId}` : projectId;
 
                 let authHeaders: Record<string, string> = {
                     'Content-Type': 'application/json',
@@ -390,7 +433,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     }
                 }
 
-                const response = await fetch(`${apiUrl}/${apiProjectId}/leads`, {
+                const response = await fetch(`${WIDGET_API_BASE_URL}/${encodeURIComponent(widgetApiProjectId)}/leads`, {
                     method: 'POST',
                     headers: authHeaders,
                     body: JSON.stringify(fullLeadData)
@@ -550,8 +593,6 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         // Fallback: Save via API when in standalone mode (public site)
         try {
             console.log('[ChatbotWidget] 🌐 specific API appointment capture (standalone mode)');
-            // Always use production API for reliability across domains
-            const apiUrl = 'https://quimera.ai/api/widget';
 
             const appointmentPayload = {
                 title: appointmentData.title,
@@ -565,8 +606,6 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 linkedLeadId: appointmentData.linkedLeadId
             };
 
-            const apiProjectId = ownerId ? `${ownerId}_${projectId}` : projectId;
-            
             let authHeaders: Record<string, string> = {
                 'Content-Type': 'application/json',
             };
@@ -580,7 +619,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 }
             }
 
-            const response = await fetch(`${apiUrl}/${apiProjectId}/appointments`, {
+            const response = await fetch(`${WIDGET_API_BASE_URL}/${encodeURIComponent(widgetApiProjectId)}/appointments`, {
                 method: 'POST',
                 headers: authHeaders,
                 body: JSON.stringify(appointmentPayload)

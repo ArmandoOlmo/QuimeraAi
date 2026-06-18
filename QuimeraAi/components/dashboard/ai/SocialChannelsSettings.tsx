@@ -11,13 +11,13 @@ import {
     Shield, Webhook, Key, Building2, Globe, HelpCircle, RefreshCw,
     Sparkles, Settings2, ChevronDown, ChevronUp
 } from 'lucide-react';
-import { SocialChannelsConfig, WhatsAppChannelConfig, FacebookMessengerChannelConfig, InstagramChannelConfig } from '../../../types/ai-assistant';
+import { AiSocialChannelsConfig, WhatsAppChannelConfig, FacebookMessengerChannelConfig, InstagramChannelConfig } from '../../../types/ai-assistant';
 import MetaOAuthConnect from './MetaOAuthConnect';
 
 interface SocialChannelsSettingsProps {
-    config: SocialChannelsConfig;
+    config: AiSocialChannelsConfig;
     projectId: string;
-    onSave: (config: SocialChannelsConfig) => Promise<void>;
+    onSave: (config: AiSocialChannelsConfig) => Promise<void>;
 }
 
 type ChannelTab = 'whatsapp' | 'facebook' | 'instagram';
@@ -574,8 +574,8 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                                         : 'text-q-text-muted hover:text-foreground hover:bg-q-surface/50'
                                     }`}
                             >
-                                <span className={`p-1.5 rounded-lg ${channel.color} ${activeChannel === channel.id ? '' : 'opacity-60'}`}>
-                                    {React.cloneElement(channel.icon as React.ReactElement, { size: 14, className: 'text-white' })}
+                                <span className={`p-1.5 rounded-lg text-white ${channel.color} ${activeChannel === channel.id ? '' : 'opacity-60'}`}>
+                                    {channel.icon}
                                 </span>
                                 <span className="hidden sm:inline">{channel.name}</span>
                                 {channel.enabled && (

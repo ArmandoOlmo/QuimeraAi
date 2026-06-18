@@ -72,20 +72,30 @@ const KNOWN_COLUMNS: Record<string, string[]> = {
     store_users: ['id', 'project_id', 'email', 'display_name', 'first_name', 'last_name', 'photo_url', 'phone', 'role', 'status', 'segments', 'tags', 'customer_id', 'total_orders', 'total_spent', 'average_order_value', 'last_login_at', 'last_order_at', 'metadata', 'accepts_marketing', 'preferred_language', 'internal_notes', 'created_at', 'updated_at'],
     store_user_segments: ['id', 'project_id', 'name', 'description', 'color', 'type', 'rules', 'user_count', 'created_at', 'updated_at'],
     store_user_activities: ['id', 'project_id', 'user_id', 'type', 'description', 'metadata', 'ip_address', 'user_agent', 'created_at'],
-    store_products: ['id', 'project_id', 'category_id', 'name', 'slug', 'description', 'short_description', 'price', 'compare_at_price', 'cost_price', 'currency', 'sku', 'barcode', 'quantity', 'track_inventory', 'low_stock_threshold', 'images', 'tags', 'has_variants', 'variants', 'options', 'status', 'is_digital', 'is_featured', 'weight', 'weight_unit', 'created_at', 'updated_at'],
-    store_categories: ['id', 'project_id', 'name', 'slug', 'description', 'image_url', 'parent_id', 'position', 'created_at', 'updated_at'],
-    store_orders: ['id', 'project_id', 'customer_id', 'order_number', 'customer_email', 'customer_name', 'customer_phone', 'items', 'subtotal', 'discount', 'discount_code', 'discount_amount', 'shipping_cost', 'tax_amount', 'total', 'currency', 'pricing', 'checkout_idempotency_key', 'cart_hash', 'stripe', 'shipping_address', 'billing_address', 'status', 'payment_status', 'fulfillment_status', 'payment_method', 'payment_intent_id', 'shipping_method', 'tracking_number', 'tracking_url', 'carrier', 'notes', 'customer_notes', 'internal_notes', 'created_at', 'updated_at', 'paid_at', 'shipped_at', 'delivered_at', 'cancelled_at', 'refunded_at'],
+    public_stores: ['id', 'user_id', 'data', 'created_at'],
+    store_products: ['id', 'store_id', 'project_id', 'category_id', 'name', 'slug', 'description', 'short_description', 'price', 'compare_at_price', 'cost_price', 'currency', 'sku', 'barcode', 'quantity', 'track_inventory', 'low_stock_threshold', 'images', 'tags', 'has_variants', 'variants', 'options', 'status', 'is_digital', 'is_featured', 'weight', 'weight_unit', 'data', 'created_at', 'updated_at'],
+    store_categories: ['id', 'store_id', 'project_id', 'data', 'created_at', 'updated_at'],
+    store_orders: ['id', 'store_id', 'user_id', 'data', 'project_id', 'customer_id', 'order_number', 'customer_email', 'customer_name', 'customer_phone', 'items', 'subtotal', 'discount', 'discount_code', 'discount_amount', 'shipping_cost', 'tax_amount', 'total', 'currency', 'pricing', 'checkout_idempotency_key', 'cart_hash', 'stripe', 'shipping_address', 'billing_address', 'status', 'payment_status', 'fulfillment_status', 'payment_method', 'payment_intent_id', 'shipping_method', 'tracking_number', 'tracking_url', 'carrier', 'notes', 'customer_notes', 'internal_notes', 'created_at', 'updated_at', 'paid_at', 'shipped_at', 'delivered_at', 'cancelled_at', 'refunded_at'],
     store_reviews: ['id', 'project_id', 'product_id', 'customer_id', 'customer_name', 'customer_email', 'rating', 'title', 'comment', 'verified_purchase', 'status', 'helpful_votes', 'admin_response', 'admin_response_at', 'created_at', 'updated_at'],
     store_discounts: ['id', 'project_id', 'code', 'type', 'value', 'minimum_amount', 'usage_limit', 'usage_count', 'starts_at', 'ends_at', 'is_active', 'created_at', 'updated_at'],
-    store_stock_notifications: ['id', 'project_id', 'product_id', 'email', 'status', 'created_at', 'notified_at'],
-    store_wishlists: ['id', 'project_id', 'user_id', 'product_id', 'created_at'],
-    email_campaigns: ['id', 'store_id', 'name', 'subject', 'preview_text', 'type', 'html_content', 'email_document', 'audience_type', 'audience_segment_id', 'custom_recipient_emails', 'status', 'stats', 'tags', 'created_by', 'created_at', 'updated_at'],
+    store_stock_notifications: ['id', 'store_id', 'project_id', 'product_id', 'product_name', 'product_slug', 'product_image', 'email', 'notified', 'created_at', 'updated_at'],
+    store_wishlists: ['id', 'store_id', 'user_id', 'product_id', 'product_name', 'product_slug', 'product_image', 'product_price', 'product_compare_at_price', 'added_at'],
+    email_campaigns: ['id', 'store_id', 'name', 'subject', 'preview_text', 'type', 'html_content', 'email_document', 'audience_type', 'audience_segment_id', 'custom_recipient_emails', 'status', 'stats', 'tags', 'automation_id', 'automation_step_id', 'scheduled_at', 'sent_at', 'created_by', 'created_at', 'updated_at'],
     email_audiences: ['id', 'store_id', 'name', 'description', 'filters', 'accepts_marketing', 'has_ordered', 'min_orders', 'max_orders', 'min_total_spent', 'max_total_spent', 'tags', 'exclude_tags', 'last_order_days_ago', 'source', 'static_members', 'static_member_count', 'estimated_count', 'last_count_update', 'is_default', 'created_by', 'created_at', 'updated_at'],
-    email_automations: ['id', 'store_id', 'name', 'description', 'type', 'category', 'status', 'trigger_config', 'audience_id', 'steps', 'template_id', 'subject', 'delay_minutes', 'stats', 'created_at', 'updated_at'],
-    email_logs: ['id', 'store_id', 'type', 'template_id', 'campaign_id', 'recipient_email', 'recipient_name', 'customer_id', 'subject', 'status', 'provider_message_id', 'provider', 'open_count', 'click_count', 'bounce_type', 'bounce_message', 'error_message', 'error_code', 'order_id', 'lead_id', 'metadata', 'sent_at', 'delivered_at', 'opened_at', 'clicked_links', 'clicked_at', 'bounced_at', 'complained_at'],
+    email_automations: ['id', 'store_id', 'name', 'description', 'type', 'category', 'status', 'trigger_config', 'audience_id', 'steps', 'template_id', 'subject', 'delay_minutes', 'stats', 'created_by', 'created_at', 'updated_at'],
+    email_logs: ['id', 'store_id', 'type', 'template_id', 'campaign_id', 'recipient_email', 'recipient_name', 'customer_id', 'subject', 'status', 'provider_message_id', 'provider', 'open_count', 'click_count', 'bounce_type', 'bounce_message', 'error_message', 'error_code', 'order_id', 'lead_id', 'metadata', 'sent_at', 'delivered_at', 'opened_at', 'clicked_links', 'clicked_at', 'bounced_at', 'complained_at', 'created_at'],
+    social_conversations: ['id', 'project_id', 'channel', 'participant_id', 'participant_name', 'participant_avatar', 'participant_email', 'participant_phone', 'status', 'started_at', 'last_message_at', 'message_count', 'unread_count', 'assigned_to', 'tags', 'notes', 'lead_id', 'metadata', 'created_at', 'updated_at'],
+    social_messages: ['id', 'conversation_id', 'project_id', 'channel', 'direction', 'sender_id', 'sender_name', 'sender_avatar', 'recipient_id', 'message', 'message_type', 'media_url', 'timestamp', 'status', 'response', 'response_timestamp', 'metadata', 'processed_by_ai', 'ai_confidence', 'escalated_to_human', 'error_code', 'error_message', 'retry_count', 'created_at', 'updated_at'],
 };
 
 const COLLECTION_TABLES: Record<string, string> = {
+    emailCampaigns: 'email_campaigns',
+    emailAudiences: 'email_audiences',
+    emailAutomations: 'email_automations',
+    emailLogs: 'email_logs',
+    emailSettings: 'email_settings',
+    socialConversations: 'social_conversations',
+    socialMessages: 'social_messages',
     adminEmailCampaigns: 'email_campaigns',
     userEmailCampaigns: 'email_campaigns',
     adminEmailAudiences: 'email_audiences',
@@ -95,6 +105,8 @@ const COLLECTION_TABLES: Record<string, string> = {
     adminEmailLogs: 'email_logs',
     userEmailLogs: 'email_logs',
     storeUsers: 'store_users',
+    publicStores: 'public_stores',
+    customerOrders: 'store_orders',
     users: 'users',
     tenants: 'tenants',
     members: 'tenant_members',
@@ -155,6 +167,10 @@ const JSON_FALLBACK_COLUMN: Record<string, string> = {
     properties: 'metadata',
     store_users: 'metadata',
     store_user_activities: 'metadata',
+    public_stores: 'data',
+    store_products: 'data',
+    store_categories: 'data',
+    store_orders: 'data',
     email_logs: 'metadata',
     email_campaigns: 'email_document',
 };
@@ -166,6 +182,32 @@ const FIELD_ALIASES: Record<string, string> = {
     tenantId: 'tenant_id',
     projectId: 'project_id',
     storeId: 'store_id',
+    categoryId: 'category_id',
+    shortDescription: 'short_description',
+    compareAtPrice: 'compare_at_price',
+    costPrice: 'cost_price',
+    trackInventory: 'track_inventory',
+    lowStockThreshold: 'low_stock_threshold',
+    hasVariants: 'has_variants',
+    isDigital: 'is_digital',
+    isFeatured: 'is_featured',
+    weightUnit: 'weight_unit',
+    orderNumber: 'order_number',
+    customerEmail: 'customer_email',
+    customerName: 'customer_name',
+    customerPhone: 'customer_phone',
+    discountCode: 'discount_code',
+    discountAmount: 'discount_amount',
+    shippingCost: 'shipping_cost',
+    taxAmount: 'tax_amount',
+    shippingAddress: 'shipping_address',
+    billingAddress: 'billing_address',
+    paymentStatus: 'payment_status',
+    fulfillmentStatus: 'fulfillment_status',
+    paymentMethod: 'payment_method',
+    paymentIntentId: 'payment_intent_id',
+    shippingMethod: 'shipping_method',
+    customerNotes: 'customer_notes',
     restaurantId: 'restaurant_id',
     leadId: 'lead_id',
     user_id: 'user_id',
@@ -195,17 +237,70 @@ const FIELD_ALIASES: Record<string, string> = {
     audienceSegmentId: 'audience_segment_id',
     customRecipientEmails: 'custom_recipient_emails',
     createdBy: 'created_by',
+    automationId: 'automation_id',
+    automationStepId: 'automation_step_id',
+    scheduledAt: 'scheduled_at',
+    sentAt: 'sent_at',
     triggerConfig: 'trigger_config',
+    audienceId: 'audience_id',
     templateId: 'template_id',
     delayMinutes: 'delay_minutes',
+    members: 'static_members',
     staticMembers: 'static_members',
     staticMemberCount: 'static_member_count',
     estimatedCount: 'estimated_count',
     lastCountUpdate: 'last_count_update',
     isDefault: 'is_default',
+    recipientEmail: 'recipient_email',
+    recipientName: 'recipient_name',
+    customerId: 'customer_id',
+    providerMessageId: 'provider_message_id',
+    openCount: 'open_count',
+    clickCount: 'click_count',
+    bounceType: 'bounce_type',
+    bounceMessage: 'bounce_message',
+    errorMessage: 'error_message',
+    errorCode: 'error_code',
+    orderId: 'order_id',
+    productName: 'product_name',
+    productSlug: 'product_slug',
+    productImage: 'product_image',
+    productPrice: 'product_price',
+    productCompareAtPrice: 'product_compare_at_price',
+    addedAt: 'added_at',
+    notifiedAt: 'notified_at',
+    deliveredAt: 'delivered_at',
+    openedAt: 'opened_at',
+    clickedLinks: 'clicked_links',
+    clickedAt: 'clicked_at',
+    bouncedAt: 'bounced_at',
+    complainedAt: 'complained_at',
+    conversationId: 'conversation_id',
+    participantId: 'participant_id',
+    participantName: 'participant_name',
+    participantAvatar: 'participant_avatar',
+    participantEmail: 'participant_email',
+    participantPhone: 'participant_phone',
+    startedAt: 'started_at',
+    lastMessageAt: 'last_message_at',
+    messageCount: 'message_count',
+    unreadCount: 'unread_count',
+    assignedTo: 'assigned_to',
+    senderId: 'sender_id',
+    senderName: 'sender_name',
+    senderAvatar: 'sender_avatar',
+    recipientId: 'recipient_id',
+    messageType: 'message_type',
+    mediaUrl: 'media_url',
+    responseTimestamp: 'response_timestamp',
+    processedByAI: 'processed_by_ai',
+    aiConfidence: 'ai_confidence',
+    escalatedToHuman: 'escalated_to_human',
+    retryCount: 'retry_count',
 };
 
 const SERVER_NOW = Symbol('serverNow');
+const EMAIL_TABLES = new Set(['email_settings', 'email_campaigns', 'email_audiences', 'email_automations', 'email_logs']);
 
 function partsFrom(input: unknown[]): string[] {
     const out: string[] = [];
@@ -259,6 +354,9 @@ function toAppRecord(row: AnyRecord | null | undefined): AnyRecord {
         const camel = snakeToCamel(key);
         if (merged[camel] === undefined) merged[camel] = value;
     }
+    if (row.static_members !== undefined && merged.members === undefined) merged.members = row.static_members;
+    if (row.store_id !== undefined && merged.projectId === undefined) merged.projectId = row.store_id;
+    if (row.store_id !== undefined && merged.storeId === undefined) merged.storeId = row.store_id;
     return merged;
 }
 
@@ -279,7 +377,17 @@ function resolvePath(path: string[]): ResolvedPath {
 
     const lastCollectionIndex = path.length % 2 === 0 ? path.length - 2 : path.length - 1;
     const collectionName = path[lastCollectionIndex];
-    const table = resolveTableName(collectionName);
+    let table = resolveTableName(collectionName);
+    const publicStoreIndex = path.indexOf('publicStores');
+
+    if (publicStoreIndex !== -1) {
+        if (collectionName === 'products') table = 'store_products';
+        if (collectionName === 'categories') table = 'store_categories';
+        if (collectionName === 'settings') table = 'store_settings';
+        if (collectionName === 'customerOrders') table = 'store_orders';
+    }
+
+    const isEmailTable = EMAIL_TABLES.has(table);
     const id = path.length % 2 === 0 ? path[path.length - 1] : undefined;
     const filters: ResolvedPath['filters'] = [];
 
@@ -287,9 +395,16 @@ function resolvePath(path: string[]): ResolvedPath {
         const parentName = path[i];
         const parentId = path[i + 1];
         if (!parentId) continue;
-        if (parentName === 'users') filters.push({ field: 'user_id', op: '==', value: parentId });
+        if (parentName === 'users' && !isEmailTable) filters.push({ field: 'user_id', op: '==', value: parentId });
         if (parentName === 'tenants') filters.push({ field: 'tenant_id', op: '==', value: parentId });
-        if (parentName === 'projects') filters.push({ field: 'project_id', op: '==', value: parentId });
+        if (parentName === 'projects') filters.push({ field: isEmailTable ? 'store_id' : 'project_id', op: '==', value: parentId });
+        if (parentName === 'publicStores') {
+            filters.push({
+                field: table === 'store_settings' ? 'project_id' : 'store_id',
+                op: '==',
+                value: parentId,
+            });
+        }
         if (parentName === 'restaurants') filters.push({ field: 'restaurant_id', op: '==', value: parentId });
         if (parentName === 'storeUsers') filters.push({ field: 'project_id', op: '==', value: parentId });
         if (parentName === 'leads') filters.push({ field: 'lead_id', op: '==', value: parentId });
@@ -310,6 +425,7 @@ function resolvePath(path: string[]): ResolvedPath {
 function applyEqId(query: any, resolved: ResolvedPath) {
     if (!resolved.id) return query;
     if (resolved.table === 'custom_domains') return query.eq('domain_name', resolved.id);
+    if (resolved.table === 'store_settings') return query;
     return query.eq('id', resolved.id);
 }
 
@@ -404,7 +520,9 @@ function normalizeWrite(table: string, data: AnyRecord, existing: AnyRecord = {}
 function generatedId() {
     return typeof crypto !== 'undefined' && 'randomUUID' in crypto
         ? crypto.randomUUID()
-        : `id_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (char) =>
+            (Number(char) ^ Math.random() * 16 >> Number(char) / 4).toString(16)
+        );
 }
 
 export function collection(...args: any[]): DataRef {
@@ -509,10 +627,11 @@ export async function addDoc(ref: DataRef, data: AnyRecord) {
 export async function setDoc(ref: DataRef, data: AnyRecord, options?: { merge?: boolean }) {
     const resolved = resolvePath(ref.path);
     const existing = options?.merge && resolved.id ? (await getDoc(ref)).data() : {};
-    const payload = normalizeWrite(resolved.table, data, existing);
+    const parentDefaults = Object.fromEntries(resolved.filters.filter(f => f.op === '==').map(f => [f.field, f.value]));
+    const payload = normalizeWrite(resolved.table, { ...parentDefaults, ...data }, existing);
     if (resolved.id) {
         if (resolved.table === 'custom_domains') payload.domain_name = resolved.id;
-        else payload.id = resolved.id;
+        else if (resolved.table !== 'store_settings') payload.id = resolved.id;
     }
     const { error } = await supabase.from(resolved.table).upsert(payload);
     if (error) throw error;

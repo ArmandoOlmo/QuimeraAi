@@ -2,16 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { AiAssistantConfig, Project, ChatAppearanceConfig } from '../../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../../utils/chatThemes';
-import ChatCore from './ChatCore';
+import ChatCore, { ChatAppointmentData, AppointmentSlot } from './ChatCore';
 
 interface EmbedWidgetProps {
     projectId: string;
     apiUrl?: string;
 }
 
+const DEFAULT_WIDGET_API_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || 'https://quimera.ai/api/widget').replace(/\/$/, '');
+
 const EmbedWidget: React.FC<EmbedWidgetProps> = ({ 
     projectId,
-    apiUrl = 'https://quimera.ai/api/widget'
+    apiUrl = DEFAULT_WIDGET_API_URL
 }) => {
     const [config, setConfig] = useState<AiAssistantConfig | null>(null);
     const [project, setProject] = useState<Project | null>(null);
@@ -19,12 +21,14 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [appointments, setAppointments] = useState<AppointmentSlot[]>([]);
+    const encodedProjectId = encodeURIComponent(projectId);
 
     // Load configuration from API
     useEffect(() => {
         const loadConfig = async () => {
             try {
-                const response = await fetch(`${apiUrl}/${projectId}`);
+                const response = await fetch(`${apiUrl}/${encodedProjectId}`);
                 
                 if (!response.ok) {
                     throw new Error('Failed to load widget configuration');
@@ -44,12 +48,46 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
         };
 
         loadConfig();
-    }, [projectId, apiUrl]);
+    }, [encodedProjectId, apiUrl]);
+
+    useEffect(() => {
+        if (!isOpen || !projectId) return;
+
+        const loadAppointments = async () => {
+            try {
+                const response = await fetch(`${apiUrl}/${encodedProjectId}/appointments`);
+                if (!response.ok) return;
+
+                const payload = await response.json();
+                const now = new Date();
+                const slots: AppointmentSlot[] = (payload.appointments || [])
+                    .map((item: any) => ({
+                        id: item.id,
+                        title: item.title || 'Reservado',
+                        startDate: new Date(item.startDate),
+                        endDate: new Date(item.endDate),
+                        status: item.status || 'scheduled',
+                    }))
+                    .filter((item: AppointmentSlot) =>
+                        item.startDate >= now &&
+                        !Number.isNaN(item.startDate.getTime()) &&
+                        !Number.isNaN(item.endDate.getTime()) &&
+                        item.status !== 'cancelled'
+                    );
+
+                setAppointments(slots);
+            } catch (err) {
+                console.warn('Error loading embedded widget availability:', err);
+            }
+        };
+
+        loadAppointments();
+    }, [isOpen, projectId, apiUrl, encodedProjectId]);
 
     // Handle lead capture for embedded widget
     const handleLeadCapture = async (leadData: any): Promise<string> => {
         try {
-            await fetch(`${apiUrl}/${projectId}/leads`, {
+            const response = await fetch(`${apiUrl}/${encodedProjectId}/leads`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -61,10 +99,55 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                     tags: ['embedded-widget', ...(leadData.tags || [])]
                 })
             });
+            if (response.ok) {
+                const payload = await response.json();
+                return payload.leadId || '';
+            }
         } catch (err) {
             console.error('Error capturing lead:', err);
         }
         return '';
+    };
+
+    const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<string | undefined> => {
+        try {
+            const response = await fetch(`${apiUrl}/${encodedProjectId}/appointments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: appointmentData.title,
+                    description: appointmentData.description,
+                    type: appointmentData.type,
+                    startDate: appointmentData.startDate.toISOString(),
+                    endDate: appointmentData.endDate.toISOString(),
+                    participantName: appointmentData.participantName,
+                    participantEmail: appointmentData.participantEmail,
+                    participantPhone: appointmentData.participantPhone,
+                    linkedLeadId: appointmentData.linkedLeadId,
+                }),
+            });
+
+            if (!response.ok) return undefined;
+            const payload = await response.json();
+
+            if (appointmentData.participantName || appointmentData.participantEmail) {
+                await handleLeadCapture({
+                    name: appointmentData.participantName || 'Cliente desde Chat',
+                    email: appointmentData.participantEmail,
+                    phone: appointmentData.participantPhone,
+                    message: `Cita agendada: ${appointmentData.title}`,
+                    tags: ['embedded-widget', 'appointment-scheduled'],
+                    notes: `Cita programada para ${appointmentData.startDate.toLocaleDateString()} a las ${appointmentData.startDate.toLocaleTimeString()}`,
+                });
+            }
+
+            return payload.appointmentId;
+        } catch (err) {
+            console.error('Error creating embedded widget appointment:', err);
+            return undefined;
+        }
     };
 
     // Apply custom position
@@ -111,6 +194,8 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                         project={project}
                         appearance={appearance}
                         onLeadCapture={handleLeadCapture}
+                        onCreateAppointment={handleCreateAppointment}
+                        existingAppointments={appointments}
                         onClose={() => setIsOpen(false)}
                         className="w-full h-full flex flex-col"
                         showHeader={true}
@@ -157,8 +242,6 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
 };
 
 export default EmbedWidget;
-
-
 
 
 

@@ -22,11 +22,16 @@ export interface ParticipantInfo {
     phone?: string;
 }
 
+export interface WebChatConversationOptions {
+    apiBaseUrl?: string;
+    publicProjectId?: string;
+}
+
 // =============================================================================
 // HOOK
 // =============================================================================
 
-export const useWebChatConversation = (projectId: string, userId?: string) => {
+export const useWebChatConversation = (projectId: string, userId?: string, options: WebChatConversationOptions = {}) => {
     const [conversationId, setConversationId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -34,7 +39,11 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
     const messageCountRef = useRef(0);
     // Use a ref to track conversation ID for immediate access (state updates are async)
     const conversationIdRef = useRef<string | null>(null);
-    const shouldPersist = Boolean(userId);
+    const apiBaseUrl = options.apiBaseUrl?.replace(/\/$/, '');
+    const publicProjectId = options.publicProjectId || projectId;
+    const shouldPersistToDatabase = Boolean(userId);
+    const shouldPersistViaApi = Boolean(!userId && apiBaseUrl && publicProjectId);
+    const shouldPersist = shouldPersistToDatabase || shouldPersistViaApi;
 
     const getDataHelpers = useCallback(async () => {
         const [{ db }, helpers] = await Promise.all([
@@ -43,6 +52,33 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
         ]);
         return { db, ...helpers };
     }, []);
+
+    const callWidgetApi = useCallback(async (path: string, init: RequestInit = {}) => {
+        if (!apiBaseUrl || !publicProjectId) {
+            throw new Error('Widget API is not configured');
+        }
+
+        const response = await fetch(`${apiBaseUrl}/${encodeURIComponent(publicProjectId)}${path}`, {
+            ...init,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(init.headers || {}),
+            },
+        });
+
+        if (!response.ok) {
+            let message = `Widget API request failed (${response.status})`;
+            try {
+                const payload = await response.json();
+                message = payload?.error || message;
+            } catch {
+                // Ignore malformed error bodies.
+            }
+            throw new Error(message);
+        }
+
+        return response.json();
+    }, [apiBaseUrl, publicProjectId]);
 
     // ==========================================================================
     // CREATE OR GET CONVERSATION
@@ -68,6 +104,23 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
         setError(null);
 
         try {
+            if (shouldPersistViaApi) {
+                const result = await callWidgetApi('/conversations', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        sessionId: sessionIdRef.current,
+                        participantInfo,
+                    }),
+                });
+
+                if (result.sessionId) sessionIdRef.current = result.sessionId;
+                conversationIdRef.current = result.conversationId;
+                setConversationId(result.conversationId);
+                messageCountRef.current = result.messageCount || 0;
+                setIsLoading(false);
+                return result.conversationId;
+            }
+
             const {
                 db,
                 collection,
@@ -138,7 +191,7 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
             setIsLoading(false);
             return null;
         }
-    }, [projectId, conversationId, shouldPersist, getDataHelpers]);
+    }, [projectId, conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers]);
 
     // ==========================================================================
     // SAVE MESSAGE
@@ -159,11 +212,26 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
         }
 
         try {
+            if (shouldPersistViaApi) {
+                const result = await callWidgetApi(`/conversations/${encodeURIComponent(targetConvId)}/messages`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        sessionId: sessionIdRef.current,
+                        role: message.role,
+                        text: message.text,
+                        isVoiceMessage: message.isVoiceMessage,
+                    }),
+                });
+                messageCountRef.current = result.messageCount || messageCountRef.current + 1;
+                return true;
+            }
+
             const { db, collection, doc, addDoc, updateDoc, Timestamp } = await getDataHelpers();
             const now = Timestamp.now();
             
             // Create the message document
             const messageData: Omit<SocialMessage, 'id'> = {
+                conversationId: targetConvId,
                 projectId,
                 channel: 'web',
                 direction: message.role === 'user' ? 'inbound' : 'outbound',
@@ -196,7 +264,7 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
             console.error('[useWebChatConversation] Error saving message:', err);
             return false;
         }
-    }, [projectId, conversationId, shouldPersist, getDataHelpers]);
+    }, [projectId, conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers]);
 
     // ==========================================================================
     // UPDATE PARTICIPANT INFO
@@ -214,6 +282,15 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
         }
 
         try {
+            if (shouldPersistViaApi) {
+                await callWidgetApi(`/conversations/${encodeURIComponent(targetConvId)}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ participantInfo: info }),
+                });
+                console.log('[useWebChatConversation] Updated participant info');
+                return true;
+            }
+
             const { db, doc, updateDoc } = await getDataHelpers();
             const conversationRef = doc(db, 'socialConversations', targetConvId);
             const updates: Partial<SocialConversation> = {};
@@ -229,7 +306,7 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
             console.error('[useWebChatConversation] Error updating participant:', err);
             return false;
         }
-    }, [conversationId, shouldPersist, getDataHelpers]);
+    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers]);
 
     // ==========================================================================
     // CLOSE CONVERSATION
@@ -245,6 +322,15 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
         }
 
         try {
+            if (shouldPersistViaApi) {
+                await callWidgetApi(`/conversations/${encodeURIComponent(targetConvId)}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ status: 'closed' }),
+                });
+                console.log('[useWebChatConversation] Closed conversation');
+                return true;
+            }
+
             const { db, doc, updateDoc } = await getDataHelpers();
             const conversationRef = doc(db, 'socialConversations', targetConvId);
             await updateDoc(conversationRef, {
@@ -256,7 +342,7 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
             console.error('[useWebChatConversation] Error closing conversation:', err);
             return false;
         }
-    }, [conversationId, shouldPersist, getDataHelpers]);
+    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers]);
 
     // ==========================================================================
     // LINK TO LEAD
@@ -272,6 +358,15 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
         }
 
         try {
+            if (shouldPersistViaApi) {
+                await callWidgetApi(`/conversations/${encodeURIComponent(targetConvId)}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ leadId }),
+                });
+                console.log('[useWebChatConversation] Linked to lead:', leadId);
+                return true;
+            }
+
             const { db, doc, updateDoc } = await getDataHelpers();
             const conversationRef = doc(db, 'socialConversations', targetConvId);
             await updateDoc(conversationRef, {
@@ -283,7 +378,7 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
             console.error('[useWebChatConversation] Error linking to lead:', err);
             return false;
         }
-    }, [conversationId, shouldPersist, getDataHelpers]);
+    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers]);
 
     // ==========================================================================
     // SAVE FULL TRANSCRIPT

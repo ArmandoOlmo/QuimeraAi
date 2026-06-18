@@ -17,6 +17,8 @@ import type { GlobalChatbotPrompts } from '../../types';
 import { useCanAccessService } from '../../hooks/useServiceAvailability';
 import { Conversation, Role } from '@elevenlabs/client';
 
+const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || 'https://quimera.ai/api/widget').replace(/\/$/, '');
+
 // =============================================================================
 // INTERFACES
 // =============================================================================
@@ -310,7 +312,8 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     isEmbedded = false,
     hidePoweredBy = false,
     currentPageContext,
-    cmsArticles
+    cmsArticles,
+    activePropertyContext
 }) => {
     const authContext = useSafeAuth();
     const user = authContext?.user ?? null;
@@ -362,12 +365,18 @@ const ChatCore: React.FC<ChatCoreProps> = ({
 
     // Web chat conversation hook for Inbox persistence
     const projectIdForConversation = project?.id || activeProject?.id || '';
+    const publicConversationProjectId = projectOwnerId && projectIdForConversation
+        ? `${projectOwnerId}_${projectIdForConversation}`
+        : projectIdForConversation;
     const {
         getOrCreateConversation,
         saveMessage: saveConversationMessage,
         updateParticipantInfo,
         linkToLead,
-    } = useWebChatConversation(projectIdForConversation, user?.id);
+    } = useWebChatConversation(projectIdForConversation, user?.id, {
+        apiBaseUrl: WIDGET_API_BASE_URL,
+        publicProjectId: publicConversationProjectId,
+    });
 
     // Get lead capture config with defaults
     const rawLeadConfig = config.leadCaptureConfig || {
@@ -594,6 +603,11 @@ ${suggestAvailableSlots()}
             
             POLICIES & CONTACT INFO:
             ${config.policiesContact || 'No policies/contact information provided.'}
+
+            ${activePropertyContext ? `
+            ACTIVE PROPERTY CONTEXT:
+            ${truncateText(activePropertyContext, 3000)}
+            ` : ''}
             
             ${config.faqs && config.faqs.length > 0 ? `
             FREQUENTLY ASKED QUESTIONS:
@@ -1211,10 +1225,10 @@ ${suggestAvailableSlots()}
     // TEXT CHAT HANDLER
     // =============================================================================
 
-    const handleSend = async () => {
-        if (!input.trim() || isLoading) return;
+    const handleSend = async (messageOverride?: string) => {
+        const userMessage = (messageOverride ?? input).trim();
+        if (!userMessage || isLoading) return;
 
-        const userMessage = input.trim();
         setInput('');
 
         const newMessages: Message[] = [...messages, { role: 'user', text: userMessage }];
@@ -1308,16 +1322,18 @@ ${suggestAvailableSlots()}
 
             let botResponse: string;
 
-            // ALWAYS capture screen for visual context (like GlobalAiAssistant)
+            // Capture screen only when the user asks about visible page context.
             let screenCapture: string | null = null;
-            console.log('[ChatCore] 👁️ Capturing screen for visual context...');
-            try {
-                screenCapture = await captureCurrentView();
-                if (screenCapture) {
-                    console.log('[ChatCore] 📸 Screen captured successfully');
+            if (detectVisualIntent(userMessage)) {
+                console.log('[ChatCore] 👁️ Capturing screen for visual context...');
+                try {
+                    screenCapture = await captureCurrentView();
+                    if (screenCapture) {
+                        console.log('[ChatCore] 📸 Screen captured successfully');
+                    }
+                } catch (error) {
+                    console.warn('[ChatCore] ⚠️ Could not capture screen:', error);
                 }
-            } catch (error) {
-                console.warn('[ChatCore] ⚠️ Could not capture screen:', error);
             }
 
             // Build full prompt with system context and conversation history
@@ -1422,7 +1438,8 @@ ${suggestAvailableSlots()}
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
-            handleSend();
+            e.preventDefault();
+            void handleSend();
         }
     };
 
@@ -2007,8 +2024,7 @@ ${suggestAvailableSlots()}
                                     <button
                                         key={qr.id}
                                         onClick={() => {
-                                            setInput(qr.text);
-                                            setTimeout(() => handleSend(), 100);
+                                            void handleSend(qr.text);
                                         }}
                                         className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-all hover:shadow-md hover:scale-105"
                                         style={{
@@ -2074,7 +2090,7 @@ ${suggestAvailableSlots()}
                             disabled={isLoading}
                         />
                         <button
-                            onClick={handleSend}
+                            onClick={() => void handleSend()}
                             disabled={!input.trim() || isLoading}
                             className="p-2 rounded-full text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                             style={{ backgroundColor: appearance.colors?.primaryColor }}
