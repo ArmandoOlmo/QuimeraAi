@@ -89,6 +89,9 @@ const HeroModern: React.FC<HeroProps> = ({
   onNavigate,
   glassEffect,
   backgroundOverlayEnabled,
+  backgroundBlurEnabled,
+  backgroundBlurAmount,
+  backgroundBlurColor,
 }) => {
   const layout = getHeroLayoutClasses(textLayout as HeroTextLayout);
   const { getColor } = useDesignTokens();
@@ -116,6 +119,14 @@ const HeroModern: React.FC<HeroProps> = ({
     /(<span.*?>)(.*?)(<\/span>)/,
     `<span class="text-transparent bg-clip-text bg-gradient-to-r from-[${actualColors.primary}] to-[${actualColors.secondary}]">$2</span>`
   );
+  const isBackgroundBlurActive = backgroundBlurEnabled ?? glassEffect ?? false;
+  const backgroundBlurStyle = isBackgroundBlurActive
+    ? {
+        backdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+        WebkitBackdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+        backgroundColor: hexToRgba(backgroundBlurColor || '#ffffff', 0.12),
+      }
+    : undefined;
 
   return (
     <section className={`relative w-full flex flex-col overflow-hidden${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
@@ -150,17 +161,20 @@ const HeroModern: React.FC<HeroProps> = ({
             alt="Hero Background"
             className="w-full h-full object-cover scale-105 transition-transform duration-1000"
           />
+          {isBackgroundBlurActive && (
+            <div className="absolute inset-0" style={backgroundBlurStyle} />
+          )}
           {/* Decorative gradient overlays — only when overlay enabled */}
           {backgroundOverlayEnabled !== false && (
           <>
           {/* Gradient Overlay Mejorado con múltiples capas - Opacidad configurable */}
-          <div className={`absolute inset-0 hidden md:block bg-gradient-to-b from-black via-black to-black${glassEffect ? ' backdrop-blur-md' : ''}`}
+          <div className="absolute inset-0 hidden md:block bg-gradient-to-b from-black via-black to-black"
             style={{
               background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.3 / 100}), rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.7 / 100}), rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}))`
             }}
           ></div>
           {/* Mobile: lighter top, stronger bottom so image is visible */}
-          <div className={`absolute inset-0 md:hidden${glassEffect ? ' backdrop-blur-md' : ''}`}
+          <div className="absolute inset-0 md:hidden"
             style={{
               background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 100%)`
             }}
@@ -277,4 +291,3 @@ const HeroModern: React.FC<HeroProps> = ({
 };
 
 export default HeroModern;
-

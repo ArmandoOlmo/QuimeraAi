@@ -54,6 +54,9 @@ const Hero: React.FC<HeroProps> = (props) => {
     heroHeight,
     overlayOpacity,
     backgroundOverlayEnabled,
+    backgroundBlurEnabled,
+    backgroundBlurAmount,
+    backgroundBlurColor,
     primaryCtaLink = '/#cta',
     secondaryCtaLink = '/#features',
     onNavigate,
@@ -103,6 +106,14 @@ const Hero: React.FC<HeroProps> = (props) => {
   // image rendering AND the color/opacity overlay. To avoid double-render that would mask the user's
   // overlay color, we skip Hero's own BackgroundImage when backgroundImageUrl is the source.
   const shouldRenderInternalImage = !!imageUrl && !backgroundImageUrl;
+  const isBackgroundBlurActive = backgroundBlurEnabled ?? glassEffect ?? false;
+  const backgroundBlurStyle = isBackgroundBlurActive
+    ? {
+        backdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+        WebkitBackdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+        backgroundColor: hexToRgba(backgroundBlurColor || '#ffffff', 0.12),
+      }
+    : undefined;
   const BackgroundImage = () => {
     if (isPendingImage(effectiveImageUrl)) {
       return (
@@ -124,17 +135,20 @@ const Hero: React.FC<HeroProps> = (props) => {
           className="w-full h-full object-cover"
           key={effectiveImageUrl}
         />
+        {isBackgroundBlurActive && (
+          <div className="absolute inset-0" style={backgroundBlurStyle} />
+        )}
         {/* Dark overlay for readability — respects "Activar superposición" toggle */}
         {backgroundOverlayEnabled !== false && (
           <>
             <div
-              className={`absolute inset-0 hidden md:block ${glassEffect ? 'backdrop-blur-md' : ''}`}
+              className="absolute inset-0 hidden md:block"
               style={{
                 background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? 50) / 100}), rgba(0,0,0,${((overlayOpacity ?? 50) + 15) / 100}))`
               }}
             />
             <div
-              className={`absolute inset-0 md:hidden ${glassEffect ? 'backdrop-blur-md' : ''}`}
+              className="absolute inset-0 md:hidden"
               style={{
                 background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,${((overlayOpacity ?? 50) + 20) / 100}) 100%)`
               }}

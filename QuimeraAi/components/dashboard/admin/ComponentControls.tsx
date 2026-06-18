@@ -242,6 +242,52 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         await updateComponentStyle(selectedComponentId, { animation: animationConfig }, isCustom);
     };
 
+    const renderBackgroundBlurControls = () => {
+        const s = styles as any;
+        const blurEnabled = s.backgroundBlurEnabled ?? s.glassEffect ?? false;
+
+        return (
+            <>
+                <hr className="border-q-border/50" />
+                <div className="space-y-3 bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <div className="flex items-center space-x-2">
+                        <Image size={16} className="text-q-accent" />
+                        <h4 className="font-semibold text-q-text">Blur del fondo</h4>
+                    </div>
+                    <ToggleControl
+                        label="Activar blur"
+                        checked={blurEnabled}
+                        onChange={(v) => handleStyleChange('backgroundBlurEnabled', v)}
+                    />
+                    {blurEnabled && (
+                        <div className="space-y-3 animate-fade-in-up">
+                            <div>
+                                <div className="flex justify-between items-center">
+                                    <Label>Cantidad de blur</Label>
+                                    <span className="text-sm font-medium text-q-text">{s.backgroundBlurAmount ?? 22}px</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="60"
+                                    step="1"
+                                    value={s.backgroundBlurAmount ?? 22}
+                                    onChange={(e) => handleStyleChange('backgroundBlurAmount', parseInt(e.target.value, 10))}
+                                    className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer"
+                                />
+                            </div>
+                            <ColorControl
+                                label="Color del blur"
+                                value={s.backgroundBlurColor || '#ffffff'}
+                                onChange={(v) => handleStyleChange('backgroundBlurColor', v)}
+                            />
+                        </div>
+                    )}
+                </div>
+            </>
+        );
+    };
+
     const renderHeroControls = () => {
         const heroStyles = styles as typeof componentStyles['hero'];
         const colors = (heroStyles.colors || {}) as any;
@@ -258,6 +304,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         📐 Full-width hero with background image, headline overlay, and call-to-action buttons. Use the content tab to change text and image.
                     </p>
                 </div>
+
+                {renderBackgroundBlurControls()}
 
                 <hr className="border-q-border/50" />
 
@@ -891,8 +939,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
     const renderStandardControls = () => {
         const s = styles as any;
+        const isHeroComponent = String(baseComponent).startsWith('hero');
         return (
             <div className="space-y-4">
+                {isHeroComponent && renderBackgroundBlurControls()}
+
                 {/* ========== LAYOUT ========== */}
                 <div className="flex items-center space-x-2">
                     <AlignJustify size={16} className="text-q-accent" />

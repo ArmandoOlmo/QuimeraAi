@@ -155,6 +155,9 @@ export interface SectionBackgroundFields {
     backgroundOverlayOpacity?: number;
     backgroundOverlayColor?: string;
     backgroundPosition?: string;
+    backgroundBlurEnabled?: boolean;
+    backgroundBlurAmount?: number;
+    backgroundBlurColor?: string;
 }
 
 // =============================================================================
@@ -313,6 +316,7 @@ export interface HeroGalleryData extends SectionBackgroundFields {
     cornerGradient?: CornerGradientConfig;
     textHorizontalAlign?: 'left' | 'center' | 'right';
     textVerticalAlign?: 'top' | 'middle' | 'bottom';
+    bgPosition?: string;
 }
 
 // =============================================================================
@@ -397,6 +401,7 @@ export interface HeroLeadData extends SectionBackgroundFields {
     subheadline: string;
     badgeText?: string;             // Optional accent badge above headline
     imageUrl?: string;              // Background image for info side
+    imagePosition?: string;         // CSS background-position for info side image
     overlayOpacity?: number;        // 0-100, darkens the info side bg
     heroHeight?: number;            // vh units
 

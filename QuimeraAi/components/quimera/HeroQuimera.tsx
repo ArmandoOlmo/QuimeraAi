@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { hexToRgba } from '../../utils/colorUtils';
 
 interface HeroQuimeraProps {
     title?: string;
@@ -25,6 +26,9 @@ interface HeroQuimeraProps {
     backgroundOverlayOpacity?: number;
     backgroundPosition?: string;
     glassEffect?: boolean;
+    backgroundBlurEnabled?: boolean;
+    backgroundBlurAmount?: number;
+    backgroundBlurColor?: string;
     // Decoration
     showDecoration?: boolean;
     showParticles?: boolean;
@@ -51,6 +55,9 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
     backgroundOverlayOpacity = 60,
     backgroundPosition = 'center center',
     glassEffect = false,
+    backgroundBlurEnabled,
+    backgroundBlurAmount,
+    backgroundBlurColor,
     showDecoration = true,
     showParticles = true,
     sectionHeight = 80,
@@ -83,6 +90,14 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
 
     // Compute overlay color from the prop or fallback to background
     const overlayColor = backgroundOverlayColor || bgColor;
+    const isBackgroundBlurActive = backgroundBlurEnabled ?? glassEffect ?? false;
+    const backgroundBlurStyle = isBackgroundBlurActive
+        ? {
+            backdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 22)}px) saturate(1.45)`,
+            WebkitBackdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 22)}px) saturate(1.45)`,
+            backgroundColor: hexToRgba(backgroundBlurColor || '#ffffff', 0.12),
+        }
+        : undefined;
 
     return (
         <section
@@ -102,6 +117,9 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
                         className="w-full h-full object-cover"
                         style={{ objectPosition: backgroundPosition }}
                     />
+                    {isBackgroundBlurActive && (
+                        <div className="absolute inset-0" style={backgroundBlurStyle} />
+                    )}
                     {/* Overlay */}
                     {backgroundOverlayEnabled && (
                         <div
@@ -120,8 +138,6 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
                 <div
                     className="absolute inset-0 z-[1]"
                     style={{
-                        backdropFilter: 'blur(24px) saturate(1.6)',
-                        WebkitBackdropFilter: 'blur(24px) saturate(1.6)',
                         backgroundColor: 'rgba(0,0,0,0.1)',
                     }}
                 />

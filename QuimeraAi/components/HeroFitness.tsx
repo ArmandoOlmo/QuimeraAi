@@ -82,6 +82,10 @@ const HeroFitness: React.FC<HeroProps> = ({
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
     heroHeight,
+    glassEffect,
+    backgroundBlurEnabled,
+    backgroundBlurAmount,
+    backgroundBlurColor,
     primaryCtaLink = '/#cta',
     secondaryCtaLink = '/#features',
     onNavigate,
@@ -107,6 +111,14 @@ const HeroFitness: React.FC<HeroProps> = ({
         /(<span.*?>)(.*?)(<\/span>)/,
         `<span class="text-transparent bg-clip-text bg-gradient-to-r from-[${actualColors.primary}] to-[${actualColors.secondary}]">$2</span>`
     );
+    const isBackgroundBlurActive = backgroundBlurEnabled ?? glassEffect ?? false;
+    const backgroundBlurStyle = isBackgroundBlurActive
+        ? {
+            backdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+            WebkitBackdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+            backgroundColor: hexToRgba(backgroundBlurColor || '#ffffff', 0.12),
+        }
+        : undefined;
 
     return (
         <section
@@ -120,6 +132,9 @@ const HeroFitness: React.FC<HeroProps> = ({
                     alt="Fitness Background"
                     className="w-full h-full object-cover"
                 />
+                {isBackgroundBlurActive && (
+                    <div className="absolute inset-0" style={backgroundBlurStyle} />
+                )}
                 {/* Dark Overlay with Gradient */}
                 <div
                     className="absolute inset-0 hidden md:block"
@@ -376,4 +391,3 @@ const HeroFitness: React.FC<HeroProps> = ({
 };
 
 export default HeroFitness;
-

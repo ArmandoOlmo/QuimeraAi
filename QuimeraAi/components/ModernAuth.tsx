@@ -12,11 +12,12 @@ interface ModernAuthProps {
     onVerificationEmailSent: (email: string) => void;
     initialMode?: 'login' | 'register';
     onNavigateToLanding?: () => void;
+    onAuthSuccess?: () => void;
 }
 
 type AuthMode = 'login' | 'register' | 'forgotPassword';
 
-const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initialMode = 'login', onNavigateToLanding }) => {
+const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initialMode = 'login', onNavigateToLanding, onAuthSuccess }) => {
     const { t } = useTranslation();
     const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
 
@@ -52,7 +53,10 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
         setIsLoading(true);
         try {
             const { redirected } = await signInWithGoogle();
-            if (!redirected) setIsLoading(false);
+            if (!redirected) {
+                setIsLoading(false);
+                onAuthSuccess?.();
+            }
         } catch (err: any) {
             setError(t('auth.errors.googleSignInFailed') + ' (' + err.message + ')');
             setIsLoading(false);
@@ -74,6 +78,9 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
 
                 // For Supabase, if email is not confirmed it usually returns an error or empty session
                 // depending on project configuration. We assume successful login if no error.
+                if (data.session || data.user) {
+                    onAuthSuccess?.();
+                }
             } catch (err: any) {
                 if (err.message.includes('Invalid login credentials')) {
                     setError(t('auth.errors.incorrectCredentials'));
@@ -113,6 +120,7 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                     onVerificationEmailSent(email);
                 } else {
                     console.log('Bypassing verification for test user in localhost or email confirmation disabled');
+                    onAuthSuccess?.();
                 }
             } catch (err: any) {
                 if (err.message.includes('User already registered')) {

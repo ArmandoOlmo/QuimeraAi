@@ -599,6 +599,7 @@ const Router: React.FC<RouterProps> = ({
           onVerificationEmailSent={onVerificationEmailSent}
           initialMode="login"
           onNavigateToLanding={() => navigate(ROUTES.LANDING)}
+          onAuthSuccess={() => replace(ROUTES.DASHBOARD)}
         />
       </Suspense>
     );
@@ -612,6 +613,7 @@ const Router: React.FC<RouterProps> = ({
           onVerificationEmailSent={onVerificationEmailSent}
           initialMode="register"
           onNavigateToLanding={() => navigate(ROUTES.LANDING)}
+          onAuthSuccess={() => replace(ROUTES.DASHBOARD)}
         />
       </Suspense>
     );
@@ -686,7 +688,6 @@ const Router: React.FC<RouterProps> = ({
 };
 
 export default Router;
-
 
 
 

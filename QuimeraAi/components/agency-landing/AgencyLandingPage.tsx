@@ -705,9 +705,22 @@ const AgencyLandingPageContent: React.FC = () => {
     mergedAnnouncementBarData,
   ]);
 
+  const sectionBackgroundProps = (sectionData: any) => ({
+    backgroundImageUrl: sectionData?.backgroundImageUrl,
+    backgroundColor: sectionData?.colors?.background || sectionData?.backgroundColor,
+    backgroundOverlayEnabled: sectionData?.backgroundOverlayEnabled,
+    backgroundOverlayOpacity: sectionData?.backgroundOverlayOpacity,
+    backgroundOverlayColor: sectionData?.backgroundOverlayColor,
+    backgroundPosition: sectionData?.backgroundPosition,
+    backgroundBlurEnabled: sectionData?.backgroundBlurEnabled,
+    backgroundBlurAmount: sectionData?.backgroundBlurAmount,
+    backgroundBlurColor: sectionData?.backgroundBlurColor,
+    glassEffect: sectionData?.glassEffect,
+  });
+
   const componentsMap: Partial<Record<PageSection, React.ReactNode>> = {
     hero: (
-      <SectionBackground backgroundImageUrl={mergedHeroData?.backgroundImageUrl} backgroundColor={mergedHeroData?.colors?.background} backgroundOverlayEnabled={mergedHeroData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroData?.backgroundOverlayColor} backgroundPosition={mergedHeroData?.backgroundPosition} glassEffect={mergedHeroData?.glassEffect}>
+      <SectionBackground {...sectionBackgroundProps(mergedHeroData)}>
         {(() => {
           const hbr = mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius;
           const nav = handleLinkNavigation;
@@ -719,7 +732,7 @@ const AgencyLandingPageContent: React.FC = () => {
         })()}
       </SectionBackground>
     ),
-    heroSplit: <SectionBackground backgroundImageUrl={mergedHeroSplitData?.backgroundImageUrl} backgroundColor={mergedHeroSplitData?.colors?.background} backgroundOverlayEnabled={mergedHeroSplitData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroSplitData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroSplitData?.backgroundOverlayColor} backgroundPosition={mergedHeroSplitData?.backgroundPosition}><HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
+    heroSplit: <SectionBackground {...sectionBackgroundProps(mergedHeroSplitData)}><HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
     heroGallery: mergedHeroGalleryData ? (
       <HeroGallery
         {...mergedHeroGalleryData}

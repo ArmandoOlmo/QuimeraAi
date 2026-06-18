@@ -255,7 +255,7 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
         />
       </div>
 
-      <BackgroundImageControl sectionKey="heroLumina" data={data} setNestedData={setNestedData} />
+      <BackgroundImageControl sectionKey="heroLumina" data={data} setNestedData={setNestedData} showBlurControls />
       
       {renderLuminaAnimationControls(data.heroLumina, (key, value) => setNestedData(`heroLumina.${key}`, value))}
       

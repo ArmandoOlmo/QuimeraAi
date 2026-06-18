@@ -73,6 +73,9 @@ interface HeroWaveProps extends HeroGalleryData {
  */
 const HeroWave: React.FC<HeroWaveProps> = ({
   glassEffect, slides = [],
+    backgroundBlurEnabled,
+    backgroundBlurAmount,
+    backgroundBlurColor,
     autoPlaySpeed = 6000,
     transitionDuration = 800,
     showArrows = true,
@@ -148,6 +151,14 @@ const HeroWave: React.FC<HeroWaveProps> = ({
     const headingColor = colors?.heading || '#ffffff';
     const ctaColor = colors?.ctaText || '#ffffff';
     const ctaBg = (colors as any)?.ctaBackground || 'rgba(255,255,255,0.2)';
+    const isBackgroundBlurActive = backgroundBlurEnabled ?? glassEffect ?? false;
+    const backgroundBlurStyle = isBackgroundBlurActive
+        ? {
+            backdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+            WebkitBackdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+            backgroundColor: hexToRgba(backgroundBlurColor || '#ffffff', 0.12),
+        }
+        : undefined;
 
     // Text alignment classes
     const alignClass = textAlign === 'left' ? 'items-start text-left' : textAlign === 'right' ? 'items-end text-right' : 'items-center text-center';
@@ -198,11 +209,14 @@ const HeroWave: React.FC<HeroWaveProps> = ({
                                 }}
                             />
                         )}
+                        {bgImage && isBackgroundBlurActive && (
+                            <div className="absolute inset-0 z-[1]" style={backgroundBlurStyle} />
+                        )}
 
                         {/* Overlay */}
                         {(bgImage || overlayOpacity > 0) && (
                             <div
-                                className="absolute inset-0 z-[1]"
+                                className="absolute inset-0 z-[2]"
                                 style={{
                                     backgroundColor: `rgba(0, 0, 0, ${overlayOpacity > 1 ? overlayOpacity / 100 : overlayOpacity})`,
                                 }}
@@ -210,7 +224,7 @@ const HeroWave: React.FC<HeroWaveProps> = ({
                         )}
 
                         {/* Grain texture */}
-                        {showGrain && <div className="absolute inset-0 z-[2] pointer-events-none wave-grain" />}
+                        {showGrain && <div className="absolute inset-0 z-[3] pointer-events-none wave-grain" />}
 
                         {/* ─── Text content ─── */}
                         <div

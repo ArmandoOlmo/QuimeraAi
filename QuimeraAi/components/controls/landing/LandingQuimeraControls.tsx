@@ -298,7 +298,7 @@ export const renderHeroQuimeraControls = (deps: ControlsDeps & { portalContainer
                 // BackgroundImageControl prefixes with sectionKey, but here data is flat
                 const cleanPath = path.startsWith('.') ? path.slice(1) : path;
                 setNestedData(cleanPath, value);
-            }} />
+            }} showBlurControls />
 
             {/* Layout */}
             <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-4">

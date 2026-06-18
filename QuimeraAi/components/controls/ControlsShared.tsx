@@ -264,9 +264,10 @@ export const BackgroundImageControl: React.FC<{
   sectionKey: string;
   data: any;
   setNestedData: (path: string, value: any) => void;
-}> = ({ sectionKey, data, setNestedData }) => {
+  showBlurControls?: boolean;
+}> = ({ sectionKey, data, setNestedData, showBlurControls = false }) => {
   const { t } = useTranslation();
-  const sectionData = (data as any)?.[sectionKey];
+  const sectionData = (data as any)?.[sectionKey] || data || {};
   const hasImage = !!sectionData?.backgroundImageUrl;
   const [showPicker, setShowPicker] = useState(false);
   const [pickerInitialTab, setPickerInitialTab] = useState<'library' | 'generate'>('library');
@@ -384,6 +385,12 @@ export const BackgroundImageControl: React.FC<{
         </div>
       )}
 
+      {showBlurControls && (
+        <div className="mt-4 pt-4 border-t border-q-border/50">
+          <BackgroundBlurControl sectionKey={sectionKey} data={data} setNestedData={setNestedData} />
+        </div>
+      )}
+
       {/* Glass Effect should always be visible regardless of section background image */}
       <div className="mt-4 pt-3 border-t border-q-border/50 animate-fade-in-up">
         <label className="block text-xs font-bold text-q-text-muted uppercase tracking-wider flex items-center gap-2 mb-2">
@@ -395,6 +402,47 @@ export const BackgroundImageControl: React.FC<{
           onChange={(v) => setNestedData(`${sectionKey}.glassEffect`, v)}
         />
       </div>
+    </div>
+  );
+};
+
+export const BackgroundBlurControl: React.FC<{
+  sectionKey: string;
+  data: any;
+  setNestedData: (path: string, value: any) => void;
+}> = ({ sectionKey, data, setNestedData }) => {
+  const sectionData = sectionKey ? (data as any)?.[sectionKey] || {} : (data as any)?.[sectionKey] || data || {};
+  const fieldPath = (field: string) => sectionKey ? `${sectionKey}.${field}` : field;
+  const enabled = sectionData.backgroundBlurEnabled ?? sectionData.glassEffect ?? false;
+
+  return (
+    <div className="space-y-3 animate-fade-in-up">
+      <label className="block text-xs font-bold text-q-text-muted uppercase tracking-wider flex items-center gap-2">
+        <Layers size={14} /> Blur del fondo
+      </label>
+      <ToggleControl
+        label="Activar blur"
+        checked={enabled}
+        onChange={(v) => setNestedData(fieldPath('backgroundBlurEnabled'), v)}
+      />
+      {enabled && (
+        <div className="space-y-3">
+          <SliderControl
+            label="Cantidad de blur"
+            value={sectionData.backgroundBlurAmount ?? 22}
+            onChange={(v) => setNestedData(fieldPath('backgroundBlurAmount'), v)}
+            min={0}
+            max={60}
+            step={1}
+            suffix="px"
+          />
+          <ColorControl
+            label="Color del blur"
+            value={sectionData.backgroundBlurColor || '#ffffff'}
+            onChange={(v) => setNestedData(fieldPath('backgroundBlurColor'), v)}
+          />
+        </div>
+      )}
     </div>
   );
 };

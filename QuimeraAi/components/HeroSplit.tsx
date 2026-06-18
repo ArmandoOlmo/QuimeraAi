@@ -51,6 +51,9 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
     subheadlineFontSize = 'md',
     buttonBorderRadius = 'xl',
     cornerGradient,
+    backgroundBlurEnabled,
+    backgroundBlurAmount,
+    backgroundBlurColor,
     onNavigate,
 }) => {
     const { getColor } = useDesignTokens();
@@ -93,6 +96,15 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
         }
     };
 
+    const isBackgroundBlurActive = backgroundBlurEnabled ?? glassEffect ?? false;
+    const backgroundBlurStyle = isBackgroundBlurActive
+        ? {
+            backdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+            WebkitBackdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+            backgroundColor: hexToRgba(backgroundBlurColor || '#ffffff', 0.12),
+        }
+        : undefined;
+
     const ImageComponent = () => {
         if (isPendingImage(imageUrl)) {
             return (
@@ -105,11 +117,16 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
         }
 
         return (
-            <img
-                src={imageUrl}
-                alt="Hero Image"
-                className="w-full h-full object-cover"
-            />
+            <>
+                <img
+                    src={imageUrl}
+                    alt="Hero Image"
+                    className="w-full h-full object-cover"
+                />
+                {isBackgroundBlurActive && (
+                    <div className="absolute inset-0" style={backgroundBlurStyle} />
+                )}
+            </>
         );
     };
 
@@ -233,4 +250,3 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
 };
 
 export default HeroSplit;
-

@@ -38,6 +38,9 @@ interface HeroGalleryProps extends HeroGalleryData {
  */
 const HeroGallery: React.FC<HeroGalleryProps> = ({
   glassEffect, slides = [],
+    backgroundBlurEnabled,
+    backgroundBlurAmount,
+    backgroundBlurColor,
     autoPlaySpeed = 6000,
     transitionDuration = 800,
     showArrows = true,
@@ -103,6 +106,14 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
     const textColor = colors?.text || '#ffffff';
     const headingColor = colors?.heading || '#ffffff';
     const ctaColor = colors?.ctaText || '#ffffff';
+    const isBackgroundBlurActive = backgroundBlurEnabled ?? glassEffect ?? false;
+    const backgroundBlurStyle = isBackgroundBlurActive
+        ? {
+            backdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+            WebkitBackdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+            backgroundColor: hexToRgba(backgroundBlurColor || '#ffffff', 0.12),
+        }
+        : undefined;
 
     // ─── Navigation handler ───
     const handleNavigate = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -156,17 +167,20 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
                                 style={{ backgroundColor: slideBg }}
                             />
                         )}
+                        {bgImage && isBackgroundBlurActive && (
+                            <div className="absolute inset-0 z-[1]" style={backgroundBlurStyle} />
+                        )}
 
                         {/* Dark overlay for text readability */}
                         <div
-                            className={`absolute inset-0 z-[1] ${glassEffect ? 'backdrop-blur-md' : ''}`}
+                            className="absolute inset-0 z-[2]"
                             style={{
                                 backgroundColor: `rgba(0, 0, 0, ${overlayOpacity > 1 ? overlayOpacity / 100 : overlayOpacity})`,
                             }}
                         />
 
                         {/* Grain texture overlay */}
-                        {showGrain && <div className="absolute inset-0 z-[2] pointer-events-none gallery-grain" />}
+                        {showGrain && <div className="absolute inset-0 z-[3] pointer-events-none gallery-grain" />}
 
                         {/* ─── Text content ─── */}
                         <div
