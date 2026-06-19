@@ -1091,20 +1091,20 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
     useEffect(() => {
         const loadData = async () => {
             try {
-                // Get store settings from publicStores
-                const publicStoreRef = doc(db, 'publicStores', storeId);
+                // Get store settings from public_stores
+                const publicStoreRef = doc(db, 'public_stores', storeId);
                 const publicStoreDoc = await getDoc(publicStoreRef);
 
                 if (!publicStoreDoc.exists()) {
-                    console.error('Store not found in publicStores');
+                    console.error('Store not found in public_stores');
                     onBack();
                     return;
                 }
 
                 const storeOwnerId = publicStoreDoc.data()?.userId;
 
-                // Get store settings from publicStores (publicly accessible)
-                const settingsRef = doc(db, `publicStores/${storeId}/settings/store`);
+                // Get store settings from public_stores (publicly accessible)
+                const settingsRef = doc(db, `public_stores/${storeId}/settings/store`);
                 const settingsDoc = await getDoc(settingsRef);
                 
                 const publicStoreData = publicStoreDoc.data();

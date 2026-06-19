@@ -16,6 +16,16 @@ type CartRow = Record<string, any>;
 const isUuid = (value?: string): boolean =>
     Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
 
+const resolveStoreIdentity = (value?: string | null) => {
+    const resolved = value || '';
+    const projectId = isUuid(resolved) ? resolved : null;
+    return {
+        storeId: resolved,
+        projectId,
+        publicStoreId: resolved && !projectId ? resolved : null,
+    };
+};
+
 const createCartId = (): string => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID();
@@ -32,12 +42,17 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
     const { persistToSupabase = true } = options;
     
     const effectiveStoreId = storeId || '';
-    const projectIdForLegacy = isUuid(effectiveStoreId) ? effectiveStoreId : null;
+    const { projectId: projectIdForLegacy, publicStoreId } = resolveStoreIdentity(effectiveStoreId);
+    const projectCartIdentityFilter = projectIdForLegacy
+        ? `store_id.eq.${projectIdForLegacy},project_id.eq.${projectIdForLegacy}`
+        : null;
 
     const buildEmptyCart = useCallback((id: string = createCartId()): Cart => ({
         id,
         userId,
         storeId: effectiveStoreId,
+        projectId: projectIdForLegacy || undefined,
+        publicStoreId: publicStoreId || undefined,
         items: [],
         currency: 'USD',
         status: 'active',
@@ -48,12 +63,14 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
         totalAmount: 0,
         createdAt: toTimestamp(),
         updatedAt: toTimestamp(),
-    }), [userId, effectiveStoreId]);
+    }), [userId, effectiveStoreId, projectIdForLegacy, publicStoreId]);
 
     const mapCartRow = useCallback((data: CartRow): Cart => ({
         id: data.id,
         userId: data.user_id,
-        storeId: data.store_id || data.project_id || effectiveStoreId,
+        storeId: data.public_store_id || data.store_id || data.project_id || effectiveStoreId,
+        projectId: data.project_id || (isUuid(data.store_id) ? data.store_id : undefined),
+        publicStoreId: data.public_store_id || undefined,
         sessionToken: data.session_token,
         items: (data.items || []) as CartItem[],
         currency: data.currency || 'USD',
@@ -86,11 +103,10 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
             setIsLoading(true);
             let query = supabase.from('store_carts').select('*').eq('user_id', userId);
             
-            if (effectiveStoreId) {
-                const storeFilter = projectIdForLegacy
-                    ? `store_id.eq.${effectiveStoreId},project_id.eq.${projectIdForLegacy}`
-                    : `store_id.eq.${effectiveStoreId}`;
-                query = query.or(storeFilter);
+            if (publicStoreId) {
+                query = query.eq('public_store_id', publicStoreId);
+            } else if (projectCartIdentityFilter) {
+                query = query.or(projectCartIdentityFilter);
             }
 
             const { data, error } = await query
@@ -112,9 +128,11 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
         fetchCart();
 
         // Real-time listener for cart changes
-        const channelFilter = effectiveStoreId
-            ? `store_id=eq.${effectiveStoreId}`
-            : `user_id=eq.${userId}`;
+        const channelFilter = publicStoreId
+            ? `public_store_id=eq.${publicStoreId}`
+            : projectIdForLegacy
+                ? `store_id=eq.${projectIdForLegacy}`
+                : `user_id=eq.${userId}`;
 
         const channel = supabase.channel(`store_carts_${userId}`)
             .on('postgres_changes', { 
@@ -135,7 +153,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [userId, effectiveStoreId, projectIdForLegacy, persistToSupabase, mapCartRow, buildEmptyCart]);
+    }, [userId, projectIdForLegacy, publicStoreId, projectCartIdentityFilter, persistToSupabase, mapCartRow, buildEmptyCart]);
 
     // Save cart to Supabase
     const saveCart = useCallback(async (updatedCart: Cart) => {
@@ -149,11 +167,18 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
                 (updatedCart.shippingAmount || 0) +
                 (updatedCart.taxAmount || 0)
             );
+            const cartStoreIdentity = resolveStoreIdentity(
+                updatedCart.projectId ||
+                updatedCart.publicStoreId ||
+                updatedCart.storeId ||
+                effectiveStoreId
+            );
             const upsertData = {
                 id: updatedCart.id || createCartId(),
                 user_id: updatedCart.userId,
-                store_id: updatedCart.storeId || effectiveStoreId || null,
-                project_id: projectIdForLegacy,
+                store_id: cartStoreIdentity.projectId,
+                project_id: cartStoreIdentity.projectId,
+                public_store_id: cartStoreIdentity.publicStoreId,
                 items: updatedCart.items,
                 currency: updatedCart.currency || 'USD',
                 status: updatedCart.status || 'active',
@@ -185,11 +210,10 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
                 .select('id')
                 .eq('user_id', updatedCart.userId);
 
-            if (effectiveStoreId) {
-                const storeFilter = projectIdForLegacy
-                    ? `store_id.eq.${effectiveStoreId},project_id.eq.${projectIdForLegacy}`
-                    : `store_id.eq.${effectiveStoreId}`;
-                existingQuery = existingQuery.or(storeFilter);
+            if (cartStoreIdentity.publicStoreId) {
+                existingQuery = existingQuery.eq('public_store_id', cartStoreIdentity.publicStoreId);
+            } else if (cartStoreIdentity.projectId) {
+                existingQuery = existingQuery.or(`store_id.eq.${cartStoreIdentity.projectId},project_id.eq.${cartStoreIdentity.projectId}`);
             }
 
             const { data: existingRows, error: lookupError } = await existingQuery
@@ -218,7 +242,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
             console.error('Error saving cart:', err);
             setError(err.message);
         }
-    }, [persistToSupabase, effectiveStoreId, projectIdForLegacy]);
+    }, [persistToSupabase, effectiveStoreId]);
 
     // Calculate subtotal
     const calculateSubtotal = useCallback((items: CartItem[]): number => {
@@ -335,18 +359,17 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
         if (persistToSupabase) {
             try {
                 let query = supabase.from('store_carts').delete().eq('user_id', userId);
-                if (effectiveStoreId) {
-                    const storeFilter = projectIdForLegacy
-                        ? `store_id.eq.${effectiveStoreId},project_id.eq.${projectIdForLegacy}`
-                        : `store_id.eq.${effectiveStoreId}`;
-                    query = query.or(storeFilter);
+                if (publicStoreId) {
+                    query = query.eq('public_store_id', publicStoreId);
+                } else if (projectCartIdentityFilter) {
+                    query = query.or(projectCartIdentityFilter);
                 }
                 await query;
             } catch (err: any) {
                 console.error('Error clearing cart:', err);
             }
         }
-    }, [userId, effectiveStoreId, projectIdForLegacy, cart.id, cart.createdAt, persistToSupabase, buildEmptyCart]);
+    }, [userId, publicStoreId, projectCartIdentityFilter, cart.id, cart.createdAt, persistToSupabase, buildEmptyCart]);
 
     // Apply discount code
     const applyDiscount = useCallback(async (discountCode: string, discountAmount: number) => {

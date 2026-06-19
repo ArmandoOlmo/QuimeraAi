@@ -50,7 +50,7 @@ const StorefrontCategory: React.FC<StorefrontCategoryProps> = ({
             setIsLoading(true);
             try {
                 // Find category by slug
-                const categoriesRef = collection(db, 'publicStores', storeId, 'categories');
+                const categoriesRef = collection(db, 'public_stores', storeId, 'categories');
                 const categoryQuery = query(categoriesRef, where('slug', '==', categorySlug));
                 const categorySnapshot = await getDocs(categoryQuery);
                 
@@ -62,7 +62,7 @@ const StorefrontCategory: React.FC<StorefrontCategoryProps> = ({
                     setCategory(categoryData);
 
                     // Fetch products in this category
-                    const productsRef = collection(db, 'publicStores', storeId, 'products');
+                    const productsRef = collection(db, 'public_stores', storeId, 'products');
                     const productsQuery = query(
                         productsRef,
                         where('category', '==', categoryData.id),

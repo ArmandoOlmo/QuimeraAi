@@ -90,7 +90,7 @@ const ProjectDiagnostic: React.FC = () => {
         let published: PublishedFingerprint | null = null;
         let rawPublished: any = null;
         try {
-          const pubRef = doc(db, 'publicStores', projectId);
+          const pubRef = doc(db, 'public_stores', projectId);
           const pubSnap = await getDoc(pubRef);
           if (pubSnap.exists()) {
             const pub = pubSnap.data();
@@ -105,7 +105,7 @@ const ProjectDiagnostic: React.FC = () => {
             };
           }
         } catch (e: any) {
-          addLog(`Warning: Could not check publicStores for ${projectId}: ${e.message}`);
+          addLog(`Warning: Could not check public_stores for ${projectId}: ${e.message}`);
         }
 
         const mismatches: string[] = [];
@@ -152,7 +152,7 @@ const ProjectDiagnostic: React.FC = () => {
 
     setRestoring(projectId);
     try {
-      addLog(`🔄 Restoring "${proj.draft.name}" from publicStores...`);
+      addLog(`🔄 Restoring "${proj.draft.name}" from public_stores...`);
 
       const pubData = proj.rawPublished;
       const projectRef = doc(db, 'users', user.id, 'projects', projectId);
@@ -172,7 +172,7 @@ const ProjectDiagnostic: React.FC = () => {
       if (pubData.responsiveStyles) restoreData.responsiveStyles = pubData.responsiveStyles;
       if (pubData.componentStyles) restoreData.componentStyles = pubData.componentStyles;
       restoreData.lastUpdated = new Date().toISOString();
-      restoreData.restoredFrom = 'publicStores';
+      restoreData.restoredFrom = 'public_stores';
       restoreData.restoredAt = new Date().toISOString();
 
       await setDoc(projectRef, restoreData, { merge: true });
@@ -197,7 +197,7 @@ const ProjectDiagnostic: React.FC = () => {
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>🔍 Project Diagnostic Tool</h1>
-      <p style={styles.subtitle}>Compares draft (Supabase) vs published (publicStores) data</p>
+      <p style={styles.subtitle}>Compares draft (Supabase) vs published (public_stores) data</p>
 
       <button onClick={diagnose} disabled={loading} style={styles.button}>
         {loading ? '⏳ Analyzing...' : '🔄 Re-scan Projects'}
@@ -235,7 +235,7 @@ const ProjectDiagnostic: React.FC = () => {
             </div>
 
             <div style={styles.column}>
-              <h3 style={styles.columnTitle}>📤 Published (publicStores)</h3>
+              <h3 style={styles.columnTitle}>📤 Published (public_stores)</h3>
               {proj.published ? (
                 <table style={styles.table}>
                   <tbody>

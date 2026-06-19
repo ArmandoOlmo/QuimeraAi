@@ -100,7 +100,7 @@ export const useProductSearch = (
 
         try {
             console.log('[useProductSearch] Loading products for store:', storeId);
-            const productsRef = collection(db, 'publicStores', storeId, 'products');
+            const productsRef = collection(db, 'public_stores', storeId, 'products');
             // First try without filter to see all products
             const snapshot = await getDocs(productsRef);
             console.log('[useProductSearch] Total docs found:', snapshot.size);

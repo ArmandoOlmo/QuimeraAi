@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS public.store_carts (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS store_id UUID;
+
 CREATE INDEX IF NOT EXISTS store_carts_store_id_idx ON public.store_carts(store_id);
 CREATE INDEX IF NOT EXISTS store_carts_user_id_idx ON public.store_carts(user_id);
 

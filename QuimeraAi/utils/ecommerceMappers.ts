@@ -101,6 +101,12 @@ export const mapProductFromDB = (row: DbRecord): Product => {
 
     return {
         id: toStringValue(row.id ?? data.id),
+        projectId: toOptionalString(readField(row, data, 'project_id', 'projectId')),
+        storeId: toOptionalString(readField(row, data, 'store_id', 'storeId')),
+        publicStoreId: toOptionalString(
+            readField(row, data, 'public_store_id', 'publicStoreId') ??
+            readField(row, data, 'store_id', 'storeId')
+        ),
         name: toStringValue(readField(row, data, 'name', 'name')),
         slug: toStringValue(readField(row, data, 'slug', 'slug')),
         description: toStringValue(readField(row, data, 'description', 'description')),
@@ -132,6 +138,9 @@ export const mapProductFromDB = (row: DbRecord): Product => {
 
 export const mapProductToDB = (product: Partial<Product>): DbRecord => {
     const data: DbRecord = {};
+    if (product.projectId !== undefined) data.project_id = product.projectId;
+    if (product.storeId !== undefined) data.store_id = product.storeId;
+    if (product.publicStoreId !== undefined) data.public_store_id = product.publicStoreId;
     if (product.name !== undefined) data.name = product.name;
     if (product.slug !== undefined) data.slug = product.slug;
     if (product.description !== undefined) data.description = product.description;
@@ -212,6 +221,9 @@ export const mapOrderFromDB = (row: DbRecord): Order => {
     return {
         id: toStringValue(row.id ?? data.id),
         orderNumber: toStringValue(readField(row, data, 'order_number', 'orderNumber') ?? row.id),
+        projectId: toOptionalString(readField(row, data, 'project_id', 'projectId')),
+        storeId: toOptionalString(readField(row, data, 'store_id', 'storeId')),
+        publicStoreId: toOptionalString(readField(row, data, 'public_store_id', 'publicStoreId')),
         customerId: toOptionalString(readField(row, data, 'customer_id', 'customerId')),
         customerEmail: toStringValue(readField(row, data, 'customer_email', 'customerEmail')),
         customerName: toStringValue(readField(row, data, 'customer_name', 'customerName')),
@@ -269,6 +281,9 @@ export const mapOrderFromDB = (row: DbRecord): Order => {
 
 export const mapOrderToDB = (order: Partial<Order>): DbRecord => {
     const data: DbRecord = {};
+    if (order.projectId !== undefined) data.project_id = order.projectId;
+    if (order.storeId !== undefined) data.store_id = order.storeId;
+    if (order.publicStoreId !== undefined) data.public_store_id = order.publicStoreId;
     if (order.orderNumber !== undefined) data.order_number = order.orderNumber;
     if (order.customerId !== undefined) data.customer_id = order.customerId;
     if (order.customerEmail !== undefined) data.customer_email = order.customerEmail;
@@ -427,6 +442,9 @@ export const mapStoreSettingsFromDB = (row: DbRecord): StoreSettings => {
     const data = readJsonObject(row.data);
 
     return {
+        projectId: toOptionalString(readField(row, data, 'project_id', 'projectId')),
+        storeId: toOptionalString(readField(row, data, 'store_id', 'storeId')),
+        publicStoreId: toOptionalString(readField(row, data, 'public_store_id', 'publicStoreId')),
         storeName: toStringValue(readField(row, data, 'store_name', 'storeName')),
         storeEmail: toStringValue(readField(row, data, 'store_email', 'storeEmail')),
         storePhone: toOptionalString(readField(row, data, 'store_phone', 'storePhone')),
@@ -470,6 +488,9 @@ export const mapStoreSettingsFromDB = (row: DbRecord): StoreSettings => {
 
 export const mapStoreSettingsToDB = (settings: Partial<StoreSettings>): DbRecord => {
     const data: DbRecord = {};
+    if (settings.projectId !== undefined) data.project_id = settings.projectId;
+    if (settings.storeId !== undefined) data.store_id = settings.storeId;
+    if (settings.publicStoreId !== undefined) data.public_store_id = settings.publicStoreId;
     if (settings.storeName !== undefined) data.store_name = settings.storeName;
     if (settings.storeEmail !== undefined) data.store_email = settings.storeEmail;
     if (settings.storePhone !== undefined) data.store_phone = settings.storePhone;

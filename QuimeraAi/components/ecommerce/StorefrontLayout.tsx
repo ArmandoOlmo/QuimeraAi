@@ -243,8 +243,8 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
 
         const fetchProjectData = async () => {
             try {
-                // First, try to get the project data from publicStores
-                const publicStoreRef = doc(db, 'publicStores', storeId);
+                // First, try to get the project data from public_stores
+                const publicStoreRef = doc(db, 'public_stores', storeId);
                 const publicStoreDoc = await getDoc(publicStoreRef);
 
                 if (publicStoreDoc.exists()) {

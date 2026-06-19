@@ -103,7 +103,7 @@ export const usePublicProduct = (
         setError(null);
 
         try {
-            const productsRef = collection(db, 'publicStores', storeId, 'products');
+            const productsRef = collection(db, 'public_stores', storeId, 'products');
             
             // First try to find by slug
             const slugQuery = query(
@@ -146,7 +146,7 @@ export const usePublicProduct = (
         }
 
         try {
-            const productsRef = collection(db, 'publicStores', storeId, 'products');
+            const productsRef = collection(db, 'public_stores', storeId, 'products');
             const relatedQuery = query(
                 productsRef,
                 where('categoryId', '==', categoryId),
@@ -198,7 +198,7 @@ export const usePublicCategory = (storeId: string, categoryId: string | undefine
         const fetchCategory = async () => {
             try {
                 const categoryDoc = await getDoc(
-                    doc(db, 'publicStores', storeId, 'categories', categoryId)
+                    doc(db, 'public_stores', storeId, 'categories', categoryId)
                 );
                 
                 if (categoryDoc.exists()) {

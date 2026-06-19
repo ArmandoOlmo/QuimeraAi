@@ -39,7 +39,7 @@ export const useStorefrontTheme = (storeId: string): {
         console.log(`[useStorefrontTheme] Loading theme for store: ${storeId}`);
 
         const unsubscribe = onSnapshot(
-            doc(db, 'publicStores', storeId),
+            doc(db, 'public_stores', storeId),
             (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();

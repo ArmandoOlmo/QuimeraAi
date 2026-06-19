@@ -1,8 +1,12 @@
 -- Align Ecommerce V2 runtime contract with existing legacy tables.
 -- This migration is additive: no columns are dropped or renamed.
+-- Identifier contract is intentionally dual:
+-- - project_id / UUID store_id are project-backed admin/cart identifiers.
+-- - public_store_id / public store_products.store_id reference public_stores.id.
 
 -- Store products: canonical store_id with legacy project_id compatibility.
 ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS store_id TEXT;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS public_store_id TEXT;
 ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS inventory_quantity INTEGER;
 ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS allow_backorder BOOLEAN DEFAULT false;
 ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS data JSONB DEFAULT '{}'::jsonb;
@@ -18,6 +22,7 @@ CREATE INDEX IF NOT EXISTS store_products_store_slug_idx ON public.store_product
 
 -- Store categories: storefront code reads categories by store_id/data.
 ALTER TABLE public.store_categories ADD COLUMN IF NOT EXISTS store_id TEXT;
+ALTER TABLE public.store_categories ADD COLUMN IF NOT EXISTS public_store_id TEXT;
 ALTER TABLE public.store_categories ADD COLUMN IF NOT EXISTS data JSONB DEFAULT '{}'::jsonb;
 
 CREATE INDEX IF NOT EXISTS store_categories_store_id_idx ON public.store_categories(store_id);
@@ -25,6 +30,7 @@ CREATE INDEX IF NOT EXISTS store_categories_store_slug_idx ON public.store_categ
 
 -- Store settings: checkout runtime reads both flat columns and data fallback.
 ALTER TABLE public.store_settings ADD COLUMN IF NOT EXISTS store_id TEXT;
+ALTER TABLE public.store_settings ADD COLUMN IF NOT EXISTS public_store_id TEXT;
 ALTER TABLE public.store_settings ADD COLUMN IF NOT EXISTS data JSONB DEFAULT '{}'::jsonb;
 ALTER TABLE public.store_settings ADD COLUMN IF NOT EXISTS free_shipping_threshold NUMERIC DEFAULT 0;
 ALTER TABLE public.store_settings ADD COLUMN IF NOT EXISTS stripe_publishable_key TEXT;
@@ -38,9 +44,10 @@ ALTER TABLE public.store_settings ADD COLUMN IF NOT EXISTS privacy_policy_url TE
 
 CREATE INDEX IF NOT EXISTS store_settings_store_id_idx ON public.store_settings(store_id);
 
--- Store carts: canonical store_id, legacy project_id, and stable identity fields.
-ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS store_id TEXT;
+-- Store carts: project-backed store_id, legacy project_id, public storefront id, and stable identity fields.
+ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS store_id UUID;
 ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE;
+ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS public_store_id TEXT;
 ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS session_token TEXT;
 ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD';
 ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
@@ -57,11 +64,13 @@ WHERE total_amount IS NULL
    OR total_amount = 0;
 
 CREATE INDEX IF NOT EXISTS store_carts_store_id_idx ON public.store_carts(store_id);
+CREATE INDEX IF NOT EXISTS store_carts_public_store_id_idx ON public.store_carts(public_store_id);
 CREATE INDEX IF NOT EXISTS store_carts_status_idx ON public.store_carts(status);
 CREATE INDEX IF NOT EXISTS store_carts_session_token_idx ON public.store_carts(session_token);
 
 -- Store orders: canonical order fields used by checkout, webhooks, and mappers.
 ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS store_id TEXT;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS public_store_id TEXT;
 ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS user_id UUID;
 ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS data JSONB DEFAULT '{}'::jsonb;
@@ -111,6 +120,7 @@ CREATE INDEX IF NOT EXISTS store_orders_stripe_checkout_session_idx ON public.st
 
 -- Store order items: add canonical fields without adding strict FKs.
 ALTER TABLE public.store_order_items ADD COLUMN IF NOT EXISTS store_id TEXT;
+ALTER TABLE public.store_order_items ADD COLUMN IF NOT EXISTS public_store_id TEXT;
 ALTER TABLE public.store_order_items ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb;
 ALTER TABLE public.store_order_items ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
 
@@ -119,6 +129,7 @@ CREATE INDEX IF NOT EXISTS store_order_items_product_id_idx ON public.store_orde
 
 -- Store customers: canonical store_id and JSON compatibility payload.
 ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS store_id TEXT;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS public_store_id TEXT;
 ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS user_id UUID;
 ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS data JSONB DEFAULT '{}'::jsonb;
 
@@ -172,8 +183,10 @@ CREATE INDEX IF NOT EXISTS store_customers_user_id_idx ON public.store_customers
 -- Optional discount/review fields already used by admin mappers.
 ALTER TABLE public.store_discounts ADD COLUMN IF NOT EXISTS can_combine BOOLEAN DEFAULT false;
 ALTER TABLE public.store_discounts ADD COLUMN IF NOT EXISTS is_automatic BOOLEAN DEFAULT false;
+ALTER TABLE public.store_discounts ADD COLUMN IF NOT EXISTS public_store_id TEXT;
 ALTER TABLE public.store_discounts ADD COLUMN IF NOT EXISTS data JSONB DEFAULT '{}'::jsonb;
 ALTER TABLE public.store_reviews ADD COLUMN IF NOT EXISTS admin_response_at TIMESTAMPTZ;
+ALTER TABLE public.store_reviews ADD COLUMN IF NOT EXISTS public_store_id TEXT;
 ALTER TABLE public.store_reviews ADD COLUMN IF NOT EXISTS data JSONB DEFAULT '{}'::jsonb;
 
 -- Add safe unique indexes only when existing data will not violate them.
