@@ -14,12 +14,18 @@ import {
     FolderTree,
     GripVertical,
     Loader2,
+    Image as ImageIcon,
+    FolderOpen,
+    Sparkles,
+    Link,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useCategories } from '../hooks/useCategories';
 import { useProducts } from '../hooks/useProducts';
 import { Category } from '../../../../types/ecommerce';
 import { useEcommerceContext } from '../EcommerceDashboard';
+import EcommerceImagePicker from '../components/EcommerceImagePicker';
+import MediaGeneratorModal from '../../../media-generator/MediaGeneratorModal';
 
 const CategoriesView: React.FC = () => {
     const { t } = useTranslation();
@@ -29,6 +35,8 @@ const CategoriesView: React.FC = () => {
     const { products } = useProducts(user?.id || '', storeId);
 
     const [showForm, setShowForm] = useState(false);
+    const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
+    const [isImageGeneratorOpen, setIsImageGeneratorOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [formData, setFormData] = useState({
         name: '',
@@ -74,6 +82,16 @@ const CategoriesView: React.FC = () => {
         setShowForm(true);
     };
 
+    const handleCategoryImageSelect = (url: string) => {
+        setFormData((prev) => ({ ...prev, imageUrl: url }));
+        setIsImagePickerOpen(false);
+        setIsImageGeneratorOpen(false);
+    };
+
+    const handleRemoveCategoryImage = () => {
+        setFormData((prev) => ({ ...prev, imageUrl: '' }));
+    };
+
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
     const handleDelete = (categoryId: string) => {
@@ -99,6 +117,8 @@ const CategoriesView: React.FC = () => {
 
     const handleCloseForm = () => {
         setShowForm(false);
+        setIsImagePickerOpen(false);
+        setIsImageGeneratorOpen(false);
         setEditingCategory(null);
         setFormData({ name: '', description: '', imageUrl: '', parentId: '' });
     };
@@ -210,16 +230,66 @@ const CategoriesView: React.FC = () => {
                                 />
                             </div>
 
-                            <div>
+                            <div className="space-y-2">
                                 <label className="block text-sm font-medium text-q-text-muted mb-1">
-                                    {t('ecommerce.imageUrl', 'URL de Imagen')}
+                                    {t('ecommerce.categoryImage', 'Imagen de categoría')}
                                 </label>
-                                <input
-                                    type="url"
-                                    value={formData.imageUrl}
-                                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                                />
+                                <div className="flex flex-col gap-3 sm:flex-row">
+                                    <div className="h-28 w-full overflow-hidden rounded-lg border border-q-border bg-muted/40 sm:h-24 sm:w-28 sm:flex-shrink-0">
+                                        {formData.imageUrl ? (
+                                            <img
+                                                src={formData.imageUrl}
+                                                alt={formData.name || t('ecommerce.categoryImage', 'Imagen de categoría')}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex h-full w-full items-center justify-center">
+                                                <ImageIcon className="text-q-text-muted" size={28} />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="min-w-0 flex-1 space-y-2">
+                                        <div className="relative">
+                                            <Link className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted" size={16} />
+                                            <input
+                                                type="url"
+                                                value={formData.imageUrl}
+                                                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                                                placeholder={t('ecommerce.pasteImageUrl', 'Pegar URL de imagen')}
+                                                className="w-full min-w-0 rounded-lg border border-q-border bg-muted/50 py-2 pl-9 pr-4 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsImagePickerOpen(true)}
+                                                className="inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border border-q-border bg-muted/40 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                                            >
+                                                <FolderOpen size={16} />
+                                                <span className="truncate">{t('ecommerce.library', 'Librería')}</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsImageGeneratorOpen(true)}
+                                                className="inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/15"
+                                            >
+                                                <Sparkles size={16} />
+                                                <span className="truncate">{t('ecommerce.generate', 'Generar')}</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveCategoryImage}
+                                                disabled={!formData.imageUrl}
+                                                className="inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border border-q-border bg-muted/20 px-3 py-2 text-sm font-medium text-q-text-muted transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <Trash2 size={16} />
+                                                <span className="truncate">{t('common.remove', 'Quitar')}</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div>
@@ -261,6 +331,25 @@ const CategoriesView: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            <EcommerceImagePicker
+                isOpen={isImagePickerOpen}
+                onClose={() => setIsImagePickerOpen(false)}
+                onSelect={handleCategoryImageSelect}
+                currentImages={formData.imageUrl ? [formData.imageUrl] : []}
+                multiple={false}
+            />
+
+            <MediaGeneratorModal
+                isOpen={isImageGeneratorOpen}
+                onClose={() => setIsImageGeneratorOpen(false)}
+                destination="user"
+                projectId={storeId}
+                allowedModes={['image']}
+                defaultMode="image"
+                generationContext="general"
+                onUseImage={handleCategoryImageSelect}
+            />
 
             {/* Delete Category Confirmation Modal */}
             <ConfirmationModal

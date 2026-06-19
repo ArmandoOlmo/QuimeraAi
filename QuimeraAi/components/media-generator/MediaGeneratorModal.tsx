@@ -13,11 +13,17 @@ const MediaGeneratorModal: React.FC<MediaGeneratorModalProps> = ({
     ...panelProps
 }) => {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-6xl" fullScreenMobile>
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            maxWidth="max-w-6xl"
+            className="p-2 sm:h-[90vh] sm:p-3"
+            fullScreenMobile
+        >
             <MediaGeneratorPanel
                 {...panelProps}
                 onClose={onClose}
-                className="h-[85vh] sm:h-[85vh]"
+                className="h-full min-h-0 overflow-hidden rounded-xl border border-q-border/70"
             />
         </Modal>
     );
