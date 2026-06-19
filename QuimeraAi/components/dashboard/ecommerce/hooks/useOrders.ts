@@ -181,12 +181,19 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
                 updateData.delivered_at = now;
             }
 
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('store_orders')
                 .update(updateData)
-                .eq('id', orderId);
+                .eq('id', orderId)
+                .select('*')
+                .single();
 
             if (error) throw error;
+            const updatedOrder = mapOrderFromDB(data);
+            setOrders((currentOrders) =>
+                currentOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+            );
+            return updatedOrder;
         },
         []
     );
@@ -233,7 +240,7 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
     // Add tracking info
     const addTrackingInfo = useCallback(
         async (orderId: string, carrier: string, trackingNumber: string, trackingUrl?: string) => {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('store_orders')
                 .update({
                     carrier,
@@ -243,9 +250,16 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
                     fulfillment_status: 'fulfilled',
                     shipped_at: new Date().toISOString(),
                 })
-                .eq('id', orderId);
+                .eq('id', orderId)
+                .select('*')
+                .single();
 
             if (error) throw error;
+            const updatedOrder = mapOrderFromDB(data);
+            setOrders((currentOrders) =>
+                currentOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+            );
+            return updatedOrder;
         },
         []
     );

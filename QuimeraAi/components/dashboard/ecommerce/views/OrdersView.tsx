@@ -95,6 +95,25 @@ const OrdersView: React.FC = () => {
         setSelectedOrder(null);
     };
 
+    const handleUpdateOrderStatus = async (orderId: string, status: OrderStatus) => {
+        const updatedOrder = await updateOrderStatus(orderId, status);
+        setSelectedOrder((currentOrder) =>
+            currentOrder?.id === orderId ? updatedOrder : currentOrder
+        );
+    };
+
+    const handleAddTrackingInfo = async (
+        orderId: string,
+        carrier: string,
+        trackingNumber: string,
+        trackingUrl?: string
+    ) => {
+        const updatedOrder = await addTrackingInfo(orderId, carrier, trackingNumber, trackingUrl);
+        setSelectedOrder((currentOrder) =>
+            currentOrder?.id === orderId ? updatedOrder : currentOrder
+        );
+    };
+
     const formatDate = (timestamp: StoredTimestamp) => {
         return timestampToDate(timestamp).toLocaleDateString('es-MX', {
             day: '2-digit',
@@ -311,8 +330,8 @@ const OrdersView: React.FC = () => {
                 <OrderDetailDrawer
                     order={selectedOrder}
                     onClose={handleCloseDrawer}
-                    onUpdateStatus={updateOrderStatus}
-                    onAddTracking={addTrackingInfo}
+                    onUpdateStatus={handleUpdateOrderStatus}
+                    onAddTracking={handleAddTrackingInfo}
                 />
             )}
         </div>
