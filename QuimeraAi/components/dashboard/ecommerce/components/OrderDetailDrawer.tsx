@@ -34,6 +34,25 @@ interface OrderDetailDrawerProps {
     onAddTracking: (orderId: string, carrier: string, trackingNumber: string, trackingUrl?: string) => Promise<void>;
 }
 
+type OrderStatusConfig = { color: string; bg: string; label: string };
+
+const ORDER_STATUS_CONFIGS: Record<OrderStatus, OrderStatusConfig> = {
+    pending: { color: 'text-yellow-400', bg: 'bg-yellow-500/20', label: 'Pendiente' },
+    paid: { color: 'text-green-400', bg: 'bg-green-500/20', label: 'Pagado' },
+    processing: { color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'Procesando' },
+    shipped: { color: 'text-purple-400', bg: 'bg-purple-500/20', label: 'Enviado' },
+    delivered: { color: 'text-green-400', bg: 'bg-green-500/20', label: 'Entregado' },
+    cancelled: { color: 'text-red-400', bg: 'bg-red-500/20', label: 'Cancelado' },
+    refunded: { color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'Reembolsado' },
+};
+
+const getStatusConfig = (status: unknown): OrderStatusConfig => {
+    if (typeof status === 'string' && Object.prototype.hasOwnProperty.call(ORDER_STATUS_CONFIGS, status)) {
+        return ORDER_STATUS_CONFIGS[status as OrderStatus];
+    }
+    return ORDER_STATUS_CONFIGS.pending;
+};
+
 const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
     order,
     onClose,
@@ -88,19 +107,6 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
             hour: '2-digit',
             minute: '2-digit',
         });
-    };
-
-    const getStatusConfig = (status: OrderStatus) => {
-        const configs: Record<OrderStatus, { color: string; bg: string; label: string }> = {
-            pending: { color: 'text-yellow-400', bg: 'bg-yellow-500/20', label: 'Pendiente' },
-            paid: { color: 'text-green-400', bg: 'bg-green-500/20', label: 'Pagado' },
-            processing: { color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'Procesando' },
-            shipped: { color: 'text-purple-400', bg: 'bg-purple-500/20', label: 'Enviado' },
-            delivered: { color: 'text-green-400', bg: 'bg-green-500/20', label: 'Entregado' },
-            cancelled: { color: 'text-red-400', bg: 'bg-red-500/20', label: 'Cancelado' },
-            refunded: { color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'Reembolsado' },
-        };
-        return configs[status];
     };
 
     const statusConfig = getStatusConfig(order.status);

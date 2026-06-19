@@ -30,6 +30,24 @@ import { useEcommerceContext } from '../EcommerceDashboard';
 import { CatalogFilterBar, FilterChipRow } from '../../filters';
 
 type OrderStatusFilter = OrderStatus | 'all';
+type OrderStatusConfig = { icon: React.ElementType; color: string; bg: string; label: string };
+
+const ORDER_STATUS_CONFIGS: Record<OrderStatus, OrderStatusConfig> = {
+    pending: { icon: Clock, color: 'text-yellow-400', bg: 'bg-yellow-500/20', label: 'Pendiente' },
+    paid: { icon: DollarSign, color: 'text-green-400', bg: 'bg-green-500/20', label: 'Pagado' },
+    processing: { icon: Package, color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'Procesando' },
+    shipped: { icon: Truck, color: 'text-purple-400', bg: 'bg-purple-500/20', label: 'Enviado' },
+    delivered: { icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/20', label: 'Entregado' },
+    cancelled: { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/20', label: 'Cancelado' },
+    refunded: { icon: DollarSign, color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'Reembolsado' },
+};
+
+const getStatusConfig = (status: unknown): OrderStatusConfig => {
+    if (typeof status === 'string' && Object.prototype.hasOwnProperty.call(ORDER_STATUS_CONFIGS, status)) {
+        return ORDER_STATUS_CONFIGS[status as OrderStatus];
+    }
+    return ORDER_STATUS_CONFIGS.pending;
+};
 
 const OrdersView: React.FC = () => {
     const { t } = useTranslation();
@@ -75,19 +93,6 @@ const OrdersView: React.FC = () => {
     const handleCloseDrawer = () => {
         setShowDrawer(false);
         setSelectedOrder(null);
-    };
-
-    const getStatusConfig = (status: OrderStatus) => {
-        const configs: Record<OrderStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
-            pending: { icon: Clock, color: 'text-yellow-400', bg: 'bg-yellow-500/20', label: 'Pendiente' },
-            paid: { icon: DollarSign, color: 'text-green-400', bg: 'bg-green-500/20', label: 'Pagado' },
-            processing: { icon: Package, color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'Procesando' },
-            shipped: { icon: Truck, color: 'text-purple-400', bg: 'bg-purple-500/20', label: 'Enviado' },
-            delivered: { icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/20', label: 'Entregado' },
-            cancelled: { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/20', label: 'Cancelado' },
-            refunded: { icon: DollarSign, color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'Reembolsado' },
-        };
-        return configs[status];
     };
 
     const formatDate = (timestamp: StoredTimestamp) => {
