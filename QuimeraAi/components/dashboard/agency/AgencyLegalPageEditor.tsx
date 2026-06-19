@@ -32,6 +32,7 @@ import {
     ChevronDown
 } from 'lucide-react';
 import { LegalPage, LegalPageSection, AgencyLegalPageType, AGENCY_LEGAL_PAGE_LABELS } from '../../../types/agencyContent';
+import AppSelect from '../../ui/AppSelect';
 
 interface AgencyLegalPageEditorProps {
     pageType: AgencyLegalPageType;
@@ -223,14 +224,14 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                                     <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         Estado
                                     </label>
-                                    <select
+                                    <AppSelect
                                         value={formData.status}
                                         onChange={(e) => updateForm('status', e.target.value as 'published' | 'draft')}
                                         className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                     >
                                         <option value="draft">Borrador</option>
                                         <option value="published">Publicado</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
                             </div>
                         </div>
@@ -319,7 +320,7 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                                                                 <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                                     Icono
                                                                 </label>
-                                                                <select
+                                                                <AppSelect
                                                                     value={section.icon || 'FileText'}
                                                                     onChange={(e) => updateSection(section.id, { icon: e.target.value })}
                                                                     className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary"
@@ -327,7 +328,7 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                                                                     {AVAILABLE_ICONS.map(icon => (
                                                                         <option key={icon.id} value={icon.id}>{icon.label}</option>
                                                                     ))}
-                                                                </select>
+                                                                </AppSelect>
                                                             </div>
                                                         </div>
                                                         <div>

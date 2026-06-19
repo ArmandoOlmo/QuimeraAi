@@ -30,9 +30,10 @@ import { useProducts } from '../hooks/useProducts';
 import { Review, ReviewStatus } from '../../../../types/ecommerce';
 import type { StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 import { FilterChipRow } from '../../filters';
 import type { FilterChipOption } from '../../filters';
+import AppSelect from '../../../ui/AppSelect';
 
 type StatusFilter = ReviewStatus | 'all';
 
@@ -289,7 +290,7 @@ const ReviewsView: React.FC = () => {
                     />
 
                     {/* Product Filter */}
-                    <select
+                    <AppSelect
                         value={productFilter}
                         onChange={(e) => setProductFilter(e.target.value)}
                         className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring lg:w-auto"
@@ -300,7 +301,7 @@ const ReviewsView: React.FC = () => {
                                 {product.name}
                             </option>
                         ))}
-                    </select>
+                    </AppSelect>
                 </div>
             </div>
 

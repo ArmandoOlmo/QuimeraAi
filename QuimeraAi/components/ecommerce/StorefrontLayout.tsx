@@ -11,8 +11,9 @@ import { db } from '@/utils/compatData';
 import Header from '../Header';
 import { HeaderData, ThemeData, Project } from '../../types';
 import { Headphones, Loader2, RefreshCw, ShieldCheck, Truck } from 'lucide-react';
-import { StorefrontCartProvider, useStorefrontCart } from './context';
+import { StoreAuthProvider, StorefrontCartProvider, useStorefrontCart } from './context';
 import CartDrawer from './CartDrawer';
+import UserAccountButton from './auth/UserAccountButton';
 // import CartButton from './CartButton'; // Removed as we use Header's cart
 
 interface StorefrontLayoutProps {
@@ -20,6 +21,7 @@ interface StorefrontLayoutProps {
     children: React.ReactNode;
     onNavigateHome?: () => void;
     onNavigateToCheckout?: () => void;
+    onNavigateToAccount?: () => void;
     projectData?: ProjectPublicData;
 }
 
@@ -83,6 +85,7 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
     children,
     onNavigateHome,
     onNavigateToCheckout,
+    onNavigateToAccount,
     projectData,
 }) => {
     const cart = useStorefrontCart();
@@ -200,19 +203,30 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
                             </span>
                             {storeName}
                         </button>
-                        <div className="grid grid-cols-1 gap-2 text-xs text-slate-600 sm:grid-cols-3 lg:flex lg:items-center lg:gap-5">
-                            <span className="inline-flex items-center gap-2">
-                                <Truck size={15} style={{ color: primaryColor }} />
-                                Envio coordinado por la tienda
-                            </span>
-                            <span className="inline-flex items-center gap-2">
-                                <ShieldCheck size={15} style={{ color: primaryColor }} />
-                                Checkout protegido
-                            </span>
-                            <span className="inline-flex items-center gap-2">
-                                <RefreshCw size={15} style={{ color: primaryColor }} />
-                                Soporte post-compra
-                            </span>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
+                            <div className="grid grid-cols-1 gap-2 text-xs text-slate-600 sm:grid-cols-3 lg:flex lg:items-center lg:gap-5">
+                                <span className="inline-flex items-center gap-2">
+                                    <Truck size={15} style={{ color: primaryColor }} />
+                                    Envio coordinado por la tienda
+                                </span>
+                                <span className="inline-flex items-center gap-2">
+                                    <ShieldCheck size={15} style={{ color: primaryColor }} />
+                                    Checkout protegido
+                                </span>
+                                <span className="inline-flex items-center gap-2">
+                                    <RefreshCw size={15} style={{ color: primaryColor }} />
+                                    Soporte post-compra
+                                </span>
+                            </div>
+                            <UserAccountButton
+                                primaryColor={primaryColor}
+                                storeName={storeName}
+                                logoUrl={projectData?.header?.logoImageUrl}
+                                onNavigateToAccount={onNavigateToAccount}
+                                onNavigateToOrders={onNavigateToAccount}
+                                variant="full"
+                                className="shrink-0"
+                            />
                         </div>
                     </div>
                 </div>
@@ -284,6 +298,7 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
     children,
     onNavigateHome,
     onNavigateToCheckout,
+    onNavigateToAccount,
     projectData: initialProjectData,
 }) => {
     const [projectData, setProjectData] = useState<ProjectPublicData | null>(initialProjectData || null);
@@ -408,16 +423,19 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
     }
 
     return (
-        <StorefrontCartProvider storeId={storeId}>
-            <StorefrontLayoutInner
-                storeId={storeId}
-                onNavigateHome={onNavigateHome}
-                onNavigateToCheckout={onNavigateToCheckout}
-                projectData={projectData}
-            >
-                {children}
-            </StorefrontLayoutInner>
-        </StorefrontCartProvider>
+        <StoreAuthProvider storeId={storeId}>
+            <StorefrontCartProvider storeId={storeId}>
+                <StorefrontLayoutInner
+                    storeId={storeId}
+                    onNavigateHome={onNavigateHome}
+                    onNavigateToCheckout={onNavigateToCheckout}
+                    onNavigateToAccount={onNavigateToAccount}
+                    projectData={projectData}
+                >
+                    {children}
+                </StorefrontLayoutInner>
+            </StorefrontCartProvider>
+        </StoreAuthProvider>
     );
 };
 

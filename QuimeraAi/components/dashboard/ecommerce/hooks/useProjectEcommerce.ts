@@ -53,10 +53,12 @@ export const useProjectEcommerce = (
         if (!userId || !projectId) {
             setIsLoading(false);
             setConfig(null);
+            setIsInitialized(false);
             return;
         }
 
         try {
+            setIsLoading(true);
             // Check project details first
             const { data: project, error: projectError } = await supabase
                 .from('projects')
@@ -107,9 +109,23 @@ export const useProjectEcommerce = (
 
     // Escuchar cambios en la configuración (store_settings changes)
     useEffect(() => {
-        if (!userId || !projectId) return;
+        if (!userId || !projectId) {
+            setIsLoading(false);
+            setConfig(null);
+            setIsInitialized(false);
+            return;
+        }
 
-        fetchConfig();
+        const loadingTimeout = window.setTimeout(() => {
+            setIsLoading((current) => {
+                if (current) {
+                    setError('La inicialización de ecommerce tardó demasiado. Intenta recargar o cambiar de proyecto.');
+                }
+                return false;
+            });
+        }, 12000);
+
+        void fetchConfig().finally(() => window.clearTimeout(loadingTimeout));
 
         const channel = supabase.channel(createRealtimeChannelName('project_ecommerce_changes', projectId))
             .on(
@@ -127,6 +143,7 @@ export const useProjectEcommerce = (
             .subscribe();
 
         return () => {
+            window.clearTimeout(loadingTimeout);
             supabase.removeChannel(channel);
         };
     }, [userId, projectId, fetchConfig]);
@@ -288,7 +305,6 @@ export const useProjectsWithEcommerce = (userId: string) => {
 };
 
 export default useProjectEcommerce;
-
 
 
 

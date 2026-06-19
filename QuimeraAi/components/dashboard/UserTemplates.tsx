@@ -27,6 +27,7 @@ import {
 import { Project } from '../../types';
 import { INDUSTRIES } from '../../data/industries';
 import HeaderBackButton from '../ui/HeaderBackButton';
+import AppSelect from '../ui/AppSelect';
 
 const UserTemplates: React.FC = () => {
     const { t } = useTranslation();
@@ -240,7 +241,7 @@ const UserTemplates: React.FC = () => {
                             {/* Category filter - icon only */}
                             <div className="relative flex-shrink-0 cursor-pointer" title={t('superadmin.allCategories', 'Categoría')}>
                                 <Building2 size={15} className={`pointer-events-none transition-colors ${filterIndustry !== 'all' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`} />
-                                <select
+                                <AppSelect
                                     value={filterIndustry}
                                     onChange={(e) => setFilterIndustry(e.target.value)}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -249,7 +250,7 @@ const UserTemplates: React.FC = () => {
                                     {usedIndustries.map(ind => (
                                         <option key={ind} value={ind}>{getIndustryLabel(ind)}</option>
                                     ))}
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {/* Clear filter */}

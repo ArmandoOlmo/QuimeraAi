@@ -41,6 +41,7 @@ import {
 import { AgencyArticle, AgencyArticleCategory, AgencyLegalPageType, AGENCY_LEGAL_PAGE_LABELS } from '../../../types/agencyContent';
 import { sanitizeHtml } from '../../../utils/sanitize';
 import { CatalogFilterBar, ContentStatusFilterChips, SortViewControls, CatalogToolbarFooter } from '../filters';
+import AppSelect from '../../ui/AppSelect';
 
 interface AgencyContentDashboardProps {
     onBack: () => void;
@@ -642,7 +643,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                 />
                                                 <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible scrollbar-hide pt-3">
                                                 {/* Category filter */}
-                                                <select
+                                                <AppSelect
                                                     value={categoryFilter}
                                                     onChange={(e) => setCategoryFilter(e.target.value as any)}
                                                     className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
@@ -651,10 +652,10 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                     {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
                                                         <option key={value} value={value}>{label}</option>
                                                     ))}
-                                                </select>
+                                                </AppSelect>
 
                                                 {/* Date range filter */}
-                                                <select
+                                                <AppSelect
                                                     value={dateRange}
                                                     onChange={(e) => setDateRange(e.target.value as any)}
                                                     className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
@@ -663,10 +664,10 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                     <option value="today">{t('contentManagement.filters.today', 'Hoy')}</option>
                                                     <option value="week">{t('contentManagement.filters.last7Days', 'Últimos 7 días')}</option>
                                                     <option value="month">{t('contentManagement.filters.last30Days', 'Últimos 30 días')}</option>
-                                                </select>
+                                                </AppSelect>
 
                                                 {/* Sort by views (date/title via cycle button above) */}
-                                                <select
+                                                <AppSelect
                                                     value={sortBy === 'views' ? 'views' : 'default'}
                                                     onChange={(e) =>
                                                         setSortBy(e.target.value === 'views' ? 'views' : 'date')
@@ -675,7 +676,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                 >
                                                     <option value="default">{t('contentManagement.filters.sortByDate', 'Fecha / Título')}</option>
                                                     <option value="views">{t('contentManagement.filters.sortByViews', 'Por vistas')}</option>
-                                                </select>
+                                                </AppSelect>
                                                 </div>
                                             </>
                                         }

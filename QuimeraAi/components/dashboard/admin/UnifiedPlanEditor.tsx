@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { StoredPlan, validatePlan, createEmptyPlan } from '../../../services/plansService';
 import { PlanLimits, PlanFeatures, SubscriptionPlanId } from '../../../types/subscription';
+import AppSelect from '../../ui/AppSelect';
 
 // =============================================================================
 // TYPES
@@ -509,7 +510,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                 </div>
                                 <div>
                                     <label className="block text-sm text-q-text-secondary mb-1.5">Icono</label>
-                                    <select
+                                    <AppSelect
                                         value={formData.icon || 'Sparkles'}
                                         onChange={(e) => updateField('icon', e.target.value)}
                                         className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
@@ -517,7 +518,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                         {PLAN_ICONS.map((icon) => (
                                             <option key={icon} value={icon}>{icon}</option>
                                         ))}
-                                    </select>
+                                    </AppSelect>
                                 </div>
                             </div>
                             
@@ -842,7 +843,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                             <label className="block text-sm text-q-text-secondary mb-1.5">
                                                 Nivel de Soporte
                                             </label>
-                                            <select
+                                            <AppSelect
                                                 value={formData.features?.supportLevel || 'community'}
                                                 onChange={(e) => updateFeature('supportLevel', e.target.value as any)}
                                                 className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
@@ -850,7 +851,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                                 {SUPPORT_LEVELS.map((level) => (
                                                     <option key={level.value} value={level.value}>{level.label}</option>
                                                 ))}
-                                            </select>
+                                            </AppSelect>
                                         </div>
                                     </div>
                                 )}

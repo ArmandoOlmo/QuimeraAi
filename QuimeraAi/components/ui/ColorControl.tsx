@@ -591,6 +591,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                     <div className="flex flex-wrap gap-1">
                         {paletteColors.map((color, i) => (
                             <button
+                                type="button"
                                 key={`palette-${i}`}
                                 onClick={() => handleColorChange(color)}
                                 className={styles.presetBtn}
@@ -615,6 +616,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                                 <div className="flex gap-0.5 flex-1 min-w-0">
                                     {palette.preview.slice(0, 5).map((color, idx) => (
                                         <button
+                                            type="button"
                                             key={`${palette.id}-${idx}`}
                                             onClick={() => handleColorChange(color)}
                                             className={`w-5 h-5 shrink-0 ${styles.presetBtn}`}
@@ -635,6 +637,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                 <div className="flex flex-wrap gap-1">
                     {PRESET_COLORS.map((color, i) => (
                         <button
+                            type="button"
                             key={`preset-${i}`}
                             onClick={() => handleColorChange(color)}
                             className={styles.presetBtn}
@@ -652,6 +655,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                     <div className="flex flex-wrap gap-1">
                         {recentColors.map((color, i) => (
                             <button
+                                type="button"
                                 key={`recent-${i}`}
                                 onClick={() => handleColorChange(color)}
                                 className={styles.presetBtn}
@@ -671,6 +675,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
             <div className="relative">
                 {compact ? (
                     <button
+                        type="button"
                         ref={triggerRef}
                         onClick={() => setIsOpen(!isOpen)}
                         className="w-8 h-8 rounded-full border-2 border-q-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered hover:scale-105 transition-transform"
@@ -680,6 +685,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                     </button>
                 ) : (
                     <button
+                        type="button"
                         ref={triggerRef}
                         onClick={() => setIsOpen(!isOpen)}
                         className={styles.trigger}

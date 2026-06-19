@@ -38,6 +38,7 @@ import TemplateEditorModal from './TemplateEditorModal';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
 import { supabase } from '../../../supabase';
 import { CatalogFilterBar, FilterChipRow } from '../filters';
+import AppSelect from '../../ui/AppSelect';
 
 /**
  * Safely resolves a value that might be a bilingual {en, es} object
@@ -436,7 +437,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs text-q-text-secondary">{t('superadmin.sortByCategory')}</label>
-                                <select
+                                <AppSelect
                                     value={filterCategory}
                                     onChange={(e) => setFilterCategory(e.target.value)}
                                     className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full"
@@ -445,7 +446,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     {categories.map(cat => (
                                         <option key={cat} value={cat}>{cat}</option>
                                     ))}
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {/* Industry Filter */}
@@ -454,7 +455,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     <Building2 className="w-3 h-3" />
                                     {t('industries.title')}
                                 </label>
-                                <select
+                                <AppSelect
                                     value={filterIndustry}
                                     onChange={(e) => setFilterIndustry(e.target.value)}
                                     className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full sm:min-w-[160px]"
@@ -463,7 +464,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     {usedIndustries.map(ind => (
                                         <option key={ind} value={ind}>{getIndustryLabel(ind)}</option>
                                     ))}
-                                </select>
+                                </AppSelect>
                             </div>
 
                             <div className="col-span-2 sm:col-span-full flex flex-col gap-1.5">
@@ -481,7 +482,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs text-q-text-secondary">{t('leads.sort')}</label>
-                                <select
+                                <AppSelect
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as SortOption)}
                                     className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full"
@@ -490,7 +491,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     <option value="name">{t('superadmin.sortByName')}</option>
                                     <option value="usage">{t('superadmin.sortByUsage')}</option>
                                     <option value="category">{t('superadmin.sortByCategory')}</option>
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {(searchTerm || filterCategory !== 'all' || filterIndustry !== 'all' || filterStatus !== 'all') && (

@@ -32,10 +32,12 @@ import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useStoreSettings } from '../hooks/useStoreSettings';
 import { StoreSettings, ShippingZone } from '../../../../types/ecommerce';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 import { useStripeConnect } from '../hooks/useStripeConnect';
 import { useEmailSettings } from '../../../../hooks/useEmailSettings';
 import { TransactionalEmailSettings, EmailSocialLinks } from '../../../../types/email';
+import AppSelect from '../../../ui/AppSelect';
+import ColorControl from '../../../ui/ColorControl';
 
 type SettingsTab = 'general' | 'payment' | 'shipping' | 'notifications' | 'email';
 
@@ -221,7 +223,7 @@ const GeneralSettings: React.FC<SettingsSectionProps> = ({ settings, onChange })
                     <label className="block text-sm font-medium text-q-text-muted mb-1">
                         {t('ecommerce.currency', 'Moneda')}
                     </label>
-                    <select
+                    <AppSelect
                         value={settings.currency || 'USD'}
                         onChange={(e) => onChange('currency', e.target.value)}
                         className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -230,7 +232,7 @@ const GeneralSettings: React.FC<SettingsSectionProps> = ({ settings, onChange })
                         <option value="MXN">MXN - Peso Mexicano</option>
                         <option value="EUR">EUR - Euro</option>
                         <option value="GBP">GBP - Libra Esterlina</option>
-                    </select>
+                    </AppSelect>
                 </div>
 
                 <div>
@@ -1112,23 +1114,12 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-q-text-muted mb-1">
-                            {t('ecommerce.primaryColor', 'Color Principal')}
-                        </label>
-                        <div className="flex gap-2">
-                            <input
-                                type="color"
-                                value={localEmailSettings.primaryColor}
-                                onChange={(e) => setLocalEmailSettings(prev => ({ ...prev, primaryColor: e.target.value }))}
-                                className="w-12 h-10 rounded border border-q-border cursor-pointer"
-                            />
-                            <input
-                                type="text"
-                                value={localEmailSettings.primaryColor}
-                                onChange={(e) => setLocalEmailSettings(prev => ({ ...prev, primaryColor: e.target.value }))}
-                                className="min-w-0 flex-1 px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                            />
-                        </div>
+                        <ColorControl
+                            label={t('ecommerce.primaryColor', 'Color Principal')}
+                            value={localEmailSettings.primaryColor}
+                            onChange={(value) => setLocalEmailSettings(prev => ({ ...prev, primaryColor: value }))}
+                            variant="dashboard"
+                        />
                     </div>
 
                     <div className="md:col-span-2">

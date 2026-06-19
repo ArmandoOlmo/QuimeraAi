@@ -10,6 +10,7 @@ import { initializeMonitoring, setUserContext, clearUserContext } from './utils/
 import { useCustomDomain, DomainNotConfiguredPage, DomainLoadingPage } from './hooks/useCustomDomain';
 import { detectSubdomain, SubdomainInfo } from './utils/subdomainUtils';
 import { lazyWithRetry } from './utils/lazyWithRetry';
+import { consumeStoredPostAuthRedirect } from './utils/authRedirect';
 
 // Lazy-loaded components for code-splitting with retry logic
 // Using lazyWithRetry to handle chunk loading failures after deployments
@@ -93,6 +94,26 @@ const AuthGate: React.FC = () => {
     setVerificationEmail(null);
     navigate(ROUTES.LOGIN);
   };
+
+  useEffect(() => {
+    if (loadingAuth || !user) return;
+
+    const currentPath = window.location.pathname;
+    const currentHash = window.location.hash;
+    const isLandingPreviewMode = new URLSearchParams(window.location.search).get('preview') === 'landing';
+    const isVerified = !!(user.email_confirmed_at || user.user_metadata?.email_verified);
+    const isSupabaseHashCallback =
+      currentHash === '#' ||
+      currentHash.includes('access_token=') ||
+      currentHash.includes('refresh_token=') ||
+      currentHash.includes('type=');
+
+    if (!isVerified || isLandingPreviewMode) return;
+
+    if (currentPath === '/' && isSupabaseHashCallback) {
+      navigate(consumeStoredPostAuthRedirect());
+    }
+  }, [loadingAuth, navigate, user]);
 
   useEffect(() => {
     if (!showLandingChatbot) {

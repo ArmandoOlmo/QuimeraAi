@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Breakpoint, ResponsiveStyles, ResponsiveValue } from '../../../types';
 import { Smartphone, Tablet, Monitor, Maximize } from 'lucide-react';
+import AppSelect from '../../ui/AppSelect';
 
 interface ResponsiveConfigEditorProps {
     componentId: string;
@@ -116,7 +117,7 @@ const ResponsiveConfigEditor: React.FC<ResponsiveConfigEditorProps> = ({ compone
                 {/* Display */}
                 <div>
                     <Label>Display</Label>
-                    <select
+                    <AppSelect
                         value={getValueForBreakpoint('display', activeBreakpoint)}
                         onChange={(e) => handleStyleChange('display', activeBreakpoint, e.target.value)}
                         className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-md text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -126,7 +127,7 @@ const ResponsiveConfigEditor: React.FC<ResponsiveConfigEditorProps> = ({ compone
                         <option value="flex">Flex</option>
                         <option value="grid">Grid</option>
                         <option value="none">None (Hide)</option>
-                    </select>
+                    </AppSelect>
                     <p className="text-xs text-q-text-secondary mt-1">CSS display property</p>
                 </div>
 

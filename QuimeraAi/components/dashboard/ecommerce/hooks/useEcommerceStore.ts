@@ -38,10 +38,12 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
         if (!userId || !effectiveStoreId) {
             setError('No user ID or store ID provided');
             setIsLoading(false);
+            setIsInitialized(false);
             return;
         }
 
         try {
+            setIsLoading(true);
             // Un "store" está vinculado a un "project". Validamos si el proyecto existe
             const { data: projectData, error: projectError } = await supabase
                 .from('projects')
@@ -101,11 +103,23 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
     useEffect(() => {
         if (!userId || !effectiveStoreId) {
             setIsLoading(false);
+            setIsInitialized(false);
             return;
         }
 
-        fetchAndInitializeStore();
+        const loadingTimeout = window.setTimeout(() => {
+            setIsLoading((current) => {
+                if (current) {
+                    setError('La tienda tardó demasiado en responder. Intenta recargar o cambiar de proyecto.');
+                    setIsInitialized(false);
+                }
+                return false;
+            });
+        }, 12000);
 
+        void fetchAndInitializeStore().finally(() => window.clearTimeout(loadingTimeout));
+
+        return () => window.clearTimeout(loadingTimeout);
     }, [userId, effectiveStoreId, fetchAndInitializeStore]);
 
     return {
@@ -119,6 +133,5 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
 };
 
 export default useEcommerceStore;
-
 
 

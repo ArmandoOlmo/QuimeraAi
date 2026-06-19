@@ -162,6 +162,16 @@ export interface OrderItem {
     totalPrice: number;
 }
 
+export interface OrderRefund {
+    id: string;
+    amount: number;
+    status: string;
+    reason?: string;
+    source?: 'admin' | 'stripe';
+    createdBy?: string;
+    createdAt?: StoredTimestamp;
+}
+
 export interface Order {
     id: string;
     orderNumber: string;            // ORD-001234
@@ -224,6 +234,8 @@ export interface Order {
     paymentMethod: string;          // "stripe", "paypal", "cash"
     paymentIntentId?: string;       // Stripe Payment Intent ID
     paidAt?: StoredTimestamp;
+    refundedAmount?: number;
+    refunds?: OrderRefund[];
     
     // Shipping
     shippingMethod?: string;
@@ -698,6 +710,7 @@ export interface StorefrontProductItem {
 
 export type EcommerceView = 
     | 'overview'
+    | 'storefront'
     | 'products'
     | 'categories'
     | 'orders'

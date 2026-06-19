@@ -18,6 +18,7 @@ import { Domain } from '../../../types';
 // --- IMPORTS ---
 import { useTranslation } from 'react-i18next';
 import { DNSRecord } from '../../../types/domains';
+import AppSelect from '../../ui/AppSelect';
 
 const getDomainDnsRecords = (domain: Domain): DNSRecord[] => {
     const dataRecords = (domain as any).data?.dnsRecords;
@@ -275,7 +276,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                 <div className="grid md:grid-cols-2 gap-6 mb-4">
                     <div>
                         <label className="block text-xs font-bold text-q-text-muted uppercase tracking-wider mb-2">{t('domainsDashboard.connectedProject')}</label>
-                        <select
+                        <AppSelect
                             className="w-full bg-secondary/30 border border-q-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
                             value={domain.projectId || ''}
                             onChange={(e) => handleProjectChange(e.target.value)}
@@ -284,7 +285,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             {projects.filter(p => p.status !== 'Template').map(p => (
                                 <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
-                        </select>
+                        </AppSelect>
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-q-text-muted uppercase tracking-wider mb-2">{t('domainsDashboard.expiryDate')}</label>
@@ -1765,7 +1766,7 @@ const DomainsDashboard: React.FC = () => {
                                 <label className="block text-xs font-bold text-q-text-muted uppercase tracking-wider mb-2">
                                     {t('domainsDashboard.connectToProject', 'Conectar a Proyecto')} *
                                 </label>
-                                <select
+                                <AppSelect
                                     required
                                     disabled={isSettingUpCloudflare}
                                     value={connectProjectId}
@@ -1778,7 +1779,7 @@ const DomainsDashboard: React.FC = () => {
                                             {project.name}
                                         </option>
                                     ))}
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {/* DNS Instructions */}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LeadTask } from '../../../types';
 import { CheckCircle2, Circle, Plus, Trash2, Calendar, AlertCircle, Loader2 } from 'lucide-react';
+import AppSelect from '../../ui/AppSelect';
 
 interface LeadTasksListProps {
     tasks: LeadTask[];
@@ -129,7 +130,7 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
                         </div>
                         <div>
                             <label className="text-xs text-q-text-muted mb-1 block">Priority</label>
-                            <select
+                            <AppSelect
                                 value={newTask.priority}
                                 onChange={e => setNewTask({ ...newTask, priority: e.target.value as any })}
                                 className="w-full bg-q-surface border border-q-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
@@ -137,7 +138,7 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
                                 <option value="low">Low</option>
                                 <option value="medium">Medium</option>
                                 <option value="high">High</option>
-                            </select>
+                            </AppSelect>
                         </div>
                     </div>
                     <div className="flex gap-2 justify-end">

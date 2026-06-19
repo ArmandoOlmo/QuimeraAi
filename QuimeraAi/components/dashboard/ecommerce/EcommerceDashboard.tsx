@@ -29,6 +29,7 @@ import {
     Plus,
     Check,
     Sparkles,
+    LayoutTemplate,
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import QuimeraLoader from '../../ui/QuimeraLoader';
@@ -37,6 +38,7 @@ import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
 import { EcommerceView } from '../../../types/ecommerce';
+import { EcommerceContext, useEcommerceContext } from './EcommerceContext';
 
 // Import views
 import ProductsView from './views/ProductsView';
@@ -50,6 +52,7 @@ import StockAlertsView from './views/StockAlertsView';
 import ReportsView from './views/ReportsView';
 import AnalyticsView from './views/AnalyticsView';
 import SettingsView from './views/SettingsView';
+import StorefrontEditorView from './views/StorefrontEditorView';
 
 // Import Project Selector Page
 import ProjectSelectorPage from './ProjectSelectorPage';
@@ -58,7 +61,6 @@ import ProjectSelectorPage from './ProjectSelectorPage';
 import { useEcommerceStore } from './hooks/useEcommerceStore';
 import { useEcommerceAnalytics } from './hooks/useEcommerceAnalytics';
 import { useOrders } from './hooks/useOrders';
-import { useReviews } from './hooks/useReviews';
 import { useProjectEcommerce } from './hooks/useProjectEcommerce';
 import { useProducts } from './hooks/useProducts';
 import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
@@ -75,28 +77,45 @@ interface NavItem {
     badgeColor?: string;
 }
 
-// Context para pasar el storeId a todos los componentes hijos
-export const EcommerceContext = React.createContext<{
-    storeId: string;
-    projectId: string | null;
-    projectName: string;
-}>({
-    storeId: 'default',
-    projectId: null,
-    projectName: '',
-});
+export { EcommerceContext, useEcommerceContext } from './EcommerceContext';
 
-export const useEcommerceContext = () => React.useContext(EcommerceContext);
+const VALID_ECOMMERCE_VIEWS: EcommerceView[] = [
+    'overview',
+    'storefront',
+    'products',
+    'categories',
+    'orders',
+    'customers',
+    'store-users',
+    'discounts',
+    'reviews',
+    'stock_alerts',
+    'reports',
+    'analytics',
+    'settings',
+];
+
+const getInitialEcommerceView = (): EcommerceView => {
+    const savedView = localStorage.getItem('ecommerceActiveView') as EcommerceView | null;
+
+    if (!savedView || !VALID_ECOMMERCE_VIEWS.includes(savedView)) return 'overview';
+
+    // The storefront editor owns a live iframe preview and should not auto-mount
+    // from persisted localStorage while we are stabilizing the ecommerce suite.
+    if (savedView === 'storefront') {
+        localStorage.setItem('ecommerceActiveView', 'overview');
+        return 'overview';
+    }
+
+    return savedView;
+};
 
 const EcommerceDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { setView } = useUI();
     const { projects, activeProject, activeProjectId, loadProject } = useProject();
-    const [activeView, setActiveView] = useState<EcommerceView>(() => {
-        const savedView = localStorage.getItem('ecommerceActiveView') as EcommerceView;
-        return savedView || 'overview';
-    });
+    const [activeView, setActiveView] = useState<EcommerceView>(getInitialEcommerceView);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -143,7 +162,7 @@ const EcommerceDashboard: React.FC = () => {
         window.addEventListener('ecommerceViewChange', handleViewChange as EventListener);
 
         const savedView = localStorage.getItem('ecommerceActiveView') as EcommerceView;
-        if (savedView && savedView !== activeView) {
+        if (savedView && savedView !== 'storefront' && VALID_ECOMMERCE_VIEWS.includes(savedView) && savedView !== activeView) {
             setActiveView(savedView);
         }
 
@@ -159,24 +178,7 @@ const EcommerceDashboard: React.FC = () => {
         }
     }, [activeProjectId]);
 
-    // Fetch analytics usando el storeId del proyecto
-    const {
-        totalRevenue,
-        totalOrders,
-        totalCustomers,
-        averageOrderValue,
-        lowStockProducts,
-        isLoading: analyticsLoading,
-    } = useEcommerceAnalytics(userId || '', storeId);
-
-    const { getPendingOrdersCount } = useOrders(userId || '', storeId);
-    const { pendingCount: pendingReviewsCount } = useReviews(userId || '', storeId);
-    const { products } = useProducts(userId || '', storeId);
     const [showDemoSeeder, setShowDemoSeeder] = useState(false);
-
-    const pendingOrdersCount = getPendingOrdersCount();
-    const lowStockCount = lowStockProducts.length;
-    const totalProducts = products.length;
 
     const handleViewChange = (view: EcommerceView) => {
         setActiveView(view);
@@ -197,31 +199,14 @@ const EcommerceDashboard: React.FC = () => {
 
     const navItems: NavItem[] = [
         { id: 'overview', icon: BarChart3, label: t('ecommerce.overview', 'Vista General') },
+        { id: 'storefront', icon: LayoutTemplate, label: t('ecommerce.storefrontLabel', 'Storefront') },
         { id: 'products', icon: Package, label: t('ecommerce.products', 'Productos') },
         { id: 'categories', icon: FolderTree, label: t('ecommerce.categories', 'Categorías') },
-        {
-            id: 'orders',
-            icon: ShoppingCart,
-            label: t('ecommerce.orders', 'Pedidos'),
-            badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
-            badgeColor: 'bg-orange-500',
-        },
+        { id: 'orders', icon: ShoppingCart, label: t('ecommerce.orders', 'Pedidos') },
         { id: 'customers', icon: Users, label: t('ecommerce.customers', 'Clientes') },
         { id: 'discounts', icon: Tag, label: t('ecommerce.discounts', 'Descuentos') },
-        {
-            id: 'reviews',
-            icon: Star,
-            label: t('ecommerce.reviews', 'Reseñas'),
-            badge: pendingReviewsCount > 0 ? pendingReviewsCount : undefined,
-            badgeColor: 'bg-yellow-500',
-        },
-        {
-            id: 'stock_alerts',
-            icon: Bell,
-            label: t('ecommerce.stockAlerts', 'Alertas Stock'),
-            badge: lowStockCount > 0 ? lowStockCount : undefined,
-            badgeColor: 'bg-red-500',
-        },
+        { id: 'reviews', icon: Star, label: t('ecommerce.reviews', 'Reseñas') },
+        { id: 'stock_alerts', icon: Bell, label: t('ecommerce.stockAlerts', 'Alertas Stock') },
         { id: 'reports', icon: FileDown, label: t('ecommerce.reports', 'Reportes') },
         { id: 'analytics', icon: TrendingUp, label: t('ecommerce.analytics', 'Analytics') },
         { id: 'settings', icon: Settings, label: t('ecommerce.settings', 'Configuración') },
@@ -231,20 +216,16 @@ const EcommerceDashboard: React.FC = () => {
         switch (activeView) {
             case 'overview':
                 return (
-                    <OverviewView
-                        totalRevenue={totalRevenue}
-                        totalOrders={totalOrders}
-                        totalCustomers={totalCustomers}
-                        averageOrderValue={averageOrderValue}
-                        pendingOrders={pendingOrdersCount}
-                        lowStockCount={lowStockCount}
-                        isLoading={analyticsLoading}
+                    <OverviewDataView
+                        userId={userId || ''}
+                        storeId={storeId}
                         onNavigate={handleViewChange}
-                        totalProducts={totalProducts}
                         showDemoSeeder={showDemoSeeder}
                         onDemoSeederClose={() => setShowDemoSeeder(false)}
                     />
                 );
+            case 'storefront':
+                return <StorefrontEditorView />;
             case 'products':
                 return <ProductsView />;
             case 'categories':
@@ -388,7 +369,7 @@ const EcommerceDashboard: React.FC = () => {
             projectId: effectiveProjectId,
             projectName: effectiveProject?.name || ''
         }}>
-            <div className="min-h-screen bg-q-bg flex">
+            <div className="flex h-screen min-h-0 overflow-hidden bg-q-bg">
                 {/* Sidebar */}
                 <DashboardSidebar
                     isMobileOpen={isMobileMenuOpen}
@@ -396,7 +377,7 @@ const EcommerceDashboard: React.FC = () => {
                 />
 
                 {/* Main Content */}
-                <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+                <div className="flex h-screen min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                     {/* Header */}
  <header className="quimera-dashboard-header-bar h-auto min-h-14 px-3 sm:px-6 py-2 sm:py-0 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sticky top-0 z-40">
                         <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-4">
@@ -493,32 +474,8 @@ const EcommerceDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Right Section: Alerts */}
+                        {/* Right Section */}
                         <div className="flex flex-shrink-0 items-center gap-1 sm:gap-3">
-                            {/* Alerts */}
-                            {(pendingOrdersCount > 0 || lowStockCount > 0) && (
-                                <div className="hidden sm:flex items-center gap-3">
-                                    {pendingOrdersCount > 0 && (
-                                        <button
-                                            onClick={() => handleViewChange('orders')}
-                                            className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 text-orange-400 rounded-lg text-sm hover:bg-orange-500/30 transition-colors"
-                                        >
-                                            <ShoppingCart size={16} />
-                                            {pendingOrdersCount} {t('ecommerce.pendingOrders', 'pendientes')}
-                                        </button>
-                                    )}
-                                    {lowStockCount > 0 && (
-                                        <button
-                                            onClick={() => handleViewChange('stock_alerts')}
-                                            className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors"
-                                        >
-                                            <AlertTriangle size={16} />
-                                            {lowStockCount} {t('ecommerce.lowStock', 'bajo stock')}
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-
                             <HeaderBackButton onClick={() => setView('dashboard')} />
                         </div>
                     </header>
@@ -556,7 +513,7 @@ const EcommerceDashboard: React.FC = () => {
                     </div>
 
                     {/* Content */}
-                    <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto p-3 sm:p-6 lg:p-8">
+                    <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 lg:p-8">
                         {renderActiveView()}
                     </main>
                 </div>
@@ -566,6 +523,50 @@ const EcommerceDashboard: React.FC = () => {
 };
 
 // Overview Component
+interface OverviewDataViewProps {
+    userId: string;
+    storeId: string;
+    onNavigate: (view: EcommerceView) => void;
+    showDemoSeeder: boolean;
+    onDemoSeederClose: () => void;
+}
+
+const OverviewDataView: React.FC<OverviewDataViewProps> = ({
+    userId,
+    storeId,
+    onNavigate,
+    showDemoSeeder,
+    onDemoSeederClose,
+}) => {
+    const {
+        totalRevenue,
+        totalOrders,
+        totalCustomers,
+        averageOrderValue,
+        lowStockProducts,
+        isLoading: analyticsLoading,
+    } = useEcommerceAnalytics(userId, storeId);
+
+    const { getPendingOrdersCount } = useOrders(userId, storeId);
+    const { products } = useProducts(userId, storeId);
+
+    return (
+        <OverviewView
+            totalRevenue={totalRevenue}
+            totalOrders={totalOrders}
+            totalCustomers={totalCustomers}
+            averageOrderValue={averageOrderValue}
+            pendingOrders={getPendingOrdersCount()}
+            lowStockCount={lowStockProducts.length}
+            isLoading={analyticsLoading}
+            onNavigate={onNavigate}
+            totalProducts={products.length}
+            showDemoSeeder={showDemoSeeder}
+            onDemoSeederClose={onDemoSeederClose}
+        />
+    );
+};
+
 interface OverviewProps {
     totalRevenue: number;
     totalOrders: number;
@@ -595,7 +596,11 @@ const OverviewView: React.FC<OverviewProps> = ({
 }) => {
     const { t } = useTranslation();
     const { projectName } = useEcommerceContext();
-    const [showSeeder, setShowSeeder] = useState(showDemoSeeder || (totalProducts === 0 && totalOrders === 0));
+    const [showSeeder, setShowSeeder] = useState(showDemoSeeder);
+
+    useEffect(() => {
+        setShowSeeder(showDemoSeeder);
+    }, [showDemoSeeder]);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('es-MX', {

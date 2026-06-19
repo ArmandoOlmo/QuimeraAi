@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Modal from '../../ui/Modal';
 import { Lead, CRMCustomFieldDef } from '../../../types';
+import AppSelect from '../../ui/AppSelect';
 
 // =============================================================================
 // TYPES
@@ -211,7 +212,7 @@ const IndustryFieldsStep: React.FC<IndustryFieldsStepProps> = ({ fields, dynamic
                                 <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{field.name}</label>
                                 <div className="relative">
                                     <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-primary transition-colors" size={16} />
-                                    <select
+                                    <AppSelect
                                         value={dynamicData[field.id] || ''}
                                         onChange={e => onDynamicChange(field.id, e.target.value)}
                                         className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all hover:bg-secondary/50 appearance-none cursor-pointer"
@@ -220,7 +221,7 @@ const IndustryFieldsStep: React.FC<IndustryFieldsStepProps> = ({ fields, dynamic
                                         {field.options.map(opt => (
                                             <option key={opt} value={opt}>{opt}</option>
                                         ))}
-                                    </select>
+                                    </AppSelect>
                                 </div>
                             </div>
                         );

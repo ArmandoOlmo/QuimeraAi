@@ -7,6 +7,7 @@ import ColorControl from './ColorControl';
 import { ChevronDown, Image, Italic } from 'lucide-react';
 import { fontOptions, formatFontName } from '../../utils/fontLoader';
 import FontWeightPicker from './FontWeightPicker';
+import AppSelect from './AppSelect';
 
 
 
@@ -43,7 +44,7 @@ const FontManager: React.FC = () => {
             
             {/* Font Family Select */}
             <div className="relative mb-2">
-                <select
+                <AppSelect
                     value={theme[familyKey] as string}
                     onChange={(e) => handleChange(familyKey, e.target.value as FontFamily)}
                     className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent transition-all appearance-none cursor-pointer hover:border-q-accent/50"
@@ -54,7 +55,7 @@ const FontManager: React.FC = () => {
                             {formatFontName(font)}
                         </option>
                     ))}
-                </select>
+                </AppSelect>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-q-text-secondary">
                     <ChevronDown className="h-4 w-4" />
                 </div>

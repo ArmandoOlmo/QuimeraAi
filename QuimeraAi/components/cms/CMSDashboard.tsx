@@ -21,6 +21,7 @@ import { ROUTES } from '../../routes/config';
 import { CMSPost, CMSCategory } from '../../types';
 import { sanitizeHtml } from '../../utils/sanitize';
 import { CatalogFilterBar, ContentStatusFilterChips, SortViewControls, CatalogToolbarFooter } from '../dashboard/filters';
+import AppSelect from '../ui/AppSelect';
 
 // === Drag & Drop Sortable Profile Item ===
 const SortableProfileItem: React.FC<{ post: CMSPost; index: number }> = ({ post, index }) => {
@@ -577,7 +578,7 @@ const CMSDashboard: React.FC = () => {
                                 <>
                                     <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.allTime', 'Fecha')}>
                                         <Calendar size={15} className={`pointer-events-none transition-colors ${dateRange !== 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`} />
-                                        <select
+                                        <AppSelect
                                             value={dateRange}
                                             onChange={(e) => setDateRange(e.target.value as any)}
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -586,13 +587,13 @@ const CMSDashboard: React.FC = () => {
                                             <option value="today">{t('cms.filters.today', 'Hoy')}</option>
                                             <option value="week">{t('cms.filters.last7Days', '7 días')}</option>
                                             <option value="month">{t('cms.filters.last30Days', '30 días')}</option>
-                                        </select>
+                                        </AppSelect>
                                     </div>
 
                                     {categories.length > 0 && (
                                         <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.category', 'Categoría')}>
                                             <Tag size={15} className={`pointer-events-none transition-colors ${categoryFilter !== 'all' ? 'quimera-status-card-accent-text' : 'text-q-text-muted hover:text-foreground'}`} />
-                                            <select
+                                            <AppSelect
                                                 value={categoryFilter}
                                                 onChange={(e) => setCategoryFilter(e.target.value)}
                                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -602,7 +603,7 @@ const CMSDashboard: React.FC = () => {
                                                 {categories.map(cat => (
                                                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                                                 ))}
-                                            </select>
+                                            </AppSelect>
                                         </div>
                                     )}
 
@@ -1195,7 +1196,7 @@ const CMSDashboard: React.FC = () => {
                                     <label className="text-xs font-medium text-q-text-muted ml-1">
                                         {t('cms.categoryLayout', 'Estilo de Diseño (Layout)')}
                                     </label>
-                                    <select
+                                    <AppSelect
                                         value={categoryForm.layoutType}
                                         onChange={(e) => setCategoryForm(prev => ({ ...prev, layoutType: e.target.value as 'blog' | 'gallery' | 'profile' }))}
                                         className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
@@ -1203,7 +1204,7 @@ const CMSDashboard: React.FC = () => {
                                         <option value="blog">{t('cms.layouts.blog', 'Blog Estándar')}</option>
                                         <option value="gallery">{t('cms.layouts.gallery', 'Galería (Masonry)')}</option>
                                         <option value="profile">{t('cms.layouts.profile', 'Directorio de Perfiles')}</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
                                 <div className="flex gap-2">
                                     <button

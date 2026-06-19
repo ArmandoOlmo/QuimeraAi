@@ -3,7 +3,7 @@
  * Panel lateral para ver y gestionar detalles de un pedido
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     X,
@@ -26,12 +26,15 @@ import {
 import { Order, OrderStatus, PaymentStatus, FulfillmentStatus, StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
+import AppSelect from '../../../ui/AppSelect';
 
 interface OrderDetailDrawerProps {
     order: Order;
     onClose: () => void;
     onUpdateStatus: (orderId: string, status: OrderStatus) => Promise<void>;
     onAddTracking: (orderId: string, carrier: string, trackingNumber: string, trackingUrl?: string) => Promise<void>;
+    onUpdateInternalNotes: (orderId: string, notes: string) => Promise<void>;
+    onRefundOrder: (orderId: string, amount?: number, reason?: string) => Promise<void>;
 }
 
 type OrderStatusConfig = { color: string; bg: string; label: string };
@@ -69,6 +72,8 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
     onClose,
     onUpdateStatus,
     onAddTracking,
+    onUpdateInternalNotes,
+    onRefundOrder,
 }) => {
     const { t } = useTranslation();
     const theme = useEcommerceTheme();
@@ -79,6 +84,22 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
         trackingNumber: '',
         trackingUrl: '',
     });
+    const [internalNotes, setInternalNotes] = useState(order.internalNotes || '');
+    const [isSavingNotes, setIsSavingNotes] = useState(false);
+    const [notesError, setNotesError] = useState<string | null>(null);
+    const [showRefundForm, setShowRefundForm] = useState(false);
+    const [refundAmount, setRefundAmount] = useState('');
+    const [refundReason, setRefundReason] = useState('requested_by_customer');
+    const [isRefunding, setIsRefunding] = useState(false);
+    const [refundError, setRefundError] = useState<string | null>(null);
+
+    useEffect(() => {
+        setInternalNotes(order.internalNotes || '');
+        setShowRefundForm(false);
+        setRefundAmount('');
+        setRefundReason('requested_by_customer');
+        setRefundError(null);
+    }, [order.id, order.internalNotes]);
 
     const handleStatusChange = async (newStatus: OrderStatus) => {
         setIsUpdating(true);
@@ -106,6 +127,50 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
         }
     };
 
+    const handleSaveInternalNotes = async () => {
+        setIsSavingNotes(true);
+        setNotesError(null);
+        try {
+            await onUpdateInternalNotes(order.id, internalNotes);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'No se pudieron guardar las notas';
+            setNotesError(message);
+        } finally {
+            setIsSavingNotes(false);
+        }
+    };
+
+    const handleStartRefund = () => {
+        setRefundAmount(refundableAmount.toFixed(2));
+        setRefundError(null);
+        setShowRefundForm(true);
+    };
+
+    const handleRefundOrder = async () => {
+        const parsedAmount = refundAmount.trim() ? toFiniteNumber(refundAmount) : undefined;
+        if (parsedAmount !== undefined && parsedAmount <= 0) {
+            setRefundError('El monto debe ser mayor que cero');
+            return;
+        }
+        if (parsedAmount !== undefined && parsedAmount - refundableAmount > 0.005) {
+            setRefundError('El monto excede el balance reembolsable');
+            return;
+        }
+
+        setIsRefunding(true);
+        setRefundError(null);
+        try {
+            await onRefundOrder(order.id, parsedAmount, refundReason);
+            setShowRefundForm(false);
+            setRefundAmount('');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'No se pudo crear el reembolso';
+            setRefundError(message);
+        } finally {
+            setIsRefunding(false);
+        }
+    };
+
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
     };
@@ -128,6 +193,15 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
     const shippingCost = order.pricing?.shippingTotal ?? order.shippingCost;
     const taxAmount = order.pricing?.taxTotal ?? order.taxAmount;
     const total = order.pricing?.total ?? order.total;
+    const refunds = Array.isArray(order.refunds) ? order.refunds : [];
+    const refundedAmount = toFiniteNumber(order.refundedAmount);
+    const refundableAmount = Math.max(0, toFiniteNumber(total) - refundedAmount);
+    const hasStripePaymentIntent = Boolean(order.paymentIntentId || order.stripe?.paymentIntentId);
+    const canRefund =
+        order.paymentMethod?.toLowerCase() === 'stripe' &&
+        ['paid', 'partially_refunded'].includes(order.paymentStatus) &&
+        hasStripePaymentIntent &&
+        refundableAmount > 0;
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-end">
@@ -156,7 +230,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                         </span>
 
                         {/* Status Dropdown */}
-                        <select
+                        <AppSelect
                             value={order.status}
                             onChange={(e) => handleStatusChange(e.target.value as OrderStatus)}
                             disabled={isUpdating}
@@ -168,8 +242,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                             <option value="shipped">Enviado</option>
                             <option value="delivered">Entregado</option>
                             <option value="cancelled">Cancelado</option>
-                            <option value="refunded">Reembolsado</option>
-                        </select>
+                        </AppSelect>
 
                         {isUpdating && <Loader2 size={18} className="animate-spin text-primary" />}
                     </div>
@@ -417,6 +490,8 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                             ? 'text-green-400'
                                             : order.paymentStatus === 'pending'
                                             ? 'text-yellow-400'
+                                            : order.paymentStatus === 'refunded' || order.paymentStatus === 'partially_refunded'
+                                            ? 'text-orange-400'
                                             : 'text-red-400'
                                     }`}
                                 >
@@ -429,6 +504,79 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                     <code className="text-xs bg-muted px-1 rounded">
                                         {order.paymentIntentId.slice(0, 20)}...
                                     </code>
+                                </div>
+                            )}
+                            {refundedAmount > 0 && (
+                                <div className="flex justify-between text-orange-400">
+                                    <span>Reembolsado</span>
+                                    <span>{formatMoney(refundedAmount)}</span>
+                                </div>
+                            )}
+                            {refunds.length > 0 && (
+                                <div className="mt-3 space-y-2 border-t border-q-border pt-3">
+                                    {refunds.map((refund) => (
+                                        <div key={refund.id} className="flex items-start justify-between gap-3 text-xs">
+                                            <div className="min-w-0">
+                                                <p className="text-foreground">{formatMoney(refund.amount)}</p>
+                                                <p className="truncate text-q-text-muted">{refund.reason || refund.status}</p>
+                                            </div>
+                                            <span className="text-q-text-muted">{refund.status}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {canRefund && (
+                                <div className="mt-4 border-t border-q-border pt-4">
+                                    {showRefundForm ? (
+                                        <div className="space-y-3">
+                                            <input
+                                                type="number"
+                                                min="0.01"
+                                                step="0.01"
+                                                max={refundableAmount}
+                                                value={refundAmount}
+                                                onChange={(event) => setRefundAmount(event.target.value)}
+                                                className="w-full px-3 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                            />
+                                            <AppSelect
+                                                value={refundReason}
+                                                onChange={(event) => setRefundReason(event.target.value)}
+                                                className="w-full px-3 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                            >
+                                                <option value="requested_by_customer">Solicitado por cliente</option>
+                                                <option value="duplicate">Duplicado</option>
+                                                <option value="fraudulent">Fraudulento</option>
+                                            </AppSelect>
+                                            {refundError && (
+                                                <p className="text-sm text-red-400">{refundError}</p>
+                                            )}
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => setShowRefundForm(false)}
+                                                    disabled={isRefunding}
+                                                    className="flex-1 px-3 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-sm disabled:opacity-50"
+                                                >
+                                                    Cancelar
+                                                </button>
+                                                <button
+                                                    onClick={handleRefundOrder}
+                                                    disabled={isRefunding}
+                                                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50"
+                                                >
+                                                    {isRefunding && <Loader2 size={14} className="animate-spin" />}
+                                                    Reembolsar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={handleStartRefund}
+                                            className="inline-flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
+                                        >
+                                            <DollarSign size={14} />
+                                            Crear reembolso
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -444,6 +592,34 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                             <p className="text-q-text-muted">{order.notes}</p>
                         </div>
                     )}
+
+                    {/* Internal Notes */}
+                    <div className="bg-muted/30 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-q-text-muted mb-3 flex items-center gap-2">
+                            <FileText size={16} />
+                            {t('ecommerce.internalNotes', 'Notas internas')}
+                        </h3>
+                        <textarea
+                            value={internalNotes}
+                            onChange={(event) => setInternalNotes(event.target.value)}
+                            rows={4}
+                            placeholder={t('ecommerce.internalNotesPlaceholder', 'Notas visibles solo para el equipo')}
+                            className="w-full px-3 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                        />
+                        {notesError && (
+                            <p className="mt-2 text-sm text-red-400">{notesError}</p>
+                        )}
+                        <div className="mt-3 flex justify-end">
+                            <button
+                                onClick={handleSaveInternalNotes}
+                                disabled={isSavingNotes || internalNotes === (order.internalNotes || '')}
+                                className="inline-flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50"
+                            >
+                                {isSavingNotes && <Loader2 size={14} className="animate-spin" />}
+                                {t('common.save', 'Guardar')}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

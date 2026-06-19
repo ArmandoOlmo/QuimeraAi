@@ -14,6 +14,7 @@ import { FileRecord } from '../../types';
 import MediaGeneratorPanel from '../media-generator/MediaGeneratorPanel';
 import ImageDetailModal from './ImageDetailModal';
 import { isLegacyStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
+import AppSelect from './AppSelect';
 
 interface ImagePickerSelectedAsset {
     id?: string;
@@ -477,7 +478,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
                                         {activeTab === 'library' && (
                                             <div className="flex items-center gap-2">
                                                 {destination === 'admin' && (
-                                                    <select
+                                                    <AppSelect
                                                         value={selectedAdminCategory}
                                                         onChange={(e) => setSelectedAdminCategory(e.target.value)}
                                                         className="h-8 px-2 py-1 bg-q-surface border border-q-border rounded text-xs font-medium focus:outline-none focus:border-q-accent"
@@ -494,7 +495,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
                                                         <option value="ai_generated">Generadas con IA</option>
                                                         <option value="icon">Íconos</option>
                                                         <option value="other">Otros</option>
-                                                    </select>
+                                                    </AppSelect>
                                                 )}
                                                 <DragDropZone
                                                     onFileSelect={handleFileUpload}
@@ -564,7 +565,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
                                                 {activeTab === 'library' && (
                                                     <div className="flex flex-col items-center gap-3 mt-2">
                                                         {destination === 'admin' && (
-                                                            <select
+                                                            <AppSelect
                                                                 value={selectedAdminCategory}
                                                                 onChange={(e) => setSelectedAdminCategory(e.target.value)}
                                                                 className="h-8 px-2 py-1 bg-q-surface border border-q-border rounded text-xs font-medium focus:outline-none focus:border-q-accent"
@@ -581,7 +582,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
                                                                 <option value="ai_generated">Generadas con IA</option>
                                                                 <option value="icon">Íconos</option>
                                                                 <option value="other">Otros</option>
-                                                            </select>
+                                                            </AppSelect>
                                                         )}
                                                         <DragDropZone
                                                             onFileSelect={handleFileUpload}

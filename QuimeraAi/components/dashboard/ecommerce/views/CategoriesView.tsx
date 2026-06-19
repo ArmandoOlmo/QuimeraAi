@@ -23,9 +23,10 @@ import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useCategories } from '../hooks/useCategories';
 import { useProducts } from '../hooks/useProducts';
 import { Category } from '../../../../types/ecommerce';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 import EcommerceImagePicker from '../components/EcommerceImagePicker';
 import MediaGeneratorModal from '../../../media-generator/MediaGeneratorModal';
+import AppSelect from '../../../ui/AppSelect';
 
 const CategoriesView: React.FC = () => {
     const { t } = useTranslation();
@@ -296,7 +297,7 @@ const CategoriesView: React.FC = () => {
                                 <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.parentCategory', 'Categoría Padre')}
                                 </label>
-                                <select
+                                <AppSelect
                                     value={formData.parentId}
                                     onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
                                     className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -309,7 +310,7 @@ const CategoriesView: React.FC = () => {
                                                 {cat.name}
                                             </option>
                                         ))}
-                                </select>
+                                </AppSelect>
                             </div>
 
                             <div className="flex gap-3 pt-4">

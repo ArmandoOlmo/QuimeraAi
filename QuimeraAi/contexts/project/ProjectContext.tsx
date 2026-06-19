@@ -543,6 +543,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const isInitialLoadRef = useRef(true);
     const projectsRef = useRef<Project[]>([]);
     const hydratingSummaryProjectIdRef = useRef<string | null>(null);
+    const hydratedSummaryProjectIdsRef = useRef<Set<string>>(new Set());
     // CRITICAL: Ref to track the active project ID synchronously for auto-save validation.
     // Unlike state, refs are updated immediately and avoid React batching issues.
     const activeProjectIdRef = useRef<string | null>(activeProjectId);
@@ -982,23 +983,31 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, [user, currentTenantId]);
 
     useEffect(() => {
+        if (activeProjectId && activeProject && !isSummaryProject(activeProject)) {
+            hydratedSummaryProjectIdsRef.current.delete(activeProjectId);
+            return;
+        }
+
         if (
             isLoadingProjects ||
             !user ||
             !activeProjectId ||
             !activeProject ||
             !isSummaryProject(activeProject) ||
-            hydratingSummaryProjectIdRef.current === activeProjectId
+            hydratingSummaryProjectIdRef.current === activeProjectId ||
+            hydratedSummaryProjectIdsRef.current.has(activeProjectId)
         ) {
             return;
         }
 
         hydratingSummaryProjectIdRef.current = activeProjectId;
+        hydratedSummaryProjectIdsRef.current.add(activeProjectId);
         console.log('[ProjectContext] Hydrating active summary project:', activeProject.name);
 
         loadProject(activeProjectId, false, false)
             .catch(error => {
                 console.error('[ProjectContext] Error hydrating active summary project:', error);
+                hydratedSummaryProjectIdsRef.current.delete(activeProjectId);
             })
             .finally(() => {
                 if (hydratingSummaryProjectIdRef.current === activeProjectId) {
@@ -1164,6 +1173,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             // CRM Configuration (only include if exists)
             ...(project.crmConfig && { crmConfig: project.crmConfig }),
+
+            // Business Blueprint (A1 stores it in projects.data; no dedicated column yet)
+            ...(project.businessBlueprint && { businessBlueprint: project.businessBlueprint }),
         }));
 
         try {
@@ -1260,6 +1272,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (project.thumbnailUrl) snapshot.thumbnailUrl = project.thumbnailUrl;
         if (project.abTests) snapshot.abTests = project.abTests;
         if (project.crmConfig) snapshot.crmConfig = project.crmConfig;
+        if (project.businessBlueprint) snapshot.businessBlueprint = project.businessBlueprint;
 
         return snapshot;
     }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, pages, adminContext]);

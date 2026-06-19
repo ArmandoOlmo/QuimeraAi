@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import { LegalPage, LegalPageSection, LegalPageType, LEGAL_PAGE_LABELS } from '../../../types/appContent';
+import AppSelect from '../../ui/AppSelect';
 
 interface LegalPageEditorProps {
     pageType: LegalPageType;
@@ -247,14 +248,14 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                 <label className="block text-sm font-medium text-q-text-muted mb-2">
                                     {t('contentManagement.editor.status', 'Estado')}
                                 </label>
-                                <select
+                                <AppSelect
                                     value={formData.status}
                                     onChange={(e) => updateForm('status', e.target.value as 'published' | 'draft')}
                                     className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                 >
                                     <option value="draft">{t('contentManagement.status.draft', 'Borrador')}</option>
                                     <option value="published">{t('contentManagement.status.published', 'Publicado')}</option>
-                                </select>
+                                </AppSelect>
                             </div>
                         </div>
                     </div>
@@ -345,7 +346,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                                             <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                                 {t('contentManagement.legal.icon', 'Icono')}
                                                             </label>
-                                                            <select
+                                                            <AppSelect
                                                                 value={section.icon || 'FileText'}
                                                                 onChange={(e) => updateSection(section.id, { icon: e.target.value })}
                                                                 className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary"
@@ -353,7 +354,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                                                 {AVAILABLE_ICONS.map(icon => (
                                                                     <option key={icon.id} value={icon.id}>{icon.label}</option>
                                                                 ))}
-                                                            </select>
+                                                            </AppSelect>
                                                         </div>
                                                     </div>
                                                     <div>

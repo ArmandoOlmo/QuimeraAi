@@ -22,6 +22,7 @@ import {
   Clock3,
 } from 'lucide-react';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
+import AppSelect from '../../ui/AppSelect';
 
 // ============================================================================
 // TYPES
@@ -917,7 +918,7 @@ function CreateApiKeyModal({
             <label className="block text-sm font-semibold text-q-text mb-2">
               Expiración (opcional)
             </label>
-            <select
+            <AppSelect
               value={expiresInDays || ''}
               onChange={(e) =>
                 setExpiresInDays(
@@ -931,7 +932,7 @@ function CreateApiKeyModal({
               <option value="90">90 días</option>
               <option value="180">180 días</option>
               <option value="365">1 año</option>
-            </select>
+            </AppSelect>
           </div>
 
           {/* Actions */}

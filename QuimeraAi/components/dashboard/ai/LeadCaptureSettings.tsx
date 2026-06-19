@@ -4,6 +4,7 @@ import { useAI } from '../../../contexts/ai';
 import { useProject } from '../../../contexts/project';
 import { Shield, Save, Sparkles, Power, FileText, LogOut, Users, Lock, Sliders, MessageSquare, Gift, Clock, Tag } from 'lucide-react';
 import { LeadCaptureConfig } from '../../../types';
+import AppSelect from '../../ui/AppSelect';
 
 const LeadCaptureSettings: React.FC = () => {
     const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
@@ -325,7 +326,7 @@ const LeadCaptureSettings: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="text-sm font-medium text-foreground mb-1 block">Opening Time</label>
-                        <select
+                        <AppSelect
                             value={config.businessHoursStart ?? 9}
                             onChange={(e) => setConfig({ ...config, businessHoursStart: parseInt(e.target.value) })}
                             disabled={!config.enabled}
@@ -336,11 +337,11 @@ const LeadCaptureSettings: React.FC = () => {
                                     {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}
                                 </option>
                             ))}
-                        </select>
+                        </AppSelect>
                     </div>
                     <div>
                         <label className="text-sm font-medium text-foreground mb-1 block">Closing Time</label>
-                        <select
+                        <AppSelect
                             value={config.businessHoursEnd ?? 18}
                             onChange={(e) => setConfig({ ...config, businessHoursEnd: parseInt(e.target.value) })}
                             disabled={!config.enabled}
@@ -351,7 +352,7 @@ const LeadCaptureSettings: React.FC = () => {
                                     {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}
                                 </option>
                             ))}
-                        </select>
+                        </AppSelect>
                     </div>
                 </div>
 

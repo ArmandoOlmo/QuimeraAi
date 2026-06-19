@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "npm:stripe@^14.0.0";
+import { sendPaidOrderTransactionalEmails } from "../_shared/ecommerce-transactional-emails.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   apiVersion: "2023-10-16",
@@ -8,6 +9,8 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
 });
 
 const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const DEFAULT_FROM_EMAIL = Deno.env.get("EMAIL_FROM") || "Quimera Ai <no-reply@quimera.ai>";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
@@ -636,6 +639,18 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   const chargeId = typeof paymentIntent.latest_charge === "string"
     ? paymentIntent.latest_charge
     : paymentIntent.latest_charge?.id;
+  const paidOrderData = {
+    ...orderData,
+    status: "processing",
+    paymentStatus: "paid",
+    paidAt,
+    stripe: {
+      ...stripeData,
+      paymentIntentId: paymentIntent.id,
+      chargeId: chargeId || stripeData.chargeId,
+    },
+    updatedAt: paidAt,
+  };
 
   await supabase
     .from("store_orders")
@@ -651,23 +666,471 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
         paymentIntentId: paymentIntent.id,
         chargeId: chargeId || stripeData.chargeId,
       },
-      data: {
-        ...orderData,
-        status: "processing",
-        paymentStatus: "paid",
-        paidAt,
-        stripe: {
-          ...stripeData,
-          paymentIntentId: paymentIntent.id,
-          chargeId: chargeId || stripeData.chargeId,
-        },
-        updatedAt: paidAt,
-      },
+      data: paidOrderData,
     })
     .eq("id", order.id);
 
-  // PR22 inventory will decrement stock from this idempotent paid-order state.
-  // PR23 emails will send transactional notifications after this state is stable.
+  await decrementInventoryForPaidOrder({
+    ...order,
+    status: "processing",
+    payment_status: "paid",
+    payment_intent_id: paymentIntent.id,
+    stripe_payment_intent_id: paymentIntent.id,
+    paid_at: paidAt,
+    data: paidOrderData,
+  }, paymentIntent.id, paidAt);
+
+  await incrementDiscountUsageForPaidOrder(order.id, paidAt);
+  await updateCustomerAccountStatsForPaidOrder({
+    ...order,
+    status: "processing",
+    payment_status: "paid",
+    payment_intent_id: paymentIntent.id,
+    stripe_payment_intent_id: paymentIntent.id,
+    paid_at: paidAt,
+    data: paidOrderData,
+  }, paidAt);
+
+  try {
+    const emailResults = await sendPaidOrderTransactionalEmails({
+      supabase,
+      order: {
+        ...order,
+        status: "processing",
+        payment_status: "paid",
+        payment_intent_id: paymentIntent.id,
+        stripe_payment_intent_id: paymentIntent.id,
+        paid_at: paidAt,
+        data: paidOrderData,
+      },
+      paidAt,
+      resendApiKey: RESEND_API_KEY,
+      defaultFromEmail: DEFAULT_FROM_EMAIL,
+    });
+    console.log("[stripe-webhook] ecommerce email results:", emailResults);
+  } catch (emailError) {
+    const message = emailError instanceof Error ? emailError.message : String(emailError);
+    console.error("[stripe-webhook] ecommerce transactional emails failed:", message);
+  }
+}
+
+function readOrderItems(order: any): any[] {
+  if (Array.isArray(order.items)) return order.items;
+  if (Array.isArray(order.data?.items)) return order.data.items;
+  return [];
+}
+
+function asNumber(value: unknown, fallback = 0): number {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function readProductData(row: any): Record<string, any> {
+  return row?.data && typeof row.data === "object" && !Array.isArray(row.data) ? row.data : {};
+}
+
+function isInventoryTracked(row: any): boolean {
+  const data = readProductData(row);
+  return (row.track_inventory ?? data.trackInventory ?? data.track_inventory ?? true) !== false;
+}
+
+function readProductVariants(row: any): any[] {
+  const data = readProductData(row);
+  if (Array.isArray(row.variants)) return row.variants;
+  if (Array.isArray(data.variants)) return data.variants;
+  return [];
+}
+
+async function fetchStoreProduct(productId: string, projectId?: string | null) {
+  let query = supabase
+    .from("store_products")
+    .select("*")
+    .eq("id", productId);
+  if (projectId) query = query.eq("project_id", projectId);
+  const { data, error } = await query.maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function decrementSimpleProductInventory(
+  product: any,
+  quantity: number,
+  paidAt: string,
+) {
+  const productData = readProductData(product);
+  const currentQuantity = asNumber(product.quantity ?? product.inventory_quantity ?? productData.quantity ?? productData.inventoryQuantity, 0);
+  const nextQuantity = Math.max(0, currentQuantity - quantity);
+  const nextData = {
+    ...productData,
+    quantity: nextQuantity,
+    inventoryQuantity: nextQuantity,
+    updatedAt: paidAt,
+  };
+
+  const { error } = await supabase
+    .from("store_products")
+    .update({
+      quantity: nextQuantity,
+      inventory_quantity: nextQuantity,
+      data: nextData,
+      updated_at: paidAt,
+    })
+    .eq("id", product.id);
+  if (error) throw error;
+
+  return {
+    key: `${product.id}:default`,
+    productId: product.id,
+    previousQuantity: currentQuantity,
+    nextQuantity,
+    quantityDecremented: quantity,
+  };
+}
+
+async function decrementVariantInventory(
+  product: any,
+  variantId: string,
+  quantity: number,
+  paidAt: string,
+) {
+  const productData = readProductData(product);
+  const variants = readProductVariants(product);
+  let matched = false;
+  let previousQuantity = 0;
+  let nextQuantity = 0;
+
+  const nextVariants = variants.map((variant) => {
+    if (String(variant?.id) !== String(variantId)) return variant;
+    matched = true;
+    previousQuantity = asNumber(variant.quantity, 0);
+    nextQuantity = Math.max(0, previousQuantity - quantity);
+    return {
+      ...variant,
+      quantity: nextQuantity,
+    };
+  });
+
+  if (!matched) return null;
+
+  const { error } = await supabase
+    .from("store_products")
+    .update({
+      variants: nextVariants,
+      data: {
+        ...productData,
+        variants: nextVariants,
+        updatedAt: paidAt,
+      },
+      updated_at: paidAt,
+    })
+    .eq("id", product.id);
+  if (error) throw error;
+
+  return {
+    key: `${product.id}:${variantId}`,
+    productId: product.id,
+    variantId,
+    previousQuantity,
+    nextQuantity,
+    quantityDecremented: quantity,
+  };
+}
+
+async function persistOrderInventoryState(
+  order: any,
+  orderData: Record<string, any>,
+  inventoryState: Record<string, any>,
+  paidAt: string,
+) {
+  const { error } = await supabase
+    .from("store_orders")
+    .update({
+      data: {
+        ...orderData,
+        inventory: inventoryState,
+        updatedAt: paidAt,
+      },
+      updated_at: paidAt,
+    })
+    .eq("id", order.id);
+  if (error) throw error;
+}
+
+function normalizeDiscountCode(code: unknown) {
+  return String(code || "").trim().toUpperCase();
+}
+
+async function findOrderDiscount(orderData: Record<string, any>, order: any) {
+  const discountId = orderData.discountRule?.id || orderData.pricing?.discount?.id;
+  const discountCode = normalizeDiscountCode(orderData.discountCode || order.discount_code || orderData.pricing?.discountCode);
+  const projectId = order.project_id || order.projectId || orderData.projectId;
+
+  if (discountId) {
+    const { data, error } = await supabase
+      .from("store_discounts")
+      .select("*")
+      .eq("id", discountId)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) return data;
+  }
+
+  if (!projectId || !discountCode) return null;
+  const { data, error } = await supabase
+    .from("store_discounts")
+    .select("*")
+    .eq("project_id", projectId)
+    .ilike("code", discountCode)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function incrementDiscountUsageForPaidOrder(orderId: string, paidAt: string) {
+  const { data: order, error: orderError } = await supabase
+    .from("store_orders")
+    .select("*")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (orderError) throw orderError;
+  if (!order) return;
+
+  const orderData = order.data || {};
+  if (orderData.discountUsage?.incrementedAt) return;
+
+  const discountCode = normalizeDiscountCode(orderData.discountCode || order.discount_code || orderData.pricing?.discountCode);
+  if (!discountCode && !orderData.discountRule?.id && !orderData.pricing?.discount?.id) return;
+
+  const discount = await findOrderDiscount(orderData, order);
+  if (!discount) {
+    await supabase
+      .from("store_orders")
+      .update({
+        data: {
+          ...orderData,
+          discountUsage: {
+            code: discountCode || null,
+            warning: "Discount record was not found when payment was confirmed.",
+            checkedAt: paidAt,
+          },
+          updatedAt: paidAt,
+        },
+        updated_at: paidAt,
+      })
+      .eq("id", order.id);
+    return;
+  }
+
+  const discountData = readProductData(discount);
+  const nextUsedCount = asNumber(discount.used_count ?? discountData.usedCount, 0) + 1;
+  const { error: discountError } = await supabase
+    .from("store_discounts")
+    .update({
+      used_count: nextUsedCount,
+      data: {
+        ...discountData,
+        usedCount: nextUsedCount,
+        lastUsedAt: paidAt,
+      },
+      updated_at: paidAt,
+    })
+    .eq("id", discount.id);
+  if (discountError) throw discountError;
+
+  const { error: orderUpdateError } = await supabase
+    .from("store_orders")
+    .update({
+      data: {
+        ...orderData,
+        discountUsage: {
+          discountId: discount.id,
+          code: normalizeDiscountCode(discount.code || discountData.code || discountCode),
+          incrementedAt: paidAt,
+        },
+        updatedAt: paidAt,
+      },
+      updated_at: paidAt,
+    })
+    .eq("id", order.id);
+  if (orderUpdateError) throw orderUpdateError;
+}
+
+async function updateCustomerAccountStatsForPaidOrder(order: any, paidAt: string) {
+  const orderData = order.data || {};
+  if (orderData.customerStats?.updatedAt) return;
+
+  const customerId = order.customer_id || orderData.customerId;
+  const orderTotal = asNumber(order.total_amount ?? order.total ?? orderData.total);
+  let customer = null;
+
+  if (customerId) {
+    const { data, error } = await supabase
+      .from("store_customers")
+      .select("*")
+      .eq("id", customerId)
+      .maybeSingle();
+    if (error) throw error;
+    customer = data;
+  }
+
+  if (!customer && order.project_id && order.customer_email) {
+    const { data, error } = await supabase
+      .from("store_customers")
+      .select("*")
+      .eq("project_id", order.project_id)
+      .ilike("email", order.customer_email)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    customer = data;
+  }
+
+  if (customer) {
+    const customerData = customer.data || {};
+    const nextTotalOrders = asNumber(customer.total_orders ?? customerData.totalOrders) + 1;
+    const nextTotalSpent = Math.round((asNumber(customer.total_spent ?? customerData.totalSpent) + orderTotal) * 100) / 100;
+    const { error } = await supabase
+      .from("store_customers")
+      .update({
+        total_orders: nextTotalOrders,
+        total_spent: nextTotalSpent,
+        last_order_at: paidAt,
+        data: {
+          ...customerData,
+          totalOrders: nextTotalOrders,
+          totalSpent: nextTotalSpent,
+          lastOrderAt: paidAt,
+          updatedAt: paidAt,
+        },
+        updated_at: paidAt,
+      })
+      .eq("id", customer.id);
+    if (error) throw error;
+  }
+
+  let storeUserQuery = supabase.from("store_users").select("*");
+  if (order.user_id) {
+    storeUserQuery = storeUserQuery.eq("auth_user_id", order.user_id);
+  } else if (order.project_id && order.customer_email) {
+    storeUserQuery = storeUserQuery.eq("project_id", order.project_id).ilike("email", order.customer_email);
+  } else {
+    storeUserQuery = storeUserQuery.eq("id", "__missing__");
+  }
+  const { data: storeUser, error: storeUserReadError } = await storeUserQuery
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (storeUserReadError) throw storeUserReadError;
+
+  if (storeUser) {
+    const totalOrders = asNumber(storeUser.total_orders) + 1;
+    const totalSpent = Math.round((asNumber(storeUser.total_spent) + orderTotal) * 100) / 100;
+    const averageOrderValue = totalOrders > 0 ? Math.round((totalSpent / totalOrders) * 100) / 100 : 0;
+    const { error } = await supabase
+      .from("store_users")
+      .update({
+        customer_id: customer?.id || storeUser.customer_id || null,
+        total_orders: totalOrders,
+        total_spent: totalSpent,
+        average_order_value: averageOrderValue,
+        last_order_at: paidAt,
+        updated_at: paidAt,
+      })
+      .eq("id", storeUser.id);
+    if (error) throw error;
+  }
+
+  const { data: latestOrder } = await supabase
+    .from("store_orders")
+    .select("data")
+    .eq("id", order.id)
+    .maybeSingle();
+  const latestOrderData = latestOrder?.data || orderData;
+
+  await supabase
+    .from("store_orders")
+    .update({
+      customer_id: customer?.id || customerId || null,
+      data: {
+        ...latestOrderData,
+        customerId: customer?.id || customerId || null,
+        customerStats: {
+          updatedAt: paidAt,
+          customerId: customer?.id || customerId || null,
+        },
+        updatedAt: paidAt,
+      },
+      updated_at: paidAt,
+    })
+    .eq("id", order.id);
+}
+
+async function decrementInventoryForPaidOrder(order: any, paymentIntentId: string, paidAt: string) {
+  const orderData = order.data || {};
+  if (orderData.inventory?.decrementedAt) return;
+
+  const items = readOrderItems(order);
+  const inventoryState = orderData.inventory || {};
+  const adjustments: any[] = Array.isArray(inventoryState.adjustments) ? [...inventoryState.adjustments] : [];
+  const warnings: string[] = Array.isArray(inventoryState.warnings) ? [...inventoryState.warnings] : [];
+  const adjustedKeys = new Set(adjustments.map((adjustment) => adjustment?.key).filter(Boolean));
+
+  for (const item of items) {
+    if (!item || typeof item !== "object") continue;
+    const rawProductId = item.productId || item.product_id;
+    const productId = rawProductId ? String(rawProductId) : "";
+    const quantity = asNumber(item.quantity, 0);
+    if (!productId || quantity <= 0) continue;
+    const variantId = item.variantId || item.variant_id;
+    const adjustmentKey = `${productId}:${variantId || "default"}`;
+    if (adjustedKeys.has(adjustmentKey)) continue;
+
+    const product = await fetchStoreProduct(productId, order.project_id || order.projectId);
+    if (!product) {
+      warnings.push(`Product ${productId} was not found during inventory decrement.`);
+      continue;
+    }
+    if (!isInventoryTracked(product)) continue;
+
+    if (variantId) {
+      const adjustment = await decrementVariantInventory(product, String(variantId), quantity, paidAt);
+      if (adjustment) {
+        adjustments.push(adjustment);
+        adjustedKeys.add(adjustment.key);
+        await persistOrderInventoryState(order, orderData, {
+          ...inventoryState,
+          decrementStartedAt: inventoryState.decrementStartedAt || paidAt,
+          paymentIntentId,
+          adjustments,
+          warnings,
+        }, paidAt);
+      } else {
+        warnings.push(`Variant ${variantId} for product ${productId} was not found during inventory decrement.`);
+      }
+      continue;
+    }
+
+    const adjustment = await decrementSimpleProductInventory(product, quantity, paidAt);
+    adjustments.push(adjustment);
+    adjustedKeys.add(adjustment.key);
+    await persistOrderInventoryState(order, orderData, {
+      ...inventoryState,
+      decrementStartedAt: inventoryState.decrementStartedAt || paidAt,
+      paymentIntentId,
+      adjustments,
+      warnings,
+    }, paidAt);
+  }
+
+  await persistOrderInventoryState(order, orderData, {
+    ...inventoryState,
+    decrementStartedAt: inventoryState.decrementStartedAt || paidAt,
+    decrementedAt: paidAt,
+    paymentIntentId,
+    adjustments,
+    warnings,
+  }, paidAt);
 }
 
 async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
@@ -758,6 +1221,115 @@ async function findStoreOrderForPaymentIntent(paymentIntent: Stripe.PaymentInten
   return null;
 }
 
-async function handleChargeRefunded(_charge: Stripe.Charge) {
-  // Store-order refund handling can be added here once refunds are surfaced in the UI.
+function readStoredRefunds(order: any): any[] {
+  return Array.isArray(order?.data?.refunds) ? order.data.refunds : [];
+}
+
+function mergeRefundRecord(refunds: any[], nextRefund: any): any[] {
+  const index = refunds.findIndex((refund) => refund?.id === nextRefund.id);
+  if (index === -1) return [...refunds, nextRefund];
+  return refunds.map((refund, refundIndex) => refundIndex === index ? { ...refund, ...nextRefund } : refund);
+}
+
+function sumActiveRefunds(refunds: any[]): number {
+  const amount = refunds.reduce((sum, refund) => {
+    const status = String(refund?.status || "").toLowerCase();
+    if (["failed", "canceled", "cancelled"].includes(status)) return sum;
+    return sum + asNumber(refund?.amount);
+  }, 0);
+  return Math.round(amount * 100) / 100;
+}
+
+function getChargePaymentIntentId(charge: Stripe.Charge): string | null {
+  if (typeof charge.payment_intent === "string") return charge.payment_intent;
+  return charge.payment_intent?.id || null;
+}
+
+async function findStoreOrderForCharge(charge: Stripe.Charge) {
+  const metadataOrderId = charge.metadata?.orderId;
+  if (metadataOrderId) {
+    const { data } = await supabase
+      .from("store_orders")
+      .select("*")
+      .eq("id", metadataOrderId)
+      .maybeSingle();
+    if (data) return data;
+  }
+
+  const paymentIntentId = getChargePaymentIntentId(charge);
+  if (paymentIntentId) {
+    const { data } = await supabase
+      .from("store_orders")
+      .select("*")
+      .or(`payment_intent_id.eq.${paymentIntentId},stripe_payment_intent_id.eq.${paymentIntentId}`)
+      .maybeSingle();
+    if (data) return data;
+  }
+
+  const { data } = await supabase
+    .from("store_orders")
+    .select("*")
+    .contains("stripe", { chargeId: charge.id })
+    .maybeSingle();
+  return data || null;
+}
+
+async function handleChargeRefunded(charge: Stripe.Charge) {
+  const order = await findStoreOrderForCharge(charge);
+  if (!order) return;
+
+  const updatedAt = new Date().toISOString();
+  const orderData = order.data || {};
+  const stripeData = orderData.stripe || {};
+  let refunds = readStoredRefunds(order);
+  const chargeRefunds = charge.refunds?.data || [];
+
+  for (const refund of chargeRefunds) {
+    refunds = mergeRefundRecord(refunds, {
+      id: refund.id,
+      amount: Math.round((refund.amount / 100) * 100) / 100,
+      status: refund.status || "unknown",
+      reason: refund.reason || undefined,
+      source: "stripe",
+      createdAt: iso(refund.created) || updatedAt,
+    });
+  }
+
+  const orderTotal = asNumber(order.total_amount ?? order.total ?? orderData.total);
+  const refundedAmount = charge.amount_refunded
+    ? Math.round((charge.amount_refunded / 100) * 100) / 100
+    : sumActiveRefunds(refunds);
+  const chargeTotal = charge.amount ? charge.amount / 100 : orderTotal;
+  const isFullyRefunded = Boolean(charge.refunded) || (chargeTotal > 0 && refundedAmount >= chargeTotal - 0.005);
+  const paymentStatus = isFullyRefunded ? "refunded" : "partially_refunded";
+  const status = isFullyRefunded ? "refunded" : (order.status || orderData.status || "processing");
+  const nextStripeData = {
+    ...stripeData,
+    paymentIntentId: getChargePaymentIntentId(charge) || stripeData.paymentIntentId,
+    chargeId: charge.id,
+    lastRefundId: chargeRefunds[0]?.id || stripeData.lastRefundId,
+  };
+  const nextData = {
+    ...orderData,
+    status,
+    paymentStatus,
+    refundedAmount,
+    refunds,
+    refundedAt: isFullyRefunded ? updatedAt : orderData.refundedAt,
+    stripe: nextStripeData,
+    updatedAt,
+  };
+  const updatePayload: Record<string, unknown> = {
+    status,
+    payment_status: paymentStatus,
+    stripe: nextStripeData,
+    data: nextData,
+    updated_at: updatedAt,
+  };
+  if (isFullyRefunded) updatePayload.refunded_at = updatedAt;
+
+  await supabase
+    .from("store_orders")
+    .update(updatePayload)
+    .eq("id", order.id);
 }

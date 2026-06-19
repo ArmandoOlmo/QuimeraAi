@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUpDown, LayoutGrid, List } from 'lucide-react';
+import AppSelect from '../../ui/AppSelect';
 
 export type ViewMode = 'grid' | 'list';
 export type DashboardSortField = 'lastUpdated' | 'name';
@@ -114,7 +115,7 @@ export const SelectSortControl: React.FC<SelectSortControlProps> = ({
     const { t } = useTranslation();
 
     return (
-        <select
+        <AppSelect
             value={sortBy}
             onChange={(e) => onSortByChange(e.target.value as ProjectSortField)}
             className={`text-xs text-foreground bg-transparent border-none outline-none cursor-pointer text-q-text-muted hover:text-foreground focus:ring-0 py-0.5 w-auto max-w-[7.5rem] sm:max-w-[8rem] min-w-0 ${className}`}
@@ -122,7 +123,7 @@ export const SelectSortControl: React.FC<SelectSortControlProps> = ({
         >
             <option value="recent">{t('common.mostRecent', 'Más recientes')}</option>
             <option value="name">{t('common.alphabetical', 'Alfabético')}</option>
-        </select>
+        </AppSelect>
     );
 };
 

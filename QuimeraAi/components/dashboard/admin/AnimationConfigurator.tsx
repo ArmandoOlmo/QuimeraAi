@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { AnimationConfig, AdvancedAnimationType, AnimationEasing, AnimationTrigger } from '../../../types';
 import { Play, Pause, RotateCcw } from 'lucide-react';
+import AppSelect from '../../ui/AppSelect';
 
 interface AnimationConfiguratorProps {
     componentId: string;
@@ -172,7 +173,7 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
             {/* Easing */}
             <div>
                 <Label>Easing Function</Label>
-                <select
+                <AppSelect
                     value={easing}
                     onChange={(e) => setEasing(e.target.value as AnimationEasing)}
                     className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-md text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -182,13 +183,13 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
                             {option.label}
                         </option>
                     ))}
-                </select>
+                </AppSelect>
             </div>
 
             {/* Trigger */}
             <div>
                 <Label>Trigger</Label>
-                <select
+                <AppSelect
                     value={trigger}
                     onChange={(e) => setTrigger(e.target.value as AnimationTrigger)}
                     className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-md text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -198,7 +199,7 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
                             {option.label}
                         </option>
                     ))}
-                </select>
+                </AppSelect>
             </div>
 
             {/* Repeat */}

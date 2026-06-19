@@ -69,7 +69,7 @@ const KNOWN_COLUMNS: Record<string, string[]> = {
     restaurant_review_templates: ['id', 'tenant_id', 'restaurant_id', 'type', 'title', 'content', 'created_at', 'updated_at'],
     restaurant_analytics_events: ['id', 'tenant_id', 'restaurant_id', 'event_name', 'metadata', 'created_at'],
     properties: ['id', 'tenant_id', 'project_id', 'title', 'description', 'price', 'address', 'city', 'state', 'country', 'property_type', 'status', 'bedrooms', 'bathrooms', 'area', 'images', 'features', 'metadata', 'created_at', 'updated_at'],
-    store_users: ['id', 'project_id', 'email', 'display_name', 'first_name', 'last_name', 'photo_url', 'phone', 'role', 'status', 'segments', 'tags', 'customer_id', 'total_orders', 'total_spent', 'average_order_value', 'last_login_at', 'last_order_at', 'metadata', 'accepts_marketing', 'preferred_language', 'internal_notes', 'created_at', 'updated_at'],
+    store_users: ['id', 'project_id', 'auth_user_id', 'public_store_id', 'email', 'display_name', 'first_name', 'last_name', 'photo_url', 'phone', 'role', 'status', 'segments', 'tags', 'customer_id', 'total_orders', 'total_spent', 'average_order_value', 'last_login_at', 'last_order_at', 'metadata', 'accepts_marketing', 'preferred_language', 'internal_notes', 'created_at', 'updated_at'],
     store_user_segments: ['id', 'project_id', 'name', 'description', 'color', 'type', 'rules', 'user_count', 'created_at', 'updated_at'],
     store_user_activities: ['id', 'project_id', 'user_id', 'type', 'description', 'metadata', 'ip_address', 'user_agent', 'created_at'],
     public_stores: ['id', 'project_id', 'user_id', 'data', 'created_at', 'updated_at'],
@@ -80,11 +80,13 @@ const KNOWN_COLUMNS: Record<string, string[]> = {
     store_discounts: ['id', 'project_id', 'store_id', 'public_store_id', 'code', 'type', 'value', 'minimum_amount', 'usage_limit', 'usage_count', 'starts_at', 'ends_at', 'is_active', 'data', 'created_at', 'updated_at'],
     store_stock_notifications: ['id', 'project_id', 'product_id', 'email', 'status', 'created_at', 'notified_at'],
     store_wishlists: ['id', 'project_id', 'user_id', 'product_id', 'created_at'],
-    email_campaigns: ['id', 'store_id', 'name', 'subject', 'preview_text', 'type', 'html_content', 'email_document', 'audience_type', 'audience_segment_id', 'custom_recipient_emails', 'status', 'stats', 'tags', 'created_by', 'created_at', 'updated_at'],
-    email_audiences: ['id', 'store_id', 'name', 'description', 'filters', 'accepts_marketing', 'has_ordered', 'min_orders', 'max_orders', 'min_total_spent', 'max_total_spent', 'tags', 'exclude_tags', 'last_order_days_ago', 'source', 'static_members', 'static_member_count', 'estimated_count', 'last_count_update', 'is_default', 'created_by', 'created_at', 'updated_at'],
-    email_automations: ['id', 'store_id', 'name', 'description', 'type', 'category', 'status', 'trigger_config', 'audience_id', 'steps', 'template_id', 'subject', 'delay_minutes', 'stats', 'created_at', 'updated_at'],
-    email_logs: ['id', 'store_id', 'type', 'template_id', 'campaign_id', 'recipient_email', 'recipient_name', 'customer_id', 'subject', 'status', 'provider_message_id', 'provider', 'open_count', 'click_count', 'bounce_type', 'bounce_message', 'error_message', 'error_code', 'order_id', 'lead_id', 'metadata', 'sent_at', 'delivered_at', 'opened_at', 'clicked_links', 'clicked_at', 'bounced_at', 'complained_at'],
+    email_campaigns: ['id', 'project_id', 'store_id', 'user_id', 'name', 'subject', 'preview_text', 'type', 'html_content', 'email_document', 'audience_type', 'audience_segment_id', 'custom_recipient_emails', 'status', 'stats', 'tags', 'created_by', 'created_at', 'updated_at'],
+    email_audiences: ['id', 'project_id', 'store_id', 'user_id', 'name', 'description', 'filters', 'accepts_marketing', 'has_ordered', 'min_orders', 'max_orders', 'min_total_spent', 'max_total_spent', 'tags', 'exclude_tags', 'last_order_days_ago', 'source', 'static_members', 'static_member_count', 'estimated_count', 'last_count_update', 'is_default', 'created_by', 'created_at', 'updated_at'],
+    email_automations: ['id', 'project_id', 'store_id', 'user_id', 'name', 'description', 'type', 'category', 'status', 'trigger_config', 'audience_id', 'steps', 'template_id', 'subject', 'delay_minutes', 'stats', 'created_at', 'updated_at'],
+    email_logs: ['id', 'project_id', 'store_id', 'user_id', 'type', 'template_id', 'campaign_id', 'recipient_email', 'recipient_name', 'customer_id', 'subject', 'status', 'provider_message_id', 'provider', 'open_count', 'click_count', 'bounce_type', 'bounce_message', 'error_message', 'error_code', 'order_id', 'lead_id', 'metadata', 'sent_at', 'delivered_at', 'opened_at', 'clicked_links', 'clicked_at', 'bounced_at', 'complained_at', 'created_at', 'updated_at'],
 };
+
+const EMAIL_TABLES = new Set(['email_campaigns', 'email_audiences', 'email_automations', 'email_logs']);
 
 const COLLECTION_TABLES: Record<string, string> = {
     adminEmailCampaigns: 'email_campaigns',
@@ -403,6 +405,17 @@ function normalizeWrite(table: string, data: AnyRecord, existing: AnyRecord = {}
     if (fallbackColumn && Object.keys(extra).length > 0) {
         const previous = existing[fallbackColumn] && typeof existing[fallbackColumn] === 'object' ? existing[fallbackColumn] : {};
         out[fallbackColumn] = { ...previous, ...extra };
+    }
+
+    if (EMAIL_TABLES.has(table)) {
+        const projectId = out.project_id || out.store_id;
+        if (projectId) {
+            if (known.has('project_id') && out.project_id === undefined) out.project_id = projectId;
+            if (known.has('store_id') && out.store_id === undefined) out.store_id = projectId;
+        }
+        if (known.has('created_by') && out.created_by === undefined && out.user_id) {
+            out.created_by = out.user_id;
+        }
     }
 
     if (known.has('updated_at') && out.updated_at === undefined) out.updated_at = new Date().toISOString();

@@ -1,0 +1,2205 @@
+/**
+ * StorefrontEditorView
+ * Presentation-only storefront editor shell for ecommerce projects.
+ */
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+    AlertCircle,
+    ChevronDown,
+    CheckCircle2,
+    ExternalLink,
+    Eye,
+    EyeOff,
+    FileText,
+    LayoutTemplate,
+    Loader2,
+    Monitor,
+    MoveDown,
+    MoveUp,
+    Palette,
+    PanelRightClose,
+    PanelRightOpen,
+    Plus,
+    RefreshCw,
+    Save,
+    Settings,
+    SlidersHorizontal,
+    Smartphone,
+    Tablet,
+    Trash2,
+} from 'lucide-react';
+import { supabase } from '../../../../supabase';
+import { useAuth } from '../../../../contexts/core/AuthContext';
+import { useProject } from '../../../../contexts/project';
+import type { PageSection } from '../../../../types';
+import { DEFAULT_STOREFRONT_THEME, type StorefrontThemeSettings } from '../../../../types/ecommerce';
+import type { StorefrontSectionKind } from '../../../../types/storefrontRenderer';
+import type { StorefrontThemePresetId } from '../../../../types/storefrontTheme';
+import {
+    storefrontSectionRegistry,
+    STOREFRONT_SECTION_KINDS,
+    validateStorefrontSectionSettings,
+} from '../../../../utils/storefrontRenderer';
+import {
+    getStorefrontCatalogSize,
+    STOREFRONT_THEME_PRESETS,
+} from '../../../../utils/storefrontTheme';
+import { useEcommerceContext } from '../EcommerceContext';
+import { useProducts } from '../hooks/useProducts';
+import { useStoreSettings } from '../hooks/useStoreSettings';
+
+type PreviewMode = 'desktop' | 'tablet' | 'mobile';
+type TemplateState = 'draft' | 'published';
+type SectionSettingsMap = Partial<Record<StorefrontSectionKind, Record<string, unknown>>>;
+type StorefrontStructurePanel = 'template' | 'theme';
+
+const defaultSections: StorefrontSectionKind[] = [
+    'announcementBar',
+    'productHero',
+    'featuredProducts',
+    'categoryGrid',
+    'trustBadges',
+];
+
+const previewWidths: Record<PreviewMode, string> = {
+    desktop: '100%',
+    tablet: '768px',
+    mobile: '390px',
+};
+
+const MIN_PREVIEW_FRAME_HEIGHT = 760;
+const STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX = 'quimera:storefront-editor-preview:';
+
+const isRecord = (value: unknown): value is Record<string, any> =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isStorefrontKind = (value: string): value is StorefrontSectionKind =>
+    STOREFRONT_SECTION_KINDS.includes(value as StorefrontSectionKind);
+
+const toSettingsRecord = (value: unknown): Record<string, unknown> =>
+    isRecord(value) ? { ...value } : {};
+
+const stableStringify = (value: unknown): string => {
+    try {
+        return JSON.stringify(value ?? null);
+    } catch {
+        return String(value ?? '');
+    }
+};
+
+const areArraysEqual = <T,>(left: T[], right: T[]): boolean =>
+    left.length === right.length && left.every((item, index) => item === right[index]);
+
+const getProjectPageData = (project: any): Record<string, any> => {
+    const dataPayload = isRecord(project?.data) ? project.data : {};
+    return isRecord(dataPayload.data) ? dataPayload.data : dataPayload;
+};
+
+const getProjectBusinessBlueprint = (project: any, pageData?: Record<string, any>): Record<string, any> | undefined => {
+    const dataPayload = isRecord(project?.data) ? project.data : {};
+    const candidates = [
+        project?.businessBlueprint,
+        dataPayload.businessBlueprint,
+        isRecord(dataPayload.data) ? dataPayload.data.businessBlueprint : undefined,
+        pageData?.businessBlueprint,
+    ];
+
+    return candidates.find(isRecord);
+};
+
+const getProjectHeaderData = (project: any, pageData: Record<string, any>): Record<string, any> => (
+    toSettingsRecord(project?.header).colors
+        ? toSettingsRecord(project?.header)
+        : toSettingsRecord(pageData.header)
+);
+
+const findBlueprintSection = (project: any, pageData: Record<string, any>, kind: StorefrontSectionKind): Record<string, any> | undefined => {
+    const sections = getProjectBusinessBlueprint(project, pageData)?.storefrontBlueprint?.sections;
+    if (!Array.isArray(sections)) return undefined;
+    return sections.find((section: any) => section?.type === kind && isRecord(section));
+};
+
+const buildSectionSettingsMap = (
+    sections: StorefrontSectionKind[],
+    pageData: Record<string, any>,
+    editorState: Record<string, any>,
+    project: any,
+): SectionSettingsMap => {
+    const editorSettings = toSettingsRecord(editorState.sectionSettings);
+
+    return sections.reduce((acc, section) => {
+        const blueprintSection = findBlueprintSection(project, pageData, section);
+        acc[section] = {
+            ...storefrontSectionRegistry[section].defaultSettings,
+            ...toSettingsRecord(pageData[section]),
+            ...toSettingsRecord(editorSettings[section]),
+            ...toSettingsRecord(blueprintSection?.settings),
+        };
+        return acc;
+    }, {} as SectionSettingsMap);
+};
+
+const compactSettings = (settings: Record<string, unknown>): Record<string, unknown> =>
+    Object.entries(settings).reduce((acc, [key, value]) => {
+        if (value !== undefined) acc[key] = value;
+        return acc;
+    }, {} as Record<string, unknown>);
+
+const normalizeSectionSettings = (
+    sections: StorefrontSectionKind[],
+    sectionSettings: SectionSettingsMap,
+): SectionSettingsMap =>
+    sections.reduce((acc, section) => {
+        acc[section] = compactSettings({
+            ...storefrontSectionRegistry[section].defaultSettings,
+            ...toSettingsRecord(sectionSettings[section]),
+        });
+        return acc;
+    }, {} as SectionSettingsMap);
+
+const parseCsv = (value: string): string[] =>
+    value
+        .split(',')
+        .map(item => item.trim())
+        .filter(Boolean);
+
+const toCsv = (value: unknown): string =>
+    Array.isArray(value) ? value.map(item => String(item)).join(', ') : '';
+
+const messagesToText = (value: unknown): string => {
+    if (!Array.isArray(value)) return '';
+    return value
+        .map(item => (isRecord(item) ? String(item.text || '') : String(item)))
+        .filter(Boolean)
+        .join('\n');
+};
+
+const textToMessages = (value: string): Array<{ text: string }> =>
+    value
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(text => ({ text }));
+
+const buildStorefrontBlueprintSections = (
+    sections: StorefrontSectionKind[],
+    settings: SectionSettingsMap,
+    visibility: Record<string, boolean>,
+    existingSections: unknown,
+    now: string,
+    userId?: string,
+): Array<Record<string, unknown>> => {
+    const existing = Array.isArray(existingSections) ? existingSections : [];
+
+    return sections.map((section, index) => {
+        const existingSection = existing.find((item: any) => item?.type === section && isRecord(item)) as Record<string, any> | undefined;
+        const sectionData = toSettingsRecord(settings[section]);
+        const enabled = visibility[section] !== false && sectionData.enabled !== false;
+
+        return {
+            ...existingSection,
+            id: existingSection?.id || `storefront-${section}`,
+            type: section,
+            order: index,
+            enabled,
+            status: enabled ? 'configured' : 'disabled',
+            needsReview: false,
+            readiness: existingSection?.readiness || { isReady: true, blockers: [], warnings: [] },
+            metadata: {
+                ...(isRecord(existingSection?.metadata) ? existingSection?.metadata : {}),
+                generatedBy: existingSection?.metadata?.generatedBy || 'user',
+                userModified: true,
+                lastEditedAt: now,
+                ...(userId ? { lastEditedBy: userId } : {}),
+            },
+            settings: sectionData,
+        };
+    });
+};
+
+const updateBusinessBlueprintStorefrontSections = (
+    blueprint: unknown,
+    sections: StorefrontSectionKind[],
+    settings: SectionSettingsMap,
+    visibility: Record<string, boolean>,
+    presetId: StorefrontThemePresetId,
+    catalogSize: string,
+    templateState: TemplateState,
+    now: string,
+    userId?: string,
+): Record<string, unknown> | undefined => {
+    if (!isRecord(blueprint) || !isRecord(blueprint.storefrontBlueprint)) return undefined;
+
+    const storefrontBlueprint = blueprint.storefrontBlueprint as Record<string, any>;
+    const nextSections = buildStorefrontBlueprintSections(
+        sections,
+        settings,
+        visibility,
+        storefrontBlueprint.sections,
+        now,
+        userId,
+    );
+
+    return {
+        ...blueprint,
+        lastSyncedAt: now,
+        storefrontBlueprint: {
+            ...storefrontBlueprint,
+            enabled: true,
+            status: templateState === 'published' ? 'published' : 'configured',
+            needsReview: false,
+            themePreset: presetId,
+            catalogSize,
+            sections: nextSections,
+            metadata: {
+                ...(isRecord(storefrontBlueprint.metadata) ? storefrontBlueprint.metadata : {}),
+                generatedBy: storefrontBlueprint.metadata?.generatedBy || 'user',
+                userModified: true,
+                lastEditedAt: now,
+                ...(userId ? { lastEditedBy: userId } : {}),
+            },
+        },
+    };
+};
+
+const mergeTheme = (
+    currentTheme: StorefrontThemeSettings,
+    presetId: StorefrontThemePresetId,
+): StorefrontThemeSettings => ({
+    ...DEFAULT_STOREFRONT_THEME,
+    ...currentTheme,
+    ...STOREFRONT_THEME_PRESETS[presetId].theme,
+});
+
+const buildPreviewTheme = (project: any, storefrontTheme: StorefrontThemeSettings): Record<string, any> => ({
+    ...toSettingsRecord(project?.theme),
+    pageBackground: storefrontTheme.backgroundColor,
+    globalColors: {
+        ...toSettingsRecord(project?.theme?.globalColors),
+        primary: storefrontTheme.primaryColor,
+        secondary: storefrontTheme.secondaryColor,
+        accent: storefrontTheme.accentColor,
+        background: storefrontTheme.backgroundColor,
+        surface: storefrontTheme.cardBackground,
+        text: storefrontTheme.textColor,
+        heading: storefrontTheme.headingColor,
+        border: storefrontTheme.borderColor,
+    },
+});
+
+const buildPreviewHeader = (
+    project: any,
+    pageData: Record<string, any>,
+    storefrontTheme: StorefrontThemeSettings,
+): Record<string, any> => {
+    const header = getProjectHeaderData(project, pageData);
+
+    return {
+        ...header,
+        colors: {
+            ...toSettingsRecord(header.colors),
+            background: storefrontTheme.headerBackground,
+            text: storefrontTheme.textColor,
+            accent: storefrontTheme.primaryColor,
+        },
+    };
+};
+
+const StorefrontEditorView: React.FC = () => {
+    const { t } = useTranslation();
+    const { user } = useAuth();
+    const { storeId, projectId, projectName } = useEcommerceContext();
+    const { projects, activeProject, refreshProjects } = useProject();
+    const { products } = useProducts(user?.id || '', storeId);
+    const {
+        settings,
+        isLoading: settingsLoading,
+        isSaving: settingsSaving,
+        getStorefrontTheme,
+        replaceStorefrontTheme,
+        resetStorefrontTheme,
+    } = useStoreSettings(user?.id || '', storeId);
+
+    const project = useMemo(() => (
+        projects.find(item => item.id === projectId) ||
+        (activeProject?.id === projectId ? activeProject : null)
+    ), [activeProject, projectId, projects]);
+
+    const projectContentSignature = stableStringify({
+        id: project?.id,
+        data: project?.data,
+        businessBlueprint: project?.businessBlueprint,
+        componentOrder: project?.componentOrder,
+        sectionVisibility: project?.sectionVisibility,
+        lastUpdated: project?.lastUpdated || project?.last_updated,
+    });
+    const pageData = useMemo(() => getProjectPageData(project), [project]);
+    const editorState = useMemo(
+        () => (isRecord(pageData.storefrontEditor) ? pageData.storefrontEditor : {}),
+        [projectContentSignature],
+    );
+    const initialOrder = useMemo(() => {
+        const order = (project?.componentOrder || []).filter((section: string) => isStorefrontKind(section));
+        return order.length > 0 ? order as StorefrontSectionKind[] : defaultSections;
+    }, [projectContentSignature]);
+    const initialSectionSettings = useMemo(
+        () => buildSectionSettingsMap(initialOrder, pageData, editorState, project),
+        [editorState, initialOrder, pageData, projectContentSignature],
+    );
+    const initialOrderSignature = stableStringify(initialOrder);
+    const initialSectionSettingsSignature = stableStringify(initialSectionSettings);
+    const projectVisibilitySignature = stableStringify(project?.sectionVisibility || {});
+
+    const [sections, setSections] = useState<StorefrontSectionKind[]>(initialOrder);
+    const [visibility, setVisibility] = useState<Record<string, boolean>>({});
+    const [sectionSettings, setSectionSettings] = useState<SectionSettingsMap>(initialSectionSettings);
+    const [selectedSection, setSelectedSection] = useState<StorefrontSectionKind>(initialOrder[0] || defaultSections[0]);
+    const [templateState, setTemplateState] = useState<TemplateState>(
+        editorState.templateState === 'published' ? 'published' : 'draft'
+    );
+    const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
+    const previewPayloadRef = useRef('');
+    const [previewRevision, setPreviewRevision] = useState(0);
+    const [selectedPresetId, setSelectedPresetId] = useState<StorefrontThemePresetId>(
+        (editorState.themePresetId as StorefrontThemePresetId) || 'minimal'
+    );
+    const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+    const [statusMessage, setStatusMessage] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [selectedStructurePanel, setSelectedStructurePanel] = useState<StorefrontStructurePanel | null>(null);
+    const [isStructureExpanded, setIsStructureExpanded] = useState(true);
+    const [isContentExpanded, setIsContentExpanded] = useState(true);
+    const [isControlsPanelOpen, setIsControlsPanelOpen] = useState(true);
+
+    useEffect(() => {
+        setSections(prev => areArraysEqual(prev, initialOrder) ? prev : initialOrder);
+        setVisibility(prev => {
+            const nextVisibility = project?.sectionVisibility || {};
+            return stableStringify(prev) === projectVisibilitySignature ? prev : nextVisibility;
+        });
+        setSectionSettings(prev => (
+            stableStringify(prev) === initialSectionSettingsSignature ? prev : initialSectionSettings
+        ));
+        setSelectedSection(prev => initialOrder.includes(prev) ? prev : initialOrder[0] || defaultSections[0]);
+        setTemplateState(editorState.templateState === 'published' ? 'published' : 'draft');
+        setSelectedPresetId((editorState.themePresetId as StorefrontThemePresetId) || 'minimal');
+    }, [
+        editorState.templateState,
+        editorState.themePresetId,
+        initialOrder,
+        initialOrderSignature,
+        initialSectionSettings,
+        initialSectionSettingsSignature,
+        project?.sectionVisibility,
+        projectVisibilitySignature,
+    ]);
+
+    const currentTheme = getStorefrontTheme();
+    const currentThemeSignature = JSON.stringify(currentTheme);
+    const previewStorefrontTheme = useMemo(
+        () => mergeTheme(currentTheme, selectedPresetId),
+        [currentThemeSignature, selectedPresetId],
+    );
+    const catalogSize = getStorefrontCatalogSize(products.length);
+    const availableSections = STOREFRONT_SECTION_KINDS.filter(kind => !sections.includes(kind));
+    const storefrontUrl = `/store/${storeId}`;
+    const previewSessionKey = `${STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX}${storeId}`;
+    const previewUrl = `${storefrontUrl}?preview=storefront-editor&editorSession=${encodeURIComponent(previewSessionKey)}&previewRevision=${previewRevision}`;
+    const selectedSectionSettings = {
+        ...storefrontSectionRegistry[selectedSection].defaultSettings,
+        ...toSettingsRecord(sectionSettings[selectedSection]),
+    };
+    const selectedSectionValidation = validateStorefrontSectionSettings(selectedSection, selectedSectionSettings);
+
+    const getSectionLabel = (kind: StorefrontSectionKind) =>
+        t(`ecommerce.storefrontEditor.sectionLabels.${kind}`, storefrontSectionRegistry[kind].label);
+
+    const getThemePresetLabel = (presetId: StorefrontThemePresetId) =>
+        t(`ecommerce.storefrontEditor.themePresets.${presetId}.label`, STOREFRONT_THEME_PRESETS[presetId].label);
+
+    const getThemePresetDescription = (presetId: StorefrontThemePresetId) =>
+        t(`ecommerce.storefrontEditor.themePresets.${presetId}.description`, STOREFRONT_THEME_PRESETS[presetId].description);
+
+    const getCatalogSizeLabel = (size: string) =>
+        t(`ecommerce.storefrontEditor.catalogSizes.${size}`, size);
+
+    const translateValidationMessage = (message: string) => {
+        if (message.startsWith('Manual featured products')) {
+            return t('ecommerce.storefrontEditor.validation.manualFeaturedProducts', message);
+        }
+        if (message.startsWith('saleCountdown.endDate')) {
+            return t('ecommerce.storefrontEditor.validation.saleCountdownEndDate', message);
+        }
+        if (message.startsWith('Product bundle')) {
+            return t('ecommerce.storefrontEditor.validation.productBundleEmpty', message);
+        }
+        if (message.startsWith('Unsupported') && message.includes('variant')) {
+            return t('ecommerce.storefrontEditor.validation.unsupportedVariant', message);
+        }
+        if (message.startsWith('Unsupported') && message.includes('visibleIn')) {
+            return t('ecommerce.storefrontEditor.validation.unsupportedVisibility', message);
+        }
+        return message;
+    };
+
+    const previewProjectData = useMemo(() => {
+        const normalizedSettings = normalizeSectionSettings(sections, sectionSettings);
+        const nextSectionVisibility = {
+            ...(project?.sectionVisibility || {}),
+            ...sections.reduce((acc, section) => {
+                acc[section] = visibility[section] !== false;
+                return acc;
+            }, {} as Record<string, boolean>),
+        };
+        const nextComponentOrder = [
+            ...(project?.componentOrder || []).filter((section: string) => !isStorefrontKind(section)),
+            ...sections,
+        ];
+        const existingBusinessBlueprint = getProjectBusinessBlueprint(project, pageData);
+        const previewBusinessBlueprint = updateBusinessBlueprintStorefrontSections(
+            existingBusinessBlueprint,
+            sections,
+            normalizedSettings,
+            nextSectionVisibility,
+            selectedPresetId,
+            catalogSize,
+            templateState,
+            String(editorState.updatedAt || project?.lastUpdated || project?.last_updated || 'storefront-preview'),
+            user?.id,
+        ) || existingBusinessBlueprint;
+        const nextPageData = sections.reduce((acc, section) => {
+            acc[section] = normalizedSettings[section];
+            return acc;
+        }, {
+            ...pageData,
+            ...(previewBusinessBlueprint ? { businessBlueprint: previewBusinessBlueprint } : {}),
+            storefrontEditor: {
+                ...(isRecord(pageData.storefrontEditor) ? pageData.storefrontEditor : {}),
+                templateState,
+                themePresetId: selectedPresetId,
+                previewMode,
+                sectionSettings: normalizedSettings,
+                source: 'storefront-builder-preview',
+            },
+        } as Record<string, any>);
+
+        return {
+            ...project,
+            id: projectId,
+            name: projectName || project?.name || settings?.storeName || 'Store',
+            header: buildPreviewHeader(project, pageData, previewStorefrontTheme),
+            theme: buildPreviewTheme(project, previewStorefrontTheme),
+            storefrontTheme: previewStorefrontTheme,
+            data: nextPageData,
+            componentOrder: nextComponentOrder,
+            sectionVisibility: nextSectionVisibility,
+            ...(previewBusinessBlueprint ? { businessBlueprint: previewBusinessBlueprint } : {}),
+        };
+    }, [
+        catalogSize,
+        pageData,
+        previewMode,
+        previewStorefrontTheme,
+        project,
+        projectId,
+        projectName,
+        sectionSettings,
+        sections,
+        selectedPresetId,
+        settings?.storeName,
+        templateState,
+        user?.id,
+        visibility,
+    ]);
+
+    useEffect(() => {
+        if (!storeId || !project) return;
+
+        try {
+            const nextPayload = JSON.stringify(previewProjectData);
+            if (nextPayload === previewPayloadRef.current) return;
+
+            previewPayloadRef.current = nextPayload;
+            window.sessionStorage.setItem(previewSessionKey, nextPayload);
+        } catch (err) {
+            console.warn('Unable to prepare storefront editor preview data:', err);
+        }
+    }, [previewProjectData, previewSessionKey, project, storeId]);
+
+    const refreshPreview = () => {
+        setPreviewRevision(prev => prev + 1);
+    };
+
+    const markTemplateDirty = () => {
+        setTemplateState(prev => prev === 'published' ? 'draft' : prev);
+    };
+
+    const updateSectionSetting = (section: StorefrontSectionKind, key: string, value: unknown) => {
+        setSectionSettings(prev => ({
+            ...prev,
+            [section]: {
+                ...storefrontSectionRegistry[section].defaultSettings,
+                ...toSettingsRecord(prev[section]),
+                [key]: value,
+            },
+        }));
+        markTemplateDirty();
+    };
+
+    const updateSelectedSectionSetting = (key: string, value: unknown) => {
+        updateSectionSetting(selectedSection, key, value);
+    };
+
+    const updateNumberSetting = (key: string, rawValue: string, min: number, max: number) => {
+        if (rawValue === '') {
+            updateSelectedSectionSetting(key, undefined);
+            return;
+        }
+
+        const numericValue = Number(rawValue);
+        if (Number.isNaN(numericValue)) return;
+        updateSelectedSectionSetting(key, Math.min(max, Math.max(min, numericValue)));
+    };
+
+    const resetSelectedSectionSettings = () => {
+        setSectionSettings(prev => ({
+            ...prev,
+            [selectedSection]: { ...storefrontSectionRegistry[selectedSection].defaultSettings },
+        }));
+        markTemplateDirty();
+    };
+
+    const setSectionVisibility = (kind: StorefrontSectionKind, nextVisible: boolean) => {
+        setVisibility(prev => ({ ...prev, [kind]: nextVisible }));
+        markTemplateDirty();
+    };
+
+    const moveSection = (kind: StorefrontSectionKind, direction: -1 | 1) => {
+        setSections(prev => {
+            const index = prev.indexOf(kind);
+            const target = index + direction;
+            if (index < 0 || target < 0 || target >= prev.length) return prev;
+            const next = [...prev];
+            [next[index], next[target]] = [next[target], next[index]];
+            return next;
+        });
+        markTemplateDirty();
+    };
+
+    const addSection = (kind: StorefrontSectionKind) => {
+        setSections(prev => [...prev, kind]);
+        setSectionSettings(prev => ({
+            ...prev,
+            [kind]: { ...storefrontSectionRegistry[kind].defaultSettings },
+        }));
+        setSelectedSection(kind);
+        setSectionVisibility(kind, true);
+    };
+
+    const removeSection = (kind: StorefrontSectionKind) => {
+        setSections(prev => prev.filter(section => section !== kind));
+        setSelectedSection(prev => prev === kind ? sections.find(section => section !== kind) || defaultSections[0] : prev);
+        markTemplateDirty();
+    };
+
+    const applySectionPreset = () => {
+        const preset = STOREFRONT_THEME_PRESETS[selectedPresetId];
+        const nextSections = preset.recommendedSections.filter(isStorefrontKind);
+        setSections(nextSections.length > 0 ? nextSections : defaultSections);
+        setVisibility(prev => nextSections.reduce((acc, section) => {
+            acc[section] = prev[section] !== false;
+            return acc;
+        }, { ...prev } as Record<string, boolean>));
+        setSectionSettings(prev => nextSections.reduce((acc, section) => {
+            acc[section] = toSettingsRecord(prev[section]);
+            if (Object.keys(acc[section] || {}).length === 0) {
+                acc[section] = { ...storefrontSectionRegistry[section].defaultSettings };
+            }
+            return acc;
+        }, { ...prev } as SectionSettingsMap));
+        setSelectedSection(nextSections[0] || defaultSections[0]);
+        setTemplateState('draft');
+    };
+
+    const applyThemePreset = async (presetId: StorefrontThemePresetId) => {
+        setError(null);
+        setStatusMessage(null);
+        setSelectedPresetId(presetId);
+
+        try {
+            await replaceStorefrontTheme(mergeTheme(currentTheme, presetId));
+            setTemplateState('draft');
+            setStatusMessage(t('ecommerce.storefrontEditor.themePresetApplied', 'Preset aplicado al storefront.'));
+        } catch (err: any) {
+            setError(err.message || t('ecommerce.storefrontEditor.themePresetError', 'No se pudo aplicar el preset.'));
+        }
+    };
+
+    const saveTemplate = async (nextState: TemplateState = templateState) => {
+        if (!projectId || !project) return;
+
+        setIsSavingTemplate(true);
+        setError(null);
+        setStatusMessage(null);
+
+        try {
+            const { data: row, error: readError } = await supabase
+                .from('projects')
+                .select('data, component_order, section_visibility')
+                .eq('id', projectId)
+                .maybeSingle();
+            if (readError) throw readError;
+
+            const now = new Date().toISOString();
+            const currentComponentOrder = Array.isArray(row?.component_order)
+                ? row.component_order as string[]
+                : project.componentOrder || [];
+            const currentVisibility = isRecord(row?.section_visibility)
+                ? row.section_visibility as Record<string, boolean>
+                : project.sectionVisibility || {};
+            const dataPayload = isRecord(row?.data) ? row.data : {};
+            const hasNestedPageData = isRecord(dataPayload.data);
+            const currentPageData = hasNestedPageData ? dataPayload.data : dataPayload;
+            const normalizedSettings = normalizeSectionSettings(sections, sectionSettings);
+            const invalidSections = sections
+                .map(section => ({
+                    section,
+                    validation: validateStorefrontSectionSettings(section, toSettingsRecord(normalizedSettings[section])),
+                }))
+                .filter(result => !result.validation.valid);
+            if (invalidSections.length > 0) {
+                throw new Error(invalidSections
+                    .map(result => `${getSectionLabel(result.section)}: ${result.validation.errors.map(translateValidationMessage).join(', ')}`)
+                    .join(' | '));
+            }
+
+            const nextSectionVisibility = {
+                ...currentVisibility,
+                ...sections.reduce((acc, section) => {
+                    acc[section] = visibility[section] !== false;
+                    return acc;
+                }, {} as Record<string, boolean>),
+            };
+            const nextComponentOrder = [
+                ...currentComponentOrder.filter(section => !isStorefrontKind(section)),
+                ...sections,
+            ] as PageSection[];
+            const currentBusinessBlueprint = isRecord(dataPayload.businessBlueprint)
+                ? dataPayload.businessBlueprint
+                : currentPageData.businessBlueprint;
+            const nextBusinessBlueprint = updateBusinessBlueprintStorefrontSections(
+                currentBusinessBlueprint,
+                sections,
+                normalizedSettings,
+                nextSectionVisibility,
+                selectedPresetId,
+                catalogSize,
+                nextState,
+                now,
+                user?.id,
+            );
+            const nextPageData = sections.reduce((acc, section) => {
+                acc[section] = normalizedSettings[section];
+                return acc;
+            }, {
+                ...currentPageData,
+                ...(nextBusinessBlueprint && !hasNestedPageData ? { businessBlueprint: nextBusinessBlueprint } : {}),
+                storefrontEditor: {
+                    ...(isRecord(currentPageData.storefrontEditor) ? currentPageData.storefrontEditor : {}),
+                    templateState: nextState,
+                    themePresetId: selectedPresetId,
+                    previewMode,
+                    sectionSettings: normalizedSettings,
+                    updatedAt: now,
+                    source: 'storefront-builder',
+                },
+            } as Record<string, any>);
+            const nextDataPayload = hasNestedPageData
+                ? {
+                    ...dataPayload,
+                    ...(nextBusinessBlueprint ? { businessBlueprint: nextBusinessBlueprint } : {}),
+                    data: nextPageData,
+                    componentOrder: nextComponentOrder,
+                    sectionVisibility: nextSectionVisibility,
+                    lastUpdated: now,
+                }
+                : {
+                    ...nextPageData,
+                    componentOrder: nextComponentOrder,
+                    sectionVisibility: nextSectionVisibility,
+                    lastUpdated: now,
+                };
+
+            const { error: updateError } = await supabase
+                .from('projects')
+                .update({
+                    data: nextDataPayload,
+                    component_order: nextComponentOrder,
+                    section_visibility: nextSectionVisibility,
+                    last_updated: now,
+                })
+                .eq('id', projectId);
+            if (updateError) throw updateError;
+
+            setTemplateState(nextState);
+            await refreshProjects();
+            setStatusMessage(nextState === 'published'
+                ? t('ecommerce.storefrontEditor.published', 'Storefront marcado como publicado.')
+                : t('ecommerce.storefrontEditor.saved', 'Storefront guardado como borrador.'));
+        } catch (err: any) {
+            setError(err.message || t('ecommerce.storefrontEditor.saveError', 'No se pudo guardar el storefront.'));
+        } finally {
+            setIsSavingTemplate(false);
+        }
+    };
+
+    if (!projectId || !project) {
+        return (
+            <div className="rounded-lg border border-q-border bg-q-surface p-6 text-sm text-q-text-muted">
+                {t('ecommerce.storefrontEditor.noProject', 'Selecciona un proyecto para editar su storefront.')}
+            </div>
+        );
+    }
+
+    const isBusy = isSavingTemplate || settingsSaving;
+    const previewDisplayName = settings?.storeName || projectName || project.name;
+
+    const selectStructurePanel = (panel: StorefrontStructurePanel) => {
+        setSelectedStructurePanel(panel);
+        setIsControlsPanelOpen(true);
+    };
+
+    const selectSectionForEditing = (section: StorefrontSectionKind) => {
+        setSelectedSection(section);
+        setSelectedStructurePanel(null);
+        setIsControlsPanelOpen(true);
+    };
+
+    const activeEditorLabel = selectedStructurePanel === 'template'
+        ? t('ecommerce.storefrontEditor.templateState', 'Estado')
+        : selectedStructurePanel === 'theme'
+            ? t('ecommerce.storefrontEditor.themePreset', 'Preset de tema')
+            : getSectionLabel(selectedSection);
+    const ActiveEditorIcon = selectedStructurePanel === 'theme'
+        ? Palette
+        : selectedStructurePanel === 'template'
+            ? LayoutTemplate
+            : SlidersHorizontal;
+
+    const renderTemplateControls = () => (
+        <div className="space-y-4">
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                        <h3 className="font-semibold text-foreground">
+                            {t('ecommerce.storefrontEditor.templateState', 'Estado')}
+                        </h3>
+                        <p className="text-xs text-q-text-muted">
+                            {t('ecommerce.storefrontEditor.templateStateHint', 'Solo controla la presentación de la tienda.')}
+                        </p>
+                    </div>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        templateState === 'published'
+                            ? 'bg-emerald-500/15 text-emerald-400'
+                            : 'bg-amber-500/15 text-amber-400'
+                    }`}>
+                        {templateState === 'published'
+                            ? t('common.published', 'Publicado')
+                            : t('common.draft', 'Borrador')}
+                    </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setTemplateState('draft')}
+                        className={`rounded-lg px-3 py-2 text-sm font-semibold ${
+                            templateState === 'draft'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted/50 text-q-text-muted hover:text-foreground'
+                        }`}
+                    >
+                        {t('common.draft', 'Borrador')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setTemplateState('published')}
+                        className={`rounded-lg px-3 py-2 text-sm font-semibold ${
+                            templateState === 'published'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted/50 text-q-text-muted hover:text-foreground'
+                        }`}
+                    >
+                        {t('common.published', 'Publicado')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderThemeControls = () => (
+        <div className="space-y-4">
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                        <h3 className="flex items-center gap-2 font-semibold text-foreground">
+                            <Palette size={17} />
+                            {t('ecommerce.storefrontEditor.themePreset', 'Preset de tema')}
+                        </h3>
+                        <p className="text-xs text-q-text-muted">
+                            {t('ecommerce.storefrontEditor.catalogSize', 'Catálogo: {{size}} · {{count}} productos', {
+                                size: getCatalogSizeLabel(catalogSize),
+                                count: products.length,
+                            })}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={resetStorefrontTheme}
+                        disabled={settingsLoading || settingsSaving}
+                        className="rounded-lg bg-muted/60 p-2 text-q-text-muted hover:text-foreground disabled:opacity-50"
+                        aria-label={t('common.reset', 'Restablecer')}
+                    >
+                        <RefreshCw size={15} />
+                    </button>
+                </div>
+
+                <div className="grid gap-2">
+                    {(Object.keys(STOREFRONT_THEME_PRESETS) as StorefrontThemePresetId[]).map(presetId => {
+                        const preset = STOREFRONT_THEME_PRESETS[presetId];
+                        const isSelected = selectedPresetId === presetId;
+
+                        return (
+                            <button
+                                key={presetId}
+                                type="button"
+                                onClick={() => applyThemePreset(presetId)}
+                                disabled={settingsLoading || settingsSaving}
+                                className={`rounded-lg border px-3 py-2 text-left transition-colors disabled:opacity-50 ${
+                                    isSelected
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-q-border bg-q-bg/40 hover:bg-muted'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-sm font-semibold text-foreground">{getThemePresetLabel(presetId)}</span>
+                                    <span className="flex gap-1">
+                                        {['primaryColor', 'accentColor', 'backgroundColor'].map(key => (
+                                            <span
+                                                key={key}
+                                                className="h-4 w-4 rounded-full border border-q-border"
+                                                style={{ backgroundColor: String(preset.theme[key as keyof StorefrontThemeSettings] || '#ffffff') }}
+                                            />
+                                        ))}
+                                    </span>
+                                </div>
+                                <p className="mt-1 line-clamp-2 text-xs text-q-text-muted">{getThemePresetDescription(presetId)}</p>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderSectionControls = () => (
+        <div className="space-y-4">
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                            <SlidersHorizontal size={15} />
+                            {getSectionLabel(selectedSection)}
+                        </h4>
+                        <p className="text-xs text-q-text-muted">
+                            {t('ecommerce.storefrontEditor.sectionSettingsHint', 'Ajustes de presentación y fuente. No edita productos.')}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={resetSelectedSectionSettings}
+                        className="rounded-md p-1.5 text-q-text-muted hover:bg-muted hover:text-foreground"
+                        aria-label={t('common.reset', 'Restablecer')}
+                    >
+                        <RefreshCw size={14} />
+                    </button>
+                </div>
+
+                {(selectedSectionValidation.errors.length > 0 || selectedSectionValidation.warnings.length > 0) && (
+                    <div className="mb-3 space-y-1">
+                        {selectedSectionValidation.errors.map(message => (
+                            <p key={message} className="rounded-md bg-red-500/10 px-2 py-1 text-xs text-red-400">
+                                {translateValidationMessage(message)}
+                            </p>
+                        ))}
+                        {selectedSectionValidation.warnings.map(message => (
+                            <p key={message} className="rounded-md bg-amber-500/10 px-2 py-1 text-xs text-amber-400">
+                                {translateValidationMessage(message)}
+                            </p>
+                        ))}
+                    </div>
+                )}
+
+                <div className="space-y-3">
+                    {storefrontSectionRegistry[selectedSection].validVariants && (
+                        <label className="block">
+                            <span className="text-xs font-semibold text-q-text-muted">
+                                {t('ecommerce.storefrontEditor.variant', 'Variante')}
+                            </span>
+                            <select
+                                value={String(selectedSectionSettings.variant || '')}
+                                onChange={event => updateSelectedSectionSetting('variant', event.target.value)}
+                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                            >
+                                {storefrontSectionRegistry[selectedSection].validVariants?.map(variant => (
+                                    <option key={variant} value={variant}>{variant}</option>
+                                ))}
+                            </select>
+                        </label>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-2">
+                        <label className="block">
+                            <span className="text-xs font-semibold text-q-text-muted">
+                                {t('ecommerce.storefrontEditor.visibleIn', 'Visible en')}
+                            </span>
+                            <select
+                                value={String(selectedSectionSettings.visibleIn || 'both')}
+                                onChange={event => updateSelectedSectionSetting('visibleIn', event.target.value)}
+                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                            >
+                                <option value="both">{t('ecommerce.storefrontEditor.visibleBoth', 'Landing + tienda')}</option>
+                                <option value="store">{t('ecommerce.storefrontEditor.visibleStore', 'Tienda')}</option>
+                                <option value="landing">{t('ecommerce.storefrontEditor.visibleLanding', 'Landing')}</option>
+                            </select>
+                        </label>
+
+                        <label className="block">
+                            <span className="text-xs font-semibold text-q-text-muted">
+                                {t('ecommerce.storefrontEditor.enabled', 'Activo')}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => updateSelectedSectionSetting('enabled', selectedSectionSettings.enabled === false)}
+                                className={`mt-1 flex h-10 w-full items-center justify-center rounded-lg border text-sm font-semibold ${
+                                    selectedSectionSettings.enabled === false
+                                        ? 'border-q-border bg-q-surface text-q-text-muted'
+                                        : 'border-primary bg-primary/10 text-primary'
+                                }`}
+                            >
+                                {selectedSectionSettings.enabled === false
+                                    ? t('common.disabled', 'Desactivado')
+                                    : t('common.enabled', 'Activo')}
+                            </button>
+                        </label>
+                    </div>
+
+                    {selectedSection === 'announcementBar' ? (
+                        <label className="block">
+                            <span className="text-xs font-semibold text-q-text-muted">
+                                {t('ecommerce.storefrontEditor.messages', 'Mensajes')}
+                            </span>
+                            <textarea
+                                value={messagesToText(selectedSectionSettings.messages)}
+                                onChange={event => updateSelectedSectionSetting('messages', textToMessages(event.target.value))}
+                                rows={3}
+                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                placeholder={t('ecommerce.storefrontEditor.messagesPlaceholder', 'Un mensaje por línea')}
+                            />
+                        </label>
+                    ) : (
+                        <>
+                            <label className="block">
+                                <span className="text-xs font-semibold text-q-text-muted">
+                                    {selectedSection === 'productHero'
+                                        ? t('ecommerce.storefrontEditor.headline', 'Encabezado')
+                                        : t('ecommerce.storefrontEditor.titleField', 'Título')}
+                                </span>
+                                <input
+                                    type="text"
+                                    value={String(selectedSectionSettings.title || selectedSectionSettings.headline || '')}
+                                    onChange={event => updateSelectedSectionSetting(
+                                        selectedSection === 'productHero' ? 'headline' : 'title',
+                                        event.target.value,
+                                    )}
+                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                />
+                            </label>
+                            <label className="block">
+                                <span className="text-xs font-semibold text-q-text-muted">
+                                    {t('ecommerce.storefrontEditor.descriptionField', 'Descripción')}
+                                </span>
+                                <textarea
+                                    value={String(selectedSectionSettings.description || selectedSectionSettings.subheadline || '')}
+                                    onChange={event => updateSelectedSectionSetting(
+                                        selectedSection === 'productHero' ? 'subheadline' : 'description',
+                                        event.target.value,
+                                    )}
+                                    rows={2}
+                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                />
+                            </label>
+                        </>
+                    )}
+
+                    {(selectedSection === 'featuredProducts' || selectedSection === 'saleCountdown') && (
+                        <div className="grid grid-cols-2 gap-2">
+                            <label className="block">
+                                <span className="text-xs font-semibold text-q-text-muted">
+                                    {t('ecommerce.storefrontEditor.productsToShow', 'Productos')}
+                                </span>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={24}
+                                    value={String(selectedSectionSettings.productsToShow || '')}
+                                    onChange={event => updateNumberSetting('productsToShow', event.target.value, 1, 24)}
+                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                />
+                            </label>
+                            {selectedSection === 'featuredProducts' && (
+                                <label className="block">
+                                    <span className="text-xs font-semibold text-q-text-muted">
+                                        {t('ecommerce.storefrontEditor.columns', 'Columnas')}
+                                    </span>
+                                    <input
+                                        type="number"
+                                        min={2}
+                                        max={5}
+                                        value={String(selectedSectionSettings.columns || '')}
+                                        onChange={event => updateNumberSetting('columns', event.target.value, 2, 5)}
+                                        className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                    />
+                                </label>
+                            )}
+                        </div>
+                    )}
+
+                    {selectedSection === 'featuredProducts' && (
+                        <label className="block">
+                            <span className="text-xs font-semibold text-q-text-muted">
+                                {t('ecommerce.storefrontEditor.sourceType', 'Fuente')}
+                            </span>
+                            <select
+                                value={String(selectedSectionSettings.sourceType || 'newest')}
+                                onChange={event => updateSelectedSectionSetting('sourceType', event.target.value)}
+                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                            >
+                                <option value="newest">{t('ecommerce.storefrontEditor.sourceNewest', 'Nuevos')}</option>
+                                <option value="on-sale">{t('ecommerce.storefrontEditor.sourceOnSale', 'En oferta')}</option>
+                                <option value="category">{t('ecommerce.storefrontEditor.sourceCategory', 'Categoría')}</option>
+                                <option value="manual">{t('ecommerce.storefrontEditor.sourceManual', 'Manual')}</option>
+                            </select>
+                        </label>
+                    )}
+
+                    {(selectedSection === 'featuredProducts' || selectedSection === 'saleCountdown' || selectedSection === 'productBundle') && (
+                        <label className="block">
+                            <span className="text-xs font-semibold text-q-text-muted">
+                                {t('ecommerce.storefrontEditor.productIds', 'IDs de productos')}
+                            </span>
+                            <textarea
+                                value={toCsv(selectedSectionSettings.productIds)}
+                                onChange={event => updateSelectedSectionSetting('productIds', parseCsv(event.target.value))}
+                                rows={2}
+                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                placeholder={t('ecommerce.storefrontEditor.productIdsPlaceholder', 'prod_1, prod_2')}
+                            />
+                        </label>
+                    )}
+
+                    {selectedSection === 'recentlyViewed' && (
+                        <label className="block">
+                            <span className="text-xs font-semibold text-q-text-muted">
+                                {t('ecommerce.storefrontEditor.maxProducts', 'Máximo')}
+                            </span>
+                            <input
+                                type="number"
+                                min={1}
+                                max={20}
+                                value={String(selectedSectionSettings.maxProducts || '')}
+                                onChange={event => updateNumberSetting('maxProducts', event.target.value, 1, 20)}
+                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                            />
+                        </label>
+                    )}
+
+                    {selectedSection === 'saleCountdown' && (
+                        <label className="block">
+                            <span className="text-xs font-semibold text-q-text-muted">
+                                {t('ecommerce.storefrontEditor.endDate', 'Fin de campaña')}
+                            </span>
+                            <input
+                                type="datetime-local"
+                                value={String(selectedSectionSettings.endDate || '').slice(0, 16)}
+                                onChange={event => updateSelectedSectionSetting('endDate', event.target.value)}
+                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                            />
+                        </label>
+                    )}
+
+                    {(selectedSection === 'collectionBanner' || selectedSection === 'productHero') && (
+                        <>
+                            <label className="block">
+                                <span className="text-xs font-semibold text-q-text-muted">
+                                    {selectedSection === 'productHero'
+                                        ? t('ecommerce.storefrontEditor.productId', 'ID de producto')
+                                        : t('ecommerce.storefrontEditor.collectionId', 'ID de colección')}
+                                </span>
+                                <input
+                                    type="text"
+                                    value={String(selectedSectionSettings.productId || selectedSectionSettings.collectionId || '')}
+                                    onChange={event => updateSelectedSectionSetting(
+                                        selectedSection === 'productHero' ? 'productId' : 'collectionId',
+                                        event.target.value,
+                                    )}
+                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                />
+                            </label>
+                            <label className="block">
+                                <span className="text-xs font-semibold text-q-text-muted">
+                                    {t('ecommerce.storefrontEditor.buttonText', 'Texto CTA')}
+                                </span>
+                                <input
+                                    type="text"
+                                    value={String(selectedSectionSettings.buttonText || '')}
+                                    onChange={event => updateSelectedSectionSetting('buttonText', event.target.value)}
+                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                />
+                            </label>
+                        </>
+                    )}
+
+                    {selectedSection === 'collectionBanner' && (
+                        <>
+                            <label className="block">
+                                <span className="text-xs font-semibold text-q-text-muted">
+                                    {t('ecommerce.storefrontEditor.backgroundImageUrl', 'Imagen de fondo')}
+                                </span>
+                                <input
+                                    type="url"
+                                    value={String(selectedSectionSettings.backgroundImageUrl || '')}
+                                    onChange={event => updateSelectedSectionSetting('backgroundImageUrl', event.target.value)}
+                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                />
+                            </label>
+                            <label className="block">
+                                <span className="text-xs font-semibold text-q-text-muted">
+                                    {t('ecommerce.storefrontEditor.height', 'Altura')}
+                                </span>
+                                <input
+                                    type="number"
+                                    min={240}
+                                    max={720}
+                                    value={String(selectedSectionSettings.height || '')}
+                                    onChange={event => updateNumberSetting('height', event.target.value, 240, 720)}
+                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                />
+                            </label>
+                        </>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderActiveControls = () => {
+        if (selectedStructurePanel === 'template') return renderTemplateControls();
+        if (selectedStructurePanel === 'theme') return renderThemeControls();
+        return renderSectionControls();
+    };
+
+    return (
+        <div className="-m-3 flex h-[calc(100vh-7rem)] min-h-[720px] flex-col overflow-hidden bg-q-bg sm:-m-6 lg:-m-8">
+            <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 px-3 lg:px-4 flex items-center justify-between gap-3 z-20">
+                <div className="flex min-w-0 items-center gap-3">
+                    <LayoutTemplate className="h-5 w-5 quimera-dashboard-header-icon" strokeWidth={2} />
+                    <div className="min-w-0">
+                        <h2 className="truncate text-sm font-semibold text-foreground sm:text-base">
+                            {previewDisplayName}
+                        </h2>
+                        <p className="hidden truncate text-xs text-q-text-muted md:block">
+                            {t('ecommerce.storefrontEditor.title', 'Editor de tienda online')}
+                        </p>
+                    </div>
+                    <span className={`hidden rounded-full px-2.5 py-1 text-xs font-semibold md:inline-flex ${
+                        templateState === 'published'
+                            ? 'bg-emerald-500/15 text-emerald-400'
+                            : 'bg-amber-500/15 text-amber-400'
+                    }`}>
+                        {templateState === 'published'
+                            ? t('common.published', 'Publicado')
+                            : t('common.draft', 'Borrador')}
+                    </span>
+                </div>
+
+                <div className="hidden md:flex absolute left-1/2 -translate-x-1/2">
+                    <div className="flex items-center gap-1 rounded-lg bg-secondary/50 p-1">
+                        {([
+                            ['desktop', Monitor, t('ecommerce.storefrontEditor.desktop', 'Escritorio')],
+                            ['tablet', Tablet, t('ecommerce.storefrontEditor.tablet', 'Tablet')],
+                            ['mobile', Smartphone, t('ecommerce.storefrontEditor.mobile', 'Móvil')],
+                        ] as const).map(([mode, Icon, label]) => (
+                            <button
+                                key={mode}
+                                type="button"
+                                onClick={() => setPreviewMode(mode)}
+                                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                                    previewMode === mode
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-q-text-muted hover:bg-q-bg/50 hover:text-foreground'
+                                }`}
+                            >
+                                <Icon size={16} />
+                                <span>{label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="ml-auto flex flex-shrink-0 items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={refreshPreview}
+                        className="flex h-9 w-9 items-center justify-center rounded-lg text-q-text-muted transition-colors hover:bg-secondary/50 hover:text-foreground"
+                        aria-label={t('ecommerce.storefrontEditor.refreshPreview', 'Actualizar preview')}
+                        title={t('ecommerce.storefrontEditor.refreshPreview', 'Actualizar preview')}
+                    >
+                        <RefreshCw size={16} />
+                    </button>
+                    <a
+                        href={storefrontUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hidden h-9 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-q-text-muted transition-colors hover:bg-secondary/50 hover:text-foreground sm:inline-flex"
+                    >
+                        <ExternalLink size={16} />
+                        <span>{t('ecommerce.storefrontEditor.openStorefront', 'Abrir tienda')}</span>
+                    </a>
+                    <button
+                        type="button"
+                        onClick={() => saveTemplate('draft')}
+                        disabled={isBusy}
+                        className="flex h-9 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-q-text-muted transition-colors hover:bg-secondary/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        {isSavingTemplate ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                        <span className="hidden sm:inline">{t('common.save', 'Guardar')}</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => saveTemplate('published')}
+                        disabled={isBusy}
+                        className="quimera-guide-cta flex h-9 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <CheckCircle2 size={16} />
+                        <span className="hidden sm:inline">{t('ecommerce.storefrontEditor.publishTemplate', 'Publicar')}</span>
+                    </button>
+                </div>
+            </header>
+
+            {(statusMessage || error) && (
+                <div className={`z-20 flex flex-shrink-0 items-center gap-2 border-b px-4 py-2 text-sm ${
+                    error
+                        ? 'border-red-500/30 bg-red-500/10 text-red-400'
+                        : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                }`}>
+                    {error ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
+                    <span className="truncate">{error || statusMessage}</span>
+                </div>
+            )}
+
+            <main className="relative flex min-h-0 flex-1 overflow-hidden">
+                <aside className="hidden w-64 flex-shrink-0 flex-col overflow-hidden border-r border-q-border bg-q-surface/50 md:flex lg:w-72">
+                    <div className="border-b border-q-border p-3">
+                        <button
+                            type="button"
+                            className="flex h-10 w-full items-center justify-between rounded-lg border border-q-border bg-q-bg px-3 text-left text-sm font-medium text-foreground"
+                        >
+                            <span className="flex min-w-0 items-center gap-2">
+                                <LayoutTemplate size={15} />
+                                <span className="truncate">{t('ecommerce.storefrontEditor.onlineStore', 'Tienda online')}</span>
+                            </span>
+                            <ChevronDown size={15} className="text-q-text-muted" />
+                        </button>
+                    </div>
+
+                    <div className="flex items-center justify-between border-b border-q-border px-4 py-3">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                            {t('landingEditor.pageStructure', 'ESTRUCTURA DE PÁGINA')}
+                        </h3>
+                        <button
+                            type="button"
+                            onClick={applySectionPreset}
+                            className="flex h-7 w-7 items-center justify-center rounded-md text-primary transition-colors hover:bg-secondary/50"
+                            title={t('ecommerce.storefrontEditor.applyPreset', 'Preset')}
+                        >
+                            <Plus size={15} />
+                        </button>
+                    </div>
+
+                    <div className="min-h-0 flex-1 overflow-y-auto p-2">
+                        <div className="mb-4">
+                            <button
+                                type="button"
+                                onClick={() => setIsStructureExpanded(prev => !prev)}
+                                className="flex w-full items-center gap-2 rounded px-2 py-2 text-xs font-bold uppercase tracking-wider text-primary transition-colors hover:bg-secondary/30"
+                            >
+                                <ChevronDown size={14} className={`transition-transform ${isStructureExpanded ? '' : '-rotate-90'}`} />
+                                <Settings size={14} />
+                                <span>{t('landingEditor.structure', 'ESTRUCTURA')}</span>
+                                <span className="text-q-text-muted">(2)</span>
+                            </button>
+
+                            {isStructureExpanded && (
+                                <div className="mt-1 space-y-0.5 pl-2">
+                                    {([
+                                        ['template', LayoutTemplate, t('ecommerce.storefrontEditor.templateState', 'Estado')],
+                                        ['theme', Palette, t('ecommerce.storefrontEditor.themePreset', 'Preset de tema')],
+                                    ] as const).map(([panel, Icon, label]) => (
+                                        <button
+                                            key={panel}
+                                            type="button"
+                                            onClick={() => selectStructurePanel(panel)}
+                                            className={`flex w-full cursor-pointer items-center gap-2 rounded-lg border p-2.5 text-left transition-colors ${
+                                                selectedStructurePanel === panel
+                                                    ? 'border-primary/30 bg-primary/10'
+                                                    : 'border-transparent hover:bg-secondary/50'
+                                            }`}
+                                        >
+                                            <Icon size={16} className="flex-shrink-0 text-q-text-muted" />
+                                            <span className="truncate text-sm font-medium">{label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <button
+                                type="button"
+                                onClick={() => setIsContentExpanded(prev => !prev)}
+                                className="flex w-full items-center gap-2 rounded px-2 py-2 text-xs font-bold uppercase tracking-wider text-primary transition-colors hover:bg-secondary/30"
+                            >
+                                <ChevronDown size={14} className={`transition-transform ${isContentExpanded ? '' : '-rotate-90'}`} />
+                                <FileText size={14} />
+                                <span>{t('landingEditor.content', 'CONTENIDO')}</span>
+                                <span className="text-q-text-muted">({sections.length})</span>
+                            </button>
+
+                            {isContentExpanded && (
+                                <div className="mt-1 space-y-1 pl-2">
+                                    {sections.map((section, index) => {
+                                        const item = storefrontSectionRegistry[section];
+                                        const isVisible = visibility[section] !== false;
+                                        const isSelected = !selectedStructurePanel && selectedSection === section;
+                                        const currentVariant = String(toSettingsRecord(sectionSettings[section]).variant || item.defaultSettings.variant || section);
+
+                                        return (
+                                            <div
+                                                key={section}
+                                                role="button"
+                                                tabIndex={0}
+                                                onClick={() => selectSectionForEditing(section)}
+                                                onKeyDown={(event) => {
+                                                    if (event.key === 'Enter' || event.key === ' ') {
+                                                        event.preventDefault();
+                                                        selectSectionForEditing(section);
+                                                    }
+                                                }}
+                                                className={`group flex w-full cursor-pointer items-center gap-2 rounded-lg border p-2.5 text-left transition-colors ${
+                                                    isSelected
+                                                        ? 'border-primary/30 bg-primary/10'
+                                                        : 'border-transparent hover:bg-secondary/50'
+                                                } ${!isVisible ? 'opacity-50' : ''}`}
+                                            >
+                                                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-muted text-xs font-bold text-q-text-muted">
+                                                    {index + 1}
+                                                </span>
+                                                <span className="min-w-0 flex-1">
+                                                    <span className="block truncate text-sm font-medium text-foreground">{getSectionLabel(section)}</span>
+                                                    <span className="block truncate text-xs text-q-text-muted">{currentVariant}</span>
+                                                </span>
+                                                <span className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                                                    <button
+                                                        type="button"
+                                                        disabled={index === 0}
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            moveSection(section, -1);
+                                                        }}
+                                                        className="rounded p-1 text-q-text-muted hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
+                                                        aria-label={t('common.moveUp', 'Mover arriba')}
+                                                    >
+                                                        <MoveUp size={13} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={index === sections.length - 1}
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            moveSection(section, 1);
+                                                        }}
+                                                        className="rounded p-1 text-q-text-muted hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
+                                                        aria-label={t('common.moveDown', 'Mover abajo')}
+                                                    >
+                                                        <MoveDown size={13} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            setSectionVisibility(section, !isVisible);
+                                                        }}
+                                                        className="rounded p-1 text-q-text-muted hover:bg-secondary hover:text-foreground"
+                                                        aria-label={isVisible ? t('common.hide', 'Ocultar') : t('common.show', 'Mostrar')}
+                                                    >
+                                                        {isVisible ? <Eye size={13} /> : <EyeOff size={13} />}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            removeSection(section);
+                                                        }}
+                                                        className="rounded p-1 text-red-400 hover:bg-red-500/10"
+                                                        aria-label={t('common.remove', 'Eliminar')}
+                                                    >
+                                                        <Trash2 size={13} />
+                                                    </button>
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {availableSections.length > 0 && (
+                            <div className="mt-5 border-t border-q-border pt-4">
+                                <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-q-text-muted">
+                                    {t('ecommerce.storefrontEditor.addSection', 'Agregar sección')}
+                                </p>
+                                <div className="space-y-1">
+                                    {availableSections.map(section => (
+                                        <button
+                                            key={section}
+                                            type="button"
+                                            onClick={() => addSection(section)}
+                                            className="flex w-full items-center justify-between rounded-lg border border-q-border bg-q-bg/40 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted"
+                                        >
+                                            <span className="truncate">{getSectionLabel(section)}</span>
+                                            <Plus size={15} />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </aside>
+
+                <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-muted/30 p-3 sm:p-4">
+                    <div
+                        className="mx-auto flex h-full w-full flex-col overflow-hidden rounded-xl border border-q-border bg-q-surface shadow-2xl transition-all duration-300"
+                        style={{
+                            width: previewWidths[previewMode],
+                            maxWidth: '100%',
+                        }}
+                    >
+                        <div className="flex h-11 flex-shrink-0 items-center border-b border-q-border bg-q-bg px-4">
+                            <div className="flex gap-2">
+                                <span className="h-3 w-3 rounded-full bg-red-500" />
+                                <span className="h-3 w-3 rounded-full bg-yellow-500" />
+                                <span className="h-3 w-3 rounded-full bg-green-500" />
+                            </div>
+                            <div className="flex flex-1 items-center justify-center px-4">
+                                <div className="flex w-full max-w-md items-center justify-center truncate rounded-full border border-q-border/50 bg-secondary/50 px-4 py-1 text-center text-xs text-q-text-muted sm:text-sm">
+                                    <span className="opacity-50">https://quimera.ai/</span>
+                                    <span className="font-medium text-foreground">{String(previewDisplayName).toLowerCase().replace(/\s+/g, '-')}</span>
+                                </div>
+                            </div>
+                            <div className="w-14" />
+                        </div>
+                        <iframe
+                            title={t('ecommerce.storefrontEditor.previewTitle', 'Vista previa de tienda online')}
+                            src={previewUrl}
+                            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                            scrolling="yes"
+                            className="min-h-0 flex-1 border-0 bg-white"
+                            style={{ minHeight: MIN_PREVIEW_FRAME_HEIGHT }}
+                        />
+                    </div>
+                </section>
+
+                <button
+                    type="button"
+                    onClick={() => setIsControlsPanelOpen(prev => !prev)}
+                    className={`absolute top-1/2 z-30 -translate-y-1/2 overflow-hidden rounded-lg border border-q-border bg-q-surface p-2 shadow-lg transition-all duration-300 hover:bg-accent ${
+                        isControlsPanelOpen
+                            ? 'right-[calc(20rem-18px)] lg:right-[calc(24rem-18px)]'
+                            : 'right-0 rounded-r-none'
+                    }`}
+                    title={isControlsPanelOpen ? t('common.hide', 'Ocultar') : t('common.show', 'Mostrar')}
+                >
+                    {isControlsPanelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+                </button>
+
+                <aside className={`${isControlsPanelOpen ? 'w-80 lg:w-96' : 'w-0'} editor-theme flex flex-shrink-0 flex-col overflow-hidden border-l border-q-border bg-q-bg transition-all duration-300`}>
+                    <div className="flex h-14 flex-shrink-0 items-center justify-between border-b border-q-border px-4">
+                        <h3 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-q-text">
+                            <ActiveEditorIcon size={16} className="flex-shrink-0 text-q-accent" />
+                            <span className="truncate">
+                                {t('landingEditor.edit', 'Editar')}: {activeEditorLabel}
+                            </span>
+                        </h3>
+                    </div>
+                    <div className="quimera-clean-controls min-h-0 flex-1 overflow-y-auto p-4">
+                        {renderActiveControls()}
+                    </div>
+                </aside>
+            </main>
+        </div>
+    );
+
+    return (
+        <div className="space-y-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-sm text-q-text-muted">
+                        <LayoutTemplate size={16} />
+                        {t('ecommerce.storefrontEditor.kicker', 'Storefront Builder')}
+                    </div>
+                    <h2 className="mt-1 text-2xl font-bold text-foreground">
+                        {t('ecommerce.storefrontEditor.title', 'Editor de Storefront')}
+                    </h2>
+                    <p className="text-q-text-muted">
+                        {projectName || project.name} · {t('ecommerce.storefrontEditor.presentationOnly', 'Presentación, secciones y tema. Productos, precios e inventario viven en Ecommerce Admin.')}
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <a
+                        href={storefrontUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-q-border bg-q-surface px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+                    >
+                        <ExternalLink size={16} />
+                        {t('ecommerce.storefrontEditor.openStorefront', 'Abrir storefront')}
+                    </a>
+                    <button
+                        type="button"
+                        onClick={() => saveTemplate('draft')}
+                        disabled={isBusy}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-q-border bg-q-surface px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-60"
+                    >
+                        {isSavingTemplate ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                        {t('common.save', 'Guardar')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => saveTemplate('published')}
+                        disabled={isBusy}
+                        className="quimera-guide-cta inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                    >
+                        <CheckCircle2 size={16} />
+                        {t('ecommerce.storefrontEditor.publishTemplate', 'Publicar plantilla')}
+                    </button>
+                </div>
+            </div>
+
+            {(statusMessage || error) && (
+                <div className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${
+                    error
+                        ? 'border-red-500/30 bg-red-500/10 text-red-400'
+                        : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                }`}>
+                    {error ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
+                    {error || statusMessage}
+                </div>
+            )}
+
+            <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
+                <aside className="space-y-5">
+                    <section className="rounded-lg border border-q-border bg-q-surface p-4">
+                        <div className="mb-4 flex items-center justify-between gap-3">
+                            <div>
+                                <h3 className="font-semibold text-foreground">
+                                    {t('ecommerce.storefrontEditor.templateState', 'Estado')}
+                                </h3>
+                                <p className="text-xs text-q-text-muted">
+                                    {t('ecommerce.storefrontEditor.templateStateHint', 'Solo controla presentación del storefront.')}
+                                </p>
+                            </div>
+                            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                templateState === 'published'
+                                    ? 'bg-emerald-500/15 text-emerald-400'
+                                    : 'bg-amber-500/15 text-amber-400'
+                            }`}>
+                                {templateState === 'published'
+                                    ? t('common.published', 'Publicado')
+                                    : t('common.draft', 'Borrador')}
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setTemplateState('draft')}
+                                className={`rounded-lg px-3 py-2 text-sm font-semibold ${
+                                    templateState === 'draft'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'bg-muted/50 text-q-text-muted hover:text-foreground'
+                                }`}
+                            >
+                                {t('common.draft', 'Borrador')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setTemplateState('published')}
+                                className={`rounded-lg px-3 py-2 text-sm font-semibold ${
+                                    templateState === 'published'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'bg-muted/50 text-q-text-muted hover:text-foreground'
+                                }`}
+                            >
+                                {t('common.published', 'Publicado')}
+                            </button>
+                        </div>
+                    </section>
+
+                    <section className="rounded-lg border border-q-border bg-q-surface p-4">
+                        <div className="mb-4 flex items-start justify-between gap-3">
+                            <div>
+                                <h3 className="font-semibold text-foreground">
+                                    {t('ecommerce.storefrontEditor.sections', 'Secciones')}
+                                </h3>
+                                <p className="text-xs text-q-text-muted">
+                                    {t('ecommerce.storefrontEditor.sectionsHint', 'Orden y visibilidad de módulos storefront.')}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={applySectionPreset}
+                                className="rounded-lg bg-muted/60 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
+                            >
+                                {t('ecommerce.storefrontEditor.applyPreset', 'Preset')}
+                            </button>
+                        </div>
+
+                        <div className="space-y-2">
+                            {sections.map((section, index) => {
+                                const item = storefrontSectionRegistry[section];
+                                const isVisible = visibility[section] !== false;
+                                const isSelected = selectedSection === section;
+                                const currentVariant = String(toSettingsRecord(sectionSettings[section]).variant || item.defaultSettings.variant || section);
+
+                                return (
+                                    <div
+                                        key={section}
+                                        onClick={() => setSelectedSection(section)}
+                                        className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2 transition-colors ${
+                                            isSelected
+                                                ? 'border-primary bg-primary/10'
+                                                : 'border-q-border bg-q-bg/60 hover:bg-muted/60'
+                                        }`}
+                                    >
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-bold text-q-text-muted">
+                                            {index + 1}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-semibold text-foreground">{getSectionLabel(section)}</p>
+                                            <p className="truncate text-xs text-q-text-muted">
+                                                {currentVariant}
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => moveSection(section, -1)}
+                                            disabled={index === 0}
+                                            className="rounded-md p-1.5 text-q-text-muted hover:bg-muted hover:text-foreground disabled:opacity-30"
+                                            aria-label={t('common.moveUp', 'Mover arriba')}
+                                        >
+                                            <MoveUp size={15} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => moveSection(section, 1)}
+                                            disabled={index === sections.length - 1}
+                                            className="rounded-md p-1.5 text-q-text-muted hover:bg-muted hover:text-foreground disabled:opacity-30"
+                                            aria-label={t('common.moveDown', 'Mover abajo')}
+                                        >
+                                            <MoveDown size={15} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSectionVisibility(section, !isVisible)}
+                                            className="rounded-md p-1.5 text-q-text-muted hover:bg-muted hover:text-foreground"
+                                            aria-label={isVisible ? t('common.hide', 'Ocultar') : t('common.show', 'Mostrar')}
+                                        >
+                                            {isVisible ? <Eye size={15} /> : <EyeOff size={15} />}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeSection(section)}
+                                            className="rounded-md p-1.5 text-red-400 hover:bg-red-500/10"
+                                            aria-label={t('common.remove', 'Eliminar')}
+                                        >
+                                            <Trash2 size={15} />
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {sections.includes(selectedSection) && (
+                            <div className="mt-4 rounded-lg border border-q-border bg-q-bg/50 p-3">
+                                <div className="mb-3 flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                            <SlidersHorizontal size={15} />
+                                            {getSectionLabel(selectedSection)}
+                                        </h4>
+                                        <p className="text-xs text-q-text-muted">
+                                            {t('ecommerce.storefrontEditor.sectionSettingsHint', 'Settings de presentación y fuente. No edita productos.')}
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={resetSelectedSectionSettings}
+                                        className="rounded-md p-1.5 text-q-text-muted hover:bg-muted hover:text-foreground"
+                                        aria-label={t('common.reset', 'Restablecer')}
+                                    >
+                                        <RefreshCw size={14} />
+                                    </button>
+                                </div>
+
+                                {(selectedSectionValidation.errors.length > 0 || selectedSectionValidation.warnings.length > 0) && (
+                                    <div className="mb-3 space-y-1">
+                                        {selectedSectionValidation.errors.map(message => (
+                                            <p key={message} className="rounded-md bg-red-500/10 px-2 py-1 text-xs text-red-400">
+                                                {translateValidationMessage(message)}
+                                            </p>
+                                        ))}
+                                        {selectedSectionValidation.warnings.map(message => (
+                                            <p key={message} className="rounded-md bg-amber-500/10 px-2 py-1 text-xs text-amber-400">
+                                                {translateValidationMessage(message)}
+                                            </p>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="space-y-3">
+                                    {storefrontSectionRegistry[selectedSection].validVariants && (
+                                        <label className="block">
+                                            <span className="text-xs font-semibold text-q-text-muted">
+                                                {t('ecommerce.storefrontEditor.variant', 'Variant')}
+                                            </span>
+                                            <select
+                                                value={String(selectedSectionSettings.variant || '')}
+                                                onChange={event => updateSelectedSectionSetting('variant', event.target.value)}
+                                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                            >
+                                                {storefrontSectionRegistry[selectedSection].validVariants?.map(variant => (
+                                                    <option key={variant} value={variant}>{variant}</option>
+                                                ))}
+                                            </select>
+                                        </label>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <label className="block">
+                                            <span className="text-xs font-semibold text-q-text-muted">
+                                                {t('ecommerce.storefrontEditor.visibleIn', 'Visible en')}
+                                            </span>
+                                            <select
+                                                value={String(selectedSectionSettings.visibleIn || 'both')}
+                                                onChange={event => updateSelectedSectionSetting('visibleIn', event.target.value)}
+                                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                            >
+                                                <option value="both">{t('ecommerce.storefrontEditor.visibleBoth', 'Landing + Store')}</option>
+                                                <option value="store">{t('ecommerce.storefrontEditor.visibleStore', 'Store')}</option>
+                                                <option value="landing">{t('ecommerce.storefrontEditor.visibleLanding', 'Landing')}</option>
+                                            </select>
+                                        </label>
+
+                                        <label className="block">
+                                            <span className="text-xs font-semibold text-q-text-muted">
+                                                {t('ecommerce.storefrontEditor.enabled', 'Enabled')}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => updateSelectedSectionSetting('enabled', selectedSectionSettings.enabled === false)}
+                                                className={`mt-1 flex h-10 w-full items-center justify-center rounded-lg border text-sm font-semibold ${
+                                                    selectedSectionSettings.enabled === false
+                                                        ? 'border-q-border bg-q-surface text-q-text-muted'
+                                                        : 'border-primary bg-primary/10 text-primary'
+                                                }`}
+                                            >
+                                                {selectedSectionSettings.enabled === false
+                                                    ? t('common.disabled', 'Desactivado')
+                                                    : t('common.enabled', 'Activo')}
+                                            </button>
+                                        </label>
+                                    </div>
+
+                                    {selectedSection === 'announcementBar' ? (
+                                        <label className="block">
+                                            <span className="text-xs font-semibold text-q-text-muted">
+                                                {t('ecommerce.storefrontEditor.messages', 'Mensajes')}
+                                            </span>
+                                            <textarea
+                                                value={messagesToText(selectedSectionSettings.messages)}
+                                                onChange={event => updateSelectedSectionSetting('messages', textToMessages(event.target.value))}
+                                                rows={3}
+                                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                                placeholder={t('ecommerce.storefrontEditor.messagesPlaceholder', 'Un mensaje por línea')}
+                                            />
+                                        </label>
+                                    ) : (
+                                        <>
+                                            <label className="block">
+                                                <span className="text-xs font-semibold text-q-text-muted">
+                                                    {selectedSection === 'productHero'
+                                                        ? t('ecommerce.storefrontEditor.headline', 'Headline')
+                                                        : t('ecommerce.storefrontEditor.titleField', 'Título')}
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    value={String(selectedSectionSettings.title || selectedSectionSettings.headline || '')}
+                                                    onChange={event => updateSelectedSectionSetting(
+                                                        selectedSection === 'productHero' ? 'headline' : 'title',
+                                                        event.target.value,
+                                                    )}
+                                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                                />
+                                            </label>
+                                            <label className="block">
+                                                <span className="text-xs font-semibold text-q-text-muted">
+                                                    {t('ecommerce.storefrontEditor.descriptionField', 'Descripción')}
+                                                </span>
+                                                <textarea
+                                                    value={String(selectedSectionSettings.description || selectedSectionSettings.subheadline || '')}
+                                                    onChange={event => updateSelectedSectionSetting(
+                                                        selectedSection === 'productHero' ? 'subheadline' : 'description',
+                                                        event.target.value,
+                                                    )}
+                                                    rows={2}
+                                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                                />
+                                            </label>
+                                        </>
+                                    )}
+
+                                    {(selectedSection === 'featuredProducts' || selectedSection === 'saleCountdown') && (
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <label className="block">
+                                                <span className="text-xs font-semibold text-q-text-muted">
+                                                    {t('ecommerce.storefrontEditor.productsToShow', 'Productos')}
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    min={1}
+                                                    max={24}
+                                                    value={String(selectedSectionSettings.productsToShow || '')}
+                                                    onChange={event => updateNumberSetting('productsToShow', event.target.value, 1, 24)}
+                                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                                />
+                                            </label>
+                                            {selectedSection === 'featuredProducts' && (
+                                                <label className="block">
+                                                    <span className="text-xs font-semibold text-q-text-muted">
+                                                        {t('ecommerce.storefrontEditor.columns', 'Columnas')}
+                                                    </span>
+                                                    <input
+                                                        type="number"
+                                                        min={2}
+                                                        max={5}
+                                                        value={String(selectedSectionSettings.columns || '')}
+                                                        onChange={event => updateNumberSetting('columns', event.target.value, 2, 5)}
+                                                        className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                                    />
+                                                </label>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {selectedSection === 'featuredProducts' && (
+                                        <label className="block">
+                                            <span className="text-xs font-semibold text-q-text-muted">
+                                                {t('ecommerce.storefrontEditor.sourceType', 'Fuente')}
+                                            </span>
+                                            <select
+                                                value={String(selectedSectionSettings.sourceType || 'newest')}
+                                                onChange={event => updateSelectedSectionSetting('sourceType', event.target.value)}
+                                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                            >
+                                                <option value="newest">{t('ecommerce.storefrontEditor.sourceNewest', 'Nuevos')}</option>
+                                                <option value="on-sale">{t('ecommerce.storefrontEditor.sourceOnSale', 'En oferta')}</option>
+                                                <option value="category">{t('ecommerce.storefrontEditor.sourceCategory', 'Categoría')}</option>
+                                                <option value="manual">{t('ecommerce.storefrontEditor.sourceManual', 'Manual')}</option>
+                                            </select>
+                                        </label>
+                                    )}
+
+                                    {(selectedSection === 'featuredProducts' || selectedSection === 'saleCountdown' || selectedSection === 'productBundle') && (
+                                        <label className="block">
+                                            <span className="text-xs font-semibold text-q-text-muted">
+                                                {t('ecommerce.storefrontEditor.productIds', 'Product IDs')}
+                                            </span>
+                                            <textarea
+                                                value={toCsv(selectedSectionSettings.productIds)}
+                                                onChange={event => updateSelectedSectionSetting('productIds', parseCsv(event.target.value))}
+                                                rows={2}
+                                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                                placeholder={t('ecommerce.storefrontEditor.productIdsPlaceholder', 'prod_1, prod_2')}
+                                            />
+                                        </label>
+                                    )}
+
+                                    {selectedSection === 'recentlyViewed' && (
+                                        <label className="block">
+                                            <span className="text-xs font-semibold text-q-text-muted">
+                                                {t('ecommerce.storefrontEditor.maxProducts', 'Máximo')}
+                                            </span>
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                max={20}
+                                                value={String(selectedSectionSettings.maxProducts || '')}
+                                                onChange={event => updateNumberSetting('maxProducts', event.target.value, 1, 20)}
+                                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                            />
+                                        </label>
+                                    )}
+
+                                    {selectedSection === 'saleCountdown' && (
+                                        <label className="block">
+                                            <span className="text-xs font-semibold text-q-text-muted">
+                                                {t('ecommerce.storefrontEditor.endDate', 'Fin de campaña')}
+                                            </span>
+                                            <input
+                                                type="datetime-local"
+                                                value={String(selectedSectionSettings.endDate || '').slice(0, 16)}
+                                                onChange={event => updateSelectedSectionSetting('endDate', event.target.value)}
+                                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                            />
+                                        </label>
+                                    )}
+
+                                    {(selectedSection === 'collectionBanner' || selectedSection === 'productHero') && (
+                                        <>
+                                            <label className="block">
+                                                <span className="text-xs font-semibold text-q-text-muted">
+                                                    {selectedSection === 'productHero'
+                                                        ? t('ecommerce.storefrontEditor.productId', 'Product ID')
+                                                        : t('ecommerce.storefrontEditor.collectionId', 'Collection ID')}
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    value={String(selectedSectionSettings.productId || selectedSectionSettings.collectionId || '')}
+                                                    onChange={event => updateSelectedSectionSetting(
+                                                        selectedSection === 'productHero' ? 'productId' : 'collectionId',
+                                                        event.target.value,
+                                                    )}
+                                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                                />
+                                            </label>
+                                            <label className="block">
+                                                <span className="text-xs font-semibold text-q-text-muted">
+                                                    {t('ecommerce.storefrontEditor.buttonText', 'Texto CTA')}
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    value={String(selectedSectionSettings.buttonText || '')}
+                                                    onChange={event => updateSelectedSectionSetting('buttonText', event.target.value)}
+                                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                                />
+                                            </label>
+                                        </>
+                                    )}
+
+                                    {selectedSection === 'collectionBanner' && (
+                                        <>
+                                            <label className="block">
+                                                <span className="text-xs font-semibold text-q-text-muted">
+                                                    {t('ecommerce.storefrontEditor.backgroundImageUrl', 'Imagen de fondo')}
+                                                </span>
+                                                <input
+                                                    type="url"
+                                                    value={String(selectedSectionSettings.backgroundImageUrl || '')}
+                                                    onChange={event => updateSelectedSectionSetting('backgroundImageUrl', event.target.value)}
+                                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                                />
+                                            </label>
+                                            <label className="block">
+                                                <span className="text-xs font-semibold text-q-text-muted">
+                                                    {t('ecommerce.storefrontEditor.height', 'Altura')}
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    min={240}
+                                                    max={720}
+                                                    value={String(selectedSectionSettings.height || '')}
+                                                    onChange={event => updateNumberSetting('height', event.target.value, 240, 720)}
+                                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                                />
+                                            </label>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {availableSections.length > 0 && (
+                            <div className="mt-4">
+                                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-q-text-muted">
+                                    {t('ecommerce.storefrontEditor.addSection', 'Agregar sección')}
+                                </p>
+                                <div className="grid grid-cols-1 gap-2">
+                                    {availableSections.map(section => (
+                                        <button
+                                            key={section}
+                                            type="button"
+                                            onClick={() => addSection(section)}
+                                            className="flex items-center justify-between rounded-lg border border-q-border bg-q-bg/40 px-3 py-2 text-left text-sm text-foreground hover:bg-muted"
+                                        >
+                                            {getSectionLabel(section)}
+                                            <Plus size={15} />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </section>
+
+                    <section className="rounded-lg border border-q-border bg-q-surface p-4">
+                        <div className="mb-4 flex items-center justify-between gap-3">
+                            <div>
+                                <h3 className="flex items-center gap-2 font-semibold text-foreground">
+                                    <Palette size={17} />
+                                    {t('ecommerce.storefrontEditor.themePreset', 'Theme preset')}
+                                </h3>
+                                <p className="text-xs text-q-text-muted">
+                                    {t('ecommerce.storefrontEditor.catalogSize', 'Catálogo: {{size}} · {{count}} productos', {
+                                        size: getCatalogSizeLabel(catalogSize),
+                                        count: products.length,
+                                    })}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={resetStorefrontTheme}
+                                disabled={settingsLoading || settingsSaving}
+                                className="rounded-lg bg-muted/60 p-2 text-q-text-muted hover:text-foreground disabled:opacity-50"
+                                aria-label={t('common.reset', 'Restablecer')}
+                            >
+                                <RefreshCw size={15} />
+                            </button>
+                        </div>
+
+                        <div className="grid gap-2">
+                            {(Object.keys(STOREFRONT_THEME_PRESETS) as StorefrontThemePresetId[]).map(presetId => {
+                                const preset = STOREFRONT_THEME_PRESETS[presetId];
+                                const isSelected = selectedPresetId === presetId;
+
+                                return (
+                                    <button
+                                        key={presetId}
+                                        type="button"
+                                        onClick={() => applyThemePreset(presetId)}
+                                        disabled={settingsLoading || settingsSaving}
+                                        className={`rounded-lg border px-3 py-2 text-left transition-colors disabled:opacity-50 ${
+                                            isSelected
+                                                ? 'border-primary bg-primary/10'
+                                                : 'border-q-border bg-q-bg/40 hover:bg-muted'
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="text-sm font-semibold text-foreground">{getThemePresetLabel(presetId)}</span>
+                                            <span className="flex gap-1">
+                                                {['primaryColor', 'accentColor', 'backgroundColor'].map(key => (
+                                                    <span
+                                                        key={key}
+                                                        className="h-4 w-4 rounded-full border border-q-border"
+                                                        style={{ backgroundColor: String(preset.theme[key as keyof StorefrontThemeSettings] || '#ffffff') }}
+                                                    />
+                                                ))}
+                                            </span>
+                                        </div>
+                                        <p className="mt-1 line-clamp-2 text-xs text-q-text-muted">{getThemePresetDescription(presetId)}</p>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </section>
+                </aside>
+
+                <section className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-q-border bg-q-surface xl:h-[calc(100vh-10rem)] xl:min-h-[760px]">
+                    <div className="flex flex-col gap-3 border-b border-q-border p-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                            <h3 className="font-semibold text-foreground">
+                                {t('ecommerce.storefrontEditor.preview', 'Preview')}
+                            </h3>
+                            <p className="truncate text-xs text-q-text-muted">
+                                {settings?.storeName || projectName || project.name} · {previewUrl}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={refreshPreview}
+                                className="flex h-10 w-10 items-center justify-center rounded-lg bg-q-bg text-q-text-muted hover:text-foreground"
+                                aria-label={t('ecommerce.storefrontEditor.refreshPreview', 'Actualizar preview')}
+                                title={t('ecommerce.storefrontEditor.refreshPreview', 'Actualizar preview')}
+                            >
+                                <RefreshCw size={16} />
+                            </button>
+                            <div className="grid grid-cols-3 gap-1 rounded-lg bg-q-bg p-1">
+                                {([
+                                    ['desktop', Monitor],
+                                    ['tablet', Tablet],
+                                    ['mobile', Smartphone],
+                                ] as const).map(([mode, Icon]) => (
+                                    <button
+                                        key={mode}
+                                        type="button"
+                                        onClick={() => setPreviewMode(mode)}
+                                        className={`flex h-9 w-10 items-center justify-center rounded-md ${
+                                            previewMode === mode
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'text-q-text-muted hover:text-foreground'
+                                        }`}
+                                        aria-label={mode}
+                                    >
+                                        <Icon size={16} />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="min-h-[640px] flex-1 overflow-hidden bg-q-bg p-3 sm:p-5">
+                        <div
+                            className="mx-auto h-full overflow-hidden rounded-lg border border-q-border bg-white shadow-xl transition-all"
+                            style={{
+                                width: previewWidths[previewMode],
+                                maxWidth: '100%',
+                                minHeight: MIN_PREVIEW_FRAME_HEIGHT,
+                            }}
+                        >
+                            <iframe
+                                title={t('ecommerce.storefrontEditor.previewTitle', 'Storefront preview')}
+                                src={previewUrl}
+                                scrolling="yes"
+                                className="h-full w-full border-0 bg-white"
+                                style={{ minHeight: MIN_PREVIEW_FRAME_HEIGHT }}
+                            />
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    );
+};
+
+export default StorefrontEditorView;

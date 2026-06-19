@@ -19,6 +19,8 @@ import {
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { AgencyPlanCardSelector } from './plans';
 import { AgencyPlan } from '../../../types/agencyPlans';
+import AppSelect from '../../ui/AppSelect';
+import ColorControl from '../../ui/ColorControl';
 
 // ============================================================================
 // TYPES
@@ -278,7 +280,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
         <label className="block text-sm font-medium text-gray-700 mb-2">
           {t('dashboard.agency.newClientPage.industry')} *
         </label>
-        <select
+        <AppSelect
           value={formData.industry}
           onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.industry ? 'border-red-500' : 'border-q-border'
@@ -290,7 +292,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               {industry.label}
             </option>
           ))}
-        </select>
+        </AppSelect>
         {errors.industry && (
           <p className="text-sm text-red-600 mt-1">{errors.industry}</p>
         )}
@@ -421,13 +423,14 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             {t('dashboard.agency.newClientPage.primaryColor')}
           </label>
           <div className="flex items-center gap-3">
-            <input
-              type="color"
+            <ColorControl
+              label={t('dashboard.agency.newClientPage.primaryColor')}
               value={formData.primaryColor}
-              onChange={(e) =>
-                setFormData({ ...formData, primaryColor: e.target.value })
+              onChange={(value) =>
+                setFormData({ ...formData, primaryColor: value })
               }
-              className="h-10 w-16 rounded cursor-pointer"
+              variant="dashboard"
+              compact
             />
             <input
               type="text"
@@ -446,13 +449,14 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             {t('dashboard.agency.newClientPage.secondaryColor')}
           </label>
           <div className="flex items-center gap-3">
-            <input
-              type="color"
+            <ColorControl
+              label={t('dashboard.agency.newClientPage.secondaryColor')}
               value={formData.secondaryColor}
-              onChange={(e) =>
-                setFormData({ ...formData, secondaryColor: e.target.value })
+              onChange={(value) =>
+                setFormData({ ...formData, secondaryColor: value })
               }
-              className="h-10 w-16 rounded cursor-pointer"
+              variant="dashboard"
+              compact
             />
             <input
               type="text"
@@ -539,7 +543,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t('dashboard.agency.newClientPage.role')}
             </label>
-            <select
+            <AppSelect
               value={user.role}
               onChange={(e) =>
                 updateUser(index, 'role', e.target.value as InitialUser['role'])
@@ -551,7 +555,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
                   {role.label} - {role.description}
                 </option>
               ))}
-            </select>
+            </AppSelect>
           </div>
         </div>
       ))}

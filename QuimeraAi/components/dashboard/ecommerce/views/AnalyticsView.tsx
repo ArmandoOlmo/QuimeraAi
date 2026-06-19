@@ -37,7 +37,7 @@ import {
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useEcommerceAnalytics } from '../hooks/useEcommerceAnalytics';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 
 type DateRange = '7d' | '30d' | '90d' | '1y';
 

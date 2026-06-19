@@ -3575,6 +3575,123 @@
     "reviews": "Reviews",
     "stockAlerts": "Stock Alerts",
     "reports": "Reports",
+    "storefrontLabel": "Storefront",
+    "storefrontEditor": {
+      "themePresetApplied": "Preset applied to storefront.",
+      "themePresetError": "Could not apply the preset.",
+      "published": "Storefront marked as published.",
+      "saved": "Storefront saved as draft.",
+      "saveError": "Could not save the storefront.",
+      "noProject": "Select a project to edit its storefront.",
+      "kicker": "Storefront Builder",
+      "title": "Storefront Editor",
+      "presentationOnly": "Presentation, sections, and theme. Products, prices, and inventory live in Ecommerce Admin.",
+      "openStorefront": "Open storefront",
+      "publishTemplate": "Publish template",
+      "templateState": "State",
+      "templateStateHint": "Only controls storefront presentation.",
+      "sections": "Sections",
+      "sectionsHint": "Order and visibility of storefront modules.",
+      "applyPreset": "Preset",
+      "sectionSettingsHint": "Presentation and source settings. Does not edit products.",
+      "variant": "Variant",
+      "visibleIn": "Visible in",
+      "visibleBoth": "Landing + store",
+      "visibleStore": "Store",
+      "visibleLanding": "Landing",
+      "enabled": "Enabled",
+      "messages": "Messages",
+      "messagesPlaceholder": "One message per line",
+      "headline": "Headline",
+      "titleField": "Title",
+      "descriptionField": "Description",
+      "productsToShow": "Products",
+      "columns": "Columns",
+      "sourceType": "Source",
+      "sourceNewest": "Newest",
+      "sourceOnSale": "On sale",
+      "sourceCategory": "Category",
+      "sourceManual": "Manual",
+      "productIds": "Product IDs",
+      "productIdsPlaceholder": "prod_1, prod_2",
+      "maxProducts": "Maximum",
+      "endDate": "Campaign end",
+      "productId": "Product ID",
+      "collectionId": "Collection ID",
+      "buttonText": "CTA text",
+      "backgroundImageUrl": "Background image",
+      "height": "Height",
+      "addSection": "Add section",
+      "themePreset": "Theme preset",
+      "catalogSize": "Catalog: {{size}} · {{count}} products",
+      "preview": "Preview",
+      "previewTitle": "Storefront preview",
+      "sectionLabels": {
+        "announcementBar": "Announcement bar",
+        "productHero": "Product hero",
+        "featuredProducts": "Featured products",
+        "categoryGrid": "Category grid",
+        "trustBadges": "Trust badges",
+        "saleCountdown": "Sale countdown",
+        "collectionBanner": "Collection banner",
+        "recentlyViewed": "Recently viewed",
+        "productReviews": "Product reviews",
+        "productBundle": "Product bundle"
+      },
+      "themePresets": {
+        "minimal": {
+          "label": "Minimal",
+          "description": "Quiet storefront for small catalogs and service-led shops."
+        },
+        "luxury": {
+          "label": "Luxury",
+          "description": "Premium presentation for high-margin products and curated collections."
+        },
+        "fitness": {
+          "label": "Fitness",
+          "description": "Energetic storefront for gear, programs, classes, and wellness products."
+        },
+        "marketplace": {
+          "label": "Marketplace",
+          "description": "Dense catalog browsing for large product sets with search and filters."
+        },
+        "editorial": {
+          "label": "Editorial",
+          "description": "Content-led storefront for storytelling, drops, lookbooks, and curated products."
+        },
+        "beauty": {
+          "label": "Beauty",
+          "description": "Warm polished storefront for beauty, wellness, cosmetics, and spa products."
+        },
+        "food": {
+          "label": "Food",
+          "description": "Menu and product-forward storefront for restaurants and food brands."
+        },
+        "fashion": {
+          "label": "Fashion",
+          "description": "Visual merchandising system for apparel, accessories, and seasonal drops."
+        },
+        "digital": {
+          "label": "Digital",
+          "description": "High-clarity storefront for software, downloads, courses, and digital products."
+        }
+      },
+      "catalogSizes": {
+        "empty": "empty",
+        "single": "single product",
+        "small": "small",
+        "medium": "medium",
+        "large": "large",
+        "enterprise": "enterprise"
+      },
+      "validation": {
+        "manualFeaturedProducts": "Manual featured products should include product IDs.",
+        "saleCountdownEndDate": "The sale countdown end date must be valid.",
+        "productBundleEmpty": "The bundle has no product IDs and will be hidden in the storefront.",
+        "unsupportedVariant": "Unsupported variant for this section.",
+        "unsupportedVisibility": "Unsupported visibility for this section."
+      }
+    },
     "storefront": {
       "cart": {
         "title": "Your Cart",

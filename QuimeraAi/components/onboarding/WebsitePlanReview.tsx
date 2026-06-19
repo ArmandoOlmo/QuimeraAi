@@ -6,6 +6,7 @@ import type { ColorCandidate } from '../../types/colorSystem';
 import { SortableComponentChips } from '../ui/SortableComponentChips';
 import ColorControl from '../ui/ColorControl';
 import { createColorBriefFromWebsitePlan, createImportedPaletteCandidates, generateColorCandidates, selectBestColorSystem } from '../../utils/colorSystemEngine';
+import AppSelect from '../ui/AppSelect';
 
 interface ComponentOption {
     key: PageSection;
@@ -373,7 +374,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
 
                         <div className="space-y-4">
                             <ReviewSection title="Mode" icon={<Sparkles size={15} />}>
-                                <select
+                                <AppSelect
                                     value={plan.generationMode}
                                     onChange={event => setPlan({ generationMode: event.target.value as WebsitePlan['generationMode'] })}
                                     className="w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-q-text outline-none focus:border-q-accent"
@@ -381,7 +382,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                     {(Object.keys(MODE_LABELS) as WebsitePlan['generationMode'][]).map(mode => (
                                         <option key={mode} value={mode}>{MODE_LABELS[mode]}</option>
                                     ))}
-                                </select>
+                                </AppSelect>
                             </ReviewSection>
 
                             <ReviewSection title="Assets" icon={<Image size={15} />}>

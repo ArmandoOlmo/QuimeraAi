@@ -11,10 +11,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, ShoppingCart, Eye, Star, ArrowRight } from 'lucide-react';
 import { FeaturedProductsData, StorefrontProductItem } from '../../../types/components';
+import type { ProductCardVisualVariant } from '../../../types/productCard';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { resolveI18nField } from '../../../utils/i18nContent';
+import { createProductCardViewModel } from '../../../utils/productCard';
 
 interface FeaturedProductsProps {
     data: FeaturedProductsData;
@@ -172,30 +174,40 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
 
     // Product Card Component
     const ProductCard = ({ product }: { product: StorefrontProductItem }) => {
-        const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
-        const discountPercent = hasDiscount
-            ? Math.round(((product.compareAtPrice! - product.price) / product.compareAtPrice!) * 100)
-            : 0;
+        const card = createProductCardViewModel(product, {
+            variant: data.cardStyle,
+            currencySymbol: '$',
+            showBadges: data.showBadge,
+            showFeaturedBadge: false,
+            showRatings: data.showRating,
+        });
+        const visualCardStyle = card.visualVariant;
 
-        const cardStyles = {
+        const cardStyles: Record<ProductCardVisualVariant, string> = {
             minimal: 'bg-transparent',
             modern: `${getBorderRadius()} shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1`,
             elegant: `${getBorderRadius()} shadow-md hover:shadow-lg transition-all duration-300 border`,
             overlay: `${getBorderRadius()} overflow-hidden group`,
+            luxury: `${getBorderRadius()} shadow-[0_18px_45px_rgba(15,23,42,0.10)] transition-all duration-300 hover:-translate-y-1 border`,
+            marketplace: `${getBorderRadius()} shadow-sm hover:shadow-lg transition-all duration-300 border`,
+            editorial: 'bg-transparent',
+            compact: `${getBorderRadius()} shadow-sm hover:shadow-md transition-all duration-300 border`,
+            imageFirst: `${getBorderRadius()} shadow-sm hover:shadow-lg transition-all duration-300 border`,
+            quickBuy: `${getBorderRadius()} shadow-md hover:shadow-xl transition-all duration-300 border`,
         };
 
         return (
             <div
-                className={`relative ${cardStyles[data.cardStyle]} cursor-pointer`}
+                className={`relative ${cardStyles[visualCardStyle]} cursor-pointer`}
                 style={{ backgroundColor: colors?.cardBackground }}
                 onClick={() => product.slug && onProductClick?.(product.slug)}
             >
                 {/* Image */}
-                <div className={`relative aspect-square overflow-hidden ${data.cardStyle !== 'overlay' ? getBorderRadius() : ''}`}>
-                    {product.image ? (
+                <div className={`relative aspect-square overflow-hidden ${visualCardStyle !== 'overlay' ? getBorderRadius() : ''}`}>
+                    {card.image?.url ? (
                         <img
-                            src={product.image}
-                            alt={product.name}
+                            src={card.image.url}
+                            alt={card.image.altText}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
                     ) : (
@@ -208,7 +220,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                     )}
 
                     {/* Badges */}
-                    {data.showBadge && hasDiscount && (
+                    {data.showBadge && card.hasDiscount && (
                         <div
                             className="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold"
                             style={{
@@ -216,7 +228,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                                 color: colors?.saleBadgeText,
                             }}
                         >
-                            -{discountPercent}%
+                            -{card.discountPercent}%
                         </div>
                     )}
 
@@ -237,20 +249,20 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                     </div>
 
                     {/* Overlay variant - text on image */}
-                    {data.cardStyle === 'overlay' && (
+                    {visualCardStyle === 'overlay' && (
                         <div 
                             className="absolute inset-0 flex flex-col justify-end p-4"
                             style={{ 
                                 background: `linear-gradient(to top, ${colors?.overlayEnd}, ${colors?.overlayStart})`
                             }}
                         >
-                            <h3 className="font-semibold line-clamp-2" style={{ color: colors?.buttonText }}>{product.name}</h3>
+                            <h3 className="font-semibold line-clamp-2" style={{ color: colors?.buttonText }}>{card.name}</h3>
                             {data.showPrice && (
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className="font-bold" style={{ color: colors?.buttonText }}>${product.price.toFixed(2)}</span>
-                                    {hasDiscount && (
+                                    <span className="font-bold" style={{ color: colors?.buttonText }}>{card.displayPrice}</span>
+                                    {card.hasDiscount && card.displayCompareAtPrice && (
                                         <span className="text-sm line-through" style={{ color: colors?.buttonText, opacity: 0.7 }}>
-                                            ${product.compareAtPrice!.toFixed(2)}
+                                            {card.displayCompareAtPrice}
                                         </span>
                                     )}
                                 </div>
@@ -260,31 +272,29 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                 </div>
 
                 {/* Content (non-overlay variants) */}
-                {data.cardStyle !== 'overlay' && (
+                {visualCardStyle !== 'overlay' && (
                     <div className="p-4">
                         <h3
                             className="font-semibold line-clamp-2 mb-1"
                             style={{ color: colors?.cardText || colors?.heading }}
                         >
-                            {product.name}
+                            {card.name}
                         </h3>
 
                         {/* Rating */}
-                        {data.showRating && product.rating !== undefined && (
+                        {data.showRating && card.rating && (
                             <div className="flex items-center gap-1 mb-2">
                                 {Array.from({ length: 5 }).map((_, i) => (
                                     <Star
                                         key={i}
                                         size={14}
-                                        style={{ color: i < Math.round(product.rating!) ? colors?.warning : colors?.border }}
-                                        fill={i < Math.round(product.rating!) ? 'currentColor' : 'none'}
+                                        style={{ color: i < Math.round(card.rating!.value) ? colors?.warning : colors?.border }}
+                                        fill={i < Math.round(card.rating!.value) ? 'currentColor' : 'none'}
                                     />
                                 ))}
-                                {product.reviewCount !== undefined && (
-                                    <span className="text-xs ml-1" style={{ color: colors?.text }}>
-                                        ({product.reviewCount})
-                                    </span>
-                                )}
+                                <span className="text-xs ml-1" style={{ color: colors?.text }}>
+                                    {card.rating.displayText}
+                                </span>
                             </div>
                         )}
 
@@ -292,11 +302,11 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         {data.showPrice && (
                             <div className="flex items-center gap-2">
                                 <span className="font-bold" style={{ color: colors?.salePrice }}>
-                                    ${product.price.toFixed(2)}
+                                    {card.displayPrice}
                                 </span>
-                                {hasDiscount && (
+                                {card.hasDiscount && card.displayCompareAtPrice && (
                                     <span className="text-sm line-through" style={{ color: colors?.originalPrice }}>
-                                        ${product.compareAtPrice!.toFixed(2)}
+                                        {card.displayCompareAtPrice}
                                     </span>
                                 )}
                             </div>
@@ -381,6 +391,14 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     const renderShowcase = () => {
         const mainProduct = products[0];
         const sideProducts = products.slice(1, 5);
+        const mainCard = mainProduct
+            ? createProductCardViewModel(mainProduct, {
+                variant: data.cardStyle,
+                currencySymbol: '$',
+                showBadges: data.showBadge,
+                showRatings: data.showRating,
+            })
+            : undefined;
 
         if (!mainProduct) return renderGrid();
 
@@ -392,10 +410,10 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         className={`relative h-full min-h-[400px] ${getBorderRadius()} overflow-hidden group cursor-pointer`}
                         onClick={() => mainProduct.slug && onProductClick?.(mainProduct.slug)}
                     >
-                        {mainProduct.image ? (
+                        {mainCard?.image?.url ? (
                             <img
-                                src={mainProduct.image}
-                                alt={mainProduct.name}
+                                src={mainCard.image.url}
+                                alt={mainCard.image.altText}
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                         ) : (
@@ -418,13 +436,13 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                                         backgroundColor: colors?.badgeBackground,
                                         color: colors?.badgeText,
                                     }}
-                                >
-                                    Destacado
-                                </span>
-                            )}
-                            <h3 className="text-2xl font-bold mb-2" style={{ color: colors?.buttonText }}>{mainProduct.name}</h3>
+                            >
+                                Destacado
+                            </span>
+                        )}
+                            <h3 className="text-2xl font-bold mb-2" style={{ color: colors?.buttonText }}>{mainCard?.name || mainProduct.name}</h3>
                             {data.showPrice && (
-                                <p className="text-xl font-bold" style={{ color: colors?.buttonText }}>${mainProduct.price.toFixed(2)}</p>
+                                <p className="text-xl font-bold" style={{ color: colors?.buttonText }}>{mainCard?.displayPrice || `$${mainProduct.price.toFixed(2)}`}</p>
                             )}
                         </div>
                     </div>

@@ -22,6 +22,7 @@ import {
     X,
     Info,
 } from 'lucide-react';
+import AppSelect from '../../ui/AppSelect';
 
 interface PermissionTemplateEditorProps {
     template: PermissionTemplate | null;
@@ -272,7 +273,7 @@ export function PermissionTemplateEditor({
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Rol
                                     </label>
-                                    <select
+                                    <AppSelect
                                         value={role}
                                         onChange={(e) => setRole(e.target.value as AgencyRole)}
                                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
@@ -280,14 +281,14 @@ export function PermissionTemplateEditor({
                                         <option value="agency_member">Miembro</option>
                                         <option value="agency_admin">Admin</option>
                                         <option value="client">Cliente</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Categoría
                                     </label>
-                                    <select
+                                    <AppSelect
                                         value={category}
                                         onChange={(e) =>
                                             setCategory(e.target.value as PermissionTemplate['category'])
@@ -299,7 +300,7 @@ export function PermissionTemplateEditor({
                                         <option value="technical">Técnico</option>
                                         <option value="management">Gestión</option>
                                         <option value="custom">Personalizado</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
                             </div>
                         </div>

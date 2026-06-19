@@ -153,6 +153,7 @@ const Controls: React.FC = () => {
   ]), []);
 
   const componentStatus = rawComponentStatus;
+  const isComponentEnabled = (section: PageSection) => componentStatus?.[section] !== false;
   const canAddEcommerceComponents = (isLoadingServiceAvailability || canAccessService('ecommerce')) &&
     (isLoadingPlanAccess || hasPlanAccess('ecommerceEnabled'));
 
@@ -290,7 +291,7 @@ const Controls: React.FC = () => {
 
   // Ecommerce control hooks
   const featuredProductsControls = useFeaturedProductsControls({ data, setNestedData, storeId: activeProject?.id || '' });
-  const categoryGridControls = useCategoryGridControls({ data, setNestedData });
+  const categoryGridControls = useCategoryGridControls({ data, setNestedData, storeId: activeProject?.id || '' });
   const productHeroControls = useProductHeroControls({ data, setNestedData, storeId: activeProject?.id || '' });
   const trustBadgesControls = useTrustBadgesControls({ data, setNestedData });
   const saleCountdownControls = useSaleCountdownControls({ data, setNestedData });
@@ -413,9 +414,9 @@ const Controls: React.FC = () => {
 
   if (!data) return null;
 
-  const sortableSections = effectiveComponentOrder.filter(k => k !== 'footer' && componentStatus[k as PageSection]);
+  const sortableSections = effectiveComponentOrder.filter(k => k !== 'footer' && isComponentEnabled(k as PageSection));
   const availableComponentsToAdd = (Object.keys(sectionConfig) as PageSection[]).filter(
-    section => componentStatus[section] &&
+    section => isComponentEnabled(section) &&
       section !== 'typography' &&
       section !== 'footer' &&
       section !== 'colors' &&

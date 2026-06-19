@@ -4,6 +4,8 @@
  */
 
 import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, AnimationType, FontFamily } from './ui';
+import type { ProductCardVariant } from './productCard';
+import type { WebsiteEcommerceCTARouteType, WebsiteEcommerceResponsiveBehavior } from './websiteEcommerceBlocks';
 
 // Re-export Project from types/project for backward compatibility
 export type { Project } from './project';
@@ -1585,7 +1587,7 @@ export interface ProductsProps {
     showPagination?: boolean;
     productsPerPage?: number;
     layout?: 'grid' | 'list';
-    cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardStyle?: ProductCardVariant;
     showAddToCart?: boolean;
     showQuickView?: boolean;
     showWishlist?: boolean;
@@ -1608,7 +1610,7 @@ export interface ProductsData extends SectionBackgroundFields {
     showPagination: boolean;
     productsPerPage: number;
     layout: 'grid' | 'list';
-    cardStyle: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardStyle: ProductCardVariant;
     showAddToCart: boolean;
     showQuickView: boolean;
     showWishlist: boolean;
@@ -1671,8 +1673,13 @@ export interface FeaturedProductsData extends SectionBackgroundFields {
     showAddToCart?: boolean;
     showViewAll?: boolean;
     viewAllUrl?: string;
+    ctaRouteType?: WebsiteEcommerceCTARouteType;
+    viewAllProductId?: string;
+    viewAllCategoryId?: string;
+    viewAllCollectionId?: string;
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     // Card style
-    cardStyle: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardStyle: ProductCardVariant;
     // Styling
     paddingY: PaddingSize;
     paddingX: PaddingSize;
@@ -1722,6 +1729,8 @@ export interface CategoryGridData extends SectionBackgroundFields {
     categories: CategoryItem[];
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    sourceType?: 'store' | 'manual';
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     columns: 2 | 3 | 4 | 5 | 6;
     showTitle?: boolean;
     layout?: 'grid' | 'carousel' | 'masonry';
@@ -1766,6 +1775,9 @@ export interface ProductHeroData extends SectionBackgroundFields {
     buttonText: string;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    sourceType?: 'featured' | 'product' | 'collection';
+    ctaRouteType?: WebsiteEcommerceCTARouteType;
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     buttonUrl?: string;
     backgroundImageUrl: string;
     // Product/Collection reference
@@ -1830,6 +1842,7 @@ export interface SaleCountdownData extends SectionBackgroundFields {
     buttonText?: string;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     // Countdown settings
     endDate: string; // ISO date string
     showDays?: boolean;
@@ -2025,6 +2038,8 @@ export interface CollectionBannerData extends SectionBackgroundFields {
     backgroundImageUrl: string;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    ctaRouteType?: WebsiteEcommerceCTARouteType;
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     // Collection reference
     collectionId?: string;
     // Button
@@ -2070,6 +2085,8 @@ export interface ProductBundleData extends SectionBackgroundFields {
     enabled?: boolean;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    ctaRouteType?: WebsiteEcommerceCTARouteType;
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     // Bundle products (IDs to fetch from store)
     productIds: string[];
     // Pricing - now with automatic discount calculation
@@ -2130,6 +2147,7 @@ export interface AnnouncementBarData extends SectionBackgroundFields {
     messages: AnnouncementMessage[];
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     /** Posición: 'above-header' renders before the Header, 'in-content' (default) renders in normal section flow */
     position?: AnnouncementBarPosition;
     // Display

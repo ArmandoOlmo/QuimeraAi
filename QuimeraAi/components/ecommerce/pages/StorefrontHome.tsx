@@ -7,24 +7,13 @@
  */
 
 import React, { useMemo } from 'react';
-import {
-    FeaturedProducts,
-    CategoryGrid,
-    ProductHero,
-    SaleCountdown,
-    TrustBadges,
-    RecentlyViewed,
-    ProductReviews,
-    CollectionBanner,
-    ProductBundle,
-    AnnouncementBar,
-} from '../sections';
 import ProductSearchPage from '../search/ProductSearchPage';
 import { Project } from '../../../types';
-import { deriveColorsFromPalette } from '../../../utils/colorUtils'; // Adjust path if needed
 import { useStorefrontCart } from '../context';
+import StorefrontModuleRenderer from '../StorefrontModuleRenderer';
+import { getRenderableStorefrontSectionDecisions } from '../../../utils/storefrontRenderer';
 
-interface ThemeColors {
+interface ThemeColors extends Record<string, string | undefined> {
     background?: string;
     text?: string;
     heading?: string;
@@ -53,47 +42,15 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
 }) => {
     const cart = useStorefrontCart();
 
-    // Map of component keys to React Components
-    const COMPONENT_MAP: Record<string, React.FC<any>> = {
-        featuredProducts: FeaturedProducts,
-        categoryGrid: CategoryGrid,
-        productHero: ProductHero,
-        saleCountdown: SaleCountdown,
-        trustBadges: TrustBadges,
-        recentlyViewed: RecentlyViewed,
-        productReviews: ProductReviews,
-        collectionBanner: CollectionBanner,
-        productBundle: ProductBundle,
-        announcementBar: AnnouncementBar,
-    };
-
-    // Filter component order to only include supported ecommerce sections
-    // and check visibility if necessary (though usually 'store' components are visible)
-    const sectionsToRender = useMemo(() => {
-        if (!projectData?.componentOrder) return [];
-        return projectData.componentOrder.filter(key => COMPONENT_MAP[key]);
-    }, [projectData]);
-
-    const renderSection = (key: string, index: number) => {
-        const Component = COMPONENT_MAP[key];
-        if (!Component) return null;
-
-        // Get data for this specific component
-        const componentData = projectData.data?.[key] || {};
-
-        // Pass common props
-        const commonProps = {
-            key: `${key}-${index}`,
-            storeId,
-            data: componentData,
-            onProductClick: onNavigateToProduct,
-            onCategoryClick: onNavigateToCategory,
-            themeColors,
-            // Certain components might need specific props, handled here or inside component default props
-        };
-
-        return <Component {...commonProps} />;
-    };
+    const sectionsToRender = useMemo(() => getRenderableStorefrontSectionDecisions({
+        pageData: projectData?.data,
+        componentOrder: projectData?.componentOrder,
+        sectionVisibility: projectData?.sectionVisibility,
+        blueprintSections: (
+            projectData?.businessBlueprint?.storefrontBlueprint?.sections ||
+            projectData?.data?.businessBlueprint?.storefrontBlueprint?.sections
+        ),
+    }), [projectData]);
 
     if (sectionsToRender.length === 0) {
         // This case should be handled by StorefrontApp switching to ProductSearchPage,
@@ -109,7 +66,13 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
                 color: themeColors?.text || '#0f172a'
             }}
         >
-            {sectionsToRender.map((key, index) => renderSection(key, index))}
+            <StorefrontModuleRenderer
+                storeId={storeId}
+                decisions={sectionsToRender}
+                globalColors={themeColors}
+                onNavigateToProduct={onNavigateToProduct}
+                onNavigateToCategory={onNavigateToCategory}
+            />
 
             {/* Always render the full product search/grid at the bottom for the core ecommerce experience */}
             <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">

@@ -44,6 +44,7 @@ import {
 import { AppArticle, AppArticleCategory, LegalPageType, LEGAL_PAGE_LABELS } from '../../../types/appContent';
 import { sanitizeHtml } from '../../../utils/sanitize';
 import { CatalogFilterBar, ContentStatusFilterChips, SortViewControls, CatalogToolbarFooter } from '../filters';
+import AppSelect from '../../ui/AppSelect';
 
 interface ContentManagementDashboardProps {
     onBack: () => void;
@@ -651,7 +652,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                 />
                                                 <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible scrollbar-hide pt-3">
                                                 {/* Category filter */}
-                                                <select
+                                                <AppSelect
                                                     value={categoryFilter}
                                                     onChange={(e) => setCategoryFilter(e.target.value as any)}
                                                     className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
@@ -660,10 +661,10 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                     {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
                                                         <option key={value} value={value}>{label}</option>
                                                     ))}
-                                                </select>
+                                                </AppSelect>
 
                                                 {/* Date range filter */}
-                                                <select
+                                                <AppSelect
                                                     value={dateRange}
                                                     onChange={(e) => setDateRange(e.target.value as any)}
                                                     className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
@@ -672,10 +673,10 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                     <option value="today">{t('contentManagement.filters.today', 'Hoy')}</option>
                                                     <option value="week">{t('contentManagement.filters.last7Days', 'Últimos 7 días')}</option>
                                                     <option value="month">{t('contentManagement.filters.last30Days', 'Últimos 30 días')}</option>
-                                                </select>
+                                                </AppSelect>
 
                                                 {/* Sort by views (date/title via cycle button above) */}
-                                                <select
+                                                <AppSelect
                                                     value={sortBy === 'views' ? 'views' : 'default'}
                                                     onChange={(e) =>
                                                         setSortBy(e.target.value === 'views' ? 'views' : 'date')
@@ -684,10 +685,10 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                 >
                                                     <option value="default">{t('contentManagement.filters.sortByDate', 'Fecha / Título')}</option>
                                                     <option value="views">{t('contentManagement.filters.sortByViews', 'Por vistas')}</option>
-                                                </select>
+                                                </AppSelect>
 
                                                 {/* Language filter */}
-                                                <select
+                                                <AppSelect
                                                     value={languageFilter}
                                                     onChange={(e) => setLanguageFilter(e.target.value as any)}
                                                     className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
@@ -695,7 +696,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                     <option value="all">{t('contentManagement.filters.language', 'Idioma')}: {t('common.all', 'Todos')}</option>
                                                     <option value="es">Español</option>
                                                     <option value="en">English</option>
-                                                </select>
+                                                </AppSelect>
                                                 </div>
                                             </>
                                         }

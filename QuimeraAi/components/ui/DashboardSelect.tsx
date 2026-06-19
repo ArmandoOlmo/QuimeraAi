@@ -1,7 +1,7 @@
 /**
  * DashboardSelect
  * Custom styled dropdown for dashboard views.
- * Replaces native browser <select> with a styled popup dropdown
+ * Replaces native browser selects with a styled popup dropdown
  * that matches the dashboard UI theme (bg-secondary, border-q-border, etc.)
  */
 

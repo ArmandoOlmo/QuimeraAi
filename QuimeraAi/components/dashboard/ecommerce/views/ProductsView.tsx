@@ -23,9 +23,10 @@ import { useCategories } from '../hooks/useCategories';
 import { Product, ProductStatus } from '../../../../types/ecommerce';
 import ProductForm from '../components/ProductForm';
 import ProductCard from '../components/ProductCard';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 import { CatalogFilterBar, FilterChipRow, SortViewControls, CatalogToolbarFooter } from '../../filters';
 import type { FilterChipOption } from '../../filters';
+import AppSelect from '../../../ui/AppSelect';
 
 type ViewMode = 'grid' | 'list';
 
@@ -165,7 +166,7 @@ const ProductsView: React.FC = () => {
                         </button>
                     )}
                 </div>
-                <select
+                <AppSelect
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring lg:w-auto"
@@ -176,7 +177,7 @@ const ProductsView: React.FC = () => {
                             {cat.name}
                         </option>
                     ))}
-                </select>
+                </AppSelect>
             </div>
 
             <CatalogFilterBar

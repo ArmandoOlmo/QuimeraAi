@@ -25,6 +25,11 @@ import SearchBar from './SearchBar';
 import FilterSidebar from './FilterSidebar';
 import { WishlistButton } from '../wishlist';
 import { RatingStars } from '../reviews';
+import type { ProductCardVariant, ProductCardVisualVariant } from '../../../types/productCard';
+import { createProductCardViewModel } from '../../../utils/productCard';
+import AppSelect from '../../ui/AppSelect';
+
+export type { ProductCardVariant } from '../../../types/productCard';
 
 interface ThemeColors {
     background?: string;
@@ -39,18 +44,6 @@ interface ThemeColors {
 }
 
 type FilterPresentation = 'sidebar' | 'drawer';
-
-export type ProductCardVariant =
-    | 'minimal'
-    | 'modern'
-    | 'elegant'
-    | 'overlay'
-    | 'luxury'
-    | 'marketplace'
-    | 'editorial'
-    | 'compact'
-    | 'imageFirst'
-    | 'quickBuy';
 
 interface ProductSearchPageProps {
     storeId: string;
@@ -432,7 +425,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                 {/* Sort */}
                                 {showSortOptions && (
                                     <div className="relative">
-                                        <select
+                                        <AppSelect
                                             value={sortBy}
                                             onChange={(e) => handleSortChange(e.target.value as SortOption)}
                                             className="appearance-none px-3 py-2 pr-8 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-colors"
@@ -448,7 +441,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                                     {option.label}
                                                 </option>
                                             ))}
-                                        </select>
+                                        </AppSelect>
                                         <ChevronDown
                                             className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                                             size={16}
@@ -538,7 +531,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             {/* Sort */}
                             {showSortOptions && (
                                 <div className="relative">
-                                    <select
+                                    <AppSelect
                                         value={sortBy}
                                         onChange={(e) => handleSortChange(e.target.value as SortOption)}
                                         className="appearance-none px-3 py-2 pr-8 rounded-lg text-sm focus:outline-none focus:ring-2"
@@ -554,7 +547,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                                 {option.label}
                                             </option>
                                         ))}
-                                    </select>
+                                    </AppSelect>
                                     <ChevronDown
                                         className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
                                         size={16}
@@ -815,13 +808,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
     cardStyle = 'modern',
     colors,
 }) => {
-    const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
-    const isAvailable = product.inStock !== false;
-    const price = Number(product.price || 0);
-    const compareAtPrice = Number(product.compareAtPrice || 0);
-    const discountPercent = hasDiscount
-        ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
-        : 0;
+    const card = createProductCardViewModel(product, {
+        variant: cardStyle,
+        currencySymbol,
+        showAvailabilityBadge: true,
+        showFeaturedBadge: true,
+    });
+    const isAvailable = card.inventory.isAvailable;
+    const visualCardStyle = card.visualVariant;
 
     // Merge colors with defaults
     const cardColors = {
@@ -835,7 +829,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     };
 
     // Overlay style - full image with text on top
-    if (cardStyle === 'overlay') {
+    if (visualCardStyle === 'overlay') {
         return (
             <div
                 className={`${borderRadiusClass} overflow-hidden group border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer`}
@@ -843,10 +837,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
             >
                 {/* Full Image with Overlay Content */}
                 <div className="relative aspect-square overflow-hidden">
-                    {product.images?.[0]?.url ? (
+                    {card.image?.url ? (
                         <img
-                            src={product.images[0].url}
-                            alt={product.name}
+                            src={card.image.url}
+                            alt={card.image.altText}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                     ) : (
@@ -863,12 +857,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex flex-col gap-2">
-                        {hasDiscount && (
+                        {card.hasDiscount && (
                             <span
                                 className="px-2 py-1 text-white text-xs font-bold rounded-full"
                                 style={{ backgroundColor: cardColors.salePriceColor }}
                             >
-                                -{discountPercent}%
+                                -{card.discountPercent}%
                             </span>
                         )}
                         {product.isFeatured && (
@@ -894,15 +888,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     {/* Content Overlay - Text on Image */}
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                         <h3 className="font-semibold text-white truncate">
-                            {product.name}
+                            {card.name}
                         </h3>
 
                         {/* Rating */}
-                        {product.reviewStats && product.reviewStats.totalReviews > 0 && (
+                        {card.rating && (
                             <div className="flex items-center gap-1 mt-1">
-                                <RatingStars rating={product.reviewStats.averageRating} size="sm" />
+                                <RatingStars rating={card.rating.value} size="sm" />
                                 <span className="text-xs text-white/70">
-                                    ({product.reviewStats.totalReviews})
+                                    {card.rating.displayText}
                                 </span>
                             </div>
                         )}
@@ -910,11 +904,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         {/* Price */}
                         <div className="flex items-baseline gap-2 mt-2">
                             <span className="text-lg font-bold text-white">
-                                {currencySymbol}{price.toFixed(2)}
+                                {card.displayPrice}
                             </span>
-                            {hasDiscount && (
+                            {card.hasDiscount && card.displayCompareAtPrice && (
                                 <span className="text-sm line-through text-white/60">
-                                    {currencySymbol}{compareAtPrice.toFixed(2)}
+                                    {card.displayCompareAtPrice}
                                 </span>
                             )}
                         </div>
@@ -940,7 +934,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
     // Card style variations are intentionally centralized so storefront themes can
     // switch product card variants without rewriting the product grid.
-    const cardStyleClasses: Record<Exclude<ProductCardVariant, 'overlay'>, string> = {
+    const cardStyleClasses: Record<Exclude<ProductCardVisualVariant, 'overlay'>, string> = {
         minimal: 'bg-transparent border-0 shadow-none',
         modern: 'bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700',
         elegant: 'bg-white dark:bg-gray-800 shadow-lg border-0',
@@ -952,31 +946,30 @@ const ProductCard: React.FC<ProductCardProps> = ({
         quickBuy: 'bg-white shadow-md border border-slate-200',
     };
 
-    const imageAspectClass = cardStyle === 'compact'
+    const imageAspectClass = visualCardStyle === 'compact'
         ? 'aspect-square'
-        : cardStyle === 'editorial' || cardStyle === 'imageFirst'
+        : visualCardStyle === 'editorial' || visualCardStyle === 'imageFirst'
             ? 'aspect-[3/4]'
             : 'aspect-[4/5]';
 
-    const contentPaddingClass = cardStyle === 'compact' ? 'p-3' : 'p-3 sm:p-4';
-    const showFullQuickBuy = cardStyle === 'quickBuy';
+    const contentPaddingClass = visualCardStyle === 'compact' ? 'p-3' : 'p-3 sm:p-4';
+    const showFullQuickBuy = visualCardStyle === 'quickBuy';
 
     // Card style variations - use theme colors if provided (for non-overlay styles)
     const getCardStyle = () => {
         if (cardColors.cardBackground) {
-            const baseStyle = cardStyle === 'minimal'
+            const baseStyle = visualCardStyle === 'minimal'
                 ? 'border-0 shadow-none'
-                : cardStyle === 'luxury'
+                : visualCardStyle === 'luxury'
                     ? 'shadow-[0_18px_45px_rgba(15,23,42,0.10)] border'
-                    : cardStyle === 'quickBuy'
+                    : visualCardStyle === 'quickBuy'
                         ? 'shadow-md border'
-                        : cardStyle === 'elegant'
+                        : visualCardStyle === 'elegant'
                             ? 'shadow-lg border-0'
                             : 'shadow-sm';
             return baseStyle;
         }
-        if (cardStyle === 'overlay') return '';
-        return cardStyleClasses[cardStyle] || cardStyleClasses.modern;
+        return cardStyleClasses[visualCardStyle] || cardStyleClasses.modern;
     };
 
     // Default styles (minimal, modern, elegant)
@@ -996,10 +989,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 style={{ backgroundColor: cardColors.mutedText ? `${cardColors.mutedText}20` : undefined }}
                 onClick={onClick}
             >
-                {product.images?.[0]?.url ? (
+                {card.image?.url ? (
                     <img
-                        src={product.images[0].url}
-                        alt={product.name}
+                        src={card.image.url}
+                        alt={card.image.altText}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                 ) : (
@@ -1013,27 +1006,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    {isAvailable && (
-                        <span className="rounded-full bg-white/90 px-2 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
-                            Disponible
-                        </span>
-                    )}
-                    {hasDiscount && (
+                    {card.badges.map((badge) => (
                         <span
+                            key={badge.kind}
                             className="px-2 py-1 text-white text-xs font-bold rounded-full"
-                            style={{ backgroundColor: cardColors.salePriceColor }}
+                            style={{
+                                backgroundColor:
+                                    badge.kind === 'sale' ? cardColors.salePriceColor :
+                                        badge.kind === 'available' ? 'rgba(255,255,255,0.9)' :
+                                            badge.kind === 'low_stock' ? '#f97316' :
+                                                primaryColor,
+                                color: badge.kind === 'available' ? '#334155' : '#ffffff',
+                            }}
                         >
-                            -{discountPercent}%
+                            {badge.label}
                         </span>
-                    )}
-                    {product.isFeatured && (
-                        <span
-                            className="px-2 py-1 text-white text-xs font-bold rounded-full"
-                            style={{ backgroundColor: primaryColor }}
-                        >
-                            Destacado
-                        </span>
-                    )}
+                    ))}
                 </div>
 
                 {/* Wishlist Button */}
@@ -1049,7 +1037,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
             {/* Content */}
             <div className={`flex flex-1 flex-col ${contentPaddingClass}`}>
-                {product.categoryName && cardStyle !== 'compact' && (
+                {product.categoryName && visualCardStyle !== 'compact' && (
                     <p className="mb-1 truncate text-[11px] font-semibold uppercase text-slate-500">
                         {product.categoryName}
                     </p>
@@ -1059,18 +1047,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     style={{ color: cardColors.heading }}
                     onClick={onClick}
                 >
-                    {product.name}
+                    {card.name}
                 </h3>
 
                 {/* Rating */}
-                {product.reviewStats && product.reviewStats.totalReviews > 0 && (
+                {card.rating && (
                     <div className="flex items-center gap-1 mt-1">
-                        <RatingStars rating={product.reviewStats.averageRating} size="sm" />
+                        <RatingStars rating={card.rating.value} size="sm" />
                         <span
                             className="text-xs"
                             style={{ color: cardColors.mutedText }}
                         >
-                            ({product.reviewStats.totalReviews})
+                            {card.rating.displayText}
                         </span>
                     </div>
                 )}
@@ -1079,14 +1067,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 <div className="mt-auto flex flex-col gap-3 pt-3">
                     <div className="flex flex-wrap items-baseline gap-2">
                         <span className="text-lg font-bold" style={{ color: cardColors.priceColor }}>
-                            {currencySymbol}{price.toFixed(2)}
+                            {card.displayPrice}
                         </span>
-                        {hasDiscount && (
+                        {card.hasDiscount && card.displayCompareAtPrice && (
                             <span
                                 className="text-sm line-through"
                                 style={{ color: cardColors.mutedText }}
                             >
-                                {currencySymbol}{compareAtPrice.toFixed(2)}
+                                {card.displayCompareAtPrice}
                             </span>
                         )}
                     </div>
@@ -1137,10 +1125,11 @@ const ProductListItem: React.FC<ProductCardProps> = ({
     borderRadiusClass = 'rounded-xl',
     colors,
 }) => {
-    const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
-    const price = Number(product.price || 0);
-    const compareAtPrice = Number(product.compareAtPrice || 0);
-    const isAvailable = product.inStock !== false;
+    const card = createProductCardViewModel(product, {
+        currencySymbol,
+        showBadges: false,
+    });
+    const isAvailable = card.inventory.isAvailable;
 
     // Merge colors with defaults
     const cardColors = {
@@ -1169,10 +1158,10 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                 style={{ backgroundColor: cardColors.mutedText ? `${cardColors.mutedText}20` : undefined }}
                 onClick={onClick}
             >
-                {product.images?.[0]?.url ? (
+                {card.image?.url ? (
                     <img
-                        src={product.images[0].url}
-                        alt={product.name}
+                        src={card.image.url}
+                        alt={card.image.altText}
                         className="w-full h-full object-cover"
                     />
                 ) : (
@@ -1193,7 +1182,7 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                         style={{ color: cardColors.heading }}
                         onClick={onClick}
                     >
-                        {product.name}
+                        {card.name}
                     </h3>
                     {product.shortDescription && (
                         <p
@@ -1203,14 +1192,14 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                             {product.shortDescription}
                         </p>
                     )}
-                    {product.reviewStats && product.reviewStats.totalReviews > 0 && (
+                    {card.rating && (
                         <div className="flex items-center gap-1 mt-2">
-                            <RatingStars rating={product.reviewStats.averageRating} size="sm" />
+                            <RatingStars rating={card.rating.value} size="sm" />
                             <span
                                 className="text-xs"
                                 style={{ color: cardColors.mutedText }}
                             >
-                                ({product.reviewStats.totalReviews})
+                                {card.rating.displayText}
                             </span>
                         </div>
                     )}
@@ -1219,14 +1208,14 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                 <div className="flex items-center justify-between mt-3">
                     <div className="flex items-baseline gap-2">
                         <span className="text-lg font-bold" style={{ color: cardColors.priceColor }}>
-                            {currencySymbol}{price.toFixed(2)}
+                            {card.displayPrice}
                         </span>
-                        {hasDiscount && (
+                        {card.hasDiscount && card.displayCompareAtPrice && (
                             <span
                                 className="text-sm line-through"
                                 style={{ color: cardColors.mutedText }}
                             >
-                                {currencySymbol}{compareAtPrice.toFixed(2)}
+                                {card.displayCompareAtPrice}
                             </span>
                         )}
                     </div>

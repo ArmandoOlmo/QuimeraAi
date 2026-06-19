@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { PageSection } from '../../types';
 import { useTranslation } from 'react-i18next';
 import MobileSearchModal from './MobileSearchModal';
@@ -328,6 +328,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         structure: false,
         content: false,
         ecommerce: false,
+        ecommerceAdd: false,
         luminaAdd: false,
         neonAdd: false,
         quimeraAdd: false,
@@ -448,12 +449,13 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         restaurantReservation: t('editor.restaurantReservationSection', 'Reservaciones'),
     };
 
+    const isComponentEnabled = useCallback((section: PageSection) => componentStatus?.[section] !== false, [componentStatus]);
+
     // Group sections by category
     const structureSections = useMemo(() => [
         'colors' as PageSection,
         'typography' as PageSection,
         ...(['header', 'footer'].filter(s => componentOrder.includes(s as PageSection)) as PageSection[]),
-        ...(componentOrder.includes('storeSettings') ? ['storeSettings' as PageSection] : [])
     ], [componentOrder]);
 
     const contentSections = useMemo(() => {
@@ -462,9 +464,9 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
             if (seen.has(s)) return false;
             seen.add(s);
             return !['header', 'footer', 'typography', 'colors', 'storeSettings', ...ECOMMERCE_SECTION_IDS].includes(s) &&
-                componentStatus[s];
+                isComponentEnabled(s);
         });
-    }, [componentOrder, componentStatus]);
+    }, [componentOrder, isComponentEnabled]);
 
     const ecommerceSections = useMemo(() => {
         const seen = new Set<PageSection>();
@@ -472,10 +474,9 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
             if (seen.has(s)) return false;
             seen.add(s);
             return ECOMMERCE_SECTION_IDS.includes(s) &&
-                s !== 'storeSettings' &&
-                componentStatus[s];
+                isComponentEnabled(s);
         });
-    }, [componentOrder, componentStatus]);
+    }, [componentOrder, isComponentEnabled]);
 
     const filteredSections = useMemo(() => {
         const seen = new Set<PageSection>();
@@ -643,7 +644,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                     </div>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
                         {/* Legacy Suite in Add Menu */}
-                        {availableComponents.filter(s => !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon') && !s.toLowerCase().includes('quimera')).length > 0 && (
+                        {availableComponents.filter(s => !ECOMMERCE_SECTION_IDS.includes(s) && !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon') && !s.toLowerCase().includes('quimera')).length > 0 && (
                             <div className="mb-1">
                                 <button
                                     onClick={() => setExpandedGroups(prev => ({ ...prev, legacyAdd: !prev.legacyAdd }))}
@@ -657,7 +658,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                 
                                 {expandedGroups.legacyAdd && (
                                     <div className="pl-4 mt-1 space-y-1">
-                                        {availableComponents.filter(s => !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon') && !s.toLowerCase().includes('quimera')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
+                                        {availableComponents.filter(s => !ECOMMERCE_SECTION_IDS.includes(s) && !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon') && !s.toLowerCase().includes('quimera')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
                                             const Icon = sectionIcons[section] || Layout;
                                             return (
                                                 <button
@@ -669,6 +670,44 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                                     className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-q-bg transition-colors text-left"
                                                 >
                                                     <Icon size={14} className="text-q-accent" />
+                                                    <span className="text-sm text-q-text font-medium">
+                                                        {sectionLabels[section]}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Ecommerce Suite in Add Menu */}
+                        {availableComponents.filter(s => ECOMMERCE_SECTION_IDS.includes(s)).length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-q-border/50">
+                                <button
+                                    onClick={() => setExpandedGroups(prev => ({ ...prev, ecommerceAdd: !prev.ecommerceAdd }))}
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-[#38BDF8] hover:bg-q-bg rounded-md transition-colors"
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <ShoppingBag size={14} /> Ecommerce Suite
+                                    </span>
+                                    <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.ecommerceAdd ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {expandedGroups.ecommerceAdd && (
+                                    <div className="pl-4 mt-1 space-y-1">
+                                        {availableComponents.filter(s => ECOMMERCE_SECTION_IDS.includes(s)).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
+                                            const Icon = sectionIcons[section] || ShoppingBag;
+                                            return (
+                                                <button
+                                                    key={section}
+                                                    onClick={() => {
+                                                        onAddComponent(section);
+                                                        setShowAddMenu(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-q-bg transition-colors text-left border-l border-transparent hover:border-[#38BDF8]/50"
+                                                >
+                                                    <Icon size={14} className="text-[#38BDF8]" />
                                                     <span className="text-sm text-q-text font-medium">
                                                         {sectionLabels[section]}
                                                     </span>
@@ -817,7 +856,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                             <>
                                 {renderGroup(t('editor.structure'), structureSections, 'structure', Layers, false)}
                                 {renderGroup(t('editor.content'), contentSections, 'content', FileText, true)}
-                                {renderGroup('Ecommerce', ecommerceSections, 'ecommerce', ShoppingBag, true)}
+                                {renderGroup('Ecommerce Suite', ecommerceSections, 'ecommerce', ShoppingBag, true)}
                             </>
                         )}
                     </SortableContext>

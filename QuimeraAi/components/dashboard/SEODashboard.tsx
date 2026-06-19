@@ -10,6 +10,7 @@ import ImagePicker from '../ui/ImagePicker';
 import SEOAiAssistant from './seo/SEOAiAssistant';
 import HeaderBackButton from '../ui/HeaderBackButton';
 import { Globe, Search, Share2, Code, CheckCircle, Menu, Store, ChevronDown, Check, Layers, Activity, ExternalLink, Sparkles } from 'lucide-react';
+import AppSelect from '../ui/AppSelect';
 
 type SeoTab = 'basic' | 'social' | 'advanced' | 'ai' | 'pixels';
 
@@ -267,7 +268,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       <label className="block text-sm font-medium text-foreground mb-2">
                         {t('seo.language')}
                       </label>
-                      <select
+                      <AppSelect
                         value={localConfig.language}
                         onChange={(e) => updateField('language', e.target.value)}
                         className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -277,7 +278,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         <option value="fr">Français</option>
                         <option value="de">Deutsch</option>
                         <option value="pt">Português</option>
-                      </select>
+                      </AppSelect>
                     </div>
 
                     {/* Favicon is managed via the Web Editor Navigation panel */}
@@ -299,7 +300,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       <label className="block text-sm font-medium text-foreground mb-2">
                         {t('seo.robotsMetaTag')}
                       </label>
-                      <select
+                      <AppSelect
                         value={localConfig.robots}
                         onChange={(e) => updateField('robots', e.target.value)}
                         className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -308,7 +309,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         <option value="noindex, follow">{t('seo.noIndexFollow')}</option>
                         <option value="index, nofollow">{t('seo.indexNoFollow')}</option>
                         <option value="noindex, nofollow">{t('seo.noIndexNoFollow')}</option>
-                      </select>
+                      </AppSelect>
                     </div>
                   </div>
                 </div>
@@ -328,7 +329,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       <label className="block text-sm font-medium text-foreground mb-2">
                         {t('seo.schemaType')}
                       </label>
-                      <select
+                      <AppSelect
                         value={localConfig.schemaType}
                         onChange={(e) => updateField('schemaType', e.target.value)}
                         className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -339,7 +340,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         <option value="Article">{t('seo.article')}</option>
                         <option value="Product">{t('seo.product')}</option>
                         <option value="Service">{t('seo.service')}</option>
-                      </select>
+                      </AppSelect>
                     </div>
                   </div>
                 </div>
@@ -500,7 +501,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       <label className="block text-sm font-medium text-foreground mb-2">
                         {t('seo.ogType')}
                       </label>
-                      <select
+                      <AppSelect
                         value={localConfig.ogType}
                         onChange={(e) => updateField('ogType', e.target.value)}
                         className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -509,7 +510,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         <option value="article">{t('seo.article')}</option>
                         <option value="product">{t('seo.product')}</option>
                         <option value="profile">{t('seo.profile')}</option>
-                      </select>
+                      </AppSelect>
                     </div>
 
                     <div>
@@ -580,7 +581,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       <label className="block text-sm font-medium text-foreground mb-2">
                         {t('seo.cardType')}
                       </label>
-                      <select
+                      <AppSelect
                         value={localConfig.twitterCard}
                         onChange={(e) => updateField('twitterCard', e.target.value)}
                         className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -589,7 +590,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         <option value="summary_large_image">{t('seo.summaryLargeImage')}</option>
                         <option value="app">{t('seo.app')}</option>
                         <option value="player">{t('seo.player')}</option>
-                      </select>
+                      </AppSelect>
                     </div>
 
                     <div>

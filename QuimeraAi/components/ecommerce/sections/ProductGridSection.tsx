@@ -7,6 +7,7 @@
 
 import React from 'react';
 import ProductSearchPage from '../search/ProductSearchPage';
+import type { ProductCardVariant } from '../../../types/productCard';
 
 interface ProductGridSectionProps {
     /** Store ID for loading products */
@@ -34,8 +35,8 @@ interface ProductGridSectionProps {
     showViewModeToggle?: boolean;
     defaultViewMode?: 'grid' | 'list';
     productsPerPage?: number;
-    gridColumns?: number;
-    cardStyle?: 'minimal' | 'modern' | 'classic' | 'bordered';
+    gridColumns?: 2 | 3 | 4 | 5;
+    cardStyle?: ProductCardVariant;
     borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
     cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     paddingY?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
@@ -95,4 +96,3 @@ const ProductGridSection: React.FC<ProductGridSectionProps> = ({
 };
 
 export default ProductGridSection;
-

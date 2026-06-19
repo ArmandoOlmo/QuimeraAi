@@ -87,6 +87,7 @@ import {
 } from '../../../utils/newsTranslation';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { getUsableImageUrl, normalizeImageUrl } from '../../../utils/imageUrl';
+import AppSelect from '../../ui/AppSelect';
 
 interface NewsEditorProps {
     news: NewsItem | null;
@@ -1018,7 +1019,7 @@ Text to format:
                                     <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                                         {t('superadmin.news.categoryLabel', 'Categoría')}
                                     </label>
-                                    <select
+                                    <AppSelect
                                         value={category}
                                         onChange={e => setCategory(e.target.value as NewsCategory)}
                                         className="w-full bg-q-bg border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-q-accent outline-none text-q-text cursor-pointer"
@@ -1028,7 +1029,7 @@ Text to format:
                                                 {t(`superadmin.news.category.${c}`, NEWS_CATEGORY_LABELS[c])}
                                             </option>
                                         ))}
-                                    </select>
+                                    </AppSelect>
                                 </div>
 
                                 {/* Tags */}

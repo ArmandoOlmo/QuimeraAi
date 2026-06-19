@@ -62,6 +62,7 @@ const PublicRestaurantMenuPage = lazyWithRetry(() => import('../components/dashb
 // Lazy-loaded ecommerce components
 const ProductDetailPageWithCart = lazyWithRetry(() => import('../components/ecommerce/ProductDetailPageWithCart'));
 const CheckoutPageEnhanced = lazyWithRetry(() => import('../components/ecommerce/CheckoutPageEnhanced'));
+const StorefrontApp = lazyWithRetry(() => import('../components/ecommerce/StorefrontApp'));
 
 // Named exports need to be handled differently with lazyWithRetry
 const ProductSearchPage = lazyWithRetry(() =>
@@ -343,16 +344,7 @@ const Router: React.FC<RouterProps> = ({
     if (pathParts.length === 3 || (pathParts.length === 4 && pathParts[3] === '')) {
       return (
         <Suspense fallback={<LoadingScreen />}>
-          <StorefrontLayout
-            storeId={storeId}
-            onNavigateHome={() => navigate(`/preview/${storeId}`)}
-            onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
-          >
-            <StorefrontProductListing
-              storeId={storeId}
-              onProductClick={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
-            />
-          </StorefrontLayout>
+          <StorefrontApp projectId={storeId} />
         </Suspense>
       );
     }
@@ -713,7 +705,6 @@ const Router: React.FC<RouterProps> = ({
 };
 
 export default Router;
-
 
 
 

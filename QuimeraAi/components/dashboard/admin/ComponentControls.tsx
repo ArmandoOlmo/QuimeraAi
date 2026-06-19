@@ -10,6 +10,7 @@ import IconSelector from '../../ui/IconSelector';
 import { Type, Layout, AlignJustify, Settings, Image, Plus, Trash2, Wand2, Palette, Clock, MapPin, Phone, Mail } from 'lucide-react';
 import ResponsiveConfigEditor from './ResponsiveConfigEditor';
 import AnimationConfigurator from './AnimationConfigurator';
+import AppSelect from '../../ui/AppSelect';
 
 // Simple re-usable controls from Controls.tsx
 const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -549,7 +550,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     {(s as any).enableCardAnimation !== false && (
                         <div>
                             <Label>Animation Type</Label>
-                            <select
+                            <AppSelect
                                 value={(s as any).animationType || 'fade-in-up'}
                                 onChange={(e) => handleStyleChange('animationType', e.target.value as AnimationType)}
                                 className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent transition-all"
@@ -562,7 +563,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 <option value="slide-down">Slide Down</option>
                                 <option value="scale-in">Scale In</option>
                                 <option value="bounce-in">Bounce In</option>
-                            </select>
+                            </AppSelect>
                         </div>
                     )}
                 </div>
@@ -1284,7 +1285,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <Label>Layout</Label>
-                        <select
+                        <AppSelect
                             value={s.layout || 'classic'}
                             onChange={(e) => handleStyleChange('layout', e.target.value)}
                             className="w-full bg-q-surface border border-q-border rounded-md px-2 py-2 text-sm text-q-text"
@@ -1293,11 +1294,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             <option value="minimal">Minimal</option>
                             <option value="center">Center</option>
                             <option value="stack">Stack</option>
-                        </select>
+                        </AppSelect>
                     </div>
                     <div>
                         <Label>Style</Label>
-                        <select
+                        <AppSelect
                             value={s.style || 'sticky-solid'}
                             onChange={(e) => handleStyleChange('style', e.target.value)}
                             className="w-full bg-q-surface border border-q-border rounded-md px-2 py-2 text-sm text-q-text"
@@ -1305,7 +1306,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             <option value="sticky-solid">Solid</option>
                             <option value="sticky-transparent">Transparent</option>
                             <option value="floating">Floating</option>
-                        </select>
+                        </AppSelect>
                     </div>
                 </div>
 
@@ -1461,7 +1462,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 <h4 className="font-semibold text-q-text">Navigation Links</h4>
                 <div>
                     <Label>Hover Style</Label>
-                    <select
+                    <AppSelect
                         value={s.hoverStyle || 'underline'}
                         onChange={(e) => handleStyleChange('hoverStyle', e.target.value)}
                         className="w-full bg-q-surface border border-q-border rounded-md px-2 py-2 text-sm text-q-text"
@@ -1470,7 +1471,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <option value="bold">Bold</option>
                         <option value="scale">Scale</option>
                         <option value="glow">Glow</option>
-                    </select>
+                    </AppSelect>
                 </div>
 
                 <div>

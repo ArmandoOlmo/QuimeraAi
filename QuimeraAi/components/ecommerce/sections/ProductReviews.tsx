@@ -10,6 +10,7 @@ import { ProductReviewsData, ProductReviewItem } from '../../../types/components
 import { resolveI18nField } from '../../../utils/i18nContent';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import AppSelect from '../../ui/AppSelect';
 
 interface ProductReviewsProps {
     data: ProductReviewsData;
@@ -396,7 +397,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
 
                     {/* Sort dropdown */}
                     <div className="relative">
-                        <select
+                        <AppSelect
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                             className={`appearance-none px-4 py-2 pr-10 ${getBorderRadius()} cursor-pointer`}
@@ -410,7 +411,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
                             <option value="highest">Mayor calificación</option>
                             <option value="lowest">Menor calificación</option>
                             <option value="helpful">Más útiles</option>
-                        </select>
+                        </AppSelect>
                         <ChevronDown
                             size={16}
                             className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"

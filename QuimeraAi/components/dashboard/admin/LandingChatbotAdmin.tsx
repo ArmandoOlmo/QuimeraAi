@@ -74,6 +74,7 @@ import {
     ButtonIconType
 } from '../../../types/landingChatbot';
 import LandingChatSimulator from './LandingChatSimulator';
+import AppSelect from '../../ui/AppSelect';
 
 // Color presets for quick selection
 const colorPresets = [
@@ -654,7 +655,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                         onChange={(e) => updatePricingPlan(index, 'price', parseFloat(e.target.value))}
                                                         className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                                     />
-                                                    <select
+                                                    <AppSelect
                                                         value={plan.currency}
                                                         onChange={(e) => updatePricingPlan(index, 'currency', e.target.value)}
                                                         className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
@@ -662,15 +663,15 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                         <option value="USD">USD</option>
                                                         <option value="EUR">EUR</option>
                                                         <option value="MXN">MXN</option>
-                                                    </select>
-                                                    <select
+                                                    </AppSelect>
+                                                    <AppSelect
                                                         value={plan.billingCycle}
                                                         onChange={(e) => updatePricingPlan(index, 'billingCycle', e.target.value)}
                                                         className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                                     >
                                                         <option value="monthly">Mensual</option>
                                                         <option value="yearly">Anual</option>
-                                                    </select>
+                                                    </AppSelect>
                                                 </div>
                                                 <textarea
                                                     placeholder="Descripción del plan y características (una por línea)"
@@ -1308,19 +1309,19 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-q-text-muted mb-2">Posición</label>
-                                    <select
+                                    <AppSelect
                                         value={formData.appearance.position}
                                         onChange={(e) => updateNestedForm('appearance', 'position', e.target.value)}
                                         className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
                                     >
                                         <option value="bottom-right">Abajo Derecha</option>
                                         <option value="bottom-left">Abajo Izquierda</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-q-text-muted mb-2">Tamaño</label>
-                                    <select
+                                    <AppSelect
                                         value={formData.appearance.size}
                                         onChange={(e) => updateNestedForm('appearance', 'size', e.target.value)}
                                         className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
@@ -1328,7 +1329,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         <option value="sm">Pequeño</option>
                                         <option value="md">Mediano</option>
                                         <option value="lg">Grande</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
 
                                 <div>
@@ -1803,7 +1804,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             </button>
                                             <div className="flex-1 space-y-2">
                                                 <div className="grid grid-cols-2 gap-2">
-                                                    <select
+                                                    <AppSelect
                                                         value={msg.trigger}
                                                         onChange={(e) => updateProactiveMessage(index, 'trigger', e.target.value)}
                                                         className="bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
@@ -1812,7 +1813,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                         <option value="scroll">Scroll (%)</option>
                                                         <option value="exit-intent">Exit Intent</option>
                                                         <option value="page">Página específica</option>
-                                                    </select>
+                                                    </AppSelect>
                                                     <input
                                                         type={msg.trigger === 'page' ? 'text' : 'number'}
                                                         placeholder={msg.trigger === 'page' ? '/pricing' : '30'}

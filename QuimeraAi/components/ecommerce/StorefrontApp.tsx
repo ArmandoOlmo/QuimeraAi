@@ -12,6 +12,7 @@ import StorefrontLayout from './StorefrontLayout';
 import ProductDetailPageWithCart from './ProductDetailPageWithCart';
 import CheckoutPageEnhanced from './CheckoutPageEnhanced';
 import OrderConfirmation from './OrderConfirmation';
+import MyAccountPage from './account/MyAccountPage';
 import { Loader2 } from 'lucide-react';
 import { useStorefrontCart } from './context';
 
@@ -19,13 +20,7 @@ import { useStorefrontCart } from './context';
 import StorefrontHome from './pages/StorefrontHome';
 import StorefrontCategory from './pages/StorefrontCategory';
 import ProductSearchPage from './search/ProductSearchPage';
-
-// List of recognized ecommerce sections to check against componentOrder
-const ECOMMERCE_SECTIONS = [
-    'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
-    'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner',
-    'productBundle', 'announcementBar'
-];
+import { isStorefrontSectionKind } from '../../utils/storefrontRenderer';
 
 interface StorefrontAppProps {
     projectId: string;
@@ -34,7 +29,7 @@ interface StorefrontAppProps {
     serverUrl?: string; // For SSR routing
 }
 
-type StorefrontView = 'home' | 'product' | 'category' | 'checkout' | 'order-confirmation';
+type StorefrontView = 'home' | 'product' | 'category' | 'checkout' | 'order-confirmation' | 'account';
 
 interface RouteState {
     view: StorefrontView;
@@ -50,6 +45,26 @@ interface StorefrontProductSearchProps {
     projectData: any;
     onProductClick: (slug: string) => void;
 }
+
+const STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX = 'quimera:storefront-editor-preview:';
+
+const getStorefrontEditorPreviewData = (projectId: string): any | null => {
+    if (typeof window === 'undefined') return null;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('preview') !== 'storefront-editor') return null;
+
+    const sessionKey = params.get('editorSession') || `${STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX}${projectId}`;
+    if (!sessionKey.startsWith(STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX)) return null;
+
+    try {
+        const raw = window.sessionStorage.getItem(sessionKey);
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        console.warn('Unable to load storefront editor preview data:', error);
+        return null;
+    }
+};
 
 const StorefrontProductSearch: React.FC<StorefrontProductSearchProps> = ({
     projectId,
@@ -112,6 +127,11 @@ function parseUrl(url: string): RouteState {
         return { view: 'checkout', params: {} };
     }
 
+    // Customer account
+    if (path.startsWith('account')) {
+        return { view: 'account', params: {} };
+    }
+
     // Order confirmation: /order/:orderId
     const orderMatch = path.match(/^order\/([^\/]+)/);
     if (orderMatch) {
@@ -128,6 +148,8 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     hostname,
     serverUrl
 }) => {
+    const initialPreviewData = initialData ? null : getStorefrontEditorPreviewData(projectId);
+
     // Route state
     const [route, setRoute] = useState<RouteState>(() => {
         // Use server URL for SSR, or window.location for client
@@ -136,8 +158,8 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     });
 
     // Project data
-    const [projectData, setProjectData] = useState<any>(initialData || null);
-    const [isLoading, setIsLoading] = useState(!initialData);
+    const [projectData, setProjectData] = useState<any>(initialData || initialPreviewData || null);
+    const [isLoading, setIsLoading] = useState(!initialData && !initialPreviewData);
 
     // Handle browser navigation (client-side only)
     useEffect(() => {
@@ -157,6 +179,13 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
 
         const fetchData = async () => {
             try {
+                const previewData = getStorefrontEditorPreviewData(projectId);
+                if (previewData) {
+                    setProjectData(previewData);
+                    setIsLoading(false);
+                    return;
+                }
+
                 const storeDoc = await getDoc(doc(db, 'public_stores', projectId));
                 if (storeDoc.exists()) {
                     setProjectData(storeDoc.data());
@@ -185,6 +214,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     const navigateToProduct = (slug: string) => navigate(`/product/${slug}`);
     const navigateToCategory = (slug: string) => navigate(`/category/${slug}`);
     const navigateToCheckout = () => navigate('/checkout');
+    const navigateToAccount = () => navigate('/account');
     const navigateToOrder = (orderId: string, orderAccessToken?: string) => {
         navigate(`/order/${orderId}${orderAccessToken ? `?token=${encodeURIComponent(orderAccessToken)}` : ''}`);
     };
@@ -244,11 +274,26 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                     />
                 );
 
+            case 'account':
+                return (
+                    <MyAccountPage
+                        storeId={projectId}
+                        onBack={navigateHome}
+                        onNavigateToProduct={navigateToProduct}
+                        primaryColor={
+                            projectData?.theme?.globalColors?.primary ||
+                            projectData?.header?.colors?.accent ||
+                            projectData?.data?.header?.colors?.accent ||
+                            '#6366f1'
+                        }
+                    />
+                );
+
             case 'home':
             default:
                 // Check if user has configured specific storefront sections
                 const hasConfiguredHome = projectData?.componentOrder?.some((key: string) =>
-                    ECOMMERCE_SECTIONS.includes(key)
+                    isStorefrontSectionKind(key)
                 );
 
                 if (hasConfiguredHome) {
@@ -288,6 +333,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
             storeId={projectId}
             onNavigateHome={navigateHome}
             onNavigateToCheckout={navigateToCheckout}
+            onNavigateToAccount={navigateToAccount}
             projectData={projectData}
         >
             {renderContent()}

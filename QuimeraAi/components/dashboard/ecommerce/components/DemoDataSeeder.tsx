@@ -19,7 +19,7 @@ import {
     ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/core/AuthContext';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 import {
     seedDemoStore,
     seedCategories,

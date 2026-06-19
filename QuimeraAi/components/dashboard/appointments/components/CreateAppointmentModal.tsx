@@ -48,6 +48,7 @@ import {
     getInitials,
     getAvatarColor,
 } from '../utils/appointmentHelpers';
+import AppSelect from '../../../ui/AppSelect';
 
 // =============================================================================
 // TYPES
@@ -441,7 +442,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                 <label className="block text-sm font-semibold text-foreground mb-2">
                     {t('appointments.form.timezoneLabel')}
                 </label>
-                <select
+                <AppSelect
                     value={data.timezone}
                     onChange={(e) => onChange({ timezone: e.target.value })}
                     className="w-full h-12 bg-secondary/50 border border-q-border rounded-xl px-4 text-foreground outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
@@ -453,7 +454,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                     <option value="Europe/London">Londres (GMT+0)</option>
                     <option value="America/Bogota">Bogotá (GMT-5)</option>
                     <option value="America/Buenos_Aires">Buenos Aires (GMT-3)</option>
-                </select>
+                </AppSelect>
             </div>
 
             {/* Location type */}

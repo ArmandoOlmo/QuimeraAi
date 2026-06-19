@@ -46,6 +46,7 @@ import { supabase } from '../../../supabase';
 import { useViewportType } from '../../../hooks/use-mobile';
 import MobileBottomSheet from '../../ui/MobileBottomSheet';
 import TabletSlidePanel from '../../ui/TabletSlidePanel';
+import AppSelect from '../../ui/AppSelect';
 
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
@@ -131,7 +132,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                         <Tag size={12} />
                         {t('cms_editor.category', { defaultValue: 'Categoría' })}
                     </label>
-                    <select
+                    <AppSelect
                         value={categoryId}
                         onChange={(e) => setCategoryId(e.target.value)}
                         className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground cursor-pointer"
@@ -140,7 +141,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                         {categories.map(cat => (
                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                         ))}
-                    </select>
+                    </AppSelect>
                 </div>
             )}
 

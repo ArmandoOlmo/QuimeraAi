@@ -3575,6 +3575,123 @@
     "reviews": "Reseñas",
     "stockAlerts": "Stock Alertas",
     "reports": "Reportes",
+    "storefrontLabel": "Tienda online",
+    "storefrontEditor": {
+      "themePresetApplied": "Preset aplicado a la tienda online.",
+      "themePresetError": "No se pudo aplicar el preset.",
+      "published": "Tienda online marcada como publicada.",
+      "saved": "Tienda online guardada como borrador.",
+      "saveError": "No se pudo guardar la tienda online.",
+      "noProject": "Selecciona un proyecto para editar su tienda online.",
+      "kicker": "Constructor de tienda",
+      "title": "Editor de tienda online",
+      "presentationOnly": "Presentación, secciones y tema. Productos, precios e inventario viven en Ecommerce Admin.",
+      "openStorefront": "Abrir tienda",
+      "publishTemplate": "Publicar plantilla",
+      "templateState": "Estado",
+      "templateStateHint": "Solo controla la presentación de la tienda.",
+      "sections": "Secciones",
+      "sectionsHint": "Orden y visibilidad de módulos de tienda.",
+      "applyPreset": "Preset",
+      "sectionSettingsHint": "Ajustes de presentación y fuente. No edita productos.",
+      "variant": "Variante",
+      "visibleIn": "Visible en",
+      "visibleBoth": "Landing + tienda",
+      "visibleStore": "Tienda",
+      "visibleLanding": "Landing",
+      "enabled": "Activo",
+      "messages": "Mensajes",
+      "messagesPlaceholder": "Un mensaje por línea",
+      "headline": "Encabezado",
+      "titleField": "Título",
+      "descriptionField": "Descripción",
+      "productsToShow": "Productos",
+      "columns": "Columnas",
+      "sourceType": "Fuente",
+      "sourceNewest": "Nuevos",
+      "sourceOnSale": "En oferta",
+      "sourceCategory": "Categoría",
+      "sourceManual": "Manual",
+      "productIds": "IDs de productos",
+      "productIdsPlaceholder": "prod_1, prod_2",
+      "maxProducts": "Máximo",
+      "endDate": "Fin de campaña",
+      "productId": "ID de producto",
+      "collectionId": "ID de colección",
+      "buttonText": "Texto CTA",
+      "backgroundImageUrl": "Imagen de fondo",
+      "height": "Altura",
+      "addSection": "Agregar sección",
+      "themePreset": "Preset de tema",
+      "catalogSize": "Catálogo: {{size}} · {{count}} productos",
+      "preview": "Vista previa",
+      "previewTitle": "Vista previa de tienda online",
+      "sectionLabels": {
+        "announcementBar": "Barra de anuncios",
+        "productHero": "Hero de producto",
+        "featuredProducts": "Productos destacados",
+        "categoryGrid": "Grid de categorías",
+        "trustBadges": "Sellos de confianza",
+        "saleCountdown": "Cuenta regresiva",
+        "collectionBanner": "Banner de colección",
+        "recentlyViewed": "Vistos recientemente",
+        "productReviews": "Reseñas de producto",
+        "productBundle": "Bundle de productos"
+      },
+      "themePresets": {
+        "minimal": {
+          "label": "Minimal",
+          "description": "Tienda sobria para catálogos pequeños y negocios orientados a servicios."
+        },
+        "luxury": {
+          "label": "Lujo",
+          "description": "Presentación premium para productos de alto margen y colecciones curadas."
+        },
+        "fitness": {
+          "label": "Fitness",
+          "description": "Tienda energética para equipo, programas, clases y productos wellness."
+        },
+        "marketplace": {
+          "label": "Marketplace",
+          "description": "Exploración densa de catálogo para tiendas grandes con búsqueda y filtros."
+        },
+        "editorial": {
+          "label": "Editorial",
+          "description": "Tienda guiada por contenido para historias, lanzamientos, lookbooks y productos curados."
+        },
+        "beauty": {
+          "label": "Belleza",
+          "description": "Tienda cálida y pulida para belleza, wellness, cosméticos y spa."
+        },
+        "food": {
+          "label": "Comida",
+          "description": "Tienda enfocada en menú y productos para restaurantes y marcas de alimentos."
+        },
+        "fashion": {
+          "label": "Moda",
+          "description": "Sistema visual de merchandising para ropa, accesorios y lanzamientos de temporada."
+        },
+        "digital": {
+          "label": "Digital",
+          "description": "Tienda clara para software, descargas, cursos y productos digitales."
+        }
+      },
+      "catalogSizes": {
+        "empty": "vacío",
+        "single": "un producto",
+        "small": "pequeño",
+        "medium": "mediano",
+        "large": "grande",
+        "enterprise": "empresarial"
+      },
+      "validation": {
+        "manualFeaturedProducts": "Los productos destacados manuales deben incluir IDs de producto.",
+        "saleCountdownEndDate": "La fecha final de la cuenta regresiva debe ser válida.",
+        "productBundleEmpty": "El bundle no tiene IDs de producto y se ocultará en la tienda.",
+        "unsupportedVariant": "Variante no soportada para esta sección.",
+        "unsupportedVisibility": "Visibilidad no soportada para esta sección."
+      }
+    },
     "storefront": {
       "cart": {
         "title": "Your Carrito",

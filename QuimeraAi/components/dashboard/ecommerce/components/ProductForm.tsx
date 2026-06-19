@@ -22,9 +22,10 @@ import { useCategories } from '../hooks/useCategories';
 import { useProductAI } from '../hooks/useProductAI';
 import { Product, ProductStatus, ProductImage } from '../../../../types/ecommerce';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 import AIAssistButton from '../../../onboarding/components/AIAssistButton';
 import EcommerceImagePicker from './EcommerceImagePicker';
+import AppSelect from '../../../ui/AppSelect';
 
 interface ProductFormProps {
     product?: Product | null;
@@ -326,7 +327,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                 <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.category', 'Categoría')}
                                 </label>
-                                <select
+                                <AppSelect
                                     value={formData.categoryId}
                                     onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                                     className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -337,7 +338,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                             {cat.name}
                                         </option>
                                     ))}
-                                </select>
+                                </AppSelect>
                             </div>
                         </div>
 

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 import { CatalogFilterBar, FilterChipRow } from '../filters';
+import AppSelect from '../../ui/AppSelect';
 
 interface Payment {
     id: string;
@@ -348,7 +349,7 @@ export function InvoiceHistory() {
                 trailing={
                     <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-gray-500" />
-                        <select
+                        <AppSelect
                             value={dateRange}
                             onChange={(e) => setDateRange(e.target.value as any)}
                             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-q-surface text-foreground text-sm focus:ring-2 focus:ring-blue-500"
@@ -357,7 +358,7 @@ export function InvoiceHistory() {
                             <option value="30d">Últimos 30 días</option>
                             <option value="90d">Últimos 90 días</option>
                             <option value="all">Todo</option>
-                        </select>
+                        </AppSelect>
                     </div>
                 }
             />

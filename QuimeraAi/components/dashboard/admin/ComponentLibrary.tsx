@@ -9,6 +9,7 @@ import ConfirmationModal from '../../ui/ConfirmationModal';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import ComponentDocumentationViewer from './ComponentDocumentationViewer';
 import { FilterChipRow } from '../filters';
+import AppSelect from '../../ui/AppSelect';
 
 const Label: React.FC<{ children: React.ReactNode, htmlFor?: string }> = ({ children, htmlFor }) => (
     <label htmlFor={htmlFor} className="block text-sm font-medium text-q-text-secondary mb-1">{children}</label>
@@ -222,7 +223,7 @@ const ComponentLibrary: React.FC = () => {
 
                         <div className="flex items-center gap-2">
                             <span className="text-sm text-q-text-secondary font-medium">Category:</span>
-                            <select
+                            <AppSelect
                                 value={filterCategory}
                                 onChange={(e) => setCategoryFilter(e.target.value)}
                                 className="px-3 py-1 bg-q-surface border border-q-border rounded-lg text-q-text text-sm focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -232,7 +233,7 @@ const ComponentLibrary: React.FC = () => {
                                         {cat.charAt(0).toUpperCase() + cat.slice(1)}
                                     </option>
                                 ))}
-                            </select>
+                            </AppSelect>
                         </div>
                     </div>
                 </div>

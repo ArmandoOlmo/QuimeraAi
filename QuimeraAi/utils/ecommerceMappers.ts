@@ -1,4 +1,4 @@
-import { Product, Category, Customer, Order, OrderItem, Review, Discount, DiscountType, StoreSettings, Cart, StoredTimestamp } from '../types/ecommerce';
+import { Product, Category, Customer, Order, OrderItem, OrderRefund, Review, Discount, DiscountType, StoreSettings, Cart, StoredTimestamp } from '../types/ecommerce';
 import { StoreUser, StoreUserRole, StoreUserStatus, UserSegment, SegmentType, UserActivity, ActivityType } from '../types/storeUsers';
 import { toStoredTimestamp } from './supabaseMappers';
 
@@ -114,6 +114,19 @@ const normalizeOrderItem = (item: unknown, index: number): OrderItem => {
         quantity,
         unitPrice,
         totalPrice,
+    };
+};
+
+const normalizeOrderRefund = (refund: unknown, index: number): OrderRefund => {
+    const source = readJsonObject(refund);
+    return {
+        id: toStringValue(source.id ?? source.refundId, `refund-${index}`),
+        amount: toNumber(source.amount),
+        status: toStringValue(source.status, 'unknown'),
+        reason: toOptionalString(source.reason),
+        source: toOptionalString(source.source) as OrderRefund['source'],
+        createdBy: toOptionalString(source.createdBy ?? source.created_by),
+        createdAt: source.createdAt ?? source.created_at ? toTimestamp(source.createdAt ?? source.created_at) : undefined,
     };
 };
 
@@ -251,6 +264,11 @@ export const mapOrderFromDB = (row: DbRecord): Order => {
         stripeData.paymentIntentId
     );
     const hasPricing = Object.keys(pricing).length > 0;
+    const refunds = toArray<unknown>(readField(row, data, 'refunds', 'refunds')).map(normalizeOrderRefund);
+    const refundedAmount = toNumber(
+        readField(row, data, 'refunded_amount', 'refundedAmount'),
+        refunds.reduce((sum, refund) => sum + toNumber(refund.amount), 0)
+    );
 
     return {
         id: toStringValue(row.id ?? data.id),
@@ -297,6 +315,8 @@ export const mapOrderFromDB = (row: DbRecord): Order => {
         paymentMethod: toStringValue(readField(row, data, 'payment_method', 'paymentMethod')),
         paymentIntentId,
         paidAt: toTimestamp(readField(row, data, 'paid_at', 'paidAt')),
+        refundedAmount,
+        refunds,
         shippingMethod: toOptionalString(readField(row, data, 'shipping_method', 'shippingMethod')),
         trackingNumber: toOptionalString(readField(row, data, 'tracking_number', 'trackingNumber')),
         trackingUrl: toOptionalString(readField(row, data, 'tracking_url', 'trackingUrl')),
@@ -347,6 +367,8 @@ export const mapOrderToDB = (order: Partial<Order>): DbRecord => {
     if (order.paymentIntentId !== undefined) data.payment_intent_id = order.paymentIntentId;
     if (order.paymentIntentId !== undefined) data.stripe_payment_intent_id = order.paymentIntentId;
     if (order.stripe?.paymentIntentId !== undefined) data.stripe_payment_intent_id = order.stripe.paymentIntentId;
+    if (order.refundedAmount !== undefined) data.refunded_amount = order.refundedAmount;
+    if (order.refunds !== undefined) data.refunds = order.refunds;
     if (order.shippingMethod !== undefined) data.shipping_method = order.shippingMethod;
     if (order.trackingNumber !== undefined) data.tracking_number = order.trackingNumber;
     if (order.trackingUrl !== undefined) data.tracking_url = order.trackingUrl;
@@ -567,34 +589,44 @@ export const mapStoreSettingsToDB = (settings: Partial<StoreSettings>): DbRecord
 // STORE USERS MAPPERS
 // ============================================================================
 
-export const mapStoreUserFromDB = (row: any): StoreUser => ({
-    id: row.id,
-    email: row.email,
-    displayName: row.display_name,
-    firstName: row.first_name,
-    lastName: row.last_name,
-    photoURL: row.photo_url,
-    phone: row.phone,
-    role: row.role as StoreUserRole,
-    status: row.status as StoreUserStatus,
-    segments: row.segments || [],
-    tags: row.tags || [],
-    customerId: row.customer_id,
-    totalOrders: row.total_orders,
-    totalSpent: Number(row.total_spent),
-    averageOrderValue: Number(row.average_order_value),
-    lastLoginAt: row.last_login_at ? toStoredTimestamp(row.last_login_at) : undefined,
-    lastOrderAt: row.last_order_at ? toStoredTimestamp(row.last_order_at) : undefined,
-    createdAt: toStoredTimestamp(row.created_at),
-    updatedAt: toStoredTimestamp(row.updated_at),
-    metadata: row.metadata || {},
-    acceptsMarketing: row.accepts_marketing,
-    preferredLanguage: row.preferred_language,
-    internalNotes: row.internal_notes,
-});
+export const mapStoreUserFromDB = (row: any): StoreUser => {
+    const metadata = row.metadata || {};
+    const data = readJsonObject(row.data);
+
+    return {
+        id: row.id,
+        authUserId: row.auth_user_id || metadata.authUserId,
+        email: row.email,
+        displayName: row.display_name,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        photoURL: row.photo_url,
+        phone: row.phone,
+        role: row.role as StoreUserRole,
+        status: row.status as StoreUserStatus,
+        segments: row.segments || [],
+        tags: row.tags || [],
+        customerId: row.customer_id,
+        addresses: toArray(readField(row, data, 'addresses', 'addresses')) as StoreUser['addresses'],
+        defaultShippingAddress: readField(row, data, 'default_shipping_address', 'defaultShippingAddress') as StoreUser['defaultShippingAddress'],
+        defaultBillingAddress: readField(row, data, 'default_billing_address', 'defaultBillingAddress') as StoreUser['defaultBillingAddress'],
+        totalOrders: row.total_orders,
+        totalSpent: Number(row.total_spent),
+        averageOrderValue: Number(row.average_order_value),
+        lastLoginAt: row.last_login_at ? toStoredTimestamp(row.last_login_at) : undefined,
+        lastOrderAt: row.last_order_at ? toStoredTimestamp(row.last_order_at) : undefined,
+        createdAt: toStoredTimestamp(row.created_at),
+        updatedAt: toStoredTimestamp(row.updated_at),
+        metadata,
+        acceptsMarketing: row.accepts_marketing,
+        preferredLanguage: row.preferred_language,
+        internalNotes: row.internal_notes,
+    };
+};
 
 export const mapStoreUserToDB = (user: Partial<StoreUser>): any => {
     const data: any = {};
+    if (user.authUserId !== undefined) data.auth_user_id = user.authUserId;
     if (user.email !== undefined) data.email = user.email;
     if (user.displayName !== undefined) data.display_name = user.displayName;
     if (user.firstName !== undefined) data.first_name = user.firstName;

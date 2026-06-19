@@ -26,7 +26,7 @@ import { Order, OrderStatus } from '../../../../types/ecommerce';
 import type { StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
 import OrderDetailDrawer from '../components/OrderDetailDrawer';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 import { CatalogFilterBar, FilterChipRow } from '../../filters';
 
 type OrderStatusFilter = OrderStatus | 'all';
@@ -53,7 +53,7 @@ const OrdersView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    const { orders, isLoading, updateOrderStatus, addTrackingInfo } = useOrders(user?.id || '', storeId);
+    const { orders, isLoading, updateOrderStatus, addTrackingInfo, addInternalNotes, createRefund } = useOrders(user?.id || '', storeId);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStatus, setSelectedStatus] = useState<OrderStatusFilter>('all');
@@ -109,6 +109,20 @@ const OrdersView: React.FC = () => {
         trackingUrl?: string
     ) => {
         const updatedOrder = await addTrackingInfo(orderId, carrier, trackingNumber, trackingUrl);
+        setSelectedOrder((currentOrder) =>
+            currentOrder?.id === orderId ? updatedOrder : currentOrder
+        );
+    };
+
+    const handleUpdateInternalNotes = async (orderId: string, notes: string) => {
+        const updatedOrder = await addInternalNotes(orderId, notes);
+        setSelectedOrder((currentOrder) =>
+            currentOrder?.id === orderId ? updatedOrder : currentOrder
+        );
+    };
+
+    const handleRefundOrder = async (orderId: string, amount?: number, reason?: string) => {
+        const updatedOrder = await createRefund(orderId, amount, reason);
         setSelectedOrder((currentOrder) =>
             currentOrder?.id === orderId ? updatedOrder : currentOrder
         );
@@ -332,6 +346,8 @@ const OrdersView: React.FC = () => {
                     onClose={handleCloseDrawer}
                     onUpdateStatus={handleUpdateOrderStatus}
                     onAddTracking={handleAddTrackingInfo}
+                    onUpdateInternalNotes={handleUpdateInternalNotes}
+                    onRefundOrder={handleRefundOrder}
                 />
             )}
         </div>

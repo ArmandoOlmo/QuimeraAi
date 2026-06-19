@@ -42,6 +42,7 @@ import { db, doc, updateDoc } from '@/utils/compatData';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
+import AppSelect from '../../ui/AppSelect';
 
 // Helper to clean JSON from markdown code blocks and fix common issues
 const cleanJsonResponse = (text: string): string => {
@@ -1242,7 +1243,7 @@ const LeadsDashboard: React.FC = () => {
                                         </button>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <select
+                                        <AppSelect
                                             onChange={async (e) => {
                                                 if (e.target.value) {
                                                     await Promise.all(
@@ -1258,7 +1259,7 @@ const LeadsDashboard: React.FC = () => {
                                             {LEAD_STAGES.map(stage => (
                                                 <option key={stage.id} value={stage.id}>{stage.label}</option>
                                             ))}
-                                        </select>
+                                        </AppSelect>
                                         <button
                                             onClick={() => setShowAddToAudienceModal(true)}
                                             className="bg-primary-foreground text-foreground p-1.5 rounded hover:bg-secondary transition-colors"
@@ -1309,7 +1310,7 @@ const LeadsDashboard: React.FC = () => {
                                             <Download size={14} />
                                             Export Selected
                                         </button>
-                                        <select
+                                        <AppSelect
                                             onChange={async (e) => {
                                                 if (e.target.value) {
                                                     await Promise.all(
@@ -1325,7 +1326,7 @@ const LeadsDashboard: React.FC = () => {
                                             {LEAD_STAGES.map(stage => (
                                                 <option key={stage.id} value={stage.id}>{stage.label}</option>
                                             ))}
-                                        </select>
+                                        </AppSelect>
                                         <button
                                             onClick={() => setBulkDeleteConfirmOpen(true)}
                                             className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-bold flex items-center gap-2 transition-colors"
@@ -1999,7 +2000,7 @@ const LeadsDashboard: React.FC = () => {
                                                                     />
                                                                 )}
                                                                 {fieldDef.type === 'select' && fieldDef.options && (
-                                                                    <select
+                                                                    <AppSelect
                                                                         value={(currentValue?.value as string) || ''}
                                                                         onChange={e => {
                                                                             const updatedFields = [...(editForm.customFields || [])];
@@ -2017,7 +2018,7 @@ const LeadsDashboard: React.FC = () => {
                                                                         {fieldDef.options.map(opt => (
                                                                             <option key={opt} value={opt}>{opt}</option>
                                                                         ))}
-                                                                    </select>
+                                                                    </AppSelect>
                                                                 )}
                                                                 {fieldDef.type === 'checkbox' && (
                                                                     <label className="flex items-center gap-2">

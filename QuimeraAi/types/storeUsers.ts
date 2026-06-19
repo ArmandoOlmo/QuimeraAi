@@ -3,7 +3,7 @@
  * Tipos para el sistema de autenticación de usuarios de tienda multi-tenant
  */
 
-import { StoredTimestamp } from './ecommerce';
+import { Address, StoredTimestamp } from './ecommerce';
 
 // =============================================================================
 // ROLES & STATUS
@@ -31,6 +31,7 @@ export interface StoreUserMetadata {
 
 export interface StoreUser {
     id: string;
+    authUserId?: string;
     
     // Basic Info
     email: string;
@@ -50,6 +51,9 @@ export interface StoreUser {
     
     // Linked Data
     customerId?: string;            // Reference to Customer in ecommerce
+    addresses?: Address[];
+    defaultShippingAddress?: Address;
+    defaultBillingAddress?: Address;
     
     // Stats
     totalOrders: number;
@@ -343,6 +347,7 @@ export interface StoreAuthContextType extends StoreAuthState {
     logout: () => Promise<void>;
     resetPassword: (email: string) => Promise<void>;
     updateProfile: (updates: Partial<StoreUser>) => Promise<void>;
+    deleteAccount: () => Promise<void>;
     refreshUser: () => Promise<void>;
 }
 
@@ -381,8 +386,6 @@ export interface DeleteStoreUserPayload {
     storeId: string;
     userId: string;
 }
-
-
 
 
 

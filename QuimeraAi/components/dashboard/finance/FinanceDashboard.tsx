@@ -46,6 +46,7 @@ import FinancialInsights from './FinancialInsights';
 import SmartTransactionTable from './SmartTransactionTable';
 import InvoiceManager from './InvoiceManager';
 import ReportGenerator from './ReportGenerator';
+import AppSelect from '../../ui/AppSelect';
 
 const COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'];
 
@@ -1127,7 +1128,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                             />
                                         </div>
                                         <div className="flex gap-2">
-                                            <select
+                                            <AppSelect
                                                 value={dateFilterPreset}
                                                 onChange={(e) => handleDatePresetChange(e.target.value)}
                                                 className="bg-q-bg border border-q-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer h-10"
@@ -1138,7 +1139,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 <option value="thisYear">{t('financeDashboard.filters.time.thisYear')}</option>
                                                 <option value="all">{t('financeDashboard.filters.time.all')}</option>
                                                 <option value="custom">{t('financeDashboard.filters.time.custom')}</option>
-                                            </select>
+                                            </AppSelect>
 
                                             {dateFilterPreset === 'custom' && (
                                                 <div className="flex gap-2 items-center bg-q-bg border border-q-border rounded-lg px-2 h-10">
@@ -1158,7 +1159,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 </div>
                                             )}
 
-                                            <select
+                                            <AppSelect
                                                 value={filterCategory}
                                                 onChange={(e) => setFilterCategory(e.target.value)}
                                                 className="bg-q-bg border border-q-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer h-10"
@@ -1167,7 +1168,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 {Object.keys(CATEGORY_COLORS).map(cat => (
                                                     <option key={cat} value={cat}>{cat}</option>
                                                 ))}
-                                            </select>
+                                            </AppSelect>
                                         </div>
                                     </div>
                                 </div>
@@ -1300,7 +1301,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                     </div>
                                                     <div>
                                                         <label className="text-xs font-bold text-q-text-muted uppercase block mb-1.5">{t('financeDashboard.category')}</label>
-                                                        <select
+                                                        <AppSelect
                                                             value={selectedExpense.category}
                                                             onChange={(e) => handleUpdateExpense(selectedExpense.id, { category: e.target.value })}
                                                             className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none"
@@ -1309,7 +1310,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                             {Object.keys(CATEGORY_COLORS).map(cat => (
                                                                 <option key={cat} value={cat}>{cat}</option>
                                                             ))}
-                                                        </select>
+                                                        </AppSelect>
                                                     </div>
                                                 </div>
 
@@ -1369,7 +1370,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                                                 />
                                                                             </div>
                                                                             <div className="flex-1" />
-                                                                            <select
+                                                                            <AppSelect
                                                                                 value={itemData.category || ''}
                                                                                 onChange={(e) => handleUpdateItem(idx, 'category', e.target.value)}
                                                                                 className="bg-transparent text-[10px] border-none focus:ring-0 text-q-text-muted p-0 cursor-pointer hover:text-foreground text-right"
@@ -1378,7 +1379,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                                                 {Object.keys(CATEGORY_COLORS).map(cat => (
                                                                                     <option key={cat} value={cat}>{cat}</option>
                                                                                 ))}
-                                                                            </select>
+                                                                            </AppSelect>
                                                                         </div>
                                                                     </div>
                                                                 );

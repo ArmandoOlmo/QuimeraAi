@@ -46,6 +46,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import NewsEditor from './NewsEditor';
 import AINewsStudio from './AINewsStudio';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
+import AppSelect from '../../ui/AppSelect';
 
 interface NewsManagementProps {
     onBack: () => void;
@@ -400,7 +401,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                     <label className="block text-xs text-q-text-secondary mb-1">
                                         {t('superadmin.news.filterCategory', 'Categoría')}
                                     </label>
-                                    <select
+                                    <AppSelect
                                         value={categoryFilter}
                                         onChange={e => setCategoryFilter(e.target.value as NewsCategory | '')}
                                         className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -411,7 +412,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                                 {t(`superadmin.news.category.${value}`, label)}
                                             </option>
                                         ))}
-                                    </select>
+                                    </AppSelect>
                                 </div>
 
                                 {/* Featured Filter */}
@@ -419,7 +420,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                     <label className="block text-xs text-q-text-secondary mb-1">
                                         {t('superadmin.news.filterFeatured', 'Destacadas')}
                                     </label>
-                                    <select
+                                    <AppSelect
                                         value={featuredFilter === '' ? '' : featuredFilter ? 'true' : 'false'}
                                         onChange={e =>
                                             setFeaturedFilter(
@@ -433,7 +434,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                         <option value="">{t('common.all', 'Todas')}</option>
                                         <option value="true">{t('superadmin.news.onlyFeatured', 'Solo destacadas')}</option>
                                         <option value="false">{t('superadmin.news.notFeatured', 'No destacadas')}</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
 
                                 {/* Clear Filters */}

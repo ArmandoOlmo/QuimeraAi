@@ -9,6 +9,7 @@ import { ProductBundleData, StorefrontProductItem } from '../../../types/compone
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { createProductCardViewModel } from '../../../utils/productCard';
 
 interface ProductBundleProps {
     data: ProductBundleData;
@@ -78,51 +79,60 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     };
 
     // Product card in bundle
-    const BundleProductCard = ({ product, isLast }: { product: StorefrontProductItem; isLast: boolean }) => (
-        <div className="flex items-center gap-4">
-            <div
-                className={`flex-shrink-0 w-24 h-24 ${getBorderRadius()} overflow-hidden cursor-pointer`}
-                onClick={() => product.slug && onProductClick?.(product.slug)}
-            >
-                {product.image ? (
-                    <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform"
-                    />
-                ) : (
-                    <div
-                        className="w-full h-full flex items-center justify-center"
-                        style={{ backgroundColor: colors?.cardBackground }}
+    const BundleProductCard = ({ product, isLast }: { product: StorefrontProductItem; isLast: boolean }) => {
+        const card = createProductCardViewModel(product, {
+            variant: 'compact',
+            currencySymbol: '$',
+            showBadges: false,
+            showRatings: false,
+        });
+
+        return (
+            <div className="flex items-center gap-4">
+                <div
+                    className={`flex-shrink-0 w-24 h-24 ${getBorderRadius()} overflow-hidden cursor-pointer`}
+                    onClick={() => product.slug && onProductClick?.(product.slug)}
+                >
+                    {card.image?.url ? (
+                        <img
+                            src={card.image.url}
+                            alt={card.image.altText}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform"
+                        />
+                    ) : (
+                        <div
+                            className="w-full h-full flex items-center justify-center"
+                            style={{ backgroundColor: colors?.cardBackground }}
+                        >
+                            <span className="text-xs" style={{ color: colors?.cardText }}>Sin imagen</span>
+                        </div>
+                    )}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <h4
+                        className="font-medium line-clamp-2 cursor-pointer hover:underline"
+                        style={{ color: colors?.cardText || colors?.heading }}
+                        onClick={() => product.slug && onProductClick?.(product.slug)}
                     >
-                        <span className="text-xs" style={{ color: colors?.cardText }}>Sin imagen</span>
+                        {card.name}
+                    </h4>
+                    {data.showIndividualPrices && (
+                        <p style={{ color: colors?.priceColor || colors?.accent }}>
+                            {card.displayPrice}
+                        </p>
+                    )}
+                </div>
+                {!isLast && (
+                    <div
+                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: colors?.accent + '20' }}
+                    >
+                        <Plus size={16} style={{ color: colors?.accent }} />
                     </div>
                 )}
             </div>
-            <div className="flex-1 min-w-0">
-                <h4
-                    className="font-medium line-clamp-2 cursor-pointer hover:underline"
-                    style={{ color: colors?.cardText || colors?.heading }}
-                    onClick={() => product.slug && onProductClick?.(product.slug)}
-                >
-                    {product.name}
-                </h4>
-                {data.showIndividualPrices && (
-                    <p style={{ color: colors?.priceColor || colors?.accent }}>
-                        ${product.price.toFixed(2)}
-                    </p>
-                )}
-            </div>
-            {!isLast && (
-                <div
-                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: colors?.accent + '20' }}
-                >
-                    <Plus size={16} style={{ color: colors?.accent }} />
-                </div>
-            )}
-        </div>
-    );
+        );
+    };
 
     // Horizontal variant
     const renderHorizontal = () => (

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useEmailDashboardContext } from '../EmailDashboard';
 import { useEmailLogs, useEmailCampaigns } from '../../../../hooks/useEmailSettings';
+import AppSelect from '../../../ui/AppSelect';
 
 type TimeRange = '7d' | '30d' | '90d' | '12m';
 
@@ -194,7 +195,7 @@ const AnalyticsView: React.FC = () => {
 
                 <div className="flex items-center gap-2">
                     <Calendar className="text-q-text-muted" size={18} />
-                    <select
+                    <AppSelect
                         value={timeRange}
                         onChange={(e) => setTimeRange(e.target.value as TimeRange)}
                         className="px-3 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -204,7 +205,7 @@ const AnalyticsView: React.FC = () => {
                                 {range.label}
                             </option>
                         ))}
-                    </select>
+                    </AppSelect>
                 </div>
             </div>
 

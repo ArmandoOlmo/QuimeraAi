@@ -14,6 +14,7 @@ import { Palette, Download, Sparkles } from 'lucide-react';
 import { loadAllFonts } from '../../../../../utils/fontLoader';
 import { FontFamily } from '../../../../../types';
 import FontFamilyPicker from '../../../../ui/FontFamilyPicker';
+import AppSelect from '../../../../ui/AppSelect';
 
 // =============================================================================
 // QUIMERA.AI BRAND PALETTE (from main.css design system)
@@ -95,7 +96,7 @@ const SelectControl: React.FC<{
         <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
             {label}
         </label>
-        <select
+        <AppSelect
             value={value}
             onChange={(e) => onChange(e.target.value)}
             className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
@@ -105,7 +106,7 @@ const SelectControl: React.FC<{
                     {opt.label}
                 </option>
             ))}
-        </select>
+        </AppSelect>
     </div>
 );
 

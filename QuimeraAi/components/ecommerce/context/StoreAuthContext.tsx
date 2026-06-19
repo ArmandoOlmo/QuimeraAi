@@ -7,14 +7,11 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import {
     signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    sendPasswordResetEmail,
     signOut,
     onAuthStateChanged,
     User as StoreAuthUser,
 } from '@/utils/compatData';
-import { doc, getDoc, collection, query, where, getDocs } from '@/utils/compatData';
-import { auth, db } from '@/utils/compatData';
+import { auth } from '@/utils/compatData';
 import { supabase } from '../../../supabase';
 import { StoreUser, StoreAuthContextType, StoreAuthState } from '../../../types/storeUsers';
 
@@ -24,6 +21,29 @@ interface StoreAuthProviderProps {
 }
 
 const StoreAuthContext = createContext<StoreAuthContextType | null>(null);
+
+const isStorefrontEditorPreview = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('preview') === 'storefront-editor';
+};
+
+const isExpectedStoreUserLookupError = (error: unknown): boolean => {
+    const maybeError = error as {
+        status?: number;
+        context?: { status?: number };
+        message?: string;
+    };
+    const status = maybeError.context?.status ?? maybeError.status;
+
+    return [400, 401, 403, 404].includes(Number(status));
+};
+
+const getSignedOutState = (): StoreAuthState => ({
+    user: null,
+    isLoading: false,
+    isAuthenticated: false,
+    error: null,
+});
 
 export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
     storeId,
@@ -36,36 +56,36 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
         error: null,
     });
 
-    // Uses Supabase client inline.
+    const fetchCurrentStoreUser = useCallback(async (
+        options: { suppressExpectedErrors?: boolean } = {},
+    ): Promise<StoreUser | null> => {
+        if (!storeId || isStorefrontEditorPreview()) return null;
 
-    // Fetch store user data from Supabase.
-    const fetchStoreUser = useCallback(async (email: string): Promise<StoreUser | null> => {
         try {
-            const usersRef = collection(db, `storeUsers/${storeId}/users`);
-            const q = query(usersRef, where('email', '==', email.toLowerCase()));
-            const snapshot = await getDocs(q);
-
-            if (snapshot.empty) {
-                return null;
-            }
-
-            const userDoc = snapshot.docs[0];
-            return {
-                id: userDoc.id,
-                ...userDoc.data(),
-            } as StoreUser;
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'storeUsers-getCurrent', storeId },
+            });
+            if (result.error) throw result.error;
+            const payload = result.data?.data || result.data;
+            return payload?.user || null;
         } catch (error) {
-            console.error('Error fetching store user:', error);
+            if (!options.suppressExpectedErrors || !isExpectedStoreUserLookupError(error)) {
+                console.error('Error fetching store user:', error);
+            }
             return null;
         }
     }, [storeId]);
 
     // Listen to storefront auth state changes.
     useEffect(() => {
+        if (isStorefrontEditorPreview()) {
+            setState(getSignedOutState());
+            return undefined;
+        }
+
         const unsubscribe = onAuthStateChanged(auth, async (authUser: StoreAuthUser | null) => {
             if (authUser && authUser.email) {
-                // User is signed in, check if they belong to this store
-                const storeUser = await fetchStoreUser(authUser.email);
+                const storeUser = await fetchCurrentStoreUser({ suppressExpectedErrors: true });
 
                 if (storeUser) {
                     // Check if user is banned
@@ -100,48 +120,39 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
                     });
                 } else {
                     // User exists in auth but not in this store.
-                    setState({
-                        user: null,
-                        isLoading: false,
-                        isAuthenticated: false,
-                        error: null,
-                    });
+                    setState(getSignedOutState());
                 }
             } else {
                 // User is signed out
-                setState({
-                    user: null,
-                    isLoading: false,
-                    isAuthenticated: false,
-                    error: null,
-                });
+                setState(getSignedOutState());
             }
         });
 
         return () => unsubscribe();
-    }, [fetchStoreUser]);
+    }, [fetchCurrentStoreUser]);
 
     // Login
     const login = useCallback(async (email: string, password: string): Promise<void> => {
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
         try {
-            // First check if user exists in this store
-            const storeUser = await fetchStoreUser(email);
+            await signInWithEmailAndPassword(auth, email, password);
+            const storeUser = await fetchCurrentStoreUser();
 
             if (!storeUser) {
+                await signOut(auth);
                 throw new Error('No existe una cuenta con este email en esta tienda');
             }
 
             if (storeUser.status === 'banned') {
+                await signOut(auth);
                 throw new Error('Tu cuenta ha sido suspendida. Contacta al soporte.');
             }
 
             if (storeUser.status === 'inactive') {
+                await signOut(auth);
                 throw new Error('Tu cuenta está inactiva. Contacta al soporte.');
             }
-
-            await signInWithEmailAndPassword(auth, email, password);
 
             // Record login (async, don't wait)
             supabase.functions.invoke('stripe-api', {
@@ -169,7 +180,7 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
 
             throw new Error(errorMessage);
         }
-    }, [storeId, fetchStoreUser]);
+    }, [storeId, fetchCurrentStoreUser]);
 
     // Register
     const register = useCallback(async (
@@ -200,6 +211,13 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
             }
 
             await signInWithEmailAndPassword(auth, email, password);
+            const storeUser = await fetchCurrentStoreUser();
+            setState({
+                user: storeUser,
+                isLoading: false,
+                isAuthenticated: Boolean(storeUser),
+                error: null,
+            });
 
         } catch (error: any) {
             let errorMessage = 'Error al crear la cuenta';
@@ -224,7 +242,7 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
 
             throw new Error(errorMessage);
         }
-    }, [storeId]);
+    }, [storeId, fetchCurrentStoreUser]);
 
     // Logout
     const logout = useCallback(async (): Promise<void> => {
@@ -245,14 +263,10 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
     // Reset Password
     const resetPassword = useCallback(async (email: string): Promise<void> => {
         try {
-            // First check if user exists in this store
-            const storeUser = await fetchStoreUser(email);
-
-            if (!storeUser) {
-                throw new Error('No existe una cuenta con este email en esta tienda');
-            }
-
-            await sendPasswordResetEmail(auth, email);
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'storeUsers-resetPassword', storeId, email },
+            });
+            if (result.error) throw result.error;
         } catch (error: any) {
             let errorMessage = 'Error al enviar el email de recuperación';
 
@@ -264,7 +278,7 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
 
             throw new Error(errorMessage);
         }
-    }, [fetchStoreUser]);
+    }, [storeId]);
 
     // Update Profile
     const updateProfile = useCallback(async (updates: Partial<StoreUser>): Promise<void> => {
@@ -272,16 +286,52 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
             throw new Error('No hay sesión activa');
         }
 
-        // Note: Profile updates should be done via server-side API routes for security.
-        // For now, just refresh the user data
-        await refreshUser();
-    }, [state.user]);
+        const result = await supabase.functions.invoke('stripe-api', {
+            body: {
+                action: 'storeUsers-updateProfile',
+                storeId,
+                profile: updates,
+                addresses: updates.addresses,
+                defaultShippingAddress: updates.defaultShippingAddress,
+                defaultBillingAddress: updates.defaultBillingAddress,
+            },
+        });
+        if (result.error) throw result.error;
+        const payload = result.data?.data || result.data;
+        setState(prev => ({
+            ...prev,
+            user: payload?.user || prev.user,
+            isLoading: false,
+            isAuthenticated: Boolean(payload?.user || prev.user),
+            error: null,
+        }));
+    }, [state.user, storeId]);
+
+    // Delete Account
+    const deleteAccount = useCallback(async (): Promise<void> => {
+        if (!state.user) {
+            throw new Error('No hay sesión activa');
+        }
+
+        const result = await supabase.functions.invoke('stripe-api', {
+            body: { action: 'storeUsers-deleteAccount', storeId },
+        });
+        if (result.error) throw result.error;
+
+        await signOut(auth);
+        setState({
+            user: null,
+            isLoading: false,
+            isAuthenticated: false,
+            error: null,
+        });
+    }, [state.user, storeId]);
 
     // Refresh User
     const refreshUser = useCallback(async (): Promise<void> => {
         if (!auth.currentUser?.email) return;
 
-        const storeUser = await fetchStoreUser(auth.currentUser.email);
+        const storeUser = await fetchCurrentStoreUser();
 
         if (storeUser) {
             setState(prev => ({
@@ -289,7 +339,7 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
                 user: storeUser,
             }));
         }
-    }, [fetchStoreUser]);
+    }, [fetchCurrentStoreUser]);
 
     // Context value
     const value = useMemo<StoreAuthContextType>(() => ({
@@ -299,8 +349,9 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
         logout,
         resetPassword,
         updateProfile,
+        deleteAccount,
         refreshUser,
-    }), [state, login, register, logout, resetPassword, updateProfile, refreshUser]);
+    }), [state, login, register, logout, resetPassword, updateProfile, deleteAccount, refreshUser]);
 
     return (
         <StoreAuthContext.Provider value={value}>
@@ -326,9 +377,6 @@ export const useStoreAuthOptional = (): StoreAuthContextType | null => {
 };
 
 export default StoreAuthContext;
-
-
-
 
 
 

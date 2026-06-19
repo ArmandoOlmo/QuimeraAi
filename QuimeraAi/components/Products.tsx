@@ -7,6 +7,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ShoppingCart, Eye, Heart, Star, Filter, Search, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { ProductsProps, StorefrontProductItem, StyleType } from '../types/components';
+import type { ProductCardVariant } from '../types/productCard';
+import { createProductCardViewModel } from '../utils/productCard';
+import AppSelect from './ui/AppSelect';
 
 // Extended props to include colors
 interface ProductsWithColorsProps extends ProductsProps {
@@ -300,7 +303,7 @@ const Products: React.FC<ProductsWithColorsProps> = ({
                         {showFilters && (
                             <div className="flex gap-4">
                                 {categories.length > 0 && (
-                                    <select
+                                    <AppSelect
                                         value={selectedCategory}
                                         onChange={(e) => setSelectedCategory(e.target.value)}
                                         className={`px-4 py-3 rounded-lg focus:outline-none focus:ring-2 ${styles.input}`}
@@ -316,10 +319,10 @@ const Products: React.FC<ProductsWithColorsProps> = ({
                                                 {cat}
                                             </option>
                                         ))}
-                                    </select>
+                                    </AppSelect>
                                 )}
 
-                                <select
+                                <AppSelect
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                                     className={`px-4 py-3 rounded-lg focus:outline-none focus:ring-2 ${styles.input}`}
@@ -333,7 +336,7 @@ const Products: React.FC<ProductsWithColorsProps> = ({
                                     <option value="name">Nombre</option>
                                     <option value="price-asc">Precio: menor a mayor</option>
                                     <option value="price-desc">Precio: mayor a menor</option>
-                                </select>
+                                </AppSelect>
                             </div>
                         )}
                     </div>
@@ -456,7 +459,7 @@ const Products: React.FC<ProductsWithColorsProps> = ({
 // Product Card Component
 interface ProductCardProps {
     product: StorefrontProductItem;
-    cardStyle: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardStyle: ProductCardVariant;
     showAddToCart: boolean;
     showQuickView: boolean;
     showWishlist: boolean;
@@ -492,21 +495,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
     primaryColor,
     effectiveColors,
 }) => {
-    const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
-    const discountPercentage = hasDiscount
-        ? Math.round(((product.compareAtPrice! - product.price) / product.compareAtPrice!) * 100)
-        : 0;
+    const card = createProductCardViewModel(product, {
+        variant: cardStyle,
+        currencySymbol: '$',
+        showFeaturedBadge: false,
+    });
+    const visualCardStyle = card.visualVariant;
 
     // Overlay style - full image with text on top
-    if (cardStyle === 'overlay') {
+    if (visualCardStyle === 'overlay') {
         return (
             <div className="group relative rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl cursor-pointer">
                 {/* Full Image */}
                 <div className="relative aspect-square overflow-hidden">
-                    {product.image ? (
+                    {card.image?.url ? (
                         <img
-                            src={product.image}
-                            alt={product.name}
+                            src={card.image.url}
+                            alt={card.image.altText}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
                     ) : (
@@ -519,17 +524,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
                     {/* Discount Badge */}
-                    {hasDiscount && (
+                    {card.hasDiscount && (
                         <div
                             className="absolute top-3 left-3 px-2 py-1 rounded-full text-white text-xs font-bold"
                             style={{ backgroundColor: '#ef4444' }}
                         >
-                            -{discountPercentage}%
+                            -{card.discountPercent}%
                         </div>
                     )}
 
                     {/* Out of Stock Badge */}
-                    {product.inStock === false && (
+                    {!card.inventory.isAvailable && (
                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                             <span className="bg-white text-gray-900 px-4 py-2 rounded-full font-medium">
                                 Agotado
@@ -574,42 +579,40 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         )}
 
                         <h3 className="font-semibold text-white mb-2 line-clamp-2">
-                            {product.name}
+                            {card.name}
                         </h3>
 
                         {/* Rating */}
-                        {product.rating !== undefined && (
+                        {card.rating && (
                             <div className="flex items-center gap-1 mb-2">
                                 {Array.from({ length: 5 }).map((_, i) => (
                                     <Star
                                         key={i}
                                         size={14}
-                                        className={i < Math.round(product.rating!) ? 'text-yellow-400' : 'text-white/40'}
-                                        fill={i < Math.round(product.rating!) ? 'currentColor' : 'none'}
+                                        className={i < Math.round(card.rating!.value) ? 'text-yellow-400' : 'text-white/40'}
+                                        fill={i < Math.round(card.rating!.value) ? 'currentColor' : 'none'}
                                     />
                                 ))}
-                                {product.reviewCount !== undefined && (
-                                    <span className="text-xs ml-1 text-white/70">
-                                        ({product.reviewCount})
-                                    </span>
-                                )}
+                                <span className="text-xs ml-1 text-white/70">
+                                    {card.rating.displayText}
+                                </span>
                             </div>
                         )}
 
                         {/* Price */}
                         <div className="flex items-center gap-2">
                             <span className="text-lg font-bold text-white">
-                                ${product.price.toFixed(2)}
+                                {card.displayPrice}
                             </span>
-                            {hasDiscount && (
+                            {card.hasDiscount && card.displayCompareAtPrice && (
                                 <span className="text-sm line-through text-white/60">
-                                    ${product.compareAtPrice!.toFixed(2)}
+                                    {card.displayCompareAtPrice}
                                 </span>
                             )}
                         </div>
 
                         {/* Add to Cart Button */}
-                        {showAddToCart && product.inStock !== false && onAddToCart && (
+                        {showAddToCart && card.inventory.isAvailable && onAddToCart && (
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -639,10 +642,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
         >
             {/* Image Container */}
             <div className="relative aspect-square overflow-hidden">
-                {product.image ? (
+                {card.image?.url ? (
                     <img
-                        src={product.image}
-                        alt={product.name}
+                        src={card.image.url}
+                        alt={card.image.altText}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                 ) : (
@@ -652,17 +655,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 )}
 
                 {/* Discount Badge */}
-                {hasDiscount && (
+                {card.hasDiscount && (
                     <div
                         className="absolute top-3 left-3 px-2 py-1 rounded-full text-white text-xs font-bold"
                         style={{ backgroundColor: '#ef4444' }}
                     >
-                        -{discountPercentage}%
+                        -{card.discountPercent}%
                     </div>
                 )}
 
                 {/* Out of Stock Badge */}
-                {product.inStock === false && (
+                {!card.inventory.isAvailable && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                         <span className="bg-white text-gray-900 px-4 py-2 rounded-full font-medium">
                             Agotado
@@ -693,7 +696,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 </div>
 
                 {/* Add to Cart Button */}
-                {showAddToCart && product.inStock !== false && onAddToCart && (
+                {showAddToCart && card.inventory.isAvailable && onAddToCart && (
                     <div className="absolute inset-x-4 bottom-4 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                             onClick={() => onAddToCart(product.id)}
@@ -725,28 +728,26 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     className={`font-medium mb-2 line-clamp-2 ${styles.text}`}
                     style={effectiveColors.cardText || effectiveColors.heading ? { color: effectiveColors.cardText || effectiveColors.heading } : undefined}
                 >
-                    {product.name}
+                    {card.name}
                 </h3>
 
                 {/* Rating */}
-                {product.rating !== undefined && (
+                {card.rating && (
                     <div className="flex items-center gap-1 mb-2">
                         {Array.from({ length: 5 }).map((_, i) => (
                             <Star
                                 key={i}
                                 size={14}
-                                className={i < Math.round(product.rating!) ? 'text-yellow-400' : 'text-gray-300'}
-                                fill={i < Math.round(product.rating!) ? 'currentColor' : 'none'}
+                                className={i < Math.round(card.rating!.value) ? 'text-yellow-400' : 'text-gray-300'}
+                                fill={i < Math.round(card.rating!.value) ? 'currentColor' : 'none'}
                             />
                         ))}
-                        {product.reviewCount !== undefined && (
-                            <span 
-                                className={`text-xs ml-1 ${styles.subtext}`}
-                                style={effectiveColors.cardText || effectiveColors.text ? { color: effectiveColors.cardText || effectiveColors.text, opacity: 0.6 } : undefined}
-                            >
-                                ({product.reviewCount})
-                            </span>
-                        )}
+                        <span
+                            className={`text-xs ml-1 ${styles.subtext}`}
+                            style={effectiveColors.cardText || effectiveColors.text ? { color: effectiveColors.cardText || effectiveColors.text, opacity: 0.6 } : undefined}
+                        >
+                            {card.rating.displayText}
+                        </span>
                     </div>
                 )}
 
@@ -756,14 +757,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         className={`text-lg font-bold ${styles.text}`}
                         style={effectiveColors.accent ? { color: effectiveColors.accent } : undefined}
                     >
-                        ${product.price.toFixed(2)}
+                        {card.displayPrice}
                     </span>
-                    {hasDiscount && (
+                    {card.hasDiscount && card.displayCompareAtPrice && (
                         <span 
                             className={`text-sm line-through ${styles.subtext}`}
                             style={effectiveColors.cardText || effectiveColors.text ? { color: effectiveColors.cardText || effectiveColors.text, opacity: 0.5 } : undefined}
                         >
-                            ${product.compareAtPrice!.toFixed(2)}
+                            {card.displayCompareAtPrice}
                         </span>
                     )}
                 </div>
@@ -773,6 +774,4 @@ const ProductCard: React.FC<ProductCardProps> = ({
 };
 
 export default Products;
-
-
 

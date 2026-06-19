@@ -32,6 +32,7 @@ import {
     formatTriggerEvent, calculateWorkflowDuration,
     getCategoryLabel, getCategoryColor,
 } from '../helpers';
+import AppSelect from '../../../../ui/AppSelect';
 
 // =============================================================================
 // TYPES
@@ -282,14 +283,14 @@ const WorkflowNode: React.FC<{
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.delayConfig.type')}</label>
-                                    <select
+                                    <AppSelect
                                         value={step.delayConfig?.delayType || 'fixed'}
                                         onChange={(e) => onUpdate({ ...step, delayConfig: { ...step.delayConfig!, delayType: e.target.value as 'fixed' | 'until-time' } })}
                                         className="w-full bg-q-bg/60 border border-q-border/50 rounded-lg px-3 py-1.5 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
                                     >
                                         <option value="fixed">{t('adminEmail.automations.delayConfig.fixedTime')}</option>
                                         <option value="until-time">{t('adminEmail.automations.delayConfig.untilTimeOfDay')}</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
                             </div>
                         )}
@@ -297,7 +298,7 @@ const WorkflowNode: React.FC<{
                         {step.type === 'condition' && (
                             <div>
                                 <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.conditionConfig.conditionType')}</label>
-                                <select
+                                <AppSelect
                                     value={step.conditionConfig?.conditionType || 'email-opened'}
                                     onChange={(e) => onUpdate({ ...step, conditionConfig: { ...step.conditionConfig!, conditionType: e.target.value as any } })}
                                     className="w-full bg-q-bg/60 border border-q-border/50 rounded-lg px-3 py-1.5 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
@@ -307,7 +308,7 @@ const WorkflowNode: React.FC<{
                                     <option value="purchase-made">{t('adminEmail.automations.conditionConfig.purchaseMade')}</option>
                                     <option value="has-tag">{t('adminEmail.automations.conditionConfig.hasTag')}</option>
                                     <option value="custom">{t('adminEmail.automations.conditionConfig.custom')}</option>
-                                </select>
+                                </AppSelect>
                                 {step.conditionConfig?.conditionType === 'has-tag' && (
                                     <input
                                         type="text"
@@ -324,7 +325,7 @@ const WorkflowNode: React.FC<{
                             <>
                                 <div>
                                     <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.actionConfig.actionType')}</label>
-                                    <select
+                                    <AppSelect
                                         value={step.actionConfig?.actionType || 'add-tag'}
                                         onChange={(e) => onUpdate({ ...step, actionConfig: { ...step.actionConfig!, actionType: e.target.value as any } })}
                                         className="w-full bg-q-bg/60 border border-q-border/50 rounded-lg px-3 py-1.5 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
@@ -334,7 +335,7 @@ const WorkflowNode: React.FC<{
                                         <option value="move-to-audience">{t('adminEmail.automations.actionConfig.moveToAudience')}</option>
                                         <option value="update-field">{t('adminEmail.automations.actionConfig.updateField')}</option>
                                         <option value="send-notification">{t('adminEmail.automations.actionConfig.sendNotification')}</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
                                 {(step.actionConfig?.actionType === 'add-tag' || step.actionConfig?.actionType === 'remove-tag') && (
                                     <div>
@@ -634,7 +635,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
 
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.category')}</label>
-                                <select
+                                <AppSelect
                                     value={newAutomation.category}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, category: e.target.value as AutomationCategory }))}
                                     className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50"
@@ -643,12 +644,12 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                     <option value="conversion">💰 {t('adminEmail.automations.catConversion')}</option>
                                     <option value="engagement">💬 {t('adminEmail.automations.catEngagement')}</option>
                                     <option value="retention">🔒 {t('adminEmail.automations.catRetention')}</option>
-                                </select>
+                                </AppSelect>
                             </div>
 
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.targetAudience')}</label>
-                                <select
+                                <AppSelect
                                     value={newAutomation.audienceId}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, audienceId: e.target.value }))}
                                     className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50"
@@ -657,12 +658,12 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                     {audiences.map(a => (
                                         <option key={a.id} value={a.id}>{a.name} ({a.estimatedCount || a.staticMemberCount || 0} contactos)</option>
                                     ))}
-                                </select>
+                                </AppSelect>
                             </div>
 
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.initialStatus')}</label>
-                                <select
+                                <AppSelect
                                     value={newAutomation.status}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, status: e.target.value as any }))}
                                     className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50"
@@ -670,7 +671,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                     <option value="draft">{t('adminEmail.automations.draftStatus')}</option>
                                     <option value="active">{t('adminEmail.automations.activeStatus')}</option>
                                     <option value="paused">{t('adminEmail.automations.pausedStatus')}</option>
-                                </select>
+                                </AppSelect>
                             </div>
                         </div>
 

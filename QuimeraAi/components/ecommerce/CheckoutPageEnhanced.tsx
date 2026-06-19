@@ -155,6 +155,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                 variantId: item.variantId || null,
                 quantity: item.quantity,
             })),
+            discountCode: discountCode || null,
             shippingMethodId: selectedShipping?.id || null,
         });
         const storageKey = `checkout_idempotency_${btoa(unescape(encodeURIComponent(cartSignature))).slice(0, 80)}`;
@@ -164,7 +165,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
         const nextKey = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
         sessionStorage.setItem(storageKey, nextKey);
         return nextKey;
-    }, [cartItems, selectedShipping?.id, storeId]);
+    }, [cartItems, discountCode, selectedShipping?.id, storeId]);
 
     const steps: { id: CheckoutStep; label: string; icon: React.ElementType }[] = [
         { id: 'information', label: 'Informacion', icon: User },
@@ -251,6 +252,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                     zipCode: formData.zipCode,
                     country: formData.country,
                 },
+                discountCode: discountCode || undefined,
                 shippingMethodId: selectedShipping?.id,
                 idempotencyKey,
                 notes: formData.notes || undefined
@@ -328,6 +330,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                     zipCode: formData.zipCode,
                     country: formData.country,
                 },
+                discountCode: discountCode || undefined,
                 billingAddress: formData.sameAsBilling ? undefined : {
                     firstName: formData.firstName,
                     lastName: formData.lastName,
@@ -1151,14 +1154,59 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
     }, []);
 
     const handleApplyDiscount = useCallback(async (code: string) => {
-        // Feature disabled for MVP to ensure security
-        throw new Error('Los códigos de descuento no están disponibles temporalmente');
-    }, []);
+        const normalizedCode = code.trim().toUpperCase();
+        if (!normalizedCode) return;
+
+        const result = await supabase.functions.invoke('stripe-api', {
+            body: {
+                action: 'validateStoreDiscount',
+                storeId,
+                discountCode: normalizedCode,
+                items: cartItems.map((item) => ({
+                    productId: item.productId,
+                    variantId: item.variantId || undefined,
+                    quantity: item.quantity,
+                })),
+                customerEmail: formData.email || undefined,
+                shippingAddress: {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    address1: formData.address1,
+                    address2: formData.address2 || undefined,
+                    city: formData.city,
+                    state: formData.state,
+                    zipCode: formData.zipCode,
+                    country: formData.country,
+                },
+                shippingMethodId: selectedShipping?.id,
+            },
+        });
+
+        if (result.error) throw result.error;
+        const payload = result.data?.data || result.data;
+        if (!payload?.valid) throw new Error(payload?.error || 'Codigo de descuento invalido');
+
+        const pricing = payload.pricing || payload;
+        setDiscountCode(payload.discountCode || normalizedCode);
+        setDiscountAmount(Number(payload.discountAmount || 0));
+        setSelectedShipping((prev) => {
+            const shippingMethodId = pricing.shippingMethodId || prev?.id || selectedShipping?.id;
+            const currentOption = shippingOptions.find((option) => option.id === shippingMethodId) || prev || selectedShipping;
+            if (!currentOption) return prev;
+            return {
+                ...currentOption,
+                id: shippingMethodId || currentOption.id,
+                name: pricing.shippingMethodName || currentOption.name,
+                price: Number(pricing.shippingTotal ?? currentOption.price),
+            };
+        });
+    }, [cartItems, formData, selectedShipping, shippingOptions, storeId]);
 
     const handleRemoveDiscount = useCallback(() => {
         setDiscountCode('');
         setDiscountAmount(0);
-    }, []);
+        setSelectedShipping((prev) => shippingOptions.find((option) => option.id === prev?.id) || prev);
+    }, [shippingOptions]);
 
     const handleUpdateQuantity = useCallback((productId: string, quantity: number, variantId?: string) => {
         if (quantity <= 0) {
@@ -1311,8 +1359,6 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
 };
 
 export default CheckoutPageEnhanced;
-
-
 
 
 

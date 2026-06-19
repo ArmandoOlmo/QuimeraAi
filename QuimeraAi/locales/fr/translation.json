@@ -1269,6 +1269,125 @@
       "hintBoth": "Les soumissions seront enregistrées comme leads ET ajoutées à l'audience email."
     }
   },
+  "ecommerce": {
+    "storefrontLabel": "Boutique en ligne",
+    "storefrontEditor": {
+      "themePresetApplied": "Preset appliqué à la boutique.",
+      "themePresetError": "Impossible d'appliquer le preset.",
+      "published": "Boutique marquée comme publiée.",
+      "saved": "Boutique enregistrée comme brouillon.",
+      "saveError": "Impossible d'enregistrer la boutique.",
+      "noProject": "Sélectionnez un projet pour modifier sa boutique.",
+      "kicker": "Constructeur de boutique",
+      "title": "Éditeur de boutique",
+      "presentationOnly": "Présentation, sections et thème. Les produits, prix et inventaire restent dans Ecommerce Admin.",
+      "openStorefront": "Ouvrir la boutique",
+      "publishTemplate": "Publier le modèle",
+      "templateState": "État",
+      "templateStateHint": "Contrôle uniquement la présentation de la boutique.",
+      "sections": "Sections",
+      "sectionsHint": "Ordre et visibilité des modules de boutique.",
+      "applyPreset": "Preset",
+      "sectionSettingsHint": "Réglages de présentation et de source. Ne modifie pas les produits.",
+      "variant": "Variante",
+      "visibleIn": "Visible dans",
+      "visibleBoth": "Landing + boutique",
+      "visibleStore": "Boutique",
+      "visibleLanding": "Landing",
+      "enabled": "Actif",
+      "messages": "Messages",
+      "messagesPlaceholder": "Un message par ligne",
+      "headline": "Titre principal",
+      "titleField": "Titre",
+      "descriptionField": "Description",
+      "productsToShow": "Produits",
+      "columns": "Colonnes",
+      "sourceType": "Source",
+      "sourceNewest": "Nouveautés",
+      "sourceOnSale": "En promotion",
+      "sourceCategory": "Catégorie",
+      "sourceManual": "Manuel",
+      "productIds": "IDs produits",
+      "productIdsPlaceholder": "prod_1, prod_2",
+      "maxProducts": "Maximum",
+      "endDate": "Fin de campagne",
+      "productId": "ID produit",
+      "collectionId": "ID collection",
+      "buttonText": "Texte CTA",
+      "backgroundImageUrl": "Image de fond",
+      "height": "Hauteur",
+      "addSection": "Ajouter une section",
+      "themePreset": "Preset de thème",
+      "catalogSize": "Catalogue : {{size}} · {{count}} produits",
+      "preview": "Aperçu",
+      "previewTitle": "Aperçu de la boutique",
+      "sectionLabels": {
+        "announcementBar": "Barre d'annonces",
+        "productHero": "Hero produit",
+        "featuredProducts": "Produits en vedette",
+        "categoryGrid": "Grille de catégories",
+        "trustBadges": "Badges de confiance",
+        "saleCountdown": "Compte à rebours",
+        "collectionBanner": "Bannière de collection",
+        "recentlyViewed": "Vus récemment",
+        "productReviews": "Avis produit",
+        "productBundle": "Bundle de produits"
+      },
+      "themePresets": {
+        "minimal": {
+          "label": "Minimal",
+          "description": "Boutique sobre pour petits catalogues et activités orientées services."
+        },
+        "luxury": {
+          "label": "Luxe",
+          "description": "Présentation premium pour produits à forte marge et collections curées."
+        },
+        "fitness": {
+          "label": "Fitness",
+          "description": "Boutique énergique pour équipements, programmes, cours et produits wellness."
+        },
+        "marketplace": {
+          "label": "Marketplace",
+          "description": "Navigation dense de catalogue pour grandes boutiques avec recherche et filtres."
+        },
+        "editorial": {
+          "label": "Éditorial",
+          "description": "Boutique centrée contenu pour histoires, lancements, lookbooks et produits curés."
+        },
+        "beauty": {
+          "label": "Beauté",
+          "description": "Boutique raffinée pour beauté, wellness, cosmétiques et spa."
+        },
+        "food": {
+          "label": "Food",
+          "description": "Boutique axée menu et produits pour restaurants et marques alimentaires."
+        },
+        "fashion": {
+          "label": "Mode",
+          "description": "Système visuel de merchandising pour vêtements, accessoires et lancements saisonniers."
+        },
+        "digital": {
+          "label": "Digital",
+          "description": "Boutique claire pour logiciels, téléchargements, cours et produits numériques."
+        }
+      },
+      "catalogSizes": {
+        "empty": "vide",
+        "single": "un produit",
+        "small": "petit",
+        "medium": "moyen",
+        "large": "grand",
+        "enterprise": "entreprise"
+      },
+      "validation": {
+        "manualFeaturedProducts": "Les produits en vedette manuels doivent inclure des IDs produit.",
+        "saleCountdownEndDate": "La date finale du compte à rebours doit être valide.",
+        "productBundleEmpty": "Le bundle n'a pas d'IDs produit et sera masqué dans la boutique.",
+        "unsupportedVariant": "Variante non prise en charge pour cette section.",
+        "unsupportedVisibility": "Visibilité non prise en charge pour cette section."
+      }
+    }
+  },
   "restaurants": {
     "title": "Restaurants",
     "overview": "Vue d’ensemble",
