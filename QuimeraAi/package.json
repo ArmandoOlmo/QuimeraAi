@@ -17,9 +17,9 @@
     "test:e2e:ui": "playwright test --ui",
     "type-check": "tsc --noEmit",
     "lint": "echo 'Linting...' && exit 0",
-    "deploy": "vercel deploy --prod",
-    "deploy:preview": "vercel deploy",
-    "deploy:quick": "vercel deploy --prod --yes",
+    "deploy": "cd .. && vercel deploy --prod",
+    "deploy:preview": "cd .. && vercel deploy",
+    "deploy:quick": "cd .. && vercel deploy --prod --yes",
     "deploy:ai-proxy": "supabase functions deploy ai-proxy --project-ref elfcrnhffuvntlfuvumd"
   },
   "dependencies": {

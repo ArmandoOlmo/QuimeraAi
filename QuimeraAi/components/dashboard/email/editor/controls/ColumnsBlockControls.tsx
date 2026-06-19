@@ -163,6 +163,7 @@ const ColumnsBlockControls: React.FC<ColumnsBlockControlsProps> = ({ block, acti
                 label={t('email.backgroundColor', 'Color de fondo')}
                 value={styles.backgroundColor || 'transparent'}
                 onChange={(color) => updateStyles({ backgroundColor: color })}
+                variant="dashboard"
             />
             
             <PaddingSelector
@@ -175,7 +176,6 @@ const ColumnsBlockControls: React.FC<ColumnsBlockControlsProps> = ({ block, acti
 };
 
 export default ColumnsBlockControls;
-
 
 
 

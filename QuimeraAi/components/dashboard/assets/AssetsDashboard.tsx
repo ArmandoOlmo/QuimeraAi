@@ -93,15 +93,15 @@ const AssetsDashboard: React.FC = () => {
     }
 
     return (
-        <div className="flex h-screen bg-q-bg text-foreground">
+        <div className="flex h-full min-h-0 overflow-hidden bg-q-bg text-foreground">
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
             />
 
-            <div className="flex-1 flex flex-col overflow-hidden relative">
+            <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+ <header className="quimera-dashboard-header-bar h-14 shrink-0 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
@@ -137,7 +137,7 @@ const AssetsDashboard: React.FC = () => {
                 </header>
 
                 {/* Main Content - Single Card Container */}
-                <main className="flex-1 overflow-auto relative z-[2] p-4 md:p-6 lg:p-8">
+                <main className="relative z-[2] min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 custom-scrollbar">
                     {showKitManager ? (
                         <div className="max-w-7xl mx-auto">
                             <div className="quimera-dashboard-panel-card group overflow-hidden h-[calc(100vh-12rem)]">

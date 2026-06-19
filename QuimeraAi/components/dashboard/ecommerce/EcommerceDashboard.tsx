@@ -300,12 +300,12 @@ const EcommerceDashboard: React.FC = () => {
     // Ecommerce not enabled for this project
     if (!ecommerceInitialized && !ecommerceLoading) {
         return (
-            <div className="min-h-screen bg-q-bg flex">
+            <div className="flex h-full min-h-0 overflow-hidden bg-q-bg">
                 <DashboardSidebar
                     isMobileOpen={isMobileMenuOpen}
                     onClose={() => setIsMobileMenuOpen(false)}
                 />
-                <div className="flex-1 flex items-center justify-center p-8">
+                <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto p-8 custom-scrollbar">
                     <div className="text-center max-w-lg">
                         <ShoppingBag className="w-10 h-10 quimera-dashboard-header-icon mx-auto mb-6" strokeWidth={1.5} />
                         <h2 className="text-2xl font-bold text-foreground mb-2">
@@ -361,7 +361,7 @@ const EcommerceDashboard: React.FC = () => {
     // Error state
     if (storeError) {
         return (
-            <div className="min-h-screen bg-q-bg flex items-center justify-center">
+            <div className="flex h-full min-h-0 items-center justify-center overflow-y-auto bg-q-bg custom-scrollbar">
                 <div className="text-center max-w-md mx-auto p-6">
                     <div className="p-4 bg-destructive/10 rounded-full w-fit mx-auto mb-4">
                         <AlertCircle className="text-destructive" size={32} />
@@ -388,7 +388,7 @@ const EcommerceDashboard: React.FC = () => {
             projectId: effectiveProjectId,
             projectName: effectiveProject?.name || ''
         }}>
-            <div className="min-h-screen bg-q-bg flex">
+            <div className="flex h-full min-h-0 overflow-hidden bg-q-bg">
                 {/* Sidebar */}
                 <DashboardSidebar
                     isMobileOpen={isMobileMenuOpen}
@@ -396,9 +396,9 @@ const EcommerceDashboard: React.FC = () => {
                 />
 
                 {/* Main Content */}
-                <div className="flex-1 flex flex-col min-h-screen">
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                     {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+ <header className="quimera-dashboard-header-bar h-14 shrink-0 px-2 sm:px-6 flex items-center justify-between sticky top-0 z-40">
                         <div className="flex items-center gap-1 sm:gap-4">
                             <button
                                 onClick={() => setIsMobileMenuOpen(true)}
@@ -524,7 +524,7 @@ const EcommerceDashboard: React.FC = () => {
                     </header>
 
                     {/* Sub-navigation */}
-                    <div className="px-4 sm:px-6 border-b border-q-border bg-q-surface/30">
+                    <div className="shrink-0 px-4 sm:px-6 border-b border-q-border bg-q-surface/30">
                         <nav className="flex gap-1 overflow-x-auto py-2 scrollbar-hide">
                             {navItems.map((item) => {
                                 const Icon = item.icon;
@@ -556,7 +556,7 @@ const EcommerceDashboard: React.FC = () => {
                     </div>
 
                     {/* Content */}
-                    <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+                    <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 custom-scrollbar">
                         {renderActiveView()}
                     </main>
                 </div>

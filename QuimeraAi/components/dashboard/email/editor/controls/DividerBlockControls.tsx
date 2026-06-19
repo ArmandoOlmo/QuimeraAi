@@ -154,6 +154,7 @@ const DividerBlockControls: React.FC<DividerBlockControlsProps> = ({ block, acti
                 label={t('email.lineColor', 'Color de la línea')}
                 value={styles.borderColor || '#e4e4e7'}
                 onChange={(color) => updateStyles({ borderColor: color })}
+                variant="dashboard"
             />
             
             <PaddingSelector
@@ -166,7 +167,6 @@ const DividerBlockControls: React.FC<DividerBlockControlsProps> = ({ block, acti
 };
 
 export default DividerBlockControls;
-
 
 
 

@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../../supabase';
 import { StoreSettings, ShippingZone, ShippingRate, StorefrontThemeSettings, DEFAULT_STOREFRONT_THEME } from '../../../../types/ecommerce';
 import { mapStoreSettingsFromDB, mapStoreSettingsToDB } from '../../../../utils/ecommerceMappers';
+import { createRealtimeChannelName } from './realtimeChannelName';
 
 // Helper functions for color manipulation
 const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
@@ -122,7 +123,7 @@ export const useStoreSettings = (userId: string, storeId?: string) => {
 
         fetchSettings();
 
-        const channel = supabase.channel('store_settings_changes')
+        const channel = supabase.channel(createRealtimeChannelName('store_settings_changes', effectiveStoreId))
             .on(
                 'postgres_changes',
                 {
@@ -495,4 +496,3 @@ export const useStoreSettings = (userId: string, storeId?: string) => {
 
 // Export helper functions for use in components
 export { adjustColorBrightness, getContrastColor, hexToRgb, rgbToHex };
-

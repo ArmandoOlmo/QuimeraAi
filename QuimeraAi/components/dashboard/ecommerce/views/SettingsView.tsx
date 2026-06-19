@@ -36,6 +36,7 @@ import { useEcommerceContext } from '../EcommerceDashboard';
 import { useStripeConnect } from '../hooks/useStripeConnect';
 import { useEmailSettings } from '../../../../hooks/useEmailSettings';
 import { TransactionalEmailSettings, EmailSocialLinks } from '../../../../types/email';
+import ColorControl from '../../../ui/ColorControl';
 
 type SettingsTab = 'general' | 'payment' | 'shipping' | 'notifications' | 'email';
 
@@ -90,7 +91,7 @@ const SettingsView: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="min-h-full space-y-6 pb-2">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
@@ -137,7 +138,7 @@ const SettingsView: React.FC = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="bg-q-surface/50 rounded-xl border border-q-border p-6">
+            <div className="rounded-xl border border-q-border bg-q-surface/50 p-4 sm:p-6">
                 {activeTab === 'general' && (
                     <GeneralSettings
                         settings={localSettings}
@@ -1112,23 +1113,12 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-q-text-muted mb-1">
-                            {t('ecommerce.primaryColor', 'Color Principal')}
-                        </label>
-                        <div className="flex gap-2">
-                            <input
-                                type="color"
-                                value={localEmailSettings.primaryColor}
-                                onChange={(e) => setLocalEmailSettings(prev => ({ ...prev, primaryColor: e.target.value }))}
-                                className="w-12 h-10 rounded border border-q-border cursor-pointer"
-                            />
-                            <input
-                                type="text"
-                                value={localEmailSettings.primaryColor}
-                                onChange={(e) => setLocalEmailSettings(prev => ({ ...prev, primaryColor: e.target.value }))}
-                                className="flex-1 px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                            />
-                        </div>
+                        <ColorControl
+                            label={t('ecommerce.primaryColor', 'Color Principal')}
+                            value={localEmailSettings.primaryColor}
+                            onChange={(value) => setLocalEmailSettings(prev => ({ ...prev, primaryColor: value }))}
+                            variant="dashboard"
+                        />
                     </div>
 
                     <div className="md:col-span-2">

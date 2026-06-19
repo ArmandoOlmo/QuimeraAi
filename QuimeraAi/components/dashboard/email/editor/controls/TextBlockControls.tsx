@@ -429,12 +429,14 @@ const TextBlockControls: React.FC<TextBlockControlsProps> = ({ block, activeTab 
                 label={t('email.backgroundColor', 'Color de fondo')}
                 value={styles.backgroundColor || 'transparent'}
                 onChange={(color) => updateStyles({ backgroundColor: color })}
+                variant="dashboard"
             />
 
             <ColorControl
                 label={t('email.textColor', 'Color del texto')}
                 value={styles.textColor || '#52525b'}
                 onChange={(color) => updateStyles({ textColor: color })}
+                variant="dashboard"
             />
 
             <hr className="border-q-border" />

@@ -6,6 +6,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { supabase } from '../../../../supabase';
 import { Cart, CartItem, Product, ProductVariant } from '../../../../types/ecommerce';
+import { createRealtimeChannelName } from './realtimeChannelName';
 
 interface UseCartOptions {
     persistToSupabase?: boolean; // legacy prop, mapped to Supabase
@@ -82,7 +83,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
             ? `project_id=eq.${effectiveStoreId}` 
             : `user_id=eq.${userId}`;
 
-        const channel = supabase.channel(`store_carts_${userId}`)
+        const channel = supabase.channel(createRealtimeChannelName('store_carts_changes', `${userId}_${effectiveStoreId || 'all'}`))
             .on('postgres_changes', { 
                 event: '*', 
                 schema: 'public', 

@@ -77,7 +77,12 @@ const OrdersView: React.FC = () => {
         setSelectedOrder(null);
     };
 
-    const getStatusConfig = (status: OrderStatus) => {
+    const formatUnknownStatus = (status?: string) =>
+        status
+            ? status.replace(/[_-]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
+            : t('ecommerce.unknownStatus', 'Desconocido');
+
+    const getStatusConfig = (status: OrderStatus | string | undefined) => {
         const configs: Record<OrderStatus, { icon: React.ElementType; color: string; bg: string; label: string }> = {
             pending: { icon: Clock, color: 'text-yellow-400', bg: 'bg-yellow-500/20', label: 'Pendiente' },
             paid: { icon: DollarSign, color: 'text-green-400', bg: 'bg-green-500/20', label: 'Pagado' },
@@ -87,7 +92,12 @@ const OrdersView: React.FC = () => {
             cancelled: { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/20', label: 'Cancelado' },
             refunded: { icon: DollarSign, color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'Reembolsado' },
         };
-        return configs[status];
+        return configs[status as OrderStatus] || {
+            icon: Clock,
+            color: 'text-q-text-muted',
+            bg: 'bg-muted',
+            label: formatUnknownStatus(status),
+        };
     };
 
     const formatDate = (timestamp: StoredTimestamp) => {

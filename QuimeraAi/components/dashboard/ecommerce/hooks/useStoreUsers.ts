@@ -19,6 +19,7 @@ import {
     ExportOptions,
 } from '../../../../types/storeUsers';
 import { mapStoreUserFromDB, mapStoreUserSegmentFromDB, mapStoreUserActivityFromDB, mapStoreUserToDB, mapStoreUserSegmentToDB } from '../../../../utils/ecommerceMappers';
+import { createRealtimeChannelName } from './realtimeChannelName';
 
 interface UseStoreUsersOptions extends StoreUsersFilterOptions {
     sort?: StoreUsersSortOptions;
@@ -83,7 +84,7 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
 
         fetchUsers();
 
-        const channel = supabase.channel('store_users_changes')
+        const channel = supabase.channel(createRealtimeChannelName('store_users_changes', storeId))
             .on(
                 'postgres_changes',
                 {
@@ -123,7 +124,7 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
 
         fetchSegments();
 
-        const channel = supabase.channel('store_user_segments_changes')
+        const channel = supabase.channel(createRealtimeChannelName('store_user_segments_changes', storeId))
             .on(
                 'postgres_changes',
                 {
@@ -618,7 +619,6 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
 };
 
 export default useStoreUsers;
-
 
 
 

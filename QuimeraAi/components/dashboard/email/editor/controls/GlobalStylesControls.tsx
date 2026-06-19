@@ -368,6 +368,7 @@ const GlobalStylesControls: React.FC = () => {
                     value={globalStyles.primaryColor}
                     onChange={(value) => updateGlobalStyles({ primaryColor: value })}
                     paletteColors={projectPalette}
+                    variant="dashboard"
                 />
 
                 <ColorControl
@@ -375,6 +376,7 @@ const GlobalStylesControls: React.FC = () => {
                     value={globalStyles.secondaryColor || globalStyles.primaryColor}
                     onChange={(value) => updateGlobalStyles({ secondaryColor: value })}
                     paletteColors={projectPalette}
+                    variant="dashboard"
                 />
 
                 <ColorControl
@@ -382,6 +384,7 @@ const GlobalStylesControls: React.FC = () => {
                     value={globalStyles.backgroundColor}
                     onChange={(value) => updateGlobalStyles({ backgroundColor: value })}
                     paletteColors={projectPalette}
+                    variant="dashboard"
                 />
 
                 <ColorControl
@@ -389,6 +392,7 @@ const GlobalStylesControls: React.FC = () => {
                     value={globalStyles.bodyBackgroundColor}
                     onChange={(value) => updateGlobalStyles({ bodyBackgroundColor: value })}
                     paletteColors={projectPalette}
+                    variant="dashboard"
                 />
 
                 <ColorControl
@@ -396,6 +400,7 @@ const GlobalStylesControls: React.FC = () => {
                     value={globalStyles.headingColor}
                     onChange={(value) => updateGlobalStyles({ headingColor: value })}
                     paletteColors={projectPalette}
+                    variant="dashboard"
                 />
 
                 <ColorControl
@@ -403,6 +408,7 @@ const GlobalStylesControls: React.FC = () => {
                     value={globalStyles.textColor}
                     onChange={(value) => updateGlobalStyles({ textColor: value })}
                     paletteColors={projectPalette}
+                    variant="dashboard"
                 />
 
                 <ColorControl
@@ -410,6 +416,7 @@ const GlobalStylesControls: React.FC = () => {
                     value={globalStyles.linkColor}
                     onChange={(value) => updateGlobalStyles({ linkColor: value })}
                     paletteColors={projectPalette}
+                    variant="dashboard"
                 />
             </div>
 

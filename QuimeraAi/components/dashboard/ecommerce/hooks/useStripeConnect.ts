@@ -8,6 +8,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../../../../supabase';
+import { createRealtimeChannelName } from './realtimeChannelName';
 
 // Types
 interface CreateConnectAccountParams {
@@ -117,7 +118,7 @@ export const useStripeConnect = (userId: string, storeId: string) => {
 
         fetchStatus();
 
-        const channel = supabase.channel('store_settings_stripe_connect')
+        const channel = supabase.channel(createRealtimeChannelName('store_settings_stripe_connect', storeId))
             .on(
                 'postgres_changes',
                 {
@@ -380,7 +381,6 @@ export const useStripeConnect = (userId: string, storeId: string) => {
         openDashboard,
     };
 };
-
 
 
 

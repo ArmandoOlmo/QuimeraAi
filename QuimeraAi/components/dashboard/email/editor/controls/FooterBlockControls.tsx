@@ -201,12 +201,14 @@ const FooterBlockControls: React.FC<FooterBlockControlsProps> = ({ block, active
                 label={t('email.backgroundColor', 'Color de fondo')}
                 value={styles.backgroundColor || '#f4f4f5'}
                 onChange={(color) => updateStyles({ backgroundColor: color })}
+                variant="dashboard"
             />
             
             <ColorControl
                 label={t('email.textColor', 'Color del texto')}
                 value={styles.textColor || '#71717a'}
                 onChange={(color) => updateStyles({ textColor: color })}
+                variant="dashboard"
             />
             
             <hr className="border-q-border" />
@@ -233,7 +235,6 @@ const FooterBlockControls: React.FC<FooterBlockControlsProps> = ({ block, active
 };
 
 export default FooterBlockControls;
-
 
 
 

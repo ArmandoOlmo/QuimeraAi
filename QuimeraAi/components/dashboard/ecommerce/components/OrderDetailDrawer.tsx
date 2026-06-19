@@ -90,7 +90,12 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
         });
     };
 
-    const getStatusConfig = (status: OrderStatus) => {
+    const formatUnknownStatus = (status?: string) =>
+        status
+            ? status.replace(/[_-]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
+            : t('ecommerce.unknownStatus', 'Desconocido');
+
+    const getStatusConfig = (status: OrderStatus | string | undefined) => {
         const configs: Record<OrderStatus, { color: string; bg: string; label: string }> = {
             pending: { color: 'text-yellow-400', bg: 'bg-yellow-500/20', label: 'Pendiente' },
             paid: { color: 'text-green-400', bg: 'bg-green-500/20', label: 'Pagado' },
@@ -100,7 +105,11 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
             cancelled: { color: 'text-red-400', bg: 'bg-red-500/20', label: 'Cancelado' },
             refunded: { color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'Reembolsado' },
         };
-        return configs[status];
+        return configs[status as OrderStatus] || {
+            color: 'text-q-text-muted',
+            bg: 'bg-muted',
+            label: formatUnknownStatus(status),
+        };
     };
 
     const statusConfig = getStatusConfig(order.status);

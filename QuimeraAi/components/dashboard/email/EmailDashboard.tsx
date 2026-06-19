@@ -61,7 +61,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
     // Loading state
     if (!userId) {
         return (
-            <div className="min-h-screen bg-q-bg flex items-center justify-center">
+            <div className="flex h-full min-h-0 items-center justify-center bg-q-bg">
                 <div className="text-center">
                     <QuimeraLoader size="md" />
                     <p className="text-q-text-muted">{t('common.loading', 'Cargando...')}</p>

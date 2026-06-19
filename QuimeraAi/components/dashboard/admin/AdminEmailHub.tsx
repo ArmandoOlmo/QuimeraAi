@@ -928,10 +928,10 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
     // =============================================================================
 
     return (
-        <div className="flex h-screen bg-q-bg text-q-text">
+        <div className="flex h-full min-h-0 bg-q-bg text-q-text overflow-hidden">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden relative">
+            <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden relative">
  <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
                         <Mail className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
@@ -943,7 +943,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
 
                 {/* Conditional Editor */}
                 {showEmailEditor && emailDocument ? (
-                    <div className="flex-1 overflow-hidden relative">
+                    <div className="flex-1 min-h-0 overflow-hidden relative">
                         <AdminEmailEditorWrapper
                             initialDocument={emailDocument}
                             onSave={handleSaveFromEditor}
@@ -969,7 +969,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                         </div>
 
                         {/* Content */}
-                        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+                        <main className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
                             {isLoading ? (
                                 <div className="flex items-center justify-center py-24">
                                     <div className="flex flex-col items-center gap-3">

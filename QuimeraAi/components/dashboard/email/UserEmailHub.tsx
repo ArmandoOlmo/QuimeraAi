@@ -487,7 +487,7 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
     // =====================================================================
 
     return (
-        <div className="flex h-screen bg-q-bg text-q-text overflow-hidden">
+        <div className="flex h-full min-h-0 bg-q-bg text-q-text overflow-hidden">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             {/* Section Navigation Panel — Desktop only */}
@@ -526,7 +526,7 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                 </div>
             )}
 
-            <div className="flex-1 flex flex-col overflow-hidden relative">
+            <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden relative">
                 {/* Header */}
  <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
@@ -539,7 +539,7 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                 </header>
 
                 {showEmailEditor && emailDocument ? (
-                    <div className="flex-1 overflow-hidden relative">
+                    <div className="flex-1 min-h-0 overflow-hidden relative">
                         <EmailEditor
                             initialDocument={emailDocument}
                             onSave={handleSaveFromEditor}
@@ -549,7 +549,7 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                 ) : (
                     <>
                         {/* Mobile Tabs */}
-                        <div className="md:hidden border-b border-q-border bg-q-bg px-2 py-2">
+                        <div className="md:hidden flex-shrink-0 border-b border-q-border bg-q-bg px-2 py-2">
                             <div className="flex overflow-x-auto gap-1 scrollbar-hide snap-x">
                                 {tabs.map((tab) => {
                                     const isActive = activeTab === tab.id;
@@ -568,8 +568,8 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                         </div>
 
                         {/* Content */}
-                        <main className="flex-1 overflow-y-auto flex flex-col">
-                            <div className="w-full h-full p-4 sm:p-6 lg:p-8">
+                        <main className="flex-1 min-h-0 overflow-y-auto flex flex-col custom-scrollbar">
+                            <div className="w-full min-h-full p-4 sm:p-6 lg:p-8">
                                 <div className="max-w-7xl mx-auto">
                                     {isLoading ? (
                                 <div className="flex items-center justify-center py-24">

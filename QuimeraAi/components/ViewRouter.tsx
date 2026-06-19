@@ -167,9 +167,9 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
     const ViewComponent = VIEW_COMPONENTS[view];
     if (ViewComponent) {
         return (
-            <div className="flex flex-col h-screen">
+            <div className="flex h-screen flex-col overflow-hidden">
                 <NoCreditsGlobalBanner />
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 overflow-hidden [&>*]:h-full [&>*]:min-h-0">
                     <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
                         <ViewComponent />
                     </Suspense>
@@ -226,9 +226,9 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
 
     // Dashboard Views (websites, dashboard, or no project selected)
     return (
-        <div className="flex flex-col h-screen">
+        <div className="flex h-screen flex-col overflow-hidden">
             <NoCreditsGlobalBanner />
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-hidden [&>*]:h-full [&>*]:min-h-0">
                 <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
                     <Dashboard />
                 </Suspense>

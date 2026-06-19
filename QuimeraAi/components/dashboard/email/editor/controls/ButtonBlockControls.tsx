@@ -263,12 +263,14 @@ const ButtonBlockControls: React.FC<ButtonBlockControlsProps> = ({ block, active
                 label={t('email.buttonColor', 'Color del botón')}
                 value={styles.buttonColor || '#4f46e5'}
                 onChange={(color) => updateStyles({ buttonColor: color })}
+                variant="dashboard"
             />
             
             <ColorControl
                 label={t('email.buttonTextColor', 'Color del texto')}
                 value={styles.buttonTextColor || '#ffffff'}
                 onChange={(color) => updateStyles({ buttonTextColor: color })}
+                variant="dashboard"
             />
             
             <hr className="border-q-border" />

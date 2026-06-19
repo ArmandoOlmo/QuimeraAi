@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../../supabase';
+import { createRealtimeChannelName } from './realtimeChannelName';
 
 export interface ProjectEcommerceConfig {
     projectId: string;
@@ -110,7 +111,7 @@ export const useProjectEcommerce = (
 
         fetchConfig();
 
-        const channel = supabase.channel('project_ecommerce_changes')
+        const channel = supabase.channel(createRealtimeChannelName('project_ecommerce_changes', projectId))
             .on(
                 'postgres_changes',
                 {
@@ -287,7 +288,6 @@ export const useProjectsWithEcommerce = (userId: string) => {
 };
 
 export default useProjectEcommerce;
-
 
 
 

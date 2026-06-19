@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../../supabase';
 import { Discount, DiscountType } from '../../../../types/ecommerce';
 import { mapDiscountFromDB, mapDiscountToDB } from '../../../../utils/ecommerceMappers';
+import { createRealtimeChannelName } from './realtimeChannelName';
 
 interface UseDiscountsOptions {
     activeOnly?: boolean;
@@ -54,7 +55,7 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
 
         fetchDiscounts();
 
-        const channel = supabase.channel('store_discounts_changes')
+        const channel = supabase.channel(createRealtimeChannelName('store_discounts_changes', effectiveStoreId))
             .on(
                 'postgres_changes',
                 {
@@ -318,4 +319,3 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
         generateCode,
     };
 };
-

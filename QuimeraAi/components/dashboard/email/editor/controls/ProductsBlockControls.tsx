@@ -211,18 +211,21 @@ const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, ac
                 label={t('email.backgroundColor', 'Color de fondo')}
                 value={styles.backgroundColor || 'transparent'}
                 onChange={(color) => updateStyles({ backgroundColor: color })}
+                variant="dashboard"
             />
             
             <ColorControl
                 label={t('email.buttonColor', 'Color del botón')}
                 value={styles.buttonColor || '#4f46e5'}
                 onChange={(color) => updateStyles({ buttonColor: color })}
+                variant="dashboard"
             />
             
             <ColorControl
                 label={t('email.buttonTextColor', 'Color texto del botón')}
                 value={styles.buttonTextColor || '#ffffff'}
                 onChange={(color) => updateStyles({ buttonTextColor: color })}
+                variant="dashboard"
             />
             
             <PaddingSelector
@@ -235,7 +238,6 @@ const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, ac
 };
 
 export default ProductsBlockControls;
-
 
 
 

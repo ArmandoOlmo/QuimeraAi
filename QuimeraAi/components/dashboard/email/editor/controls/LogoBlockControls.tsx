@@ -269,6 +269,7 @@ const LogoBlockControls: React.FC<LogoBlockControlsProps> = ({ block, activeTab 
                 label={t('email.backgroundColor', 'Color de fondo')}
                 value={styles.backgroundColor || 'transparent'}
                 onChange={(color) => updateStyles({ backgroundColor: color })}
+                variant="dashboard"
             />
 
             <hr className="border-q-border" />

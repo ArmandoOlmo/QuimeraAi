@@ -283,18 +283,21 @@ const HeroBlockControls: React.FC<HeroBlockControlsProps> = ({ block, activeTab 
                 label={t('email.backgroundColor', 'Color de fondo')}
                 value={styles.backgroundColor || '#4f46e5'}
                 onChange={(color) => updateStyles({ backgroundColor: color })}
+                variant="dashboard"
             />
 
             <ColorControl
                 label={t('email.headingColor', 'Color del título')}
                 value={styles.headingColor || '#ffffff'}
                 onChange={(color) => updateStyles({ headingColor: color })}
+                variant="dashboard"
             />
 
             <ColorControl
                 label={t('email.textColor', 'Color del texto')}
                 value={styles.textColor || '#ffffff'}
                 onChange={(color) => updateStyles({ textColor: color })}
+                variant="dashboard"
             />
 
             <hr className="border-q-border" />
@@ -303,12 +306,14 @@ const HeroBlockControls: React.FC<HeroBlockControlsProps> = ({ block, activeTab 
                 label={t('email.buttonColor', 'Color del botón')}
                 value={styles.buttonColor || '#ffffff'}
                 onChange={(color) => updateStyles({ buttonColor: color })}
+                variant="dashboard"
             />
 
             <ColorControl
                 label={t('email.buttonTextColor', 'Color texto del botón')}
                 value={styles.buttonTextColor || '#4f46e5'}
                 onChange={(color) => updateStyles({ buttonTextColor: color })}
+                variant="dashboard"
             />
 
             <hr className="border-q-border" />

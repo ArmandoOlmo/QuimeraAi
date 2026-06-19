@@ -79,7 +79,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     const handleBack = onBack ?? (() => setView('dashboard'));
 
     return (
-        <div className="min-h-screen bg-q-bg flex">
+        <div className="flex h-full min-h-0 overflow-hidden bg-q-bg">
             {/* Sidebar */}
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
@@ -87,9 +87,9 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
             />
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col min-h-screen">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 w-full px-4 sm:px-6 flex items-center sticky top-0 z-40">
+ <header className="quimera-dashboard-header-bar h-14 w-full shrink-0 px-4 sm:px-6 flex items-center sticky top-0 z-40">
                     {/* Left: Menu & Title */}
                     <div className="flex items-center gap-4 flex-shrink-0">
                         <button
@@ -130,7 +130,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                 />
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+                <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 custom-scrollbar">
                     <div className="max-w-7xl mx-auto">
                         {/* Hero Section */}
                         <div className="mb-8">
@@ -416,4 +416,3 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
 };
 
 export default ProjectSelectorPage;
-

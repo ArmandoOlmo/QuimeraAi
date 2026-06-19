@@ -24,6 +24,7 @@ import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useProducts } from '../hooks/useProducts';
 import { supabase } from '../../../../supabase';
 import { useEcommerceContext } from '../EcommerceDashboard';
+import { createRealtimeChannelName } from '../hooks/realtimeChannelName';
 
 interface StockNotificationSubscriber {
     id: string;
@@ -80,7 +81,7 @@ const StockAlertsView: React.FC = () => {
 
         fetchSubscribers();
 
-        const channel = supabase.channel('stock_notifications_changes')
+        const channel = supabase.channel(createRealtimeChannelName('stock_notifications_changes', storeId))
             .on(
                 'postgres_changes',
                 {
