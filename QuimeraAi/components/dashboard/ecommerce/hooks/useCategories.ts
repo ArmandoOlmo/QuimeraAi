@@ -107,7 +107,11 @@ export const useCategories = (userId: string, storeId?: string) => {
     // Update category
     const updateCategory = useCallback(
         async (categoryId: string, updates: Partial<Category>) => {
-            const updateData = mapCategoryToDB(updates);
+            const existingCategory = categories.find((category) => category.id === categoryId);
+            const updateData = mapCategoryToDB({
+                ...existingCategory,
+                ...updates,
+            });
 
             if (updates.name) {
                 updateData.slug = generateSlug(updates.name);
@@ -120,7 +124,7 @@ export const useCategories = (userId: string, storeId?: string) => {
 
             if (error) throw error;
         },
-        []
+        [categories]
     );
 
     // Delete category
@@ -143,9 +147,17 @@ export const useCategories = (userId: string, storeId?: string) => {
             // easily via the JS client, we can do multiple updates or use a database function.
             // Using Promise.all for updates since it's an admin op and categories count is usually small.
             const promises = orderedIds.map((id, index) => {
+                const category = categories.find((item) => item.id === id);
+                const data = {
+                    ...(category?.description !== undefined ? { description: category.description } : {}),
+                    ...(category?.imageUrl !== undefined ? { imageUrl: category.imageUrl } : {}),
+                    ...(category?.parentId !== undefined ? { parentId: category.parentId } : {}),
+                    position: index,
+                };
+
                 return supabase
                     .from('store_categories')
-                    .update({ data: { position: index } })
+                    .update({ data })
                     .eq('id', id);
             });
 
@@ -155,7 +167,7 @@ export const useCategories = (userId: string, storeId?: string) => {
                 throw errors[0].error;
             }
         },
-        []
+        [categories]
     );
 
     // Get category by ID

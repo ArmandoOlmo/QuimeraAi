@@ -212,12 +212,16 @@ export const mapCategoryFromDB = (row: DbRecord): Category => {
 
 export const mapCategoryToDB = (category: Partial<Category>): DbRecord => {
     const data: DbRecord = {};
+    const metadata: DbRecord = {};
+
     if (category.name !== undefined) data.name = category.name;
     if (category.slug !== undefined) data.slug = category.slug;
-    if (category.description !== undefined) data.description = category.description;
-    if (category.imageUrl !== undefined) data.image_url = category.imageUrl;
-    if (category.parentId !== undefined) data.parent_id = category.parentId;
-    if (category.position !== undefined) data.data = { position: category.position };
+    if (category.description !== undefined) metadata.description = category.description;
+    if (category.imageUrl !== undefined) metadata.imageUrl = category.imageUrl;
+    if (category.parentId !== undefined) metadata.parentId = category.parentId;
+    if (category.position !== undefined) metadata.position = category.position;
+    if (Object.keys(metadata).length > 0) data.data = metadata;
+
     return data;
 };
 
