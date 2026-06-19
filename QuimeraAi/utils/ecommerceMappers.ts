@@ -192,7 +192,7 @@ export const mapCategoryToDB = (category: Partial<Category>): DbRecord => {
     if (category.description !== undefined) data.description = category.description;
     if (category.imageUrl !== undefined) data.image_url = category.imageUrl;
     if (category.parentId !== undefined) data.parent_id = category.parentId;
-    if (category.position !== undefined) data.position = category.position;
+    if (category.position !== undefined) data.data = { position: category.position };
     return data;
 };
 

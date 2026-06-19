@@ -24,13 +24,17 @@ export const useCategories = (userId: string, storeId?: string) => {
             .from('store_categories')
             .select('*')
             .eq('project_id', effectiveStoreId)
-            .order('position', { ascending: true });
+            .order('created_at', { ascending: true });
 
         if (fetchError) {
             console.error('Error fetching categories:', fetchError);
             setError(fetchError.message);
         } else {
-            setCategories((data || []).map(mapCategoryFromDB));
+            const mappedCategories = (data || [])
+                .map(mapCategoryFromDB)
+                .sort((a, b) => a.position - b.position);
+
+            setCategories(mappedCategories);
             setError(null);
         }
         setIsLoading(false);
@@ -141,7 +145,7 @@ export const useCategories = (userId: string, storeId?: string) => {
             const promises = orderedIds.map((id, index) => {
                 return supabase
                     .from('store_categories')
-                    .update({ position: index })
+                    .update({ data: { position: index } })
                     .eq('id', id);
             });
 
