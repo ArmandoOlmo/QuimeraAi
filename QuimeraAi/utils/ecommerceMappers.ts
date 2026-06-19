@@ -92,6 +92,31 @@ const normalizeProductStatus = (value: unknown): Product['status'] => {
     return status === 'active' || status === 'archived' ? status : 'draft';
 };
 
+const normalizeOrderItem = (item: unknown, index: number): OrderItem => {
+    const source = readJsonObject(item);
+    const quantity = toNumber(source.quantity, 1);
+    const unitPrice = toNumber(source.unit_price ?? source.unitPrice ?? source.price);
+    const totalPrice = toNumber(source.total_price ?? source.totalPrice, unitPrice * quantity);
+    const name = toStringValue(source.name ?? source.product_name ?? source.productName, 'Producto');
+    const imageUrl = toOptionalString(source.image_url ?? source.imageUrl ?? source.image);
+
+    return {
+        id: toStringValue(source.id, `item-${index}`),
+        productId: toStringValue(source.product_id ?? source.productId),
+        variantId: toOptionalString(source.variant_id ?? source.variantId),
+        name,
+        productName: toOptionalString(source.product_name ?? source.productName) ?? name,
+        variantName: toOptionalString(source.variant_name ?? source.variantName),
+        sku: toOptionalString(source.sku),
+        imageUrl,
+        image: toOptionalString(source.image) ?? imageUrl,
+        price: unitPrice,
+        quantity,
+        unitPrice,
+        totalPrice,
+    };
+};
+
 export const mapProductFromDB = (row: DbRecord): Product => {
     const data = readJsonObject(row.data);
     const quantity = toNumber(
@@ -199,23 +224,28 @@ export const mapCategoryToDB = (category: Partial<Category>): DbRecord => {
 export const mapOrderFromDB = (row: DbRecord): Order => {
     const data = readJsonObject(row.data);
     const stripeData = readJsonObject(readField(row, data, 'stripe', 'stripe'));
-    const subtotal = toNumber(readField(row, data, 'subtotal', 'subtotal'));
-    const discountAmount = toOptionalNumber(readField(row, data, 'discount_amount', 'discountAmount'));
+    const pricing = readJsonObject(readField(row, data, 'pricing', 'pricing'));
+    const subtotal = toNumber(readField(row, data, 'subtotal', 'subtotal') ?? pricing.subtotal);
+    const discountAmount = toOptionalNumber(
+        readField(row, data, 'discount_amount', 'discountAmount') ??
+        pricing.discountTotal
+    );
     const shippingCost = toNumber(
         readField(row, data, 'shipping_amount', 'shippingAmount') ??
-        readField(row, data, 'shipping_cost', 'shippingCost')
+        readField(row, data, 'shipping_cost', 'shippingCost') ??
+        pricing.shippingTotal
     );
-    const taxAmount = toNumber(readField(row, data, 'tax_amount', 'taxAmount'));
+    const taxAmount = toNumber(readField(row, data, 'tax_amount', 'taxAmount') ?? pricing.taxTotal);
     const total = toNumber(
         readField(row, data, 'total_amount', 'totalAmount') ??
-        readField(row, data, 'total', 'total')
+        readField(row, data, 'total', 'total') ??
+        pricing.total
     );
     const paymentIntentId = toOptionalString(
         readField(row, data, 'stripe_payment_intent_id', 'stripePaymentIntentId') ??
         readField(row, data, 'payment_intent_id', 'paymentIntentId') ??
         stripeData.paymentIntentId
     );
-    const pricing = readJsonObject(readField(row, data, 'pricing', 'pricing'));
     const hasPricing = Object.keys(pricing).length > 0;
 
     return {
@@ -228,7 +258,7 @@ export const mapOrderFromDB = (row: DbRecord): Order => {
         customerEmail: toStringValue(readField(row, data, 'customer_email', 'customerEmail')),
         customerName: toStringValue(readField(row, data, 'customer_name', 'customerName')),
         customerPhone: toOptionalString(readField(row, data, 'customer_phone', 'customerPhone')),
-        items: toArray<OrderItem>(readField(row, data, 'items', 'items')),
+        items: toArray<unknown>(readField(row, data, 'items', 'items')).map(normalizeOrderItem),
         subtotal,
         discount: toNumber(readField(row, data, 'discount', 'discount') ?? discountAmount),
         discountCode: toOptionalString(readField(row, data, 'discount_code', 'discountCode')),

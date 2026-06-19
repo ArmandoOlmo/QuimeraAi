@@ -53,6 +53,17 @@ const getStatusConfig = (status: unknown): OrderStatusConfig => {
     return ORDER_STATUS_CONFIGS.pending;
 };
 
+const toFiniteNumber = (value: unknown, fallback = 0): number => {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
+    if (typeof value === 'string' && value.trim() !== '') {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+    }
+    return fallback;
+};
+
+const formatMoney = (value: unknown): string => `$${toFiniteNumber(value).toFixed(2)}`;
+
 const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
     order,
     onClose,
@@ -110,6 +121,13 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
     };
 
     const statusConfig = getStatusConfig(order.status);
+    const orderItems = Array.isArray(order.items) ? order.items : [];
+    const shippingAddress = (order.shippingAddress ?? {}) as Partial<Order['shippingAddress']>;
+    const subtotal = order.pricing?.subtotal ?? order.subtotal;
+    const discountAmount = order.discountAmount ?? order.pricing?.discountTotal ?? order.discount;
+    const shippingCost = order.pricing?.shippingTotal ?? order.shippingCost;
+    const taxAmount = order.pricing?.taxTotal ?? order.taxAmount;
+    const total = order.pricing?.total ?? order.total;
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-end">
@@ -192,13 +210,14 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                             {t('ecommerce.shippingAddress', 'Dirección de Envío')}
                         </h3>
                         <div className="text-q-text-muted space-y-1">
-                            <p>{order.shippingAddress.address1}</p>
-                            {order.shippingAddress.address2 && <p>{order.shippingAddress.address2}</p>}
+                            <p>{shippingAddress.address1 || '-'}</p>
+                            {shippingAddress.address2 && <p>{shippingAddress.address2}</p>}
                             <p>
-                                {order.shippingAddress.city}, {order.shippingAddress.state}{' '}
-                                {order.shippingAddress.zipCode}
+                                {[shippingAddress.city, shippingAddress.state, shippingAddress.zipCode]
+                                    .filter(Boolean)
+                                    .join(', ') || '-'}
                             </p>
-                            <p>{order.shippingAddress.country}</p>
+                            <p>{shippingAddress.country || '-'}</p>
                         </div>
                     </div>
 
@@ -296,37 +315,45 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                     <div className="bg-muted/30 rounded-lg p-4">
                         <h3 className="text-sm font-medium text-q-text-muted mb-3 flex items-center gap-2">
                             <Package size={16} />
-                            {t('ecommerce.items', 'Productos')} ({order.items.length})
+                            {t('ecommerce.items', 'Productos')} ({orderItems.length})
                         </h3>
 
                         <div className="space-y-3">
-                            {order.items.map((item, index) => (
-                                <div key={index} className="flex items-center gap-3">
-                                    {item.image ? (
-                                        <img
-                                            src={item.image}
-                                            alt={item.productName}
-                                            className="w-12 h-12 rounded-lg object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                                            <Package className="text-q-text-muted" size={20} />
-                                        </div>
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-foreground font-medium truncate">{item.productName}</p>
-                                        {item.variantName && (
-                                            <p className="text-q-text-muted text-sm">{item.variantName}</p>
+                            {orderItems.map((item, index) => {
+                                const itemName = item.productName || item.name || 'Producto';
+                                const itemImage = item.image || item.imageUrl;
+                                const itemPrice = item.price ?? item.unitPrice;
+                                const itemQuantity = toFiniteNumber(item.quantity, 1);
+                                const itemTotal = item.totalPrice ?? toFiniteNumber(itemPrice) * itemQuantity;
+
+                                return (
+                                    <div key={item.id || index} className="flex items-center gap-3">
+                                        {itemImage ? (
+                                            <img
+                                                src={itemImage}
+                                                alt={itemName}
+                                                className="w-12 h-12 rounded-lg object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                                                <Package className="text-q-text-muted" size={20} />
+                                            </div>
                                         )}
-                                        <p className="text-q-text-muted text-sm">
-                                            ${item.price.toFixed(2)} × {item.quantity}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-foreground font-medium truncate">{itemName}</p>
+                                            {item.variantName && (
+                                                <p className="text-q-text-muted text-sm">{item.variantName}</p>
+                                            )}
+                                            <p className="text-q-text-muted text-sm">
+                                                {formatMoney(itemPrice)} × {itemQuantity}
+                                            </p>
+                                        </div>
+                                        <p className="text-foreground font-medium">
+                                            {formatMoney(itemTotal)}
                                         </p>
                                     </div>
-                                    <p className="text-foreground font-medium">
-                                        ${(item.price * item.quantity).toFixed(2)}
-                                    </p>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -340,32 +367,32 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between text-q-text-muted">
                                 <span>Subtotal</span>
-                                <span>${order.subtotal.toFixed(2)}</span>
+                                <span>{formatMoney(subtotal)}</span>
                             </div>
-                            {order.discountAmount && order.discountAmount > 0 && (
+                            {toFiniteNumber(discountAmount) > 0 && (
                                 <div className="flex justify-between text-green-400">
                                     <span>
                                         Descuento
                                         {order.discountCode && ` (${order.discountCode})`}
                                     </span>
-                                    <span>-${order.discountAmount.toFixed(2)}</span>
+                                    <span>-{formatMoney(discountAmount)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between text-q-text-muted">
                                 <span>Envío</span>
                                 <span>
-                                    {order.shippingCost === 0 ? 'Gratis' : `$${order.shippingCost.toFixed(2)}`}
+                                    {toFiniteNumber(shippingCost) === 0 ? 'Gratis' : formatMoney(shippingCost)}
                                 </span>
                             </div>
-                            {order.taxAmount > 0 && (
+                            {toFiniteNumber(taxAmount) > 0 && (
                                 <div className="flex justify-between text-q-text-muted">
                                     <span>Impuestos</span>
-                                    <span>${order.taxAmount.toFixed(2)}</span>
+                                    <span>{formatMoney(taxAmount)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between text-foreground font-bold pt-2 border-t border-q-border">
                                 <span>Total</span>
-                                <span>${order.total.toFixed(2)}</span>
+                                <span>{formatMoney(total)}</span>
                             </div>
                         </div>
                     </div>

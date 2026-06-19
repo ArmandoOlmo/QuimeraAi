@@ -232,10 +232,11 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
 
     // Add tracking info
     const addTrackingInfo = useCallback(
-        async (orderId: string, trackingNumber: string, trackingUrl?: string) => {
+        async (orderId: string, carrier: string, trackingNumber: string, trackingUrl?: string) => {
             const { error } = await supabase
                 .from('store_orders')
                 .update({
+                    carrier,
                     tracking_number: trackingNumber,
                     tracking_url: trackingUrl,
                     status: 'shipped',
