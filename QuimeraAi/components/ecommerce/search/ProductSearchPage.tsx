@@ -38,6 +38,20 @@ interface ThemeColors {
     mutedText?: string;
 }
 
+type FilterPresentation = 'sidebar' | 'drawer';
+
+export type ProductCardVariant =
+    | 'minimal'
+    | 'modern'
+    | 'elegant'
+    | 'overlay'
+    | 'luxury'
+    | 'marketplace'
+    | 'editorial'
+    | 'compact'
+    | 'imageFirst'
+    | 'quickBuy';
+
 interface ProductSearchPageProps {
     storeId: string;
     userId?: string | null;
@@ -56,6 +70,8 @@ interface ProductSearchPageProps {
     themeColors?: ThemeColors;
     /** Show/hide the filter sidebar. Default: true */
     showFilterSidebar?: boolean;
+    /** How filters are presented. Storefront defaults to a drawer instead of a permanent sidebar. */
+    filterPresentation?: FilterPresentation;
     /** Show/hide the search bar. Default: true */
     showSearchBar?: boolean;
     /** Show/hide the sort dropdown. Default: true */
@@ -69,7 +85,7 @@ interface ProductSearchPageProps {
     /** Grid columns for product cards. Default: 4 */
     gridColumns?: 2 | 3 | 4 | 5;
     /** Card style variant. Default: 'modern' */
-    cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardStyle?: ProductCardVariant;
     /** Border radius for cards. Default: 'xl' */
     borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
     /** Gap between cards. Default: 'md' */
@@ -94,6 +110,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
     title,
     themeColors,
     showFilterSidebar = true,
+    filterPresentation = 'drawer',
     showSearchBar = true,
     showSortOptions = true,
     showViewModeToggle = true,
@@ -196,6 +213,24 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
         applyFilters(newFilters);
     };
 
+    const handleCategoryChip = (category?: { id: string; slug?: string }) => {
+        if (!category) {
+            handleFiltersChange({
+                ...filters,
+                categoryId: undefined,
+                categorySlug: undefined,
+            });
+            return;
+        }
+
+        const isSelected = filters.categoryId === category.id || filters.categorySlug === category.slug;
+        handleFiltersChange({
+            ...filters,
+            categoryId: isSelected ? undefined : category.id,
+            categorySlug: isSelected ? undefined : category.slug,
+        });
+    };
+
     const handleSortChange = (newSort: SortOption) => {
         setSortBy(newSort);
         setSort(newSort);
@@ -229,6 +264,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
 
     const heroTitle = title || 'Tienda';
     const featuredProductsCount = products.filter((product) => product.isFeatured).length;
+    const useDrawerFilters = filterPresentation === 'drawer';
 
     // Use theme colors if provided, otherwise use defaults
     const colors = themeColors ? {
@@ -371,7 +407,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                 {showFilterSidebar && (
                                     <button
                                         onClick={() => setShowFilters(!showFilters)}
-                                        className="lg:hidden flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg"
+                                        className={`${useDrawerFilters ? 'flex' : 'lg:hidden flex'} items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg`}
                                     >
                                         <SlidersHorizontal size={18} />
                                         Filtros
@@ -471,7 +507,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             {/* Filter Toggle (Mobile) */}
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className="lg:hidden flex items-center gap-2 px-3 py-2 rounded-lg transition-colors"
+                                className={`${useDrawerFilters ? 'flex' : 'lg:hidden flex'} items-center gap-2 px-3 py-2 rounded-lg transition-colors`}
                                 style={{
                                     backgroundColor: colors?.cardBg || undefined,
                                     color: colors?.text || undefined,
@@ -560,6 +596,44 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                 </div>
             )}
 
+            {showFilterSidebar && availableCategories.length > 0 && (
+                <div className={`max-w-7xl mx-auto ${embedded ? paddingXClass : 'px-4 sm:px-6 lg:px-8'} mb-6`}>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                        <button
+                            type="button"
+                            onClick={() => handleCategoryChip()}
+                            className="whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
+                            style={{
+                                borderColor: !filters.categoryId && !filters.categorySlug ? primaryColor : colors.border,
+                                backgroundColor: !filters.categoryId && !filters.categorySlug ? `${primaryColor}14` : colors.cardBg,
+                                color: !filters.categoryId && !filters.categorySlug ? primaryColor : colors.text,
+                            }}
+                        >
+                            Todos
+                        </button>
+                        {availableCategories.slice(0, 10).map((category) => {
+                            const isSelected = filters.categoryId === category.id || filters.categorySlug === category.slug;
+                            return (
+                                <button
+                                    key={category.id}
+                                    type="button"
+                                    onClick={() => handleCategoryChip(category)}
+                                    className="whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
+                                    style={{
+                                        borderColor: isSelected ? primaryColor : colors.border,
+                                        backgroundColor: isSelected ? primaryColor : colors.cardBg,
+                                        color: isSelected ? '#ffffff' : colors.text,
+                                    }}
+                                >
+                                    {category.name}
+                                    <span className="ml-2 text-xs opacity-70">{category.count}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             {/* Content */}
             <div className={`max-w-7xl mx-auto ${embedded ? paddingXClass : 'px-4 sm:px-6 lg:px-8 py-6'}`}>
                 <div className="flex gap-6">
@@ -589,6 +663,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             onSearchChange={setSearchTerm}
                             onSearch={handleSearch}
                             searchSuggestions={suggestions}
+                            presentationMode={filterPresentation}
                         />
                     )}
 
@@ -724,7 +799,7 @@ interface ProductCardProps {
     currencySymbol: string;
     primaryColor: string;
     borderRadiusClass?: string;
-    cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardStyle?: ProductCardVariant;
     colors?: ProductCardColors;
 }
 
@@ -863,22 +938,45 @@ const ProductCard: React.FC<ProductCardProps> = ({
         );
     }
 
+    // Card style variations are intentionally centralized so storefront themes can
+    // switch product card variants without rewriting the product grid.
+    const cardStyleClasses: Record<Exclude<ProductCardVariant, 'overlay'>, string> = {
+        minimal: 'bg-transparent border-0 shadow-none',
+        modern: 'bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700',
+        elegant: 'bg-white dark:bg-gray-800 shadow-lg border-0',
+        luxury: 'bg-white shadow-[0_18px_45px_rgba(15,23,42,0.10)] border border-slate-100',
+        marketplace: 'bg-white shadow-sm border border-slate-200',
+        editorial: 'bg-white border-0 shadow-none',
+        compact: 'bg-white shadow-sm border border-slate-200',
+        imageFirst: 'bg-white shadow-sm border border-slate-100',
+        quickBuy: 'bg-white shadow-md border border-slate-200',
+    };
+
+    const imageAspectClass = cardStyle === 'compact'
+        ? 'aspect-square'
+        : cardStyle === 'editorial' || cardStyle === 'imageFirst'
+            ? 'aspect-[3/4]'
+            : 'aspect-[4/5]';
+
+    const contentPaddingClass = cardStyle === 'compact' ? 'p-3' : 'p-3 sm:p-4';
+    const showFullQuickBuy = cardStyle === 'quickBuy';
+
     // Card style variations - use theme colors if provided (for non-overlay styles)
     const getCardStyle = () => {
         if (cardColors.cardBackground) {
             const baseStyle = cardStyle === 'minimal'
                 ? 'border-0 shadow-none'
-                : cardStyle === 'elegant'
-                    ? 'shadow-lg border-0'
-                    : 'shadow-sm';
+                : cardStyle === 'luxury'
+                    ? 'shadow-[0_18px_45px_rgba(15,23,42,0.10)] border'
+                    : cardStyle === 'quickBuy'
+                        ? 'shadow-md border'
+                        : cardStyle === 'elegant'
+                            ? 'shadow-lg border-0'
+                            : 'shadow-sm';
             return baseStyle;
         }
-        return {
-            minimal: 'bg-transparent border-0 shadow-none',
-            modern: 'bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700',
-            elegant: 'bg-white dark:bg-gray-800 shadow-lg border-0',
-            overlay: '', // Handled separately above
-        }[cardStyle];
+        if (cardStyle === 'overlay') return '';
+        return cardStyleClasses[cardStyle] || cardStyleClasses.modern;
     };
 
     // Default styles (minimal, modern, elegant)
@@ -894,7 +992,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         >
             {/* Image */}
             <div
-                className="relative aspect-[4/5] cursor-pointer overflow-hidden bg-slate-100"
+                className={`relative ${imageAspectClass} cursor-pointer overflow-hidden bg-slate-100`}
                 style={{ backgroundColor: cardColors.mutedText ? `${cardColors.mutedText}20` : undefined }}
                 onClick={onClick}
             >
@@ -950,8 +1048,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </div>
 
             {/* Content */}
-            <div className="flex flex-1 flex-col p-3 sm:p-4">
-                {product.categoryName && (
+            <div className={`flex flex-1 flex-col ${contentPaddingClass}`}>
+                {product.categoryName && cardStyle !== 'compact' && (
                     <p className="mb-1 truncate text-[11px] font-semibold uppercase text-slate-500">
                         {product.categoryName}
                     </p>
@@ -992,11 +1090,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                             </span>
                         )}
                     </div>
-                    <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <div className={showFullQuickBuy ? 'grid grid-cols-1 gap-2' : 'grid grid-cols-[1fr_auto] gap-2'}>
                         <button
                             type="button"
                             onClick={onClick}
-                            className="rounded-lg border px-3 py-2 text-sm font-semibold transition-colors hover:bg-slate-50"
+                            className={`${showFullQuickBuy ? 'hidden' : ''} rounded-lg border px-3 py-2 text-sm font-semibold transition-colors hover:bg-slate-50`}
                             style={{ borderColor: cardColors.border || '#e2e8f0', color: cardColors.heading || '#0f172a' }}
                         >
                             Ver
@@ -1013,7 +1111,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                                 style={{ backgroundColor: primaryColor }}
                                 aria-label={`Agregar ${product.name} al carrito`}
                             >
-                                <ShoppingCart size={17} />
+                                {showFullQuickBuy ? (
+                                    'Agregar al carrito'
+                                ) : (
+                                    <ShoppingCart size={17} />
+                                )}
                             </button>
                         )}
                     </div>

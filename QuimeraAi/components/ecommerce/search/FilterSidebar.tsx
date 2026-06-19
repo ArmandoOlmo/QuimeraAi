@@ -43,6 +43,7 @@ interface FilterSidebarProps {
     onSearchChange?: (term: string) => void;
     onSearch?: (term: string) => void;
     searchSuggestions?: string[];
+    presentationMode?: 'sidebar' | 'drawer';
 }
 
 const FilterSidebar: React.FC<FilterSidebarProps> = ({
@@ -61,6 +62,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     onSearchChange,
     onSearch,
     searchSuggestions = [],
+    presentationMode = 'sidebar',
 }) => {
     // Theme colors with fallbacks
     const colors = {
@@ -236,7 +238,11 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     )}
                     <button
                         onClick={onClose}
-                        className={hasThemeColors ? "lg:hidden p-2 transition-colors hover:opacity-70" : "lg:hidden p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"}
+                        aria-label="Cerrar filtros"
+                        className={hasThemeColors
+                            ? `${presentationMode === 'drawer' ? '' : 'lg:hidden'} p-2 transition-colors hover:opacity-70`
+                            : `${presentationMode === 'drawer' ? '' : 'lg:hidden'} p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors`
+                        }
                         style={colors?.mutedText ? { color: colors?.mutedText } : undefined}
                     >
                         <X size={20} />
@@ -530,26 +536,37 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
     return (
         <>
-            {/* Mobile Overlay */}
+            {/* Overlay */}
             {isOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+                    className={`${presentationMode === 'drawer' ? '' : 'lg:hidden'} fixed inset-0 bg-black/60 backdrop-blur-sm z-40`}
                     onClick={onClose}
                 />
             )}
 
-            {/* Sidebar */}
+            {/* Sidebar / drawer */}
             <aside
-                className={`
-                    fixed lg:relative lg:translate-x-0
-                    left-0 top-0 h-full lg:h-auto
-                    w-80 lg:w-64
-                    ${hasThemeColors ? '' : 'bg-white dark:bg-gray-800 lg:bg-transparent dark:lg:bg-transparent'}
-                    shadow-xl lg:shadow-none
-                    z-50 lg:z-auto
-                    transform transition-transform duration-300
-                    ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-                `}
+                className={presentationMode === 'drawer'
+                    ? `
+                        fixed right-0 top-0 h-full
+                        w-full max-w-sm
+                        ${hasThemeColors ? '' : 'bg-white dark:bg-gray-800'}
+                        shadow-2xl
+                        z-50
+                        transform transition-transform duration-300
+                        ${isOpen ? 'translate-x-0' : 'translate-x-full'}
+                    `
+                    : `
+                        fixed lg:relative lg:translate-x-0
+                        left-0 top-0 h-full lg:h-auto
+                        w-80 lg:w-64
+                        ${hasThemeColors ? '' : 'bg-white dark:bg-gray-800 lg:bg-transparent dark:lg:bg-transparent'}
+                        shadow-xl lg:shadow-none
+                        z-50 lg:z-auto
+                        transform transition-transform duration-300
+                        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+                    `
+                }
                 style={hasThemeColors ? { backgroundColor: colors?.background } : undefined}
             >
                 {content}
