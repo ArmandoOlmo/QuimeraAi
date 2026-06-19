@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../../../../supabase';
 import { Order, OrderStatus, EcommerceStats, Product, Customer } from '../../../../types/ecommerce';
 import { mapOrderFromDB, mapProductFromDB, mapCustomerFromDB } from '../../../../utils/ecommerceMappers';
+import { createRealtimeChannelName } from './realtimeChannel';
 
 interface DateRange {
     startDate: Date;
@@ -112,15 +113,15 @@ export const useEcommerceAnalytics = (
     useEffect(() => {
         if (!effectiveStoreId) return;
 
-        const ordersChannel = supabase.channel('analytics_orders_changes')
+        const ordersChannel = supabase.channel(createRealtimeChannelName('analytics_orders_changes', effectiveStoreId))
             .on('postgres_changes', { event: '*', schema: 'public', table: 'store_orders', filter: `project_id=eq.${effectiveStoreId}` }, () => fetchOrders())
             .subscribe();
 
-        const productsChannel = supabase.channel('analytics_products_changes')
+        const productsChannel = supabase.channel(createRealtimeChannelName('analytics_products_changes', effectiveStoreId))
             .on('postgres_changes', { event: '*', schema: 'public', table: 'store_products', filter: `project_id=eq.${effectiveStoreId}` }, () => fetchProducts())
             .subscribe();
 
-        const customersChannel = supabase.channel('analytics_customers_changes')
+        const customersChannel = supabase.channel(createRealtimeChannelName('analytics_customers_changes', effectiveStoreId))
             .on('postgres_changes', { event: '*', schema: 'public', table: 'store_customers', filter: `project_id=eq.${effectiveStoreId}` }, () => fetchCustomers())
             .subscribe();
 
@@ -388,4 +389,3 @@ export const useEcommerceAnalytics = (
         compareWithPreviousPeriod,
     };
 };
-

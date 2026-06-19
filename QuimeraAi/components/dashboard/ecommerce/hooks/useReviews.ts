@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../../../../supabase';
 import { Review, ReviewStatus } from '../../../../types/ecommerce';
 import { mapReviewFromDB, mapReviewToDB } from '../../../../utils/ecommerceMappers';
+import { createRealtimeChannelName } from './realtimeChannel';
 
 export interface UseReviewsOptions {
     statusFilter?: ReviewStatus | 'all';
@@ -83,7 +84,7 @@ export const useReviews = (
 
         fetchReviews();
 
-        const channel = supabase.channel('store_reviews_changes')
+        const channel = supabase.channel(createRealtimeChannelName('store_reviews_changes', effectiveStoreId))
             .on(
                 'postgres_changes',
                 {
@@ -212,4 +213,3 @@ export const useReviews = (
 };
 
 export default useReviews;
-

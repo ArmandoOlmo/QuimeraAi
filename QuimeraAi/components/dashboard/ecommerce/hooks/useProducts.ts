@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../../supabase';
 import { Product, ProductImage, ProductStatus } from '../../../../types/ecommerce';
 import { mapProductFromDB, mapProductToDB } from '../../../../utils/ecommerceMappers';
+import { createRealtimeChannelName } from './realtimeChannel';
 
 interface UseProductsOptions {
     categoryId?: string;
@@ -69,7 +70,7 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
         fetchProducts();
 
         // Realtime subscription
-        const channel = supabase.channel('store_products_changes')
+        const channel = supabase.channel(createRealtimeChannelName('store_products_changes', effectiveStoreId))
             .on(
                 'postgres_changes',
                 {
@@ -364,4 +365,3 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
         getLowStockProducts,
     };
 };
-

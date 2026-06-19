@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../../supabase';
 import { Customer, Address } from '../../../../types/ecommerce';
 import { mapCustomerFromDB, mapCustomerToDB } from '../../../../utils/ecommerceMappers';
+import { createRealtimeChannelName } from './realtimeChannel';
 
 interface UseCustomersOptions {
     searchTerm?: string;
@@ -76,7 +77,7 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
 
         fetchCustomers();
 
-        const channel = supabase.channel('store_customers_changes')
+        const channel = supabase.channel(createRealtimeChannelName('store_customers_changes', effectiveStoreId))
             .on(
                 'postgres_changes',
                 {
@@ -333,4 +334,3 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
         getMarketingCustomers,
     };
 };
-

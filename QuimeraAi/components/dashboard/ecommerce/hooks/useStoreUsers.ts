@@ -7,6 +7,7 @@ import { getTimestampSeconds, timestampToDate } from '../../../../utils/timestam
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../../../../supabase';
+import { createRealtimeChannelName } from './realtimeChannel';
 import {
     StoreUser,
     StoreUserRole,
@@ -83,7 +84,7 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
 
         fetchUsers();
 
-        const channel = supabase.channel('store_users_changes')
+        const channel = supabase.channel(createRealtimeChannelName('store_users_changes', storeId))
             .on(
                 'postgres_changes',
                 {
@@ -123,7 +124,7 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
 
         fetchSegments();
 
-        const channel = supabase.channel('store_user_segments_changes')
+        const channel = supabase.channel(createRealtimeChannelName('store_user_segments_changes', storeId))
             .on(
                 'postgres_changes',
                 {
@@ -618,7 +619,6 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
 };
 
 export default useStoreUsers;
-
 
 
 

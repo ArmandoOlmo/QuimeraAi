@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../../supabase';
 import { Order, OrderStatus, PaymentStatus, FulfillmentStatus, OrderItem, Address } from '../../../../types/ecommerce';
 import { mapOrderFromDB, mapOrderToDB } from '../../../../utils/ecommerceMappers';
+import { createRealtimeChannelName } from './realtimeChannel';
 
 interface UseOrdersOptions {
     status?: OrderStatus;
@@ -73,7 +74,7 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
 
         fetchOrders();
 
-        const channel = supabase.channel('store_orders_changes')
+        const channel = supabase.channel(createRealtimeChannelName('store_orders_changes', effectiveStoreId))
             .on(
                 'postgres_changes',
                 {
@@ -315,4 +316,3 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
         generateOrderNumber,
     };
 };
-

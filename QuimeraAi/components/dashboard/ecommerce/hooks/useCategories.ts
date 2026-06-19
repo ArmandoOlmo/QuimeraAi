@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../../supabase';
 import { Category } from '../../../../types/ecommerce';
 import { mapCategoryFromDB, mapCategoryToDB } from '../../../../utils/ecommerceMappers';
+import { createRealtimeChannelName } from './realtimeChannel';
 
 export const useCategories = (userId: string, storeId?: string) => {
     const [categories, setCategories] = useState<Category[]>([]);
@@ -43,7 +44,7 @@ export const useCategories = (userId: string, storeId?: string) => {
 
         fetchCategories();
 
-        const channel = supabase.channel('store_categories_changes')
+        const channel = supabase.channel(createRealtimeChannelName('store_categories_changes', effectiveStoreId))
             .on(
                 'postgres_changes',
                 {
@@ -197,4 +198,3 @@ export const useCategories = (userId: string, storeId?: string) => {
         getCategoryTree,
     };
 };
-
