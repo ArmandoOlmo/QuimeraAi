@@ -45,7 +45,7 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
             // Un "store" está vinculado a un "project". Validamos si el proyecto existe
             const { data: projectData, error: projectError } = await supabase
                 .from('projects')
-                .select('id, name, created_at, updated_at, user_id')
+                .select('id, name, created_at, last_updated, user_id')
                 .eq('id', effectiveStoreId)
                 .single();
 
@@ -62,7 +62,7 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
                 id: projectData.id,
                 name: projectData.name,
                 createdAt: projectData.created_at,
-                updatedAt: projectData.updated_at,
+                updatedAt: projectData.last_updated ?? projectData.created_at,
                 isActive: true, // Asumimos que si el proyecto existe, la tienda está activa
                 ownerId: projectData.user_id,
             };
@@ -119,7 +119,6 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
 };
 
 export default useEcommerceStore;
-
 
 
 
