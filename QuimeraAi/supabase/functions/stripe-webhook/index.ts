@@ -49,7 +49,17 @@ serve(async (req) => {
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
+  let paymentEvent: any = null;
+
   try {
+    const registration = await registerPaymentEvent(event);
+    if (registration.duplicate) {
+      return json({ received: true, duplicate: true });
+    }
+
+    paymentEvent = registration.row;
+    await updatePaymentEventStatus(paymentEvent.id, "processing");
+
     switch (event.type) {
       case "checkout.session.completed":
         await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
@@ -81,8 +91,16 @@ serve(async (req) => {
         console.log(`[stripe-webhook] unhandled event type ${event.type}`);
     }
 
+    if (paymentEvent?.id) await updatePaymentEventStatus(paymentEvent.id, "processed", { processedAt: true });
     return json({ received: true });
   } catch (error: any) {
+    if (paymentEvent?.id) {
+      await updatePaymentEventStatus(paymentEvent.id, "failed", {
+        processingError: error.message || "Webhook processing error",
+      }).catch((eventError) => {
+        console.error("[stripe-webhook] could not mark event failed:", eventError.message);
+      });
+    }
     console.error("[stripe-webhook] processing error:", error);
     return new Response(`Webhook Error: ${error.message}`, { status: 500 });
   }
@@ -97,6 +115,104 @@ function json(body: unknown, status = 200) {
 
 function iso(timestamp?: number | null): string | null {
   return timestamp ? new Date(timestamp * 1000).toISOString() : null;
+}
+
+function isUuid(value?: string | null) {
+  return Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
+}
+
+function extractPaymentEventRefs(event: Stripe.Event) {
+  const object = event.data.object as any;
+  const metadata = object?.metadata || {};
+  const paymentIntent = object?.object === "payment_intent"
+    ? object.id
+    : typeof object?.payment_intent === "string"
+      ? object.payment_intent
+      : object?.payment_intent?.id || metadata.paymentIntentId || metadata.payment_intent_id || null;
+  const checkoutSession = object?.object === "checkout.session"
+    ? object.id
+    : typeof object?.checkout_session === "string"
+      ? object.checkout_session
+      : object?.checkout_session?.id || metadata.checkoutSessionId || metadata.checkout_session_id || null;
+
+  return {
+    paymentIntentId: paymentIntent,
+    checkoutSessionId: checkoutSession,
+    orderId: metadata.orderId || metadata.order_id || null,
+    storeId: metadata.storeId || metadata.store_id || null,
+    projectId: isUuid(metadata.projectId || metadata.project_id) ? metadata.projectId || metadata.project_id : null,
+  };
+}
+
+async function registerPaymentEvent(event: Stripe.Event) {
+  const refs = extractPaymentEventRefs(event);
+  const { data: existing, error: existingError } = await supabase
+    .from("store_payment_events")
+    .select("*")
+    .eq("provider", "stripe")
+    .eq("event_id", event.id)
+    .maybeSingle();
+  if (existingError) throw existingError;
+  if (existing) {
+    const status = String(existing.status || "");
+    return { duplicate: status === "processing" || status === "processed", row: existing };
+  }
+
+  const { data, error } = await supabase
+    .from("store_payment_events")
+    .insert({
+      provider: "stripe",
+      event_id: event.id,
+      event_type: event.type,
+      payment_intent_id: refs.paymentIntentId,
+      checkout_session_id: refs.checkoutSessionId,
+      order_id: refs.orderId,
+      store_id: refs.storeId,
+      project_id: refs.projectId,
+      status: "received",
+      payload: event as any,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    const duplicate = error.code === "23505" || /duplicate|unique/i.test(error.message || "");
+    if (duplicate) {
+      const { data: raced, error: racedError } = await supabase
+        .from("store_payment_events")
+        .select("*")
+        .eq("provider", "stripe")
+        .eq("event_id", event.id)
+        .maybeSingle();
+      if (racedError) throw racedError;
+      if (!raced) throw error;
+      const status = String(raced?.status || "");
+      return { duplicate: status === "processing" || status === "processed", row: raced };
+    }
+    throw error;
+  }
+
+  return { duplicate: false, row: data };
+}
+
+async function updatePaymentEventStatus(
+  id: string,
+  status: "processing" | "processed" | "failed",
+  options: { processingError?: string; processedAt?: boolean } = {},
+) {
+  const update: Record<string, unknown> = {
+    status,
+    processing_error: options.processingError || null,
+  };
+  if (options.processedAt || status === "failed") {
+    update.processed_at = new Date().toISOString();
+  }
+
+  const { error } = await supabase
+    .from("store_payment_events")
+    .update(update)
+    .eq("id", id);
+  if (error) throw error;
 }
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
@@ -514,35 +630,91 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   const order = await findStoreOrderForPaymentIntent(paymentIntent);
   if (!order) return;
 
+  const paidAt = new Date().toISOString();
+  const orderData = order.data || {};
+  const stripeData = orderData.stripe || {};
+  const chargeId = typeof paymentIntent.latest_charge === "string"
+    ? paymentIntent.latest_charge
+    : paymentIntent.latest_charge?.id;
+
   await supabase
     .from("store_orders")
     .update({
       status: "processing",
       payment_status: "paid",
+      payment_intent_id: paymentIntent.id,
+      stripe_payment_intent_id: paymentIntent.id,
+      paid_at: paidAt,
+      updated_at: paidAt,
+      stripe: {
+        ...stripeData,
+        paymentIntentId: paymentIntent.id,
+        chargeId: chargeId || stripeData.chargeId,
+      },
       data: {
-        ...(order.data || {}),
+        ...orderData,
         status: "processing",
         paymentStatus: "paid",
-        updatedAt: new Date().toISOString(),
+        paidAt,
+        stripe: {
+          ...stripeData,
+          paymentIntentId: paymentIntent.id,
+          chargeId: chargeId || stripeData.chargeId,
+        },
+        updatedAt: paidAt,
       },
     })
     .eq("id", order.id);
+
+  // PR22 inventory will decrement stock from this idempotent paid-order state.
+  // PR23 emails will send transactional notifications after this state is stable.
 }
 
 async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   const order = await findStoreOrderForPaymentIntent(paymentIntent);
   if (!order) return;
 
+  const failedAt = new Date().toISOString();
+  const orderData = order.data || {};
+  const stripeData = orderData.stripe || {};
+  const nextStatus = paymentIntent.status === "canceled" ? "cancelled" : (order.status || orderData.status || "pending");
+  const updatePayload: Record<string, unknown> = {
+    status: nextStatus,
+    payment_status: "failed",
+    payment_intent_id: paymentIntent.id,
+    stripe_payment_intent_id: paymentIntent.id,
+    updated_at: failedAt,
+    stripe: {
+      ...stripeData,
+      paymentIntentId: paymentIntent.id,
+      failureCode: paymentIntent.last_payment_error?.code,
+      failureMessage: paymentIntent.last_payment_error?.message,
+    },
+    data: {
+      ...orderData,
+      status: nextStatus,
+      paymentStatus: "failed",
+      stripe: {
+        ...stripeData,
+        paymentIntentId: paymentIntent.id,
+        failureCode: paymentIntent.last_payment_error?.code,
+        failureMessage: paymentIntent.last_payment_error?.message,
+      },
+      updatedAt: failedAt,
+    },
+  };
+
+  if (nextStatus === "cancelled") {
+    updatePayload.cancelled_at = failedAt;
+    updatePayload.data = {
+      ...(updatePayload.data as Record<string, unknown>),
+      cancelledAt: failedAt,
+    };
+  }
+
   await supabase
     .from("store_orders")
-    .update({
-      payment_status: "failed",
-      data: {
-        ...(order.data || {}),
-        paymentStatus: "failed",
-        updatedAt: new Date().toISOString(),
-      },
-    })
+    .update(updatePayload)
     .eq("id", order.id);
 }
 
@@ -561,7 +733,7 @@ async function findStoreOrderForPaymentIntent(paymentIntent: Stripe.PaymentInten
   let query = supabase
     .from("store_orders")
     .select("*")
-    .eq("payment_intent_id", paymentIntent.id);
+    .or(`payment_intent_id.eq.${paymentIntent.id},stripe_payment_intent_id.eq.${paymentIntent.id}`);
   if (projectId) query = query.eq("project_id", projectId);
   const { data: byPaymentIntent } = await query.maybeSingle();
   if (byPaymentIntent) return byPaymentIntent;

@@ -1178,6 +1178,16 @@ async function sha256(value: string) {
   return hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
 }
 
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`).join(",")}}`;
+  }
+  const encoded = JSON.stringify(value);
+  return encoded === undefined ? "null" : encoded;
+}
+
 function randomToken(prefix = "") {
   const bytes = new Uint8Array(24);
   crypto.getRandomValues(bytes);
@@ -1224,6 +1234,57 @@ async function getStoreContext(storeId: string) {
   };
 
   return { storeId, projectId, ownerId, settingsRow, settings, publicStore };
+}
+
+function getOrderData(row: any) {
+  return row?.data || row || {};
+}
+
+function getOrderPaymentIntentId(row: any): string | null {
+  const data = getOrderData(row);
+  return row?.stripe_payment_intent_id || row?.payment_intent_id || data?.stripe?.paymentIntentId || null;
+}
+
+function isReusablePaymentIntent(paymentIntent: Stripe.PaymentIntent) {
+  return !["canceled"].includes(paymentIntent.status);
+}
+
+async function getExistingCheckoutOrder(checkoutIdempotencyKey: string) {
+  const { data, error } = await supabase
+    .from("store_orders")
+    .select("*")
+    .eq("checkout_idempotency_key", checkoutIdempotencyKey)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+function formatStoredCheckoutResponse(row: any, paymentIntent?: Stripe.PaymentIntent | null) {
+  const data = getOrderData(row);
+  const stripeData = data.stripe || {};
+  return {
+    clientSecret: paymentIntent?.client_secret || stripeData.clientSecret,
+    paymentIntentId: paymentIntent?.id || row.stripe_payment_intent_id || row.payment_intent_id || stripeData.paymentIntentId,
+    orderId: row.id,
+    orderNumber: row.order_number || data.orderNumber,
+    orderAccessToken: data.orderAccessToken,
+    total: Number(row.total_amount ?? row.total ?? data.total ?? 0),
+    cartHash: row.cart_hash || data.cartHash,
+    checkoutIdempotencyKey: row.checkout_idempotency_key || data.checkoutIdempotencyKey,
+    reused: true,
+  };
+}
+
+async function findReusableStorePaymentIntent(row: any) {
+  const paymentIntentId = getOrderPaymentIntentId(row);
+  if (!paymentIntentId) return null;
+  try {
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    return isReusablePaymentIntent(paymentIntent) ? paymentIntent : null;
+  } catch (error: any) {
+    console.warn("[stripe-api] could not retrieve existing PaymentIntent:", paymentIntentId, error.message);
+    return null;
+  }
 }
 
 async function requireStoreOwner(userId: string, storeId: string) {
@@ -1282,7 +1343,8 @@ async function buildStoreOrder(data: any) {
     shippingAddress,
     billingAddress,
     shippingMethodId,
-    idempotencyKey = randomToken("checkout_"),
+    idempotencyKey,
+    sessionToken,
     notes,
   } = data;
 
@@ -1348,8 +1410,32 @@ async function buildStoreOrder(data: any) {
 
   const taxTotal = settings.taxEnabled ? subtotal * (Number(settings.taxRate || 0) / 100) : 0;
   const total = Math.max(0, subtotal + shippingTotal + taxTotal);
-  const cartHash = await sha256(JSON.stringify({ items, shippingMethodId, total }));
-  const orderNumber = `ORD-${String(idempotencyKey).replace(/[^a-zA-Z0-9_-]/g, "").substring(0, 32).toUpperCase()}`;
+  const cartHash = await sha256(stableStringify({
+    currency,
+    items: canonicalItems.map((item) => ({
+      productId: item.productId,
+      variantId: item.variantId,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      totalPrice: item.totalPrice,
+    })),
+    shippingMethodId: shippingMethodId || null,
+    shippingTotal,
+    subtotal,
+    taxTotal,
+    total,
+  }));
+  const checkoutIdempotencyKey = `eco_${(await sha256(stableStringify({
+    cartHash,
+    clientIdempotencyKey: String(idempotencyKey || "").trim() || null,
+    currency,
+    customerEmail: String(customerEmail || "").trim().toLowerCase(),
+    projectId,
+    sessionToken: String(sessionToken || "").trim() || null,
+    storeId: context.storeId,
+    total: cents(total),
+  }))).slice(0, 64)}`;
+  const orderNumber = `ORD-${checkoutIdempotencyKey.replace(/[^a-zA-Z0-9_-]/g, "").substring(0, 32).toUpperCase()}`;
   const accessToken = randomToken("ord_");
   const accessTokenHash = await sha256(accessToken);
 
@@ -1360,6 +1446,7 @@ async function buildStoreOrder(data: any) {
     connectedAccountId,
     currency,
     orderNumber,
+    checkoutIdempotencyKey,
     accessToken,
     accessTokenHash,
     cartHash,
@@ -1384,7 +1471,7 @@ async function buildStoreOrder(data: any) {
       paymentMethod: "stripe",
       shippingMethod: shippingMethodName,
       notes: notes || null,
-      checkoutIdempotencyKey: idempotencyKey,
+      checkoutIdempotencyKey,
       orderAccessToken: accessToken,
       orderAccessTokenHash: accessTokenHash,
       cartHash,
@@ -1397,50 +1484,39 @@ async function buildStoreOrder(data: any) {
 async function createStoreCheckoutIntent(data: any) {
   const order = await buildStoreOrder(data);
 
-  const { data: existing } = await supabase
-    .from("store_orders")
-    .select("*")
-    .eq("project_id", order.projectId)
-    .eq("order_number", order.orderNumber)
-    .maybeSingle();
+  const existing = await getExistingCheckoutOrder(order.checkoutIdempotencyKey);
 
   if (existing) {
-    const existingData = existing.data || existing;
-    if (existingData.cartHash && existingData.cartHash !== order.cartHash) {
+    const existingData = getOrderData(existing);
+    const existingCartHash = existing.cart_hash || existingData.cartHash;
+    if (existingCartHash && existingCartHash !== order.cartHash) {
       throw new Error("Checkout already exists for a different cart. Refresh checkout and try again.");
     }
-    return {
-      clientSecret: existingData.stripe?.clientSecret,
-      orderId: existing.id,
-      orderNumber: existing.order_number || existingData.orderNumber,
-      orderAccessToken: existingData.orderAccessToken,
-      total: Number(existing.total ?? existingData.total ?? 0),
-      cartHash: existingData.cartHash,
-    };
+
+    const reusablePaymentIntent = await findReusableStorePaymentIntent(existing);
+    if (reusablePaymentIntent) return formatStoredCheckoutResponse(existing, reusablePaymentIntent);
+
+    return await replaceStoreOrderPaymentIntent(existing, order);
   }
 
-  const platformFee = Math.round(order.data.total * 0.01 * 100);
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: cents(order.data.total),
-    currency: order.currency,
-    automatic_payment_methods: { enabled: true },
-    application_fee_amount: platformFee > 0 ? platformFee : undefined,
-    transfer_data: { destination: order.connectedAccountId },
-    metadata: {
-      storeId: order.context.storeId,
-      projectId: order.projectId,
-      ownerId: order.ownerId || "",
-      orderNumber: order.orderNumber,
-      cartHash: order.cartHash,
-    },
-  }, { idempotencyKey: `pi_${order.orderNumber}` });
+  const { paymentIntent, platformFeeAmount } = await createStorePaymentIntent(order);
 
   const orderData = {
     ...order.data,
+    pricing: {
+      subtotal: order.data.subtotal,
+      discountTotal: 0,
+      shippingTotal: order.data.shippingCost,
+      taxTotal: order.data.taxAmount,
+      platformFeeTotal: platformFeeAmount / 100,
+      total: order.data.total,
+    },
     stripe: {
       paymentIntentId: paymentIntent.id,
       connectedAccountId: order.connectedAccountId,
       clientSecret: paymentIntent.client_secret,
+      applicationFeeAmount: platformFeeAmount,
+      attempt: 1,
     },
   };
 
@@ -1448,18 +1524,27 @@ async function createStoreCheckoutIntent(data: any) {
     .from("store_orders")
     .insert({
       store_id: order.context.storeId,
-      user_id: order.ownerId,
+      public_store_id: order.context.storeId,
+      user_id: null,
       project_id: order.projectId,
       order_number: order.orderNumber,
       customer_email: orderData.customerEmail,
       customer_name: orderData.customerName,
       customer_phone: orderData.customerPhone,
+      items: orderData.items,
       subtotal: orderData.subtotal,
       discount: 0,
+      discount_amount: 0,
       shipping_cost: orderData.shippingCost,
+      shipping_amount: orderData.shippingCost,
       tax_amount: orderData.taxAmount,
       total: orderData.total,
+      total_amount: orderData.total,
       currency: orderData.currency.toUpperCase(),
+      pricing: orderData.pricing,
+      checkout_idempotency_key: order.checkoutIdempotencyKey,
+      cart_hash: order.cartHash,
+      stripe: orderData.stripe,
       shipping_address: orderData.shippingAddress,
       billing_address: orderData.billingAddress,
       status: "pending",
@@ -1467,13 +1552,39 @@ async function createStoreCheckoutIntent(data: any) {
       fulfillment_status: "unfulfilled",
       payment_method: "stripe",
       payment_intent_id: paymentIntent.id,
+      stripe_payment_intent_id: paymentIntent.id,
       notes: orderData.notes,
+      customer_notes: orderData.notes,
+      shipping_method: orderData.shippingMethod,
+      metadata: {
+        source: "stripe-api",
+        checkoutIdempotencyKey: order.checkoutIdempotencyKey,
+        cartHash: order.cartHash,
+      },
       data: orderData,
     })
     .select("*")
     .single();
 
-  if (error) throw error;
+  if (error) {
+    const duplicateCheckout = error.code === "23505" || /duplicate|unique/i.test(error.message || "");
+    if (duplicateCheckout) {
+      const racedOrder = await getExistingCheckoutOrder(order.checkoutIdempotencyKey);
+      if (racedOrder) {
+        const reusablePaymentIntent = await findReusableStorePaymentIntent(racedOrder);
+        if (reusablePaymentIntent) return formatStoredCheckoutResponse(racedOrder, reusablePaymentIntent);
+        return await replaceStoreOrderPaymentIntent(racedOrder, order);
+      }
+    }
+    throw error;
+  }
+
+  await stripe.paymentIntents.update(paymentIntent.id, {
+    metadata: {
+      ...paymentIntent.metadata,
+      orderId: inserted.id,
+    },
+  });
 
   return {
     clientSecret: paymentIntent.client_secret,
@@ -1483,7 +1594,83 @@ async function createStoreCheckoutIntent(data: any) {
     orderAccessToken: order.accessToken,
     total: orderData.total,
     cartHash: order.cartHash,
+    checkoutIdempotencyKey: order.checkoutIdempotencyKey,
+    reused: false,
   };
+}
+
+async function createStorePaymentIntent(order: any, idempotencySuffix = "") {
+  const platformFeeAmount = Math.round(order.data.total * 0.01 * 100);
+  const stripeIdempotencyKey = `pi_${order.checkoutIdempotencyKey}${idempotencySuffix}`.slice(0, 255);
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: cents(order.data.total),
+    currency: order.currency,
+    automatic_payment_methods: { enabled: true },
+    application_fee_amount: platformFeeAmount > 0 ? platformFeeAmount : undefined,
+    transfer_data: { destination: order.connectedAccountId },
+    metadata: {
+      storeId: order.context.storeId,
+      projectId: order.projectId,
+      ownerId: order.ownerId || "",
+      orderNumber: order.orderNumber,
+      checkoutIdempotencyKey: order.checkoutIdempotencyKey,
+      cartHash: order.cartHash,
+    },
+  }, { idempotencyKey: stripeIdempotencyKey });
+
+  return { paymentIntent, platformFeeAmount };
+}
+
+async function replaceStoreOrderPaymentIntent(existing: any, order: any) {
+  const existingData = getOrderData(existing);
+  const existingStripe = existingData.stripe || {};
+  const nextAttempt = Number(existingStripe.attempt || 1) + 1;
+  const { paymentIntent, platformFeeAmount } = await createStorePaymentIntent(order, `_retry_${nextAttempt}`);
+  const nextData = {
+    ...existingData,
+    status: "pending",
+    paymentStatus: "pending",
+    updatedAt: nowIso(),
+    stripe: {
+      ...existingStripe,
+      paymentIntentId: paymentIntent.id,
+      connectedAccountId: order.connectedAccountId,
+      clientSecret: paymentIntent.client_secret,
+      applicationFeeAmount: platformFeeAmount,
+      attempt: nextAttempt,
+    },
+  };
+
+  const { data: updated, error } = await supabase
+    .from("store_orders")
+    .update({
+      status: "pending",
+      payment_status: "pending",
+      payment_intent_id: paymentIntent.id,
+      stripe_payment_intent_id: paymentIntent.id,
+      stripe: nextData.stripe,
+      metadata: {
+        ...(existing.metadata || {}),
+        checkoutIdempotencyKey: order.checkoutIdempotencyKey,
+        cartHash: order.cartHash,
+        paymentIntentReplacedAt: nowIso(),
+      },
+      data: nextData,
+      updated_at: nowIso(),
+    })
+    .eq("id", existing.id)
+    .select("*")
+    .single();
+  if (error) throw error;
+
+  await stripe.paymentIntents.update(paymentIntent.id, {
+    metadata: {
+      ...paymentIntent.metadata,
+      orderId: existing.id,
+    },
+  });
+
+  return formatStoredCheckoutResponse(updated || existing, paymentIntent);
 }
 
 async function createStoreCheckoutSession(data: any) {
