@@ -112,7 +112,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
 
         const fetchData = async () => {
             try {
-                const storeDoc = await getDoc(doc(db, 'publicStores', projectId));
+                const storeDoc = await getDoc(doc(db, 'public_stores', projectId));
                 if (storeDoc.exists()) {
                     setProjectData(storeDoc.data());
                 }

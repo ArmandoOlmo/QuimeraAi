@@ -44,6 +44,9 @@ export type ProductStatus = 'active' | 'draft' | 'archived';
 
 export interface Product {
     id: string;
+    projectId?: string;              // Admin/project-backed store identifier when present
+    storeId?: string;                // Public products may use public_stores.id here
+    publicStoreId?: string;          // Explicit public_stores.id alias for new code
     name: string;
     slug: string;
     description: string;
@@ -162,6 +165,9 @@ export interface OrderItem {
 export interface Order {
     id: string;
     orderNumber: string;            // ORD-001234
+    projectId?: string;              // Project-backed admin/order identifier
+    storeId?: string;                // Legacy mixed identifier; inspect source before assuming type
+    publicStoreId?: string;          // public_stores.id for storefront-created orders
     
     // Customer
     customerId?: string;
@@ -261,13 +267,23 @@ export interface CartItem {
 export interface Cart {
     id: string;
     userId?: string;                // User ID if logged in
-    storeId?: string;               // Store ID for multi-tenant
+    storeId?: string;               // Legacy mixed identifier; may be projectId or publicStoreId
+    projectId?: string;             // UUID project-backed store id for dashboard/admin carts
+    publicStoreId?: string;         // public_stores.id for storefront carts
     customerId?: string;
     sessionId?: string;
+    sessionToken?: string;
     items: CartItem[];
+    currency?: string;
+    status?: 'active' | 'converted' | 'abandoned' | 'expired';
     subtotal: number;
     discountCode?: string;
     discountAmount?: number;
+    shippingAmount?: number;
+    taxAmount?: number;
+    totalAmount?: number;
+    cartHash?: string;
+    data?: Record<string, unknown>;
     createdAt: StoredTimestamp;
     updatedAt: StoredTimestamp;
     expiresAt?: StoredTimestamp;
@@ -570,6 +586,9 @@ export const DEFAULT_STOREFRONT_THEME: StorefrontThemeSettings = {
 
 export interface StoreSettings {
     // General
+    projectId?: string;             // Project-backed settings identifier
+    storeId?: string;               // Legacy mixed identifier; do not assume public_stores.id
+    publicStoreId?: string;         // public_stores.id when settings are storefront-scoped
     storeName: string;
     storeEmail: string;
     storePhone?: string;
@@ -697,13 +716,15 @@ export type EcommerceView =
 
 /**
  * Configuración de ecommerce vinculada a un proyecto específico
- * Cada proyecto puede tener su propia tienda de ecommerce
+ * Cada proyecto puede tener su propia tienda de ecommerce.
+ * Este storeId es project-backed y no debe confundirse con public_stores.id.
  */
 export interface ProjectEcommerceConfig {
     projectId: string;
     projectName: string;
     ecommerceEnabled: boolean;
-    storeId: string;              // Igual a projectId para relación 1:1
+    storeId: string;              // Igual a projectId para relación 1:1 dashboard/admin
+    publicStoreId?: string;       // public_stores.id cuando existe una storefront publicada
     storeName: string;
     createdAt: StoredTimestamp;
     updatedAt: StoredTimestamp;
@@ -714,8 +735,9 @@ export interface ProjectEcommerceConfig {
  * Usado por el EcommerceContext para pasar info a componentes hijos
  */
 export interface EcommerceContextData {
-    storeId: string;
+    storeId: string;              // project-backed id in dashboard ecommerce context
     projectId: string | null;
+    publicStoreId?: string;
     projectName: string;
 }
 
@@ -750,4 +772,3 @@ export interface PublicProduct {
     createdAt?: StoredTimestamp;
     updatedAt?: StoredTimestamp;
 }
-

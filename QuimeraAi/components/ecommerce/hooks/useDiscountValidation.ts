@@ -212,7 +212,7 @@ export const useDiscountValidation = (storeId: string): UseDiscountValidationRet
 
             try {
                 // Fetch discount from Supabase
-                const discountsRef = collection(db, 'publicStores', storeId, 'discounts');
+                const discountsRef = collection(db, 'public_stores', storeId, 'discounts');
                 const q = query(
                     discountsRef,
                     where('code', '==', code.toUpperCase().trim()),

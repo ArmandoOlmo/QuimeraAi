@@ -343,8 +343,8 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = (props) => {
                     new URLSearchParams(window.location.search).get('token') ||
                     undefined;
 
-                // Get store owner ID from publicStores
-                const publicStoreRef = doc(db, 'publicStores', storeId);
+                // Get store owner ID from public_stores
+                const publicStoreRef = doc(db, 'public_stores', storeId);
                 const publicStoreDoc = await getDoc(publicStoreRef);
 
                 if (!publicStoreDoc.exists()) {
@@ -354,7 +354,7 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = (props) => {
                 }
 
                 // Get store settings from public collection
-                const settingsRef = doc(db, `publicStores/${storeId}/settings/store`);
+                const settingsRef = doc(db, `public_stores/${storeId}/settings/store`);
                 const settingsDoc = await getDoc(settingsRef);
                 if (settingsDoc.exists()) {
                     setStoreSettings(settingsDoc.data() as StoreSettings);

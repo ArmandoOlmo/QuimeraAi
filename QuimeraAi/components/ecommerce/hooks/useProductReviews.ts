@@ -103,7 +103,7 @@ export const useProductReviews = (
     const fetchStats = useCallback(async () => {
         try {
             const productDoc = await getDoc(
-                doc(db, 'publicStores', storeId, 'products', productId)
+                doc(db, 'public_stores', storeId, 'products', productId)
             );
             
             if (productDoc.exists()) {
@@ -137,7 +137,7 @@ export const useProductReviews = (
         setError(null);
 
         try {
-            const reviewsRef = collection(db, 'publicStores', storeId, 'reviews');
+            const reviewsRef = collection(db, 'public_stores', storeId, 'reviews');
             const { field, direction } = getOrderByField();
 
             let q = query(
@@ -315,7 +315,7 @@ export const useMarkReviewHelpful = (storeId: string) => {
         setIsMarking(true);
 
         try {
-            const reviewRef = doc(db, 'publicStores', storeId, 'reviews', reviewId);
+            const reviewRef = doc(db, 'public_stores', storeId, 'reviews', reviewId);
             await updateDoc(reviewRef, {
                 helpfulVotes: increment(1),
             });

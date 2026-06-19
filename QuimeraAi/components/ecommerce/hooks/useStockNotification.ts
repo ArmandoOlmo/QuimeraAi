@@ -84,7 +84,7 @@ export const useStockNotification = (storeId: string): UseStockNotificationRetur
 
         setIsLoading(true);
 
-        const notificationsRef = collection(db, 'publicStores', storeId, 'stockNotifications');
+        const notificationsRef = collection(db, 'public_stores', storeId, 'stockNotifications');
         const q = query(notificationsRef, where('email', '==', email.toLowerCase()));
 
         const unsubscribe = onSnapshot(
@@ -144,7 +144,7 @@ export const useStockNotification = (storeId: string): UseStockNotificationRetur
                 const notificationId = `${productId}_${normalizedEmail.replace(/[^a-z0-9]/g, '_')}`;
                 const notificationRef = doc(
                     db,
-                    'publicStores',
+                    'public_stores',
                     storeId,
                     'stockNotifications',
                     notificationId
@@ -181,7 +181,7 @@ export const useStockNotification = (storeId: string): UseStockNotificationRetur
             const notificationId = `${productId}_${email.replace(/[^a-z0-9]/g, '_')}`;
             const notificationRef = doc(
                 db,
-                'publicStores',
+                'public_stores',
                 storeId,
                 'stockNotifications',
                 notificationId

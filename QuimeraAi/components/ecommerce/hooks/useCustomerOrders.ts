@@ -43,7 +43,7 @@ export const useCustomerOrders = (
 
         try {
             // Query public orders by customer email
-            const ordersRef = collection(db, 'publicStores', storeId, 'customerOrders');
+            const ordersRef = collection(db, 'public_stores', storeId, 'customerOrders');
             const q = query(
                 ordersRef,
                 where('customerEmail', '==', customerEmail.toLowerCase()),
@@ -74,7 +74,7 @@ export const useCustomerOrders = (
             if (!storeId || !orderId) return null;
 
             try {
-                const orderRef = doc(db, 'publicStores', storeId, 'customerOrders', orderId);
+                const orderRef = doc(db, 'public_stores', storeId, 'customerOrders', orderId);
                 const orderDoc = await getDoc(orderRef);
 
                 if (orderDoc.exists()) {

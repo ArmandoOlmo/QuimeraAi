@@ -121,8 +121,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
             
             setIsLoading(true);
             try {
-                // Search products in Supabase (publicStores is where published products live)
-                const productsRef = collection(db, 'publicStores', storeId, 'products');
+                // Search products in Supabase (public_stores is where published products live)
+                const productsRef = collection(db, 'public_stores', storeId, 'products');
                 const searchLower = searchTerm.toLowerCase();
                 
                 // Get all products and filter client-side for better search
