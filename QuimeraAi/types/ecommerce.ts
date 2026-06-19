@@ -264,10 +264,18 @@ export interface Cart {
     storeId?: string;               // Store ID for multi-tenant
     customerId?: string;
     sessionId?: string;
+    sessionToken?: string;
     items: CartItem[];
+    currency?: string;
+    status?: 'active' | 'converted' | 'abandoned' | 'expired';
     subtotal: number;
     discountCode?: string;
     discountAmount?: number;
+    shippingAmount?: number;
+    taxAmount?: number;
+    totalAmount?: number;
+    cartHash?: string;
+    data?: Record<string, unknown>;
     createdAt: StoredTimestamp;
     updatedAt: StoredTimestamp;
     expiresAt?: StoredTimestamp;
@@ -750,4 +758,3 @@ export interface PublicProduct {
     createdAt?: StoredTimestamp;
     updatedAt?: StoredTimestamp;
 }
-

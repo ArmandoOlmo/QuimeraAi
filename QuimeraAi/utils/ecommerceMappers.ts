@@ -2,38 +2,136 @@ import { Product, Category, Customer, Order, OrderItem, Review, Discount, Discou
 import { StoreUser, StoreUserRole, StoreUserStatus, UserSegment, SegmentType, UserActivity, ActivityType } from '../types/storeUsers';
 import { toStoredTimestamp } from './supabaseMappers';
 
-export const mapProductFromDB = (row: any): Product => ({
-    id: row.id,
-    name: row.name,
-    slug: row.slug,
-    description: row.description,
-    shortDescription: row.short_description,
-    price: Number(row.price || 0),
-    compareAtPrice: row.compare_at_price ? Number(row.compare_at_price) : undefined,
-    costPrice: row.cost_price ? Number(row.cost_price) : undefined,
-    currency: row.currency,
-    sku: row.sku,
-    barcode: row.barcode,
-    quantity: Number(row.quantity || 0),
-    trackInventory: row.track_inventory,
-    lowStockThreshold: row.low_stock_threshold,
-    images: row.images || [],
-    tags: row.tags || [],
-    hasVariants: row.has_variants,
-    variants: row.variants || [],
-    options: row.options || [],
-    status: row.status,
-    isDigital: row.is_digital,
-    isFeatured: row.is_featured,
-    weight: row.weight ? Number(row.weight) : undefined,
-    weightUnit: row.weight_unit,
-    categoryId: row.category_id,
-    createdAt: toStoredTimestamp(row.created_at),
-    updatedAt: toStoredTimestamp(row.updated_at),
-});
+type DbRecord = Record<string, unknown>;
 
-export const mapProductToDB = (product: Partial<Product>): any => {
-    const data: any = {};
+const isRecord = (value: unknown): value is DbRecord =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const readJsonObject = (value: unknown): DbRecord => isRecord(value) ? value : {};
+
+const readField = (
+    row: DbRecord,
+    data: DbRecord,
+    columnKey: string,
+    dataKey = columnKey
+): unknown => row[columnKey] ?? data[dataKey];
+
+const toNumber = (value: unknown, fallback = 0): number => {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
+    if (typeof value === 'string' && value.trim() !== '') {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+    }
+    return fallback;
+};
+
+const toOptionalNumber = (value: unknown): number | undefined =>
+    value === undefined || value === null || value === '' ? undefined : toNumber(value);
+
+const toStringValue = (value: unknown, fallback = ''): string =>
+    typeof value === 'string' ? value : value === undefined || value === null ? fallback : String(value);
+
+const toOptionalString = (value: unknown): string | undefined => {
+    const resolved = toStringValue(value);
+    return resolved ? resolved : undefined;
+};
+
+const toBoolean = (value: unknown, fallback = false): boolean =>
+    typeof value === 'boolean' ? value : value === undefined || value === null ? fallback : Boolean(value);
+
+const toArray = <T>(value: unknown): T[] => Array.isArray(value) ? value as T[] : [];
+
+const toTimestamp = (value: unknown): StoredTimestamp => {
+    if (value instanceof Date || typeof value === 'number') return value;
+    if (typeof value === 'string') return toStoredTimestamp(value);
+    if (isRecord(value) && typeof value.seconds === 'number') return value as StoredTimestamp;
+    return toStoredTimestamp(undefined);
+};
+
+const ORDER_STATUSES: ReadonlySet<Order['status']> = new Set([
+    'pending',
+    'paid',
+    'processing',
+    'shipped',
+    'delivered',
+    'cancelled',
+    'refunded',
+]);
+
+const PAYMENT_STATUSES: ReadonlySet<Order['paymentStatus']> = new Set([
+    'pending',
+    'paid',
+    'failed',
+    'refunded',
+    'partially_refunded',
+]);
+
+const FULFILLMENT_STATUSES: ReadonlySet<Order['fulfillmentStatus']> = new Set([
+    'unfulfilled',
+    'partial',
+    'fulfilled',
+]);
+
+const normalizeOrderStatus = (value: unknown): Order['status'] => {
+    const status = toStringValue(value, 'pending') as Order['status'];
+    return ORDER_STATUSES.has(status) ? status : 'pending';
+};
+
+const normalizePaymentStatus = (value: unknown): Order['paymentStatus'] => {
+    const status = toStringValue(value, 'pending') as Order['paymentStatus'];
+    return PAYMENT_STATUSES.has(status) ? status : 'pending';
+};
+
+const normalizeFulfillmentStatus = (value: unknown): Order['fulfillmentStatus'] => {
+    const status = toStringValue(value, 'unfulfilled') as Order['fulfillmentStatus'];
+    return FULFILLMENT_STATUSES.has(status) ? status : 'unfulfilled';
+};
+
+const normalizeProductStatus = (value: unknown): Product['status'] => {
+    const status = toStringValue(value, 'draft');
+    return status === 'active' || status === 'archived' ? status : 'draft';
+};
+
+export const mapProductFromDB = (row: DbRecord): Product => {
+    const data = readJsonObject(row.data);
+    const quantity = toNumber(
+        readField(row, data, 'quantity', 'quantity') ??
+        readField(row, data, 'inventory_quantity', 'inventoryQuantity')
+    );
+
+    return {
+        id: toStringValue(row.id ?? data.id),
+        name: toStringValue(readField(row, data, 'name', 'name')),
+        slug: toStringValue(readField(row, data, 'slug', 'slug')),
+        description: toStringValue(readField(row, data, 'description', 'description')),
+        shortDescription: toOptionalString(readField(row, data, 'short_description', 'shortDescription')),
+        price: toNumber(readField(row, data, 'price', 'price')),
+        compareAtPrice: toOptionalNumber(readField(row, data, 'compare_at_price', 'compareAtPrice')),
+        costPrice: toOptionalNumber(readField(row, data, 'cost_price', 'costPrice')),
+        currency: toOptionalString(readField(row, data, 'currency', 'currency')),
+        sku: toOptionalString(readField(row, data, 'sku', 'sku')),
+        barcode: toOptionalString(readField(row, data, 'barcode', 'barcode')),
+        quantity,
+        trackInventory: toBoolean(readField(row, data, 'track_inventory', 'trackInventory'), true),
+        lowStockThreshold: toOptionalNumber(readField(row, data, 'low_stock_threshold', 'lowStockThreshold')),
+        images: toArray<Product['images'] extends Array<infer T> ? T : never>(readField(row, data, 'images', 'images')),
+        tags: toArray<string>(readField(row, data, 'tags', 'tags')),
+        hasVariants: toBoolean(readField(row, data, 'has_variants', 'hasVariants'), false),
+        variants: toArray<Product['variants'] extends Array<infer T> ? T : never>(readField(row, data, 'variants', 'variants')),
+        options: toArray<Product['options'] extends Array<infer T> ? T : never>(readField(row, data, 'options', 'options')),
+        status: normalizeProductStatus(readField(row, data, 'status', 'status')),
+        isDigital: toBoolean(readField(row, data, 'is_digital', 'isDigital'), false),
+        isFeatured: toBoolean(readField(row, data, 'is_featured', 'isFeatured'), false),
+        weight: toOptionalNumber(readField(row, data, 'weight', 'weight')),
+        weightUnit: toOptionalString(readField(row, data, 'weight_unit', 'weightUnit')) as Product['weightUnit'],
+        categoryId: toOptionalString(readField(row, data, 'category_id', 'categoryId') ?? readField(row, data, 'category', 'category')),
+        createdAt: toTimestamp(readField(row, data, 'created_at', 'createdAt')),
+        updatedAt: toTimestamp(readField(row, data, 'updated_at', 'updatedAt') ?? readField(row, data, 'created_at', 'createdAt')),
+    };
+};
+
+export const mapProductToDB = (product: Partial<Product>): DbRecord => {
+    const data: DbRecord = {};
     if (product.name !== undefined) data.name = product.name;
     if (product.slug !== undefined) data.slug = product.slug;
     if (product.description !== undefined) data.description = product.description;
@@ -45,6 +143,7 @@ export const mapProductToDB = (product: Partial<Product>): any => {
     if (product.sku !== undefined) data.sku = product.sku;
     if (product.barcode !== undefined) data.barcode = product.barcode;
     if (product.quantity !== undefined) data.quantity = product.quantity;
+    if (product.quantity !== undefined) data.inventory_quantity = product.quantity;
     if (product.trackInventory !== undefined) data.track_inventory = product.trackInventory;
     if (product.lowStockThreshold !== undefined) data.low_stock_threshold = product.lowStockThreshold;
     if (product.images !== undefined) data.images = product.images;
@@ -61,20 +160,24 @@ export const mapProductToDB = (product: Partial<Product>): any => {
     return data;
 };
 
-export const mapCategoryFromDB = (row: any): Category => ({
-    id: row.id,
-    name: row.name,
-    slug: row.slug,
-    description: row.description,
-    imageUrl: row.image_url,
-    parentId: row.parent_id,
-    position: row.position,
-    createdAt: toStoredTimestamp(row.created_at),
-    updatedAt: toStoredTimestamp(row.updated_at),
-});
+export const mapCategoryFromDB = (row: DbRecord): Category => {
+    const data = readJsonObject(row.data);
 
-export const mapCategoryToDB = (category: Partial<Category>): any => {
-    const data: any = {};
+    return {
+        id: toStringValue(row.id ?? data.id),
+        name: toStringValue(readField(row, data, 'name', 'name')),
+        slug: toStringValue(readField(row, data, 'slug', 'slug')),
+        description: toOptionalString(readField(row, data, 'description', 'description')),
+        imageUrl: toOptionalString(readField(row, data, 'image_url', 'imageUrl')),
+        parentId: toOptionalString(readField(row, data, 'parent_id', 'parentId')),
+        position: toNumber(readField(row, data, 'position', 'position')),
+        createdAt: toTimestamp(readField(row, data, 'created_at', 'createdAt')),
+        updatedAt: toTimestamp(readField(row, data, 'updated_at', 'updatedAt') ?? readField(row, data, 'created_at', 'createdAt')),
+    };
+};
+
+export const mapCategoryToDB = (category: Partial<Category>): DbRecord => {
+    const data: DbRecord = {};
     if (category.name !== undefined) data.name = category.name;
     if (category.slug !== undefined) data.slug = category.slug;
     if (category.description !== undefined) data.description = category.description;
@@ -84,51 +187,88 @@ export const mapCategoryToDB = (category: Partial<Category>): any => {
     return data;
 };
 
-export const mapOrderFromDB = (row: any): Order => ({
-    id: row.id,
-    orderNumber: row.order_number,
-    customerId: row.customer_id,
-    customerEmail: row.customer_email,
-    customerName: row.customer_name,
-    customerPhone: row.customer_phone,
-    items: row.items || [],
-    subtotal: Number(row.subtotal || 0),
-    discount: Number(row.discount || 0),
-    discountCode: row.discount_code,
-    discountAmount: row.discount_amount ? Number(row.discount_amount) : undefined,
-    shippingCost: Number(row.shipping_cost || 0),
-    taxAmount: Number(row.tax_amount || 0),
-    total: Number(row.total || 0),
-    currency: row.currency,
-    pricing: row.pricing,
-    checkoutIdempotencyKey: row.checkout_idempotency_key,
-    cartHash: row.cart_hash,
-    stripe: row.stripe,
-    shippingAddress: row.shipping_address,
-    billingAddress: row.billing_address,
-    status: row.status,
-    paymentStatus: row.payment_status,
-    fulfillmentStatus: row.fulfillment_status,
-    paymentMethod: row.payment_method,
-    paymentIntentId: row.payment_intent_id,
-    paidAt: toStoredTimestamp(row.paid_at),
-    shippingMethod: row.shipping_method,
-    trackingNumber: row.tracking_number,
-    trackingUrl: row.tracking_url,
-    carrier: row.carrier,
-    shippedAt: toStoredTimestamp(row.shipped_at),
-    deliveredAt: toStoredTimestamp(row.delivered_at),
-    notes: row.notes,
-    customerNotes: row.customer_notes,
-    internalNotes: row.internal_notes,
-    createdAt: toStoredTimestamp(row.created_at),
-    updatedAt: toStoredTimestamp(row.updated_at),
-    cancelledAt: toStoredTimestamp(row.cancelled_at),
-    refundedAt: toStoredTimestamp(row.refunded_at),
-});
+export const mapOrderFromDB = (row: DbRecord): Order => {
+    const data = readJsonObject(row.data);
+    const stripeData = readJsonObject(readField(row, data, 'stripe', 'stripe'));
+    const subtotal = toNumber(readField(row, data, 'subtotal', 'subtotal'));
+    const discountAmount = toOptionalNumber(readField(row, data, 'discount_amount', 'discountAmount'));
+    const shippingCost = toNumber(
+        readField(row, data, 'shipping_amount', 'shippingAmount') ??
+        readField(row, data, 'shipping_cost', 'shippingCost')
+    );
+    const taxAmount = toNumber(readField(row, data, 'tax_amount', 'taxAmount'));
+    const total = toNumber(
+        readField(row, data, 'total_amount', 'totalAmount') ??
+        readField(row, data, 'total', 'total')
+    );
+    const paymentIntentId = toOptionalString(
+        readField(row, data, 'stripe_payment_intent_id', 'stripePaymentIntentId') ??
+        readField(row, data, 'payment_intent_id', 'paymentIntentId') ??
+        stripeData.paymentIntentId
+    );
+    const pricing = readJsonObject(readField(row, data, 'pricing', 'pricing'));
+    const hasPricing = Object.keys(pricing).length > 0;
 
-export const mapOrderToDB = (order: Partial<Order>): any => {
-    const data: any = {};
+    return {
+        id: toStringValue(row.id ?? data.id),
+        orderNumber: toStringValue(readField(row, data, 'order_number', 'orderNumber') ?? row.id),
+        customerId: toOptionalString(readField(row, data, 'customer_id', 'customerId')),
+        customerEmail: toStringValue(readField(row, data, 'customer_email', 'customerEmail')),
+        customerName: toStringValue(readField(row, data, 'customer_name', 'customerName')),
+        customerPhone: toOptionalString(readField(row, data, 'customer_phone', 'customerPhone')),
+        items: toArray<OrderItem>(readField(row, data, 'items', 'items')),
+        subtotal,
+        discount: toNumber(readField(row, data, 'discount', 'discount') ?? discountAmount),
+        discountCode: toOptionalString(readField(row, data, 'discount_code', 'discountCode')),
+        discountAmount,
+        shippingCost,
+        taxAmount,
+        total,
+        currency: toStringValue(readField(row, data, 'currency', 'currency'), 'USD'),
+        pricing: hasPricing ? pricing as Order['pricing'] : {
+            subtotal,
+            discountTotal: discountAmount ?? toNumber(readField(row, data, 'discount', 'discount')),
+            shippingTotal: shippingCost,
+            taxTotal: taxAmount,
+            platformFeeTotal: toNumber(pricing.platformFeeTotal),
+            total,
+        },
+        checkoutIdempotencyKey: toOptionalString(readField(row, data, 'checkout_idempotency_key', 'checkoutIdempotencyKey')),
+        cartHash: toOptionalString(readField(row, data, 'cart_hash', 'cartHash')),
+        stripe: {
+            ...stripeData,
+            paymentIntentId: paymentIntentId ?? toOptionalString(stripeData.paymentIntentId),
+            connectedAccountId: toOptionalString(stripeData.connectedAccountId),
+            clientSecret: toOptionalString(stripeData.clientSecret),
+            chargeId: toOptionalString(stripeData.chargeId),
+            applicationFeeAmount: toOptionalNumber(stripeData.applicationFeeAmount),
+        },
+        shippingAddress: readJsonObject(readField(row, data, 'shipping_address', 'shippingAddress')) as unknown as Order['shippingAddress'],
+        billingAddress: readJsonObject(readField(row, data, 'billing_address', 'billingAddress')) as unknown as Order['billingAddress'],
+        status: normalizeOrderStatus(readField(row, data, 'status', 'status')),
+        paymentStatus: normalizePaymentStatus(readField(row, data, 'payment_status', 'paymentStatus')),
+        fulfillmentStatus: normalizeFulfillmentStatus(readField(row, data, 'fulfillment_status', 'fulfillmentStatus')),
+        paymentMethod: toStringValue(readField(row, data, 'payment_method', 'paymentMethod')),
+        paymentIntentId,
+        paidAt: toTimestamp(readField(row, data, 'paid_at', 'paidAt')),
+        shippingMethod: toOptionalString(readField(row, data, 'shipping_method', 'shippingMethod')),
+        trackingNumber: toOptionalString(readField(row, data, 'tracking_number', 'trackingNumber')),
+        trackingUrl: toOptionalString(readField(row, data, 'tracking_url', 'trackingUrl')),
+        carrier: toOptionalString(readField(row, data, 'carrier', 'carrier')),
+        shippedAt: toTimestamp(readField(row, data, 'shipped_at', 'shippedAt')),
+        deliveredAt: toTimestamp(readField(row, data, 'delivered_at', 'deliveredAt')),
+        notes: toOptionalString(readField(row, data, 'notes', 'notes')),
+        customerNotes: toOptionalString(readField(row, data, 'customer_notes', 'customerNotes')),
+        internalNotes: toOptionalString(readField(row, data, 'internal_notes', 'internalNotes')),
+        createdAt: toTimestamp(readField(row, data, 'created_at', 'createdAt')),
+        updatedAt: toTimestamp(readField(row, data, 'updated_at', 'updatedAt') ?? readField(row, data, 'created_at', 'createdAt')),
+        cancelledAt: toTimestamp(readField(row, data, 'cancelled_at', 'cancelledAt')),
+        refundedAt: toTimestamp(readField(row, data, 'refunded_at', 'refundedAt')),
+    };
+};
+
+export const mapOrderToDB = (order: Partial<Order>): DbRecord => {
+    const data: DbRecord = {};
     if (order.orderNumber !== undefined) data.order_number = order.orderNumber;
     if (order.customerId !== undefined) data.customer_id = order.customerId;
     if (order.customerEmail !== undefined) data.customer_email = order.customerEmail;
@@ -140,8 +280,10 @@ export const mapOrderToDB = (order: Partial<Order>): any => {
     if (order.discountCode !== undefined) data.discount_code = order.discountCode;
     if (order.discountAmount !== undefined) data.discount_amount = order.discountAmount;
     if (order.shippingCost !== undefined) data.shipping_cost = order.shippingCost;
+    if (order.shippingCost !== undefined) data.shipping_amount = order.shippingCost;
     if (order.taxAmount !== undefined) data.tax_amount = order.taxAmount;
     if (order.total !== undefined) data.total = order.total;
+    if (order.total !== undefined) data.total_amount = order.total;
     if (order.currency !== undefined) data.currency = order.currency;
     if (order.pricing !== undefined) data.pricing = order.pricing;
     if (order.checkoutIdempotencyKey !== undefined) data.checkout_idempotency_key = order.checkoutIdempotencyKey;
@@ -154,6 +296,8 @@ export const mapOrderToDB = (order: Partial<Order>): any => {
     if (order.fulfillmentStatus !== undefined) data.fulfillment_status = order.fulfillmentStatus;
     if (order.paymentMethod !== undefined) data.payment_method = order.paymentMethod;
     if (order.paymentIntentId !== undefined) data.payment_intent_id = order.paymentIntentId;
+    if (order.paymentIntentId !== undefined) data.stripe_payment_intent_id = order.paymentIntentId;
+    if (order.stripe?.paymentIntentId !== undefined) data.stripe_payment_intent_id = order.stripe.paymentIntentId;
     if (order.shippingMethod !== undefined) data.shipping_method = order.shippingMethod;
     if (order.trackingNumber !== undefined) data.tracking_number = order.trackingNumber;
     if (order.trackingUrl !== undefined) data.tracking_url = order.trackingUrl;
@@ -165,27 +309,31 @@ export const mapOrderToDB = (order: Partial<Order>): any => {
     return data;
 };
 
-export const mapCustomerFromDB = (row: any): Customer => ({
-    id: row.id,
-    email: row.email,
-    firstName: row.first_name,
-    lastName: row.last_name,
-    phone: row.phone,
-    totalOrders: Number(row.total_orders || 0),
-    totalSpent: Number(row.total_spent || 0),
-    lastOrderAt: toStoredTimestamp(row.last_order_at),
-    defaultShippingAddress: row.default_shipping_address,
-    defaultBillingAddress: row.default_billing_address,
-    addresses: row.addresses || [],
-    acceptsMarketing: row.accepts_marketing,
-    tags: row.tags || [],
-    notes: row.notes,
-    createdAt: toStoredTimestamp(row.created_at),
-    updatedAt: toStoredTimestamp(row.updated_at),
-});
+export const mapCustomerFromDB = (row: DbRecord): Customer => {
+    const data = readJsonObject(row.data);
 
-export const mapCustomerToDB = (customer: Partial<Customer>): any => {
-    const data: any = {};
+    return {
+        id: toStringValue(row.id ?? data.id),
+        email: toStringValue(readField(row, data, 'email', 'email')),
+        firstName: toStringValue(readField(row, data, 'first_name', 'firstName')),
+        lastName: toStringValue(readField(row, data, 'last_name', 'lastName')),
+        phone: toOptionalString(readField(row, data, 'phone', 'phone')),
+        totalOrders: toNumber(readField(row, data, 'total_orders', 'totalOrders')),
+        totalSpent: toNumber(readField(row, data, 'total_spent', 'totalSpent')),
+        lastOrderAt: toTimestamp(readField(row, data, 'last_order_at', 'lastOrderAt')),
+        defaultShippingAddress: readJsonObject(readField(row, data, 'default_shipping_address', 'defaultShippingAddress')) as unknown as Customer['defaultShippingAddress'],
+        defaultBillingAddress: readJsonObject(readField(row, data, 'default_billing_address', 'defaultBillingAddress')) as unknown as Customer['defaultBillingAddress'],
+        addresses: toArray<Customer['addresses'][number]>(readField(row, data, 'addresses', 'addresses')),
+        acceptsMarketing: toBoolean(readField(row, data, 'accepts_marketing', 'acceptsMarketing'), false),
+        tags: toArray<string>(readField(row, data, 'tags', 'tags')),
+        notes: toOptionalString(readField(row, data, 'notes', 'notes')),
+        createdAt: toTimestamp(readField(row, data, 'created_at', 'createdAt')),
+        updatedAt: toTimestamp(readField(row, data, 'updated_at', 'updatedAt') ?? readField(row, data, 'created_at', 'createdAt')),
+    };
+};
+
+export const mapCustomerToDB = (customer: Partial<Customer>): DbRecord => {
+    const data: DbRecord = {};
     if (customer.email !== undefined) data.email = customer.email;
     if (customer.firstName !== undefined) data.first_name = customer.firstName;
     if (customer.lastName !== undefined) data.last_name = customer.lastName;
@@ -202,25 +350,29 @@ export const mapCustomerToDB = (customer: Partial<Customer>): any => {
     return data;
 };
 
-export const mapReviewFromDB = (row: any): Review => ({
-    id: row.id,
-    productId: row.product_id,
-    customerName: row.customer_name,
-    customerEmail: row.customer_email,
-    rating: row.rating,
-    title: row.title,
-    comment: row.comment,
-    verifiedPurchase: row.verified_purchase,
-    status: row.status,
-    helpfulVotes: row.helpful_votes,
-    adminResponse: row.admin_response,
-    adminResponseAt: toStoredTimestamp(row.admin_response_at), // Not in original DB schema, but map if present
-    createdAt: toStoredTimestamp(row.created_at),
-    updatedAt: toStoredTimestamp(row.updated_at),
-});
+export const mapReviewFromDB = (row: DbRecord): Review => {
+    const data = readJsonObject(row.data);
 
-export const mapReviewToDB = (review: Partial<Review>): any => {
-    const data: any = {};
+    return {
+        id: toStringValue(row.id ?? data.id),
+        productId: toStringValue(readField(row, data, 'product_id', 'productId')),
+        customerName: toStringValue(readField(row, data, 'customer_name', 'customerName')),
+        customerEmail: toStringValue(readField(row, data, 'customer_email', 'customerEmail')),
+        rating: toNumber(readField(row, data, 'rating', 'rating')),
+        title: toOptionalString(readField(row, data, 'title', 'title')),
+        comment: toStringValue(readField(row, data, 'comment', 'comment')),
+        verifiedPurchase: toBoolean(readField(row, data, 'verified_purchase', 'verifiedPurchase'), false),
+        status: toStringValue(readField(row, data, 'status', 'status')) as Review['status'],
+        helpfulVotes: toNumber(readField(row, data, 'helpful_votes', 'helpfulVotes')),
+        adminResponse: toOptionalString(readField(row, data, 'admin_response', 'adminResponse')),
+        adminResponseAt: toTimestamp(readField(row, data, 'admin_response_at', 'adminResponseAt')),
+        createdAt: toTimestamp(readField(row, data, 'created_at', 'createdAt')),
+        updatedAt: toTimestamp(readField(row, data, 'updated_at', 'updatedAt') ?? readField(row, data, 'created_at', 'createdAt')),
+    };
+};
+
+export const mapReviewToDB = (review: Partial<Review>): DbRecord => {
+    const data: DbRecord = {};
     if (review.productId !== undefined) data.product_id = review.productId;
     if (review.customerName !== undefined) data.customer_name = review.customerName;
     if (review.customerEmail !== undefined) data.customer_email = review.customerEmail;
@@ -234,27 +386,32 @@ export const mapReviewToDB = (review: Partial<Review>): any => {
     return data;
 };
 
-export const mapDiscountFromDB = (row: any): Discount => ({
-    id: row.id,
-    code: row.code,
-    type: row.type as DiscountType,
-    value: Number(row.value || 0),
-    appliesTo: row.applies_to || 'all',
-    customerEligibility: row.customer_eligibility || 'all',
-    canCombine: row.can_combine ?? false,
-    isAutomatic: row.is_automatic ?? false,
-    minimumPurchase: row.minimum_purchase ? Number(row.minimum_purchase) : undefined,
-    maxUses: row.max_uses,
-    usedCount: row.used_count || 0,
-    startsAt: toStoredTimestamp(row.starts_at),
-    endsAt: row.ends_at ? toStoredTimestamp(row.ends_at) : undefined,
-    isActive: row.is_active,
-    createdAt: toStoredTimestamp(row.created_at),
-    updatedAt: toStoredTimestamp(row.updated_at),
-});
+export const mapDiscountFromDB = (row: DbRecord): Discount => {
+    const data = readJsonObject(row.data);
+    const customerEligibility = toStringValue(readField(row, data, 'customer_eligibility', 'customerEligibility'), 'everyone');
 
-export const mapDiscountToDB = (discount: Partial<Discount>): any => {
-    const data: any = {};
+    return {
+        id: toStringValue(row.id ?? data.id),
+        code: toStringValue(readField(row, data, 'code', 'code')),
+        type: toStringValue(readField(row, data, 'type', 'type'), 'percentage') as DiscountType,
+        value: toNumber(readField(row, data, 'value', 'value')),
+        appliesTo: toStringValue(readField(row, data, 'applies_to', 'appliesTo'), 'all') as Discount['appliesTo'],
+        customerEligibility: customerEligibility === 'all' ? 'everyone' : customerEligibility as Discount['customerEligibility'],
+        canCombine: toBoolean(readField(row, data, 'can_combine', 'canCombine'), false),
+        isAutomatic: toBoolean(readField(row, data, 'is_automatic', 'isAutomatic'), false),
+        minimumPurchase: toOptionalNumber(readField(row, data, 'minimum_purchase', 'minimumPurchase')),
+        maxUses: toOptionalNumber(readField(row, data, 'max_uses', 'maxUses')),
+        usedCount: toNumber(readField(row, data, 'used_count', 'usedCount')),
+        startsAt: toTimestamp(readField(row, data, 'starts_at', 'startsAt')),
+        endsAt: readField(row, data, 'ends_at', 'endsAt') ? toTimestamp(readField(row, data, 'ends_at', 'endsAt')) : undefined,
+        isActive: toBoolean(readField(row, data, 'is_active', 'isActive'), true),
+        createdAt: toTimestamp(readField(row, data, 'created_at', 'createdAt')),
+        updatedAt: toTimestamp(readField(row, data, 'updated_at', 'updatedAt') ?? readField(row, data, 'created_at', 'createdAt')),
+    };
+};
+
+export const mapDiscountToDB = (discount: Partial<Discount>): DbRecord => {
+    const data: DbRecord = {};
     if (discount.code !== undefined) data.code = discount.code;
     if (discount.type !== undefined) data.type = discount.type;
     if (discount.value !== undefined) data.value = discount.value;
@@ -266,40 +423,53 @@ export const mapDiscountToDB = (discount: Partial<Discount>): any => {
     return data;
 };
 
-export const mapStoreSettingsFromDB = (row: any): StoreSettings => ({
-    storeName: row.store_name,
-    storeEmail: row.store_email,
-    storePhone: row.store_phone,
-    storeLogo: row.store_logo,
-    currency: row.currency,
-    currencySymbol: row.currency_symbol,
-    storefrontTheme: row.storefront_theme,
-    taxEnabled: row.tax_enabled,
-    taxRate: Number(row.tax_rate),
-    taxName: row.tax_name,
-    taxIncluded: row.tax_included,
-    taxIncludedInPrice: row.tax_included, // Some overlap
-    shippingZones: row.shipping_zones || [],
-    stripeEnabled: row.stripe_enabled,
-    paypalEnabled: row.paypal_enabled,
-    cashOnDeliveryEnabled: row.cash_on_delivery_enabled,
-    stripeConnectAccountId: row.stripe_connect_account_id,
-    stripeConnectStatus: row.stripe_connect_status,
-    stripeConnectChargesEnabled: row.stripe_connect_charges_enabled,
-    stripeConnectPayoutsEnabled: row.stripe_connect_payouts_enabled,
-    stripeConnectDetailsSubmitted: row.stripe_connect_details_submitted,
-    orderNotificationEmail: row.order_notification_email,
-    lowStockNotifications: row.low_stock_notifications,
-    lowStockThreshold: row.low_stock_threshold,
-    requirePhone: row.require_phone,
-    requireShippingAddress: row.require_shipping_address,
-    isActive: row.is_active ?? true,
-    createdAt: toStoredTimestamp(row.created_at),
-    updatedAt: toStoredTimestamp(row.updated_at),
-});
+export const mapStoreSettingsFromDB = (row: DbRecord): StoreSettings => {
+    const data = readJsonObject(row.data);
 
-export const mapStoreSettingsToDB = (settings: Partial<StoreSettings>): any => {
-    const data: any = {};
+    return {
+        storeName: toStringValue(readField(row, data, 'store_name', 'storeName')),
+        storeEmail: toStringValue(readField(row, data, 'store_email', 'storeEmail')),
+        storePhone: toOptionalString(readField(row, data, 'store_phone', 'storePhone')),
+        storeLogo: toOptionalString(readField(row, data, 'store_logo', 'storeLogo')),
+        currency: toStringValue(readField(row, data, 'currency', 'currency'), 'USD'),
+        currencySymbol: toStringValue(readField(row, data, 'currency_symbol', 'currencySymbol'), '$'),
+        storefrontTheme: readJsonObject(readField(row, data, 'storefront_theme', 'storefrontTheme')) as unknown as StoreSettings['storefrontTheme'],
+        taxEnabled: toBoolean(readField(row, data, 'tax_enabled', 'taxEnabled'), false),
+        taxRate: toNumber(readField(row, data, 'tax_rate', 'taxRate')),
+        taxName: toOptionalString(readField(row, data, 'tax_name', 'taxName')),
+        taxIncluded: toBoolean(readField(row, data, 'tax_included', 'taxIncluded'), false),
+        taxIncludedInPrice: toBoolean(readField(row, data, 'tax_included', 'taxIncludedInPrice'), false),
+        shippingZones: toArray<StoreSettings['shippingZones'][number]>(readField(row, data, 'shipping_zones', 'shippingZones')),
+        freeShippingThreshold: toOptionalNumber(readField(row, data, 'free_shipping_threshold', 'freeShippingThreshold')),
+        stripeEnabled: toBoolean(readField(row, data, 'stripe_enabled', 'stripeEnabled'), false),
+        stripePublishableKey: toOptionalString(readField(row, data, 'stripe_publishable_key', 'stripePublishableKey')),
+        paypalEnabled: toBoolean(readField(row, data, 'paypal_enabled', 'paypalEnabled'), false),
+        paypalClientId: toOptionalString(readField(row, data, 'paypal_client_id', 'paypalClientId')),
+        cashOnDeliveryEnabled: toBoolean(readField(row, data, 'cash_on_delivery_enabled', 'cashOnDeliveryEnabled'), false),
+        stripeConnectAccountId: toOptionalString(readField(row, data, 'stripe_connect_account_id', 'stripeConnectAccountId')),
+        stripeConnectStatus: toOptionalString(readField(row, data, 'stripe_connect_status', 'stripeConnectStatus')) as StoreSettings['stripeConnectStatus'],
+        stripeConnectChargesEnabled: toBoolean(readField(row, data, 'stripe_connect_charges_enabled', 'stripeConnectChargesEnabled'), false),
+        stripeConnectPayoutsEnabled: toBoolean(readField(row, data, 'stripe_connect_payouts_enabled', 'stripeConnectPayoutsEnabled'), false),
+        stripeConnectDetailsSubmitted: toBoolean(readField(row, data, 'stripe_connect_details_submitted', 'stripeConnectDetailsSubmitted'), false),
+        orderNotificationEmail: toStringValue(readField(row, data, 'order_notification_email', 'orderNotificationEmail')),
+        lowStockNotifications: toBoolean(readField(row, data, 'low_stock_notifications', 'lowStockNotifications'), false),
+        lowStockThreshold: toNumber(readField(row, data, 'low_stock_threshold', 'lowStockThreshold'), 5),
+        notifyOnNewOrder: toBoolean(readField(row, data, 'notify_on_new_order', 'notifyOnNewOrder'), true),
+        notifyOnLowStock: toBoolean(readField(row, data, 'notify_on_low_stock', 'notifyOnLowStock'), true),
+        sendOrderConfirmation: toBoolean(readField(row, data, 'send_order_confirmation', 'sendOrderConfirmation'), true),
+        sendShippingNotification: toBoolean(readField(row, data, 'send_shipping_notification', 'sendShippingNotification'), true),
+        termsAndConditionsUrl: toOptionalString(readField(row, data, 'terms_and_conditions_url', 'termsAndConditionsUrl')),
+        privacyPolicyUrl: toOptionalString(readField(row, data, 'privacy_policy_url', 'privacyPolicyUrl')),
+        requirePhone: toBoolean(readField(row, data, 'require_phone', 'requirePhone'), false),
+        requireShippingAddress: toBoolean(readField(row, data, 'require_shipping_address', 'requireShippingAddress'), true),
+        isActive: toBoolean(readField(row, data, 'is_active', 'isActive'), true),
+        createdAt: toTimestamp(readField(row, data, 'created_at', 'createdAt')),
+        updatedAt: toTimestamp(readField(row, data, 'updated_at', 'updatedAt') ?? readField(row, data, 'created_at', 'createdAt')),
+    };
+};
+
+export const mapStoreSettingsToDB = (settings: Partial<StoreSettings>): DbRecord => {
+    const data: DbRecord = {};
     if (settings.storeName !== undefined) data.store_name = settings.storeName;
     if (settings.storeEmail !== undefined) data.store_email = settings.storeEmail;
     if (settings.storePhone !== undefined) data.store_phone = settings.storePhone;
@@ -312,8 +482,11 @@ export const mapStoreSettingsToDB = (settings: Partial<StoreSettings>): any => {
     if (settings.taxName !== undefined) data.tax_name = settings.taxName;
     if (settings.taxIncluded !== undefined) data.tax_included = settings.taxIncluded;
     if (settings.shippingZones !== undefined) data.shipping_zones = settings.shippingZones;
+    if (settings.freeShippingThreshold !== undefined) data.free_shipping_threshold = settings.freeShippingThreshold;
     if (settings.stripeEnabled !== undefined) data.stripe_enabled = settings.stripeEnabled;
+    if (settings.stripePublishableKey !== undefined) data.stripe_publishable_key = settings.stripePublishableKey;
     if (settings.paypalEnabled !== undefined) data.paypal_enabled = settings.paypalEnabled;
+    if (settings.paypalClientId !== undefined) data.paypal_client_id = settings.paypalClientId;
     if (settings.cashOnDeliveryEnabled !== undefined) data.cash_on_delivery_enabled = settings.cashOnDeliveryEnabled;
     if (settings.stripeConnectAccountId !== undefined) data.stripe_connect_account_id = settings.stripeConnectAccountId;
     if (settings.stripeConnectStatus !== undefined) data.stripe_connect_status = settings.stripeConnectStatus;
@@ -323,8 +496,14 @@ export const mapStoreSettingsToDB = (settings: Partial<StoreSettings>): any => {
     if (settings.orderNotificationEmail !== undefined) data.order_notification_email = settings.orderNotificationEmail;
     if (settings.lowStockNotifications !== undefined) data.low_stock_notifications = settings.lowStockNotifications;
     if (settings.lowStockThreshold !== undefined) data.low_stock_threshold = settings.lowStockThreshold;
+    if (settings.notifyOnNewOrder !== undefined) data.notify_on_new_order = settings.notifyOnNewOrder;
+    if (settings.notifyOnLowStock !== undefined) data.notify_on_low_stock = settings.notifyOnLowStock;
+    if (settings.sendOrderConfirmation !== undefined) data.send_order_confirmation = settings.sendOrderConfirmation;
+    if (settings.sendShippingNotification !== undefined) data.send_shipping_notification = settings.sendShippingNotification;
     if (settings.requirePhone !== undefined) data.require_phone = settings.requirePhone;
     if (settings.requireShippingAddress !== undefined) data.require_shipping_address = settings.requireShippingAddress;
+    if (settings.termsAndConditionsUrl !== undefined) data.terms_and_conditions_url = settings.termsAndConditionsUrl;
+    if (settings.privacyPolicyUrl !== undefined) data.privacy_policy_url = settings.privacyPolicyUrl;
     if (settings.isActive !== undefined) data.is_active = settings.isActive;
     return data;
 };
