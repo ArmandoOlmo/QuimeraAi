@@ -1,6 +1,12 @@
 import type { PageSection } from '../../types';
 import type { StorefrontSectionKind } from '../../types/storefrontRenderer';
-import { isStorefrontSectionKind } from './registry';
+import type { StorefrontEditorSection } from '../../types/storefrontEditor';
+import { storefrontBlockRegistry, isStorefrontBlockKind } from './blockRegistry';
+import {
+    isLegacyStorefrontSectionKind,
+    isStorefrontSectionKind,
+    storefrontSectionRegistry,
+} from './registry';
 
 export type StorefrontEditorConfigMode = 'draft' | 'published';
 
@@ -8,8 +14,10 @@ export interface ResolvedStorefrontEditorConfig {
     componentOrder: StorefrontSectionKind[];
     sectionVisibility: Record<string, boolean>;
     sectionSettings: Record<string, Record<string, unknown>>;
+    sections: StorefrontEditorSection[];
     themePresetId?: string;
     themeSettings?: Record<string, unknown>;
+    theme?: Record<string, unknown>;
     source: 'draft' | 'published' | 'legacy';
 }
 
@@ -19,7 +27,10 @@ const isRecord = (value: unknown): value is Record<string, any> =>
 const toRecord = (value: unknown): Record<string, any> =>
     isRecord(value) ? value : {};
 
-const normalizeStorefrontOrder = (value: unknown): StorefrontSectionKind[] => {
+const normalizeStorefrontOrder = (
+    value: unknown,
+    options: { legacyOnly?: boolean } = {},
+): StorefrontSectionKind[] => {
     if (!Array.isArray(value)) return [];
 
     return value
@@ -28,7 +39,7 @@ const normalizeStorefrontOrder = (value: unknown): StorefrontSectionKind[] => {
             if (isRecord(item)) return item.type || item.kind || item.id;
             return null;
         })
-        .filter(isStorefrontSectionKind);
+        .filter(options.legacyOnly ? isLegacyStorefrontSectionKind : isStorefrontSectionKind);
 };
 
 const normalizeSettings = (value: unknown): Record<string, Record<string, unknown>> => {
@@ -40,6 +51,67 @@ const normalizeSettings = (value: unknown): Record<string, Record<string, unknow
         return acc;
     }, {} as Record<string, Record<string, unknown>>);
 };
+
+const normalizeEditorBlocks = (value: unknown, parentId: string): StorefrontEditorSection['blocks'] => {
+    if (!Array.isArray(value)) return [];
+
+    return value.reduce((acc, item, index) => {
+        if (!isRecord(item)) return acc;
+        const kind = item.kind;
+        if (!isStorefrontBlockKind(kind)) return acc;
+        const registryItem = storefrontBlockRegistry[kind];
+        acc.push({
+            id: typeof item.id === 'string' ? item.id : `${parentId}-${kind}-${index + 1}`,
+            kind,
+            label: typeof item.label === 'string' ? item.label : registryItem.label,
+            enabled: item.enabled !== false,
+            order: Number.isFinite(Number(item.order)) ? Number(item.order) : index,
+            settings: {
+                ...registryItem.defaultSettings,
+                ...toRecord(item.settings),
+            },
+            metadata: isRecord(item.metadata) ? item.metadata : undefined,
+        });
+        return acc;
+    }, [] as StorefrontEditorSection['blocks']);
+};
+
+const normalizeEditorSections = (value: unknown): StorefrontEditorSection[] => {
+    if (!Array.isArray(value)) return [];
+
+    return value.reduce((acc, item, index) => {
+        if (!isRecord(item)) return acc;
+        const kind = item.kind || item.type;
+        if (!isStorefrontSectionKind(kind)) return acc;
+        const registryItem = storefrontSectionRegistry[kind];
+        const id = typeof item.id === 'string' ? item.id : `storefront-${kind}-${index + 1}`;
+
+        acc.push({
+            id,
+            kind,
+            label: typeof item.label === 'string' ? item.label : registryItem.label,
+            group: item.group || registryItem.group || 'template',
+            enabled: item.enabled !== false,
+            order: Number.isFinite(Number(item.order)) ? Number(item.order) : index,
+            settings: {
+                ...registryItem.defaultSettings,
+                ...toRecord(item.settings),
+            },
+            blocks: normalizeEditorBlocks(item.blocks, id),
+            metadata: isRecord(item.metadata) ? item.metadata : undefined,
+        });
+        return acc;
+    }, [] as StorefrontEditorSection[]).sort((a, b) => a.order - b.order);
+};
+
+const normalizeSettingsFromEditorSections = (sections: StorefrontEditorSection[]): Record<string, Record<string, unknown>> =>
+    sections.reduce((acc, section) => {
+        acc[section.kind] = {
+            ...toRecord(acc[section.kind]),
+            ...section.settings,
+        };
+        return acc;
+    }, {} as Record<string, Record<string, unknown>>);
 
 function getPageData(projectData: any): Record<string, any> {
     const rootData = toRecord(projectData?.data);
@@ -80,6 +152,7 @@ export function resolveStorefrontEditorConfig(
         projectData?.componentOrder ||
         rootData.componentOrder ||
         pageData.componentOrder,
+        { legacyOnly: true },
     );
     const selectedOrder = normalizeStorefrontOrder(selectedConfig?.componentOrder || selectedConfig?.sections);
     const legacyVisibility = {
@@ -88,7 +161,11 @@ export function resolveStorefrontEditorConfig(
         ...toRecord(projectData?.sectionVisibility),
     } as Record<string, boolean>;
     const selectedVisibility = toRecord(selectedConfig?.sectionVisibility) as Record<string, boolean>;
-    const selectedSettings = normalizeSettings(selectedConfig?.sectionSettings);
+    const editorSections = normalizeEditorSections(selectedConfig?.sections);
+    const selectedSettings = {
+        ...normalizeSettingsFromEditorSections(editorSections),
+        ...normalizeSettings(selectedConfig?.sectionSettings),
+    };
 
     return {
         componentOrder: selectedOrder.length > 0 ? selectedOrder : legacyOrder,
@@ -97,6 +174,7 @@ export function resolveStorefrontEditorConfig(
             ...selectedVisibility,
         },
         sectionSettings: selectedSettings,
+        sections: editorSections,
         themePresetId: String(
             selectedConfig?.themePresetId ||
             selectedConfig?.themePreset ||
@@ -105,6 +183,7 @@ export function resolveStorefrontEditorConfig(
             '',
         ) || undefined,
         themeSettings: toRecord(selectedConfig?.themeSettings),
+        theme: toRecord(selectedConfig?.theme),
         source: selectedConfig ? (selectedConfig === editorState.published ? 'published' : 'draft') : 'legacy',
     };
 }
@@ -124,6 +203,7 @@ export function applyResolvedStorefrontEditorConfig(
     const nextPageData = {
         ...pageData,
         ...config.sectionSettings,
+        ...(config.sections.length > 0 ? { storefrontResolvedSections: config.sections } : {}),
     };
 
     const nextData = hasNestedData

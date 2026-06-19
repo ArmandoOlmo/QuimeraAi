@@ -25,6 +25,54 @@ describe('storefrontRenderer registry', () => {
         })).toHaveLength(2);
     });
 
+    it('uses storefront editor sections before blueprint sections and legacy componentOrder', () => {
+        const decisions = resolveStorefrontSectionDecisions({
+            componentOrder: ['featuredProducts'],
+            blueprintSections: [
+                {
+                    id: 'blueprint-hero',
+                    type: 'hero',
+                    order: 0,
+                    enabled: true,
+                    status: 'generated',
+                    needsReview: false,
+                    readiness: { isReady: true, blockers: [], warnings: [] },
+                    metadata: { generatedBy: 'ai', userModified: false },
+                },
+            ],
+            editorSections: [
+                {
+                    id: 'editor-category-tiles',
+                    kind: 'categoryTiles',
+                    label: 'Tiles',
+                    group: 'template',
+                    enabled: true,
+                    order: 0,
+                    settings: { title: 'From editor' },
+                    blocks: [
+                        {
+                            id: 'editor-category-tiles-text',
+                            kind: 'text',
+                            label: 'Text',
+                            enabled: true,
+                            order: 0,
+                            settings: { text: 'Block' },
+                        },
+                    ],
+                },
+            ],
+        });
+
+        expect(decisions).toHaveLength(1);
+        expect(decisions[0]).toMatchObject({
+            id: 'editor-category-tiles',
+            kind: 'categoryTiles',
+            source: 'editor',
+            status: 'render',
+        });
+        expect(decisions[0].data.blocks).toHaveLength(1);
+    });
+
     it('uses blueprint sections before componentOrder when supported blueprint sections exist', () => {
         const decisions = resolveStorefrontSectionDecisions({
             componentOrder: ['featuredProducts', 'categoryGrid'],

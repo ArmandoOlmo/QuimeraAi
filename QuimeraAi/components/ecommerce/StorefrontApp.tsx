@@ -22,7 +22,7 @@ import StorefrontCategory from './pages/StorefrontCategory';
 import ProductSearchPage from './search/ProductSearchPage';
 import {
     applyResolvedStorefrontEditorConfig,
-    isStorefrontSectionKind,
+    isLegacyStorefrontSectionKind,
     type StorefrontEditorConfigMode,
 } from '../../utils/storefrontRenderer';
 
@@ -304,8 +304,9 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
             case 'home':
             default:
                 // Check if user has configured specific storefront sections
-                const hasConfiguredHome = resolvedProjectData?.componentOrder?.some((key: string) =>
-                    isStorefrontSectionKind(key)
+                const hasConfiguredHome = (
+                    resolvedProjectData?.data?.storefrontResolvedSections?.length > 0 ||
+                    resolvedProjectData?.componentOrder?.some((key: string) => isLegacyStorefrontSectionKind(key))
                 );
 
                 if (hasConfiguredHome) {
