@@ -41,6 +41,8 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
     themeColors
 }) => {
     const cart = useStorefrontCart();
+    const isEditorPreview = typeof window !== 'undefined' &&
+        new URLSearchParams(window.location.search).get('preview') === 'storefront-editor';
 
     const sectionsToRender = useMemo(() => getRenderableStorefrontSectionDecisions({
         pageData: projectData?.data,
@@ -51,12 +53,7 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
             projectData?.data?.businessBlueprint?.storefrontBlueprint?.sections
         ),
     }), [projectData]);
-
-    if (sectionsToRender.length === 0) {
-        // This case should be handled by StorefrontApp switching to ProductSearchPage,
-        // but as a failsafe we can render nothing or a message.
-        return null;
-    }
+    const hasRenderableSections = sectionsToRender.length > 0;
 
     return (
         <div
@@ -66,13 +63,21 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
                 color: themeColors?.text || '#0f172a'
             }}
         >
-            <StorefrontModuleRenderer
-                storeId={storeId}
-                decisions={sectionsToRender}
-                globalColors={themeColors}
-                onNavigateToProduct={onNavigateToProduct}
-                onNavigateToCategory={onNavigateToCategory}
-            />
+            {hasRenderableSections ? (
+                <StorefrontModuleRenderer
+                    storeId={storeId}
+                    decisions={sectionsToRender}
+                    globalColors={themeColors}
+                    onNavigateToProduct={onNavigateToProduct}
+                    onNavigateToCategory={onNavigateToCategory}
+                />
+            ) : isEditorPreview ? (
+                <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                        No hay secciones visibles. Activa una sección o aplica un preset.
+                    </div>
+                </div>
+            ) : null}
 
             {/* Always render the full product search/grid at the bottom for the core ecommerce experience */}
             <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">

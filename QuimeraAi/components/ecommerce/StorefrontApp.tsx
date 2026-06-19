@@ -20,7 +20,11 @@ import { useStorefrontCart } from './context';
 import StorefrontHome from './pages/StorefrontHome';
 import StorefrontCategory from './pages/StorefrontCategory';
 import ProductSearchPage from './search/ProductSearchPage';
-import { isStorefrontSectionKind } from '../../utils/storefrontRenderer';
+import {
+    applyResolvedStorefrontEditorConfig,
+    isStorefrontSectionKind,
+    type StorefrontEditorConfigMode,
+} from '../../utils/storefrontRenderer';
 
 interface StorefrontAppProps {
     projectId: string;
@@ -149,6 +153,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     serverUrl
 }) => {
     const initialPreviewData = initialData ? null : getStorefrontEditorPreviewData(projectId);
+    const initialConfigMode: StorefrontEditorConfigMode = initialPreviewData ? 'draft' : 'published';
 
     // Route state
     const [route, setRoute] = useState<RouteState>(() => {
@@ -160,6 +165,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     // Project data
     const [projectData, setProjectData] = useState<any>(initialData || initialPreviewData || null);
     const [isLoading, setIsLoading] = useState(!initialData && !initialPreviewData);
+    const [storefrontConfigMode, setStorefrontConfigMode] = useState<StorefrontEditorConfigMode>(initialConfigMode);
 
     // Handle browser navigation (client-side only)
     useEffect(() => {
@@ -182,6 +188,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                 const previewData = getStorefrontEditorPreviewData(projectId);
                 if (previewData) {
                     setProjectData(previewData);
+                    setStorefrontConfigMode('draft');
                     setIsLoading(false);
                     return;
                 }
@@ -189,6 +196,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                 const storeDoc = await getDoc(doc(db, 'public_stores', projectId));
                 if (storeDoc.exists()) {
                     setProjectData(storeDoc.data());
+                    setStorefrontConfigMode('published');
                 }
             } catch (error) {
                 console.error('Error fetching store data:', error);
@@ -218,6 +226,10 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     const navigateToOrder = (orderId: string, orderAccessToken?: string) => {
         navigate(`/order/${orderId}${orderAccessToken ? `?token=${encodeURIComponent(orderAccessToken)}` : ''}`);
     };
+
+    const resolvedProjectData = projectData
+        ? applyResolvedStorefrontEditorConfig(projectData, { mode: storefrontConfigMode })
+        : projectData;
 
     // Loading state
     if (isLoading) {
@@ -281,9 +293,9 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                         onBack={navigateHome}
                         onNavigateToProduct={navigateToProduct}
                         primaryColor={
-                            projectData?.theme?.globalColors?.primary ||
-                            projectData?.header?.colors?.accent ||
-                            projectData?.data?.header?.colors?.accent ||
+                            resolvedProjectData?.theme?.globalColors?.primary ||
+                            resolvedProjectData?.header?.colors?.accent ||
+                            resolvedProjectData?.data?.header?.colors?.accent ||
                             '#6366f1'
                         }
                     />
@@ -292,7 +304,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
             case 'home':
             default:
                 // Check if user has configured specific storefront sections
-                const hasConfiguredHome = projectData?.componentOrder?.some((key: string) =>
+                const hasConfiguredHome = resolvedProjectData?.componentOrder?.some((key: string) =>
                     isStorefrontSectionKind(key)
                 );
 
@@ -300,17 +312,17 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                     return (
                         <StorefrontHome
                             storeId={projectId}
-                            projectData={projectData}
+                            projectData={resolvedProjectData}
                             onNavigateToProduct={navigateToProduct}
                             onNavigateToCategory={navigateToCategory}
                             themeColors={{
-                                background: projectData?.theme?.pageBackground || '#ffffff',
-                                text: projectData?.theme?.globalColors?.text || '#334155',
-                                heading: projectData?.theme?.globalColors?.heading || '#0f172a',
-                                cardBackground: projectData?.theme?.globalColors?.surface || '#ffffff',
-                                cardText: projectData?.theme?.globalColors?.text || '#334155',
-                                border: projectData?.theme?.globalColors?.border || '#e2e8f0',
-                                priceColor: projectData?.theme?.globalColors?.primary || '#4f46e5',
+                                background: resolvedProjectData?.theme?.pageBackground || '#ffffff',
+                                text: resolvedProjectData?.theme?.globalColors?.text || '#334155',
+                                heading: resolvedProjectData?.theme?.globalColors?.heading || '#0f172a',
+                                cardBackground: resolvedProjectData?.theme?.globalColors?.surface || '#ffffff',
+                                cardText: resolvedProjectData?.theme?.globalColors?.text || '#334155',
+                                border: resolvedProjectData?.theme?.globalColors?.border || '#e2e8f0',
+                                priceColor: resolvedProjectData?.theme?.globalColors?.primary || '#4f46e5',
                                 salePriceColor: '#ef4444',
                                 mutedText: '#64748b'
                             }}
@@ -321,7 +333,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                 return (
                     <StorefrontProductSearch
                         projectId={projectId}
-                        projectData={projectData}
+                        projectData={resolvedProjectData}
                         onProductClick={navigateToProduct}
                     />
                 );
@@ -334,7 +346,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
             onNavigateHome={navigateHome}
             onNavigateToCheckout={navigateToCheckout}
             onNavigateToAccount={navigateToAccount}
-            projectData={projectData}
+            projectData={resolvedProjectData}
         >
             {renderContent()}
         </StorefrontLayout>

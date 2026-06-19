@@ -6,6 +6,10 @@ import type {
     StorefrontSectionResolverInput,
     StorefrontSectionValidationResult,
 } from '../../types/storefrontRenderer';
+import {
+    CORE_STOREFRONT_SECTION_KEYS,
+    resolveStorefrontSectionVisibility,
+} from './visibility';
 
 export const STOREFRONT_SECTION_KINDS: StorefrontSectionKind[] = [
     'announcementBar',
@@ -29,6 +33,8 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         label: 'Announcement Bar',
         moduleRegistryId: 'storefront-home-sections',
         emptyBehavior: 'render',
+        defaultVisible: true,
+        isCoreSection: true,
         validVariants: ['static', 'scrolling', 'rotating'],
         defaultSettings: {
             variant: 'static',
@@ -41,6 +47,8 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         label: 'Product Hero',
         moduleRegistryId: 'storefront-home-sections',
         emptyBehavior: 'render',
+        defaultVisible: true,
+        isCoreSection: true,
         validVariants: ['featured', 'collection', 'sale', 'new-arrivals'],
         defaultSettings: {
             variant: 'featured',
@@ -53,6 +61,8 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         label: 'Featured Products',
         moduleRegistryId: 'website-featured-products-block',
         emptyBehavior: 'render',
+        defaultVisible: true,
+        isCoreSection: true,
         validVariants: ['carousel', 'grid', 'showcase'],
         defaultSettings: {
             variant: 'grid',
@@ -66,6 +76,8 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         label: 'Category Grid',
         moduleRegistryId: 'storefront-home-sections',
         emptyBehavior: 'render',
+        defaultVisible: true,
+        isCoreSection: true,
         validVariants: ['cards', 'overlay', 'minimal', 'banner'],
         defaultSettings: {
             variant: 'cards',
@@ -78,6 +90,8 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         label: 'Trust Badges',
         moduleRegistryId: 'storefront-home-sections',
         emptyBehavior: 'render',
+        defaultVisible: true,
+        isCoreSection: true,
         validVariants: ['horizontal', 'grid', 'minimal', 'detailed'],
         defaultSettings: {
             variant: 'horizontal',
@@ -90,6 +104,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         label: 'Sale Countdown',
         moduleRegistryId: 'storefront-home-sections',
         emptyBehavior: 'render',
+        defaultVisible: true,
         validVariants: ['banner', 'floating', 'inline', 'fullwidth'],
         defaultSettings: {
             variant: 'banner',
@@ -102,6 +117,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         label: 'Collection Banner',
         moduleRegistryId: 'storefront-home-sections',
         emptyBehavior: 'hide',
+        defaultVisible: true,
         validVariants: ['hero', 'split', 'minimal', 'overlay'],
         defaultSettings: {
             variant: 'hero',
@@ -114,6 +130,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         label: 'Recently Viewed',
         moduleRegistryId: 'storefront-home-sections',
         emptyBehavior: 'render',
+        defaultVisible: true,
         validVariants: ['carousel', 'grid', 'compact'],
         defaultSettings: {
             variant: 'carousel',
@@ -127,6 +144,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         label: 'Product Reviews',
         moduleRegistryId: 'storefront-home-sections',
         emptyBehavior: 'render',
+        defaultVisible: true,
         validVariants: ['list', 'cards', 'masonry', 'featured'],
         defaultSettings: {
             variant: 'cards',
@@ -140,6 +158,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         label: 'Product Bundle',
         moduleRegistryId: 'storefront-home-sections',
         emptyBehavior: 'hide',
+        defaultVisible: true,
         validVariants: ['horizontal', 'vertical', 'compact'],
         defaultSettings: {
             variant: 'horizontal',
@@ -216,9 +235,11 @@ function resolveVisibility(
     kind: StorefrontSectionKind,
     sectionVisibility?: StorefrontSectionResolverInput['sectionVisibility'],
 ): boolean {
-    if (!sectionVisibility) return true;
-    const explicit = sectionVisibility[kind];
-    return explicit !== false;
+    const registryItem = storefrontSectionRegistry[kind];
+    return resolveStorefrontSectionVisibility(kind, sectionVisibility, {
+        defaultVisible: registryItem.defaultVisible ?? true,
+        isCoreSection: registryItem.isCoreSection || CORE_STOREFRONT_SECTION_KEYS.includes(kind),
+    });
 }
 
 function hasDisabledBlueprintState(blueprintSection?: StorefrontSectionBlueprint): boolean {

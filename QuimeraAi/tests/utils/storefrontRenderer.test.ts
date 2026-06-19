@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
     getRenderableStorefrontSectionDecisions,
+    normalizeStorefrontSectionVisibility,
+    resolveStorefrontEditorConfig,
+    resolveStorefrontSectionVisibility,
     resolveStorefrontSectionDecisions,
     validateStorefrontSectionSettings,
 } from '../../utils/storefrontRenderer';
@@ -150,5 +153,72 @@ describe('storefrontRenderer registry', () => {
 
         expect(result.valid).toBe(true);
         expect(result.warnings).toContain('Manual featured products should include productIds.');
+    });
+
+    it('normalizes preset sections to visible even when they were previously hidden', () => {
+        const visibility = normalizeStorefrontSectionVisibility({
+            sections: ['productHero', 'featuredProducts'],
+            previousVisibility: {
+                productHero: false,
+                featuredProducts: false,
+            },
+            recommendedSections: ['productHero', 'featuredProducts'],
+            forceRecommendedVisible: true,
+            ensureAtLeastOneVisible: true,
+        });
+
+        expect(visibility.productHero).toBe(true);
+        expect(visibility.featuredProducts).toBe(true);
+    });
+
+    it('defaults new core storefront sections to visible without reading website section keys', () => {
+        expect(resolveStorefrontSectionVisibility('productHero', { hero: false }, {
+            defaultVisible: true,
+            isCoreSection: true,
+        })).toBe(true);
+    });
+
+    it('keeps manual all-hidden state so StorefrontHome can render the product-grid fallback', () => {
+        const visibility = normalizeStorefrontSectionVisibility({
+            sections: ['productHero', 'featuredProducts'],
+            previousVisibility: {
+                productHero: false,
+                featuredProducts: false,
+            },
+            ensureAtLeastOneVisible: false,
+        });
+
+        expect(visibility.productHero).toBe(false);
+        expect(visibility.featuredProducts).toBe(false);
+    });
+
+    it('resolves draft and published storefront editor configs separately', () => {
+        const projectData = {
+            componentOrder: ['announcementBar'],
+            sectionVisibility: { announcementBar: true },
+            data: {
+                storefrontEditor: {
+                    draft: {
+                        componentOrder: ['productHero'],
+                        sectionVisibility: { productHero: false },
+                    },
+                    published: {
+                        componentOrder: ['featuredProducts'],
+                        sectionVisibility: { featuredProducts: true },
+                    },
+                },
+            },
+        };
+
+        expect(resolveStorefrontEditorConfig(projectData, { mode: 'draft' })).toMatchObject({
+            componentOrder: ['productHero'],
+            sectionVisibility: { productHero: false },
+            source: 'draft',
+        });
+        expect(resolveStorefrontEditorConfig(projectData, { mode: 'published' })).toMatchObject({
+            componentOrder: ['featuredProducts'],
+            sectionVisibility: { featuredProducts: true },
+            source: 'published',
+        });
     });
 });

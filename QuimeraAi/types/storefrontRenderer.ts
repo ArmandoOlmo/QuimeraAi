@@ -28,6 +28,8 @@ export interface StorefrontSectionRegistryItem {
     label: string;
     moduleRegistryId: string;
     emptyBehavior: StorefrontSectionEmptyBehavior;
+    defaultVisible?: boolean;
+    isCoreSection?: boolean;
     validVariants?: string[];
     defaultSettings: Record<string, unknown>;
     isEmpty?: (settings: Record<string, unknown>) => boolean;

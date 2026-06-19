@@ -38,6 +38,8 @@ import { DEFAULT_STOREFRONT_THEME, type StorefrontThemeSettings } from '../../..
 import type { StorefrontSectionKind } from '../../../../types/storefrontRenderer';
 import type { StorefrontThemePresetId } from '../../../../types/storefrontTheme';
 import {
+    normalizeStorefrontSectionVisibility,
+    resolveStorefrontEditorConfig,
     storefrontSectionRegistry,
     STOREFRONT_SECTION_KINDS,
     validateStorefrontSectionSettings,
@@ -80,6 +82,11 @@ const isStorefrontKind = (value: string): value is StorefrontSectionKind =>
 
 const toSettingsRecord = (value: unknown): Record<string, unknown> =>
     isRecord(value) ? { ...value } : {};
+
+const storefrontDefaultVisibilityBySection = STOREFRONT_SECTION_KINDS.reduce((acc, section) => {
+    acc[section] = storefrontSectionRegistry[section].defaultVisible ?? true;
+    return acc;
+}, {} as Record<string, boolean>);
 
 const stableStringify = (value: unknown): string => {
     try {
@@ -158,6 +165,55 @@ const normalizeSectionSettings = (
         });
         return acc;
     }, {} as SectionSettingsMap);
+
+const buildCurrentStorefrontVisibility = (
+    sections: StorefrontSectionKind[],
+    previousVisibility: Record<string, boolean>,
+    options: {
+        recommendedSections?: StorefrontSectionKind[];
+        forceRecommendedVisible?: boolean;
+        ensureAtLeastOneVisible?: boolean;
+    } = {},
+): Record<string, boolean> =>
+    normalizeStorefrontSectionVisibility({
+        sections,
+        previousVisibility,
+        recommendedSections: options.recommendedSections,
+        forceRecommendedVisible: options.forceRecommendedVisible,
+        defaultVisibleBySection: storefrontDefaultVisibilityBySection,
+        ensureAtLeastOneVisible: options.ensureAtLeastOneVisible,
+        fallbackSection: sections.includes('featuredProducts') ? 'featuredProducts' : sections[0],
+    });
+
+const buildStorefrontEditorSnapshot = (
+    sections: StorefrontSectionKind[],
+    sectionSettings: SectionSettingsMap,
+    visibility: Record<string, boolean>,
+    presetId: StorefrontThemePresetId,
+    themeSettings: StorefrontThemeSettings,
+    now: string,
+    state: TemplateState,
+): Record<string, unknown> => ({
+    componentOrder: sections,
+    sectionVisibility: sections.reduce((acc, section) => {
+        acc[section] = visibility[section] !== false;
+        return acc;
+    }, {} as Record<string, boolean>),
+    themePreset: presetId,
+    themePresetId: presetId,
+    themeSettings,
+    sectionSettings,
+    sections: sections.map((section, index) => ({
+        id: `storefront-${section}`,
+        type: section,
+        order: index,
+        enabled: visibility[section] !== false,
+        settings: toSettingsRecord(sectionSettings[section]),
+    })),
+    state,
+    updatedAt: now,
+    ...(state === 'published' ? { publishedAt: now } : {}),
+});
 
 const parseCsv = (value: string): string[] =>
     value
@@ -340,17 +396,38 @@ const StorefrontEditorView: React.FC = () => {
         () => (isRecord(pageData.storefrontEditor) ? pageData.storefrontEditor : {}),
         [projectContentSignature],
     );
+    const draftEditorConfig = useMemo(
+        () => resolveStorefrontEditorConfig(project, { mode: 'draft' }),
+        [projectContentSignature],
+    );
     const initialOrder = useMemo(() => {
-        const order = (project?.componentOrder || []).filter((section: string) => isStorefrontKind(section));
+        const order = draftEditorConfig.componentOrder.length > 0
+            ? draftEditorConfig.componentOrder
+            : (project?.componentOrder || []).filter((section: string) => isStorefrontKind(section));
         return order.length > 0 ? order as StorefrontSectionKind[] : defaultSections;
-    }, [projectContentSignature]);
+    }, [draftEditorConfig.componentOrder, project?.componentOrder, projectContentSignature]);
     const initialSectionSettings = useMemo(
-        () => buildSectionSettingsMap(initialOrder, pageData, editorState, project),
-        [editorState, initialOrder, pageData, projectContentSignature],
+        () => buildSectionSettingsMap(
+            initialOrder,
+            pageData,
+            {
+                ...editorState,
+                sectionSettings: {
+                    ...toSettingsRecord(editorState.sectionSettings),
+                    ...draftEditorConfig.sectionSettings,
+                },
+            },
+            project,
+        ),
+        [draftEditorConfig.sectionSettings, editorState, initialOrder, pageData, projectContentSignature],
+    );
+    const initialVisibility = useMemo(
+        () => buildCurrentStorefrontVisibility(initialOrder, draftEditorConfig.sectionVisibility),
+        [draftEditorConfig.sectionVisibility, initialOrder],
     );
     const initialOrderSignature = stableStringify(initialOrder);
     const initialSectionSettingsSignature = stableStringify(initialSectionSettings);
-    const projectVisibilitySignature = stableStringify(project?.sectionVisibility || {});
+    const projectVisibilitySignature = stableStringify(initialVisibility);
 
     const [sections, setSections] = useState<StorefrontSectionKind[]>(initialOrder);
     const [visibility, setVisibility] = useState<Record<string, boolean>>({});
@@ -363,7 +440,9 @@ const StorefrontEditorView: React.FC = () => {
     const previewPayloadRef = useRef('');
     const [previewRevision, setPreviewRevision] = useState(0);
     const [selectedPresetId, setSelectedPresetId] = useState<StorefrontThemePresetId>(
-        (editorState.themePresetId as StorefrontThemePresetId) || 'minimal'
+        (draftEditorConfig.themePresetId as StorefrontThemePresetId) ||
+        (editorState.themePresetId as StorefrontThemePresetId) ||
+        'minimal'
     );
     const [isSavingTemplate, setIsSavingTemplate] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -376,23 +455,27 @@ const StorefrontEditorView: React.FC = () => {
     useEffect(() => {
         setSections(prev => areArraysEqual(prev, initialOrder) ? prev : initialOrder);
         setVisibility(prev => {
-            const nextVisibility = project?.sectionVisibility || {};
-            return stableStringify(prev) === projectVisibilitySignature ? prev : nextVisibility;
+            return stableStringify(prev) === projectVisibilitySignature ? prev : initialVisibility;
         });
         setSectionSettings(prev => (
             stableStringify(prev) === initialSectionSettingsSignature ? prev : initialSectionSettings
         ));
         setSelectedSection(prev => initialOrder.includes(prev) ? prev : initialOrder[0] || defaultSections[0]);
         setTemplateState(editorState.templateState === 'published' ? 'published' : 'draft');
-        setSelectedPresetId((editorState.themePresetId as StorefrontThemePresetId) || 'minimal');
+        setSelectedPresetId(
+            (draftEditorConfig.themePresetId as StorefrontThemePresetId) ||
+            (editorState.themePresetId as StorefrontThemePresetId) ||
+            'minimal',
+        );
     }, [
+        draftEditorConfig.themePresetId,
         editorState.templateState,
         editorState.themePresetId,
+        initialVisibility,
         initialOrder,
         initialOrderSignature,
         initialSectionSettings,
         initialSectionSettingsSignature,
-        project?.sectionVisibility,
         projectVisibilitySignature,
     ]);
 
@@ -411,6 +494,7 @@ const StorefrontEditorView: React.FC = () => {
         ...storefrontSectionRegistry[selectedSection].defaultSettings,
         ...toSettingsRecord(sectionSettings[selectedSection]),
     };
+    const selectedSectionIsActive = visibility[selectedSection] !== false && selectedSectionSettings.enabled !== false;
     const selectedSectionValidation = validateStorefrontSectionSettings(selectedSection, selectedSectionSettings);
 
     const getSectionLabel = (kind: StorefrontSectionKind) =>
@@ -446,13 +530,10 @@ const StorefrontEditorView: React.FC = () => {
 
     const previewProjectData = useMemo(() => {
         const normalizedSettings = normalizeSectionSettings(sections, sectionSettings);
-        const nextSectionVisibility = {
+        const nextSectionVisibility = buildCurrentStorefrontVisibility(sections, {
             ...(project?.sectionVisibility || {}),
-            ...sections.reduce((acc, section) => {
-                acc[section] = visibility[section] !== false;
-                return acc;
-            }, {} as Record<string, boolean>),
-        };
+            ...visibility,
+        });
         const nextComponentOrder = [
             ...(project?.componentOrder || []).filter((section: string) => !isStorefrontKind(section)),
             ...sections,
@@ -469,20 +550,30 @@ const StorefrontEditorView: React.FC = () => {
             String(editorState.updatedAt || project?.lastUpdated || project?.last_updated || 'storefront-preview'),
             user?.id,
         ) || existingBusinessBlueprint;
+        const previewStorefrontEditor = {
+            ...(isRecord(pageData.storefrontEditor) ? pageData.storefrontEditor : {}),
+            templateState,
+            themePresetId: selectedPresetId,
+            previewMode,
+            sectionSettings: normalizedSettings,
+            draft: buildStorefrontEditorSnapshot(
+                sections,
+                normalizedSettings,
+                nextSectionVisibility,
+                selectedPresetId,
+                previewStorefrontTheme,
+                String(editorState.updatedAt || project?.lastUpdated || project?.last_updated || 'storefront-preview'),
+                'draft',
+            ),
+            source: 'storefront-builder-preview',
+        };
         const nextPageData = sections.reduce((acc, section) => {
             acc[section] = normalizedSettings[section];
             return acc;
         }, {
             ...pageData,
             ...(previewBusinessBlueprint ? { businessBlueprint: previewBusinessBlueprint } : {}),
-            storefrontEditor: {
-                ...(isRecord(pageData.storefrontEditor) ? pageData.storefrontEditor : {}),
-                templateState,
-                themePresetId: selectedPresetId,
-                previewMode,
-                sectionSettings: normalizedSettings,
-                source: 'storefront-builder-preview',
-            },
+            storefrontEditor: previewStorefrontEditor,
         } as Record<string, any>);
 
         return {
@@ -573,6 +664,14 @@ const StorefrontEditorView: React.FC = () => {
 
     const setSectionVisibility = (kind: StorefrontSectionKind, nextVisible: boolean) => {
         setVisibility(prev => ({ ...prev, [kind]: nextVisible }));
+        setSectionSettings(prev => ({
+            ...prev,
+            [kind]: {
+                ...storefrontSectionRegistry[kind].defaultSettings,
+                ...toSettingsRecord(prev[kind]),
+                enabled: nextVisible,
+            },
+        }));
         markTemplateDirty();
     };
 
@@ -604,29 +703,39 @@ const StorefrontEditorView: React.FC = () => {
         markTemplateDirty();
     };
 
-    const applySectionPreset = () => {
-        const preset = STOREFRONT_THEME_PRESETS[selectedPresetId];
+    const applySectionPresetById = (presetId: StorefrontThemePresetId) => {
+        const preset = STOREFRONT_THEME_PRESETS[presetId];
         const nextSections = preset.recommendedSections.filter(isStorefrontKind);
-        setSections(nextSections.length > 0 ? nextSections : defaultSections);
-        setVisibility(prev => nextSections.reduce((acc, section) => {
-            acc[section] = prev[section] !== false;
-            return acc;
-        }, { ...prev } as Record<string, boolean>));
-        setSectionSettings(prev => nextSections.reduce((acc, section) => {
-            acc[section] = toSettingsRecord(prev[section]);
-            if (Object.keys(acc[section] || {}).length === 0) {
-                acc[section] = { ...storefrontSectionRegistry[section].defaultSettings };
-            }
+        const nextOrder = nextSections.length > 0 ? nextSections : defaultSections;
+
+        setSections(nextOrder);
+        setVisibility(prev => buildCurrentStorefrontVisibility(nextOrder, prev, {
+            recommendedSections: nextOrder,
+            forceRecommendedVisible: true,
+            ensureAtLeastOneVisible: true,
+        }));
+        setSectionSettings(prev => nextOrder.reduce((acc, section) => {
+            const existingSettings = toSettingsRecord(prev[section]);
+            acc[section] = {
+                ...storefrontSectionRegistry[section].defaultSettings,
+                ...existingSettings,
+                enabled: true,
+            };
             return acc;
         }, { ...prev } as SectionSettingsMap));
-        setSelectedSection(nextSections[0] || defaultSections[0]);
+        setSelectedSection(nextOrder[0] || defaultSections[0]);
         setTemplateState('draft');
+    };
+
+    const applySectionPreset = () => {
+        applySectionPresetById(selectedPresetId);
     };
 
     const applyThemePreset = async (presetId: StorefrontThemePresetId) => {
         setError(null);
         setStatusMessage(null);
         setSelectedPresetId(presetId);
+        applySectionPresetById(presetId);
 
         try {
             await replaceStorefrontTheme(mergeTheme(currentTheme, presetId));
@@ -675,13 +784,10 @@ const StorefrontEditorView: React.FC = () => {
                     .join(' | '));
             }
 
-            const nextSectionVisibility = {
+            const nextSectionVisibility = buildCurrentStorefrontVisibility(sections, {
                 ...currentVisibility,
-                ...sections.reduce((acc, section) => {
-                    acc[section] = visibility[section] !== false;
-                    return acc;
-                }, {} as Record<string, boolean>),
-            };
+                ...visibility,
+            });
             const nextComponentOrder = [
                 ...currentComponentOrder.filter(section => !isStorefrontKind(section)),
                 ...sections,
@@ -700,21 +806,48 @@ const StorefrontEditorView: React.FC = () => {
                 now,
                 user?.id,
             );
+            const existingStorefrontEditor = isRecord(currentPageData.storefrontEditor)
+                ? currentPageData.storefrontEditor
+                : {};
+            const draftSnapshot = buildStorefrontEditorSnapshot(
+                sections,
+                normalizedSettings,
+                nextSectionVisibility,
+                selectedPresetId,
+                previewStorefrontTheme,
+                now,
+                'draft',
+            );
+            const publishedSnapshot = nextState === 'published'
+                ? buildStorefrontEditorSnapshot(
+                    sections,
+                    normalizedSettings,
+                    nextSectionVisibility,
+                    selectedPresetId,
+                    previewStorefrontTheme,
+                    now,
+                    'published',
+                )
+                : (isRecord(existingStorefrontEditor.published) ? existingStorefrontEditor.published : undefined);
+            const nextStorefrontEditor = {
+                ...existingStorefrontEditor,
+                templateState: nextState,
+                themePreset: selectedPresetId,
+                themePresetId: selectedPresetId,
+                previewMode,
+                sectionSettings: normalizedSettings,
+                draft: draftSnapshot,
+                ...(publishedSnapshot ? { published: publishedSnapshot } : {}),
+                updatedAt: now,
+                source: 'storefront-builder',
+            };
             const nextPageData = sections.reduce((acc, section) => {
                 acc[section] = normalizedSettings[section];
                 return acc;
             }, {
                 ...currentPageData,
                 ...(nextBusinessBlueprint && !hasNestedPageData ? { businessBlueprint: nextBusinessBlueprint } : {}),
-                storefrontEditor: {
-                    ...(isRecord(currentPageData.storefrontEditor) ? currentPageData.storefrontEditor : {}),
-                    templateState: nextState,
-                    themePresetId: selectedPresetId,
-                    previewMode,
-                    sectionSettings: normalizedSettings,
-                    updatedAt: now,
-                    source: 'storefront-builder',
-                },
+                storefrontEditor: nextStorefrontEditor,
             } as Record<string, any>);
             const nextDataPayload = hasNestedPageData
                 ? {
@@ -742,6 +875,47 @@ const StorefrontEditorView: React.FC = () => {
                 })
                 .eq('id', projectId);
             if (updateError) throw updateError;
+
+            if (nextState === 'published' && storeId) {
+                const { data: publicStoreRow, error: publicReadError } = await supabase
+                    .from('public_stores')
+                    .select('data, user_id')
+                    .eq('id', storeId)
+                    .maybeSingle();
+
+                if (publicReadError) throw publicReadError;
+
+                const existingPublicData = isRecord(publicStoreRow?.data) ? publicStoreRow.data : {};
+                const publicStoreData = {
+                    ...existingPublicData,
+                    id: storeId,
+                    projectId,
+                    sourceProjectId: projectId,
+                    name: projectName || project.name || settings?.storeName || 'Store',
+                    data: nextPageData,
+                    header: buildPreviewHeader(project, nextPageData, previewStorefrontTheme),
+                    theme: buildPreviewTheme(project, previewStorefrontTheme),
+                    storefrontTheme: previewStorefrontTheme,
+                    businessBlueprint: nextBusinessBlueprint || currentBusinessBlueprint,
+                    storefrontEditor: nextStorefrontEditor,
+                    componentOrder: nextComponentOrder,
+                    sectionVisibility: nextSectionVisibility,
+                    pages: project.pages || [],
+                    menus: project.menus || [],
+                    publishedAt: now,
+                    updatedAt: now,
+                };
+
+                const { error: publicUpsertError } = await supabase
+                    .from('public_stores')
+                    .upsert({
+                        id: storeId,
+                        user_id: publicStoreRow?.user_id || user?.id || project.userId || project.user_id,
+                        data: publicStoreData,
+                    });
+
+                if (publicUpsertError) throw publicUpsertError;
+            }
 
             setTemplateState(nextState);
             await refreshProjects();
@@ -981,14 +1155,14 @@ const StorefrontEditorView: React.FC = () => {
                             </span>
                             <button
                                 type="button"
-                                onClick={() => updateSelectedSectionSetting('enabled', selectedSectionSettings.enabled === false)}
+                                onClick={() => setSectionVisibility(selectedSection, !selectedSectionIsActive)}
                                 className={`mt-1 flex h-10 w-full items-center justify-center rounded-lg border text-sm font-semibold ${
-                                    selectedSectionSettings.enabled === false
+                                    !selectedSectionIsActive
                                         ? 'border-q-border bg-q-surface text-q-text-muted'
                                         : 'border-primary bg-primary/10 text-primary'
                                 }`}
                             >
-                                {selectedSectionSettings.enabled === false
+                                {!selectedSectionIsActive
                                     ? t('common.disabled', 'Desactivado')
                                     : t('common.enabled', 'Activo')}
                             </button>
@@ -1828,14 +2002,14 @@ const StorefrontEditorView: React.FC = () => {
                                             </span>
                                             <button
                                                 type="button"
-                                                onClick={() => updateSelectedSectionSetting('enabled', selectedSectionSettings.enabled === false)}
+                                                onClick={() => setSectionVisibility(selectedSection, !selectedSectionIsActive)}
                                                 className={`mt-1 flex h-10 w-full items-center justify-center rounded-lg border text-sm font-semibold ${
-                                                    selectedSectionSettings.enabled === false
+                                                    !selectedSectionIsActive
                                                         ? 'border-q-border bg-q-surface text-q-text-muted'
                                                         : 'border-primary bg-primary/10 text-primary'
                                                 }`}
                                             >
-                                                {selectedSectionSettings.enabled === false
+                                                {!selectedSectionIsActive
                                                     ? t('common.disabled', 'Desactivado')
                                                     : t('common.enabled', 'Activo')}
                                             </button>
