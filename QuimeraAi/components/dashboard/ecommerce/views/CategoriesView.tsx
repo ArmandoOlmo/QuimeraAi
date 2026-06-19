@@ -129,7 +129,7 @@ const CategoriesView: React.FC = () => {
 
                 <button
                     onClick={() => setShowForm(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90"
+                    className="flex w-full items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90 sm:w-auto"
                 >
                     <Plus size={20} />
                     {t('ecommerce.addCategory', 'Agregar Categoría')}
@@ -174,9 +174,9 @@ const CategoriesView: React.FC = () => {
 
             {/* Category Form Modal */}
             {showForm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md">
-                        <div className="p-6 border-b border-q-border">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md max-h-[92vh] overflow-y-auto">
+                        <div className="p-4 border-b border-q-border sm:p-6">
                             <h3 className="text-lg font-bold text-foreground">
                                 {editingCategory
                                     ? t('ecommerce.editCategory', 'Editar Categoría')
@@ -184,7 +184,7 @@ const CategoriesView: React.FC = () => {
                             </h3>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                        <form onSubmit={handleSubmit} className="p-4 space-y-4 sm:p-6">
                             <div>
                                 <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.categoryName', 'Nombre')} *
@@ -297,8 +297,8 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
 
     return (
         <>
-            <div className="flex items-center gap-4 p-4 hover:bg-muted/20">
-                <div className="text-q-text-muted cursor-grab">
+            <div className="flex items-start gap-3 p-4 hover:bg-muted/20 sm:items-center sm:gap-4">
+                <div className="hidden text-q-text-muted cursor-grab sm:block">
                     <GripVertical size={20} />
                 </div>
 
@@ -306,26 +306,29 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                     <img
                         src={category.imageUrl}
                         alt={category.name}
-                        className="w-12 h-12 rounded-lg object-cover"
+                        className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
                     />
                 ) : (
-                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center">
                         <FolderTree className="text-q-text-muted" size={24} />
                     </div>
                 )}
 
-                <div className="flex-1">
-                    <h4 className="text-foreground font-medium">{category.name}</h4>
+                <div className="min-w-0 flex-1">
+                    <h4 className="truncate text-foreground font-medium">{category.name}</h4>
                     {category.description && (
                         <p className="text-q-text-muted text-sm line-clamp-1">{category.description}</p>
                     )}
+                    <p className="text-xs text-q-text-muted sm:hidden">
+                        {productCount} {t('ecommerce.products', 'productos')}
+                    </p>
                 </div>
 
-                <div className="text-q-text-muted text-sm">
+                <div className="hidden text-q-text-muted text-sm sm:block">
                     {productCount} {t('ecommerce.products', 'productos')}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
                     <button
                         onClick={() => onEdit(category)}
                         className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
@@ -343,8 +346,8 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
 
             {/* Subcategories */}
             {subcategories.map((sub) => (
-                <div key={sub.id} className="flex items-center gap-4 p-4 pl-12 hover:bg-muted/20 border-l-2 border-q-border ml-6">
-                    <div className="text-q-text-muted cursor-grab">
+                <div key={sub.id} className="ml-3 flex items-start gap-3 border-l-2 border-q-border p-4 pl-4 hover:bg-muted/20 sm:ml-6 sm:items-center sm:gap-4 sm:pl-12">
+                    <div className="hidden text-q-text-muted cursor-grab sm:block">
                         <GripVertical size={20} />
                     </div>
 
@@ -352,23 +355,26 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                         <img
                             src={sub.imageUrl}
                             alt={sub.name}
-                            className="w-10 h-10 rounded-lg object-cover"
+                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                         />
                     ) : (
-                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center">
                             <FolderTree className="text-q-text-muted" size={20} />
                         </div>
                     )}
 
-                    <div className="flex-1">
-                        <h4 className="text-foreground font-medium">{sub.name}</h4>
+                    <div className="min-w-0 flex-1">
+                        <h4 className="truncate text-foreground font-medium">{sub.name}</h4>
+                        <p className="text-xs text-q-text-muted sm:hidden">
+                            {getProductCount(sub.id)} {t('ecommerce.products', 'productos')}
+                        </p>
                     </div>
 
-                    <div className="text-q-text-muted text-sm">
+                    <div className="hidden text-q-text-muted text-sm sm:block">
                         {getProductCount(sub.id)} {t('ecommerce.products', 'productos')}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
                         <button
                             onClick={() => onEdit(sub)}
                             className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"

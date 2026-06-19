@@ -92,8 +92,8 @@ const SettingsView: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
                     <h2 className="text-2xl font-bold text-foreground">
                         {t('ecommerce.settings', 'Configuración')}
                     </h2>
@@ -106,7 +106,7 @@ const SettingsView: React.FC = () => {
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="flex items-center gap-2 px-4 py-2 disabled:opacity-50 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90"
+                        className="flex w-full items-center justify-center gap-2 px-4 py-2 disabled:opacity-50 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90 sm:w-auto"
                     >
                         {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
                         {t('common.saveChanges', 'Guardar Cambios')}
@@ -115,7 +115,7 @@ const SettingsView: React.FC = () => {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-2 sm:mx-0 sm:px-0">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -137,7 +137,7 @@ const SettingsView: React.FC = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="bg-q-surface/50 rounded-xl border border-q-border p-6">
+            <div className="min-w-0 bg-q-surface/50 rounded-xl border border-q-border p-4 sm:p-6">
                 {activeTab === 'general' && (
                     <GeneralSettings
                         settings={localSettings}
@@ -392,13 +392,13 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
 
             {/* Stripe Connect - Main Payment Method */}
             <div className="p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-purple-500/20">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
+                        <div className="flex-shrink-0 p-2 rounded-lg bg-purple-500/20">
                             <CreditCard className="text-purple-400" size={24} />
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2">
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <h4 className="text-foreground font-medium">Stripe Connect</h4>
                                 {getStatusBadge()}
                             </div>
@@ -428,7 +428,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                             {!showConnectForm ? (
                                 <button
                                     onClick={() => setShowConnectForm(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors"
+                                    className="flex w-full items-center justify-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors sm:w-auto"
                                 >
                                     <CreditCard size={18} />
                                     Conectar con Stripe
@@ -459,11 +459,11 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                             className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                         />
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col gap-2 sm:flex-row">
                                         <button
                                             onClick={handleStartConnect}
                                             disabled={connectLoading || !connectEmail || !connectBusinessName}
-                                            className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                                            className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors disabled:opacity-50"
                                         >
                                             {connectLoading ? (
                                                 <Loader2 size={18} className="animate-spin" />
@@ -489,10 +489,10 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                         // Connected - Show status and actions
                         <div className="space-y-4">
                             {/* Account Info */}
-                            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                                <div>
+                            <div className="flex items-start justify-between gap-3 p-3 bg-muted/30 rounded-lg">
+                                <div className="min-w-0">
                                     <p className="text-sm text-q-text-muted">ID de cuenta</p>
-                                    <p className="text-foreground font-mono text-sm">
+                                    <p className="break-all text-foreground font-mono text-sm">
                                         {connectStatus?.accountId}
                                     </p>
                                 </div>
@@ -510,7 +510,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                             </div>
 
                             {/* Capabilities */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div className={`p-3 rounded-lg ${canAcceptPayments ? 'bg-green-500/10' : 'bg-yellow-500/10'}`}>
                                     <div className="flex items-center gap-2">
                                         {canAcceptPayments ? (
@@ -565,18 +565,18 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                             )}
 
                             {/* Action buttons */}
-                            <div className="flex gap-2 pt-2">
+                            <div className="flex flex-col gap-2 pt-2 sm:flex-row">
                                 <button
                                     onClick={openDashboard}
                                     disabled={connectLoading}
-                                    className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
+                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
                                 >
                                     <ExternalLink size={16} />
                                     Ver Dashboard de Stripe
                                 </button>
                                 <button
                                     onClick={() => setShowDisconnectConfirm(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors"
+                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors"
                                 >
                                     <Unlink size={16} />
                                     Desconectar
@@ -588,8 +588,8 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
 
                 {/* Disconnect confirmation modal */}
                 {showDisconnectConfirm && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md p-6">
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+                        <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md p-4 sm:p-6">
                             <h3 className="text-lg font-bold text-foreground mb-2">
                                 ¿Desconectar Stripe?
                             </h3>
@@ -597,7 +597,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                 Si desconectas tu cuenta de Stripe, no podrás recibir pagos en tu tienda. 
                                 Puedes volver a conectarla en cualquier momento.
                             </p>
-                            <div className="flex gap-3">
+                            <div className="flex flex-col gap-3 sm:flex-row">
                                 <button
                                     onClick={() => setShowDisconnectConfirm(false)}
                                     className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors"
@@ -623,17 +623,17 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
 
             {/* PayPal */}
             <div className="p-4 bg-muted/30 rounded-lg">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
+                <div className="mb-4 flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
                         <DollarSign className="text-blue-400 flex-shrink-0" size={24} strokeWidth={2} />
-                        <div>
+                        <div className="min-w-0">
                             <h4 className="text-foreground font-medium">PayPal</h4>
                             <p className="text-q-text-muted text-sm">
                                 {t('ecommerce.paypalDesc', 'Acepta pagos con PayPal')}
                             </p>
                         </div>
                     </div>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex flex-shrink-0 items-center gap-2 cursor-pointer">
                         <input
                             type="checkbox"
                             checked={settings.paypalEnabled || false}
@@ -662,10 +662,10 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
 
             {/* Cash on Delivery */}
             <div className="p-4 bg-muted/30 rounded-lg">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
                         <Truck className="text-green-400 flex-shrink-0" size={24} strokeWidth={2} />
-                        <div>
+                        <div className="min-w-0">
                             <h4 className="text-foreground font-medium">
                                 {t('ecommerce.cod', 'Pago Contra Entrega')}
                             </h4>
@@ -674,7 +674,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                             </p>
                         </div>
                     </div>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex flex-shrink-0 items-center gap-2 cursor-pointer">
                         <input
                             type="checkbox"
                             checked={settings.cashOnDeliveryEnabled || false}
@@ -721,13 +721,13 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-lg font-semibold text-foreground">
                     {t('ecommerce.shippingSettings', 'Configuración de Envío')}
                 </h3>
                 <button
                     onClick={() => setShowAddZone(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg transition-colors text-sm hover:bg-primary/90"
+                    className="flex w-full items-center justify-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg transition-colors text-sm hover:bg-primary/90 sm:w-auto"
                 >
                     <Plus size={16} />
                     {t('ecommerce.addZone', 'Agregar Zona')}
@@ -739,20 +739,20 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
                 <div className="space-y-4">
                     {settings.shippingZones.map((zone) => (
                         <div key={zone.id} className="p-4 bg-muted/30 rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                 <h4 className="text-foreground font-medium">{zone.name}</h4>
-                                <div className="flex items-center gap-2">
-                                    <Globe size={16} className="text-q-text-muted" />
-                                    <span className="text-q-text-muted text-sm">
+                                <div className="flex min-w-0 items-center gap-2">
+                                    <Globe size={16} className="flex-shrink-0 text-q-text-muted" />
+                                    <span className="truncate text-q-text-muted text-sm">
                                         {zone.countries.join(', ')}
                                     </span>
                                 </div>
                             </div>
                             <div className="mt-3 space-y-2">
                                 {zone.rates.map((rate) => (
-                                    <div key={rate.id} className="flex items-center justify-between text-sm">
-                                        <span className="text-q-text-muted">{rate.name}</span>
-                                        <span className="text-green-400">
+                                    <div key={rate.id} className="flex items-center justify-between gap-3 text-sm">
+                                        <span className="min-w-0 truncate text-q-text-muted">{rate.name}</span>
+                                        <span className="flex-shrink-0 text-green-400">
                                             ${rate.price.toFixed(2)}
                                             {rate.minOrder && (
                                                 <span className="text-q-text-muted ml-2">
@@ -778,7 +778,7 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
                     {t('ecommerce.freeShippingThreshold', 'Envío Gratis')}
                 </h4>
                 <div className="flex items-center gap-4">
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1">
                         <label className="block text-sm font-medium text-q-text-muted mb-1">
                             {t('ecommerce.minOrderFreeShipping', 'Mínimo para envío gratis ($)')}
                         </label>
@@ -798,15 +798,15 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
 
             {/* Add Zone Modal */}
             {showAddZone && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md">
-                        <div className="p-6 border-b border-q-border">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md max-h-[92vh] overflow-y-auto">
+                        <div className="p-4 border-b border-q-border sm:p-6">
                             <h3 className="text-lg font-bold text-foreground">
                                 {t('ecommerce.addShippingZone', 'Agregar Zona de Envío')}
                             </h3>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        <div className="p-4 space-y-4 sm:p-6">
                             <div>
                                 <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.zoneName', 'Nombre de la Zona')} *
@@ -833,7 +833,7 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
                                 />
                             </div>
 
-                            <div className="flex gap-3 pt-4">
+                            <div className="flex flex-col gap-3 pt-4 sm:flex-row">
                                 <button
                                     type="button"
                                     onClick={() => setShowAddZone(false)}
@@ -1079,7 +1079,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                 <button
                     onClick={handleSaveSenderInfo}
                     disabled={isSaving}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 sm:w-auto"
                 >
                     {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                     {t('common.save', 'Guardar')}
@@ -1126,7 +1126,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                                 type="text"
                                 value={localEmailSettings.primaryColor}
                                 onChange={(e) => setLocalEmailSettings(prev => ({ ...prev, primaryColor: e.target.value }))}
-                                className="flex-1 px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="min-w-0 flex-1 px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                             />
                         </div>
                     </div>
@@ -1148,7 +1148,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                 <button
                     onClick={handleSaveBranding}
                     disabled={isSaving}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 sm:w-auto"
                 >
                     {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                     {t('common.save', 'Guardar')}

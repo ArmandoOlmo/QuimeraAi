@@ -264,9 +264,9 @@ const ReportsView: React.FC = () => {
                                             : 'border-q-border hover:border-primary/50 bg-q-surface/50'
                                     }`}
                                 >
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex min-w-0 items-start gap-3">
                                         <div
-                                            className={`p-2 rounded-lg ${
+                                            className={`flex-shrink-0 p-2 rounded-lg ${
                                                 isSelected ? 'bg-primary/20' : 'bg-muted'
                                             }`}
                                         >
@@ -275,7 +275,7 @@ const ReportsView: React.FC = () => {
                                                 className={isSelected ? 'text-primary' : 'text-q-text-muted'}
                                             />
                                         </div>
-                                        <div>
+                                        <div className="min-w-0">
                                             <p className="font-medium text-foreground">{report.title}</p>
                                             <p className="text-sm text-q-text-muted">{report.description}</p>
                                         </div>
@@ -289,7 +289,7 @@ const ReportsView: React.FC = () => {
                 {/* Report Options */}
                 <div className="lg:col-span-2">
                     {selectedReport ? (
-                        <div className="bg-q-surface/50 rounded-xl border border-q-border p-6 space-y-6">
+                        <div className="bg-q-surface/50 rounded-xl border border-q-border p-4 space-y-6 sm:p-6">
                             <h3 className="font-semibold text-foreground">
                                 Configurar reporte
                             </h3>
@@ -301,8 +301,8 @@ const ReportsView: React.FC = () => {
                                         <Calendar className="inline mr-2" size={16} />
                                         Rango de fechas
                                     </label>
-                                    <div className="flex gap-4">
-                                        <div className="flex-1">
+                                    <div className="flex flex-col gap-4 sm:flex-row">
+                                        <div className="min-w-0 flex-1">
                                             <label className="block text-xs text-q-text-muted mb-1">Desde</label>
                                             <input
                                                 type="date"
@@ -311,7 +311,7 @@ const ReportsView: React.FC = () => {
                                                 className="w-full px-3 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                             />
                                         </div>
-                                        <div className="flex-1">
+                                        <div className="min-w-0 flex-1">
                                             <label className="block text-xs text-q-text-muted mb-1">Hasta</label>
                                             <input
                                                 type="date"

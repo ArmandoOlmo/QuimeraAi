@@ -192,8 +192,47 @@ const OrdersView: React.FC = () => {
                     </p>
                 </div>
             ) : (
-                <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden">
-                    <table className="w-full">
+                <>
+                <div className="space-y-3 sm:hidden">
+                    {filteredOrders.map((order) => {
+                        const statusConfig = getStatusConfig(order.status);
+                        const StatusIcon = statusConfig.icon;
+
+                        return (
+                            <div key={order.id} className="rounded-xl border border-q-border bg-q-surface/50 p-3">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="font-medium text-foreground">{order.orderNumber}</p>
+                                        <p className="truncate text-sm text-q-text-muted">{order.customerName}</p>
+                                        <p className="truncate text-xs text-q-text-muted">{order.customerEmail}</p>
+                                    </div>
+                                    <div className="flex-shrink-0 text-right">
+                                        <p className="font-semibold text-foreground">${order.total.toFixed(2)}</p>
+                                        <p className="text-xs text-q-text-muted">
+                                            {order.items.length} {t('ecommerce.items', 'items')}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="mt-3 flex items-center justify-between gap-3">
+                                    <span
+                                        className={`inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusConfig.bg} ${statusConfig.color}`}
+                                    >
+                                        <StatusIcon size={14} className="flex-shrink-0" />
+                                        <span className="truncate">{statusConfig.label}</span>
+                                    </span>
+                                    <button
+                                        onClick={() => handleViewOrder(order)}
+                                        className="flex-shrink-0 p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                    >
+                                        <Eye size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className="hidden overflow-x-auto rounded-xl border border-q-border bg-q-surface/50 sm:block">
+                    <table className="w-full min-w-[700px]">
                         <thead className="bg-muted/30">
                             <tr>
                                 <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
@@ -264,6 +303,7 @@ const OrdersView: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+                </>
             )}
 
             {/* Order Detail Drawer */}

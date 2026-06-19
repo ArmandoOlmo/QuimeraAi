@@ -166,17 +166,17 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-4xl max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-4xl max-h-[90vh] flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-q-border">
-                    <div className="flex items-center gap-4">
+                <div className="flex items-start justify-between gap-3 p-4 border-b border-q-border">
+                    <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                         <h2 className="text-lg font-bold text-foreground">
                             {t('ecommerce.selectImage', 'Seleccionar Imagen')}
                         </h2>
 
                         {/* Library Tabs */}
-                        <div className="flex bg-muted/50 p-1 rounded-lg">
+                        <div className="flex w-full overflow-x-auto bg-muted/50 p-1 rounded-lg sm:w-auto">
                             <button
                                 onClick={() => setLibrarySource('project')}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${librarySource === 'project'
@@ -202,15 +202,15 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
 
                     <button
                         onClick={onClose}
-                        className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                        className="flex-shrink-0 p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Search and Upload */}
-                <div className="p-4 border-b border-q-border flex gap-3">
-                    <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                <div className="p-4 border-b border-q-border flex flex-col gap-3 sm:flex-row">
+                    <div className="flex min-w-0 items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
                         <Search size={16} className="text-q-text-secondary flex-shrink-0" />
                         <input
                             type="text"
@@ -229,7 +229,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                     <button
                         onClick={triggerFileUpload}
                         disabled={isUploading}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isUploading ? (
                             <Loader2 size={16} className="animate-spin" />
@@ -269,7 +269,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                                         )}
 
                                         {/* Images Grid */}
-                                        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
+                                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">
                                             {projectImages.map(file => {
                                                 const isSelected = currentImages.includes(file.downloadURL);
 

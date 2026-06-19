@@ -200,8 +200,42 @@ const CustomersView: React.FC = () => {
                     </p>
                 </div>
             ) : (
-                <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden">
-                    <table className="w-full">
+                <>
+                <div className="space-y-3 sm:hidden">
+                    {filteredCustomers.map((customer) => (
+                        <div key={customer.id} className="rounded-xl border border-q-border bg-q-surface/50 p-3">
+                            <div className="flex items-start gap-3">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted font-medium text-foreground">
+                                    {customer.firstName[0]}{customer.lastName[0]}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <p className="truncate font-medium text-foreground">
+                                                {customer.firstName} {customer.lastName}
+                                            </p>
+                                            <p className="truncate text-xs text-q-text-muted">{customer.email}</p>
+                                        </div>
+                                        <p className="flex-shrink-0 font-semibold text-foreground">${customer.totalSpent.toFixed(2)}</p>
+                                    </div>
+                                    <div className="mt-3 flex items-center justify-between gap-3">
+                                        <p className="text-xs text-q-text-muted">
+                                            {customer.totalOrders} {t('ecommerce.orders', 'Pedidos')}
+                                        </p>
+                                        <button
+                                            onClick={() => handleViewCustomer(customer)}
+                                            className="flex-shrink-0 p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                        >
+                                            <Eye size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="hidden overflow-x-auto rounded-xl border border-q-border bg-q-surface/50 sm:block">
+                    <table className="w-full min-w-[700px]">
                         <thead className="bg-muted/30">
                             <tr>
                                 <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
@@ -279,6 +313,7 @@ const CustomersView: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+                </>
             )}
 
             {/* Customer Detail Modal */}
@@ -320,23 +355,23 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
     const { t } = useTranslation();
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
             <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                <div className="p-6 border-b border-q-border">
-                    <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full flex items-center justify-center bg-primary text-primary-foreground text-xl font-bold">
+                <div className="p-4 border-b border-q-border sm:p-6">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="w-12 h-12 rounded-full flex flex-shrink-0 items-center justify-center bg-primary text-primary-foreground text-lg font-bold sm:h-16 sm:w-16 sm:text-xl">
                             {customer.firstName[0]}{customer.lastName[0]}
                         </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-foreground">
+                        <div className="min-w-0">
+                            <h3 className="truncate text-lg font-bold text-foreground sm:text-xl">
                                 {customer.firstName} {customer.lastName}
                             </h3>
-                            <p className="text-q-text-muted">{customer.email}</p>
+                            <p className="truncate text-sm text-q-text-muted sm:text-base">{customer.email}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="p-6 space-y-6">
+                <div className="p-4 space-y-6 sm:p-6">
                     {/* Stats */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-muted/30 rounded-lg p-4">
@@ -353,9 +388,9 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
                     <div>
                         <h4 className="text-sm font-medium text-q-text-muted mb-3">{t('ecommerce.contactInfo', 'Información de Contacto')}</h4>
                         <div className="space-y-2">
-                            <div className="flex items-center gap-3 text-q-text-muted">
+                            <div className="flex min-w-0 items-center gap-3 text-q-text-muted">
                                 <Mail size={18} className="text-q-text-muted" />
-                                {customer.email}
+                                <span className="min-w-0 truncate">{customer.email}</span>
                             </div>
                             {customer.phone && (
                                 <div className="flex items-center gap-3 text-q-text-muted">
@@ -422,7 +457,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
                     </div>
                 </div>
 
-                <div className="p-6 border-t border-q-border flex gap-3">
+                <div className="p-4 border-t border-q-border flex flex-col gap-3 sm:flex-row sm:p-6">
                     <button
                         onClick={onAddToAudience}
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium"

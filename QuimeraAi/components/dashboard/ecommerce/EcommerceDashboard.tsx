@@ -300,7 +300,7 @@ const EcommerceDashboard: React.FC = () => {
     // Ecommerce not enabled for this project
     if (!ecommerceInitialized && !ecommerceLoading) {
         return (
-            <div className="min-h-screen bg-q-bg flex">
+            <div className="min-h-screen bg-q-bg flex overflow-x-hidden">
                 <DashboardSidebar
                     isMobileOpen={isMobileMenuOpen}
                     onClose={() => setIsMobileMenuOpen(false)}
@@ -396,33 +396,33 @@ const EcommerceDashboard: React.FC = () => {
                 />
 
                 {/* Main Content */}
-                <div className="flex-1 flex flex-col min-h-screen">
+                <div className="flex-1 min-w-0 flex flex-col min-h-screen">
                     {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between sticky top-0 z-40">
-                        <div className="flex items-center gap-1 sm:gap-4">
+ <header className="quimera-dashboard-header-bar h-auto min-h-14 px-3 sm:px-6 py-2 sm:py-0 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sticky top-0 z-40">
+                        <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-4">
                             <button
                                 onClick={() => setIsMobileMenuOpen(true)}
-                                className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                className="lg:hidden h-9 w-9 flex-shrink-0 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                             >
                                 <Menu className="w-5 h-5" />
                             </button>
-                            <div className="flex items-center gap-1 sm:gap-2">
-                                <ShoppingBag className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
-                                <h1 className="text-sm sm:text-lg font-semibold text-foreground">
+                            <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+                                <ShoppingBag className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                <h1 className="max-w-[8rem] truncate text-sm sm:max-w-none sm:text-lg font-semibold text-foreground">
                                     {t('ecommerce.dashboardTitle', 'Panel de Ventas')}
                                 </h1>
                             </div>
                             {/* Project Selector */}
-                            <div className="relative">
+                            <div className="relative min-w-0">
                                 <button
                                     onClick={() => setIsProjectSelectorOpen(!isProjectSelectorOpen)}
-                                    className="flex items-center gap-1 sm:gap-2 text-sm text-q-text-muted hover:text-foreground transition-colors"
+                                    className="flex min-w-0 items-center gap-1 sm:gap-2 text-sm text-q-text-muted hover:text-foreground transition-colors"
                                 >
-                                    <Store size={14} />
-                                    <span className="max-w-[100px] sm:max-w-[200px] truncate">
+                                    <Store size={14} className="flex-shrink-0" />
+                                    <span className="max-w-[7rem] truncate sm:max-w-[200px]">
                                         {effectiveProject?.name || 'Seleccionar proyecto'}
                                     </span>
-                                    <ChevronDown size={14} className={`transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
+                                    <ChevronDown size={14} className={`flex-shrink-0 transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
                                 </button>
 
                                 {/* Dropdown */}
@@ -432,7 +432,7 @@ const EcommerceDashboard: React.FC = () => {
                                             className="fixed inset-0 z-40"
                                             onClick={() => setIsProjectSelectorOpen(false)}
                                         />
-                                        <div className="absolute top-full left-0 mt-2 w-80 bg-q-surface border border-q-border rounded-xl shadow-xl z-50 py-2 max-h-96 overflow-auto">
+                                        <div className="fixed left-3 right-3 top-14 mt-2 max-h-[70vh] overflow-auto rounded-xl border border-q-border bg-q-surface py-2 shadow-xl z-50 sm:absolute sm:left-0 sm:right-auto sm:top-full sm:w-80 sm:max-h-96">
                                             <div className="px-4 py-2 border-b border-q-border/50 mb-2">
                                                 <p className="text-xs font-medium text-q-text-muted uppercase tracking-wide">
                                                     {t('ecommerce.quickSwitch', 'Cambio rápido')}
@@ -494,7 +494,7 @@ const EcommerceDashboard: React.FC = () => {
                         </div>
 
                         {/* Right Section: Alerts */}
-                        <div className="flex items-center gap-1 sm:gap-3">
+                        <div className="flex flex-shrink-0 items-center gap-1 sm:gap-3">
                             {/* Alerts */}
                             {(pendingOrdersCount > 0 || lowStockCount > 0) && (
                                 <div className="hidden sm:flex items-center gap-3">
@@ -524,8 +524,8 @@ const EcommerceDashboard: React.FC = () => {
                     </header>
 
                     {/* Sub-navigation */}
-                    <div className="px-4 sm:px-6 border-b border-q-border bg-q-surface/30">
-                        <nav className="flex gap-1 overflow-x-auto py-2 scrollbar-hide">
+                    <div className="overflow-hidden border-b border-q-border bg-q-surface/30 px-3 sm:px-6">
+                        <nav className="-mx-3 flex gap-1 overflow-x-auto px-3 py-2 scrollbar-hide sm:mx-0 sm:px-0">
                             {navItems.map((item) => {
                                 const Icon = item.icon;
                                 const isActive = activeView === item.id;
@@ -556,7 +556,7 @@ const EcommerceDashboard: React.FC = () => {
                     </div>
 
                     {/* Content */}
-                    <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+                    <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto p-3 sm:p-6 lg:p-8">
                         {renderActiveView()}
                     </main>
                 </div>

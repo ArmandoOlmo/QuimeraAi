@@ -141,7 +141,7 @@ const ProductsView: React.FC = () => {
 
                 <button
                     onClick={() => setShowForm(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90"
+                    className="flex w-full items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90 sm:w-auto"
                 >
                     <Plus size={20} />
                     {t('ecommerce.addProduct', 'Agregar Producto')}
@@ -168,7 +168,7 @@ const ProductsView: React.FC = () => {
                 <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring lg:w-auto"
                 >
                     <option value="">{t('ecommerce.allCategories', 'Todas las categorías')}</option>
                     {categories.map((cat) => (
@@ -241,8 +241,61 @@ const ProductsView: React.FC = () => {
                     ))}
                 </div>
             ) : (
-                <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden">
-                    <table className="w-full">
+                <>
+                <div className="space-y-3 sm:hidden">
+                    {filteredProducts.map((product) => (
+                        <div key={product.id} className="rounded-xl border border-q-border bg-q-surface/50 p-3">
+                            <div className="flex gap-3">
+                                {product.images?.[0] ? (
+                                    <img
+                                        src={product.images[0].url}
+                                        alt={product.name}
+                                        className="h-16 w-16 flex-shrink-0 rounded-lg object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-muted">
+                                        <ImageIcon className="text-q-text-muted" size={22} />
+                                    </div>
+                                )}
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <p className="truncate font-medium text-foreground">{product.name}</p>
+                                            <p className="truncate text-xs text-q-text-muted">{getCategoryName(product.categoryId)}</p>
+                                        </div>
+                                        <p className="flex-shrink-0 font-semibold text-foreground">${product.price.toFixed(2)}</p>
+                                    </div>
+                                    <div className="mt-3 flex items-center justify-between gap-3">
+                                        <div className="min-w-0 text-xs text-q-text-muted">
+                                            {product.sku && <span className="mr-2">SKU: {product.sku}</span>}
+                                            {product.trackInventory && (
+                                                <span className={product.quantity <= (product.lowStockThreshold || 5) ? 'text-orange-400' : ''}>
+                                                    {product.quantity} uds
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-shrink-0 items-center gap-1">
+                                            <button
+                                                onClick={() => handleEdit(product)}
+                                                className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                            >
+                                                <Edit size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(product.id)}
+                                                className="p-2 text-q-text-muted hover:text-destructive hover:bg-muted rounded-lg transition-colors"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="hidden overflow-x-auto rounded-xl border border-q-border bg-q-surface/50 sm:block">
+                    <table className="w-full min-w-[640px]">
                         <thead className="bg-muted/30">
                             <tr>
                                 <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
@@ -349,6 +402,7 @@ const ProductsView: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+                </>
             )}
 
             {/* Product Form Modal */}

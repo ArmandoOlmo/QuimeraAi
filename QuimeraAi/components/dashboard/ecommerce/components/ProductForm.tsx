@@ -247,11 +247,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
     const isAnyGenerating = isGeneratingDescription || isGeneratingSEO || isGeneratingTags || isGeneratingAll;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center overflow-y-auto p-4">
-            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-3xl my-8">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center overflow-y-auto p-3 sm:p-4">
+            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-3xl my-3 sm:my-8">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-q-border">
-                    <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-3 p-4 border-b border-q-border sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                         <h2 className="text-xl font-bold text-foreground">
                             {product
                                 ? t('ecommerce.editProduct', 'Editar Producto')
@@ -270,14 +270,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                        className="absolute right-5 top-5 p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors sm:static"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit}>
-                    <div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+                    <div className="p-4 space-y-6 max-h-[calc(100vh-150px)] overflow-y-auto sm:p-6 sm:max-h-[calc(100vh-200px)]">
                         {/* Basic Info */}
                         <div className="space-y-4">
                             <h3 className="text-lg font-medium text-foreground">
@@ -343,21 +343,21 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
 
                         {/* Images */}
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <h3 className="text-lg font-medium text-foreground">
                                     {t('ecommerce.images', 'Imágenes')}
                                 </h3>
                                 <button
                                     type="button"
                                     onClick={() => setIsImagePickerOpen(true)}
-                                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors"
+                                    className="flex w-full items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors sm:w-auto"
                                 >
                                     <FolderOpen size={16} />
                                     {t('ecommerce.selectFromLibrary', 'Seleccionar de Biblioteca')}
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
                                 {/* Existing Images */}
                                 {images.map((image) => (
                                     <div key={image.id} className="relative aspect-square group">
@@ -445,7 +445,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                 {t('ecommerce.pricing', 'Precios')}
                             </h3>
 
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                 <div>
                                     <label className="block text-sm font-medium text-q-text-muted mb-1">
                                         {t('ecommerce.price', 'Precio')} *
@@ -530,7 +530,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                             </label>
 
                             {formData.trackInventory && (
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                     <div>
                                         <label className="block text-sm font-medium text-q-text-muted mb-1">
                                             {t('ecommerce.quantity', 'Cantidad')}
@@ -764,7 +764,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                     </div>
 
                     {/* Footer */}
-                    <div className="flex gap-4 p-6 border-t border-q-border">
+                    <div className="flex flex-col gap-3 p-4 border-t border-q-border sm:flex-row sm:p-6">
                         <button
                             type="button"
                             onClick={onClose}

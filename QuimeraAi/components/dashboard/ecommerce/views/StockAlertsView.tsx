@@ -279,8 +279,8 @@ const StockAlertsView: React.FC = () => {
                             <Bell className="text-primary" size={18} />
                             {t('ecommerce.notificationSubscribers', 'Suscriptores de Notificaciones')}
                         </h3>
-                        <div className="flex gap-2">
-                            <div className="flex items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-1.5">
+                        <div className="flex gap-2 sm:w-auto w-full">
+                            <div className="flex w-full items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-1.5">
                                 <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                                 <input
                                     type="text"
@@ -323,23 +323,23 @@ const StockAlertsView: React.FC = () => {
                                             </div>
                                         )}
                                     </div>
-                                    <div>
-                                        <p className="font-medium text-foreground">{data.productName}</p>
+                                    <div className="min-w-0">
+                                        <p className="truncate font-medium text-foreground">{data.productName}</p>
                                         <p className="text-sm text-q-text-muted">
                                             {data.subscribers.length} suscriptor{data.subscribers.length !== 1 ? 'es' : ''}
                                         </p>
                                     </div>
                                 </div>
-                                <div className="space-y-2 pl-13">
+                                <div className="space-y-2 sm:pl-[3.25rem]">
                                     {data.subscribers.map((sub) => (
                                         <div
                                             key={sub.id}
-                                            className="flex items-center justify-between p-2 bg-muted/30 rounded-lg"
+                                            className="flex items-center justify-between gap-2 p-2 bg-muted/30 rounded-lg"
                                         >
-                                            <div className="flex items-center gap-2">
-                                                <Mail className="text-q-text-muted" size={14} />
-                                                <span className="text-sm text-foreground">{sub.email}</span>
-                                                <span className="text-xs text-q-text-muted">
+                                            <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                                <Mail className="text-q-text-muted flex-shrink-0" size={14} />
+                                                <span className="min-w-0 max-w-full truncate text-sm text-foreground">{sub.email}</span>
+                                                <span className="text-xs text-q-text-muted flex-shrink-0">
                                                     · {formatDate(sub.createdAt)}
                                                 </span>
                                                 {sub.notified && (

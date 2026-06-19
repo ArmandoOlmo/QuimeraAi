@@ -221,7 +221,7 @@ const DiscountsView: React.FC = () => {
 
                 <button
                     onClick={() => setShowForm(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90"
+                    className="flex w-full items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90 sm:w-auto"
                 >
                     <Plus size={20} />
                     {t('ecommerce.addDiscount', 'Crear Descuento')}
@@ -280,13 +280,13 @@ const DiscountsView: React.FC = () => {
                                     : 'border-q-border'
                                 }`}
                         >
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                                 {/* Code */}
-                                <div className="flex items-center gap-3">
+                                <div className="flex min-w-0 items-center gap-3">
                                     {getTypeIcon(discount.type)}
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <code className="text-lg font-mono font-bold text-foreground bg-muted/50 px-2 py-0.5 rounded">
+                                    <div className="min-w-0">
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <code className="max-w-[11rem] truncate text-lg font-mono font-bold text-foreground bg-muted/50 px-2 py-0.5 rounded sm:max-w-none">
                                                 {discount.code}
                                             </code>
                                             <button
@@ -305,7 +305,7 @@ const DiscountsView: React.FC = () => {
                                 </div>
 
                                 {/* Value */}
-                                <div className="flex-1">
+                                <div className="min-w-0 flex-1">
                                     <p className="text-2xl font-bold text-green-400">
                                         {formatDiscountValue(discount)}
                                     </p>
@@ -317,7 +317,7 @@ const DiscountsView: React.FC = () => {
                                 </div>
 
                                 {/* Usage */}
-                                <div className="text-center">
+                                <div className="text-left sm:text-center">
                                     <p className="text-foreground font-medium">
                                         {discount.usedCount}
                                         {discount.maxUses ? ` / ${discount.maxUses}` : ''}
@@ -326,7 +326,7 @@ const DiscountsView: React.FC = () => {
                                 </div>
 
                                 {/* Status */}
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
                                     {isExpired(discount) ? (
                                         <span className="flex items-center gap-1 px-2 py-1 bg-muted text-q-text-muted rounded-full text-xs">
                                             <Clock size={12} />
@@ -351,7 +351,7 @@ const DiscountsView: React.FC = () => {
                                 </div>
 
                                 {/* Actions */}
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 sm:ml-auto">
                                     <button
                                         onClick={() => toggleDiscountStatus(discount.id)}
                                         className={`p-2 rounded-lg transition-colors ${discount.isActive
@@ -382,9 +382,9 @@ const DiscountsView: React.FC = () => {
 
             {/* Discount Form Modal */}
             {showForm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md">
-                        <div className="p-6 border-b border-q-border">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md max-h-[92vh] overflow-y-auto">
+                        <div className="p-4 border-b border-q-border sm:p-6">
                             <h3 className="text-lg font-bold text-foreground">
                                 {editingDiscount
                                     ? t('ecommerce.editDiscount', 'Editar Descuento')
@@ -392,13 +392,13 @@ const DiscountsView: React.FC = () => {
                             </h3>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                        <form onSubmit={handleSubmit} className="p-4 space-y-4 sm:p-6">
                             {/* Code */}
                             <div>
                                 <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.code', 'Código')}
                                 </label>
-                                <div className="flex gap-2">
+                                <div className="flex flex-col gap-2 sm:flex-row">
                                     <input
                                         type="text"
                                         value={formData.code}
@@ -406,7 +406,7 @@ const DiscountsView: React.FC = () => {
                                             setFormData({ ...formData, code: e.target.value.toUpperCase() })
                                         }
                                         placeholder="DESCUENTO20"
-                                        className="flex-1 px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground uppercase focus:outline-none focus:ring-2 focus:ring-ring"
+                                        className="min-w-0 flex-1 px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground uppercase focus:outline-none focus:ring-2 focus:ring-ring"
                                     />
                                     <button
                                         type="button"
@@ -493,7 +493,7 @@ const DiscountsView: React.FC = () => {
 
                             {/* Dates */}
                             {!editingDiscount && (
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
                                         <label className="block text-sm font-medium text-q-text-muted mb-1">
                                             {t('ecommerce.startsAt', 'Inicia')} *

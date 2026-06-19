@@ -125,8 +125,8 @@ const AnalyticsView: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
                     <h2 className="text-2xl font-bold text-foreground">
                         {t('ecommerce.analytics', 'Analytics')}
                     </h2>
@@ -136,12 +136,12 @@ const AnalyticsView: React.FC = () => {
                 </div>
 
                 {/* Date Range Selector */}
-                <div className="flex items-center gap-2 bg-q-surface/50 rounded-lg p-1">
+                <div className="flex w-full items-center gap-1 overflow-x-auto rounded-lg bg-q-surface/50 p-1 sm:w-auto sm:gap-2">
                     {(['7d', '30d', '90d', '1y'] as DateRange[]).map((range) => (
                         <button
                             key={range}
                             onClick={() => setDateRange(range)}
-                            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${dateRange === range
+                            className={`flex-1 whitespace-nowrap px-3 py-1.5 rounded-md text-sm font-medium transition-colors sm:flex-none ${dateRange === range
                                     ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
                                     : 'text-q-text-muted hover:text-foreground'
                                 }`}
@@ -184,7 +184,7 @@ const AnalyticsView: React.FC = () => {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Revenue Chart */}
-                <div className="quimera-dashboard-panel-card group p-6">
+                <div className="quimera-dashboard-panel-card group p-4 sm:p-6">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                         {t('ecommerce.revenueOverTime', 'Ingresos en el Tiempo')}
                     </h3>
@@ -229,7 +229,7 @@ const AnalyticsView: React.FC = () => {
                 </div>
 
                 {/* Orders by Status */}
-                <div className="quimera-dashboard-panel-card group p-6">
+                <div className="quimera-dashboard-panel-card group p-4 sm:p-6">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                         {t('ecommerce.ordersByStatus', 'Pedidos por Estado')}
                     </h3>
@@ -272,7 +272,7 @@ const AnalyticsView: React.FC = () => {
             {/* Top Products & Customers */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Top Products */}
-                <div className="quimera-dashboard-panel-card group p-6">
+                <div className="quimera-dashboard-panel-card group p-4 sm:p-6">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                         {t('ecommerce.topProducts', 'Productos Más Vendidos')}
                     </h3>
@@ -287,7 +287,7 @@ const AnalyticsView: React.FC = () => {
                                         <p className="text-foreground font-medium truncate">{product.productName}</p>
                                         <p className="text-q-text-muted text-sm">{product.totalSold} vendidos</p>
                                     </div>
-                                    <p className="text-green-400 font-semibold">
+                                    <p className="flex-shrink-0 text-green-400 font-semibold">
                                         {formatCurrency(product.revenue)}
                                     </p>
                                 </div>
@@ -301,7 +301,7 @@ const AnalyticsView: React.FC = () => {
                 </div>
 
                 {/* Top Customers */}
-                <div className="quimera-dashboard-panel-card group p-6">
+                <div className="quimera-dashboard-panel-card group p-4 sm:p-6">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                         {t('ecommerce.topCustomers', 'Mejores Clientes')}
                     </h3>
@@ -316,7 +316,7 @@ const AnalyticsView: React.FC = () => {
                                         <p className="text-foreground font-medium truncate">{customer.name}</p>
                                         <p className="text-q-text-muted text-sm">{customer.totalOrders} pedidos</p>
                                     </div>
-                                    <p className="text-green-400 font-semibold">
+                                    <p className="flex-shrink-0 text-green-400 font-semibold">
                                         {formatCurrency(customer.totalSpent)}
                                     </p>
                                 </div>
@@ -331,11 +331,11 @@ const AnalyticsView: React.FC = () => {
             </div>
 
             {/* Conversion Metrics */}
-            <div className="bg-q-surface/50 rounded-xl p-6 border border-q-border">
+            <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border sm:p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">
                     {t('ecommerce.conversionMetrics', 'Métricas de Conversión')}
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                     <div className="text-center p-4 bg-muted/30 rounded-lg">
                         <p className="text-3xl font-bold text-foreground">{conversionMetrics.paidOrders}</p>
                         <p className="text-sm text-q-text-muted">{t('ecommerce.paidOrders', 'Pedidos Pagados')}</p>

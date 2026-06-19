@@ -77,7 +77,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     };
 
     return (
-        <div className="min-h-screen bg-q-bg flex">
+        <div className="min-h-screen bg-q-bg flex overflow-x-hidden">
             {/* Sidebar */}
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
@@ -85,28 +85,28 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
             />
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col min-h-screen">
+            <div className="flex-1 min-w-0 flex flex-col min-h-screen">
                 {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 w-full px-4 sm:px-6 flex items-center sticky top-0 z-40">
+ <header className="quimera-dashboard-header-bar h-auto min-h-14 w-full px-3 sm:px-6 py-2 sm:py-0 flex items-center gap-3 sticky top-0 z-40">
                     {/* Left: Menu & Title */}
-                    <div className="flex items-center gap-4 flex-shrink-0">
+                    <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                            className="lg:hidden h-9 w-9 flex-shrink-0 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                             aria-label={t('common.openMenu', 'Abrir menú')}
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <div className="flex items-center gap-2">
-                            <ShoppingBag className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
-                            <h1 className="text-lg font-semibold text-foreground">
+                        <div className="flex min-w-0 items-center gap-2">
+                            <ShoppingBag className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                            <h1 className="truncate text-sm font-semibold text-foreground sm:text-lg">
                                 {t('ecommerce.dashboardTitle', 'Panel de Ventas')}
                             </h1>
                         </div>
                     </div>
 
                     {/* Right: Search */}
-                    <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
+                    <div className="flex items-center gap-3 flex-shrink-0">
                         <button
                             onClick={() => setIsSearchOpen(true)}
                             className="text-q-text-muted hover:text-foreground transition-colors"
@@ -128,12 +128,12 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                 />
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-                    <div className="max-w-7xl mx-auto">
+                <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto p-3 sm:p-6 lg:p-8">
+                    <div className="max-w-7xl mx-auto min-w-0">
                         {/* Hero Section */}
                         <div className="mb-8">
                             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-                                <div>
+                                <div className="min-w-0">
                                     <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
                                         {t('ecommerce.yourProjects', 'Tus Proyectos')}
                                     </h2>
@@ -143,7 +143,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                 </div>
                                 <button
                                     onClick={() => setIsOnboardingOpen(true)}
-                                    className="quimera-guide-cta flex items-center gap-2 px-5 py-3 rounded-xl font-medium"
+                                    className="quimera-guide-cta flex w-full items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium sm:w-auto"
                                 >
                                     <Sparkles size={18} />
                                     {t('dashboard.newProject', 'Nuevo Proyecto')}
@@ -151,7 +151,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                             </div>
 
                             {/* Stats Bar */}
-                            <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
                                 {[
                                     {
                                         id: 'total',
@@ -246,7 +246,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                 {!searchQuery && (
                                     <button
                                         onClick={() => setIsOnboardingOpen(true)}
-                                        className="quimera-guide-cta inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium"
+                                        className="quimera-guide-cta inline-flex w-full items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium sm:w-auto"
                                     >
                                         <Plus size={20} />
                                         {t('dashboard.newProject', 'Nuevo Proyecto')}
