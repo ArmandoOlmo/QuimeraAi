@@ -11,6 +11,7 @@ import { useRouteSEO } from '../hooks/useRouteSEO';
 import { ROUTES, hasRouteAccess } from './config';
 import { View, AdminView } from '../types/ui';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
+import { useStorefrontCart } from '../components/ecommerce/context';
 
 // LoadingScreen is kept synchronous as it's used as fallback
 import LoadingScreen from './LoadingScreen';
@@ -72,6 +73,32 @@ const StorefrontLayout = lazyWithRetry(() =>
 const OrderConfirmation = lazyWithRetry(() =>
   import('../components/ecommerce').then(module => ({ default: module.OrderConfirmation }))
 );
+
+interface StorefrontProductListingProps {
+  storeId: string;
+  onProductClick: (slug: string) => void;
+  onBack?: () => void;
+  initialCategory?: string;
+}
+
+const StorefrontProductListing: React.FC<StorefrontProductListingProps> = ({
+  storeId,
+  onProductClick,
+  onBack,
+  initialCategory,
+}) => {
+  const cart = useStorefrontCart();
+
+  return (
+    <ProductSearchPage
+      storeId={storeId}
+      onProductClick={onProductClick}
+      onBack={onBack}
+      initialCategory={initialCategory}
+      onAddToCart={(product) => cart.addItem(product, 1)}
+    />
+  );
+};
 
 // =============================================================================
 // TYPES
@@ -301,7 +328,7 @@ const Router: React.FC<RouterProps> = ({
             onNavigateHome={() => navigate(`/preview/${storeId}`)}
             onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
           >
-            <ProductSearchPage
+            <StorefrontProductListing
               storeId={storeId}
               onProductClick={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
               onBack={() => navigate(`/store/${storeId}`)}
@@ -321,7 +348,7 @@ const Router: React.FC<RouterProps> = ({
             onNavigateHome={() => navigate(`/preview/${storeId}`)}
             onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
           >
-            <ProductSearchPage
+            <StorefrontProductListing
               storeId={storeId}
               onProductClick={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
             />
@@ -686,7 +713,6 @@ const Router: React.FC<RouterProps> = ({
 };
 
 export default Router;
-
 
 
 

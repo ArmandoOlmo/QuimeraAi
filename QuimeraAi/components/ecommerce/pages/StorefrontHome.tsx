@@ -22,6 +22,7 @@ import {
 import ProductSearchPage from '../search/ProductSearchPage';
 import { Project } from '../../../types';
 import { deriveColorsFromPalette } from '../../../utils/colorUtils'; // Adjust path if needed
+import { useStorefrontCart } from '../context';
 
 interface ThemeColors {
     background?: string;
@@ -50,6 +51,7 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
     onNavigateToCategory,
     themeColors
 }) => {
+    const cart = useStorefrontCart();
 
     // Map of component keys to React Components
     const COMPONENT_MAP: Record<string, React.FC<any>> = {
@@ -110,7 +112,7 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
             {sectionsToRender.map((key, index) => renderSection(key, index))}
 
             {/* Always render the full product search/grid at the bottom for the core ecommerce experience */}
-            <div className="container mx-auto px-4 py-8">
+            <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
                 <ProductSearchPage
                     storeId={storeId}
                     // Pass null userId as we are in public view
@@ -128,6 +130,7 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
                     // Use project primary color if available
                     primaryColor={themeColors.priceColor || '#6366f1'}
                     onProductClick={onNavigateToProduct}
+                    onAddToCart={(product) => cart.addItem(product, 1)}
                 />
             </div>
         </div>

@@ -150,15 +150,14 @@ export const usePublicProduct = (
             const relatedQuery = query(
                 productsRef,
                 where('categoryId', '==', categoryId),
-                where('inStock', '==', true),
                 orderBy('updatedAt', 'desc'),
-                limit(5) // Get 5 to filter out current product
+                limit(12)
             );
 
             const relatedDocs = await getDocs(relatedQuery);
             const related = relatedDocs.docs
                 .map(doc => ({ ...doc.data(), id: doc.id } as PublicProduct))
-                .filter(p => p.id !== currentProductId)
+                .filter(p => p.id !== currentProductId && p.inStock !== false)
                 .slice(0, 4); // Limit to 4 related products
 
             setRelatedProducts(related);

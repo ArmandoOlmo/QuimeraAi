@@ -13,6 +13,7 @@ import ProductDetailPageWithCart from './ProductDetailPageWithCart';
 import CheckoutPageEnhanced from './CheckoutPageEnhanced';
 import OrderConfirmation from './OrderConfirmation';
 import { Loader2 } from 'lucide-react';
+import { useStorefrontCart } from './context';
 
 // Import storefront pages
 import StorefrontHome from './pages/StorefrontHome';
@@ -43,6 +44,50 @@ interface RouteState {
         orderId?: string;
     };
 }
+
+interface StorefrontProductSearchProps {
+    projectId: string;
+    projectData: any;
+    onProductClick: (slug: string) => void;
+}
+
+const StorefrontProductSearch: React.FC<StorefrontProductSearchProps> = ({
+    projectId,
+    projectData,
+    onProductClick,
+}) => {
+    const cart = useStorefrontCart();
+    const primaryColor = projectData?.theme?.globalColors?.primary ||
+        projectData?.header?.colors?.accent ||
+        projectData?.data?.header?.colors?.accent ||
+        '#2563eb';
+
+    return (
+        <ProductSearchPage
+            storeId={projectId}
+            onProductClick={onProductClick}
+            onAddToCart={(product) => cart.addItem(product, 1)}
+            primaryColor={primaryColor}
+            showFilterSidebar={true}
+            showSearchBar={true}
+            showSortOptions={true}
+            showViewModeToggle={true}
+            defaultViewMode="grid"
+            gridColumns={4}
+            cardStyle="modern"
+            title="Tienda"
+            themeColors={{
+                background: projectData?.theme?.pageBackground || '#f8fafc',
+                text: projectData?.header?.colors?.text || projectData?.data?.header?.colors?.text || '#334155',
+                heading: projectData?.header?.colors?.text || projectData?.data?.header?.colors?.text || '#0f172a',
+                cardBackground: '#ffffff',
+                border: '#e2e8f0',
+                mutedText: '#64748b',
+                priceColor: primaryColor,
+            }}
+        />
+    );
+};
 
 /**
  * Parse URL to determine view and params
@@ -165,6 +210,8 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                         storeId={projectId}
                         productSlug={route.params.productSlug!}
                         onNavigateToStore={navigateHome}
+                        onNavigateToCategory={navigateToCategory}
+                        onNavigateToProduct={navigateToProduct}
                     />
                 );
 
@@ -226,28 +273,11 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                     );
                 }
 
-                // Use ProductSearchPage for full store experience with filters, search, etc.
-                const primaryColor = projectData?.theme?.globalColors?.primary ||
-                    projectData?.data?.header?.colors?.background ||
-                    '#6366f1';
                 return (
-                    <ProductSearchPage
-                        storeId={projectId}
+                    <StorefrontProductSearch
+                        projectId={projectId}
+                        projectData={projectData}
                         onProductClick={navigateToProduct}
-                        primaryColor={primaryColor}
-                        showFilterSidebar={true}
-                        showSearchBar={true}
-                        showSortOptions={true}
-                        showViewModeToggle={true}
-                        defaultViewMode="grid"
-                        gridColumns={4}
-                        cardStyle="modern"
-                        title="Tienda"
-                        themeColors={{
-                            background: projectData?.theme?.pageBackground || '#ffffff',
-                            text: projectData?.data?.header?.colors?.text || '#374151',
-                            heading: projectData?.data?.header?.colors?.text || '#1f2937',
-                        }}
                     />
                 );
         }

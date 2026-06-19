@@ -16,6 +16,8 @@ import {
     ShoppingBag,
     Tag,
     ArrowRight,
+    ShieldCheck,
+    Truck,
 } from 'lucide-react';
 import { CartItem } from '../../types/ecommerce';
 import { useGlobalStorefrontColors } from './hooks/useUnifiedStorefrontColors';
@@ -82,16 +84,16 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
     // Effective colors from storeSettings > primaryColor prop > globalColors
     // Priority: explicit color > theme accent > hardcoded default
     const effectiveColors = {
-        background: colors?.background || '#0f172a',
-        heading: colors?.heading || '#ffffff',
-        text: colors?.text || '#94a3b8',
+        background: colors?.background || '#ffffff',
+        heading: colors?.heading || '#0f172a',
+        text: colors?.text || '#64748b',
         accent: colors?.accent || themeAccent,
-        cardBackground: colors?.cardBackground || '#1e293b',
-        cardText: colors?.cardText || '#e2e8f0',
+        cardBackground: colors?.cardBackground || '#f8fafc',
+        cardText: colors?.cardText || '#334155',
         buttonBackground: colors?.buttonBackground || colors?.accent || themeAccent,
         buttonText: colors?.buttonText || '#ffffff',
         priceColor: colors?.priceColor || colors?.accent || themeAccent,
-        borderColor: colors?.borderColor || '#334155',
+        borderColor: colors?.borderColor || '#e2e8f0',
     };
     
     const effectivePrimaryColor = effectiveColors.accent;
@@ -191,7 +193,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
             >
                 {/* Header */}
                 <div 
-                    className="flex items-center justify-between p-4 border-b"
+                    className="flex items-center justify-between p-5 border-b"
                     style={{ borderColor: effectiveColors.borderColor }}
                 >
                     <div className="flex items-center gap-3">
@@ -248,7 +250,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                 )}
 
                 {/* Cart Items */}
-                <div className="flex-1 overflow-y-auto p-4">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-5">
                     {items.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center">
                             <ShoppingBag className="mb-4" size={64} style={{ color: effectiveColors.borderColor }} />
@@ -277,8 +279,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                             {items.map((item) => (
                                 <div
                                     key={`${item.productId}-${item.variantId || 'default'}`}
-                                    className="flex gap-4 p-3 rounded-xl"
-                                    style={{ backgroundColor: effectiveColors.cardBackground }}
+                                    className="flex gap-4 p-3 rounded-xl border"
+                                    style={{ backgroundColor: effectiveColors.cardBackground, borderColor: effectiveColors.borderColor }}
                                 >
                                     {/* Image */}
                                     {item.image ? (
@@ -374,7 +376,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                 {/* Footer */}
                 {items.length > 0 && (
                     <div 
-                        className="border-t p-4 space-y-4"
+                        className="border-t p-4 space-y-4 sm:p-5"
                         style={{ borderColor: effectiveColors.borderColor }}
                     >
                         {/* Discount Code */}
@@ -476,6 +478,17 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                             <ArrowRight size={20} />
                         </button>
 
+                        <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: effectiveColors.text }}>
+                            <span className="inline-flex items-center gap-2 rounded-lg border px-3 py-2" style={{ borderColor: effectiveColors.borderColor }}>
+                                <ShieldCheck size={15} style={{ color: effectiveColors.accent }} />
+                                Pago protegido
+                            </span>
+                            <span className="inline-flex items-center gap-2 rounded-lg border px-3 py-2" style={{ borderColor: effectiveColors.borderColor }}>
+                                <Truck size={15} style={{ color: effectiveColors.accent }} />
+                                Envio al checkout
+                            </span>
+                        </div>
+
                         <button
                             onClick={onClose}
                             className="w-full py-2 transition-colors hover:opacity-70"
@@ -491,6 +504,5 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
 };
 
 export default CartDrawer;
-
 
 

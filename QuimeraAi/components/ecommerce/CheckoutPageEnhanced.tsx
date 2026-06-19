@@ -378,9 +378,9 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen bg-slate-50 dark:bg-gray-900">
             {/* Header */}
-            <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
+            <header className="bg-white/95 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 backdrop-blur">
                 <div className="max-w-6xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <button
@@ -451,10 +451,10 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
             </div>
 
             {/* Main Content */}
-            <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
-                <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
+            <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+                <div className="grid lg:grid-cols-[minmax(0,1fr)_400px] gap-6 lg:gap-8">
                     {/* Form Section */}
-                    <div className="lg:col-span-3 space-y-6">
+                    <div className="space-y-6">
                         {/* Error Message */}
                         {error && (
                             <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl flex items-start gap-3 animate-shake">
@@ -471,7 +471,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
 
                         {/* Express Checkout */}
                         {currentStep === 'information' && (
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 p-5 shadow-sm sm:p-6 dark:border-gray-700">
                                 <div className="flex items-center gap-2 mb-4">
                                     <Wallet size={20} style={{ color: primaryColor }} />
                                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -505,7 +505,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
 
                         {/* Information Step */}
                         {currentStep === 'information' && (
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm space-y-6">
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 p-5 shadow-sm space-y-6 sm:p-6 dark:border-gray-700">
                                 <div className="flex items-center gap-2">
                                     <User size={20} style={{ color: primaryColor }} />
                                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -640,7 +640,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
 
                         {/* Shipping Step */}
                         {currentStep === 'shipping' && (
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm space-y-6">
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 p-5 shadow-sm space-y-6 sm:p-6 dark:border-gray-700">
                                 <div className="flex items-center gap-2">
                                     <Truck size={20} style={{ color: primaryColor }} />
                                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -703,7 +703,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                                     ))}
                                 </div>
 
-                                <div className="flex gap-4 pt-4">
+                                <div className="flex flex-col gap-3 pt-4 sm:flex-row">
                                     <button
                                         onClick={() => onStepChange('information')}
                                         className="flex-1 py-3.5 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
@@ -726,7 +726,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
 
                         {/* Payment Step */}
                         {currentStep === 'payment' && (
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm space-y-6">
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 p-5 shadow-sm space-y-6 sm:p-6 dark:border-gray-700">
                                 <div className="flex items-center gap-2">
                                     <CreditCard size={20} style={{ color: primaryColor }} />
                                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -757,7 +757,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                                     />
                                 </div>
 
-                                <div className="flex gap-4 pt-4">
+                                <div className="flex flex-col gap-3 pt-4 sm:flex-row">
                                     <button
                                         onClick={() => onStepChange('shipping')}
                                         className="flex-1 py-3.5 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
@@ -805,8 +805,8 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                     </div>
 
                     {/* Order Summary Sidebar */}
-                    <div className="lg:col-span-2">
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm sticky top-32 overflow-hidden">
+                    <div>
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 shadow-sm sticky top-32 overflow-hidden dark:border-gray-700">
                             {/* Summary Header */}
                             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -1311,7 +1311,6 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
 };
 
 export default CheckoutPageEnhanced;
-
 
 
 
