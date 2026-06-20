@@ -67,6 +67,10 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
         return map[data.titleFontSize || 'lg'] || 'text-3xl';
     };
+    const getDescriptionSize = () => {
+        const map = { sm: 'text-sm', md: 'text-base', lg: 'text-lg', xl: 'text-xl' };
+        return map[data.descriptionFontSize || 'md'] || 'text-base';
+    };
 
     const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
     const getTextAlignment = () => getStorefrontTextAlignmentClass(data.textAlignment, 'left');
@@ -267,7 +271,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                 </h3>
 
                 {data.description && (
-                    <p className={`mb-6 ${getTextAlignment()}`} style={{ color: colors?.text }}>
+                    <p className={`${getDescriptionSize()} mb-6 ${getTextAlignment()}`} style={{ color: colors?.text }}>
                         {data.description}
                     </p>
                 )}
@@ -455,12 +459,12 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                                 <Package size={32} style={{ color: colors?.accent }} />
                             </div>
                             <h3 
-                                className="text-xl font-bold mb-2"
+                                className={`${getTitleSize()} font-bold mb-2`}
                                 style={{ color: colors?.heading }}
                             >
                                 {data.title || 'Product Bundle'}
                             </h3>
-                            <p className="mb-4" style={{ color: colors?.text }}>
+                            <p className={`${getDescriptionSize()} mb-4`} style={{ color: colors?.text }}>
                                 {data.description || 'Selecciona productos para crear tu bundle'}
                             </p>
                             <div 

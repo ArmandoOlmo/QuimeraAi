@@ -98,6 +98,10 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
         return map[data.titleFontSize || 'lg'] || 'text-3xl';
     };
+    const getDescriptionSize = () => {
+        const map = { sm: 'text-sm', md: 'text-base', lg: 'text-lg', xl: 'text-xl' };
+        return map[data.descriptionFontSize || 'md'] || 'text-base';
+    };
     const getTextAlignment = () => getStorefrontTextAlignmentClass(data.textAlignment, 'left');
     const getContentPosition = () => getStorefrontContentPositionClass(data.contentPosition, 'left');
 
@@ -324,7 +328,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                                 </h2>
                             )}
                             {data.description && (
-                                <p style={{ color: colors?.text }}>
+                                <p className={getDescriptionSize()} style={{ color: colors?.text }}>
                                     {data.description}
                                 </p>
                             )}
@@ -479,7 +483,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                             </h2>
                         )}
                         {data.description && (
-                            <p style={{ color: colors?.text }}>{data.description}</p>
+                            <p className={getDescriptionSize()} style={{ color: colors?.text }}>{data.description}</p>
                         )}
                     </div>
                 )}

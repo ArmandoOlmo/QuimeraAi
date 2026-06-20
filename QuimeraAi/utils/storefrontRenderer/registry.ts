@@ -375,6 +375,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
             paddingX: 'md',
             cardGap: 'md',
             titleFontSize: 'md',
+            descriptionFontSize: 'md',
             textAlignment: 'left',
             contentPosition: 'left',
             borderRadius: 'xl',

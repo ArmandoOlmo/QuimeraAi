@@ -66,6 +66,14 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     const getPaddingX = () => getStorefrontPaddingXClass(data.paddingX, 'md');
     const getButtonRadius = () => getStorefrontRadiusClass(data.buttonBorderRadius, 'xl');
     const getSectionRadius = () => getStorefrontRadiusClass(data.borderRadius || data.buttonBorderRadius, 'xl');
+    const getHeadlineSize = () => {
+        const map: Record<string, string> = { sm: 'text-2xl', md: 'text-3xl', lg: 'text-4xl', xl: 'text-5xl' };
+        return map[data.headlineFontSize || 'xl'] || 'text-5xl';
+    };
+    const getSubheadlineSize = () => {
+        const map: Record<string, string> = { sm: 'text-sm', md: 'text-base', lg: 'text-lg', xl: 'text-xl' };
+        return map[data.subheadlineFontSize || 'md'] || 'text-base';
+    };
 
     const getImageSize = () => {
         const map: Record<string, string> = { 
@@ -166,7 +174,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
                 {/* Product Name as Headline */}
                 <h1
-                    className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
+                    className={`${getHeadlineSize()} font-bold mb-4`}
                     style={{ color: colors?.heading }}
                 >
                     {headline}
@@ -175,7 +183,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                 {/* Description */}
                 {showDescription && description && (
                     <p
-                        className="text-base md:text-lg mb-4 max-w-2xl opacity-90"
+                        className={`${getSubheadlineSize()} mb-4 max-w-2xl opacity-90`}
                         style={{ color: colors?.text }}
                     >
                         {description}
@@ -397,7 +405,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
                             {/* Headline */}
                             <h1
-                                className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
+                                className={`${getHeadlineSize()} font-bold mb-4`}
                                 style={{ color: colors?.heading }}
                             >
                                 {data.headline || featuredProduct?.name || 'Featured Product'}
@@ -406,7 +414,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                             {/* Description */}
                             {data.showDescription !== false && (data.subheadline || featuredProduct?.description) && (
                                 <p
-                                    className="text-base md:text-lg mb-6 max-w-xl opacity-90"
+                                    className={`${getSubheadlineSize()} mb-6 max-w-xl opacity-90`}
                                     style={{ color: colors?.text }}
                                 >
                                     {data.subheadline || featuredProduct?.description}

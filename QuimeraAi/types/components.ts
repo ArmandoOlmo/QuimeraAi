@@ -1976,6 +1976,7 @@ export interface RecentlyViewedData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
     textAlignment?: TextAlignment;
     contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;

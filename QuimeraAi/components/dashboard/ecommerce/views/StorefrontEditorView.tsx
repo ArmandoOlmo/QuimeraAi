@@ -1532,6 +1532,7 @@ const StorefrontEditorView: React.FC = () => {
         const supportsHeroControls = selectedSection === 'productHero' || selectedSection === 'collectionBanner';
         const supportsPositionControls = true;
         const supportsBackgroundImage = true;
+        const supportsDescriptionTypography = !['announcementBar', 'trustBadges'].includes(selectedSection);
         const supportsCardGap = ['featuredProducts', 'categoryGrid', 'trustBadges', 'saleCountdown', 'recentlyViewed', 'productReviews', 'productBundle'].includes(selectedSection);
         const sectionTitleValue = String(
             selectedSection === 'productHero'
@@ -1837,6 +1838,24 @@ const StorefrontEditorView: React.FC = () => {
                             updateSelectedSectionSetting('headlineFontSize', value);
                         }}
                     />
+                    {supportsDescriptionTypography && (
+                        <FontSizeSelector
+                            label={t('ecommerce.storefrontEditor.descriptionSize', 'Tamaño de descripción')}
+                            value={String(
+                                selectedSection === 'productHero'
+                                    ? selectedSectionSettings.subheadlineFontSize || 'md'
+                                    : selectedSectionSettings.descriptionFontSize || 'md',
+                            )}
+                            onChange={value => {
+                                if (selectedSection === 'productHero') {
+                                    updateSelectedSectionSetting('subheadlineFontSize', value);
+                                    return;
+                                }
+
+                                updateSelectedSectionSetting('descriptionFontSize', value);
+                            }}
+                        />
+                    )}
                     {supportsColumns && (
                         <SliderControl
                             label={t('ecommerce.storefrontEditor.columns', 'Columnas')}
