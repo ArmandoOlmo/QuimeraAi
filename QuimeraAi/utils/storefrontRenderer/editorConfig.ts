@@ -41,14 +41,14 @@ const normalizeSettings = (value: unknown): Record<string, Record<string, unknow
     }, {} as Record<string, Record<string, unknown>>);
 };
 
-function getPageData(projectData: any): Record<string, any> {
+export function resolveStorefrontPageData(projectData: any): Record<string, any> {
     const rootData = toRecord(projectData?.data);
     return isRecord(rootData.data) ? rootData.data : rootData;
 }
 
-function getStorefrontEditor(projectData: any): Record<string, any> {
+export function resolveStorefrontEditorState(projectData: any): Record<string, any> {
     const rootData = toRecord(projectData?.data);
-    const pageData = getPageData(projectData);
+    const pageData = resolveStorefrontPageData(projectData);
     return [
         projectData?.storefrontEditor,
         rootData.storefrontEditor,
@@ -73,8 +73,8 @@ export function resolveStorefrontEditorConfig(
 ): ResolvedStorefrontEditorConfig {
     const mode = options.mode || 'published';
     const rootData = toRecord(projectData?.data);
-    const pageData = getPageData(projectData);
-    const editorState = getStorefrontEditor(projectData);
+    const pageData = resolveStorefrontPageData(projectData);
+    const editorState = resolveStorefrontEditorState(projectData);
     const selectedConfig = readConfigRecord(editorState, mode);
     const legacyOrder = normalizeStorefrontOrder(
         projectData?.componentOrder ||

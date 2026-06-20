@@ -382,6 +382,8 @@ const StorefrontEditorView: React.FC = () => {
         projects.find(item => item.id === projectId) ||
         (activeProject?.id === projectId ? activeProject : null)
     ), [activeProject, projectId, projects]);
+    const projectLastUpdated = project?.lastUpdated || (project as any)?.last_updated;
+    const projectOwnerId = project?.userId || (project as any)?.user_id;
 
     const projectContentSignature = stableStringify({
         id: project?.id,
@@ -389,7 +391,7 @@ const StorefrontEditorView: React.FC = () => {
         businessBlueprint: project?.businessBlueprint,
         componentOrder: project?.componentOrder,
         sectionVisibility: project?.sectionVisibility,
-        lastUpdated: project?.lastUpdated || project?.last_updated,
+        lastUpdated: projectLastUpdated,
     });
     const pageData = useMemo(() => getProjectPageData(project), [project]);
     const editorState = useMemo(
@@ -438,6 +440,7 @@ const StorefrontEditorView: React.FC = () => {
     );
     const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
     const previewPayloadRef = useRef('');
+    const previewReloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [previewRevision, setPreviewRevision] = useState(0);
     const [selectedPresetId, setSelectedPresetId] = useState<StorefrontThemePresetId>(
         (draftEditorConfig.themePresetId as StorefrontThemePresetId) ||
@@ -547,7 +550,7 @@ const StorefrontEditorView: React.FC = () => {
             selectedPresetId,
             catalogSize,
             templateState,
-            String(editorState.updatedAt || project?.lastUpdated || project?.last_updated || 'storefront-preview'),
+            String(editorState.updatedAt || projectLastUpdated || 'storefront-preview'),
             user?.id,
         ) || existingBusinessBlueprint;
         const previewStorefrontEditor = {
@@ -562,7 +565,7 @@ const StorefrontEditorView: React.FC = () => {
                 nextSectionVisibility,
                 selectedPresetId,
                 previewStorefrontTheme,
-                String(editorState.updatedAt || project?.lastUpdated || project?.last_updated || 'storefront-preview'),
+                String(editorState.updatedAt || projectLastUpdated || 'storefront-preview'),
                 'draft',
             ),
             source: 'storefront-builder-preview',
@@ -614,10 +617,23 @@ const StorefrontEditorView: React.FC = () => {
 
             previewPayloadRef.current = nextPayload;
             window.sessionStorage.setItem(previewSessionKey, nextPayload);
+            if (previewReloadTimerRef.current) {
+                clearTimeout(previewReloadTimerRef.current);
+            }
+            previewReloadTimerRef.current = setTimeout(() => {
+                setPreviewRevision(prev => prev + 1);
+                previewReloadTimerRef.current = null;
+            }, 120);
         } catch (err) {
             console.warn('Unable to prepare storefront editor preview data:', err);
         }
     }, [previewProjectData, previewSessionKey, project, storeId]);
+
+    useEffect(() => () => {
+        if (previewReloadTimerRef.current) {
+            clearTimeout(previewReloadTimerRef.current);
+        }
+    }, []);
 
     const refreshPreview = () => {
         setPreviewRevision(prev => prev + 1);
@@ -910,7 +926,7 @@ const StorefrontEditorView: React.FC = () => {
                     .from('public_stores')
                     .upsert({
                         id: storeId,
-                        user_id: publicStoreRow?.user_id || user?.id || project.userId || project.user_id,
+                        user_id: publicStoreRow?.user_id || user?.id || projectOwnerId,
                         data: publicStoreData,
                     });
 

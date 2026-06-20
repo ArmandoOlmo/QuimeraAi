@@ -9,10 +9,13 @@
 import React, { useMemo } from 'react';
 import ProductSearchPage from '../search/ProductSearchPage';
 import { Project } from '../../../types';
+import type { StorefrontSectionBlueprint } from '../../../types/businessBlueprint';
 import { useStorefrontCart } from '../context';
 import StorefrontModuleRenderer from '../StorefrontModuleRenderer';
 import {
     getRenderableStorefrontSectionDecisions,
+    resolveStorefrontEditorState,
+    resolveStorefrontPageData,
     resolveStorefrontSectionDecisions,
 } from '../../../utils/storefrontRenderer';
 
@@ -42,22 +45,31 @@ const isRecord = (value: unknown): value is Record<string, any> =>
 const getStorefrontEditorSections = (
     projectData: Project,
     isEditorPreview: boolean,
-): unknown[] | undefined => {
-    const pageData = isRecord(projectData?.data) ? projectData.data as Record<string, any> : {};
-    const editorState = isRecord(pageData.storefrontEditor)
-        ? pageData.storefrontEditor
-        : isRecord((projectData as any)?.storefrontEditor)
-            ? (projectData as any).storefrontEditor
-            : {};
+): StorefrontSectionBlueprint[] | undefined => {
+    const editorState = resolveStorefrontEditorState(projectData);
     const draftSections = isRecord(editorState.draft) && Array.isArray(editorState.draft.sections)
-        ? editorState.draft.sections
+        ? editorState.draft.sections as StorefrontSectionBlueprint[]
         : undefined;
     const publishedSections = isRecord(editorState.published) && Array.isArray(editorState.published.sections)
-        ? editorState.published.sections
+        ? editorState.published.sections as StorefrontSectionBlueprint[]
         : undefined;
 
     if (isEditorPreview) return draftSections || publishedSections;
     return publishedSections || draftSections;
+};
+
+const getBusinessBlueprintSections = (
+    projectData: Project,
+    pageData: Record<string, any>,
+): StorefrontSectionBlueprint[] | undefined => {
+    const rootData = isRecord(projectData?.data) ? projectData.data as Record<string, any> : {};
+    const candidates = [
+        (projectData as any)?.businessBlueprint?.storefrontBlueprint?.sections,
+        rootData.businessBlueprint?.storefrontBlueprint?.sections,
+        pageData.businessBlueprint?.storefrontBlueprint?.sections,
+    ];
+
+    return candidates.find(Array.isArray) as StorefrontSectionBlueprint[] | undefined;
 };
 
 const StorefrontHome: React.FC<StorefrontHomeProps> = ({
@@ -70,23 +82,23 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
     const cart = useStorefrontCart();
     const isEditorPreview = typeof window !== 'undefined' &&
         new URLSearchParams(window.location.search).get('preview') === 'storefront-editor';
+    const pageData = useMemo(() => resolveStorefrontPageData(projectData), [projectData]);
 
     const sectionsToRender = useMemo(() => {
         const resolverInput = {
-            pageData: projectData?.data,
+            pageData,
             componentOrder: projectData?.componentOrder,
             sectionVisibility: projectData?.sectionVisibility,
             blueprintSections: (
                 getStorefrontEditorSections(projectData, isEditorPreview) ||
-                projectData?.businessBlueprint?.storefrontBlueprint?.sections ||
-                projectData?.data?.businessBlueprint?.storefrontBlueprint?.sections
+                getBusinessBlueprintSections(projectData, pageData)
             ),
         };
 
         return isEditorPreview
             ? resolveStorefrontSectionDecisions(resolverInput)
             : getRenderableStorefrontSectionDecisions(resolverInput);
-    }, [isEditorPreview, projectData]);
+    }, [isEditorPreview, pageData, projectData]);
     const hasRenderableSections = sectionsToRender.some(decision => (
         decision.status === 'render' ||
         (isEditorPreview && ['empty', 'invalid', 'unsupported'].includes(decision.status))

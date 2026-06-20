@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+    applyResolvedStorefrontEditorConfig,
     getRenderableStorefrontSectionDecisions,
     normalizeStorefrontSectionVisibility,
+    resolveStorefrontPageData,
     resolveStorefrontEditorConfig,
     resolveStorefrontSectionVisibility,
     resolveStorefrontSectionDecisions,
@@ -219,6 +221,53 @@ describe('storefrontRenderer registry', () => {
             componentOrder: ['featuredProducts'],
             sectionVisibility: { featuredProducts: true },
             source: 'published',
+        });
+    });
+
+    it('resolves nested storefront editor data for preview rendering', () => {
+        const projectData = {
+            componentOrder: ['announcementBar'],
+            sectionVisibility: { announcementBar: true },
+            data: {
+                data: {
+                    storefrontEditor: {
+                        draft: {
+                            componentOrder: ['collectionBanner'],
+                            sectionVisibility: { collectionBanner: true },
+                            sectionSettings: {
+                                collectionBanner: {
+                                    variant: 'hero',
+                                    title: 'Coleccion destacada',
+                                    visibleIn: 'store',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        const appliedProject = applyResolvedStorefrontEditorConfig(projectData, { mode: 'draft' });
+        const pageData = resolveStorefrontPageData(appliedProject);
+        const decisions = resolveStorefrontSectionDecisions({
+            pageData,
+            componentOrder: appliedProject.componentOrder,
+            sectionVisibility: appliedProject.sectionVisibility,
+        });
+
+        expect(resolveStorefrontEditorConfig(projectData, { mode: 'draft' })).toMatchObject({
+            componentOrder: ['collectionBanner'],
+            sectionVisibility: { collectionBanner: true },
+            source: 'draft',
+        });
+        expect(pageData.collectionBanner).toMatchObject({
+            title: 'Coleccion destacada',
+            visibleIn: 'store',
+        });
+        expect(decisions).toHaveLength(1);
+        expect(decisions[0]).toMatchObject({
+            kind: 'collectionBanner',
+            status: 'render',
         });
     });
 });
