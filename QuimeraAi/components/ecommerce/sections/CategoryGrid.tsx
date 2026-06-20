@@ -14,6 +14,7 @@ import { useSafeProject } from '../../../contexts/project';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { resolveI18nField } from '../../../utils/i18nContent';
+import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
 
 interface CategoryGridProps {
     data: CategoryGridData;
@@ -172,18 +173,25 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                     ) : (
                         <div
                             className="w-full h-full"
-                            style={{ backgroundColor: colors?.cardBackground }}
+                            style={{
+                                background: `linear-gradient(135deg, ${colors?.accent}55, ${colors?.cardBackground})`,
+                            }}
                         />
                     )}
                     <div
                         className="absolute inset-0 flex flex-col justify-end p-4 transition-opacity"
                         style={{
-                            background: `linear-gradient(to top, ${colors?.overlayEnd}, ${colors?.overlayStart})`,
+                            background: `linear-gradient(to top, ${colors?.overlayEnd} 0%, rgba(0,0,0,0.34) 55%, ${colors?.overlayStart} 100%)`,
                         }}
                     >
-                        <h3 className="font-bold text-xl" style={{ color: colors?.buttonText }}>{categoryName}</h3>
+                        <h3 className="text-xl font-bold leading-tight drop-shadow-sm" style={{ color: colors?.buttonText }}>{categoryName}</h3>
+                        {category.description && (
+                            <p className="mt-1 line-clamp-2 text-sm" style={{ color: colors?.buttonText, opacity: 0.82 }}>
+                                {text(category.description as any)}
+                            </p>
+                        )}
                         {data.showProductCount && category.productCount !== undefined && (
-                            <p className="text-sm" style={{ color: colors?.buttonText, opacity: 0.8 }}>{category.productCount} productos</p>
+                            <p className="mt-2 text-sm" style={{ color: colors?.buttonText, opacity: 0.82 }}>{category.productCount} productos</p>
                         )}
                     </div>
                 </div>
@@ -250,19 +258,21 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                     ) : (
                         <div
                             className="w-full h-full"
-                            style={{ backgroundColor: colors?.cardBackground }}
+                            style={{
+                                background: `linear-gradient(135deg, ${colors?.accent}55, ${colors?.cardBackground})`,
+                            }}
                         />
                     )}
                     <div
-                        className="absolute inset-0 flex items-center justify-center"
+                        className="absolute inset-0 flex items-end justify-start p-5"
                         style={{
-                            background: `linear-gradient(to right, ${colors?.overlayEnd}, ${colors?.overlayStart})`,
+                            background: `linear-gradient(to top, ${colors?.overlayEnd} 0%, rgba(0,0,0,0.28) 55%, ${colors?.overlayStart} 100%)`,
                         }}
                     >
-                        <div className="text-center">
-                            <h3 className="font-bold text-2xl mb-1" style={{ color: colors?.buttonText }}>{categoryName}</h3>
+                        <div>
+                            <h3 className="text-2xl font-bold leading-tight drop-shadow-sm" style={{ color: colors?.buttonText }}>{categoryName}</h3>
                             {data.showProductCount && category.productCount !== undefined && (
-                                <p style={{ color: colors?.buttonText, opacity: 0.8 }}>{category.productCount} productos</p>
+                                <p className="mt-1" style={{ color: colors?.buttonText, opacity: 0.82 }}>{category.productCount} productos</p>
                             )}
                         </div>
                     </div>
@@ -276,7 +286,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
 
     if (isLoading) {
         return (
-            <section className={`${getPaddingY()} ${getPaddingX()}`} style={{ backgroundColor: colors?.background }}>
+            <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
                 <div className="max-w-7xl mx-auto">
                     <div className="animate-pulse">
                         <div className="h-8 rounded w-1/3 mb-4" style={{ backgroundColor: colors?.border }} />
@@ -295,7 +305,10 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
     return (
         <section
             className={`${getPaddingY()} ${getPaddingX()}`}
-            style={{ backgroundColor: colors?.background, fontFamily: colors?.fontFamily }}
+            style={{
+                ...getStorefrontSectionBackgroundStyle(data, colors?.background),
+                fontFamily: colors?.fontFamily,
+            }}
         >
             <div className="max-w-7xl mx-auto">
                 {/* Header */}

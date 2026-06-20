@@ -15,6 +15,7 @@ import { ProductHeroData } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
 
 interface ProductHeroProps {
     data: ProductHeroData;
@@ -266,7 +267,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         return (
             <div
                 className={`${getPaddingY()} ${getPaddingX()}`}
-                style={{ backgroundColor: colors?.background }}
+                style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
             >
                 <div className="max-w-7xl mx-auto">
                     <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center`}>
@@ -294,7 +295,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         return (
             <div
                 className={`${getPaddingY()} ${getPaddingX()}`}
-                style={{ backgroundColor: colors?.background }}
+                style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
             >
                 <div className="max-w-7xl mx-auto">
                     <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center`}>
@@ -323,8 +324,8 @@ const ProductHero: React.FC<ProductHeroProps> = ({
             <div
                 className="relative overflow-hidden"
                 style={{
+                    ...getStorefrontSectionBackgroundStyle(data, colors?.background),
                     minHeight: '400px',
-                    backgroundColor: colors?.background,
                 }}
             >
                 {/* Background Image */}
@@ -361,7 +362,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         return (
             <div
                 className={`${getPaddingY()} ${getPaddingX()}`}
-                style={{ backgroundColor: colors?.background }}
+                style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
             >
                 <div className="max-w-4xl mx-auto">
                     <div className="flex flex-col items-center text-center">
@@ -458,7 +459,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         return (
             <div
                 className={`animate-pulse ${getPaddingY()} ${getPaddingX()}`}
-                style={{ backgroundColor: colors?.background }}
+                style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
             >
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
@@ -478,9 +479,6 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
     // Default to 'split' if layout is not defined
     const layout = data.layout || 'split';
-    
-    // Debug log - remove after testing
-    console.log('[ProductHero] Layout value:', layout, '| data.layout:', data.layout);
     
     switch (layout) {
         case 'split':

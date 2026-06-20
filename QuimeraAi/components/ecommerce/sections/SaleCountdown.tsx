@@ -9,6 +9,7 @@ import { SaleCountdownData, StorefrontProductItem } from '../../../types/compone
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
 
 interface SaleCountdownProps {
     data: SaleCountdownData;
@@ -166,7 +167,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                         )}
                         
                         {/* Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
                         
                         {/* Discount Badge */}
                         {discount > 0 && (
@@ -182,10 +183,10 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                         )}
                         
                         {/* Content on Image */}
-                        <div className="absolute bottom-0 left-0 right-0 p-3">
-                            <h4 className="font-semibold text-sm text-white line-clamp-1">{product.name}</h4>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className="font-bold text-white">${product.price.toFixed(2)}</span>
+                        <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <h4 className="text-sm font-semibold leading-tight text-white line-clamp-2 drop-shadow-sm">{product.name}</h4>
+                            <div className="mt-2 flex items-center gap-2">
+                                <span className="font-bold text-white drop-shadow-sm">${product.price.toFixed(2)}</span>
                                 {product.compareAtPrice && (
                                     <span className="text-sm line-through text-white/60">
                                         ${product.compareAtPrice.toFixed(2)}
@@ -261,7 +262,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     const renderBanner = () => (
         <div
             className={`${getPaddingY()} ${getPaddingX()} ${getBorderRadius()}`}
-            style={{ backgroundColor: colors?.background }}
+            style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
         >
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
@@ -335,7 +336,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
         <div
             className={`${getPaddingY()} ${getPaddingX()}`}
             style={{
-                backgroundColor: colors?.background,
+                ...getStorefrontSectionBackgroundStyle(data, colors?.background),
                 minHeight: data.height || 300,
             }}
         >
@@ -415,7 +416,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     const renderInline = () => (
         <div
             className={`${getPaddingY()} ${getPaddingX()}`}
-            style={{ backgroundColor: colors?.background }}
+            style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
         >
             <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -461,7 +462,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     const renderFloating = () => (
         <div
             className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 ${getPaddingX()} py-3 ${getBorderRadius()} shadow-2xl`}
-            style={{ backgroundColor: colors?.background }}
+            style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
         >
             <div className="flex items-center gap-4">
                 {data.badgeText && (

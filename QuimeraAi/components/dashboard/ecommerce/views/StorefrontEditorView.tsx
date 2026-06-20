@@ -7,13 +7,19 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import {
     AlertCircle,
+    AlignHorizontalJustifyCenter,
+    Box,
     ChevronDown,
     CheckCircle2,
+    Clock,
+    Columns3,
     ExternalLink,
     Eye,
     EyeOff,
     FileText,
+    Image as ImageIcon,
     LayoutTemplate,
+    Maximize2,
     Loader2,
     Monitor,
     MoveDown,
@@ -26,9 +32,11 @@ import {
     Save,
     Settings,
     SlidersHorizontal,
+    Sparkles,
     Smartphone,
     Tablet,
     Trash2,
+    Type,
 } from 'lucide-react';
 import { supabase } from '../../../../supabase';
 import { useAuth } from '../../../../contexts/core/AuthContext';
@@ -37,6 +45,20 @@ import type { PageSection } from '../../../../types';
 import { DEFAULT_STOREFRONT_THEME, type StorefrontThemeSettings } from '../../../../types/ecommerce';
 import type { StorefrontSectionKind } from '../../../../types/storefrontRenderer';
 import type { StorefrontThemePresetId } from '../../../../types/storefrontTheme';
+import ColorControl from '../../../ui/ColorControl';
+import TabbedControls from '../../../ui/TabbedControls';
+import {
+    BorderRadiusSelector,
+    FontSizeSelector,
+    PaddingSelector,
+    Select,
+    SliderControl,
+    ToggleControl,
+} from '../../../ui/EditorControlPrimitives';
+import {
+    BackgroundImageControl,
+    CornerGradientControl,
+} from '../../../controls/ControlsShared';
 import {
     normalizeStorefrontSectionVisibility,
     resolveStorefrontEditorConfig,
@@ -254,6 +276,81 @@ const textToMessages = (value: string): Array<{ text: string }> =>
         .map(line => line.trim())
         .filter(Boolean)
         .map(text => ({ text }));
+
+const storefrontSelectOptions = {
+    padding: [
+        { value: 'none', label: '0' },
+        { value: 'sm', label: 'SM' },
+        { value: 'md', label: 'MD' },
+        { value: 'lg', label: 'LG' },
+        { value: 'xl', label: 'XL' },
+    ],
+    productCardStyle: [
+        { value: 'overlay', label: 'Imagen completa' },
+        { value: 'modern', label: 'Modern' },
+        { value: 'elegant', label: 'Elegant' },
+        { value: 'minimal', label: 'Minimal' },
+        { value: 'luxury', label: 'Luxury' },
+        { value: 'marketplace', label: 'Marketplace' },
+        { value: 'editorial', label: 'Editorial' },
+        { value: 'imageFirst', label: 'Image First' },
+        { value: 'quickBuy', label: 'Quick Buy' },
+        { value: 'compact', label: 'Compact' },
+    ],
+    aspectRatio: [
+        { value: '1:1', label: '1:1' },
+        { value: '4:3', label: '4:3' },
+        { value: '3:4', label: '3:4' },
+        { value: '16:9', label: '16:9' },
+        { value: '9:16', label: '9:16' },
+    ],
+    objectFit: [
+        { value: 'cover', label: 'Cover' },
+        { value: 'contain', label: 'Contain' },
+        { value: 'fill', label: 'Fill' },
+    ],
+    alignment: [
+        { value: 'left', label: 'Izquierda' },
+        { value: 'center', label: 'Centro' },
+        { value: 'right', label: 'Derecha' },
+    ],
+    overlayStyle: [
+        { value: 'gradient', label: 'Degradado' },
+        { value: 'solid', label: 'Sólido' },
+        { value: 'none', label: 'Sin overlay' },
+    ],
+    visibleIn: [
+        { value: 'both', label: 'Landing + tienda' },
+        { value: 'store', label: 'Tienda' },
+        { value: 'landing', label: 'Landing' },
+    ],
+    sourceType: [
+        { value: 'newest', label: 'Nuevos' },
+        { value: 'on-sale', label: 'En oferta' },
+        { value: 'category', label: 'Categoría' },
+        { value: 'manual', label: 'Manual' },
+    ],
+};
+
+const getNestedSetting = (settings: Record<string, unknown>, path: string): unknown =>
+    path.split('.').reduce<unknown>((current, key) => (
+        isRecord(current) ? current[key] : undefined
+    ), settings);
+
+const getSettingString = (settings: Record<string, unknown>, path: string, fallback = ''): string => {
+    const value = getNestedSetting(settings, path);
+    return typeof value === 'string' ? value : fallback;
+};
+
+const getSettingNumber = (settings: Record<string, unknown>, path: string, fallback: number): number => {
+    const value = getNestedSetting(settings, path);
+    return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+};
+
+const getSettingBoolean = (settings: Record<string, unknown>, path: string, fallback: boolean): boolean => {
+    const value = getNestedSetting(settings, path);
+    return typeof value === 'boolean' ? value : fallback;
+};
 
 const buildStorefrontBlueprintSections = (
     sections: StorefrontSectionKind[],
@@ -684,6 +781,46 @@ const StorefrontEditorView: React.FC = () => {
 
     const updateSelectedSectionSetting = (key: string, value: unknown) => {
         updateSectionSetting(selectedSection, key, value);
+    };
+
+    const updateSectionNestedSetting = (section: StorefrontSectionKind, path: string, value: unknown) => {
+        const keys = path.split('.').filter(Boolean);
+        if (keys.length === 0) return;
+
+        setSectionSettings(prev => {
+            const nextSectionSettings = {
+                ...storefrontSectionRegistry[section].defaultSettings,
+                ...toSettingsRecord(prev[section]),
+            };
+            let cursor: Record<string, unknown> = nextSectionSettings;
+
+            keys.forEach((key, index) => {
+                if (index === keys.length - 1) {
+                    cursor[key] = value;
+                    return;
+                }
+
+                const nextValue = toSettingsRecord(cursor[key]);
+                cursor[key] = nextValue;
+                cursor = nextValue;
+            });
+
+            return {
+                ...prev,
+                [section]: nextSectionSettings,
+            };
+        });
+        markTemplateDirty();
+    };
+
+    const updateSelectedSectionNestedSetting = (path: string, value: unknown) => {
+        updateSectionNestedSetting(selectedSection, path, value);
+    };
+
+    const setStorefrontNestedData = (path: string, value: unknown) => {
+        const [sectionKey, ...settingPath] = path.split('.');
+        if (!isStorefrontKind(sectionKey) || settingPath.length === 0) return;
+        updateSectionNestedSetting(sectionKey, settingPath.join('.'), value);
     };
 
     const updateNumberSetting = (key: string, rawValue: string, min: number, max: number) => {
@@ -1136,10 +1273,30 @@ const StorefrontEditorView: React.FC = () => {
         </div>
     );
 
-    const renderSectionControls = () => (
-        <div className="space-y-4">
+    const renderSectionControls = () => {
+        const sectionControlData = { [selectedSection]: selectedSectionSettings };
+        const validVariants = storefrontSectionRegistry[selectedSection].validVariants || [];
+        const colors = toSettingsRecord(selectedSectionSettings.colors);
+        const supportsProductCards = ['featuredProducts', 'recentlyViewed', 'saleCountdown'].includes(selectedSection);
+        const supportsProductCount = ['featuredProducts', 'saleCountdown', 'recentlyViewed'].includes(selectedSection);
+        const supportsColumns = ['featuredProducts', 'categoryGrid', 'recentlyViewed', 'trustBadges'].includes(selectedSection);
+        const supportsHeight = ['announcementBar', 'productHero', 'saleCountdown', 'collectionBanner'].includes(selectedSection);
+        const supportsHeroControls = selectedSection === 'productHero' || selectedSection === 'collectionBanner';
+        const supportsBackgroundImage = selectedSection !== 'announcementBar';
+        const sectionTitleValue = String(
+            selectedSection === 'productHero'
+                ? selectedSectionSettings.headline || ''
+                : selectedSectionSettings.title || '',
+        );
+        const sectionDescriptionValue = String(
+            selectedSection === 'productHero'
+                ? selectedSectionSettings.subheadline || ''
+                : selectedSectionSettings.description || selectedSectionSettings.subtitle || '',
+        );
+
+        const renderSectionHeader = () => (
             <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
-                <div className="mb-3 flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
                             <SlidersHorizontal size={15} />
@@ -1160,7 +1317,7 @@ const StorefrontEditorView: React.FC = () => {
                 </div>
 
                 {(selectedSectionValidation.errors.length > 0 || selectedSectionValidation.warnings.length > 0) && (
-                    <div className="mb-3 space-y-1">
+                    <div className="mt-3 space-y-1">
                         {selectedSectionValidation.errors.map(message => (
                             <p key={message} className="rounded-md bg-red-500/10 px-2 py-1 text-xs text-red-400">
                                 {translateValidationMessage(message)}
@@ -1173,269 +1330,505 @@ const StorefrontEditorView: React.FC = () => {
                         ))}
                     </div>
                 )}
+            </div>
+        );
 
-                <div className="space-y-3">
-                    {storefrontSectionRegistry[selectedSection].validVariants && (
-                        <label className="block">
-                            <span className="text-xs font-semibold text-q-text-muted">
-                                {t('ecommerce.storefrontEditor.variant', 'Variante')}
-                            </span>
-                            <select
-                                value={String(selectedSectionSettings.variant || '')}
-                                onChange={event => updateSelectedSectionSetting('variant', event.target.value)}
-                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                            >
-                                {storefrontSectionRegistry[selectedSection].validVariants?.map(variant => (
-                                    <option key={variant} value={variant}>{variant}</option>
-                                ))}
-                            </select>
-                        </label>
+        const contentTab = (
+            <div className="space-y-4">
+                {renderSectionHeader()}
+
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                        <Settings size={14} />
+                        {t('ecommerce.storefrontEditor.basicSettings', 'Configuración')}
+                    </label>
+
+                    {validVariants.length > 0 && (
+                        <Select
+                            label={t('ecommerce.storefrontEditor.variant', 'Variante')}
+                            value={String(selectedSectionSettings.variant || validVariants[0])}
+                            onChange={value => updateSelectedSectionSetting('variant', value)}
+                            options={validVariants.map(variant => ({ value: variant, label: variant }))}
+                            noMargin
+                        />
                     )}
 
-                    <div className="grid grid-cols-2 gap-2">
-                        <label className="block">
-                            <span className="text-xs font-semibold text-q-text-muted">
-                                {t('ecommerce.storefrontEditor.visibleIn', 'Visible en')}
-                            </span>
-                            <select
-                                value={String(selectedSectionSettings.visibleIn || 'both')}
-                                onChange={event => updateSelectedSectionSetting('visibleIn', event.target.value)}
-                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                            >
-                                <option value="both">{t('ecommerce.storefrontEditor.visibleBoth', 'Landing + tienda')}</option>
-                                <option value="store">{t('ecommerce.storefrontEditor.visibleStore', 'Tienda')}</option>
-                                <option value="landing">{t('ecommerce.storefrontEditor.visibleLanding', 'Landing')}</option>
-                            </select>
-                        </label>
+                    <Select
+                        label={t('ecommerce.storefrontEditor.visibleIn', 'Visible en')}
+                        value={String(selectedSectionSettings.visibleIn || 'both')}
+                        onChange={value => updateSelectedSectionSetting('visibleIn', value)}
+                        options={storefrontSelectOptions.visibleIn}
+                        noMargin
+                    />
 
-                        <label className="block">
-                            <span className="text-xs font-semibold text-q-text-muted">
-                                {t('ecommerce.storefrontEditor.enabled', 'Activo')}
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => setSectionVisibility(selectedSection, !selectedSectionIsActive)}
-                                className={`mt-1 flex h-10 w-full items-center justify-center rounded-lg border text-sm font-semibold ${
-                                    !selectedSectionIsActive
-                                        ? 'border-q-border bg-q-surface text-q-text-muted'
-                                        : 'border-primary bg-primary/10 text-primary'
-                                }`}
-                            >
-                                {!selectedSectionIsActive
-                                    ? t('common.disabled', 'Desactivado')
-                                    : t('common.enabled', 'Activo')}
-                            </button>
+                    <ToggleControl
+                        label={t('ecommerce.storefrontEditor.enabled', 'Activo')}
+                        checked={selectedSectionIsActive}
+                        onChange={value => setSectionVisibility(selectedSection, value)}
+                    />
+                </div>
+
+                {selectedSection === 'announcementBar' ? (
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+                            <Type size={14} />
+                            {t('ecommerce.storefrontEditor.messages', 'Mensajes')}
                         </label>
+                        <textarea
+                            value={messagesToText(selectedSectionSettings.messages)}
+                            onChange={event => updateSelectedSectionSetting('messages', textToMessages(event.target.value))}
+                            rows={4}
+                            className="w-full rounded-md border border-q-border/80 bg-q-bg/80 px-3 py-2.5 text-sm text-q-text focus:border-q-accent/70 focus:outline-none focus:ring-2 focus:ring-q-accent/25"
+                            placeholder={t('ecommerce.storefrontEditor.messagesPlaceholder', 'Un mensaje por línea')}
+                        />
                     </div>
-
-                    {selectedSection === 'announcementBar' ? (
-                        <label className="block">
-                            <span className="text-xs font-semibold text-q-text-muted">
-                                {t('ecommerce.storefrontEditor.messages', 'Mensajes')}
-                            </span>
-                            <textarea
-                                value={messagesToText(selectedSectionSettings.messages)}
-                                onChange={event => updateSelectedSectionSetting('messages', textToMessages(event.target.value))}
-                                rows={3}
-                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                                placeholder={t('ecommerce.storefrontEditor.messagesPlaceholder', 'Un mensaje por línea')}
-                            />
+                ) : (
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                            <Type size={14} />
+                            {t('controls.contentTab', 'Contenido')}
                         </label>
-                    ) : (
-                        <>
-                            <label className="block">
-                                <span className="text-xs font-semibold text-q-text-muted">
-                                    {selectedSection === 'productHero'
-                                        ? t('ecommerce.storefrontEditor.headline', 'Encabezado')
-                                        : t('ecommerce.storefrontEditor.titleField', 'Título')}
-                                </span>
-                                <input
-                                    type="text"
-                                    value={String(selectedSectionSettings.title || selectedSectionSettings.headline || '')}
-                                    onChange={event => updateSelectedSectionSetting(
-                                        selectedSection === 'productHero' ? 'headline' : 'title',
-                                        event.target.value,
-                                    )}
-                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                                />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs font-semibold text-q-text-muted">
-                                    {t('ecommerce.storefrontEditor.descriptionField', 'Descripción')}
-                                </span>
-                                <textarea
-                                    value={String(selectedSectionSettings.description || selectedSectionSettings.subheadline || '')}
-                                    onChange={event => updateSelectedSectionSetting(
-                                        selectedSection === 'productHero' ? 'subheadline' : 'description',
-                                        event.target.value,
-                                    )}
-                                    rows={2}
-                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                                />
-                            </label>
-                        </>
-                    )}
-
-                    {(selectedSection === 'featuredProducts' || selectedSection === 'saleCountdown') && (
-                        <div className="grid grid-cols-2 gap-2">
-                            <label className="block">
-                                <span className="text-xs font-semibold text-q-text-muted">
-                                    {t('ecommerce.storefrontEditor.productsToShow', 'Productos')}
-                                </span>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    max={24}
-                                    value={String(selectedSectionSettings.productsToShow || '')}
-                                    onChange={event => updateNumberSetting('productsToShow', event.target.value, 1, 24)}
-                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                                />
-                            </label>
-                            {selectedSection === 'featuredProducts' && (
-                                <label className="block">
-                                    <span className="text-xs font-semibold text-q-text-muted">
-                                        {t('ecommerce.storefrontEditor.columns', 'Columnas')}
-                                    </span>
-                                    <input
-                                        type="number"
-                                        min={2}
-                                        max={5}
-                                        value={String(selectedSectionSettings.columns || '')}
-                                        onChange={event => updateNumberSetting('columns', event.target.value, 2, 5)}
-                                        className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                                    />
-                                </label>
-                            )}
-                        </div>
-                    )}
-
-                    {selectedSection === 'featuredProducts' && (
                         <label className="block">
-                            <span className="text-xs font-semibold text-q-text-muted">
-                                {t('ecommerce.storefrontEditor.sourceType', 'Fuente')}
-                            </span>
-                            <select
-                                value={String(selectedSectionSettings.sourceType || 'newest')}
-                                onChange={event => updateSelectedSectionSetting('sourceType', event.target.value)}
-                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                            >
-                                <option value="newest">{t('ecommerce.storefrontEditor.sourceNewest', 'Nuevos')}</option>
-                                <option value="on-sale">{t('ecommerce.storefrontEditor.sourceOnSale', 'En oferta')}</option>
-                                <option value="category">{t('ecommerce.storefrontEditor.sourceCategory', 'Categoría')}</option>
-                                <option value="manual">{t('ecommerce.storefrontEditor.sourceManual', 'Manual')}</option>
-                            </select>
-                        </label>
-                    )}
-
-                    {(selectedSection === 'featuredProducts' || selectedSection === 'saleCountdown' || selectedSection === 'productBundle') && (
-                        <label className="block">
-                            <span className="text-xs font-semibold text-q-text-muted">
-                                {t('ecommerce.storefrontEditor.productIds', 'IDs de productos')}
-                            </span>
-                            <textarea
-                                value={toCsv(selectedSectionSettings.productIds)}
-                                onChange={event => updateSelectedSectionSetting('productIds', parseCsv(event.target.value))}
-                                rows={2}
-                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                                placeholder={t('ecommerce.storefrontEditor.productIdsPlaceholder', 'prod_1, prod_2')}
-                            />
-                        </label>
-                    )}
-
-                    {selectedSection === 'recentlyViewed' && (
-                        <label className="block">
-                            <span className="text-xs font-semibold text-q-text-muted">
-                                {t('ecommerce.storefrontEditor.maxProducts', 'Máximo')}
+                            <span className="text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">
+                                {selectedSection === 'productHero'
+                                    ? t('ecommerce.storefrontEditor.headline', 'Encabezado')
+                                    : t('ecommerce.storefrontEditor.titleField', 'Título')}
                             </span>
                             <input
-                                type="number"
-                                min={1}
-                                max={20}
-                                value={String(selectedSectionSettings.maxProducts || '')}
-                                onChange={event => updateNumberSetting('maxProducts', event.target.value, 1, 20)}
-                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                type="text"
+                                value={sectionTitleValue}
+                                onChange={event => updateSelectedSectionSetting(selectedSection === 'productHero' ? 'headline' : 'title', event.target.value)}
+                                className="mt-1 w-full rounded-md border border-q-border/80 bg-q-bg/80 px-3 py-2.5 text-sm text-q-text focus:border-q-accent/70 focus:outline-none focus:ring-2 focus:ring-q-accent/25"
                             />
                         </label>
-                    )}
-
-                    {selectedSection === 'saleCountdown' && (
                         <label className="block">
-                            <span className="text-xs font-semibold text-q-text-muted">
+                            <span className="text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">
+                                {t('ecommerce.storefrontEditor.descriptionField', 'Descripción')}
+                            </span>
+                            <textarea
+                                value={sectionDescriptionValue}
+                                onChange={event => updateSelectedSectionSetting(selectedSection === 'productHero' ? 'subheadline' : 'description', event.target.value)}
+                                rows={3}
+                                className="mt-1 w-full rounded-md border border-q-border/80 bg-q-bg/80 px-3 py-2.5 text-sm text-q-text focus:border-q-accent/70 focus:outline-none focus:ring-2 focus:ring-q-accent/25"
+                            />
+                        </label>
+                    </div>
+                )}
+
+                {selectedSection === 'featuredProducts' && (
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                            <Box size={14} />
+                            {t('ecommerce.storefrontEditor.productSource', 'Fuente de productos')}
+                        </label>
+                        <Select
+                            label={t('ecommerce.storefrontEditor.sourceType', 'Fuente')}
+                            value={String(selectedSectionSettings.sourceType || 'newest')}
+                            onChange={value => updateSelectedSectionSetting('sourceType', value)}
+                            options={storefrontSelectOptions.sourceType}
+                            noMargin
+                        />
+                    </div>
+                )}
+
+                {(selectedSection === 'featuredProducts' || selectedSection === 'saleCountdown' || selectedSection === 'productBundle') && (
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">
+                            {t('ecommerce.storefrontEditor.productIds', 'IDs de productos')}
+                        </label>
+                        <textarea
+                            value={toCsv(selectedSectionSettings.productIds)}
+                            onChange={event => updateSelectedSectionSetting('productIds', parseCsv(event.target.value))}
+                            rows={3}
+                            className="w-full rounded-md border border-q-border/80 bg-q-bg/80 px-3 py-2.5 text-sm text-q-text focus:border-q-accent/70 focus:outline-none focus:ring-2 focus:ring-q-accent/25"
+                            placeholder={t('ecommerce.storefrontEditor.productIdsPlaceholder', 'prod_1, prod_2')}
+                        />
+                        <p className="mt-2 text-[11px] text-q-text-muted">
+                            {t('ecommerce.storefrontEditor.productIdsHint', 'Solo selecciona fuente de presentación. Los productos se administran en Ecommerce Admin.')}
+                        </p>
+                    </div>
+                )}
+
+                {supportsHeroControls && (
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                            <Sparkles size={14} />
+                            {t('ecommerce.storefrontEditor.ctaAndTarget', 'CTA y destino')}
+                        </label>
+                        <label className="block">
+                            <span className="text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">
+                                {selectedSection === 'productHero'
+                                    ? t('ecommerce.storefrontEditor.productId', 'ID de producto')
+                                    : t('ecommerce.storefrontEditor.collectionId', 'ID de colección')}
+                            </span>
+                            <input
+                                type="text"
+                                value={String(selectedSectionSettings.productId || selectedSectionSettings.collectionId || '')}
+                                onChange={event => updateSelectedSectionSetting(selectedSection === 'productHero' ? 'productId' : 'collectionId', event.target.value)}
+                                className="mt-1 w-full rounded-md border border-q-border/80 bg-q-bg/80 px-3 py-2.5 text-sm text-q-text focus:border-q-accent/70 focus:outline-none focus:ring-2 focus:ring-q-accent/25"
+                            />
+                        </label>
+                        <label className="block">
+                            <span className="text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">
+                                {t('ecommerce.storefrontEditor.buttonText', 'Texto CTA')}
+                            </span>
+                            <input
+                                type="text"
+                                value={String(selectedSectionSettings.buttonText || '')}
+                                onChange={event => updateSelectedSectionSetting('buttonText', event.target.value)}
+                                className="mt-1 w-full rounded-md border border-q-border/80 bg-q-bg/80 px-3 py-2.5 text-sm text-q-text focus:border-q-accent/70 focus:outline-none focus:ring-2 focus:ring-q-accent/25"
+                            />
+                        </label>
+                    </div>
+                )}
+
+                {selectedSection === 'saleCountdown' && (
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                            <Clock size={14} />
+                            {t('ecommerce.storefrontEditor.countdown', 'Cuenta regresiva')}
+                        </label>
+                        <label className="block">
+                            <span className="text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">
                                 {t('ecommerce.storefrontEditor.endDate', 'Fin de campaña')}
                             </span>
                             <input
                                 type="datetime-local"
                                 value={String(selectedSectionSettings.endDate || '').slice(0, 16)}
                                 onChange={event => updateSelectedSectionSetting('endDate', event.target.value)}
-                                className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
+                                className="mt-1 w-full rounded-md border border-q-border/80 bg-q-bg/80 px-3 py-2.5 text-sm text-q-text focus:border-q-accent/70 focus:outline-none focus:ring-2 focus:ring-q-accent/25"
                             />
                         </label>
-                    )}
+                        <label className="block">
+                            <span className="text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">
+                                {t('ecommerce.storefrontEditor.discountText', 'Texto de descuento')}
+                            </span>
+                            <input
+                                type="text"
+                                value={String(selectedSectionSettings.discountText || '')}
+                                onChange={event => updateSelectedSectionSetting('discountText', event.target.value)}
+                                className="mt-1 w-full rounded-md border border-q-border/80 bg-q-bg/80 px-3 py-2.5 text-sm text-q-text focus:border-q-accent/70 focus:outline-none focus:ring-2 focus:ring-q-accent/25"
+                            />
+                        </label>
+                    </div>
+                )}
+            </div>
+        );
 
-                    {(selectedSection === 'collectionBanner' || selectedSection === 'productHero') && (
+        const styleTab = (
+            <div className="space-y-4">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <AlignHorizontalJustifyCenter size={14} />
+                        {t('ecommerce.storefrontEditor.layoutControls', 'Layout')}
+                    </label>
+                    <PaddingSelector
+                        label={t('ecommerce.storefrontEditor.paddingY', 'Padding vertical')}
+                        value={String(selectedSectionSettings.paddingY || 'md')}
+                        onChange={value => updateSelectedSectionSetting('paddingY', value)}
+                        showNone
+                        showXl
+                    />
+                    <PaddingSelector
+                        label={t('ecommerce.storefrontEditor.paddingX', 'Padding horizontal')}
+                        value={String(selectedSectionSettings.paddingX || 'md')}
+                        onChange={value => updateSelectedSectionSetting('paddingX', value)}
+                        showNone
+                        showXl
+                    />
+                    <BorderRadiusSelector
+                        label={t('ecommerce.storefrontEditor.cornerRadius', 'Esquinas')}
+                        value={String(selectedSectionSettings.borderRadius || selectedSectionSettings.buttonBorderRadius || 'xl')}
+                        onChange={value => {
+                            updateSelectedSectionSetting('borderRadius', value);
+                            if (supportsHeroControls) updateSelectedSectionSetting('buttonBorderRadius', value);
+                        }}
+                        extended
+                    />
+                    {supportsHeight && (
+                        <SliderControl
+                            label={t('ecommerce.storefrontEditor.height', 'Altura')}
+                            value={getSettingNumber(selectedSectionSettings, 'height', selectedSection === 'announcementBar' ? 44 : 420)}
+                            onChange={value => updateSelectedSectionSetting('height', value)}
+                            min={selectedSection === 'announcementBar' ? 28 : 220}
+                            max={selectedSection === 'announcementBar' ? 96 : 760}
+                            step={selectedSection === 'announcementBar' ? 2 : 10}
+                            suffix="px"
+                        />
+                    )}
+                    <FontSizeSelector
+                        label={t('ecommerce.storefrontEditor.titleSize', 'Tamaño de título')}
+                        value={String(selectedSectionSettings.titleFontSize || selectedSectionSettings.headlineFontSize || 'lg')}
+                        onChange={value => {
+                            updateSelectedSectionSetting('titleFontSize', value);
+                            updateSelectedSectionSetting('headlineFontSize', value);
+                        }}
+                    />
+                    {supportsColumns && (
+                        <SliderControl
+                            label={t('ecommerce.storefrontEditor.columns', 'Columnas')}
+                            value={getSettingNumber(selectedSectionSettings, 'columns', selectedSection === 'categoryGrid' ? 4 : 4)}
+                            onChange={value => updateSelectedSectionSetting('columns', value)}
+                            min={2}
+                            max={selectedSection === 'categoryGrid' || selectedSection === 'recentlyViewed' ? 6 : 5}
+                            step={1}
+                        />
+                    )}
+                </div>
+
+                {supportsHeroControls && (
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                            <Maximize2 size={14} />
+                            {t('ecommerce.storefrontEditor.positionControls', 'Posición')}
+                        </label>
+                        {selectedSection === 'productHero' && (
+                            <Select
+                                label={t('ecommerce.storefrontEditor.layout', 'Layout')}
+                                value={String(selectedSectionSettings.layout || 'split')}
+                                onChange={value => updateSelectedSectionSetting('layout', value)}
+                                options={[
+                                    { value: 'split', label: 'Split izquierda' },
+                                    { value: 'split-right', label: 'Split derecha' },
+                                    { value: 'full', label: 'Full image' },
+                                    { value: 'centered', label: 'Centrado' },
+                                ]}
+                            />
+                        )}
+                        <Select
+                            label={t('ecommerce.storefrontEditor.contentPosition', 'Posición de contenido')}
+                            value={String(selectedSectionSettings.contentPosition || 'center')}
+                            onChange={value => updateSelectedSectionSetting('contentPosition', value)}
+                            options={storefrontSelectOptions.alignment}
+                        />
+                        <Select
+                            label={t('ecommerce.storefrontEditor.textAlignment', 'Alineación de texto')}
+                            value={String(selectedSectionSettings.textAlignment || 'center')}
+                            onChange={value => updateSelectedSectionSetting('textAlignment', value)}
+                            options={storefrontSelectOptions.alignment}
+                        />
+                    </div>
+                )}
+
+                {(supportsProductCards || selectedSection === 'categoryGrid') && (
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                            <Columns3 size={14} />
+                            {t('ecommerce.storefrontEditor.cardControls', 'Tarjetas')}
+                        </label>
+                        {supportsProductCards && (
+                            <Select
+                                label={t('ecommerce.storefrontEditor.cardStyle', 'Diseño de tarjeta')}
+                                value={String(selectedSectionSettings.cardStyle || 'overlay')}
+                                onChange={value => updateSelectedSectionSetting('cardStyle', value)}
+                                options={storefrontSelectOptions.productCardStyle}
+                                noMargin
+                            />
+                        )}
+                        {selectedSection === 'categoryGrid' && (
+                            <>
+                                <Select
+                                    label={t('ecommerce.storefrontEditor.categoryCardStyle', 'Diseño de categoría')}
+                                    value={String(selectedSectionSettings.variant || 'overlay')}
+                                    onChange={value => updateSelectedSectionSetting('variant', value)}
+                                    options={(storefrontSectionRegistry.categoryGrid.validVariants || []).map(variant => ({ value: variant, label: variant }))}
+                                />
+                                <Select
+                                    label={t('ecommerce.storefrontEditor.imageRatio', 'Proporción de imagen')}
+                                    value={String(selectedSectionSettings.imageAspectRatio || '1:1')}
+                                    onChange={value => updateSelectedSectionSetting('imageAspectRatio', value)}
+                                    options={storefrontSelectOptions.aspectRatio}
+                                />
+                                <Select
+                                    label={t('ecommerce.storefrontEditor.imageFit', 'Ajuste de imagen')}
+                                    value={String(selectedSectionSettings.imageObjectFit || 'cover')}
+                                    onChange={value => updateSelectedSectionSetting('imageObjectFit', value)}
+                                    options={storefrontSelectOptions.objectFit}
+                                />
+                            </>
+                        )}
+                        {supportsProductCount && (
+                            <SliderControl
+                                label={selectedSection === 'recentlyViewed'
+                                    ? t('ecommerce.storefrontEditor.maxProducts', 'Máximo')
+                                    : t('ecommerce.storefrontEditor.productsToShow', 'Productos')}
+                                value={getSettingNumber(selectedSectionSettings, selectedSection === 'recentlyViewed' ? 'maxProducts' : 'productsToShow', selectedSection === 'recentlyViewed' ? 10 : 8)}
+                                onChange={value => updateSelectedSectionSetting(selectedSection === 'recentlyViewed' ? 'maxProducts' : 'productsToShow', value)}
+                                min={1}
+                                max={24}
+                                step={1}
+                            />
+                        )}
+                    </div>
+                )}
+
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                        <Palette size={14} />
+                        {t('ecommerce.storefrontEditor.colors', 'Colores')}
+                    </label>
+                    <ColorControl label={t('editor.controls.common.background', 'Fondo')} value={String(colors.background || '#ffffff')} onChange={value => updateSelectedSectionNestedSetting('colors.background', value)} />
+                    <ColorControl label={t('editor.controls.common.title', 'Título')} value={String(colors.heading || '#0f172a')} onChange={value => updateSelectedSectionNestedSetting('colors.heading', value)} />
+                    <ColorControl label={t('controls.text', 'Texto')} value={String(colors.text || '#475569')} onChange={value => updateSelectedSectionNestedSetting('colors.text', value)} />
+                    <ColorControl label={t('controls.accent', 'Acento')} value={String(colors.accent || colors.iconColor || '#4f46e5')} onChange={value => {
+                        updateSelectedSectionNestedSetting('colors.accent', value);
+                        updateSelectedSectionNestedSetting('colors.iconColor', value);
+                    }} />
+                    {(supportsProductCards || selectedSection === 'categoryGrid' || selectedSection === 'productReviews' || selectedSection === 'productBundle') && (
                         <>
-                            <label className="block">
-                                <span className="text-xs font-semibold text-q-text-muted">
-                                    {selectedSection === 'productHero'
-                                        ? t('ecommerce.storefrontEditor.productId', 'ID de producto')
-                                        : t('ecommerce.storefrontEditor.collectionId', 'ID de colección')}
-                                </span>
-                                <input
-                                    type="text"
-                                    value={String(selectedSectionSettings.productId || selectedSectionSettings.collectionId || '')}
-                                    onChange={event => updateSelectedSectionSetting(
-                                        selectedSection === 'productHero' ? 'productId' : 'collectionId',
-                                        event.target.value,
-                                    )}
-                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                                />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs font-semibold text-q-text-muted">
-                                    {t('ecommerce.storefrontEditor.buttonText', 'Texto CTA')}
-                                </span>
-                                <input
-                                    type="text"
-                                    value={String(selectedSectionSettings.buttonText || '')}
-                                    onChange={event => updateSelectedSectionSetting('buttonText', event.target.value)}
-                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                                />
-                            </label>
+                            <ColorControl label={t('controls.cardBackground', 'Fondo tarjeta')} value={String(colors.cardBackground || '#ffffff')} onChange={value => updateSelectedSectionNestedSetting('colors.cardBackground', value)} />
+                            <ColorControl label={t('controls.cardText', 'Texto tarjeta')} value={String(colors.cardText || colors.heading || '#0f172a')} onChange={value => updateSelectedSectionNestedSetting('colors.cardText', value)} />
                         </>
                     )}
-
-                    {selectedSection === 'collectionBanner' && (
+                    {(supportsProductCards || selectedSection === 'categoryGrid') && (
                         <>
-                            <label className="block">
-                                <span className="text-xs font-semibold text-q-text-muted">
-                                    {t('ecommerce.storefrontEditor.backgroundImageUrl', 'Imagen de fondo')}
-                                </span>
-                                <input
-                                    type="url"
-                                    value={String(selectedSectionSettings.backgroundImageUrl || '')}
-                                    onChange={event => updateSelectedSectionSetting('backgroundImageUrl', event.target.value)}
-                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                                />
-                            </label>
-                            <label className="block">
-                                <span className="text-xs font-semibold text-q-text-muted">
-                                    {t('ecommerce.storefrontEditor.height', 'Altura')}
-                                </span>
-                                <input
-                                    type="number"
-                                    min={240}
-                                    max={720}
-                                    value={String(selectedSectionSettings.height || '')}
-                                    onChange={event => updateNumberSetting('height', event.target.value, 240, 720)}
-                                    className="mt-1 w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-foreground"
-                                />
-                            </label>
+                            <ColorControl label={t('ecommerce.storefrontEditor.overlayStart', 'Overlay inicio')} value={String(colors.overlayStart || 'transparent')} onChange={value => updateSelectedSectionNestedSetting('colors.overlayStart', value)} />
+                            <ColorControl label={t('ecommerce.storefrontEditor.overlayEnd', 'Overlay final')} value={String(colors.overlayEnd || 'rgba(0,0,0,0.75)')} onChange={value => updateSelectedSectionNestedSetting('colors.overlayEnd', value)} />
+                        </>
+                    )}
+                    {supportsHeroControls && (
+                        <ColorControl label={t('ecommerce.storefrontEditor.overlayColor', 'Color overlay')} value={String(colors.overlayColor || '#000000')} onChange={value => updateSelectedSectionNestedSetting('colors.overlayColor', value)} />
+                    )}
+                    {(supportsHeroControls || selectedSection === 'saleCountdown' || selectedSection === 'productBundle') && (
+                        <>
+                            <ColorControl label={t('controls.fondoBotn', 'Fondo botón')} value={String(colors.buttonBackground || '#111827')} onChange={value => updateSelectedSectionNestedSetting('colors.buttonBackground', value)} />
+                            <ColorControl label={t('editor.controls.common.buttonText', 'Texto botón')} value={String(colors.buttonText || '#ffffff')} onChange={value => updateSelectedSectionNestedSetting('colors.buttonText', value)} />
                         </>
                     )}
                 </div>
+
+                {supportsBackgroundImage && (
+                    <BackgroundImageControl
+                        sectionKey={selectedSection}
+                        data={sectionControlData}
+                        setNestedData={setStorefrontNestedData}
+                    />
+                )}
+
+                {supportsHeroControls && (
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                            <ImageIcon size={14} />
+                            {t('ecommerce.storefrontEditor.overlayControls', 'Overlay')}
+                        </label>
+                        <Select
+                            label={t('ecommerce.storefrontEditor.overlayStyle', 'Tipo de overlay')}
+                            value={String(selectedSectionSettings.overlayStyle || 'gradient')}
+                            onChange={value => updateSelectedSectionSetting('overlayStyle', value)}
+                            options={storefrontSelectOptions.overlayStyle}
+                        />
+                        <SliderControl
+                            label={t('ecommerce.storefrontEditor.overlayOpacity', 'Opacidad')}
+                            value={getSettingNumber(selectedSectionSettings, 'overlayOpacity', 55)}
+                            onChange={value => updateSelectedSectionSetting('overlayOpacity', value)}
+                            min={0}
+                            max={100}
+                            step={5}
+                            suffix="%"
+                        />
+                    </div>
+                )}
+
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <CornerGradientControl
+                        enabled={getSettingBoolean(selectedSectionSettings, 'cornerGradient.enabled', false)}
+                        position={(getSettingString(selectedSectionSettings, 'cornerGradient.position', 'top-right') || 'top-right') as any}
+                        color={getSettingString(selectedSectionSettings, 'cornerGradient.color', '#fbbf24')}
+                        opacity={getSettingNumber(selectedSectionSettings, 'cornerGradient.opacity', 35)}
+                        size={getSettingNumber(selectedSectionSettings, 'cornerGradient.size', 45)}
+                        onEnabledChange={value => updateSelectedSectionNestedSetting('cornerGradient.enabled', value)}
+                        onPositionChange={value => updateSelectedSectionNestedSetting('cornerGradient.position', value)}
+                        onColorChange={value => updateSelectedSectionNestedSetting('cornerGradient.color', value)}
+                        onOpacityChange={value => updateSelectedSectionNestedSetting('cornerGradient.opacity', value)}
+                        onSizeChange={value => updateSelectedSectionNestedSetting('cornerGradient.size', value)}
+                    />
+                </div>
             </div>
-        </div>
-    );
+        );
+
+        const advancedTab = (
+            <div className="space-y-4">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                        <Eye size={14} />
+                        {t('ecommerce.storefrontEditor.displayOptions', 'Opciones de visualización')}
+                    </label>
+                    {supportsProductCards && (
+                        <>
+                            <ToggleControl label={t('ecommerce.storefrontEditor.showPrice', 'Mostrar precio')} checked={getSettingBoolean(selectedSectionSettings, 'showPrice', true)} onChange={value => updateSelectedSectionSetting('showPrice', value)} />
+                            <ToggleControl label={t('ecommerce.storefrontEditor.showRating', 'Mostrar reseñas')} checked={getSettingBoolean(selectedSectionSettings, 'showRating', true)} onChange={value => updateSelectedSectionSetting('showRating', value)} />
+                            <ToggleControl label={t('ecommerce.storefrontEditor.showBadge', 'Mostrar badges')} checked={getSettingBoolean(selectedSectionSettings, 'showBadge', true)} onChange={value => updateSelectedSectionSetting('showBadge', value)} />
+                            <ToggleControl label={t('ecommerce.storefrontEditor.showAddToCart', 'Mostrar agregar carrito')} checked={getSettingBoolean(selectedSectionSettings, 'showAddToCart', true)} onChange={value => updateSelectedSectionSetting('showAddToCart', value)} />
+                        </>
+                    )}
+                    {selectedSection === 'categoryGrid' && (
+                        <ToggleControl label={t('ecommerce.storefrontEditor.showProductCount', 'Mostrar conteo')} checked={getSettingBoolean(selectedSectionSettings, 'showProductCount', true)} onChange={value => updateSelectedSectionSetting('showProductCount', value)} />
+                    )}
+                    {selectedSection === 'trustBadges' && (
+                        <ToggleControl label={t('ecommerce.storefrontEditor.showLabels', 'Mostrar labels')} checked={getSettingBoolean(selectedSectionSettings, 'showLabels', true)} onChange={value => updateSelectedSectionSetting('showLabels', value)} />
+                    )}
+                    {selectedSection === 'announcementBar' && (
+                        <>
+                            <ToggleControl label={t('ecommerce.storefrontEditor.showIcon', 'Mostrar icono')} checked={getSettingBoolean(selectedSectionSettings, 'showIcon', true)} onChange={value => updateSelectedSectionSetting('showIcon', value)} />
+                            <ToggleControl label={t('ecommerce.storefrontEditor.dismissible', 'Dismissible')} checked={getSettingBoolean(selectedSectionSettings, 'dismissible', false)} onChange={value => updateSelectedSectionSetting('dismissible', value)} />
+                            <ToggleControl label={t('ecommerce.storefrontEditor.pauseOnHover', 'Pausar en hover')} checked={getSettingBoolean(selectedSectionSettings, 'pauseOnHover', true)} onChange={value => updateSelectedSectionSetting('pauseOnHover', value)} />
+                        </>
+                    )}
+                    {selectedSection === 'saleCountdown' && (
+                        <>
+                            <ToggleControl label={t('ecommerce.storefrontEditor.showProducts', 'Mostrar productos')} checked={getSettingBoolean(selectedSectionSettings, 'showProducts', true)} onChange={value => updateSelectedSectionSetting('showProducts', value)} />
+                            <ToggleControl label={t('ecommerce.storefrontEditor.showDays', 'Días')} checked={getSettingBoolean(selectedSectionSettings, 'showDays', true)} onChange={value => updateSelectedSectionSetting('showDays', value)} />
+                            <ToggleControl label={t('ecommerce.storefrontEditor.showSeconds', 'Segundos')} checked={getSettingBoolean(selectedSectionSettings, 'showSeconds', true)} onChange={value => updateSelectedSectionSetting('showSeconds', value)} />
+                        </>
+                    )}
+                </div>
+
+                {(selectedSection === 'announcementBar' || selectedSection === 'featuredProducts' || selectedSection === 'recentlyViewed') && (
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
+                            {t('ecommerce.storefrontEditor.motion', 'Movimiento')}
+                        </label>
+                        {(selectedSection === 'featuredProducts' || selectedSection === 'recentlyViewed') && (
+                            <ToggleControl label={t('ecommerce.storefrontEditor.autoScroll', 'Auto scroll')} checked={getSettingBoolean(selectedSectionSettings, 'autoScroll', false)} onChange={value => updateSelectedSectionSetting('autoScroll', value)} />
+                        )}
+                        <SliderControl
+                            label={t('ecommerce.storefrontEditor.speed', 'Velocidad')}
+                            value={getSettingNumber(selectedSectionSettings, 'speed', getSettingNumber(selectedSectionSettings, 'scrollSpeed', 5000))}
+                            onChange={value => {
+                                updateSelectedSectionSetting('speed', value);
+                                updateSelectedSectionSetting('scrollSpeed', value);
+                            }}
+                            min={1000}
+                            max={12000}
+                            step={500}
+                            suffix="ms"
+                        />
+                    </div>
+                )}
+
+                {selectedSection === 'productBundle' && (
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
+                            {t('ecommerce.storefrontEditor.bundleGuardrails', 'Bundle')}
+                        </label>
+                        <SliderControl
+                            label={t('ecommerce.storefrontEditor.discountPercent', 'Descuento sugerido')}
+                            value={getSettingNumber(selectedSectionSettings, 'discountPercent', 15)}
+                            onChange={value => updateSelectedSectionSetting('discountPercent', value)}
+                            min={0}
+                            max={90}
+                            step={1}
+                            suffix="%"
+                        />
+                        <ToggleControl label={t('ecommerce.storefrontEditor.showSavings', 'Mostrar ahorro')} checked={getSettingBoolean(selectedSectionSettings, 'showSavings', true)} onChange={value => updateSelectedSectionSetting('showSavings', value)} />
+                        <ToggleControl label={t('ecommerce.storefrontEditor.showIndividualPrices', 'Mostrar precios individuales')} checked={getSettingBoolean(selectedSectionSettings, 'showIndividualPrices', true)} onChange={value => updateSelectedSectionSetting('showIndividualPrices', value)} />
+                    </div>
+                )}
+            </div>
+        );
+
+        return <TabbedControls contentTab={contentTab} styleTab={styleTab} advancedTab={advancedTab} />;
+    };
 
     const renderActiveControls = () => {
         if (selectedStructurePanel === 'template') return renderTemplateControls();

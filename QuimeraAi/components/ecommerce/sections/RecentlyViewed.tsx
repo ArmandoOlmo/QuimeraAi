@@ -9,6 +9,7 @@ import { RecentlyViewedData, StorefrontProductItem } from '../../../types/compon
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
 
 interface RecentlyViewedProps {
     data: RecentlyViewedData;
@@ -142,11 +143,11 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                         )}
                         
                         {/* Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
                         
                         {/* Content on Image */}
-                        <div className="absolute bottom-0 left-0 right-0 p-3">
-                            <h4 className="font-semibold text-sm text-white line-clamp-2">
+                        <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <h4 className="text-sm font-semibold leading-tight text-white line-clamp-2 drop-shadow-sm">
                                 {product.name}
                             </h4>
                             {data.showRating && product.rating !== undefined && (
@@ -162,7 +163,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                                 </div>
                             )}
                             {data.showPrice && (
-                                <p className="font-bold text-white mt-1">
+                                <p className="mt-2 font-bold text-white drop-shadow-sm">
                                     ${product.price.toFixed(2)}
                                 </p>
                             )}
@@ -327,7 +328,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
 
     if (isLoading) {
         return (
-            <section className={`${getPaddingY()} ${getPaddingX()}`} style={{ backgroundColor: colors?.background }}>
+            <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
                 <div className="max-w-7xl mx-auto">
                     <div className="animate-pulse">
                         <div className="h-8 rounded w-1/4 mb-6" style={{ backgroundColor: colors?.borderColor }} />
@@ -345,7 +346,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
     return (
         <section
             className={`${getPaddingY()} ${getPaddingX()}`}
-            style={{ backgroundColor: colors?.background }}
+            style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
         >
             <div className="max-w-7xl mx-auto">
                 {/* Header */}

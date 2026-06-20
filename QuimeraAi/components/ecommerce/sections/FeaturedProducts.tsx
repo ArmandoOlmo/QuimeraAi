@@ -17,6 +17,7 @@ import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { resolveI18nField } from '../../../utils/i18nContent';
 import { createProductCardViewModel } from '../../../utils/productCard';
+import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
 
 interface FeaturedProductsProps {
     data: FeaturedProductsData;
@@ -248,18 +249,18 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         )}
                     </div>
 
-                    {/* Overlay variant - text on image */}
+                    {/* Overlay variant - full image card with text anchored over a gradient */}
                     {visualCardStyle === 'overlay' && (
                         <div 
                             className="absolute inset-0 flex flex-col justify-end p-4"
                             style={{ 
-                                background: `linear-gradient(to top, ${colors?.overlayEnd}, ${colors?.overlayStart})`
+                                background: `linear-gradient(to top, ${colors?.overlayEnd} 0%, rgba(0,0,0,0.36) 58%, ${colors?.overlayStart} 100%)`
                             }}
                         >
-                            <h3 className="font-semibold line-clamp-2" style={{ color: colors?.buttonText }}>{card.name}</h3>
+                            <h3 className="text-base font-semibold leading-tight line-clamp-2 drop-shadow-sm" style={{ color: colors?.buttonText }}>{card.name}</h3>
                             {data.showPrice && (
-                                <div className="flex items-center gap-2 mt-1">
-                                    <span className="font-bold" style={{ color: colors?.buttonText }}>{card.displayPrice}</span>
+                                <div className="mt-2 flex items-center gap-2">
+                                    <span className="text-lg font-bold drop-shadow-sm" style={{ color: colors?.buttonText }}>{card.displayPrice}</span>
                                     {card.hasDiscount && card.displayCompareAtPrice && (
                                         <span className="text-sm line-through" style={{ color: colors?.buttonText, opacity: 0.7 }}>
                                             {card.displayCompareAtPrice}
@@ -460,7 +461,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
 
     if (isLoading) {
         return (
-            <section className={`${getPaddingY()} ${getPaddingX()}`} style={{ backgroundColor: colors?.background }}>
+            <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
                 <div className="max-w-7xl mx-auto">
                     <div className="animate-pulse">
                         <div className="h-8 rounded w-1/3 mb-4" style={{ backgroundColor: colors?.border }} />
@@ -479,7 +480,10 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     return (
         <section
             className={`${getPaddingY()} ${getPaddingX()}`}
-            style={{ backgroundColor: colors?.background, fontFamily: colors?.fontFamily }}
+            style={{
+                ...getStorefrontSectionBackgroundStyle(data, colors?.background),
+                fontFamily: colors?.fontFamily,
+            }}
         >
             <div className="max-w-7xl mx-auto">
                 {/* Header */}

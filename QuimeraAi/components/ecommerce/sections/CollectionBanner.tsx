@@ -8,6 +8,7 @@ import { ArrowRight } from 'lucide-react';
 import { CollectionBannerData } from '../../../types/components';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
 
 interface CollectionBannerProps {
     data: CollectionBannerData;
@@ -95,8 +96,8 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
         <div
             className="relative overflow-hidden"
             style={{
+                ...getStorefrontSectionBackgroundStyle(data, colors?.background),
                 height: `${data.height || 400}px`,
-                backgroundColor: colors?.background,
             }}
         >
             {/* Background Image */}
@@ -155,11 +156,11 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
     const renderSplit = () => (
         <div
             className="relative overflow-hidden"
-            style={{
-                height: `${data.height || 400}px`,
-                backgroundColor: colors?.background,
-            }}
-        >
+                style={{
+                    ...getStorefrontSectionBackgroundStyle(data, colors?.background),
+                    height: `${data.height || 400}px`,
+                }}
+            >
             <div className="h-full grid grid-cols-1 lg:grid-cols-2">
                 {/* Content Side */}
                 <div className={`flex flex-col justify-center ${getPaddingX()} ${getPaddingY()} ${getTextAlignment()}`}>
@@ -210,7 +211,7 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
     const renderMinimal = () => (
         <div
             className={`${getPaddingY()} ${getPaddingX()}`}
-            style={{ backgroundColor: colors?.background }}
+            style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
         >
             <div className={`max-w-4xl mx-auto flex flex-col ${getTextAlignment()}`}>
                 <h2
@@ -249,8 +250,8 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
         <div
             className="relative overflow-hidden"
             style={{
+                ...getStorefrontSectionBackgroundStyle(data, colors?.background),
                 height: `${data.height || 400}px`,
-                backgroundColor: colors?.background,
             }}
         >
             {/* Background Image */}
@@ -316,7 +317,6 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
 };
 
 export default CollectionBanner;
-
 
 
 

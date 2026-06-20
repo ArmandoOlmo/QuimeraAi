@@ -10,6 +10,7 @@ import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { createProductCardViewModel } from '../../../utils/productCard';
+import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
 
 interface ProductBundleProps {
     data: ProductBundleData;
@@ -388,7 +389,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
 
     if (isLoading) {
         return (
-            <section className={`${getPaddingY()} ${getPaddingX()}`} style={{ backgroundColor: colors?.background }}>
+            <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
                 <div className="max-w-7xl mx-auto">
                     <div className="animate-pulse">
                         <div className={`${getBorderRadius()} p-6`} style={{ backgroundColor: colors?.cardBackground }}>
@@ -424,7 +425,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
         
         // In editor mode, show a helpful placeholder
         return (
-            <section className={`${getPaddingY()} ${getPaddingX()}`}>
+            <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
                 <div className="max-w-4xl mx-auto">
                     <div 
                         className={`${getBorderRadius()} p-8 border-2 border-dashed`}
@@ -480,7 +481,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     }
 
     return (
-        <section className={`${getPaddingY()} ${getPaddingX()}`}>
+        <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
             <div className="max-w-7xl mx-auto">
                 {data.variant === 'horizontal' && renderHorizontal()}
                 {data.variant === 'vertical' && renderVertical()}

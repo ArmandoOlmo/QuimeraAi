@@ -11,6 +11,7 @@ import { resolveI18nField } from '../../../utils/i18nContent';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import AppSelect from '../../ui/AppSelect';
+import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
 
 interface ProductReviewsProps {
     data: ProductReviewsData;
@@ -376,7 +377,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
     return (
         <section
             className={`${getPaddingY()} ${getPaddingX()}`}
-            style={{ backgroundColor: colors?.background }}
+            style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
         >
             <div className="max-w-7xl mx-auto">
                 {/* Header */}

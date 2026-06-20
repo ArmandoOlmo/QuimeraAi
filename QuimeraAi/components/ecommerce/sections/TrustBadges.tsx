@@ -15,6 +15,7 @@ import { TrustBadgesData, TrustBadgeIcon, TrustBadgeItem } from '../../../types/
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { resolveI18nField } from '../../../utils/i18nContent';
+import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
 
 interface TrustBadgesProps {
     data: TrustBadgesData;
@@ -223,7 +224,7 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId, globalColors }
         <section
             className={`${getPaddingY()} ${getPaddingX()}`}
             style={{
-                backgroundColor: colors?.background,
+                ...getStorefrontSectionBackgroundStyle(data, colors?.background),
                 borderTop: colors?.border ? `1px solid ${colors?.border}30` : 'none',
                 borderBottom: colors?.border ? `1px solid ${colors?.border}30` : 'none',
             }}
