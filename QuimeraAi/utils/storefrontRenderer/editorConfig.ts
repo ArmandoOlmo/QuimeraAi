@@ -88,6 +88,10 @@ export function resolveStorefrontEditorConfig(
         pageData.componentOrder,
     );
     const selectedOrder = normalizeStorefrontOrder(selectedConfig?.componentOrder || selectedConfig?.sections);
+    const hasExplicitEditorOrder = Boolean(
+        selectedConfig &&
+        (Array.isArray(selectedConfig.componentOrder) || Array.isArray(selectedConfig.sections))
+    );
     const legacyVisibility = {
         ...toRecord(rootData.sectionVisibility),
         ...toRecord(pageData.sectionVisibility),
@@ -96,9 +100,9 @@ export function resolveStorefrontEditorConfig(
     const selectedVisibility = toRecord(selectedConfig?.sectionVisibility) as Record<string, boolean>;
     const selectedSettings = normalizeSettings(selectedConfig?.sectionSettings);
 
-    const resolvedOrder = appendDefaultStorefrontSections(
-        selectedOrder.length > 0 ? selectedOrder : legacyOrder,
-    );
+    const resolvedOrder = hasExplicitEditorOrder
+        ? selectedOrder
+        : appendDefaultStorefrontSections(selectedOrder.length > 0 ? selectedOrder : legacyOrder);
 
     return {
         componentOrder: resolvedOrder,

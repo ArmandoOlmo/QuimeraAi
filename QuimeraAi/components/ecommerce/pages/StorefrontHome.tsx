@@ -84,14 +84,13 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
     const pageData = useMemo(() => resolveStorefrontPageData(projectData), [projectData]);
 
     const sectionsToRender = useMemo(() => {
+        const editorSections = getStorefrontEditorSections(projectData, isEditorPreview);
         const resolverInput = {
             pageData,
             componentOrder: projectData?.componentOrder,
             sectionVisibility: projectData?.sectionVisibility,
-            blueprintSections: (
-                getStorefrontEditorSections(projectData, isEditorPreview) ||
-                getBusinessBlueprintSections(projectData, pageData)
-            ),
+            blueprintSections: editorSections || getBusinessBlueprintSections(projectData, pageData),
+            includeMissingSections: !editorSections,
         };
 
         return isEditorPreview

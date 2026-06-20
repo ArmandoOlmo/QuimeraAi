@@ -688,6 +688,7 @@ function appendMissingStorefrontSections(order: StorefrontSectionKind[]): Storef
 
 export function resolveStorefrontSectionDecisions(input: StorefrontSectionResolverInput): StorefrontSectionRenderDecision[] {
     const pageData = (input.pageData || {}) as Record<string, unknown>;
+    const includeMissingSections = input.includeMissingSections !== false;
     const blueprintSections = orderedBlueprintSections(input.blueprintSections);
     const supportedBlueprintSections = blueprintSections.filter(section => isStorefrontSectionKind(section.type));
     const componentSections = (input.componentOrder || []).filter(isStorefrontSectionKind);
@@ -702,10 +703,13 @@ export function resolveStorefrontSectionDecisions(input: StorefrontSectionResolv
         const blueprintOrder = supportedBlueprintSections
             .map(section => section.type)
             .filter(isStorefrontSectionKind);
-        const orderedSections = appendMissingStorefrontSections([
+        const explicitSections = [
             ...blueprintOrder,
             ...componentSections.filter(section => !blueprintOrder.includes(section)),
-        ]);
+        ];
+        const orderedSections = includeMissingSections
+            ? appendMissingStorefrontSections(explicitSections)
+            : explicitSections;
 
         return orderedSections.map((kind, index) => {
             const blueprintSection = blueprintByKind.get(kind);
@@ -722,7 +726,7 @@ export function resolveStorefrontSectionDecisions(input: StorefrontSectionResolv
     }
 
     const sectionsToRender = componentSections.length > 0
-        ? appendMissingStorefrontSections(componentSections)
+        ? (includeMissingSections ? appendMissingStorefrontSections(componentSections) : componentSections)
         : STOREFRONT_SECTION_KINDS;
 
     return sectionsToRender

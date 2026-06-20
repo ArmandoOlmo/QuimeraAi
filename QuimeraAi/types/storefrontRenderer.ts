@@ -57,4 +57,5 @@ export interface StorefrontSectionResolverInput {
     componentOrder?: PageSection[] | string[];
     sectionVisibility?: Partial<Record<PageSection, boolean>> | Record<string, boolean>;
     blueprintSections?: StorefrontSectionBlueprint[];
+    includeMissingSections?: boolean;
 }

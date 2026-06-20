@@ -43,6 +43,17 @@ describe('storefrontRenderer registry', () => {
         expect(decisions.every(decision => decision.status === 'render')).toBe(true);
     });
 
+    it('respects explicit editor sections so removed modules can be added back individually', () => {
+        const decisions = resolveStorefrontSectionDecisions({
+            pageData: {},
+            componentOrder: ['announcementBar', 'featuredProducts'],
+            sectionVisibility: {},
+            includeMissingSections: false,
+        });
+
+        expect(decisions.map(decision => decision.kind)).toEqual(['announcementBar', 'featuredProducts']);
+    });
+
     it('completes legacy storefront editor config with every storefront section', () => {
         const config = resolveStorefrontEditorConfig({
             componentOrder: ['announcementBar'],
@@ -90,6 +101,28 @@ describe('storefrontRenderer registry', () => {
         expect(decisions.slice(0, 2).every(decision => decision.source === 'blueprint')).toBe(true);
         expect(decisions.slice(2).every(decision => decision.source === 'componentOrder')).toBe(true);
         expect(decisions[1].data.headline).toBe('From blueprint settings');
+    });
+
+    it('respects explicit editor blueprint sections without appending missing modules', () => {
+        const decisions = resolveStorefrontSectionDecisions({
+            componentOrder: ['featuredProducts', 'categoryGrid'],
+            includeMissingSections: false,
+            blueprintSections: [
+                {
+                    id: 'editor-hero',
+                    type: 'productHero',
+                    order: 1,
+                    enabled: true,
+                    status: 'generated',
+                    needsReview: false,
+                    readiness: { isReady: true, blockers: [], warnings: [] },
+                    metadata: { generatedBy: 'user', userModified: true },
+                },
+            ],
+        });
+
+        expect(decisions.map(decision => decision.kind)).toEqual(['productHero', 'featuredProducts', 'categoryGrid']);
+        expect(decisions.map(decision => decision.source)).toEqual(['blueprint', 'componentOrder', 'componentOrder']);
     });
 
     it('falls back to componentOrder when blueprint sections are unsupported', () => {
@@ -245,12 +278,12 @@ describe('storefrontRenderer registry', () => {
         };
 
         expect(resolveStorefrontEditorConfig(projectData, { mode: 'draft' })).toMatchObject({
-            componentOrder: ['productHero', ...STOREFRONT_SECTION_KINDS.filter(section => section !== 'productHero')],
+            componentOrder: ['productHero'],
             sectionVisibility: { productHero: false },
             source: 'draft',
         });
         expect(resolveStorefrontEditorConfig(projectData, { mode: 'published' })).toMatchObject({
-            componentOrder: ['featuredProducts', ...STOREFRONT_SECTION_KINDS.filter(section => section !== 'featuredProducts')],
+            componentOrder: ['featuredProducts'],
             sectionVisibility: { featuredProducts: true },
             source: 'published',
         });
@@ -303,7 +336,7 @@ describe('storefrontRenderer registry', () => {
         };
 
         expect(resolveStorefrontEditorConfig(projectData, { mode: 'draft' })).toMatchObject({
-            componentOrder: ['featuredProducts', ...STOREFRONT_SECTION_KINDS.filter(section => section !== 'featuredProducts')],
+            componentOrder: ['featuredProducts'],
             sectionVisibility: { featuredProducts: true },
             source: 'published',
         });
@@ -338,10 +371,11 @@ describe('storefrontRenderer registry', () => {
             pageData,
             componentOrder: appliedProject.componentOrder,
             sectionVisibility: appliedProject.sectionVisibility,
+            includeMissingSections: false,
         });
 
         expect(resolveStorefrontEditorConfig(projectData, { mode: 'draft' })).toMatchObject({
-            componentOrder: ['collectionBanner', ...STOREFRONT_SECTION_KINDS.filter(section => section !== 'collectionBanner')],
+            componentOrder: ['collectionBanner'],
             sectionVisibility: { collectionBanner: true },
             source: 'draft',
         });
@@ -349,7 +383,7 @@ describe('storefrontRenderer registry', () => {
             title: 'Coleccion destacada',
             visibleIn: 'store',
         });
-        expect(decisions).toHaveLength(STOREFRONT_SECTION_KINDS.length);
+        expect(decisions).toHaveLength(1);
         expect(decisions[0]).toMatchObject({
             kind: 'collectionBanner',
             status: 'render',
