@@ -449,9 +449,9 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         moduleRegistryId: 'storefront-home-sections',
         emptyBehavior: 'render',
         defaultVisible: true,
-        validVariants: ['horizontal', 'vertical', 'compact'],
+        validVariants: ['editorial', 'price-stack', 'horizontal', 'vertical', 'compact'],
         defaultSettings: {
-            variant: 'horizontal',
+            variant: 'editorial',
             enabled: true,
             productIds: [],
             visibleIn: 'store',

@@ -2113,7 +2113,7 @@ export interface CollectionBannerData extends SectionBackgroundFields {
 // =============================================================================
 // ECOMMERCE - PRODUCT BUNDLE
 // =============================================================================
-export type ProductBundleVariant = 'horizontal' | 'vertical' | 'compact';
+export type ProductBundleVariant = 'horizontal' | 'vertical' | 'compact' | 'editorial' | 'price-stack';
 
 export interface ProductBundleData extends SectionBackgroundFields {
     variant: ProductBundleVariant;

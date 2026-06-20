@@ -335,6 +335,13 @@ const storefrontSelectOptions = {
         { value: 'cards', label: 'Cards' },
         { value: 'list', label: 'Lista' },
     ],
+    productBundleVariant: [
+        { value: 'editorial', label: 'Editorial landing' },
+        { value: 'price-stack', label: 'Precio destacado' },
+        { value: 'horizontal', label: 'Horizontal' },
+        { value: 'vertical', label: 'Vertical' },
+        { value: 'compact', label: 'Compacto' },
+    ],
     cardGap: [
         { value: 'sm', label: 'Compacto' },
         { value: 'md', label: 'Normal' },
@@ -1588,7 +1595,9 @@ const StorefrontEditorView: React.FC = () => {
             ? storefrontSelectOptions.trustBadgeVariant
             : selectedSection === 'productReviews'
                 ? storefrontSelectOptions.productReviewsVariant
-                : validVariants.map(variant => ({ value: variant, label: variant }));
+                : selectedSection === 'productBundle'
+                    ? storefrontSelectOptions.productBundleVariant
+                    : validVariants.map(variant => ({ value: variant, label: variant }));
         const countSettingKey = selectedSection === 'recentlyViewed'
             ? 'maxProducts'
             : selectedSection === 'productReviews'

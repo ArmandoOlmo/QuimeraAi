@@ -3085,8 +3085,10 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
 
             <SelectControl
                 label={t('editor.controls.ecommerce.variant', 'Variant')}
-                value={d.variant || 'horizontal'}
+                value={d.variant || 'editorial'}
                 options={[
+                    { value: 'editorial', label: t('editor.controls.ecommerce.editorialLanding', 'Editorial landing') },
+                    { value: 'price-stack', label: t('editor.controls.ecommerce.priceStack', 'Precio destacado') },
                     { value: 'horizontal', label: t('editor.controls.ecommerce.horizontal', 'Horizontal') },
                     { value: 'vertical', label: t('editor.controls.ecommerce.vertical', 'Vertical') },
                     { value: 'compact', label: t('editor.controls.ecommerce.compact', 'Compact') },

@@ -57,11 +57,20 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     const bundlePrice = originalPrice * (1 - discountPercent / 100);
     const savings = originalPrice - bundlePrice;
     const savingsPercent = originalPrice > 0 ? Math.round((savings / originalPrice) * 100) : discountPercent;
+    const activeVariant = data.variant || 'editorial';
+    const buttonLabel = data.buttonText || 'Comprar bundle';
+    const savingsLabel = data.savingsText || 'Ahorra';
 
     // Style helpers
     const getPaddingY = () => getStorefrontPaddingYClass(data.paddingY, 'lg');
     const getPaddingX = () => getStorefrontPaddingXClass(data.paddingX, 'md');
     const getCardGap = () => getStorefrontCardGapClass(data.cardGap, 'md');
+    const getProductGap = () => (
+        data.cardGap === 'sm' ? 'gap-3' : data.cardGap === 'lg' ? 'gap-6' : data.cardGap === 'xl' ? 'gap-8' : 'gap-4'
+    );
+    const getProductStackSpacing = () => (
+        data.cardGap === 'sm' ? 'space-y-3' : data.cardGap === 'lg' ? 'space-y-6' : data.cardGap === 'xl' ? 'space-y-8' : 'space-y-4'
+    );
 
     const getTitleSize = () => {
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
@@ -84,6 +93,29 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
         backgroundColor: getStorefrontColorWithOpacity(colors?.background, 0.52, 'rgba(255,255,255,0.52)'),
         border: `1px solid ${getStorefrontColorWithOpacity(colors?.borderColor || colors?.border, 0.45, 'rgba(15,23,42,0.1)')}`,
     });
+    const getPricePanelStyle = (): React.CSSProperties => ({
+        backgroundColor: getStorefrontColorWithOpacity(colors?.accent, 0.08, 'rgba(79,70,229,0.08)'),
+        border: `1px solid ${getStorefrontColorWithOpacity(colors?.accent, 0.22, 'rgba(79,70,229,0.22)')}`,
+    });
+    const getImageFallbackStyle = (): React.CSSProperties => ({
+        backgroundColor: colors?.cardBackground,
+        backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(255,255,255,0.72), transparent 38%), linear-gradient(135deg, #e2e8f0, #f8fafc)',
+    });
+
+    const renderBundleBadge = (className = '') => (
+        data.showBadge && data.badgeText ? (
+            <span
+                className={`inline-flex items-center gap-1 w-fit px-3 py-1 rounded-full text-sm font-semibold ${className}`}
+                style={{
+                    backgroundColor: colors?.badgeBackground,
+                    color: colors?.badgeText,
+                }}
+            >
+                <Tag size={14} />
+                {data.badgeText}
+            </span>
+        ) : null
+    );
 
     const handleAddBundle = () => {
         if (onAddToCart && data.productIds) {
@@ -104,12 +136,14 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
 
         return (
             <div
-                className={`group flex items-center ${data.cardGap === 'sm' ? 'gap-3' : data.cardGap === 'lg' ? 'gap-6' : data.cardGap === 'xl' ? 'gap-8' : 'gap-4'} ${getBorderRadius()} p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg`}
+                className={`group flex items-center ${getProductGap()} ${getBorderRadius()} p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg`}
                 style={getProductRowStyle()}
             >
-                <div
-                    className={`flex-shrink-0 w-24 h-24 ${getBorderRadius()} overflow-hidden cursor-pointer`}
+                <button
+                    type="button"
+                    className={`flex-shrink-0 w-24 h-24 ${getBorderRadius()} overflow-hidden disabled:cursor-default`}
                     onClick={() => product.slug && onProductClick?.(product.slug)}
+                    disabled={!product.slug || !onProductClick}
                 >
                     {card.image?.url ? (
                         <img
@@ -119,20 +153,23 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                         />
                     ) : (
                         <div
-                            className="w-full h-full flex items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.75),transparent_36%),linear-gradient(135deg,#e2e8f0,#f8fafc)]"
+                            className="w-full h-full flex items-center justify-center"
+                            style={getImageFallbackStyle()}
                         >
                             <Package size={22} style={{ color: colors?.cardText }} />
                         </div>
                     )}
-                </div>
+                </button>
                 <div className="flex-1 min-w-0">
-                    <h4
-                        className="font-medium line-clamp-2 cursor-pointer hover:underline"
+                    <button
+                        type="button"
+                        className="font-medium line-clamp-2 text-left hover:underline disabled:cursor-default disabled:hover:no-underline"
                         style={{ color: colors?.cardText || colors?.heading }}
                         onClick={() => product.slug && onProductClick?.(product.slug)}
+                        disabled={!product.slug || !onProductClick}
                     >
                         {card.name}
-                    </h4>
+                    </button>
                     {data.showIndividualPrices && (
                         <p style={{ color: colors?.priceColor || colors?.accent }}>
                             {card.displayPrice}
@@ -151,6 +188,63 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
         );
     };
 
+    const BundleProductTile = ({ product, index }: { product: StorefrontProductItem; index: number }) => {
+        const card = createProductCardViewModel(product, {
+            variant: 'overlay',
+            currencySymbol: '$',
+            showBadges: false,
+            showRatings: false,
+        });
+
+        return (
+            <button
+                type="button"
+                className={`group relative min-h-[260px] overflow-hidden ${getBorderRadius()} text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl disabled:cursor-default`}
+                style={{
+                    border: `1px solid ${getStorefrontColorWithOpacity(colors?.borderColor || colors?.border, 0.55, 'rgba(15,23,42,0.12)')}`,
+                    backgroundColor: colors?.cardBackground,
+                }}
+                onClick={() => product.slug && onProductClick?.(product.slug)}
+                disabled={!product.slug || !onProductClick}
+            >
+                {card.image?.url ? (
+                    <img
+                        src={card.image.url}
+                        alt={card.image.altText}
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                ) : (
+                    <div
+                        className="absolute inset-0 flex items-center justify-center"
+                        style={getImageFallbackStyle()}
+                    >
+                        <Package size={34} style={{ color: colors?.cardText }} />
+                    </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/28 to-transparent" />
+                <div
+                    className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
+                    style={{
+                        backgroundColor: getStorefrontColorWithOpacity(colors?.badgeBackground || colors?.accent, 0.92, '#4f46e5'),
+                        color: colors?.badgeText || '#ffffff',
+                    }}
+                >
+                    {index + 1}
+                </div>
+                <div className="absolute inset-x-0 bottom-0 p-4">
+                    <h4 className="line-clamp-2 text-lg font-semibold text-white">
+                        {card.name}
+                    </h4>
+                    {data.showIndividualPrices && (
+                        <p className="mt-1 text-sm font-medium text-white/85">
+                            {card.displayPrice}
+                        </p>
+                    )}
+                </div>
+            </button>
+        );
+    };
+
     // Horizontal variant
     const renderHorizontal = () => (
         <div
@@ -159,7 +253,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
         >
             <div className={`grid grid-cols-1 lg:grid-cols-3 ${getCardGap()} p-6`}>
                 {/* Products */}
-                <div className={`lg:col-span-2 ${data.cardGap === 'sm' ? 'space-y-3' : data.cardGap === 'lg' ? 'space-y-6' : data.cardGap === 'xl' ? 'space-y-8' : 'space-y-4'}`}>
+                <div className={`lg:col-span-2 ${getProductStackSpacing()}`}>
                     {bundleProducts.map((product, index) => (
                         <BundleProductCard
                             key={product.id}
@@ -172,10 +266,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                 {/* Pricing */}
                 <div
                     className={`${getBorderRadius()} p-6 flex flex-col justify-center`}
-                    style={{
-                        backgroundColor: getStorefrontColorWithOpacity(colors?.accent, 0.08, 'rgba(79,70,229,0.08)'),
-                        border: `1px solid ${getStorefrontColorWithOpacity(colors?.accent, 0.22, 'rgba(79,70,229,0.22)')}`,
-                    }}
+                    style={getPricePanelStyle()}
                 >
                     {data.showBadge && data.badgeText && (
                         <span
@@ -221,13 +312,14 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                                 className="flex justify-between font-semibold"
                                 style={{ color: colors?.savingsColor }}
                             >
-                                <span>{data.savingsText || 'Ahorra'}:</span>
+                                <span>{savingsLabel}:</span>
                                 <span>${savings.toFixed(2)} ({savingsPercent}%)</span>
                             </div>
                         )}
                     </div>
 
                     <button
+                        type="button"
                         onClick={handleAddBundle}
                         className={`w-full py-3 ${getBorderRadius()} font-semibold flex items-center justify-center gap-2 transition-opacity hover:opacity-90`}
                         style={{
@@ -236,7 +328,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                         }}
                     >
                         <ShoppingCart size={20} />
-                        {data.buttonText}
+                        {buttonLabel}
                     </button>
                 </div>
             </div>
@@ -277,7 +369,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                 )}
 
                 {/* Products */}
-                <div className={`${data.cardGap === 'sm' ? 'space-y-3' : data.cardGap === 'lg' ? 'space-y-6' : data.cardGap === 'xl' ? 'space-y-8' : 'space-y-4'} mb-6`}>
+                <div className={`${getProductStackSpacing()} mb-6`}>
                     {bundleProducts.map((product, index) => (
                         <BundleProductCard
                             key={product.id}
@@ -290,10 +382,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                 {/* Pricing */}
                 <div
                     className={`${getBorderRadius()} p-4 mb-4`}
-                    style={{
-                        backgroundColor: getStorefrontColorWithOpacity(colors?.accent, 0.08, 'rgba(79,70,229,0.08)'),
-                        border: `1px solid ${getStorefrontColorWithOpacity(colors?.accent, 0.22, 'rgba(79,70,229,0.22)')}`,
-                    }}
+                    style={getPricePanelStyle()}
                 >
                     {data.showIndividualPrices && (
                         <div className="flex justify-between text-sm mb-1" style={{ color: colors?.text }}>
@@ -312,12 +401,13 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                             className="text-center mt-2 font-semibold"
                             style={{ color: colors?.savingsColor }}
                         >
-                            {data.savingsText || 'Ahorra'} ${savings.toFixed(2)} ({savingsPercent}%)
+                            {savingsLabel} ${savings.toFixed(2)} ({savingsPercent}%)
                         </div>
                     )}
                 </div>
 
                 <button
+                    type="button"
                     onClick={handleAddBundle}
                     className={`w-full py-3 ${getBorderRadius()} font-semibold flex items-center justify-center gap-2 transition-opacity hover:opacity-90`}
                     style={{
@@ -326,7 +416,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                     }}
                 >
                     <ShoppingCart size={20} />
-                    {data.buttonText}
+                    {buttonLabel}
                 </button>
             </div>
         </div>
@@ -335,7 +425,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     // Compact variant
     const renderCompact = () => (
         <div
-            className={`${getBorderRadius()} overflow-hidden flex items-center ${data.cardGap === 'sm' ? 'gap-3' : data.cardGap === 'lg' ? 'gap-6' : data.cardGap === 'xl' ? 'gap-8' : 'gap-4'} p-4`}
+            className={`${getBorderRadius()} overflow-hidden flex items-center ${getProductGap()} p-4`}
             style={getCardSurfaceStyle(true)}
         >
             {/* Product thumbnails */}
@@ -397,6 +487,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
 
             {/* Button */}
             <button
+                type="button"
                 onClick={handleAddBundle}
                 className={`px-4 py-2 ${getBorderRadius()} font-semibold transition-opacity hover:opacity-90`}
                 style={{
@@ -404,8 +495,192 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                     color: colors?.buttonText,
                 }}
             >
-                {data.buttonText}
+                {buttonLabel}
             </button>
+        </div>
+    );
+
+    const renderEditorial = () => (
+        <div
+            className={`${getBorderRadius()} overflow-hidden p-5 md:p-8`}
+            style={getCardSurfaceStyle(true)}
+        >
+            <div className={`grid grid-cols-1 lg:grid-cols-[0.92fr_1.08fr] ${getCardGap()} items-stretch`}>
+                <div
+                    className={`flex min-h-[360px] flex-col justify-between ${getTextAlignment()} ${getBorderRadius()} p-6 md:p-8`}
+                    style={getPricePanelStyle()}
+                >
+                    <div className={`flex flex-col ${getTextAlignment()}`}>
+                        {renderBundleBadge('mb-5')}
+                        <h3
+                            className={`${getTitleSize()} font-bold leading-tight`}
+                            style={{ color: colors?.heading }}
+                        >
+                            {data.title}
+                        </h3>
+                        {data.description && (
+                            <p
+                                className={`${getDescriptionSize()} mt-3 max-w-xl`}
+                                style={{ color: colors?.text }}
+                            >
+                                {data.description}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="mt-8 w-full">
+                        <div className={`${getBorderRadius()} p-4`} style={getCardSurfaceStyle(false)}>
+                            <div className="flex items-end justify-between gap-4">
+                                <div>
+                                    <p className="text-sm font-medium" style={{ color: colors?.text }}>
+                                        Precio bundle
+                                    </p>
+                                    <p className="text-3xl font-bold" style={{ color: colors?.priceColor || colors?.heading }}>
+                                        ${bundlePrice.toFixed(2)}
+                                    </p>
+                                </div>
+                                {data.showSavings && savings > 0 && (
+                                    <div
+                                        className="rounded-full px-3 py-1 text-sm font-semibold"
+                                        style={{
+                                            backgroundColor: getStorefrontColorWithOpacity(colors?.savingsColor, 0.14, 'rgba(22,163,74,0.14)'),
+                                            color: colors?.savingsColor,
+                                        }}
+                                    >
+                                        {savingsLabel} {savingsPercent}%
+                                    </div>
+                                )}
+                            </div>
+                            {data.showIndividualPrices && originalPrice > 0 && (
+                                <div className="mt-3 flex justify-between text-sm" style={{ color: colors?.text }}>
+                                    <span>Precio individual</span>
+                                    <span className="line-through">${originalPrice.toFixed(2)}</span>
+                                </div>
+                            )}
+                            <button
+                                type="button"
+                                onClick={handleAddBundle}
+                                className={`mt-5 flex w-full items-center justify-center gap-2 ${getBorderRadius()} px-5 py-3 font-semibold transition-opacity hover:opacity-90`}
+                                style={{
+                                    backgroundColor: colors?.buttonBackground,
+                                    color: colors?.buttonText,
+                                }}
+                            >
+                                <ShoppingCart size={20} />
+                                {buttonLabel}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className={`grid grid-cols-1 sm:grid-cols-2 ${getCardGap()}`}>
+                    {bundleProducts.slice(0, 6).map((product, index) => (
+                        <BundleProductTile key={product.id} product={product} index={index} />
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderPriceStack = () => (
+        <div
+            className={`${getBorderRadius()} overflow-hidden p-5 md:p-7`}
+            style={getCardSurfaceStyle(true)}
+        >
+            <div className={`grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] ${getCardGap()} items-start`}>
+                <div>
+                    <div className={`mb-6 flex flex-col ${getTextAlignment()}`}>
+                        {renderBundleBadge('mb-4')}
+                        <h3
+                            className={`${getTitleSize()} font-bold leading-tight`}
+                            style={{ color: colors?.heading }}
+                        >
+                            {data.title}
+                        </h3>
+                        {data.description && (
+                            <p
+                                className={`${getDescriptionSize()} mt-2 max-w-2xl`}
+                                style={{ color: colors?.text }}
+                            >
+                                {data.description}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className={getProductStackSpacing()}>
+                        {bundleProducts.map((product, index) => (
+                            <BundleProductCard
+                                key={product.id}
+                                product={product}
+                                isLast={index === bundleProducts.length - 1}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                <aside
+                    className={`${getBorderRadius()} p-5 lg:sticky lg:top-6`}
+                    style={getPricePanelStyle()}
+                >
+                    <div className="flex items-center justify-between gap-4">
+                        <div>
+                            <p className="text-sm font-medium" style={{ color: colors?.text }}>
+                                Bundle
+                            </p>
+                            <p className="text-4xl font-bold" style={{ color: colors?.priceColor || colors?.heading }}>
+                                ${bundlePrice.toFixed(2)}
+                            </p>
+                        </div>
+                        <div
+                            className="flex h-12 w-12 items-center justify-center rounded-full"
+                            style={{
+                                backgroundColor: getStorefrontColorWithOpacity(colors?.accent, 0.14, 'rgba(79,70,229,0.14)'),
+                                color: colors?.accent,
+                            }}
+                        >
+                            <Package size={24} />
+                        </div>
+                    </div>
+
+                    <div className="my-5 space-y-3 text-sm">
+                        {data.showIndividualPrices && originalPrice > 0 && (
+                            <div className="flex justify-between" style={{ color: colors?.text }}>
+                                <span>Individual</span>
+                                <span className="line-through">${originalPrice.toFixed(2)}</span>
+                            </div>
+                        )}
+                        {data.showSavings && savings > 0 && (
+                            <div className="flex justify-between font-semibold" style={{ color: colors?.savingsColor }}>
+                                <span>{savingsLabel}</span>
+                                <span>${savings.toFixed(2)}</span>
+                            </div>
+                        )}
+                        <div
+                            className="flex justify-between border-t pt-3 font-semibold"
+                            style={{
+                                borderColor: getStorefrontColorWithOpacity(colors?.borderColor || colors?.border, 0.68, 'rgba(15,23,42,0.12)'),
+                                color: colors?.heading,
+                            }}
+                        >
+                            <span>Total</span>
+                            <span>${bundlePrice.toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={handleAddBundle}
+                        className={`flex w-full items-center justify-center gap-2 ${getBorderRadius()} px-5 py-3 font-semibold transition-opacity hover:opacity-90`}
+                        style={{
+                            backgroundColor: colors?.buttonBackground,
+                            color: colors?.buttonText,
+                        }}
+                    >
+                        <ShoppingCart size={20} />
+                        {buttonLabel}
+                    </button>
+                </aside>
+            </div>
         </div>
     );
 
@@ -501,9 +776,12 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
         <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
             <div className={`flex max-w-7xl mx-auto ${getContentPosition()}`}>
                 <div className="w-full">
-                    {data.variant === 'horizontal' && renderHorizontal()}
-                    {data.variant === 'vertical' && renderVertical()}
-                    {data.variant === 'compact' && renderCompact()}
+                    {activeVariant === 'editorial' && renderEditorial()}
+                    {activeVariant === 'price-stack' && renderPriceStack()}
+                    {activeVariant === 'horizontal' && renderHorizontal()}
+                    {activeVariant === 'vertical' && renderVertical()}
+                    {activeVariant === 'compact' && renderCompact()}
+                    {!['editorial', 'price-stack', 'horizontal', 'vertical', 'compact'].includes(activeVariant) && renderEditorial()}
                 </div>
             </div>
         </section>
