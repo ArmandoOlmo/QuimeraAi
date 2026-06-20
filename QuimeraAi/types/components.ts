@@ -1906,7 +1906,7 @@ export interface SaleCountdownData extends SectionBackgroundFields {
 // =============================================================================
 // ECOMMERCE - TRUST BADGES
 // =============================================================================
-export type TrustBadgesVariant = 'horizontal' | 'grid' | 'minimal' | 'detailed';
+export type TrustBadgesVariant = 'horizontal' | 'grid' | 'minimal' | 'detailed' | 'premium-strip' | 'icon-cloud';
 export type TrustBadgeIcon = 'truck' | 'shield' | 'credit-card' | 'refresh-cw' | 'clock' | 'award' | 'lock' | 'headphones' | 'package' | 'check-circle' | 'star' | 'heart';
 
 export interface TrustBadgeItem {
@@ -2001,7 +2001,7 @@ export interface RecentlyViewedData extends SectionBackgroundFields {
 // =============================================================================
 // ECOMMERCE - PRODUCT REVIEWS
 // =============================================================================
-export type ProductReviewsVariant = 'list' | 'cards' | 'masonry' | 'featured';
+export type ProductReviewsVariant = 'list' | 'cards' | 'masonry' | 'featured' | 'spotlight';
 
 export interface ProductReviewItem {
     id: string;

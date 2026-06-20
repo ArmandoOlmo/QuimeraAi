@@ -320,6 +320,21 @@ const storefrontSelectOptions = {
         { value: 'banner', label: 'Banner' },
         { value: 'minimal', label: 'Minimal' },
     ],
+    trustBadgeVariant: [
+        { value: 'premium-strip', label: 'Franja premium' },
+        { value: 'icon-cloud', label: 'Nube de iconos' },
+        { value: 'detailed', label: 'Detallado' },
+        { value: 'grid', label: 'Grid' },
+        { value: 'horizontal', label: 'Horizontal' },
+        { value: 'minimal', label: 'Minimal' },
+    ],
+    productReviewsVariant: [
+        { value: 'spotlight', label: 'Spotlight editorial' },
+        { value: 'featured', label: 'Destacada' },
+        { value: 'masonry', label: 'Masonry' },
+        { value: 'cards', label: 'Cards' },
+        { value: 'list', label: 'Lista' },
+    ],
     cardGap: [
         { value: 'sm', label: 'Compacto' },
         { value: 'md', label: 'Normal' },
@@ -1569,6 +1584,11 @@ const StorefrontEditorView: React.FC = () => {
                 ? selectedSectionSettings.subheadline || ''
                 : selectedSectionSettings.description || selectedSectionSettings.subtitle || '',
         );
+        const variantOptions = selectedSection === 'trustBadges'
+            ? storefrontSelectOptions.trustBadgeVariant
+            : selectedSection === 'productReviews'
+                ? storefrontSelectOptions.productReviewsVariant
+                : validVariants.map(variant => ({ value: variant, label: variant }));
         const countSettingKey = selectedSection === 'recentlyViewed'
             ? 'maxProducts'
             : selectedSection === 'productReviews'
@@ -1639,7 +1659,7 @@ const StorefrontEditorView: React.FC = () => {
                             label={t('ecommerce.storefrontEditor.variant', 'Variante')}
                             value={String(selectedSectionSettings.variant || validVariants[0])}
                             onChange={value => updateSelectedSectionSetting('variant', value)}
-                            options={validVariants.map(variant => ({ value: variant, label: variant }))}
+                            options={variantOptions}
                             noMargin
                         />
                     )}

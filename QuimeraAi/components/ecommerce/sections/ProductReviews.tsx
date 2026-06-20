@@ -400,6 +400,135 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
         );
     };
 
+    const renderSpotlight = () => {
+        const spotlightReview = sortedReviews.find(r => r.rating >= 5) || sortedReviews[0];
+        const supportingReviews = sortedReviews.filter(review => review.id !== spotlightReview?.id).slice(0, 4);
+        const spotlightAuthorName = text(spotlightReview?.authorName as any);
+        const spotlightContent = text(spotlightReview?.content as any);
+        const spotlightTitle = text(spotlightReview?.title as any);
+
+        if (!spotlightReview) return null;
+
+        return (
+            <div className={`grid grid-cols-1 lg:grid-cols-[0.9fr_1.6fr] ${getCardGap()}`}>
+                <aside
+                    className={`flex flex-col justify-between p-7 sm:p-8 ${getBorderRadius()}`}
+                    style={{
+                        ...getCardSurfaceStyle(true),
+                        backgroundImage: `radial-gradient(circle at top left, ${getStorefrontColorWithOpacity(colors?.accent, 0.22, 'rgba(79,70,229,0.22)')}, transparent 42%)`,
+                    }}
+                >
+                    <div>
+                        <div className="text-6xl font-black leading-none" style={{ color: colors?.heading }}>
+                            {averageRating.toFixed(1)}
+                        </div>
+                        <div className="mt-3">
+                            <Stars rating={averageRating} size={22} />
+                        </div>
+                        <p className="mt-3 text-sm" style={{ color: colors?.text }}>
+                            {totalReviews} reseñas
+                        </p>
+                    </div>
+
+                    {data.showRatingDistribution && (
+                        <div className="mt-8 space-y-2">
+                            {[5, 4, 3, 2, 1].map((star) => {
+                                const count = ratingDistribution[star as 1 | 2 | 3 | 4 | 5];
+                                const percent = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+                                return (
+                                    <div key={star} className="flex items-center gap-3">
+                                        <span className="w-8 text-xs font-semibold" style={{ color: colors?.text }}>{star} ★</span>
+                                        <div className="h-2 flex-1 rounded-full" style={{ backgroundColor: getStorefrontColorWithOpacity(colors?.borderColor || colors?.border, 0.38, 'rgba(15,23,42,0.12)') }}>
+                                            <div
+                                                className="h-full rounded-full"
+                                                style={{
+                                                    width: `${percent}%`,
+                                                    backgroundColor: colors?.starColor,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </aside>
+
+                <div className={`grid grid-cols-1 ${getCardGap()}`}>
+                    <article
+                        className={`relative overflow-hidden p-7 sm:p-8 ${getBorderRadius()}`}
+                        style={{
+                            ...getCardSurfaceStyle(true),
+                            backgroundImage: `linear-gradient(135deg, ${getStorefrontColorWithOpacity(colors?.accent, 0.16, 'rgba(79,70,229,0.16)')}, transparent 58%)`,
+                        }}
+                    >
+                        {spotlightReview.productImage && data.showPhotos && (
+                            <div className={`mb-6 aspect-[16/7] overflow-hidden ${getBorderRadius()}`}>
+                                <img
+                                    src={spotlightReview.productImage}
+                                    alt={text(spotlightReview.productName as any) || spotlightTitle || spotlightAuthorName}
+                                    className="h-full w-full object-cover"
+                                />
+                            </div>
+                        )}
+                        <div className="mb-5 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                {spotlightReview.authorImage ? (
+                                    <img
+                                        src={spotlightReview.authorImage}
+                                        alt={spotlightAuthorName}
+                                        className="h-12 w-12 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div
+                                        className="flex h-12 w-12 items-center justify-center rounded-full font-bold"
+                                        style={{ backgroundColor: colors?.accent, color: colors?.buttonText || '#ffffff' }}
+                                    >
+                                        {(spotlightAuthorName || '?').charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                                <div>
+                                    <p className="font-semibold" style={{ color: colors?.cardText || colors?.heading }}>
+                                        {spotlightAuthorName}
+                                    </p>
+                                    {data.showVerifiedBadge && spotlightReview.verified && (
+                                        <span
+                                            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold"
+                                            style={{
+                                                backgroundColor: getStorefrontColorWithOpacity(colors?.verifiedBadgeColor, 0.14, 'rgba(22,163,74,0.14)'),
+                                                color: colors?.verifiedBadgeColor,
+                                            }}
+                                        >
+                                            <CheckCircle size={12} />
+                                            Verificado
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <Stars rating={spotlightReview.rating} />
+                        </div>
+                        {spotlightTitle && (
+                            <h4 className="text-2xl font-bold leading-tight" style={{ color: colors?.heading }}>
+                                {spotlightTitle}
+                            </h4>
+                        )}
+                        <blockquote className="mt-4 text-lg leading-8" style={{ color: colors?.text }}>
+                            {spotlightContent}
+                        </blockquote>
+                    </article>
+
+                    {supportingReviews.length > 0 && (
+                        <div className={`grid grid-cols-1 md:grid-cols-2 ${getCardGap()}`}>
+                            {supportingReviews.map((review) => (
+                                <ReviewCard key={review.id} review={review} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <section
             className={`${getPaddingY()} ${getPaddingX()}`}
@@ -448,7 +577,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
                 </div>
 
                 {/* Rating Summary */}
-                <RatingSummary />
+                {data.variant !== 'spotlight' && <RatingSummary />}
 
                 {/* Reviews */}
                 {reviews.length === 0 ? (
@@ -461,6 +590,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
                         {data.variant === 'cards' && renderCards()}
                         {data.variant === 'masonry' && renderMasonry()}
                         {data.variant === 'featured' && renderFeatured()}
+                        {data.variant === 'spotlight' && renderSpotlight()}
 
                         {/* Show more button */}
                         {sortedReviews.length > (data.maxReviews || 6) && !showAll && (

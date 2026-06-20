@@ -220,7 +220,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         emptyBehavior: 'render',
         defaultVisible: true,
         isCoreSection: true,
-        validVariants: ['horizontal', 'grid', 'minimal', 'detailed'],
+        validVariants: ['horizontal', 'grid', 'minimal', 'detailed', 'premium-strip', 'icon-cloud'],
         defaultSettings: {
             variant: 'horizontal',
             badges: [],
@@ -400,7 +400,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         moduleRegistryId: 'storefront-home-sections',
         emptyBehavior: 'render',
         defaultVisible: true,
-        validVariants: ['list', 'cards', 'masonry', 'featured'],
+        validVariants: ['list', 'cards', 'masonry', 'featured', 'spotlight'],
         defaultSettings: {
             variant: 'cards',
             enabled: true,
