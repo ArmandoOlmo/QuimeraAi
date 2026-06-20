@@ -557,8 +557,16 @@ const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps
             ref={setCombinedNodeRef}
             style={style}
             role="listitem"
+            tabIndex={0}
+            aria-current={isSelected ? 'true' : undefined}
             data-storefront-editor-sidebar-section={section}
-            className={`group flex w-full items-center gap-2 rounded-lg border p-2.5 text-left transition-colors ${
+            onClick={onSelect}
+            onKeyDown={(event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                onSelect();
+            }}
+            className={`group flex w-full cursor-pointer items-center gap-2 rounded-lg border p-2.5 text-left transition-colors ${
                 isSelected
                     ? 'border-primary/30 bg-primary/10'
                     : 'border-transparent hover:bg-secondary/50'
@@ -578,14 +586,10 @@ const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps
             <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-muted text-xs font-bold text-q-text-muted">
                 {index + 1}
             </span>
-            <button
-                type="button"
-                onClick={onSelect}
-                className="min-w-0 flex-1 text-left"
-            >
+            <div className="min-w-0 flex-1 text-left">
                 <span className="block truncate text-sm font-medium text-foreground">{label}</span>
                 <span className="block truncate text-xs text-q-text-muted">{variant}</span>
-            </button>
+            </div>
             <span className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                 <button
                     type="button"
@@ -2422,7 +2426,10 @@ const StorefrontEditorView: React.FC = () => {
                             ref={previewFrameRef}
                             title={t('ecommerce.storefrontEditor.previewTitle', 'Vista previa de tienda online')}
                             src={previewUrl}
-                            onLoad={() => postPreviewPayload()}
+                            onLoad={() => {
+                                postPreviewPayload();
+                                scrollPreviewSectionIntoView(selectedSection);
+                            }}
                             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                             scrolling="yes"
                             className="min-h-0 flex-1 border-0 bg-white"
@@ -3028,7 +3035,10 @@ const StorefrontEditorView: React.FC = () => {
                                 ref={previewFrameRef}
                                 title={t('ecommerce.storefrontEditor.previewTitle', 'Storefront preview')}
                                 src={previewUrl}
-                                onLoad={() => postPreviewPayload()}
+                                onLoad={() => {
+                                    postPreviewPayload();
+                                    scrollPreviewSectionIntoView(selectedSection);
+                                }}
                                 scrolling="yes"
                                 className="h-full w-full border-0 bg-white"
                                 style={{ minHeight: MIN_PREVIEW_FRAME_HEIGHT }}
