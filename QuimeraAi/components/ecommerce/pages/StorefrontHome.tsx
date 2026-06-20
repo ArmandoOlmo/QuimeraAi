@@ -33,6 +33,30 @@ interface StorefrontHomeProps {
     themeColors: ThemeColors;
 }
 
+const isRecord = (value: unknown): value is Record<string, any> =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const getStorefrontEditorSections = (
+    projectData: Project,
+    isEditorPreview: boolean,
+): unknown[] | undefined => {
+    const pageData = isRecord(projectData?.data) ? projectData.data : {};
+    const editorState = isRecord(pageData.storefrontEditor)
+        ? pageData.storefrontEditor
+        : isRecord((projectData as any)?.storefrontEditor)
+            ? (projectData as any).storefrontEditor
+            : {};
+    const draftSections = isRecord(editorState.draft) && Array.isArray(editorState.draft.sections)
+        ? editorState.draft.sections
+        : undefined;
+    const publishedSections = isRecord(editorState.published) && Array.isArray(editorState.published.sections)
+        ? editorState.published.sections
+        : undefined;
+
+    if (isEditorPreview) return draftSections || publishedSections;
+    return publishedSections || draftSections;
+};
+
 const StorefrontHome: React.FC<StorefrontHomeProps> = ({
     storeId,
     projectData,
@@ -49,10 +73,11 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
         componentOrder: projectData?.componentOrder,
         sectionVisibility: projectData?.sectionVisibility,
         blueprintSections: (
+            getStorefrontEditorSections(projectData, isEditorPreview) ||
             projectData?.businessBlueprint?.storefrontBlueprint?.sections ||
             projectData?.data?.businessBlueprint?.storefrontBlueprint?.sections
         ),
-    }), [projectData]);
+    }), [isEditorPreview, projectData]);
     const hasRenderableSections = sectionsToRender.length > 0;
 
     return (
