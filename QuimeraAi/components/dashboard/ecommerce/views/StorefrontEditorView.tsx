@@ -734,6 +734,8 @@ const StorefrontEditorView: React.FC = () => {
     const previewPayloadRef = useRef('');
     const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
     const sidebarSectionItemRefs = useRef<Partial<Record<StorefrontSectionKind, HTMLDivElement | null>>>({});
+    const pendingPreviewSectionScrollRef = useRef<StorefrontSectionKind | null>(null);
+    const previewSectionScrollTimeoutsRef = useRef<number[]>([]);
     const selectedPresetOverrideRef = useRef<StorefrontThemePresetId | null>(null);
     const presetProjectKeyRef = useRef(activePresetProjectKey);
     const [selectedPresetId, setSelectedPresetId] = useState<StorefrontThemePresetId>(persistedPresetId);
@@ -849,6 +851,25 @@ const StorefrontEditorView: React.FC = () => {
         }, window.location.origin);
     }, [previewSessionKey, storeId]);
 
+    const clearScheduledPreviewSectionScrolls = useCallback(() => {
+        if (typeof window === 'undefined') return;
+
+        previewSectionScrollTimeoutsRef.current.forEach(timeoutId => window.clearTimeout(timeoutId));
+        previewSectionScrollTimeoutsRef.current = [];
+    }, []);
+
+    const schedulePreviewSectionScroll = useCallback((section: StorefrontSectionKind) => {
+        if (typeof window === 'undefined') return;
+
+        clearScheduledPreviewSectionScrolls();
+        [0, 120, 320, 720].forEach(delay => {
+            const timeoutId = window.setTimeout(() => {
+                scrollPreviewSectionIntoView(section);
+            }, delay);
+            previewSectionScrollTimeoutsRef.current.push(timeoutId);
+        });
+    }, [clearScheduledPreviewSectionScrolls, scrollPreviewSectionIntoView]);
+
     const selectSectionForEditing = useCallback((
         section: StorefrontSectionKind,
         options: { scrollPreview?: boolean; scrollSidebar?: boolean } = {},
@@ -863,9 +884,24 @@ const StorefrontEditorView: React.FC = () => {
         setIsControlsPanelOpen(true);
         setIsContentExpanded(true);
 
-        if (scrollPreview) scrollPreviewSectionIntoView(section);
+        if (scrollPreview) {
+            pendingPreviewSectionScrollRef.current = section;
+            schedulePreviewSectionScroll(section);
+        }
         if (scrollSidebar) scrollSidebarSectionIntoView(section);
-    }, [scrollPreviewSectionIntoView, scrollSidebarSectionIntoView]);
+    }, [schedulePreviewSectionScroll, scrollSidebarSectionIntoView]);
+
+    useEffect(() => () => {
+        clearScheduledPreviewSectionScrolls();
+    }, [clearScheduledPreviewSectionScrolls]);
+
+    useEffect(() => {
+        const pendingSection = pendingPreviewSectionScrollRef.current;
+        if (!pendingSection || selectedSection !== pendingSection || !sections.includes(pendingSection)) return;
+
+        schedulePreviewSectionScroll(pendingSection);
+        pendingPreviewSectionScrollRef.current = null;
+    }, [schedulePreviewSectionScroll, sections, selectedSection]);
 
     const getSectionLabel = (kind: StorefrontSectionKind) =>
         t(`ecommerce.storefrontEditor.sectionLabels.${kind}`, storefrontSectionRegistry[kind].label);
@@ -2505,7 +2541,7 @@ const StorefrontEditorView: React.FC = () => {
                             src={previewUrl}
                             onLoad={() => {
                                 postPreviewPayload();
-                                scrollPreviewSectionIntoView(selectedSection);
+                                schedulePreviewSectionScroll(selectedSection);
                             }}
                             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                             scrolling="yes"
