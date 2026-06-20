@@ -10,7 +10,10 @@ import { X, Megaphone, Tag, Gift, Truck, Percent, Sparkles, Bell, Info, ChevronL
 import { AnnouncementBarData, AnnouncementMessage, ServiceIcon } from '../../../types/components';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
-import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
+import {
+    getStorefrontContentPositionClass,
+    getStorefrontSectionBackgroundStyle,
+} from './sectionVisualStyles';
 
 interface AnnouncementBarProps {
     data: AnnouncementBarData;
@@ -73,6 +76,15 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
         const map = { sm: 'text-xs', md: 'text-sm', lg: 'text-base', xl: 'text-lg' };
         return map[data.fontSize || 'sm'] || 'text-sm';
     };
+    const getContentPosition = () => getStorefrontContentPositionClass(data.contentPosition, 'center');
+    const getTextAlignment = () => {
+        const map: Record<string, string> = {
+            left: 'text-left',
+            center: 'text-center',
+            right: 'text-right',
+        };
+        return map[data.textAlignment || 'center'] || map.center;
+    };
 
     const IconComponent = data.icon ? iconMap[data.icon] || Megaphone : Megaphone;
 
@@ -108,7 +120,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
 
     // Message content renderer
     const renderMessage = (message: AnnouncementMessage, index: number) => (
-        <span key={index} className="inline-flex items-center gap-2">
+        <span key={index} className={`inline-flex items-center gap-2 ${getTextAlignment()}`}>
             <span>{message.text}</span>
             {message.link && message.linkText && (
                 <a
@@ -128,11 +140,11 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
             className={`${getPaddingY()} ${getPaddingX()} ${getFontSize()}`}
             style={barStyle}
         >
-            <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+            <div className={`mx-auto flex max-w-7xl items-center gap-3 ${getContentPosition()}`}>
                 {data.showIcon && (
                     <IconComponent size={16} style={{ color: iconColor }} />
                 )}
-                <div className="flex items-center gap-4">
+                <div className={`flex flex-wrap items-center gap-4 ${getContentPosition()}`}>
                     {messages.map((msg, i) => (
                         <React.Fragment key={i}>
                             {i > 0 && <span className="opacity-50">|</span>}
@@ -227,7 +239,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
             onMouseEnter={() => data.pauseOnHover && setIsPaused(true)}
             onMouseLeave={() => data.pauseOnHover && setIsPaused(false)}
         >
-            <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+            <div className={`mx-auto flex max-w-7xl items-center gap-3 ${getContentPosition()}`}>
                 {messages.length > 1 && (
                     <button
                         onClick={() => setCurrentIndex((prev) => (prev - 1 + messages.length) % messages.length)}
@@ -242,7 +254,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
                     <IconComponent size={16} style={{ color: iconColor }} />
                 )}
 
-                <div className="relative overflow-hidden" style={{ minWidth: '200px' }}>
+                <div className={`relative overflow-hidden ${getTextAlignment()}`} style={{ minWidth: '200px' }}>
                     <div
                         className="transition-all duration-500 ease-out"
                         style={{

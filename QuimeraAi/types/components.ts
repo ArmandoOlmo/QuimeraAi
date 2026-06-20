@@ -1690,6 +1690,8 @@ export interface FeaturedProductsData extends SectionBackgroundFields {
     cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
@@ -1749,6 +1751,8 @@ export interface CategoryGridData extends SectionBackgroundFields {
     cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
@@ -1870,6 +1874,8 @@ export interface SaleCountdownData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
     // Card style for products
@@ -1970,6 +1976,8 @@ export interface RecentlyViewedData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     titleFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
     // Colors
@@ -2193,6 +2201,8 @@ export interface AnnouncementBarData extends SectionBackgroundFields {
     paddingY: PaddingSize;
     paddingX: PaddingSize;
     fontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     // Colors
     colors: {
         background: string;

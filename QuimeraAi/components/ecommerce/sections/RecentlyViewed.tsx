@@ -11,11 +11,14 @@ import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import {
     getStorefrontAspectRatioClass,
+    getStorefrontColorWithOpacity,
+    getStorefrontContentPositionClass,
     getStorefrontOverlayGradient,
     getStorefrontPaddingXClass,
     getStorefrontPaddingYClass,
     getStorefrontRadiusClass,
     getStorefrontSectionBackgroundStyle,
+    getStorefrontTextAlignmentClass,
 } from './sectionVisualStyles';
 
 interface RecentlyViewedProps {
@@ -93,6 +96,8 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
         return map[data.titleFontSize || 'lg'] || 'text-3xl';
     };
+    const getTextAlignment = () => getStorefrontTextAlignmentClass(data.textAlignment, 'left');
+    const getContentPosition = () => getStorefrontContentPositionClass(data.contentPosition, 'left');
 
     const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
     const getCardAspectRatio = () => getStorefrontAspectRatioClass((data as any).cardAspectRatio, '4:5');
@@ -215,7 +220,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                     ) : (
                         <div
                             className="w-full h-full flex items-center justify-center"
-                            style={{ backgroundColor: colors?.accent + '20' }}
+                            style={{ backgroundColor: getStorefrontColorWithOpacity(colors?.accent, 0.14, 'rgba(79,70,229,0.14)') }}
                         >
                             <span style={{ color: colors?.cardText }}>Sin imagen</span>
                         </div>
@@ -255,7 +260,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
             <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
                 <div className="max-w-7xl mx-auto">
                     {(data.title || data.description) && (
-                        <div className="mb-6">
+                        <div className={`mb-6 flex flex-col ${getTextAlignment()}`}>
                             {data.title && (
                                 <h2
                                     className={`${getTitleSize()} font-bold mb-2`}
@@ -388,7 +393,9 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
             <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
                 <div className="max-w-7xl mx-auto">
                     <div className="animate-pulse">
-                        <div className="h-8 rounded w-1/4 mb-6" style={{ backgroundColor: colors?.borderColor }} />
+                        <div className={`mb-6 flex ${getContentPosition()}`}>
+                            <div className="h-8 w-1/4 min-w-48 rounded" style={{ backgroundColor: colors?.borderColor }} />
+                        </div>
                         <div className={`grid grid-cols-2 ${getGridCols()} gap-4`}>
                             {Array.from({ length: 5 }).map((_, i) => (
                                 <div key={i} className="aspect-square rounded-xl" style={{ backgroundColor: colors?.borderColor }} />
@@ -408,7 +415,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 {(data.title || data.description) && (
-                    <div className="mb-6">
+                    <div className={`mb-6 flex flex-col ${getTextAlignment()}`}>
                         {data.title && (
                             <h2
                                 className={`${getTitleSize()} font-bold mb-1`}

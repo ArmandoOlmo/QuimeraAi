@@ -17,11 +17,13 @@ import { resolveI18nField } from '../../../utils/i18nContent';
 import {
     getStorefrontAspectRatioClass,
     getStorefrontCardGapClass,
+    getStorefrontContentPositionClass,
     getStorefrontOverlayGradient,
     getStorefrontPaddingXClass,
     getStorefrontPaddingYClass,
     getStorefrontRadiusClass,
     getStorefrontSectionBackgroundStyle,
+    getStorefrontTextAlignmentClass,
 } from './sectionVisualStyles';
 
 interface CategoryGridProps {
@@ -73,6 +75,12 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
         return map[data.titleFontSize || 'lg'] || 'text-3xl';
     };
+    const getDescriptionSize = () => {
+        const map = { sm: 'text-sm', md: 'text-base', lg: 'text-lg', xl: 'text-xl' };
+        return map[data.descriptionFontSize || 'md'] || 'text-lg';
+    };
+    const getTextAlignment = () => getStorefrontTextAlignmentClass(data.textAlignment, 'center');
+    const getContentPosition = () => getStorefrontContentPositionClass(data.contentPosition, 'center');
 
     const getGridCols = () => {
         const cols = data.columns || 4;
@@ -287,7 +295,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
             <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
                 <div className="max-w-7xl mx-auto">
                     {(title || description) && (
-                        <div className="mb-8">
+                        <div className={`mb-8 flex flex-col ${getTextAlignment()}`}>
                             {title && (
                                 <h2
                                     className={`${getTitleSize()} font-bold mb-2`}
@@ -297,7 +305,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                                 </h2>
                             )}
                             {description && (
-                                <p className="text-lg" style={{ color: colors?.text }}>
+                                <p className={`max-w-2xl ${getDescriptionSize()}`} style={{ color: colors?.text }}>
                                     {description}
                                 </p>
                             )}
@@ -328,7 +336,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 {(title || description) && (
-                    <div className="text-center mb-10">
+                    <div className={`mb-10 flex flex-col ${getTextAlignment()}`}>
                         {title && (
                             <h2
                                 className={`${getTitleSize()} font-bold mb-3`}
@@ -338,7 +346,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                             </h2>
                         )}
                         {description && (
-                            <p className="text-lg max-w-2xl mx-auto" style={{ color: colors?.text }}>
+                            <p className={`max-w-2xl ${getDescriptionSize()}`} style={{ color: colors?.text }}>
                                 {description}
                             </p>
                         )}
@@ -351,10 +359,12 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                         No hay categorías disponibles
                     </div>
                 ) : (
-                    <div className={`grid grid-cols-1 ${getGridCols()} ${getCardGap()}`}>
-                        {categories.map((category) => (
-                            <CategoryCard key={category.id} category={category} />
-                        ))}
+                    <div className={`flex ${getContentPosition()}`}>
+                        <div className={`grid w-full grid-cols-1 ${getGridCols()} ${getCardGap()}`}>
+                            {categories.map((category) => (
+                                <CategoryCard key={category.id} category={category} />
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>

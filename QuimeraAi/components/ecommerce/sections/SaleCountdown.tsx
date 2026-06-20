@@ -12,11 +12,13 @@ import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/use
 import {
     getStorefrontAspectRatioClass,
     getStorefrontCardGapClass,
+    getStorefrontContentPositionClass,
     getStorefrontOverlayGradient,
     getStorefrontPaddingXClass,
     getStorefrontPaddingYClass,
     getStorefrontRadiusClass,
     getStorefrontSectionBackgroundStyle,
+    getStorefrontTextAlignmentClass,
 } from './sectionVisualStyles';
 
 interface SaleCountdownProps {
@@ -102,10 +104,16 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
         return map[data.titleFontSize || 'lg'] || 'text-3xl';
     };
+    const getDescriptionSize = () => {
+        const map = { sm: 'text-sm', md: 'text-base', lg: 'text-lg', xl: 'text-xl' };
+        return map[data.descriptionFontSize || 'md'] || 'text-base';
+    };
 
     const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
     const getCardAspectRatio = () => getStorefrontAspectRatioClass((data as any).cardAspectRatio, '4:5');
     const getImageObjectFit = () => (data as any).imageObjectFit || 'cover';
+    const getTextAlignment = () => getStorefrontTextAlignmentClass(data.textAlignment, 'left');
+    const getContentPosition = () => getStorefrontContentPositionClass(data.contentPosition, 'center');
 
     // Time unit component
     const TimeUnit = ({ value, label }: { value: number; label: string }) => (
@@ -269,9 +277,9 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
             style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
         >
             <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+                <div className={`flex flex-col items-center gap-8 lg:flex-row ${data.contentPosition === 'left' ? 'lg:justify-start' : data.contentPosition === 'right' ? 'lg:justify-end' : 'lg:justify-between'}`}>
                     {/* Content */}
-                    <div className="text-center lg:text-left">
+                    <div className={`flex flex-col ${getTextAlignment()}`}>
                         {data.badgeText && (
                             <span
                                 className={`inline-flex items-center gap-2 px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
@@ -291,7 +299,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                             {data.title}
                         </h2>
                         {data.description && (
-                            <p style={{ color: colors?.text }}>{data.description}</p>
+                            <p className={`max-w-2xl ${getDescriptionSize()}`} style={{ color: colors?.text }}>{data.description}</p>
                         )}
                         {data.discountText && (
                             <p
@@ -344,7 +352,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                 minHeight: data.height || 300,
             }}
         >
-            <div className="max-w-7xl mx-auto text-center">
+            <div className={`mx-auto flex max-w-7xl flex-col ${getTextAlignment()}`}>
                 {data.badgeText && (
                     <span
                         className={`inline-flex items-center gap-2 px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
@@ -376,7 +384,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
 
                 {/* Countdown */}
                 {!isExpired ? (
-                    <div className="flex justify-center gap-4 mb-8">
+                    <div className={`mb-8 flex gap-4 ${getContentPosition()}`}>
                         {data.showDays !== false && <TimeUnit value={timeLeft.days} label="Días" />}
                         {data.showHours !== false && <TimeUnit value={timeLeft.hours} label="Horas" />}
                         {data.showMinutes !== false && <TimeUnit value={timeLeft.minutes} label="Min" />}
@@ -389,7 +397,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                 )}
 
                 {data.description && (
-                    <p className="mb-6" style={{ color: colors?.text }}>{data.description}</p>
+                    <p className={`mb-6 max-w-2xl ${getDescriptionSize()}`} style={{ color: colors?.text }}>{data.description}</p>
                 )}
 
                 <a
@@ -422,7 +430,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
             className={`${getPaddingY()} ${getPaddingX()}`}
             style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
         >
-            <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className={`mx-auto flex max-w-4xl flex-col gap-4 md:flex-row md:items-center ${data.contentPosition === 'left' ? 'md:justify-start' : data.contentPosition === 'right' ? 'md:justify-end' : 'md:justify-between'}`}>
                 <div className="flex items-center gap-3">
                     {data.badgeText && (
                         <span

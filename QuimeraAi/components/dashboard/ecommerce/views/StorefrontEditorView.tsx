@@ -1452,7 +1452,7 @@ const StorefrontEditorView: React.FC = () => {
         const supportsColumns = ['featuredProducts', 'categoryGrid', 'recentlyViewed', 'trustBadges', 'productReviews'].includes(selectedSection);
         const supportsHeight = true;
         const supportsHeroControls = selectedSection === 'productHero' || selectedSection === 'collectionBanner';
-        const supportsPositionControls = supportsHeroControls || ['trustBadges', 'productReviews', 'productBundle'].includes(selectedSection);
+        const supportsPositionControls = true;
         const supportsBackgroundImage = true;
         const supportsCardGap = ['featuredProducts', 'categoryGrid', 'trustBadges', 'saleCountdown', 'recentlyViewed', 'productReviews', 'productBundle'].includes(selectedSection);
         const sectionTitleValue = String(
