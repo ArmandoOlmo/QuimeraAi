@@ -256,6 +256,59 @@ describe('storefrontRenderer registry', () => {
         });
     });
 
+    it('does not expose draft storefront editor config in published mode', () => {
+        const projectData = {
+            componentOrder: ['announcementBar'],
+            sectionVisibility: {
+                announcementBar: true,
+                productHero: true,
+            },
+            data: {
+                storefrontEditor: {
+                    draft: {
+                        componentOrder: ['productHero'],
+                        sectionVisibility: { productHero: true },
+                        sectionSettings: {
+                            productHero: {
+                                headline: 'Draft-only hero',
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        const publishedConfig = resolveStorefrontEditorConfig(projectData, { mode: 'published' });
+        const appliedProject = applyResolvedStorefrontEditorConfig(projectData, { mode: 'published' });
+        const pageData = resolveStorefrontPageData(appliedProject);
+
+        expect(publishedConfig).toMatchObject({
+            componentOrder: ['announcementBar', ...STOREFRONT_SECTION_KINDS.filter(section => section !== 'announcementBar')],
+            source: 'legacy',
+        });
+        expect(pageData.productHero?.headline).not.toBe('Draft-only hero');
+    });
+
+    it('lets draft storefront editor config start from published when draft is missing', () => {
+        const projectData = {
+            componentOrder: ['announcementBar'],
+            data: {
+                storefrontEditor: {
+                    published: {
+                        componentOrder: ['featuredProducts'],
+                        sectionVisibility: { featuredProducts: true },
+                    },
+                },
+            },
+        };
+
+        expect(resolveStorefrontEditorConfig(projectData, { mode: 'draft' })).toMatchObject({
+            componentOrder: ['featuredProducts', ...STOREFRONT_SECTION_KINDS.filter(section => section !== 'featuredProducts')],
+            sectionVisibility: { featuredProducts: true },
+            source: 'published',
+        });
+    });
+
     it('resolves nested storefront editor data for preview rendering', () => {
         const projectData = {
             componentOrder: ['announcementBar'],

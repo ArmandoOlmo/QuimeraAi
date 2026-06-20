@@ -65,9 +65,10 @@ function readConfigRecord(editorState: Record<string, any>, mode: StorefrontEdit
     const preferred = toRecord(editorState[mode]);
     if (Object.keys(preferred).length > 0) return preferred;
 
-    const fallbackMode = mode === 'published' ? 'draft' : 'published';
-    const fallback = toRecord(editorState[fallbackMode]);
-    if (Object.keys(fallback).length > 0) return fallback;
+    if (mode === 'draft') {
+        const fallback = toRecord(editorState.published);
+        if (Object.keys(fallback).length > 0) return fallback;
+    }
 
     return null;
 }

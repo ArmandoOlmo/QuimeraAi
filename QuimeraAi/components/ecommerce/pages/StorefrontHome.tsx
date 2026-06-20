@@ -54,7 +54,7 @@ const getStorefrontEditorSections = (
         : undefined;
 
     if (isEditorPreview) return draftSections || publishedSections;
-    return publishedSections || draftSections;
+    return publishedSections;
 };
 
 const getBusinessBlueprintSections = (
