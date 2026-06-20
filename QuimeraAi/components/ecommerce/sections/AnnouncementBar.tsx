@@ -14,6 +14,10 @@ import {
     getStorefrontContentPositionClass,
     getStorefrontSectionBackgroundStyle,
 } from './sectionVisualStyles';
+import {
+    buildStorefrontCatalogUrl,
+    isGenericStorefrontCatalogLink,
+} from '../../../utils/storefrontRouter';
 
 interface AnnouncementBarProps {
     data: AnnouncementBarData;
@@ -37,7 +41,7 @@ const iconMap: Record<string, React.FC<{ size?: number; className?: string }>> =
 const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, globalColors }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
-    const productListUrl = effectiveStoreId ? `/store/${effectiveStoreId}/products` : '/products';
+    const productListUrl = buildStorefrontCatalogUrl(effectiveStoreId);
 
     // Unified colors system
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
@@ -107,8 +111,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
     // Build href based on linkType
     const getMessageHref = (message: AnnouncementMessage): string => {
         if (!message.link) return '';
-        const normalizedLink = message.link.trim().toLowerCase();
-        if (['/tienda', '#products', '#store', '#tienda', '/shop', '/catalog', '/products'].includes(normalizedLink)) {
+        if (isGenericStorefrontCatalogLink(message.link)) {
             return productListUrl;
         }
         switch (message.linkType) {

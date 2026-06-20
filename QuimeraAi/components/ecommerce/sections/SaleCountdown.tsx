@@ -22,6 +22,7 @@ import {
     getStorefrontSectionBackgroundStyle,
     getStorefrontTextAlignmentClass,
 } from './sectionVisualStyles';
+import { buildStorefrontCatalogUrl } from '../../../utils/storefrontRouter';
 
 interface SaleCountdownProps {
     data: SaleCountdownData;
@@ -46,7 +47,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
-    const productListUrl = effectiveStoreId ? `/store/${effectiveStoreId}/products` : '/products';
+    const productListUrl = buildStorefrontCatalogUrl(effectiveStoreId);
 
     const { products: allProducts } = usePublicProducts(effectiveStoreId, {
         limitCount: data.productsToShow || 4,

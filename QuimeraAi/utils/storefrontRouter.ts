@@ -16,6 +16,37 @@ export interface StorefrontRouteState {
     };
 }
 
+export const STOREFRONT_CATALOG_PATH = 'tienda/productos';
+
+const GENERIC_STOREFRONT_CATALOG_LINKS = new Set([
+    '',
+    '#products',
+    '#store',
+    '#tienda',
+    '/tienda',
+    '/shop',
+    '/catalog',
+    '/products',
+    '/tienda/productos',
+    '/tienda/catalogo',
+]);
+
+export function buildStorefrontCatalogUrl(storeId?: string | null): string {
+    const normalizedStoreId = String(storeId || '').trim().replace(/^\/+|\/+$/g, '');
+    return normalizedStoreId
+        ? `/store/${normalizedStoreId}/${STOREFRONT_CATALOG_PATH}`
+        : `/${STOREFRONT_CATALOG_PATH}`;
+}
+
+export function isGenericStorefrontCatalogLink(value: unknown): boolean {
+    if (typeof value !== 'string') return false;
+
+    const normalized = value.trim().toLowerCase();
+    if (GENERIC_STOREFRONT_CATALOG_LINKS.has(normalized)) return true;
+
+    return /^\/store\/[^/]+\/(products|catalog|shop|tienda\/productos|tienda\/catalogo)\/?$/.test(normalized);
+}
+
 export function parseStorefrontUrl(url: string): StorefrontRouteState {
     const normalizedUrl = url.split(/[?#]/)[0] || '/';
     const path = normalizedUrl.replace(/^\/store\/[^/]+/, '').replace(/^\//, '') || '/';

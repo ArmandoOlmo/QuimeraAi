@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseStorefrontUrl } from '../../utils/storefrontRouter';
+import {
+    buildStorefrontCatalogUrl,
+    isGenericStorefrontCatalogLink,
+    parseStorefrontUrl,
+} from '../../utils/storefrontRouter';
 
 describe('storefrontRouter', () => {
     it('keeps storefront home and /tienda as landing pages', () => {
@@ -15,6 +19,15 @@ describe('storefrontRouter', () => {
         expect(parseStorefrontUrl('/store/store_123/shop')).toMatchObject({ view: 'products' });
         expect(parseStorefrontUrl('/store/store_123/tienda/productos')).toMatchObject({ view: 'products' });
         expect(parseStorefrontUrl('/store/store_123/tienda/catalogo')).toMatchObject({ view: 'products' });
+    });
+
+    it('builds canonical storefront catalog links while accepting legacy generic links', () => {
+        expect(buildStorefrontCatalogUrl('store_123')).toBe('/store/store_123/tienda/productos');
+        expect(buildStorefrontCatalogUrl()).toBe('/tienda/productos');
+        expect(isGenericStorefrontCatalogLink('/store/store_123/products')).toBe(true);
+        expect(isGenericStorefrontCatalogLink('/store/store_123/tienda/productos')).toBe(true);
+        expect(isGenericStorefrontCatalogLink('/tienda')).toBe(true);
+        expect(isGenericStorefrontCatalogLink('/custom-sale')).toBe(false);
     });
 
     it('parses product, category, checkout, account, and order routes', () => {

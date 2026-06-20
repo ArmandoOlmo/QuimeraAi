@@ -24,6 +24,10 @@ import {
     getStorefrontSectionBackgroundStyle,
     getStorefrontTextAlignmentClass,
 } from './sectionVisualStyles';
+import {
+    buildStorefrontCatalogUrl,
+    isGenericStorefrontCatalogLink,
+} from '../../../utils/storefrontRouter';
 
 interface ProductHeroProps {
     data: ProductHeroData;
@@ -44,7 +48,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
-    const productListUrl = effectiveStoreId ? `/store/${effectiveStoreId}/products` : '/products';
+    const productListUrl = buildStorefrontCatalogUrl(effectiveStoreId);
     
     // Unified colors system
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
@@ -111,8 +115,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     const handleButtonClick = () => {
         // Check if buttonUrl is a custom URL (not a generic store link)
         // Generic links like '/tienda', '#products', '' are treated as "navigate to product"
-        const isCustomUrl = data.buttonUrl && 
-            !['#products', '#store', '#tienda', '/tienda', ''].includes(data.buttonUrl.toLowerCase());
+        const isCustomUrl = data.buttonUrl && !isGenericStorefrontCatalogLink(data.buttonUrl);
         
         if (isCustomUrl) {
             window.location.href = data.buttonUrl!;

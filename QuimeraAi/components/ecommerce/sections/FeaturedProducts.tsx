@@ -29,6 +29,10 @@ import {
     getStorefrontSectionBackgroundStyle,
     getStorefrontTextAlignmentClass,
 } from './sectionVisualStyles';
+import {
+    buildStorefrontCatalogUrl,
+    isGenericStorefrontCatalogLink,
+} from '../../../utils/storefrontRouter';
 
 interface FeaturedProductsProps {
     data: FeaturedProductsData;
@@ -52,11 +56,9 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     const description = resolveI18nField(data.description as any, i18n.language);
     const productListUrl = React.useMemo(() => {
         const rawUrl = typeof data.viewAllUrl === 'string' ? data.viewAllUrl.trim() : '';
-        const normalizedUrl = rawUrl.toLowerCase();
-        const storefrontProductsUrl = effectiveStoreId ? `/store/${effectiveStoreId}/products` : '/products';
-        const genericStoreLinks = new Set(['', '#products', '#store', '#tienda', '/tienda', '/shop', '/catalog', '/products']);
+        const storefrontProductsUrl = buildStorefrontCatalogUrl(effectiveStoreId);
 
-        return genericStoreLinks.has(normalizedUrl) ? storefrontProductsUrl : rawUrl;
+        return isGenericStorefrontCatalogLink(rawUrl) ? storefrontProductsUrl : rawUrl;
     }, [data.viewAllUrl, effectiveStoreId]);
     
     // Unified colors system - merges global theme with component-specific colors
