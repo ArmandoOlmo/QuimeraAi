@@ -100,6 +100,7 @@ const previewWidths: Record<PreviewMode, string> = {
 
 const MIN_PREVIEW_FRAME_HEIGHT = 760;
 const STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX = 'quimera:storefront-editor-preview:';
+const STOREFRONT_EDITOR_PREVIEW_UPDATE = 'quimera:storefront-editor-preview:update';
 
 const isRecord = (value: unknown): value is Record<string, any> =>
     typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -296,6 +297,12 @@ const storefrontSelectOptions = {
         { value: 'imageFirst', label: 'Image First' },
         { value: 'quickBuy', label: 'Quick Buy' },
         { value: 'compact', label: 'Compact' },
+    ],
+    cardGap: [
+        { value: 'sm', label: 'Compacto' },
+        { value: 'md', label: 'Normal' },
+        { value: 'lg', label: 'Amplio' },
+        { value: 'xl', label: 'Editorial' },
     ],
     aspectRatio: [
         { value: '1:1', label: '1:1' },
@@ -563,7 +570,7 @@ const StorefrontEditorView: React.FC = () => {
     );
     const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
     const previewPayloadRef = useRef('');
-    const previewReloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
     const selectedPresetOverrideRef = useRef<StorefrontThemePresetId | null>(null);
     const presetProjectKeyRef = useRef(activePresetProjectKey);
     const [previewRevision, setPreviewRevision] = useState(0);
@@ -732,6 +739,17 @@ const StorefrontEditorView: React.FC = () => {
         visibility,
     ]);
 
+    const postPreviewPayload = useCallback((payload = previewPayloadRef.current) => {
+        if (!payload || typeof window === 'undefined') return;
+
+        previewFrameRef.current?.contentWindow?.postMessage({
+            type: STOREFRONT_EDITOR_PREVIEW_UPDATE,
+            sessionKey: previewSessionKey,
+            projectId: storeId,
+            payload,
+        }, window.location.origin);
+    }, [previewSessionKey, storeId]);
+
     useEffect(() => {
         if (!storeId || !project) return;
 
@@ -741,25 +759,14 @@ const StorefrontEditorView: React.FC = () => {
 
             previewPayloadRef.current = nextPayload;
             window.sessionStorage.setItem(previewSessionKey, nextPayload);
-            if (previewReloadTimerRef.current) {
-                clearTimeout(previewReloadTimerRef.current);
-            }
-            previewReloadTimerRef.current = setTimeout(() => {
-                setPreviewRevision(prev => prev + 1);
-                previewReloadTimerRef.current = null;
-            }, 120);
+            postPreviewPayload(nextPayload);
         } catch (err) {
             console.warn('Unable to prepare storefront editor preview data:', err);
         }
-    }, [previewProjectData, previewSessionKey, project, storeId]);
-
-    useEffect(() => () => {
-        if (previewReloadTimerRef.current) {
-            clearTimeout(previewReloadTimerRef.current);
-        }
-    }, []);
+    }, [postPreviewPayload, previewProjectData, previewSessionKey, project, storeId]);
 
     const refreshPreview = () => {
+        postPreviewPayload();
         setPreviewRevision(prev => prev + 1);
     };
 
@@ -1282,7 +1289,8 @@ const StorefrontEditorView: React.FC = () => {
         const supportsColumns = ['featuredProducts', 'categoryGrid', 'recentlyViewed', 'trustBadges'].includes(selectedSection);
         const supportsHeight = ['announcementBar', 'productHero', 'saleCountdown', 'collectionBanner'].includes(selectedSection);
         const supportsHeroControls = selectedSection === 'productHero' || selectedSection === 'collectionBanner';
-        const supportsBackgroundImage = selectedSection !== 'announcementBar';
+        const supportsBackgroundImage = true;
+        const supportsCardGap = ['featuredProducts', 'categoryGrid', 'recentlyViewed'].includes(selectedSection);
         const sectionTitleValue = String(
             selectedSection === 'productHero'
                 ? selectedSectionSettings.headline || ''
@@ -1558,8 +1566,16 @@ const StorefrontEditorView: React.FC = () => {
                     )}
                     <FontSizeSelector
                         label={t('ecommerce.storefrontEditor.titleSize', 'Tamaño de título')}
-                        value={String(selectedSectionSettings.titleFontSize || selectedSectionSettings.headlineFontSize || 'lg')}
+                        value={String(
+                            selectedSection === 'announcementBar'
+                                ? selectedSectionSettings.fontSize || 'sm'
+                                : selectedSectionSettings.titleFontSize || selectedSectionSettings.headlineFontSize || 'lg',
+                        )}
                         onChange={value => {
+                            if (selectedSection === 'announcementBar') {
+                                updateSelectedSectionSetting('fontSize', value);
+                                return;
+                            }
                             updateSelectedSectionSetting('titleFontSize', value);
                             updateSelectedSectionSetting('headlineFontSize', value);
                         }}
@@ -1623,6 +1639,14 @@ const StorefrontEditorView: React.FC = () => {
                                 onChange={value => updateSelectedSectionSetting('cardStyle', value)}
                                 options={storefrontSelectOptions.productCardStyle}
                                 noMargin
+                            />
+                        )}
+                        {supportsCardGap && (
+                            <Select
+                                label={t('ecommerce.storefrontEditor.cardGap', 'Separación')}
+                                value={String(selectedSectionSettings.cardGap || 'md')}
+                                onChange={value => updateSelectedSectionSetting('cardGap', value)}
+                                options={storefrontSelectOptions.cardGap}
                             />
                         )}
                         {selectedSection === 'categoryGrid' && (
@@ -2147,8 +2171,10 @@ const StorefrontEditorView: React.FC = () => {
                             <div className="w-14" />
                         </div>
                         <iframe
+                            ref={previewFrameRef}
                             title={t('ecommerce.storefrontEditor.previewTitle', 'Vista previa de tienda online')}
                             src={previewUrl}
+                            onLoad={() => postPreviewPayload()}
                             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                             scrolling="yes"
                             className="min-h-0 flex-1 border-0 bg-white"
@@ -2814,8 +2840,10 @@ const StorefrontEditorView: React.FC = () => {
                             }}
                         >
                             <iframe
+                                ref={previewFrameRef}
                                 title={t('ecommerce.storefrontEditor.previewTitle', 'Storefront preview')}
                                 src={previewUrl}
+                                onLoad={() => postPreviewPayload()}
                                 scrolling="yes"
                                 className="h-full w-full border-0 bg-white"
                                 style={{ minHeight: MIN_PREVIEW_FRAME_HEIGHT }}

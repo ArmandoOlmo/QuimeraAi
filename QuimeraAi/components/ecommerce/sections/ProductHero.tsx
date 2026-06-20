@@ -87,6 +87,40 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         return map[data.imageSize || 'medium'] || map.medium;
     };
 
+    const getTextAlignment = () => {
+        const map: Record<string, string> = {
+            left: 'items-start text-left',
+            center: 'items-center text-center',
+            right: 'items-end text-right',
+        };
+        return map[data.textAlignment || 'left'] || map.left;
+    };
+
+    const getContentPosition = () => {
+        const map: Record<string, string> = {
+            left: 'justify-start',
+            center: 'justify-center',
+            right: 'justify-end',
+        };
+        return map[data.contentPosition || 'left'] || map.left;
+    };
+
+    const withOpacity = (color: string, opacity: number) => {
+        if (/^#([0-9a-f]{6})$/i.test(color)) {
+            const alpha = Math.round(Math.max(0, Math.min(1, opacity)) * 255).toString(16).padStart(2, '0');
+            return `${color}${alpha}`;
+        }
+        return color;
+    };
+
+    const getOverlayBackground = () => {
+        if (data.overlayStyle === 'none') return 'transparent';
+        const overlayColor = (colors as any)?.overlayColor || colors?.background || '#000000';
+        const opacity = Math.max(0, Math.min(100, data.overlayOpacity ?? 55)) / 100;
+        if (data.overlayStyle === 'solid') return withOpacity(overlayColor, opacity);
+        return `linear-gradient(to right, ${withOpacity(overlayColor, opacity)} 0%, ${withOpacity(overlayColor, opacity * 0.4)} 100%)`;
+    };
+
     // Helper to navigate to product - uses callback if available, otherwise direct hash navigation
     const navigateToProduct = (slugOrId: string) => {
         if (onProductClick) {
@@ -140,7 +174,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
         return (
             <div 
-                className={`flex flex-col cursor-pointer ${showImage ? '' : 'items-center text-center'}`}
+                className={`flex flex-col cursor-pointer ${showImage ? '' : getTextAlignment()}`}
                 onClick={handleProductClick}
             >
                 {/* Badge */}
@@ -325,7 +359,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                 className="relative overflow-hidden"
                 style={{
                     ...getStorefrontSectionBackgroundStyle(data, colors?.background),
-                    minHeight: '400px',
+                    minHeight: `${data.height || 520}px`,
                 }}
             >
                 {/* Background Image */}
@@ -340,15 +374,16 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                 {/* Overlay */}
                 <div
                     className="absolute inset-0"
-                    style={{
-                        background: `linear-gradient(to right, ${(colors as any)?.overlayColor || colors?.background}dd, ${(colors as any)?.overlayColor || colors?.background}66)`,
-                    }}
+                    style={{ background: getOverlayBackground() }}
                 />
 
                 {/* Content */}
-                <div className={`relative ${getPaddingY()} ${getPaddingX()}`}>
-                    <div className="max-w-7xl mx-auto">
-                        <div className="max-w-2xl">
+                <div
+                    className={`relative flex ${getPaddingY()} ${getPaddingX()} ${getContentPosition()}`}
+                    style={{ minHeight: `${data.height || 520}px` }}
+                >
+                    <div className={`flex w-full max-w-7xl mx-auto ${getContentPosition()}`}>
+                        <div className={`max-w-2xl flex flex-col ${getTextAlignment()}`}>
                             {renderProductInfo(false)}
                         </div>
                     </div>

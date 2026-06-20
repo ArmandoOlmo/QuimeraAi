@@ -10,6 +10,7 @@ import { X, Megaphone, Tag, Gift, Truck, Percent, Sparkles, Bell, Info, ChevronL
 import { AnnouncementBarData, AnnouncementMessage, ServiceIcon } from '../../../types/components';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
 
 interface AnnouncementBarProps {
     data: AnnouncementBarData;
@@ -58,12 +59,12 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
 
     // Style helpers
     const getPaddingY = () => {
-        const map = { sm: 'py-2', md: 'py-3', lg: 'py-4' };
+        const map = { none: 'py-0', sm: 'py-2', md: 'py-3', lg: 'py-4', xl: 'py-5' };
         return map[data.paddingY] || 'py-3';
     };
 
     const getPaddingX = () => {
-        const map = { sm: 'px-4', md: 'px-6', lg: 'px-8' };
+        const map = { none: 'px-0', sm: 'px-4', md: 'px-6', lg: 'px-8', xl: 'px-10' };
         return map[data.paddingX] || 'px-6';
     };
 
@@ -82,6 +83,13 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
     const linkColor = colors?.link || textColor;
     const iconColor = colors?.iconColor || textColor;
     const borderColor = colors?.borderColor;
+    const barStyle = {
+        ...getStorefrontSectionBackgroundStyle(data, bgColor),
+        color: textColor,
+        borderBottom: borderColor ? `1px solid ${borderColor}` : 'none',
+        height: data.height ? `${data.height}px` : 'auto',
+    };
+    const edgeBackground = data.backgroundImageUrl ? 'rgba(0,0,0,0.24)' : bgColor;
 
     // Build href based on linkType
     const getMessageHref = (message: AnnouncementMessage): string => {
@@ -113,12 +121,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
     const renderStatic = () => (
         <div
             className={`${getPaddingY()} ${getPaddingX()} ${getFontSize()}`}
-            style={{
-                backgroundColor: bgColor,
-                color: textColor,
-                borderBottom: borderColor ? `1px solid ${borderColor}` : 'none',
-                height: data.height ? `${data.height}px` : 'auto',
-            }}
+            style={barStyle}
         >
             <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
                 {data.showIcon && (
@@ -149,18 +152,13 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
     const renderScrolling = () => (
         <div
             className={`${getPaddingY()} ${getFontSize()} overflow-hidden`}
-            style={{
-                backgroundColor: bgColor,
-                color: textColor,
-                borderBottom: borderColor ? `1px solid ${borderColor}` : 'none',
-                height: data.height ? `${data.height}px` : 'auto',
-            }}
+            style={barStyle}
             onMouseEnter={() => data.pauseOnHover && setIsPaused(true)}
             onMouseLeave={() => data.pauseOnHover && setIsPaused(false)}
         >
             <div className="relative flex items-center">
                 {data.showIcon && (
-                    <div className={`flex-shrink-0 ${getPaddingX()} z-10`} style={{ backgroundColor: bgColor }}>
+                    <div className={`flex-shrink-0 ${getPaddingX()} z-10`} style={{ backgroundColor: edgeBackground }}>
                         <IconComponent size={16} style={{ color: iconColor }} />
                     </div>
                 )}
@@ -193,7 +191,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
                     </div>
                 </div>
                 {data.dismissible && (
-                    <div className={`flex-shrink-0 ${getPaddingX()} z-10`} style={{ backgroundColor: bgColor }}>
+                    <div className={`flex-shrink-0 ${getPaddingX()} z-10`} style={{ backgroundColor: edgeBackground }}>
                         <button
                             onClick={() => setIsVisible(false)}
                             className="p-1 rounded hover:bg-white/10 transition-colors"
@@ -220,12 +218,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
     const renderRotating = () => (
         <div
             className={`${getPaddingY()} ${getPaddingX()} ${getFontSize()}`}
-            style={{
-                backgroundColor: bgColor,
-                color: textColor,
-                borderBottom: borderColor ? `1px solid ${borderColor}` : 'none',
-                height: data.height ? `${data.height}px` : 'auto',
-            }}
+            style={barStyle}
             onMouseEnter={() => data.pauseOnHover && setIsPaused(true)}
             onMouseLeave={() => data.pauseOnHover && setIsPaused(false)}
         >

@@ -51,6 +51,7 @@ interface StorefrontProductSearchProps {
 }
 
 const STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX = 'quimera:storefront-editor-preview:';
+const STOREFRONT_EDITOR_PREVIEW_UPDATE = 'quimera:storefront-editor-preview:update';
 
 const getStorefrontEditorPreviewData = (projectId: string): any | null => {
     if (typeof window === 'undefined') return null;
@@ -68,6 +69,29 @@ const getStorefrontEditorPreviewData = (projectId: string): any | null => {
         console.warn('Unable to load storefront editor preview data:', error);
         return null;
     }
+};
+
+const getStorefrontEditorPreviewSessionKey = (projectId: string): string | null => {
+    if (typeof window === 'undefined') return null;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('preview') !== 'storefront-editor') return null;
+
+    const sessionKey = params.get('editorSession') || `${STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX}${projectId}`;
+    return sessionKey.startsWith(STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX) ? sessionKey : null;
+};
+
+const parsePreviewPayload = (payload: unknown): any | null => {
+    if (typeof payload === 'string') {
+        try {
+            return JSON.parse(payload);
+        } catch (error) {
+            console.warn('Unable to parse storefront editor preview update:', error);
+            return null;
+        }
+    }
+
+    return payload && typeof payload === 'object' ? payload : null;
 };
 
 const StorefrontProductSearch: React.FC<StorefrontProductSearchProps> = ({
@@ -207,6 +231,31 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
 
         fetchData();
     }, [projectId, projectData]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const previewSessionKey = getStorefrontEditorPreviewSessionKey(projectId);
+        if (!previewSessionKey) return;
+
+        const handlePreviewUpdate = (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+
+            const message = event.data;
+            if (!message || message.type !== STOREFRONT_EDITOR_PREVIEW_UPDATE) return;
+            if (message.sessionKey !== previewSessionKey) return;
+
+            const nextProjectData = parsePreviewPayload(message.payload);
+            if (!nextProjectData) return;
+
+            setProjectData(nextProjectData);
+            setStorefrontConfigMode('draft');
+            setIsLoading(false);
+        };
+
+        window.addEventListener('message', handlePreviewUpdate);
+        return () => window.removeEventListener('message', handlePreviewUpdate);
+    }, [projectId]);
 
     // Navigation functions
     const navigate = (path: string) => {

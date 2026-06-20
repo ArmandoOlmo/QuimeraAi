@@ -99,6 +99,26 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
         return map[data.borderRadius || 'xl'] || 'rounded-xl';
     };
 
+    const getCardGap = () => {
+        const map: Record<string, string> = {
+            sm: 'gap-3',
+            md: 'gap-4',
+            lg: 'gap-6',
+            xl: 'gap-8',
+        };
+        return map[data.cardGap || 'md'] || 'gap-4';
+    };
+
+    const getCardGapPx = () => {
+        const map: Record<string, number> = {
+            sm: 12,
+            md: 16,
+            lg: 24,
+            xl: 32,
+        };
+        return map[data.cardGap || 'md'] || 16;
+    };
+
     const getGridCols = () => {
         const cols = data.columns || 5;
         switch (cols) {
@@ -143,7 +163,12 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                         )}
                         
                         {/* Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+                        <div
+                            className="absolute inset-0"
+                            style={{
+                                background: `linear-gradient(to top, ${colors?.overlayEnd || 'rgba(0,0,0,0.85)'} 0%, rgba(0,0,0,0.35) 55%, ${colors?.overlayStart || 'transparent'} 100%)`,
+                            }}
+                        />
                         
                         {/* Content on Image */}
                         <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -235,7 +260,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
         <div className="relative">
             <div className="overflow-hidden">
                 <div
-                    className="flex transition-transform duration-500 ease-out gap-4"
+                    className={`flex transition-transform duration-500 ease-out ${getCardGap()}`}
                     style={{
                         transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
                     }}
@@ -244,7 +269,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                         <div
                             key={product.id}
                             className="flex-shrink-0"
-                            style={{ width: `calc(${100 / itemsPerView}% - ${(itemsPerView - 1) * 16 / itemsPerView}px)` }}
+                            style={{ width: `calc(${100 / itemsPerView}% - ${(itemsPerView - 1) * getCardGapPx() / itemsPerView}px)` }}
                         >
                             <ProductCard product={product} />
                         </div>
@@ -278,7 +303,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
 
     // Grid variant
     const renderGrid = () => (
-        <div className={`grid grid-cols-2 ${getGridCols()} gap-4`}>
+        <div className={`grid grid-cols-2 ${getGridCols()} ${getCardGap()}`}>
             {recentProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
             ))}

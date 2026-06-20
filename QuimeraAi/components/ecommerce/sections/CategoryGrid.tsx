@@ -105,6 +105,16 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
         return data.imageObjectFit || 'cover';
     };
 
+    const getCardGap = () => {
+        const map: Record<string, string> = {
+            sm: 'gap-3',
+            md: 'gap-4 md:gap-6',
+            lg: 'gap-6 md:gap-8',
+            xl: 'gap-8 md:gap-10',
+        };
+        return map[data.cardGap || 'md'] || 'gap-4 md:gap-6';
+    };
+
     // Category Card Component
     const CategoryCard = ({ category }: { category: CategoryItem }) => {
         const categoryName = text(category.name as any);
@@ -336,7 +346,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                         No hay categorías disponibles
                     </div>
                 ) : (
-                    <div className={`grid grid-cols-1 ${getGridCols()} gap-6`}>
+                    <div className={`grid grid-cols-1 ${getGridCols()} ${getCardGap()}`}>
                         {categories.map((category) => (
                             <CategoryCard key={category.id} category={category} />
                         ))}

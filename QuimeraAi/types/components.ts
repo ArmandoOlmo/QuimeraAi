@@ -1740,6 +1740,7 @@ export interface CategoryGridData extends SectionBackgroundFields {
     // Styling
     paddingY: PaddingSize;
     paddingX: PaddingSize;
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     borderRadius?: BorderRadiusSize;
@@ -1948,6 +1949,7 @@ export interface RecentlyViewedData extends SectionBackgroundFields {
     // Styling
     paddingY: PaddingSize;
     paddingX: PaddingSize;
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     titleFontSize?: FontSize;
     borderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
@@ -1962,6 +1964,8 @@ export interface RecentlyViewedData extends SectionBackgroundFields {
         starColor?: string;
         borderColor?: string;
         buttonText?: string;
+        overlayStart?: string;
+        overlayEnd?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -2170,6 +2174,7 @@ export interface AnnouncementBarData extends SectionBackgroundFields {
         iconColor?: string;
         borderColor?: string;
     };
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================
