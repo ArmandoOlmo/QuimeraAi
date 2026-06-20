@@ -50,6 +50,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     const productListUrl = buildStorefrontCatalogUrl(effectiveStoreId);
 
     const { products: allProducts } = usePublicProducts(effectiveStoreId, {
+        productIds: data.productIds?.length ? data.productIds : undefined,
         limitCount: data.productsToShow || 4,
     });
 

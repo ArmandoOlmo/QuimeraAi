@@ -9,6 +9,7 @@ import { StorefrontProductItem } from '../types/components';
 
 export interface UsePublicProductsOptions {
     categoryId?: string;
+    productIds?: string[];
     searchTerm?: string;
     sortBy?: 'newest' | 'price-asc' | 'price-desc' | 'name';
     limitCount?: number;
@@ -37,11 +38,13 @@ export const usePublicProducts = (
 
     const {
         categoryId,
+        productIds: rawProductIds = [],
         searchTerm,
         sortBy = 'newest',
         limitCount = 50,
         realtime = false,
     } = options;
+    const productIdsKey = rawProductIds.filter(Boolean).join('|');
 
     // Fetch categories
     useEffect(() => {
@@ -90,12 +93,21 @@ export const usePublicProducts = (
         setError(null);
 
         try {
+            const productIds = productIdsKey ? productIdsKey.split('|').filter(Boolean) : [];
+
             // Query from store_products (hybrid schema: flat id/store_id + JSONB data)
-            const { data, error } = await supabase
+            let query = supabase
                 .from('store_products')
                 .select('id, store_id, data')
-                .eq('store_id', storeId)
-                .limit(limitCount * 2); // Fetch more to account for filtering
+                .eq('store_id', storeId);
+
+            if (productIds.length > 0) {
+                query = query.in('id', productIds);
+            } else {
+                query = query.limit(limitCount * 2); // Fetch more to account for filtering
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
 
@@ -140,28 +152,35 @@ export const usePublicProducts = (
             }
 
             // Client-side sorting
-            switch (sortBy) {
-                case 'price-asc':
-                    fetchedProducts.sort((a, b) => a.price - b.price);
-                    break;
-                case 'price-desc':
-                    fetchedProducts.sort((a, b) => b.price - a.price);
-                    break;
-                case 'name':
-                    fetchedProducts.sort((a, b) => a.name.localeCompare(b.name));
-                    break;
-                case 'newest':
-                default:
-                    fetchedProducts.sort((a, b) => {
-                        const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
-                        const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
-                        return dateB.getTime() - dateA.getTime();
-                    });
-                    break;
+            if (productIds.length > 0) {
+                const order = new Map(productIds.map((id, index) => [id, index]));
+                fetchedProducts.sort((a, b) => (order.get(a.id) ?? 9999) - (order.get(b.id) ?? 9999));
+            } else {
+                switch (sortBy) {
+                    case 'price-asc':
+                        fetchedProducts.sort((a, b) => a.price - b.price);
+                        break;
+                    case 'price-desc':
+                        fetchedProducts.sort((a, b) => b.price - a.price);
+                        break;
+                    case 'name':
+                        fetchedProducts.sort((a, b) => a.name.localeCompare(b.name));
+                        break;
+                    case 'newest':
+                    default:
+                        fetchedProducts.sort((a, b) => {
+                            const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
+                            const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
+                            return dateB.getTime() - dateA.getTime();
+                        });
+                        break;
+                }
             }
 
             // Apply limit after filtering and sorting
-            fetchedProducts = fetchedProducts.slice(0, limitCount);
+            if (productIds.length === 0) {
+                fetchedProducts = fetchedProducts.slice(0, limitCount);
+            }
 
             setProducts(fetchedProducts);
         } catch (err: any) {
@@ -171,7 +190,7 @@ export const usePublicProducts = (
         } finally {
             setIsLoading(false);
         }
-    }, [storeId, categoryId, searchTerm, sortBy, limitCount]);
+    }, [storeId, categoryId, searchTerm, sortBy, limitCount, productIdsKey]);
 
     // Initial fetch
     useEffect(() => {
@@ -214,7 +233,6 @@ export const usePublicProducts = (
 };
 
 export default usePublicProducts;
-
 
 
 

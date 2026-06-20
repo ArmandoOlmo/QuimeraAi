@@ -40,7 +40,9 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
 
-    const { products: allProducts, isLoading } = usePublicProducts(effectiveStoreId);
+    const { products: allProducts, isLoading } = usePublicProducts(effectiveStoreId, {
+        productIds: data.productIds?.length ? data.productIds : undefined,
+    });
 
     // Get bundle products
     const bundleProducts = React.useMemo(() => {

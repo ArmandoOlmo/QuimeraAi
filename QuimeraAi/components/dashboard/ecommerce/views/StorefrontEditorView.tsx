@@ -47,6 +47,7 @@ import {
     Plus,
     RefreshCw,
     Save,
+    Search,
     Settings,
     SlidersHorizontal,
     Sparkles,
@@ -60,6 +61,7 @@ import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useProject } from '../../../../contexts/project';
 import type { PageSection } from '../../../../types';
 import { DEFAULT_STOREFRONT_THEME, type StorefrontThemeSettings } from '../../../../types/ecommerce';
+import type { Category, Product } from '../../../../types/ecommerce';
 import type { StorefrontSectionKind } from '../../../../types/storefrontRenderer';
 import type { StorefrontThemePresetId } from '../../../../types/storefrontTheme';
 import ColorControl from '../../../ui/ColorControl';
@@ -79,6 +81,7 @@ import {
 import {
     normalizeStorefrontSectionVisibility,
     resolveStorefrontEditorConfig,
+    resolveStorefrontEditorInitialOrder,
     storefrontSectionRegistry,
     STOREFRONT_SECTION_KINDS,
     validateStorefrontSectionSettings,
@@ -88,6 +91,7 @@ import {
     STOREFRONT_THEME_PRESETS,
 } from '../../../../utils/storefrontTheme';
 import { useEcommerceContext } from '../EcommerceContext';
+import { useCategories } from '../hooks/useCategories';
 import { useProducts } from '../hooks/useProducts';
 import { useStoreSettings } from '../hooks/useStoreSettings';
 
@@ -273,8 +277,11 @@ const parseCsv = (value: string): string[] =>
         .map(item => item.trim())
         .filter(Boolean);
 
-const toCsv = (value: unknown): string =>
-    Array.isArray(value) ? value.map(item => String(item)).join(', ') : '';
+const normalizeIdList = (value: unknown): string[] => {
+    if (Array.isArray(value)) return value.map(item => String(item).trim()).filter(Boolean);
+    if (typeof value === 'string') return parseCsv(value);
+    return [];
+};
 
 const messagesToText = (value: unknown): string => {
     if (!Array.isArray(value)) return '';
@@ -648,12 +655,314 @@ const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps
     );
 };
 
+interface StorefrontProductChooserProps {
+    products: Product[];
+    selectedIds: string[];
+    mode: 'single' | 'multiple';
+    title: string;
+    description: string;
+    searchPlaceholder: string;
+    emptyLabel: string;
+    noMatchesLabel: string;
+    selectedLabel: string;
+    clearLabel: string;
+    notFoundLabel: string;
+    onChange: (productIds: string[]) => void;
+}
+
+const formatStorefrontProductPrice = (product: Product): string => {
+    const currency = product.currency || 'USD';
+
+    try {
+        return new Intl.NumberFormat('es-US', {
+            style: 'currency',
+            currency,
+        }).format(product.price || 0);
+    } catch {
+        return `$${Number(product.price || 0).toFixed(2)}`;
+    }
+};
+
+const StorefrontProductChooser: React.FC<StorefrontProductChooserProps> = ({
+    products,
+    selectedIds,
+    mode,
+    title,
+    description,
+    searchPlaceholder,
+    emptyLabel,
+    noMatchesLabel,
+    selectedLabel,
+    clearLabel,
+    notFoundLabel,
+    onChange,
+}) => {
+    const [query, setQuery] = useState('');
+    const normalizedQuery = query.trim().toLowerCase();
+    const productById = useMemo(() => new Map(products.map(product => [product.id, product])), [products]);
+    const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+    const missingIds = selectedIds.filter(id => !productById.has(id));
+    const filteredProducts = useMemo(() => {
+        if (!normalizedQuery) return products;
+
+        return products.filter(product => {
+            const haystack = [
+                product.name,
+                product.sku,
+                product.slug,
+                product.status,
+                ...(product.tags || []),
+            ].filter(Boolean).join(' ').toLowerCase();
+
+            return haystack.includes(normalizedQuery);
+        });
+    }, [normalizedQuery, products]);
+
+    const toggleProduct = (productId: string) => {
+        if (mode === 'single') {
+            onChange(selectedSet.has(productId) ? [] : [productId]);
+            return;
+        }
+
+        onChange(selectedSet.has(productId)
+            ? selectedIds.filter(id => id !== productId)
+            : [...selectedIds, productId]);
+    };
+
+    return (
+        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
+                        {title}
+                    </label>
+                    <p className="mt-1 text-[11px] leading-4 text-q-text-muted">{description}</p>
+                </div>
+                {selectedIds.length > 0 && (
+                    <button
+                        type="button"
+                        onClick={() => onChange([])}
+                        className="rounded-md px-2 py-1 text-[11px] font-semibold text-q-text-muted hover:bg-muted hover:text-foreground"
+                    >
+                        {clearLabel}
+                    </button>
+                )}
+            </div>
+
+            <div className="relative">
+                <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted" />
+                <input
+                    type="search"
+                    value={query}
+                    onChange={event => setQuery(event.target.value)}
+                    placeholder={searchPlaceholder}
+                    className="w-full rounded-md border border-q-border/80 bg-q-bg/80 py-2 pl-9 pr-3 text-sm text-q-text focus:border-q-accent/70 focus:outline-none focus:ring-2 focus:ring-q-accent/25"
+                />
+            </div>
+
+            <div className="text-[11px] font-medium text-q-text-muted">
+                {selectedIds.length} {selectedLabel}
+            </div>
+
+            {products.length === 0 ? (
+                <div className="rounded-md border border-dashed border-q-border px-3 py-4 text-sm text-q-text-muted">
+                    {emptyLabel}
+                </div>
+            ) : filteredProducts.length === 0 ? (
+                <div className="rounded-md border border-dashed border-q-border px-3 py-4 text-sm text-q-text-muted">
+                    {noMatchesLabel}
+                </div>
+            ) : (
+                <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
+                    {filteredProducts.map(product => {
+                        const isSelected = selectedSet.has(product.id);
+                        const imageUrl = product.images?.[0]?.url;
+
+                        return (
+                            <button
+                                key={product.id}
+                                type="button"
+                                aria-pressed={isSelected}
+                                onClick={() => toggleProduct(product.id)}
+                                className={`flex w-full items-center gap-3 rounded-lg border p-2 text-left transition-colors ${
+                                    isSelected
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-q-border bg-q-bg/40 hover:bg-muted'
+                                }`}
+                            >
+                                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted text-q-text-muted">
+                                    {imageUrl ? (
+                                        <img src={imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                                    ) : (
+                                        <Box size={18} />
+                                    )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="truncate text-sm font-semibold text-foreground">{product.name}</span>
+                                        {isSelected && <CheckCircle2 size={14} className="flex-shrink-0 text-primary" />}
+                                    </div>
+                                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-q-text-muted">
+                                        <span>{formatStorefrontProductPrice(product)}</span>
+                                        <span>{product.status}</span>
+                                        {product.sku && <span>SKU {product.sku}</span>}
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+
+            {missingIds.length > 0 && (
+                <div className="space-y-1 rounded-md border border-amber-500/20 bg-amber-500/10 p-2">
+                    <p className="text-[11px] text-amber-300">{notFoundLabel}</p>
+                    <div className="flex flex-wrap gap-1">
+                        {missingIds.map(id => (
+                            <button
+                                key={id}
+                                type="button"
+                                onClick={() => onChange(selectedIds.filter(selectedId => selectedId !== id))}
+                                className="rounded bg-amber-500/15 px-2 py-0.5 text-[11px] text-amber-200 hover:bg-amber-500/25"
+                            >
+                                {id}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+interface StorefrontCategoryChooserProps {
+    categories: Category[];
+    selectedValue: string;
+    title: string;
+    description: string;
+    searchPlaceholder: string;
+    emptyLabel: string;
+    noMatchesLabel: string;
+    clearLabel: string;
+    onChange: (categorySlug: string) => void;
+}
+
+const StorefrontCategoryChooser: React.FC<StorefrontCategoryChooserProps> = ({
+    categories,
+    selectedValue,
+    title,
+    description,
+    searchPlaceholder,
+    emptyLabel,
+    noMatchesLabel,
+    clearLabel,
+    onChange,
+}) => {
+    const [query, setQuery] = useState('');
+    const normalizedQuery = query.trim().toLowerCase();
+    const filteredCategories = useMemo(() => {
+        if (!normalizedQuery) return categories;
+
+        return categories.filter(category => {
+            const haystack = [
+                category.name,
+                category.slug,
+                category.description,
+            ].filter(Boolean).join(' ').toLowerCase();
+
+            return haystack.includes(normalizedQuery);
+        });
+    }, [categories, normalizedQuery]);
+
+    return (
+        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
+                        {title}
+                    </label>
+                    <p className="mt-1 text-[11px] leading-4 text-q-text-muted">{description}</p>
+                </div>
+                {selectedValue && (
+                    <button
+                        type="button"
+                        onClick={() => onChange('')}
+                        className="rounded-md px-2 py-1 text-[11px] font-semibold text-q-text-muted hover:bg-muted hover:text-foreground"
+                    >
+                        {clearLabel}
+                    </button>
+                )}
+            </div>
+
+            <div className="relative">
+                <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted" />
+                <input
+                    type="search"
+                    value={query}
+                    onChange={event => setQuery(event.target.value)}
+                    placeholder={searchPlaceholder}
+                    className="w-full rounded-md border border-q-border/80 bg-q-bg/80 py-2 pl-9 pr-3 text-sm text-q-text focus:border-q-accent/70 focus:outline-none focus:ring-2 focus:ring-q-accent/25"
+                />
+            </div>
+
+            {categories.length === 0 ? (
+                <div className="rounded-md border border-dashed border-q-border px-3 py-4 text-sm text-q-text-muted">
+                    {emptyLabel}
+                </div>
+            ) : filteredCategories.length === 0 ? (
+                <div className="rounded-md border border-dashed border-q-border px-3 py-4 text-sm text-q-text-muted">
+                    {noMatchesLabel}
+                </div>
+            ) : (
+                <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                    {filteredCategories.map(category => {
+                        const value = category.slug || category.id;
+                        const isSelected = selectedValue === value || selectedValue === category.id;
+
+                        return (
+                            <button
+                                key={category.id}
+                                type="button"
+                                aria-pressed={isSelected}
+                                onClick={() => onChange(isSelected ? '' : value)}
+                                className={`flex w-full items-center gap-3 rounded-lg border p-2 text-left transition-colors ${
+                                    isSelected
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-q-border bg-q-bg/40 hover:bg-muted'
+                                }`}
+                            >
+                                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted text-q-text-muted">
+                                    {category.imageUrl ? (
+                                        <img src={category.imageUrl} alt={category.name} className="h-full w-full object-cover" />
+                                    ) : (
+                                        <LayoutTemplate size={18} />
+                                    )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="truncate text-sm font-semibold text-foreground">{category.name}</span>
+                                        {isSelected && <CheckCircle2 size={14} className="flex-shrink-0 text-primary" />}
+                                    </div>
+                                    <div className="mt-0.5 truncate text-[11px] text-q-text-muted">
+                                        /category/{value}
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const StorefrontEditorView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId, projectId, projectName } = useEcommerceContext();
     const { projects, activeProject, refreshProjects } = useProject();
     const { products } = useProducts(user?.id || '', storeId);
+    const { categories } = useCategories(user?.id || '', storeId);
     const {
         settings,
         isLoading: settingsLoading,
@@ -686,12 +995,10 @@ const StorefrontEditorView: React.FC = () => {
         () => resolveStorefrontEditorConfig(project, { mode: 'draft' }),
         [projectContentSignature],
     );
-    const initialOrder = useMemo(() => {
-        const order = draftEditorConfig.componentOrder.length > 0
-            ? draftEditorConfig.componentOrder
-            : (project?.componentOrder || []).filter((section: string) => isStorefrontKind(section));
-        return order.length > 0 ? order as StorefrontSectionKind[] : defaultSections;
-    }, [draftEditorConfig.componentOrder, project?.componentOrder, projectContentSignature]);
+    const initialOrder = useMemo(
+        () => resolveStorefrontEditorInitialOrder(project, { mode: 'draft' }),
+        [projectContentSignature],
+    );
     const initialSectionSettings = useMemo(
         () => buildSectionSettingsMap(
             initialOrder,
@@ -742,7 +1049,9 @@ const StorefrontEditorView: React.FC = () => {
     const [isSavingTemplate, setIsSavingTemplate] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [selectedStructurePanel, setSelectedStructurePanel] = useState<StorefrontStructurePanel | null>(null);
+    const [selectedStructurePanel, setSelectedStructurePanel] = useState<StorefrontStructurePanel | null>(
+        initialOrder.length === 0 ? 'template' : null,
+    );
     const [isStructureExpanded, setIsStructureExpanded] = useState(true);
     const [isContentExpanded, setIsContentExpanded] = useState(true);
     const [isControlsPanelOpen, setIsControlsPanelOpen] = useState(true);
@@ -767,6 +1076,7 @@ const StorefrontEditorView: React.FC = () => {
             stableStringify(prev) === initialSectionSettingsSignature ? prev : initialSectionSettings
         ));
         setSelectedSection(prev => initialOrder.includes(prev) ? prev : initialOrder[0] || defaultSections[0]);
+        setSelectedStructurePanel(prev => (initialOrder.length === 0 && prev === null ? 'template' : prev));
         setTemplateState(editorState.templateState === 'published' ? 'published' : 'draft');
         if (presetProjectKeyRef.current !== activePresetProjectKey) {
             presetProjectKeyRef.current = activePresetProjectKey;
@@ -1185,8 +1495,13 @@ const StorefrontEditorView: React.FC = () => {
     };
 
     const removeSection = (kind: StorefrontSectionKind) => {
-        setSections(prev => prev.filter(section => section !== kind));
-        setSelectedSection(prev => prev === kind ? sections.find(section => section !== kind) || defaultSections[0] : prev);
+        const nextSections = sections.filter(section => section !== kind);
+
+        setSections(nextSections);
+        if (selectedSection === kind) {
+            setSelectedSection(nextSections[0] || defaultSections[0]);
+            setSelectedStructurePanel(nextSections.length === 0 ? 'template' : null);
+        }
         markTemplateDirty();
     };
 
@@ -1653,6 +1968,16 @@ const StorefrontEditorView: React.FC = () => {
             : selectedSection === 'collectionBanner' || selectedSection === 'productHero'
                 ? 520
                 : 360;
+        const selectedProductIds = normalizeIdList(selectedSectionSettings.productIds);
+        const selectedHeroProductId = String(selectedSectionSettings.productId || '');
+        const selectedCollectionSlug = String(selectedSectionSettings.collectionId || '');
+        const updateSelectedProductIds = (nextIds: string[]) => {
+            updateSelectedSectionSetting('productIds', nextIds);
+            if (selectedSection === 'featuredProducts') {
+                updateSelectedSectionSetting('sourceType', 'manual');
+                updateSelectedSectionSetting('productsToShow', Math.max(getSettingNumber(selectedSectionSettings, 'productsToShow', countFallback), nextIds.length || countFallback));
+            }
+        };
 
         const renderSectionHeader = () => (
             <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
@@ -1776,37 +2101,83 @@ const StorefrontEditorView: React.FC = () => {
                 )}
 
                 {selectedSection === 'featuredProducts' && (
-                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
-                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
-                            <Box size={14} />
-                            {t('ecommerce.storefrontEditor.productSource', 'Fuente de productos')}
-                        </label>
-                        <Select
-                            label={t('ecommerce.storefrontEditor.sourceType', 'Fuente')}
-                            value={String(selectedSectionSettings.sourceType || 'newest')}
-                            onChange={value => updateSelectedSectionSetting('sourceType', value)}
-                            options={storefrontSelectOptions.sourceType}
-                            noMargin
+                    <>
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                            <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                                <Box size={14} />
+                                {t('ecommerce.storefrontEditor.productSource', 'Fuente de productos')}
+                            </label>
+                            <Select
+                                label={t('ecommerce.storefrontEditor.sourceType', 'Fuente')}
+                                value={String(selectedSectionSettings.sourceType || 'newest')}
+                                onChange={value => updateSelectedSectionSetting('sourceType', value)}
+                                options={storefrontSelectOptions.sourceType}
+                                noMargin
+                            />
+                        </div>
+                        <StorefrontProductChooser
+                            products={products}
+                            selectedIds={selectedProductIds}
+                            mode="multiple"
+                            title={t('ecommerce.storefrontEditor.chooseProducts', 'Escoger productos')}
+                            description={t('ecommerce.storefrontEditor.chooseProductsHint', 'Selecciona productos reales de la tienda. Al escogerlos, la fuente cambia a Manual.')}
+                            searchPlaceholder={t('ecommerce.storefrontEditor.searchProducts', 'Buscar productos...')}
+                            emptyLabel={t('ecommerce.storefrontEditor.noProductsForChooser', 'No hay productos en esta tienda todavía. Crea productos en Ecommerce Admin.')}
+                            noMatchesLabel={t('ecommerce.storefrontEditor.noProductMatches', 'No encontramos productos con esa búsqueda.')}
+                            selectedLabel={t('ecommerce.storefrontEditor.productsSelected', 'productos seleccionados')}
+                            clearLabel={t('common.clear', 'Limpiar')}
+                            notFoundLabel={t('ecommerce.storefrontEditor.productIdsNotFound', 'Estos IDs guardados no están en la tienda actual.')}
+                            onChange={updateSelectedProductIds}
                         />
-                    </div>
+                    </>
                 )}
 
-                {(selectedSection === 'featuredProducts' || selectedSection === 'saleCountdown' || selectedSection === 'productBundle') && (
-                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
-                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">
-                            {t('ecommerce.storefrontEditor.productIds', 'IDs de productos')}
-                        </label>
-                        <textarea
-                            value={toCsv(selectedSectionSettings.productIds)}
-                            onChange={event => updateSelectedSectionSetting('productIds', parseCsv(event.target.value))}
-                            rows={3}
-                            className="w-full rounded-md border border-q-border/80 bg-q-bg/80 px-3 py-2.5 text-sm text-q-text focus:border-q-accent/70 focus:outline-none focus:ring-2 focus:ring-q-accent/25"
-                            placeholder={t('ecommerce.storefrontEditor.productIdsPlaceholder', 'prod_1, prod_2')}
-                        />
-                        <p className="mt-2 text-[11px] text-q-text-muted">
-                            {t('ecommerce.storefrontEditor.productIdsHint', 'Solo selecciona fuente de presentación. Los productos se administran en Ecommerce Admin.')}
-                        </p>
-                    </div>
+                {(selectedSection === 'saleCountdown' || selectedSection === 'productBundle') && (
+                    <StorefrontProductChooser
+                        products={products}
+                        selectedIds={selectedProductIds}
+                        mode="multiple"
+                        title={t('ecommerce.storefrontEditor.chooseProducts', 'Escoger productos')}
+                        description={t('ecommerce.storefrontEditor.chooseProductsNoAdminHint', 'Selecciona productos reales para este componente. La edición de precio, inventario y producto sigue en Ecommerce Admin.')}
+                        searchPlaceholder={t('ecommerce.storefrontEditor.searchProducts', 'Buscar productos...')}
+                        emptyLabel={t('ecommerce.storefrontEditor.noProductsForChooser', 'No hay productos en esta tienda todavía. Crea productos en Ecommerce Admin.')}
+                        noMatchesLabel={t('ecommerce.storefrontEditor.noProductMatches', 'No encontramos productos con esa búsqueda.')}
+                        selectedLabel={t('ecommerce.storefrontEditor.productsSelected', 'productos seleccionados')}
+                        clearLabel={t('common.clear', 'Limpiar')}
+                        notFoundLabel={t('ecommerce.storefrontEditor.productIdsNotFound', 'Estos IDs guardados no están en la tienda actual.')}
+                        onChange={updateSelectedProductIds}
+                    />
+                )}
+
+                {selectedSection === 'productHero' && (
+                    <StorefrontProductChooser
+                        products={products}
+                        selectedIds={selectedHeroProductId ? [selectedHeroProductId] : []}
+                        mode="single"
+                        title={t('ecommerce.storefrontEditor.chooseHeroProduct', 'Producto del hero')}
+                        description={t('ecommerce.storefrontEditor.chooseHeroProductHint', 'Escoge el producto real que se mostrará en el hero. Si lo dejas vacío, se usará el primer producto disponible.')}
+                        searchPlaceholder={t('ecommerce.storefrontEditor.searchProducts', 'Buscar productos...')}
+                        emptyLabel={t('ecommerce.storefrontEditor.noProductsForChooser', 'No hay productos en esta tienda todavía. Crea productos en Ecommerce Admin.')}
+                        noMatchesLabel={t('ecommerce.storefrontEditor.noProductMatches', 'No encontramos productos con esa búsqueda.')}
+                        selectedLabel={t('ecommerce.storefrontEditor.productsSelected', 'productos seleccionados')}
+                        clearLabel={t('common.clear', 'Limpiar')}
+                        notFoundLabel={t('ecommerce.storefrontEditor.productIdsNotFound', 'Estos IDs guardados no están en la tienda actual.')}
+                        onChange={nextIds => updateSelectedSectionSetting('productId', nextIds[0] || '')}
+                    />
+                )}
+
+                {selectedSection === 'collectionBanner' && (
+                    <StorefrontCategoryChooser
+                        categories={categories}
+                        selectedValue={selectedCollectionSlug}
+                        title={t('ecommerce.storefrontEditor.chooseCollection', 'Colección del banner')}
+                        description={t('ecommerce.storefrontEditor.chooseCollectionHint', 'Escoge una categoría real de la tienda. El banner navegará a esa página de categoría.')}
+                        searchPlaceholder={t('ecommerce.storefrontEditor.searchCollections', 'Buscar categorías...')}
+                        emptyLabel={t('ecommerce.storefrontEditor.noCollectionsForChooser', 'No hay categorías en esta tienda todavía. Crea categorías en Ecommerce Admin.')}
+                        noMatchesLabel={t('ecommerce.storefrontEditor.noCollectionMatches', 'No encontramos categorías con esa búsqueda.')}
+                        clearLabel={t('common.clear', 'Limpiar')}
+                        onChange={value => updateSelectedSectionSetting('collectionId', value)}
+                    />
                 )}
 
                 {supportsHeroControls && (
@@ -1814,19 +2185,6 @@ const StorefrontEditorView: React.FC = () => {
                         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
                             <Sparkles size={14} />
                             {t('ecommerce.storefrontEditor.ctaAndTarget', 'CTA y destino')}
-                        </label>
-                        <label className="block">
-                            <span className="text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">
-                                {selectedSection === 'productHero'
-                                    ? t('ecommerce.storefrontEditor.productId', 'ID de producto')
-                                    : t('ecommerce.storefrontEditor.collectionId', 'ID de colección')}
-                            </span>
-                            <input
-                                type="text"
-                                value={String(selectedSectionSettings.productId || selectedSectionSettings.collectionId || '')}
-                                onChange={event => updateSelectedSectionSetting(selectedSection === 'productHero' ? 'productId' : 'collectionId', event.target.value)}
-                                className="mt-1 w-full rounded-md border border-q-border/80 bg-q-bg/80 px-3 py-2.5 text-sm text-q-text focus:border-q-accent/70 focus:outline-none focus:ring-2 focus:ring-q-accent/25"
-                            />
                         </label>
                         <label className="block">
                             <span className="text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">

@@ -54,6 +54,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
     
     const { products, isLoading } = usePublicProducts(effectiveStoreId, {
+        productIds: data.productId ? [data.productId] : undefined,
         limitCount: 1,
     });
 

@@ -5,6 +5,7 @@ import {
     normalizeStorefrontSectionVisibility,
     resolveStorefrontPageData,
     resolveStorefrontEditorConfig,
+    resolveStorefrontEditorInitialOrder,
     resolveStorefrontSectionVisibility,
     resolveStorefrontSectionDecisions,
     STOREFRONT_SECTION_KINDS,
@@ -79,6 +80,25 @@ describe('storefrontRenderer registry', () => {
             componentOrder: [],
             source: 'draft',
         });
+    });
+
+    it('starts the editor with every section only for legacy or unconfigured storefronts', () => {
+        expect(resolveStorefrontEditorInitialOrder({
+            componentOrder: [],
+            data: {},
+        }, { mode: 'draft' })).toEqual(STOREFRONT_SECTION_KINDS);
+
+        expect(resolveStorefrontEditorInitialOrder({
+            data: {
+                storefrontEditor: {
+                    draft: {
+                        componentOrder: [],
+                        sections: [],
+                        sectionVisibility: {},
+                    },
+                },
+            },
+        }, { mode: 'draft' })).toEqual([]);
     });
 
     it('completes legacy storefront editor config with every storefront section', () => {

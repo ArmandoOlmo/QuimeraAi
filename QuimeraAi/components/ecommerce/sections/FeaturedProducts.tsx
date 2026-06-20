@@ -65,6 +65,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
     
     const { products: allProducts, isLoading } = usePublicProducts(effectiveStoreId, {
+        productIds: data.sourceType === 'manual' && data.productIds?.length ? data.productIds : undefined,
         limitCount: data.productsToShow || 8,
         sortBy: data.sourceType === 'newest' ? 'newest' : 'name',
     });

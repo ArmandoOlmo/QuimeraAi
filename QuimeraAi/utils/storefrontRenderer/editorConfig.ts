@@ -123,6 +123,16 @@ export function resolveStorefrontEditorConfig(
     };
 }
 
+export function resolveStorefrontEditorInitialOrder(
+    projectData: any,
+    options: { mode?: StorefrontEditorConfigMode } = {},
+): StorefrontSectionKind[] {
+    const config = resolveStorefrontEditorConfig(projectData, options);
+
+    if (config.source !== 'legacy') return config.componentOrder;
+    return config.componentOrder.length > 0 ? config.componentOrder : appendDefaultStorefrontSections([]);
+}
+
 export function applyResolvedStorefrontEditorConfig(
     projectData: any,
     options: { mode?: StorefrontEditorConfigMode } = {},
