@@ -45,7 +45,7 @@ interface MenuNav {
     items: MenuItemNav[];
 }
 
-interface ProjectPublicData {
+export interface ProjectPublicData {
     header: HeaderData;
     theme: ThemeData;
     name: string;
@@ -106,7 +106,7 @@ const normalizeHeaderData = (value: unknown, fallbackName = 'Store', fallbackThe
     } as HeaderData;
 };
 
-const normalizeProjectPublicData = (value: unknown): ProjectPublicData | null => {
+export const normalizeProjectPublicData = (value: unknown): ProjectPublicData | null => {
     if (!isRecord(value)) return null;
 
     const root = value;
