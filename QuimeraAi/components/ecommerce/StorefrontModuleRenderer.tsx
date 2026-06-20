@@ -26,6 +26,9 @@ interface StorefrontModuleRendererProps {
 }
 
 const STOREFRONT_EDITOR_SECTION_CLICK = 'quimera:storefront-editor:section-click';
+const STOREFRONT_EDITOR_SELECTED_SELECTOR = '[data-storefront-editor-selected="true"]';
+const STOREFRONT_EDITOR_SELECTED_OUTLINE = '2px solid #fbbf24';
+const STOREFRONT_EDITOR_SELECTED_SHADOW = '0 0 0 5px rgba(251, 191, 36, 0.18)';
 
 const storefrontComponentMap: Record<StorefrontSectionKind, React.FC<any>> = {
     announcementBar: AnnouncementBar,
@@ -45,6 +48,25 @@ const shouldShowEditorPlaceholder = (decision: StorefrontSectionRenderDecision):
 
 const getSectionLabel = (kind: string): string =>
     isStorefrontSectionKind(kind) ? storefrontSectionRegistry[kind].label : kind;
+
+const clearStorefrontEditorSectionHighlights = () => {
+    if (typeof document === 'undefined') return;
+
+    document
+        .querySelectorAll<HTMLElement>(STOREFRONT_EDITOR_SELECTED_SELECTOR)
+        .forEach(element => {
+            element.removeAttribute('data-storefront-editor-selected');
+            element.style.outline = '';
+            element.style.boxShadow = '';
+        });
+};
+
+const markStorefrontEditorSectionSelected = (element: HTMLElement) => {
+    clearStorefrontEditorSectionHighlights();
+    element.setAttribute('data-storefront-editor-selected', 'true');
+    element.style.outline = STOREFRONT_EDITOR_SELECTED_OUTLINE;
+    element.style.boxShadow = STOREFRONT_EDITOR_SELECTED_SHADOW;
+};
 
 const StorefrontEditorSectionPlaceholder: React.FC<{
     decision: StorefrontSectionRenderDecision;
@@ -119,6 +141,7 @@ const StorefrontModuleRenderer: React.FC<StorefrontModuleRendererProps> = ({
 
         event.preventDefault();
         event.stopPropagation();
+        markStorefrontEditorSectionSelected(event.currentTarget);
 
         window.parent?.postMessage({
             type: STOREFRONT_EDITOR_SECTION_CLICK,
