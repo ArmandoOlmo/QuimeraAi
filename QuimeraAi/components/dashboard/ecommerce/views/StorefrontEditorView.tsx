@@ -109,7 +109,6 @@ const previewWidths: Record<PreviewMode, string> = {
     mobile: '390px',
 };
 
-const MIN_PREVIEW_FRAME_HEIGHT = 760;
 const STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX = 'quimera:storefront-editor-preview:';
 const STOREFRONT_EDITOR_PREVIEW_UPDATE = 'quimera:storefront-editor-preview:update';
 const STOREFRONT_EDITOR_SELECT_SECTION = 'quimera:storefront-editor:select-section';
@@ -2510,8 +2509,7 @@ const StorefrontEditorView: React.FC = () => {
                             }}
                             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                             scrolling="yes"
-                            className="min-h-0 flex-1 border-0 bg-white"
-                            style={{ minHeight: MIN_PREVIEW_FRAME_HEIGHT }}
+                            className="h-full min-h-0 flex-1 border-0 bg-white"
                         />
                     </div>
                 </section>
