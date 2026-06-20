@@ -117,7 +117,7 @@ describe('storefrontRenderer registry', () => {
         });
     });
 
-    it('hides sections via sectionVisibility, visibleIn, enabled, and disabled blueprint status', () => {
+    it('hides sections via sectionVisibility, enabled, and disabled blueprint status', () => {
         const decisions = resolveStorefrontSectionDecisions({
             componentOrder: ['announcementBar', 'recentlyViewed', 'productReviews'],
             sectionVisibility: { announcementBar: false },
@@ -127,7 +127,8 @@ describe('storefrontRenderer registry', () => {
             },
         });
 
-        expect(decisions.slice(0, 3).map(decision => decision.status)).toEqual(['hidden', 'hidden', 'hidden']);
+        expect(decisions.slice(0, 3).map(decision => decision.status)).toEqual(['hidden', 'hidden', 'render']);
+        expect(decisions[2].data.visibleIn).toBe('landing');
         expect(decisions).toHaveLength(STOREFRONT_SECTION_KINDS.length);
 
         const blueprintHidden = resolveStorefrontSectionDecisions({

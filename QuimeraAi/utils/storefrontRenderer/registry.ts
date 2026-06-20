@@ -579,7 +579,6 @@ function hasDisabledBlueprintState(blueprintSection?: StorefrontSectionBlueprint
 
 function isHiddenBySettings(data: Record<string, unknown>): boolean {
     if (data.enabled === false) return true;
-    if (data.visibleIn === 'landing') return true;
     return false;
 }
 
