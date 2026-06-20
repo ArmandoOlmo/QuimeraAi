@@ -680,19 +680,51 @@ function orderedBlueprintSections(sections?: StorefrontSectionBlueprint[]): Stor
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
+function appendMissingStorefrontSections(order: StorefrontSectionKind[]): StorefrontSectionKind[] {
+    return [
+        ...order,
+        ...STOREFRONT_SECTION_KINDS.filter(section => !order.includes(section)),
+    ];
+}
+
 export function resolveStorefrontSectionDecisions(input: StorefrontSectionResolverInput): StorefrontSectionRenderDecision[] {
     const pageData = (input.pageData || {}) as Record<string, unknown>;
     const blueprintSections = orderedBlueprintSections(input.blueprintSections);
     const supportedBlueprintSections = blueprintSections.filter(section => isStorefrontSectionKind(section.type));
+    const componentSections = (input.componentOrder || []).filter(isStorefrontSectionKind);
 
     if (supportedBlueprintSections.length > 0) {
-        return supportedBlueprintSections.map((section, index) => (
-            buildDecision(section.type, index, 'blueprint', pageData, input.sectionVisibility, section)
-        ));
+        const blueprintByKind = new Map<StorefrontSectionKind, StorefrontSectionBlueprint>();
+        supportedBlueprintSections.forEach(section => {
+            if (!isStorefrontSectionKind(section.type) || blueprintByKind.has(section.type)) return;
+            blueprintByKind.set(section.type, section);
+        });
+
+        const blueprintOrder = supportedBlueprintSections
+            .map(section => section.type)
+            .filter(isStorefrontSectionKind);
+        const orderedSections = appendMissingStorefrontSections([
+            ...blueprintOrder,
+            ...componentSections.filter(section => !blueprintOrder.includes(section)),
+        ]);
+
+        return orderedSections.map((kind, index) => {
+            const blueprintSection = blueprintByKind.get(kind);
+
+            return buildDecision(
+                kind,
+                index,
+                blueprintSection ? 'blueprint' : 'componentOrder',
+                pageData,
+                input.sectionVisibility,
+                blueprintSection,
+            );
+        });
     }
 
-    const componentSections = (input.componentOrder || []).filter(isStorefrontSectionKind);
-    const sectionsToRender = componentSections.length > 0 ? componentSections : STOREFRONT_SECTION_KINDS;
+    const sectionsToRender = componentSections.length > 0
+        ? appendMissingStorefrontSections(componentSections)
+        : STOREFRONT_SECTION_KINDS;
 
     return sectionsToRender
         .map((kind, index) => buildDecision(kind, index, 'componentOrder', pageData, input.sectionVisibility));

@@ -20,12 +20,16 @@ describe('storefrontRenderer registry', () => {
             },
         });
 
-        expect(decisions.map(decision => decision.kind)).toEqual(['announcementBar', 'featuredProducts']);
+        expect(decisions.map(decision => decision.kind)).toEqual([
+            'announcementBar',
+            'featuredProducts',
+            ...STOREFRONT_SECTION_KINDS.filter(section => !['announcementBar', 'featuredProducts'].includes(section)),
+        ]);
         expect(decisions.every(decision => decision.source === 'componentOrder')).toBe(true);
         expect(getRenderableStorefrontSectionDecisions({
             componentOrder: ['hero', 'announcementBar', 'featuredProducts', 'footer'],
             pageData: {},
-        })).toHaveLength(2);
+        })).toHaveLength(STOREFRONT_SECTION_KINDS.length);
     });
 
     it('defaults an unconfigured storefront landing page to every storefront section', () => {
@@ -81,8 +85,10 @@ describe('storefrontRenderer registry', () => {
             ],
         });
 
-        expect(decisions.map(decision => decision.id)).toEqual(['announcement-blueprint', 'hero-blueprint']);
-        expect(decisions.every(decision => decision.source === 'blueprint')).toBe(true);
+        expect(decisions.map(decision => decision.kind)).toEqual(STOREFRONT_SECTION_KINDS);
+        expect(decisions.slice(0, 2).map(decision => decision.id)).toEqual(['announcement-blueprint', 'hero-blueprint']);
+        expect(decisions.slice(0, 2).every(decision => decision.source === 'blueprint')).toBe(true);
+        expect(decisions.slice(2).every(decision => decision.source === 'componentOrder')).toBe(true);
         expect(decisions[1].data.headline).toBe('From blueprint settings');
     });
 
@@ -103,7 +109,7 @@ describe('storefrontRenderer registry', () => {
             ],
         });
 
-        expect(decisions).toHaveLength(1);
+        expect(decisions).toHaveLength(STOREFRONT_SECTION_KINDS.length);
         expect(decisions[0]).toMatchObject({
             kind: 'featuredProducts',
             source: 'componentOrder',
@@ -121,7 +127,8 @@ describe('storefrontRenderer registry', () => {
             },
         });
 
-        expect(decisions.map(decision => decision.status)).toEqual(['hidden', 'hidden', 'hidden']);
+        expect(decisions.slice(0, 3).map(decision => decision.status)).toEqual(['hidden', 'hidden', 'hidden']);
+        expect(decisions).toHaveLength(STOREFRONT_SECTION_KINDS.length);
 
         const blueprintHidden = resolveStorefrontSectionDecisions({
             blueprintSections: [
@@ -162,11 +169,12 @@ describe('storefrontRenderer registry', () => {
             },
         });
 
-        expect(empty.map(decision => decision.status)).toEqual(['render', 'render']);
+        expect(empty.slice(0, 2).map(decision => decision.status)).toEqual(['render', 'render']);
+        expect(empty).toHaveLength(STOREFRONT_SECTION_KINDS.length);
         expect(getRenderableStorefrontSectionDecisions({
             componentOrder: ['productBundle'],
             pageData: { productBundle: { productIds: [] } },
-        })).toHaveLength(1);
+        })).toHaveLength(STOREFRONT_SECTION_KINDS.length);
     });
 
     it('validates section settings with warnings for reviewable incomplete states', () => {
@@ -236,12 +244,12 @@ describe('storefrontRenderer registry', () => {
         };
 
         expect(resolveStorefrontEditorConfig(projectData, { mode: 'draft' })).toMatchObject({
-            componentOrder: ['productHero'],
+            componentOrder: ['productHero', ...STOREFRONT_SECTION_KINDS.filter(section => section !== 'productHero')],
             sectionVisibility: { productHero: false },
             source: 'draft',
         });
         expect(resolveStorefrontEditorConfig(projectData, { mode: 'published' })).toMatchObject({
-            componentOrder: ['featuredProducts'],
+            componentOrder: ['featuredProducts', ...STOREFRONT_SECTION_KINDS.filter(section => section !== 'featuredProducts')],
             sectionVisibility: { featuredProducts: true },
             source: 'published',
         });
@@ -279,7 +287,7 @@ describe('storefrontRenderer registry', () => {
         });
 
         expect(resolveStorefrontEditorConfig(projectData, { mode: 'draft' })).toMatchObject({
-            componentOrder: ['collectionBanner'],
+            componentOrder: ['collectionBanner', ...STOREFRONT_SECTION_KINDS.filter(section => section !== 'collectionBanner')],
             sectionVisibility: { collectionBanner: true },
             source: 'draft',
         });
@@ -287,7 +295,7 @@ describe('storefrontRenderer registry', () => {
             title: 'Coleccion destacada',
             visibleIn: 'store',
         });
-        expect(decisions).toHaveLength(1);
+        expect(decisions).toHaveLength(STOREFRONT_SECTION_KINDS.length);
         expect(decisions[0]).toMatchObject({
             kind: 'collectionBanner',
             status: 'render',

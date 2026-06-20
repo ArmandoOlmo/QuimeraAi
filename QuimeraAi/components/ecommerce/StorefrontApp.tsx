@@ -197,7 +197,7 @@ function parseUrl(url: string): RouteState {
     const path = url.replace(/^\/store\/[^\/]+/, '').replace(/^\//, '') || '/';
 
     // Product listing page. The storefront home stays a landing page; catalog is a separate route.
-    if (/^(products|catalog|shop|tienda)\/?$/.test(path)) {
+    if (/^(products|catalog|shop|tienda\/productos|tienda\/catalogo)\/?$/.test(path)) {
         return { view: 'products', params: {} };
     }
 

@@ -95,10 +95,12 @@ export function resolveStorefrontEditorConfig(
     const selectedVisibility = toRecord(selectedConfig?.sectionVisibility) as Record<string, boolean>;
     const selectedSettings = normalizeSettings(selectedConfig?.sectionSettings);
 
-    const resolvedOrder = selectedOrder.length > 0 ? selectedOrder : legacyOrder;
+    const resolvedOrder = appendDefaultStorefrontSections(
+        selectedOrder.length > 0 ? selectedOrder : legacyOrder,
+    );
 
     return {
-        componentOrder: selectedConfig ? resolvedOrder : appendDefaultStorefrontSections(resolvedOrder),
+        componentOrder: resolvedOrder,
         sectionVisibility: {
             ...legacyVisibility,
             ...selectedVisibility,
