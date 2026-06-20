@@ -4,6 +4,7 @@ import type { CornerGradientConfig, SectionBackgroundFields } from '../../../typ
 type SectionVisualData = SectionBackgroundFields & {
     cornerGradient?: Partial<CornerGradientConfig>;
     height?: number;
+    glassEffect?: boolean;
 };
 
 const isHexColor = (value?: string): boolean =>
@@ -75,6 +76,19 @@ export const getStorefrontCardGapPx = (value?: string, fallback = 'md'): number 
     return map[value || fallback] || map[fallback] || map.md;
 };
 
+export const getStorefrontAspectRatioClass = (value?: string, fallback = '1:1'): string => {
+    const map: Record<string, string> = {
+        auto: 'aspect-auto',
+        '1:1': 'aspect-square',
+        '4:3': 'aspect-[4/3]',
+        '3:4': 'aspect-[3/4]',
+        '4:5': 'aspect-[4/5]',
+        '16:9': 'aspect-video',
+        '9:16': 'aspect-[9/16]',
+    };
+    return map[value || fallback] || map[fallback] || map['1:1'];
+};
+
 export const getStorefrontColumnsClass = (columns?: number, fallback = 4): string => {
     switch (columns || fallback) {
         case 2: return 'sm:grid-cols-2';
@@ -108,6 +122,14 @@ export const getStorefrontColorWithOpacity = (color: string | undefined, opacity
     const alpha = Math.max(0, Math.min(1, opacity));
     return isHexColor(safeColor) ? hexToRgba(safeColor, alpha) : safeColor;
 };
+
+export const getStorefrontOverlayGradient = (
+    overlayStart?: string,
+    overlayEnd?: string,
+    mid = 'rgba(0,0,0,0.34)',
+): string => (
+    `linear-gradient(to top, ${overlayEnd || 'rgba(0,0,0,0.82)'} 0%, ${mid} 58%, ${overlayStart || 'transparent'} 100%)`
+);
 
 export const getStorefrontOverlayBackground = (
     overlayStyle: unknown,
@@ -163,11 +185,20 @@ export const getStorefrontSectionBackgroundStyle = (
         data.backgroundImageUrl ? `url(${data.backgroundImageUrl})` : undefined,
     ].filter(Boolean);
 
+    const effectiveBackgroundColor = data.glassEffect
+        ? getStorefrontColorWithOpacity(backgroundColor, 0.82, backgroundColor || '#ffffff')
+        : backgroundColor;
+
     return {
-        backgroundColor,
+        backgroundColor: effectiveBackgroundColor,
         ...(typeof data.height === 'number' && Number.isFinite(data.height) && data.height > 0
             ? { minHeight: `${data.height}px` }
             : {}),
+        ...(data.glassEffect ? {
+            backdropFilter: 'blur(18px) saturate(1.35)',
+            WebkitBackdropFilter: 'blur(18px) saturate(1.35)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
+        } : {}),
         ...(layers.length > 0 ? {
             backgroundImage: layers.join(', '),
             backgroundPosition: data.backgroundImageUrl

@@ -18,8 +18,13 @@ import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/use
 import { resolveI18nField } from '../../../utils/i18nContent';
 import { createProductCardViewModel } from '../../../utils/productCard';
 import {
+    getStorefrontAspectRatioClass,
     getStorefrontCardGapClass,
     getStorefrontCardGapPx,
+    getStorefrontOverlayGradient,
+    getStorefrontPaddingXClass,
+    getStorefrontPaddingYClass,
+    getStorefrontRadiusClass,
     getStorefrontSectionBackgroundStyle,
 } from './sectionVisualStyles';
 
@@ -126,27 +131,8 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     };
 
     // Style helpers - matching ProductSearchPage layout options
-    const getPaddingY = () => {
-        const map: Record<string, string> = { 
-            none: 'py-0', 
-            sm: 'py-4', 
-            md: 'py-6 md:py-8', 
-            lg: 'py-8 md:py-12', 
-            xl: 'py-12 md:py-16' 
-        };
-        return map[data.paddingY] || 'py-6 md:py-8';
-    };
-
-    const getPaddingX = () => {
-        const map: Record<string, string> = { 
-            none: 'px-0', 
-            sm: 'px-2 sm:px-4', 
-            md: 'px-4 sm:px-6 lg:px-8', 
-            lg: 'px-6 sm:px-8 lg:px-12', 
-            xl: 'px-8 sm:px-12 lg:px-16' 
-        };
-        return map[data.paddingX] || 'px-4 sm:px-6 lg:px-8';
-    };
+    const getPaddingY = () => getStorefrontPaddingYClass(data.paddingY, 'lg');
+    const getPaddingX = () => getStorefrontPaddingXClass(data.paddingX, 'md');
 
     const getTitleSize = () => {
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
@@ -167,18 +153,9 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
         return getStorefrontCardGapClass(data.cardGap, 'md');
     };
 
-    const getBorderRadius = () => {
-        const map: Record<string, string> = { 
-            none: 'rounded-none', 
-            sm: 'rounded-sm', 
-            md: 'rounded-md', 
-            lg: 'rounded-lg', 
-            xl: 'rounded-xl', 
-            '2xl': 'rounded-2xl', 
-            full: 'rounded-full' 
-        };
-        return map[data.borderRadius || 'xl'] || 'rounded-xl';
-    };
+    const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
+    const getCardAspectRatio = () => getStorefrontAspectRatioClass((data as any).cardAspectRatio, '4:5');
+    const getImageObjectFit = () => (data as any).imageObjectFit || 'cover';
 
     // Product Card Component
     const ProductCard = ({ product }: { product: StorefrontProductItem }) => {
@@ -195,7 +172,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
             minimal: 'bg-transparent',
             modern: `${getBorderRadius()} shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1`,
             elegant: `${getBorderRadius()} shadow-md hover:shadow-lg transition-all duration-300 border`,
-            overlay: `${getBorderRadius()} overflow-hidden group`,
+            overlay: `${getBorderRadius()} overflow-hidden group shadow-lg ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl`,
             luxury: `${getBorderRadius()} shadow-[0_18px_45px_rgba(15,23,42,0.10)] transition-all duration-300 hover:-translate-y-1 border`,
             marketplace: `${getBorderRadius()} shadow-sm hover:shadow-lg transition-all duration-300 border`,
             editorial: 'bg-transparent',
@@ -211,19 +188,19 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                 onClick={() => product.slug && onProductClick?.(product.slug)}
             >
                 {/* Image */}
-                <div className={`relative aspect-square overflow-hidden ${visualCardStyle !== 'overlay' ? getBorderRadius() : ''}`}>
+                <div className={`relative ${getCardAspectRatio()} overflow-hidden ${visualCardStyle !== 'overlay' ? getBorderRadius() : ''}`}>
                     {card.image?.url ? (
                         <img
                             src={card.image.url}
                             alt={card.image.altText}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            style={{ objectFit: getImageObjectFit() as any }}
                         />
                     ) : (
                         <div 
-                            className="w-full h-full flex items-center justify-center"
-                            style={{ backgroundColor: colors?.accent + '20' }}
+                            className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.24),transparent_42%),linear-gradient(135deg,rgba(79,70,229,0.34),rgba(15,23,42,0.92))]"
                         >
-                            <span style={{ color: colors?.cardText }}>Sin imagen</span>
+                            <span className="rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">Sin imagen</span>
                         </div>
                     )}
 
@@ -261,15 +238,46 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         <div 
                             className="absolute inset-0 flex flex-col justify-end p-4"
                             style={{ 
-                                background: `linear-gradient(to top, ${colors?.overlayEnd} 0%, rgba(0,0,0,0.36) 58%, ${colors?.overlayStart} 100%)`
+                                background: getStorefrontOverlayGradient(colors?.overlayStart, colors?.overlayEnd),
                             }}
                         >
-                            <h3 className="text-base font-semibold leading-tight line-clamp-2 drop-shadow-sm" style={{ color: colors?.buttonText }}>{card.name}</h3>
+                            <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                                {card.badges.slice(0, 2).map(badge => (
+                                    <span
+                                        key={badge.kind}
+                                        className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide shadow-sm backdrop-blur-md"
+                                        style={{
+                                            backgroundColor: badge.kind === 'sale'
+                                                ? colors?.badgeBackground || '#ef4444'
+                                                : 'rgba(255,255,255,0.16)',
+                                            color: badge.kind === 'sale'
+                                                ? colors?.badgeText || '#ffffff'
+                                                : colors?.buttonText || '#ffffff',
+                                        }}
+                                    >
+                                        {badge.label}
+                                    </span>
+                                ))}
+                            </div>
+                            <h3 className="text-base font-semibold leading-tight line-clamp-2 drop-shadow-sm" style={{ color: colors?.buttonText || '#ffffff' }}>{card.name}</h3>
+                            {data.showRating && card.rating && (
+                                <div className="mt-2 flex items-center gap-1">
+                                    {Array.from({ length: 5 }).map((_, i) => (
+                                        <Star
+                                            key={i}
+                                            size={12}
+                                            className={i < Math.round(card.rating!.value) ? 'text-yellow-300' : 'text-white/40'}
+                                            fill={i < Math.round(card.rating!.value) ? 'currentColor' : 'none'}
+                                        />
+                                    ))}
+                                    <span className="ml-1 text-xs text-white/80">{card.rating.displayText}</span>
+                                </div>
+                            )}
                             {data.showPrice && (
-                                <div className="mt-2 flex items-center gap-2">
-                                    <span className="text-lg font-bold drop-shadow-sm" style={{ color: colors?.buttonText }}>{card.displayPrice}</span>
+                                <div className="mt-3 flex items-end justify-between gap-3">
+                                    <span className="text-lg font-bold drop-shadow-sm" style={{ color: colors?.buttonText || '#ffffff' }}>{card.displayPrice}</span>
                                     {card.hasDiscount && card.displayCompareAtPrice && (
-                                        <span className="text-sm line-through" style={{ color: colors?.buttonText, opacity: 0.7 }}>
+                                        <span className="text-sm line-through" style={{ color: colors?.buttonText || '#ffffff', opacity: 0.7 }}>
                                             {card.displayCompareAtPrice}
                                         </span>
                                     )}
@@ -432,7 +440,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         <div 
                             className="absolute inset-0"
                             style={{ 
-                                background: `linear-gradient(to top, ${colors?.overlayEnd}, ${colors?.overlayStart})`
+                                background: getStorefrontOverlayGradient(colors?.overlayStart, colors?.overlayEnd)
                             }} 
                         />
                         <div className="absolute bottom-0 left-0 right-0 p-6">

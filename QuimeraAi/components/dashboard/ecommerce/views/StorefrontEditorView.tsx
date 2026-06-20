@@ -319,6 +319,7 @@ const storefrontSelectOptions = {
         { value: '1:1', label: '1:1' },
         { value: '4:3', label: '4:3' },
         { value: '3:4', label: '3:4' },
+        { value: '4:5', label: '4:5' },
         { value: '16:9', label: '16:9' },
         { value: '9:16', label: '9:16' },
     ],
@@ -510,6 +511,7 @@ interface SortableStorefrontSectionItemProps {
     hideLabel: string;
     showLabel: string;
     removeLabel: string;
+    dragHandleLabel: string;
 }
 
 const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps> = ({
@@ -525,6 +527,7 @@ const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps
     hideLabel,
     showLabel,
     removeLabel,
+    dragHandleLabel,
 }) => {
     const {
         attributes,
@@ -545,6 +548,7 @@ const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps
         <div
             ref={setNodeRef}
             style={style}
+            role="listitem"
             className={`group flex w-full items-center gap-2 rounded-lg border p-2.5 text-left transition-colors ${
                 isSelected
                     ? 'border-primary/30 bg-primary/10'
@@ -557,7 +561,8 @@ const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps
                 {...listeners}
                 onClick={(event) => event.stopPropagation()}
                 className="flex h-7 w-7 flex-shrink-0 touch-none items-center justify-center rounded-md bg-muted text-q-text-muted transition-colors cursor-grab active:cursor-grabbing hover:bg-secondary hover:text-foreground"
-                aria-label={`Reordenar ${label}`}
+                aria-label={`${dragHandleLabel}: ${label}`}
+                title={`${dragHandleLabel}: ${label}`}
             >
                 <GripVertical size={14} />
             </button>
@@ -1292,7 +1297,7 @@ const StorefrontEditorView: React.FC = () => {
             onDragEnd={handleSectionDragEnd}
         >
             <SortableContext items={sections} strategy={verticalListSortingStrategy}>
-                <div className={className}>
+                <div className={className} role="list" aria-label={t('ecommerce.storefrontEditor.sortableSections', 'Componentes del storefront')}>
                     {sections.map((section, index) => {
                         const item = storefrontSectionRegistry[section];
                         const isVisible = visibility[section] !== false;
@@ -1314,6 +1319,7 @@ const StorefrontEditorView: React.FC = () => {
                                 hideLabel={t('common.hide', 'Ocultar')}
                                 showLabel={t('common.show', 'Mostrar')}
                                 removeLabel={t('common.remove', 'Eliminar')}
+                                dragHandleLabel={t('ecommerce.storefrontEditor.dragToReorder', 'Arrastra para reordenar')}
                             />
                         );
                     })}
@@ -1817,13 +1823,27 @@ const StorefrontEditorView: React.FC = () => {
                             {t('ecommerce.storefrontEditor.cardControls', 'Tarjetas')}
                         </label>
                         {supportsProductCards && (
-                            <Select
-                                label={t('ecommerce.storefrontEditor.cardStyle', 'Diseño de tarjeta')}
-                                value={String(selectedSectionSettings.cardStyle || 'overlay')}
-                                onChange={value => updateSelectedSectionSetting('cardStyle', value)}
-                                options={storefrontSelectOptions.productCardStyle}
-                                noMargin
-                            />
+                            <>
+                                <Select
+                                    label={t('ecommerce.storefrontEditor.cardStyle', 'Diseño de tarjeta')}
+                                    value={String(selectedSectionSettings.cardStyle || 'overlay')}
+                                    onChange={value => updateSelectedSectionSetting('cardStyle', value)}
+                                    options={storefrontSelectOptions.productCardStyle}
+                                    noMargin
+                                />
+                                <Select
+                                    label={t('ecommerce.storefrontEditor.cardAspectRatio', 'Proporción de tarjeta')}
+                                    value={String(selectedSectionSettings.cardAspectRatio || '4:5')}
+                                    onChange={value => updateSelectedSectionSetting('cardAspectRatio', value)}
+                                    options={storefrontSelectOptions.aspectRatio}
+                                />
+                                <Select
+                                    label={t('ecommerce.storefrontEditor.imageFit', 'Ajuste de imagen')}
+                                    value={String(selectedSectionSettings.imageObjectFit || 'cover')}
+                                    onChange={value => updateSelectedSectionSetting('imageObjectFit', value)}
+                                    options={storefrontSelectOptions.objectFit}
+                                />
+                            </>
                         )}
                         {supportsCardGap && (
                             <Select
@@ -1900,6 +1920,16 @@ const StorefrontEditorView: React.FC = () => {
                         <>
                             <ColorControl label={t('controls.cardBackground', 'Fondo tarjeta')} value={String(colors.cardBackground || '#ffffff')} onChange={value => updateSelectedSectionNestedSetting('colors.cardBackground', value)} />
                             <ColorControl label={t('controls.cardText', 'Texto tarjeta')} value={String(colors.cardText || colors.heading || '#0f172a')} onChange={value => updateSelectedSectionNestedSetting('colors.cardText', value)} />
+                            <ColorControl label={t('ecommerce.storefrontEditor.cardBorder', 'Borde tarjeta')} value={String(colors.borderColor || '#e2e8f0')} onChange={value => updateSelectedSectionNestedSetting('colors.borderColor', value)} />
+                        </>
+                    )}
+                    {supportsProductCards && (
+                        <>
+                            <ColorControl label={t('ecommerce.storefrontEditor.priceColor', 'Precio')} value={String(colors.priceColor || colors.salePriceColor || colors.accent || '#111827')} onChange={value => updateSelectedSectionNestedSetting('colors.priceColor', value)} />
+                            <ColorControl label={t('ecommerce.storefrontEditor.salePriceColor', 'Precio oferta')} value={String(colors.salePriceColor || '#dc2626')} onChange={value => updateSelectedSectionNestedSetting('colors.salePriceColor', value)} />
+                            <ColorControl label={t('ecommerce.storefrontEditor.badgeBackground', 'Fondo badge')} value={String(colors.badgeBackground || '#ef4444')} onChange={value => updateSelectedSectionNestedSetting('colors.badgeBackground', value)} />
+                            <ColorControl label={t('ecommerce.storefrontEditor.badgeText', 'Texto badge')} value={String(colors.badgeText || '#ffffff')} onChange={value => updateSelectedSectionNestedSetting('colors.badgeText', value)} />
+                            <ColorControl label={t('ecommerce.storefrontEditor.starColor', 'Estrellas')} value={String(colors.starColor || '#f59e0b')} onChange={value => updateSelectedSectionNestedSetting('colors.starColor', value)} />
                         </>
                     )}
                     {(supportsProductCards || selectedSection === 'categoryGrid') && (
@@ -2236,7 +2266,12 @@ const StorefrontEditorView: React.FC = () => {
                             </button>
 
                             {isContentExpanded && (
-                                renderSortableSectionList('mt-1 space-y-1 pl-2')
+                                <div className="mt-1 pl-2">
+                                    <p className="mb-2 px-2 text-[11px] font-medium text-q-text-muted">
+                                        {t('ecommerce.storefrontEditor.dragSectionsHint', 'Arrastra cualquier componente para cambiar el orden.')}
+                                    </p>
+                                    {renderSortableSectionList('space-y-1')}
+                                </div>
                             )}
                         </div>
 

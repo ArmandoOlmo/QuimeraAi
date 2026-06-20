@@ -15,7 +15,9 @@ import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { resolveI18nField } from '../../../utils/i18nContent';
 import {
+    getStorefrontAspectRatioClass,
     getStorefrontCardGapClass,
+    getStorefrontOverlayGradient,
     getStorefrontPaddingXClass,
     getStorefrontPaddingYClass,
     getStorefrontRadiusClass,
@@ -85,17 +87,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
 
     const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
 
-    const getAspectRatio = () => {
-        const map = {
-            'auto': 'aspect-auto',
-            '1:1': 'aspect-square',
-            '4:3': 'aspect-[4/3]',
-            '3:4': 'aspect-[3/4]',
-            '16:9': 'aspect-video',
-            '9:16': 'aspect-[9/16]',
-        };
-        return map[data.imageAspectRatio] || 'aspect-square';
-    };
+    const getAspectRatio = () => getStorefrontAspectRatioClass(data.imageAspectRatio, '4:5');
 
     const getObjectFit = () => {
         return data.imageObjectFit || 'cover';
@@ -119,10 +111,10 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
             return (
                 <div
                     onClick={handleClick}
-                    className={`group cursor-pointer ${getBorderRadius()} overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
+                    className={`group cursor-pointer ${getBorderRadius()} overflow-hidden shadow-lg ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl`}
                     style={{ backgroundColor: colors?.cardBackground }}
                 >
-                    <div className={`${getAspectRatio()} overflow-hidden`}>
+                    <div className={`relative ${getAspectRatio()} overflow-hidden`}>
                         {category.imageUrl ? (
                             <img
                                 src={category.imageUrl}
@@ -132,25 +124,31 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                             />
                         ) : (
                             <div
-                                className="w-full h-full flex items-center justify-center"
-                                style={{ backgroundColor: colors?.accent + '20' }}
+                                className="h-full w-full bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.24),transparent_42%),linear-gradient(135deg,rgba(79,70,229,0.36),rgba(15,23,42,0.92))]"
                             >
-                                <span style={{ color: colors?.cardText }}>Sin imagen</span>
+                                <span className="sr-only">Sin imagen</span>
                             </div>
                         )}
-                    </div>
-                    <div className="p-4">
-                        <h3
-                            className="font-semibold text-lg mb-1"
-                            style={{ color: colors?.cardText || colors?.heading }}
+                        <div
+                            className="absolute inset-0 flex flex-col justify-end p-4"
+                            style={{
+                                background: getStorefrontOverlayGradient(colors?.overlayStart, colors?.overlayEnd),
+                            }}
                         >
-                            {categoryName}
-                        </h3>
-                        {data.showProductCount && category.productCount !== undefined && (
-                            <p className="text-sm" style={{ color: colors?.text }}>
-                                {category.productCount} productos
-                            </p>
-                        )}
+                            <h3 className="text-xl font-bold leading-tight drop-shadow-sm" style={{ color: colors?.buttonText || '#ffffff' }}>
+                                {categoryName}
+                            </h3>
+                            {category.description && (
+                                <p className="mt-1 line-clamp-2 text-sm" style={{ color: colors?.buttonText || '#ffffff', opacity: 0.82 }}>
+                                    {text(category.description as any)}
+                                </p>
+                            )}
+                            {data.showProductCount && category.productCount !== undefined && (
+                                <p className="mt-2 text-sm font-medium" style={{ color: colors?.buttonText || '#ffffff', opacity: 0.86 }}>
+                                    {category.productCount} productos
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
             );
@@ -181,7 +179,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                     <div
                         className="absolute inset-0 flex flex-col justify-end p-4 transition-opacity"
                         style={{
-                            background: `linear-gradient(to top, ${colors?.overlayEnd} 0%, rgba(0,0,0,0.34) 55%, ${colors?.overlayStart} 100%)`,
+                            background: getStorefrontOverlayGradient(colors?.overlayStart, colors?.overlayEnd),
                         }}
                     >
                         <h3 className="text-xl font-bold leading-tight drop-shadow-sm" style={{ color: colors?.buttonText }}>{categoryName}</h3>
@@ -266,7 +264,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                     <div
                         className="absolute inset-0 flex items-end justify-start p-5"
                         style={{
-                            background: `linear-gradient(to top, ${colors?.overlayEnd} 0%, rgba(0,0,0,0.28) 55%, ${colors?.overlayStart} 100%)`,
+                            background: getStorefrontOverlayGradient(colors?.overlayStart, colors?.overlayEnd, 'rgba(0,0,0,0.28)'),
                         }}
                     >
                         <div>

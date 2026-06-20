@@ -1681,6 +1681,8 @@ export interface FeaturedProductsData extends SectionBackgroundFields {
     responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     // Card style
     cardStyle: ProductCardVariant;
+    cardAspectRatio?: AspectRatio;
+    imageObjectFit?: ObjectFit;
     // Styling
     paddingY: PaddingSize;
     paddingX: PaddingSize;
@@ -1871,6 +1873,8 @@ export interface SaleCountdownData extends SectionBackgroundFields {
     animationType?: AnimationType;
     // Card style for products
     cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardAspectRatio?: AspectRatio;
+    imageObjectFit?: ObjectFit;
     cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     // Colors
     colors: {
@@ -1954,6 +1958,8 @@ export interface RecentlyViewedData extends SectionBackgroundFields {
     showPrice?: boolean;
     showRating?: boolean;
     cardStyle: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardAspectRatio?: AspectRatio;
+    imageObjectFit?: ObjectFit;
     // Styling
     paddingY: PaddingSize;
     paddingX: PaddingSize;

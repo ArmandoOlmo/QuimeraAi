@@ -10,7 +10,9 @@ import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import {
+    getStorefrontAspectRatioClass,
     getStorefrontCardGapClass,
+    getStorefrontOverlayGradient,
     getStorefrontPaddingXClass,
     getStorefrontPaddingYClass,
     getStorefrontRadiusClass,
@@ -102,6 +104,8 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     };
 
     const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
+    const getCardAspectRatio = () => getStorefrontAspectRatioClass((data as any).cardAspectRatio, '4:5');
+    const getImageObjectFit = () => (data as any).imageObjectFit || 'cover';
 
     // Time unit component
     const TimeUnit = ({ value, label }: { value: number; label: string }) => (
@@ -144,19 +148,19 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                     className={`group cursor-pointer relative ${cardStyles.overlay}`}
                     onClick={() => product.slug && onProductClick?.(product.slug)}
                 >
-                    <div className="relative aspect-square overflow-hidden">
+                    <div className={`relative ${getCardAspectRatio()} overflow-hidden`}>
                         {product.image ? (
                             <img
                                 src={product.image}
                                 alt={product.name}
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                style={{ objectFit: getImageObjectFit() as any }}
                             />
                         ) : (
                             <div 
-                                className="w-full h-full flex items-center justify-center"
-                                style={{ backgroundColor: colors?.background }}
+                                className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.24),transparent_42%),linear-gradient(135deg,rgba(251,191,36,0.32),rgba(15,23,42,0.94))]"
                             >
-                                <span style={{ color: colors?.text, opacity: 0.5 }}>Sin imagen</span>
+                                <span className="rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">Sin imagen</span>
                             </div>
                         )}
                         
@@ -164,7 +168,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                         <div
                             className="absolute inset-0"
                             style={{
-                                background: `linear-gradient(to top, ${colors?.overlayEnd || 'rgba(0,0,0,0.85)'} 0%, rgba(0,0,0,0.35) 55%, ${colors?.overlayStart || 'transparent'} 100%)`,
+                                background: getStorefrontOverlayGradient(colors?.overlayStart, colors?.overlayEnd),
                             }}
                         />
                         
@@ -208,12 +212,13 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                 }}
                 onClick={() => product.slug && onProductClick?.(product.slug)}
             >
-                <div className="relative aspect-square overflow-hidden">
+                <div className={`relative ${getCardAspectRatio()} overflow-hidden`}>
                     {product.image ? (
                         <img
                             src={product.image}
                             alt={product.name}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            style={{ objectFit: getImageObjectFit() as any }}
                         />
                     ) : (
                         <div 
