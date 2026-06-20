@@ -1,33 +1,13 @@
 import type { PageData } from './components';
 import type { StorefrontSectionBlueprint } from './businessBlueprint';
 import type { PageSection } from './ui';
-import type {
-    StorefrontEditorBlockKind,
-    StorefrontEditorGroup,
-    StorefrontEditorSection,
-    StorefrontInspectorControl,
-} from './storefrontEditor';
 
 export type StorefrontSectionKind =
     | 'announcementBar'
-    | 'header'
-    | 'hero'
     | 'productHero'
-    | 'categoryTiles'
-    | 'featuredCollection'
-    | 'productGrid'
     | 'featuredProducts'
-    | 'promoBanner'
-    | 'imageWithText'
     | 'categoryGrid'
     | 'trustBadges'
-    | 'testimonials'
-    | 'newsletter'
-    | 'faq'
-    | 'storeFooter'
-    | 'policiesAndLinks'
-    | 'newsletterPopup'
-    | 'cartDrawer'
     | 'saleCountdown'
     | 'collectionBanner'
     | 'recentlyViewed'
@@ -48,17 +28,6 @@ export interface StorefrontSectionRegistryItem {
     label: string;
     moduleRegistryId: string;
     emptyBehavior: StorefrontSectionEmptyBehavior;
-    group?: StorefrontEditorGroup;
-    category?: 'commerce' | 'content' | 'trust' | 'marketing' | 'footer' | 'overlay';
-    previewLabel?: string;
-    supportsBlocks?: boolean;
-    allowedBlocks?: StorefrontEditorBlockKind[];
-    defaultBlocks?: Array<{
-        kind: StorefrontEditorBlockKind;
-        label: string;
-        settings?: Record<string, unknown>;
-    }>;
-    inspectorSchema?: StorefrontInspectorControl[];
     defaultVisible?: boolean;
     isCoreSection?: boolean;
     validVariants?: string[];
@@ -80,7 +49,7 @@ export interface StorefrontSectionRenderDecision {
     data: Record<string, unknown>;
     reasons: string[];
     warnings: string[];
-    source: 'editor' | 'blueprint' | 'componentOrder';
+    source: 'blueprint' | 'componentOrder';
 }
 
 export interface StorefrontSectionResolverInput {
@@ -88,5 +57,4 @@ export interface StorefrontSectionResolverInput {
     componentOrder?: PageSection[] | string[];
     sectionVisibility?: Partial<Record<PageSection, boolean>> | Record<string, boolean>;
     blueprintSections?: StorefrontSectionBlueprint[];
-    editorSections?: StorefrontEditorSection[];
 }

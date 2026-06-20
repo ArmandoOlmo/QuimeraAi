@@ -48,7 +48,6 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
         pageData: projectData?.data,
         componentOrder: projectData?.componentOrder,
         sectionVisibility: projectData?.sectionVisibility,
-        editorSections: projectData?.data?.storefrontResolvedSections,
         blueprintSections: (
             projectData?.businessBlueprint?.storefrontBlueprint?.sections ||
             projectData?.data?.businessBlueprint?.storefrontBlueprint?.sections
