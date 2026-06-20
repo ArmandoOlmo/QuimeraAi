@@ -52,6 +52,43 @@ interface StorefrontProductSearchProps {
 
 const STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX = 'quimera:storefront-editor-preview:';
 const STOREFRONT_EDITOR_PREVIEW_UPDATE = 'quimera:storefront-editor-preview:update';
+const STOREFRONT_EDITOR_SELECT_SECTION = 'quimera:storefront-editor:select-section';
+
+const getStorefrontEditorSectionSelector = (section: string): string =>
+    `[data-storefront-editor-section="${section}"]`;
+
+const clearStorefrontEditorSectionHighlights = () => {
+    document
+        .querySelectorAll<HTMLElement>('[data-storefront-editor-selected="true"]')
+        .forEach(element => {
+            element.removeAttribute('data-storefront-editor-selected');
+            element.style.outline = '';
+            element.style.boxShadow = '';
+        });
+};
+
+const scrollStorefrontEditorSectionIntoView = (section: string) => {
+    const scrollToSection = () => {
+        const target = document.querySelector<HTMLElement>(getStorefrontEditorSectionSelector(section));
+        if (!target) return false;
+
+        clearStorefrontEditorSectionHighlights();
+        target.setAttribute('data-storefront-editor-selected', 'true');
+        target.style.outline = '2px solid #fbbf24';
+        target.style.boxShadow = '0 0 0 5px rgba(251, 191, 36, 0.18)';
+        target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+        });
+        return true;
+    };
+
+    window.requestAnimationFrame(() => {
+        if (!scrollToSection()) {
+            window.setTimeout(scrollToSection, 120);
+        }
+    });
+};
 
 const getStorefrontEditorPreviewData = (projectId: string): any | null => {
     if (typeof window === 'undefined') return null;
@@ -207,6 +244,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     const [isLoading, setIsLoading] = useState(!initialData && !initialPreviewData);
     const [storefrontConfigMode, setStorefrontConfigMode] = useState<StorefrontEditorConfigMode>(initialConfigMode);
     const previewPayloadSignatureRef = useRef(initialPreviewData ? getPreviewPayloadSignature(initialPreviewData) : '');
+    const previewSessionKey = getStorefrontEditorPreviewSessionKey(projectId);
 
     // Handle browser navigation (client-side only)
     useEffect(() => {
@@ -253,15 +291,23 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
-        const previewSessionKey = getStorefrontEditorPreviewSessionKey(projectId);
         if (!previewSessionKey) return;
 
         const handlePreviewUpdate = (event: MessageEvent) => {
             if (event.origin !== window.location.origin) return;
 
             const message = event.data;
-            if (!message || message.type !== STOREFRONT_EDITOR_PREVIEW_UPDATE) return;
+            if (!message) return;
             if (message.sessionKey !== previewSessionKey) return;
+
+            if (message.type === STOREFRONT_EDITOR_SELECT_SECTION) {
+                if (typeof message.section === 'string') {
+                    scrollStorefrontEditorSectionIntoView(message.section);
+                }
+                return;
+            }
+
+            if (message.type !== STOREFRONT_EDITOR_PREVIEW_UPDATE) return;
 
             const nextProjectData = parsePreviewPayload(message.payload);
             if (!nextProjectData) return;
@@ -277,7 +323,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
 
         window.addEventListener('message', handlePreviewUpdate);
         return () => window.removeEventListener('message', handlePreviewUpdate);
-    }, [projectId]);
+    }, [previewSessionKey]);
 
     // Navigation functions
     const navigate = (path: string) => {
@@ -389,6 +435,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                         projectData={resolvedProjectData}
                         onNavigateToProduct={navigateToProduct}
                         onNavigateToCategory={navigateToCategory}
+                        previewSessionKey={previewSessionKey}
                         themeColors={{
                             background: resolvedProjectData?.theme?.pageBackground || '#ffffff',
                             text: resolvedProjectData?.theme?.globalColors?.text || '#334155',

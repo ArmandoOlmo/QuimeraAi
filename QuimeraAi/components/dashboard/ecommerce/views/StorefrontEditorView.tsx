@@ -112,6 +112,8 @@ const previewWidths: Record<PreviewMode, string> = {
 const MIN_PREVIEW_FRAME_HEIGHT = 760;
 const STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX = 'quimera:storefront-editor-preview:';
 const STOREFRONT_EDITOR_PREVIEW_UPDATE = 'quimera:storefront-editor-preview:update';
+const STOREFRONT_EDITOR_SELECT_SECTION = 'quimera:storefront-editor:select-section';
+const STOREFRONT_EDITOR_SECTION_CLICK = 'quimera:storefront-editor:section-click';
 
 const isRecord = (value: unknown): value is Record<string, any> =>
     typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -512,6 +514,7 @@ interface SortableStorefrontSectionItemProps {
     showLabel: string;
     removeLabel: string;
     dragHandleLabel: string;
+    onItemRef?: (section: StorefrontSectionKind, node: HTMLDivElement | null) => void;
 }
 
 const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps> = ({
@@ -528,6 +531,7 @@ const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps
     showLabel,
     removeLabel,
     dragHandleLabel,
+    onItemRef,
 }) => {
     const {
         attributes,
@@ -543,12 +547,17 @@ const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps
         transition,
         zIndex: isDragging ? 20 : undefined,
     };
+    const setCombinedNodeRef = React.useCallback((node: HTMLDivElement | null) => {
+        setNodeRef(node);
+        onItemRef?.(section, node);
+    }, [onItemRef, section, setNodeRef]);
 
     return (
         <div
-            ref={setNodeRef}
+            ref={setCombinedNodeRef}
             style={style}
             role="listitem"
+            data-storefront-editor-sidebar-section={section}
             className={`group flex w-full items-center gap-2 rounded-lg border p-2.5 text-left transition-colors ${
                 isSelected
                     ? 'border-primary/30 bg-primary/10'
@@ -690,6 +699,7 @@ const StorefrontEditorView: React.FC = () => {
     const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
     const previewPayloadRef = useRef('');
     const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
+    const sidebarSectionItemRefs = useRef<Partial<Record<StorefrontSectionKind, HTMLDivElement | null>>>({});
     const selectedPresetOverrideRef = useRef<StorefrontThemePresetId | null>(null);
     const presetProjectKeyRef = useRef(activePresetProjectKey);
     const [selectedPresetId, setSelectedPresetId] = useState<StorefrontThemePresetId>(persistedPresetId);
@@ -759,6 +769,53 @@ const StorefrontEditorView: React.FC = () => {
     };
     const selectedSectionIsActive = visibility[selectedSection] !== false && selectedSectionSettings.enabled !== false;
     const selectedSectionValidation = validateStorefrontSectionSettings(selectedSection, selectedSectionSettings);
+
+    const setSidebarSectionItemRef = useCallback((section: StorefrontSectionKind, node: HTMLDivElement | null) => {
+        if (node) {
+            sidebarSectionItemRefs.current[section] = node;
+            return;
+        }
+
+        delete sidebarSectionItemRefs.current[section];
+    }, []);
+
+    const scrollSidebarSectionIntoView = useCallback((section: StorefrontSectionKind) => {
+        window.requestAnimationFrame(() => {
+            sidebarSectionItemRefs.current[section]?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+            });
+        });
+    }, []);
+
+    const scrollPreviewSectionIntoView = useCallback((section: StorefrontSectionKind) => {
+        if (typeof window === 'undefined') return;
+
+        previewFrameRef.current?.contentWindow?.postMessage({
+            type: STOREFRONT_EDITOR_SELECT_SECTION,
+            sessionKey: previewSessionKey,
+            projectId: storeId,
+            section,
+        }, window.location.origin);
+    }, [previewSessionKey, storeId]);
+
+    const selectSectionForEditing = useCallback((
+        section: StorefrontSectionKind,
+        options: { scrollPreview?: boolean; scrollSidebar?: boolean } = {},
+    ) => {
+        const {
+            scrollPreview = true,
+            scrollSidebar = false,
+        } = options;
+
+        setSelectedSection(section);
+        setSelectedStructurePanel(null);
+        setIsControlsPanelOpen(true);
+        setIsContentExpanded(true);
+
+        if (scrollPreview) scrollPreviewSectionIntoView(section);
+        if (scrollSidebar) scrollSidebarSectionIntoView(section);
+    }, [scrollPreviewSectionIntoView, scrollSidebarSectionIntoView]);
 
     const getSectionLabel = (kind: StorefrontSectionKind) =>
         t(`ecommerce.storefrontEditor.sectionLabels.${kind}`, storefrontSectionRegistry[kind].label);
@@ -893,6 +950,28 @@ const StorefrontEditorView: React.FC = () => {
             console.warn('Unable to prepare storefront editor preview data:', err);
         }
     }, [postPreviewPayload, previewProjectData, previewSessionKey, project, storeId]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const handlePreviewSectionClick = (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+
+            const message = event.data;
+            if (!message || message.type !== STOREFRONT_EDITOR_SECTION_CLICK) return;
+            if (message.sessionKey !== previewSessionKey) return;
+            const section = String(message.section);
+            if (!isStorefrontKind(section)) return;
+
+            selectSectionForEditing(section, {
+                scrollPreview: false,
+                scrollSidebar: true,
+            });
+        };
+
+        window.addEventListener('message', handlePreviewSectionClick);
+        return () => window.removeEventListener('message', handlePreviewSectionClick);
+    }, [previewSessionKey, selectSectionForEditing]);
 
     const refreshPreview = () => {
         postPreviewPayload();
@@ -1274,12 +1353,6 @@ const StorefrontEditorView: React.FC = () => {
         setIsControlsPanelOpen(true);
     };
 
-    const selectSectionForEditing = (section: StorefrontSectionKind) => {
-        setSelectedSection(section);
-        setSelectedStructurePanel(null);
-        setIsControlsPanelOpen(true);
-    };
-
     const activeEditorLabel = selectedStructurePanel === 'template'
         ? t('ecommerce.storefrontEditor.templateState', 'Estado')
         : selectedStructurePanel === 'theme'
@@ -1320,6 +1393,7 @@ const StorefrontEditorView: React.FC = () => {
                                 showLabel={t('common.show', 'Mostrar')}
                                 removeLabel={t('common.remove', 'Eliminar')}
                                 dragHandleLabel={t('ecommerce.storefrontEditor.dragToReorder', 'Arrastra para reordenar')}
+                                onItemRef={setSidebarSectionItemRef}
                             />
                         );
                     })}

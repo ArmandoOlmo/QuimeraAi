@@ -35,6 +35,7 @@ interface StorefrontHomeProps {
     onNavigateToProduct: (slug: string) => void;
     onNavigateToCategory: (slug: string) => void;
     themeColors: ThemeColors;
+    previewSessionKey?: string | null;
 }
 
 const isRecord = (value: unknown): value is Record<string, any> =>
@@ -75,7 +76,8 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
     projectData,
     onNavigateToProduct,
     onNavigateToCategory,
-    themeColors
+    themeColors,
+    previewSessionKey,
 }) => {
     const isEditorPreview = typeof window !== 'undefined' &&
         new URLSearchParams(window.location.search).get('preview') === 'storefront-editor';
@@ -115,6 +117,7 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
                     decisions={sectionsToRender}
                     globalColors={themeColors}
                     isEditorPreview={isEditorPreview}
+                    previewSessionKey={previewSessionKey}
                     onNavigateToProduct={onNavigateToProduct}
                     onNavigateToCategory={onNavigateToCategory}
                 />

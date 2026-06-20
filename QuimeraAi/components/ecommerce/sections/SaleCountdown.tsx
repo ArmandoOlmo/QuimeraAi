@@ -6,9 +6,11 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Clock, Tag } from 'lucide-react';
 import { SaleCountdownData, StorefrontProductItem } from '../../../types/components';
+import type { ProductCardVisualVariant } from '../../../types/productCard';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { createProductCardViewModel } from '../../../utils/productCard';
 import {
     getStorefrontAspectRatioClass,
     getStorefrontCardGapClass,
@@ -135,32 +137,41 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
 
     // Product card for sale items
     const SaleProductCard = ({ product }: { product: StorefrontProductItem }) => {
-        const discount = product.compareAtPrice
-            ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
-            : 0;
-
-        const cardStyle = data.cardStyle || 'modern';
+        const card = createProductCardViewModel(product, {
+            variant: data.cardStyle || 'modern',
+            currencySymbol: '$',
+            showBadges: true,
+            showFeaturedBadge: false,
+            showRatings: false,
+        });
+        const visualCardStyle = card.visualVariant;
         
         // Card style classes
-        const cardStyles = {
+        const cardStyles: Record<ProductCardVisualVariant, string> = {
             minimal: 'bg-transparent',
             modern: `${getBorderRadius()} shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1`,
             elegant: `${getBorderRadius()} shadow-sm hover:shadow-md transition-all duration-300 border`,
             overlay: `${getBorderRadius()} overflow-hidden hover:shadow-xl transition-all duration-300`,
+            luxury: `${getBorderRadius()} shadow-[0_18px_45px_rgba(15,23,42,0.12)] transition-all duration-300 hover:-translate-y-1 border`,
+            marketplace: `${getBorderRadius()} shadow-sm hover:shadow-lg transition-all duration-300 border`,
+            editorial: 'bg-transparent',
+            compact: `${getBorderRadius()} shadow-sm hover:shadow-md transition-all duration-300 border`,
+            imageFirst: `${getBorderRadius()} shadow-sm hover:shadow-lg transition-all duration-300 border`,
+            quickBuy: `${getBorderRadius()} shadow-md hover:shadow-xl transition-all duration-300 border`,
         };
 
         // Overlay style - full image with text on top
-        if (cardStyle === 'overlay') {
+        if (visualCardStyle === 'overlay') {
             return (
                 <div
                     className={`group cursor-pointer relative ${cardStyles.overlay}`}
-                    onClick={() => product.slug && onProductClick?.(product.slug)}
+                    onClick={() => card.slug && onProductClick?.(card.slug)}
                 >
                     <div className={`relative ${getCardAspectRatio()} overflow-hidden`}>
-                        {product.image ? (
+                        {card.image?.url ? (
                             <img
-                                src={product.image}
-                                alt={product.name}
+                                src={card.image.url}
+                                alt={card.image.altText}
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                 style={{ objectFit: getImageObjectFit() as any }}
                             />
@@ -181,7 +192,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                         />
                         
                         {/* Discount Badge */}
-                        {discount > 0 && (
+                        {card.hasDiscount && (
                             <span
                                 className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-bold"
                                 style={{
@@ -189,18 +200,18 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                                     color: colors?.badgeText,
                                 }}
                             >
-                                -{discount}%
+                                -{card.discountPercent}%
                             </span>
                         )}
                         
                         {/* Content on Image */}
                         <div className="absolute bottom-0 left-0 right-0 p-4">
-                            <h4 className="text-sm font-semibold leading-tight text-white line-clamp-2 drop-shadow-sm">{product.name}</h4>
+                            <h4 className="text-sm font-semibold leading-tight text-white line-clamp-2 drop-shadow-sm">{card.name}</h4>
                             <div className="mt-2 flex items-center gap-2">
-                                <span className="font-bold text-white drop-shadow-sm">${product.price.toFixed(2)}</span>
-                                {product.compareAtPrice && (
+                                <span className="font-bold text-white drop-shadow-sm">{card.displayPrice}</span>
+                                {card.hasDiscount && card.displayCompareAtPrice && (
                                     <span className="text-sm line-through text-white/60">
-                                        ${product.compareAtPrice.toFixed(2)}
+                                        {card.displayCompareAtPrice}
                                     </span>
                                 )}
                             </div>
@@ -213,18 +224,18 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
         // Default styles (minimal, modern, elegant)
         return (
             <div
-                className={`group cursor-pointer ${cardStyles[cardStyle]} overflow-hidden backdrop-blur-sm`}
+                className={`group cursor-pointer ${cardStyles[visualCardStyle]} overflow-hidden backdrop-blur-sm`}
                 style={{ 
                     backgroundColor: colors?.cardBackground || 'rgba(255,255,255,0.1)',
-                    borderColor: cardStyle === 'elegant' ? colors?.text + '20' : undefined,
+                    borderColor: visualCardStyle === 'elegant' ? colors?.text + '20' : undefined,
                 }}
-                onClick={() => product.slug && onProductClick?.(product.slug)}
+                onClick={() => card.slug && onProductClick?.(card.slug)}
             >
                 <div className={`relative ${getCardAspectRatio()} overflow-hidden`}>
-                    {product.image ? (
+                    {card.image?.url ? (
                         <img
-                            src={product.image}
-                            alt={product.name}
+                            src={card.image.url}
+                            alt={card.image.altText}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                             style={{ objectFit: getImageObjectFit() as any }}
                         />
@@ -236,7 +247,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                             <span style={{ color: colors?.text, opacity: 0.5 }}>Sin imagen</span>
                         </div>
                     )}
-                    {discount > 0 && (
+                    {card.hasDiscount && (
                         <span
                             className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-bold"
                             style={{
@@ -244,7 +255,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                                 color: colors?.badgeText,
                             }}
                         >
-                            -{discount}%
+                            -{card.discountPercent}%
                         </span>
                     )}
                 </div>
@@ -253,15 +264,15 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                         className="font-medium text-sm line-clamp-1" 
                         style={{ color: colors?.cardText || colors?.heading }}
                     >
-                        {product.name}
+                        {card.name}
                     </h4>
                     <div className="flex items-center gap-2 mt-1">
                         <span className="font-bold" style={{ color: colors?.cardText || colors?.heading }}>
-                            ${product.price.toFixed(2)}
+                            {card.displayPrice}
                         </span>
-                        {product.compareAtPrice && (
+                        {card.hasDiscount && card.displayCompareAtPrice && (
                             <span className="text-sm line-through" style={{ color: colors?.text, opacity: 0.6 }}>
-                                ${product.compareAtPrice.toFixed(2)}
+                                {card.displayCompareAtPrice}
                             </span>
                         )}
                     </div>

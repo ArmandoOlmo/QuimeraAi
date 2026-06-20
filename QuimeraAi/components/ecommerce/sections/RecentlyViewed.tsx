@@ -6,9 +6,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { RecentlyViewedData, StorefrontProductItem } from '../../../types/components';
+import type { ProductCardVisualVariant } from '../../../types/productCard';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { createProductCardViewModel } from '../../../utils/productCard';
 import {
     getStorefrontAspectRatioClass,
     getStorefrontColorWithOpacity,
@@ -136,25 +138,39 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
 
     // Product Card
     const ProductCard = ({ product }: { product: StorefrontProductItem }) => {
-        const cardStyles = {
+        const card = createProductCardViewModel(product, {
+            variant: data.cardStyle,
+            currencySymbol: '$',
+            showBadges: true,
+            showFeaturedBadge: false,
+            showRatings: data.showRating,
+        });
+        const visualCardStyle = card.visualVariant;
+        const cardStyles: Record<ProductCardVisualVariant, string> = {
             minimal: 'bg-transparent',
             modern: `${getBorderRadius()} shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1`,
             elegant: `${getBorderRadius()} shadow-sm hover:shadow-md transition-all duration-300 border`,
             overlay: `${getBorderRadius()} overflow-hidden`,
+            luxury: `${getBorderRadius()} shadow-[0_18px_45px_rgba(15,23,42,0.10)] transition-all duration-300 hover:-translate-y-1 border`,
+            marketplace: `${getBorderRadius()} shadow-sm hover:shadow-lg transition-all duration-300 border`,
+            editorial: 'bg-transparent',
+            compact: `${getBorderRadius()} shadow-sm hover:shadow-md transition-all duration-300 border`,
+            imageFirst: `${getBorderRadius()} shadow-sm hover:shadow-lg transition-all duration-300 border`,
+            quickBuy: `${getBorderRadius()} shadow-md hover:shadow-xl transition-all duration-300 border`,
         };
 
         // Overlay style - full image with text on top
-        if (data.cardStyle === 'overlay') {
+        if (visualCardStyle === 'overlay') {
             return (
                 <div
                     className={`group cursor-pointer relative ${cardStyles.overlay}`}
-                    onClick={() => product.slug && onProductClick?.(product.slug)}
+                    onClick={() => card.slug && onProductClick?.(card.slug)}
                 >
                     <div className={`relative ${getCardAspectRatio()} overflow-hidden`}>
-                        {product.image ? (
+                        {card.image?.url ? (
                             <img
-                                src={product.image}
-                                alt={product.name}
+                                src={card.image.url}
+                                alt={card.image.altText}
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                 style={{ objectFit: getImageObjectFit() as any }}
                             />
@@ -176,24 +192,46 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                         
                         {/* Content on Image */}
                         <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                                {card.badges.slice(0, 2).map(badge => (
+                                    <span
+                                        key={badge.kind}
+                                        className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide shadow-sm backdrop-blur-md"
+                                        style={{
+                                            backgroundColor: badge.kind === 'sale'
+                                                ? colors?.accent || '#ef4444'
+                                                : 'rgba(255,255,255,0.16)',
+                                            color: colors?.buttonText || '#ffffff',
+                                        }}
+                                    >
+                                        {badge.label}
+                                    </span>
+                                ))}
+                            </div>
                             <h4 className="text-sm font-semibold leading-tight text-white line-clamp-2 drop-shadow-sm">
-                                {product.name}
+                                {card.name}
                             </h4>
-                            {data.showRating && product.rating !== undefined && (
+                            {data.showRating && card.rating && (
                                 <div className="flex items-center gap-1 mt-1">
                                     {Array.from({ length: 5 }).map((_, i) => (
                                         <Star
                                             key={i}
                                             size={12}
-                                            className={i < Math.round(product.rating!) ? 'text-yellow-400' : 'text-white/40'}
-                                            fill={i < Math.round(product.rating!) ? 'currentColor' : 'none'}
+                                            style={{ color: i < Math.round(card.rating!.value) ? colors?.starColor || '#f59e0b' : 'rgba(255,255,255,0.38)' }}
+                                            fill={i < Math.round(card.rating!.value) ? 'currentColor' : 'none'}
                                         />
                                     ))}
+                                    <span className="ml-1 text-xs text-white/80">{card.rating.displayText}</span>
                                 </div>
                             )}
                             {data.showPrice && (
                                 <p className="mt-2 font-bold text-white drop-shadow-sm">
-                                    ${product.price.toFixed(2)}
+                                    {card.displayPrice}
+                                    {card.hasDiscount && card.displayCompareAtPrice && (
+                                        <span className="ml-2 text-sm font-medium line-through text-white/60">
+                                            {card.displayCompareAtPrice}
+                                        </span>
+                                    )}
                                 </p>
                             )}
                         </div>
@@ -205,15 +243,15 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
         // Default styles (minimal, modern, elegant)
         return (
             <div
-                className={`group cursor-pointer ${cardStyles[data.cardStyle]}`}
+                className={`group cursor-pointer ${cardStyles[visualCardStyle]}`}
                 style={{ backgroundColor: colors?.cardBackground }}
-                onClick={() => product.slug && onProductClick?.(product.slug)}
+                onClick={() => card.slug && onProductClick?.(card.slug)}
             >
                 <div className={`relative ${getCardAspectRatio()} overflow-hidden ${getBorderRadius()}`}>
-                    {product.image ? (
+                    {card.image?.url ? (
                         <img
-                            src={product.image}
-                            alt={product.name}
+                            src={card.image.url}
+                            alt={card.image.altText}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                             style={{ objectFit: getImageObjectFit() as any }}
                         />
@@ -225,30 +263,46 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                             <span style={{ color: colors?.cardText }}>Sin imagen</span>
                         </div>
                     )}
+                    {card.hasDiscount && (
+                        <span
+                            className="absolute left-2 top-2 rounded-full px-2 py-1 text-xs font-bold"
+                            style={{ backgroundColor: colors?.accent, color: colors?.buttonText || '#ffffff' }}
+                        >
+                            -{card.discountPercent}%
+                        </span>
+                    )}
                 </div>
                 <div className="p-3">
                     <h4
                         className="font-medium text-sm line-clamp-2"
                         style={{ color: colors?.cardText || colors?.heading }}
                     >
-                        {product.name}
+                        {card.name}
                     </h4>
-                    {data.showRating && product.rating !== undefined && (
+                    {data.showRating && card.rating && (
                         <div className="flex items-center gap-1 mt-1">
                             {Array.from({ length: 5 }).map((_, i) => (
                                 <Star
                                     key={i}
                                     size={12}
-                                    style={{ color: i < Math.round(product.rating!) ? colors?.starColor : (colors?.borderColor || '#d1d5db') }}
-                                    fill={i < Math.round(product.rating!) ? 'currentColor' : 'none'}
+                                    style={{ color: i < Math.round(card.rating!.value) ? colors?.starColor : (colors?.borderColor || '#d1d5db') }}
+                                    fill={i < Math.round(card.rating!.value) ? 'currentColor' : 'none'}
                                 />
                             ))}
+                            <span className="ml-1 text-xs" style={{ color: colors?.text }}>{card.rating.displayText}</span>
                         </div>
                     )}
                     {data.showPrice && (
-                        <p className="font-semibold mt-1" style={{ color: colors?.accent }}>
-                            ${product.price.toFixed(2)}
-                        </p>
+                        <div className="mt-1 flex items-center gap-2">
+                            <span className="font-semibold" style={{ color: colors?.accent }}>
+                                {card.displayPrice}
+                            </span>
+                            {card.hasDiscount && card.displayCompareAtPrice && (
+                                <span className="text-xs line-through" style={{ color: colors?.text, opacity: 0.65 }}>
+                                    {card.displayCompareAtPrice}
+                                </span>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>

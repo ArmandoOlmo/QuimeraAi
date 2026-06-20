@@ -20,9 +20,12 @@ interface StorefrontModuleRendererProps {
     decisions: StorefrontSectionRenderDecision[];
     globalColors?: StorefrontGlobalColors;
     isEditorPreview?: boolean;
+    previewSessionKey?: string | null;
     onNavigateToProduct: (slug: string) => void;
     onNavigateToCategory: (slug: string) => void;
 }
+
+const STOREFRONT_EDITOR_SECTION_CLICK = 'quimera:storefront-editor:section-click';
 
 const storefrontComponentMap: Record<StorefrontSectionKind, React.FC<any>> = {
     announcementBar: AnnouncementBar,
@@ -104,37 +107,79 @@ const StorefrontModuleRenderer: React.FC<StorefrontModuleRendererProps> = ({
     decisions,
     globalColors,
     isEditorPreview = false,
+    previewSessionKey,
     onNavigateToProduct,
     onNavigateToCategory,
 }) => {
+    const notifyEditorSectionClick = (
+        decision: StorefrontSectionRenderDecision,
+        event: React.MouseEvent<HTMLDivElement>,
+    ) => {
+        if (!isEditorPreview || !previewSessionKey || typeof window === 'undefined') return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        window.parent?.postMessage({
+            type: STOREFRONT_EDITOR_SECTION_CLICK,
+            sessionKey: previewSessionKey,
+            storeId,
+            section: decision.kind,
+            sectionId: decision.id,
+        }, window.location.origin);
+    };
+
+    const renderEditorFrame = (
+        decision: StorefrontSectionRenderDecision,
+        children: React.ReactNode,
+    ) => {
+        if (!isEditorPreview) {
+            return <React.Fragment key={decision.id}>{children}</React.Fragment>;
+        }
+
+        return (
+            <div
+                key={decision.id}
+                data-storefront-editor-section={decision.kind}
+                data-storefront-editor-section-id={decision.id}
+                data-storefront-editor-section-label={getSectionLabel(String(decision.kind))}
+                className="storefront-editor-preview-section relative cursor-pointer outline-offset-4 transition-[outline,box-shadow] duration-200"
+                style={{ scrollMarginTop: 96 }}
+                onClickCapture={(event) => notifyEditorSectionClick(decision, event)}
+            >
+                {children}
+            </div>
+        );
+    };
+
     return (
         <>
             {decisions.map((decision) => {
                 if (decision.status !== 'render') {
                     if (!isEditorPreview || !shouldShowEditorPlaceholder(decision)) return null;
 
-                    return (
+                    return renderEditorFrame(
+                        decision,
                         <StorefrontEditorSectionPlaceholder
-                            key={decision.id}
                             decision={decision}
                             globalColors={globalColors}
-                        />
+                        />,
                     );
                 }
 
                 const Component = storefrontComponentMap[decision.kind as StorefrontSectionKind];
                 if (!Component) return null;
 
-                return (
+                return renderEditorFrame(
+                    decision,
                     <Component
-                        key={decision.id}
                         storeId={storeId}
                         data={decision.data}
                         globalColors={globalColors}
                         onProductClick={onNavigateToProduct}
                         onCategoryClick={onNavigateToCategory}
                         onCollectionClick={onNavigateToCategory}
-                    />
+                    />,
                 );
             })}
         </>
