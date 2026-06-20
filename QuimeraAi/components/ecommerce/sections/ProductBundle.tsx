@@ -12,10 +12,13 @@ import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/use
 import { createProductCardViewModel } from '../../../utils/productCard';
 import {
     getStorefrontCardGapClass,
+    getStorefrontColorWithOpacity,
+    getStorefrontContentPositionClass,
     getStorefrontPaddingXClass,
     getStorefrontPaddingYClass,
     getStorefrontRadiusClass,
     getStorefrontSectionBackgroundStyle,
+    getStorefrontTextAlignmentClass,
 } from './sectionVisualStyles';
 
 interface ProductBundleProps {
@@ -66,6 +69,17 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     };
 
     const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
+    const getTextAlignment = () => getStorefrontTextAlignmentClass(data.textAlignment, 'left');
+    const getContentPosition = () => getStorefrontContentPositionClass(data.contentPosition, 'center');
+    const getCardSurfaceStyle = (elevated = false): React.CSSProperties => ({
+        backgroundColor: getStorefrontColorWithOpacity(colors?.cardBackground, data.glassEffect ? 0.78 : 1, colors?.cardBackground || '#ffffff'),
+        border: `1px solid ${getStorefrontColorWithOpacity(colors?.borderColor || colors?.border, 0.68, 'rgba(15,23,42,0.12)')}`,
+        boxShadow: elevated ? '0 26px 80px rgba(15,23,42,0.16)' : '0 14px 36px rgba(15,23,42,0.08)',
+    });
+    const getProductRowStyle = (): React.CSSProperties => ({
+        backgroundColor: getStorefrontColorWithOpacity(colors?.background, 0.52, 'rgba(255,255,255,0.52)'),
+        border: `1px solid ${getStorefrontColorWithOpacity(colors?.borderColor || colors?.border, 0.45, 'rgba(15,23,42,0.1)')}`,
+    });
 
     const handleAddBundle = () => {
         if (onAddToCart && data.productIds) {
@@ -85,7 +99,10 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
         });
 
         return (
-            <div className={`flex items-center ${data.cardGap === 'sm' ? 'gap-3' : data.cardGap === 'lg' ? 'gap-6' : data.cardGap === 'xl' ? 'gap-8' : 'gap-4'}`}>
+            <div
+                className={`group flex items-center ${data.cardGap === 'sm' ? 'gap-3' : data.cardGap === 'lg' ? 'gap-6' : data.cardGap === 'xl' ? 'gap-8' : 'gap-4'} ${getBorderRadius()} p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg`}
+                style={getProductRowStyle()}
+            >
                 <div
                     className={`flex-shrink-0 w-24 h-24 ${getBorderRadius()} overflow-hidden cursor-pointer`}
                     onClick={() => product.slug && onProductClick?.(product.slug)}
@@ -94,14 +111,13 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                         <img
                             src={card.image.url}
                             alt={card.image.altText}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                     ) : (
                         <div
-                            className="w-full h-full flex items-center justify-center"
-                            style={{ backgroundColor: colors?.cardBackground }}
+                            className="w-full h-full flex items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.75),transparent_36%),linear-gradient(135deg,#e2e8f0,#f8fafc)]"
                         >
-                            <span className="text-xs" style={{ color: colors?.cardText }}>Sin imagen</span>
+                            <Package size={22} style={{ color: colors?.cardText }} />
                         </div>
                     )}
                 </div>
@@ -122,7 +138,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                 {!isLast && (
                     <div
                         className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: colors?.accent + '20' }}
+                        style={{ backgroundColor: getStorefrontColorWithOpacity(colors?.accent, 0.14, 'rgba(79,70,229,0.14)') }}
                     >
                         <Plus size={16} style={{ color: colors?.accent }} />
                     </div>
@@ -135,7 +151,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     const renderHorizontal = () => (
         <div
             className={`${getBorderRadius()} overflow-hidden`}
-            style={{ backgroundColor: colors?.cardBackground || colors?.background }}
+            style={getCardSurfaceStyle(true)}
         >
             <div className={`grid grid-cols-1 lg:grid-cols-3 ${getCardGap()} p-6`}>
                 {/* Products */}
@@ -152,7 +168,10 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                 {/* Pricing */}
                 <div
                     className={`${getBorderRadius()} p-6 flex flex-col justify-center`}
-                    style={{ backgroundColor: colors?.cardBackground }}
+                    style={{
+                        backgroundColor: getStorefrontColorWithOpacity(colors?.accent, 0.08, 'rgba(79,70,229,0.08)'),
+                        border: `1px solid ${getStorefrontColorWithOpacity(colors?.accent, 0.22, 'rgba(79,70,229,0.22)')}`,
+                    }}
                 >
                     {data.showBadge && data.badgeText && (
                         <span
@@ -168,14 +187,14 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                     )}
 
                     <h3
-                        className={`${getTitleSize()} font-bold mb-2`}
+                        className={`${getTitleSize()} font-bold mb-2 ${getTextAlignment()}`}
                         style={{ color: colors?.heading }}
                     >
                         {data.title}
                     </h3>
 
                     {data.description && (
-                        <p className="mb-4" style={{ color: colors?.text }}>
+                        <p className={`mb-4 ${getTextAlignment()}`} style={{ color: colors?.text }}>
                             {data.description}
                         </p>
                     )}
@@ -224,7 +243,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     const renderVertical = () => (
         <div
             className={`${getBorderRadius()} overflow-hidden max-w-md mx-auto`}
-            style={{ backgroundColor: colors?.cardBackground || colors?.background }}
+            style={getCardSurfaceStyle(true)}
         >
             <div className="p-6">
                 {data.showBadge && data.badgeText && (
@@ -241,14 +260,14 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                 )}
 
                 <h3
-                    className={`${getTitleSize()} font-bold mb-2`}
+                    className={`${getTitleSize()} font-bold mb-2 ${getTextAlignment()}`}
                     style={{ color: colors?.heading }}
                 >
                     {data.title}
                 </h3>
 
                 {data.description && (
-                    <p className="mb-6" style={{ color: colors?.text }}>
+                    <p className={`mb-6 ${getTextAlignment()}`} style={{ color: colors?.text }}>
                         {data.description}
                     </p>
                 )}
@@ -267,7 +286,10 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                 {/* Pricing */}
                 <div
                     className={`${getBorderRadius()} p-4 mb-4`}
-                    style={{ backgroundColor: colors?.cardBackground }}
+                    style={{
+                        backgroundColor: getStorefrontColorWithOpacity(colors?.accent, 0.08, 'rgba(79,70,229,0.08)'),
+                        border: `1px solid ${getStorefrontColorWithOpacity(colors?.accent, 0.22, 'rgba(79,70,229,0.22)')}`,
+                    }}
                 >
                     {data.showIndividualPrices && (
                         <div className="flex justify-between text-sm mb-1" style={{ color: colors?.text }}>
@@ -310,7 +332,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     const renderCompact = () => (
         <div
             className={`${getBorderRadius()} overflow-hidden flex items-center ${data.cardGap === 'sm' ? 'gap-3' : data.cardGap === 'lg' ? 'gap-6' : data.cardGap === 'xl' ? 'gap-8' : 'gap-4'} p-4`}
-            style={{ backgroundColor: colors?.cardBackground || colors?.background }}
+            style={getCardSurfaceStyle(true)}
         >
             {/* Product thumbnails */}
             <div className="flex -space-x-3">
@@ -359,7 +381,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                         <span
                             className="text-sm px-2 py-0.5 rounded-full"
                             style={{
-                                backgroundColor: colors?.savingsColor + '20',
+                                backgroundColor: getStorefrontColorWithOpacity(colors?.savingsColor, 0.14, 'rgba(22,163,74,0.14)'),
                                 color: colors?.savingsColor,
                             }}
                         >
@@ -386,7 +408,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     if (isLoading) {
         return (
             <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
-                <div className="max-w-7xl mx-auto">
+                <div className={`flex max-w-7xl mx-auto ${getContentPosition()}`}>
                     <div className="animate-pulse">
                         <div className={`${getBorderRadius()} p-6`} style={{ backgroundColor: colors?.cardBackground }}>
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -401,7 +423,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                                         </div>
                                     ))}
                                 </div>
-                                <div className="rounded-xl p-6" style={{ backgroundColor: colors?.accent + '20' }}>
+                                <div className="rounded-xl p-6" style={{ backgroundColor: getStorefrontColorWithOpacity(colors?.accent, 0.14, 'rgba(79,70,229,0.14)') }}>
                                     <div className="h-8 rounded w-1/2 mb-4" style={{ backgroundColor: colors?.borderColor }} />
                                     <div className="h-4 rounded w-full mb-6" style={{ backgroundColor: colors?.borderColor }} />
                                     <div className="h-12 rounded" style={{ backgroundColor: colors?.borderColor }} />
@@ -417,18 +439,18 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     if (bundleProducts.length === 0) {
         return (
             <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
-                <div className="max-w-4xl mx-auto">
+                <div className={`flex max-w-4xl mx-auto ${getContentPosition()}`}>
                     <div 
-                        className={`${getBorderRadius()} p-8 border-2 border-dashed`}
-                        style={{ 
-                            backgroundColor: colors?.background + '80',
-                            borderColor: colors?.accent + '40'
+                        className={`${getBorderRadius()} w-full p-8 border-2 border-dashed`}
+                        style={{
+                            ...getCardSurfaceStyle(true),
+                            borderColor: getStorefrontColorWithOpacity(colors?.accent, 0.35, 'rgba(79,70,229,0.35)'),
                         }}
                     >
                         <div className="text-center">
                             <div 
                                 className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
-                                style={{ backgroundColor: colors?.accent + '20' }}
+                                style={{ backgroundColor: getStorefrontColorWithOpacity(colors?.accent, 0.14, 'rgba(79,70,229,0.14)') }}
                             >
                                 <Package size={32} style={{ color: colors?.accent }} />
                             </div>
@@ -444,7 +466,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                             <div 
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm"
                                 style={{ 
-                                    backgroundColor: colors?.accent + '15',
+                                    backgroundColor: getStorefrontColorWithOpacity(colors?.accent, 0.12, 'rgba(79,70,229,0.12)'),
                                     color: colors?.accent
                                 }}
                             >
@@ -473,10 +495,12 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
 
     return (
         <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
-            <div className="max-w-7xl mx-auto">
-                {data.variant === 'horizontal' && renderHorizontal()}
-                {data.variant === 'vertical' && renderVertical()}
-                {data.variant === 'compact' && renderCompact()}
+            <div className={`flex max-w-7xl mx-auto ${getContentPosition()}`}>
+                <div className="w-full">
+                    {data.variant === 'horizontal' && renderHorizontal()}
+                    {data.variant === 'vertical' && renderVertical()}
+                    {data.variant === 'compact' && renderCompact()}
+                </div>
             </div>
         </section>
     );

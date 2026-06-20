@@ -13,11 +13,14 @@ import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/use
 import AppSelect from '../../ui/AppSelect';
 import {
     getStorefrontCardGapClass,
+    getStorefrontColorWithOpacity,
     getStorefrontColumnsClass,
+    getStorefrontContentPositionClass,
     getStorefrontPaddingXClass,
     getStorefrontPaddingYClass,
     getStorefrontRadiusClass,
     getStorefrontSectionBackgroundStyle,
+    getStorefrontTextAlignmentClass,
 } from './sectionVisualStyles';
 
 interface ProductReviewsProps {
@@ -120,8 +123,19 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
         return map[data.titleFontSize || 'lg'] || 'text-3xl';
     };
+    const getDescriptionSize = () => {
+        const map = { sm: 'text-sm', md: 'text-base', lg: 'text-lg', xl: 'text-xl' };
+        return map[data.descriptionFontSize || 'md'] || 'text-base';
+    };
 
     const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
+    const getTextAlignment = () => getStorefrontTextAlignmentClass(data.textAlignment, 'left');
+    const getContentPosition = () => getStorefrontContentPositionClass(data.contentPosition, 'left');
+    const getCardSurfaceStyle = (featured = false): React.CSSProperties => ({
+        backgroundColor: getStorefrontColorWithOpacity(colors?.cardBackground, data.glassEffect ? 0.78 : 1, colors?.cardBackground || '#ffffff'),
+        border: `1px solid ${getStorefrontColorWithOpacity(colors?.borderColor || colors?.border, 0.72, 'rgba(15,23,42,0.12)')}`,
+        boxShadow: featured ? '0 24px 70px rgba(15,23,42,0.18)' : '0 14px 38px rgba(15,23,42,0.08)',
+    });
 
     // Stars component
     const Stars = ({ rating, size = 16 }: { rating: number; size?: number }) => (
@@ -139,9 +153,9 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
 
     // Rating summary
     const RatingSummary = () => (
-        <div className={`flex flex-col md:flex-row ${getCardGap()} mb-8 p-6 ${getBorderRadius()}`} style={{ backgroundColor: colors?.cardBackground }}>
+        <div className={`flex flex-col md:flex-row ${getCardGap()} mb-8 p-6 ${getBorderRadius()}`} style={getCardSurfaceStyle(true)}>
             {/* Average rating */}
-            <div className="text-center md:text-left md:pr-8 md:border-r" style={{ borderColor: `${colors?.text}20` }}>
+            <div className="text-center md:text-left md:pr-8 md:border-r" style={{ borderColor: getStorefrontColorWithOpacity(colors?.borderColor || colors?.border, 0.55, 'rgba(15,23,42,0.12)') }}>
                 <div className="text-5xl font-bold" style={{ color: colors?.heading }}>
                     {averageRating.toFixed(1)}
                 </div>
@@ -194,9 +208,19 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
 
         return (
             <div
-                className={`p-5 ${getBorderRadius()}`}
-                style={{ backgroundColor: colors?.cardBackground }}
+                className={`group overflow-hidden p-5 ${getBorderRadius()} transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`}
+                style={getCardSurfaceStyle()}
             >
+                {data.showPhotos && review.productImage && (
+                    <div className={`-mx-5 -mt-5 mb-5 aspect-[16/9] overflow-hidden ${getBorderRadius()}`}>
+                        <img
+                            src={review.productImage}
+                            alt={productName || reviewTitle || authorName}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -221,9 +245,9 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
                                 </span>
                                 {data.showVerifiedBadge && review.verified && (
                                     <span
-                                        className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+                                        className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold"
                                         style={{
-                                            backgroundColor: `${colors?.verifiedBadgeColor}20`,
+                                            backgroundColor: getStorefrontColorWithOpacity(colors?.verifiedBadgeColor, 0.14, 'rgba(22,163,74,0.14)'),
                                             color: colors?.verifiedBadgeColor,
                                         }}
                                     >
@@ -254,7 +278,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
 
                 {/* Product info */}
                 {data.showProductInfo && productName && (
-                    <div className="flex items-center gap-3 mt-4 pt-4 border-t" style={{ borderColor: `${colors?.text}20` }}>
+                    <div className="flex items-center gap-3 mt-4 pt-4 border-t" style={{ borderColor: getStorefrontColorWithOpacity(colors?.borderColor || colors?.border, 0.55, 'rgba(15,23,42,0.12)') }}>
                         {review.productImage && (
                             <img
                                 src={review.productImage}
@@ -322,7 +346,10 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
                 {featuredReview && (
                     <div
                         className={`p-8 ${getBorderRadius()} lg:row-span-2`}
-                        style={{ backgroundColor: colors?.accent }}
+                        style={{
+                            backgroundColor: colors?.accent,
+                            boxShadow: '0 28px 80px rgba(15,23,42,0.22)',
+                        }}
                     >
                         <div className="flex items-center gap-3 mb-4">
                             {featuredReview.authorImage ? (
@@ -380,8 +407,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
         >
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-                    <div>
+                <div className={`mb-8 flex flex-col gap-4 ${getTextAlignment()}`}>
+                    <div className={`flex w-full flex-col ${getTextAlignment()}`}>
                         {title && (
                             <h2
                                 className={`${getTitleSize()} font-bold`}
@@ -391,12 +418,12 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
                             </h2>
                         )}
                         {description && (
-                            <p className="mt-1" style={{ color: colors?.text }}>{description}</p>
+                            <p className={`mt-2 max-w-2xl ${getDescriptionSize()}`} style={{ color: colors?.text }}>{description}</p>
                         )}
                     </div>
 
                     {/* Sort dropdown */}
-                    <div className="relative">
+                    <div className={`relative flex ${getContentPosition()}`}>
                         <AppSelect
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}

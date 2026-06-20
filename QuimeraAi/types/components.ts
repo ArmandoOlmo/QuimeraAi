@@ -158,6 +158,7 @@ export interface SectionBackgroundFields {
     backgroundOverlayOpacity?: number;
     backgroundOverlayColor?: string;
     backgroundPosition?: string;
+    glassEffect?: boolean;
 }
 
 // =============================================================================
@@ -1922,6 +1923,8 @@ export interface TrustBadgesData extends SectionBackgroundFields {
     paddingY: PaddingSize;
     paddingX: PaddingSize;
     titleFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
     cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     // Colors
@@ -1930,6 +1933,8 @@ export interface TrustBadgesData extends SectionBackgroundFields {
         heading?: string;
         text: string;
         iconColor: string;
+        cardBackground?: string;
+        cardText?: string;
         borderColor?: string;
         accent?: string;
     };
@@ -2027,6 +2032,8 @@ export interface ProductReviewsData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
     cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     animationType?: AnimationType;
@@ -2128,6 +2135,8 @@ export interface ProductBundleData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
     cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     animationType?: AnimationType;

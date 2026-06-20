@@ -1452,6 +1452,7 @@ const StorefrontEditorView: React.FC = () => {
         const supportsColumns = ['featuredProducts', 'categoryGrid', 'recentlyViewed', 'trustBadges', 'productReviews'].includes(selectedSection);
         const supportsHeight = true;
         const supportsHeroControls = selectedSection === 'productHero' || selectedSection === 'collectionBanner';
+        const supportsPositionControls = supportsHeroControls || ['trustBadges', 'productReviews', 'productBundle'].includes(selectedSection);
         const supportsBackgroundImage = true;
         const supportsCardGap = ['featuredProducts', 'categoryGrid', 'trustBadges', 'saleCountdown', 'recentlyViewed', 'productReviews', 'productBundle'].includes(selectedSection);
         const sectionTitleValue = String(
@@ -1770,7 +1771,7 @@ const StorefrontEditorView: React.FC = () => {
                     )}
                 </div>
 
-                {supportsHeroControls && (
+                {supportsPositionControls && (
                     <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
                         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
                             <Maximize2 size={14} />
@@ -1816,7 +1817,7 @@ const StorefrontEditorView: React.FC = () => {
                     </div>
                 )}
 
-                {(supportsProductCards || selectedSection === 'categoryGrid') && (
+                {(supportsProductCards || supportsCardGap || selectedSection === 'categoryGrid') && (
                     <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
                         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
                             <Columns3 size={14} />
@@ -1916,7 +1917,7 @@ const StorefrontEditorView: React.FC = () => {
                         updateSelectedSectionNestedSetting('colors.accent', value);
                         updateSelectedSectionNestedSetting('colors.iconColor', value);
                     }} />
-                    {(supportsProductCards || selectedSection === 'categoryGrid' || selectedSection === 'productReviews' || selectedSection === 'productBundle') && (
+                    {(supportsProductCards || selectedSection === 'categoryGrid' || selectedSection === 'trustBadges' || selectedSection === 'productReviews' || selectedSection === 'productBundle') && (
                         <>
                             <ColorControl label={t('controls.cardBackground', 'Fondo tarjeta')} value={String(colors.cardBackground || '#ffffff')} onChange={value => updateSelectedSectionNestedSetting('colors.cardBackground', value)} />
                             <ColorControl label={t('controls.cardText', 'Texto tarjeta')} value={String(colors.cardText || colors.heading || '#0f172a')} onChange={value => updateSelectedSectionNestedSetting('colors.cardText', value)} />
@@ -1930,6 +1931,20 @@ const StorefrontEditorView: React.FC = () => {
                             <ColorControl label={t('ecommerce.storefrontEditor.badgeBackground', 'Fondo badge')} value={String(colors.badgeBackground || '#ef4444')} onChange={value => updateSelectedSectionNestedSetting('colors.badgeBackground', value)} />
                             <ColorControl label={t('ecommerce.storefrontEditor.badgeText', 'Texto badge')} value={String(colors.badgeText || '#ffffff')} onChange={value => updateSelectedSectionNestedSetting('colors.badgeText', value)} />
                             <ColorControl label={t('ecommerce.storefrontEditor.starColor', 'Estrellas')} value={String(colors.starColor || '#f59e0b')} onChange={value => updateSelectedSectionNestedSetting('colors.starColor', value)} />
+                        </>
+                    )}
+                    {selectedSection === 'productReviews' && (
+                        <>
+                            <ColorControl label={t('ecommerce.storefrontEditor.starColor', 'Estrellas')} value={String(colors.starColor || '#f59e0b')} onChange={value => updateSelectedSectionNestedSetting('colors.starColor', value)} />
+                            <ColorControl label={t('ecommerce.storefrontEditor.verifiedBadgeColor', 'Verificado')} value={String(colors.verifiedBadgeColor || '#16a34a')} onChange={value => updateSelectedSectionNestedSetting('colors.verifiedBadgeColor', value)} />
+                        </>
+                    )}
+                    {selectedSection === 'productBundle' && (
+                        <>
+                            <ColorControl label={t('ecommerce.storefrontEditor.priceColor', 'Precio')} value={String(colors.priceColor || colors.accent || '#111827')} onChange={value => updateSelectedSectionNestedSetting('colors.priceColor', value)} />
+                            <ColorControl label={t('ecommerce.storefrontEditor.savingsColor', 'Ahorro')} value={String(colors.savingsColor || '#16a34a')} onChange={value => updateSelectedSectionNestedSetting('colors.savingsColor', value)} />
+                            <ColorControl label={t('ecommerce.storefrontEditor.badgeBackground', 'Fondo badge')} value={String(colors.badgeBackground || colors.accent || '#4f46e5')} onChange={value => updateSelectedSectionNestedSetting('colors.badgeBackground', value)} />
+                            <ColorControl label={t('ecommerce.storefrontEditor.badgeText', 'Texto badge')} value={String(colors.badgeText || '#ffffff')} onChange={value => updateSelectedSectionNestedSetting('colors.badgeText', value)} />
                         </>
                     )}
                     {(supportsProductCards || selectedSection === 'categoryGrid') && (
@@ -2019,6 +2034,14 @@ const StorefrontEditorView: React.FC = () => {
                     {selectedSection === 'trustBadges' && (
                         <ToggleControl label={t('ecommerce.storefrontEditor.showLabels', 'Mostrar labels')} checked={getSettingBoolean(selectedSectionSettings, 'showLabels', true)} onChange={value => updateSelectedSectionSetting('showLabels', value)} />
                     )}
+                    {selectedSection === 'productReviews' && (
+                        <>
+                            <ToggleControl label={t('ecommerce.storefrontEditor.showRatingDistribution', 'Mostrar distribución')} checked={getSettingBoolean(selectedSectionSettings, 'showRatingDistribution', true)} onChange={value => updateSelectedSectionSetting('showRatingDistribution', value)} />
+                            <ToggleControl label={t('ecommerce.storefrontEditor.showPhotos', 'Mostrar fotos')} checked={getSettingBoolean(selectedSectionSettings, 'showPhotos', true)} onChange={value => updateSelectedSectionSetting('showPhotos', value)} />
+                            <ToggleControl label={t('ecommerce.storefrontEditor.showVerifiedBadge', 'Mostrar verificado')} checked={getSettingBoolean(selectedSectionSettings, 'showVerifiedBadge', true)} onChange={value => updateSelectedSectionSetting('showVerifiedBadge', value)} />
+                            <ToggleControl label={t('ecommerce.storefrontEditor.showProductInfo', 'Mostrar producto')} checked={getSettingBoolean(selectedSectionSettings, 'showProductInfo', false)} onChange={value => updateSelectedSectionSetting('showProductInfo', value)} />
+                        </>
+                    )}
                     {selectedSection === 'announcementBar' && (
                         <>
                             <ToggleControl label={t('ecommerce.storefrontEditor.showIcon', 'Mostrar icono')} checked={getSettingBoolean(selectedSectionSettings, 'showIcon', true)} onChange={value => updateSelectedSectionSetting('showIcon', value)} />
@@ -2074,6 +2097,7 @@ const StorefrontEditorView: React.FC = () => {
                         />
                         <ToggleControl label={t('ecommerce.storefrontEditor.showSavings', 'Mostrar ahorro')} checked={getSettingBoolean(selectedSectionSettings, 'showSavings', true)} onChange={value => updateSelectedSectionSetting('showSavings', value)} />
                         <ToggleControl label={t('ecommerce.storefrontEditor.showIndividualPrices', 'Mostrar precios individuales')} checked={getSettingBoolean(selectedSectionSettings, 'showIndividualPrices', true)} onChange={value => updateSelectedSectionSetting('showIndividualPrices', value)} />
+                        <ToggleControl label={t('ecommerce.storefrontEditor.showBadge', 'Mostrar badge')} checked={getSettingBoolean(selectedSectionSettings, 'showBadge', true)} onChange={value => updateSelectedSectionSetting('showBadge', value)} />
                     </div>
                 )}
             </div>
