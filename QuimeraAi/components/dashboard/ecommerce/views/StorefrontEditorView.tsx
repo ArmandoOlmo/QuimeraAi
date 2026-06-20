@@ -56,6 +56,11 @@ type PreviewMode = 'desktop' | 'tablet' | 'mobile';
 type TemplateState = 'draft' | 'published';
 type SectionSettingsMap = Partial<Record<StorefrontSectionKind, Record<string, unknown>>>;
 type StorefrontStructurePanel = 'template' | 'theme';
+type StorefrontThemeWithPresetMetadata = StorefrontThemeSettings & {
+    themePreset?: StorefrontThemePresetId;
+    themePresetId?: StorefrontThemePresetId;
+    presetId?: StorefrontThemePresetId;
+};
 
 const defaultSections: StorefrontSectionKind[] = [
     'announcementBar',
@@ -79,6 +84,17 @@ const isRecord = (value: unknown): value is Record<string, any> =>
 
 const isStorefrontKind = (value: string): value is StorefrontSectionKind =>
     STOREFRONT_SECTION_KINDS.includes(value as StorefrontSectionKind);
+
+const isThemePresetId = (value: unknown): value is StorefrontThemePresetId =>
+    typeof value === 'string' && Object.prototype.hasOwnProperty.call(STOREFRONT_THEME_PRESETS, value);
+
+const normalizeThemePresetId = (value: unknown): StorefrontThemePresetId | undefined =>
+    isThemePresetId(value) ? value : undefined;
+
+const getThemePresetIdFromTheme = (theme?: Partial<StorefrontThemeWithPresetMetadata> | null): StorefrontThemePresetId | undefined =>
+    normalizeThemePresetId(theme?.themePresetId) ||
+    normalizeThemePresetId(theme?.themePreset) ||
+    normalizeThemePresetId(theme?.presetId);
 
 const toSettingsRecord = (value: unknown): Record<string, unknown> =>
     isRecord(value) ? { ...value } : {};
@@ -323,10 +339,13 @@ const updateBusinessBlueprintStorefrontSections = (
 const mergeTheme = (
     currentTheme: StorefrontThemeSettings,
     presetId: StorefrontThemePresetId,
-): StorefrontThemeSettings => ({
+): StorefrontThemeWithPresetMetadata => ({
     ...DEFAULT_STOREFRONT_THEME,
     ...currentTheme,
     ...STOREFRONT_THEME_PRESETS[presetId].theme,
+    themePreset: presetId,
+    themePresetId: presetId,
+    presetId,
 });
 
 const buildPreviewTheme = (project: any, storefrontTheme: StorefrontThemeSettings): Record<string, any> => ({
@@ -375,7 +394,6 @@ const StorefrontEditorView: React.FC = () => {
         isSaving: settingsSaving,
         getStorefrontTheme,
         replaceStorefrontTheme,
-        resetStorefrontTheme,
     } = useStoreSettings(user?.id || '', storeId);
 
     const project = useMemo(() => (
@@ -430,6 +448,14 @@ const StorefrontEditorView: React.FC = () => {
     const initialOrderSignature = stableStringify(initialOrder);
     const initialSectionSettingsSignature = stableStringify(initialSectionSettings);
     const projectVisibilitySignature = stableStringify(initialVisibility);
+    const storedThemePresetId = getThemePresetIdFromTheme(settings?.storefrontTheme as Partial<StorefrontThemeWithPresetMetadata> | undefined);
+    const persistedPresetId =
+        normalizeThemePresetId(draftEditorConfig.themePresetId) ||
+        normalizeThemePresetId(editorState.themePresetId) ||
+        normalizeThemePresetId(editorState.themePreset) ||
+        storedThemePresetId ||
+        'minimal';
+    const activePresetProjectKey = project?.id || projectId || storeId || 'storefront-editor';
 
     const [sections, setSections] = useState<StorefrontSectionKind[]>(initialOrder);
     const [visibility, setVisibility] = useState<Record<string, boolean>>({});
@@ -441,12 +467,10 @@ const StorefrontEditorView: React.FC = () => {
     const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
     const previewPayloadRef = useRef('');
     const previewReloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const selectedPresetOverrideRef = useRef<StorefrontThemePresetId | null>(null);
+    const presetProjectKeyRef = useRef(activePresetProjectKey);
     const [previewRevision, setPreviewRevision] = useState(0);
-    const [selectedPresetId, setSelectedPresetId] = useState<StorefrontThemePresetId>(
-        (draftEditorConfig.themePresetId as StorefrontThemePresetId) ||
-        (editorState.themePresetId as StorefrontThemePresetId) ||
-        'minimal'
-    );
+    const [selectedPresetId, setSelectedPresetId] = useState<StorefrontThemePresetId>(persistedPresetId);
     const [isSavingTemplate, setIsSavingTemplate] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -465,13 +489,15 @@ const StorefrontEditorView: React.FC = () => {
         ));
         setSelectedSection(prev => initialOrder.includes(prev) ? prev : initialOrder[0] || defaultSections[0]);
         setTemplateState(editorState.templateState === 'published' ? 'published' : 'draft');
-        setSelectedPresetId(
-            (draftEditorConfig.themePresetId as StorefrontThemePresetId) ||
-            (editorState.themePresetId as StorefrontThemePresetId) ||
-            'minimal',
-        );
+        if (presetProjectKeyRef.current !== activePresetProjectKey) {
+            presetProjectKeyRef.current = activePresetProjectKey;
+            selectedPresetOverrideRef.current = null;
+        }
+        setSelectedPresetId(selectedPresetOverrideRef.current || persistedPresetId);
     }, [
+        activePresetProjectKey,
         draftEditorConfig.themePresetId,
+        editorState.themePreset,
         editorState.templateState,
         editorState.themePresetId,
         initialVisibility,
@@ -479,6 +505,7 @@ const StorefrontEditorView: React.FC = () => {
         initialOrderSignature,
         initialSectionSettings,
         initialSectionSettingsSignature,
+        persistedPresetId,
         projectVisibilitySignature,
     ]);
 
@@ -750,11 +777,27 @@ const StorefrontEditorView: React.FC = () => {
     const applyThemePreset = async (presetId: StorefrontThemePresetId) => {
         setError(null);
         setStatusMessage(null);
+        selectedPresetOverrideRef.current = presetId;
         setSelectedPresetId(presetId);
         applySectionPresetById(presetId);
 
         try {
             await replaceStorefrontTheme(mergeTheme(currentTheme, presetId));
+            setTemplateState('draft');
+            setStatusMessage(t('ecommerce.storefrontEditor.themePresetApplied', 'Preset aplicado al storefront.'));
+        } catch (err: any) {
+            setError(err.message || t('ecommerce.storefrontEditor.themePresetError', 'No se pudo aplicar el preset.'));
+        }
+    };
+
+    const handleResetStorefrontTheme = async () => {
+        setError(null);
+        setStatusMessage(null);
+        selectedPresetOverrideRef.current = 'minimal';
+        setSelectedPresetId('minimal');
+
+        try {
+            await replaceStorefrontTheme(mergeTheme(DEFAULT_STOREFRONT_THEME, 'minimal'));
             setTemplateState('draft');
             setStatusMessage(t('ecommerce.storefrontEditor.themePresetApplied', 'Preset aplicado al storefront.'));
         } catch (err: any) {
@@ -1046,7 +1089,7 @@ const StorefrontEditorView: React.FC = () => {
                     </div>
                     <button
                         type="button"
-                        onClick={resetStorefrontTheme}
+                        onClick={handleResetStorefrontTheme}
                         disabled={settingsLoading || settingsSaving}
                         className="rounded-lg bg-muted/60 p-2 text-q-text-muted hover:text-foreground disabled:opacity-50"
                         aria-label={t('common.reset', 'Restablecer')}
@@ -2278,7 +2321,7 @@ const StorefrontEditorView: React.FC = () => {
                             </div>
                             <button
                                 type="button"
-                                onClick={resetStorefrontTheme}
+                                onClick={handleResetStorefrontTheme}
                                 disabled={settingsLoading || settingsSaving}
                                 className="rounded-lg bg-muted/60 p-2 text-q-text-muted hover:text-foreground disabled:opacity-50"
                                 aria-label={t('common.reset', 'Restablecer')}

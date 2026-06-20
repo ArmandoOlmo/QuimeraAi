@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_STOREFRONT_THEME } from '../../types/ecommerce';
+import type { StorefrontThemePresetId } from '../../types/storefrontTheme';
 import {
     getCompatibleStorefrontThemePresets,
     getStorefrontCatalogSize,
@@ -9,6 +10,21 @@ import {
     selectStorefrontThemePreset,
     STOREFRONT_THEME_PRESETS,
 } from '../../utils/storefrontTheme';
+
+const EXPECTED_STOREFRONT_THEME_PRESET_IDS: StorefrontThemePresetId[] = [
+    'minimal',
+    'luxury',
+    'fitness',
+    'marketplace',
+    'editorial',
+    'beauty',
+    'food',
+    'fashion',
+    'digital',
+    'restaurant',
+    'realEstate',
+    'services',
+];
 
 describe('storefrontTheme presets', () => {
     it('classifies catalog sizes with explicit thresholds', () => {
@@ -114,6 +130,36 @@ describe('storefrontTheme presets', () => {
             expect(settings.primaryColor).toMatch(/^#/);
             expect(settings.buttonBackground).toBeTruthy();
             expect(settings.headingFontFamily).toBeTruthy();
+        });
+    });
+
+    it('keeps every declared preset registered and selectable', () => {
+        expect(Object.keys(STOREFRONT_THEME_PRESETS).sort()).toEqual(
+            [...EXPECTED_STOREFRONT_THEME_PRESET_IDS].sort(),
+        );
+
+        EXPECTED_STOREFRONT_THEME_PRESET_IDS.forEach(presetId => {
+            const preset = STOREFRONT_THEME_PRESETS[presetId];
+            const industry = preset.compatibility.compatibleIndustries.includes('all')
+                ? 'ecommerce'
+                : preset.compatibility.compatibleIndustries[0];
+            const selected = selectStorefrontThemePreset({
+                preferredPresetId: presetId,
+                industry,
+                catalogSize: preset.compatibility.catalogSizes[0],
+                enabledModules: [
+                    ...preset.compatibility.requiredModules,
+                    'ecommerce-engine',
+                    'restaurant-engine',
+                    'real-estate-engine',
+                ],
+            });
+
+            expect(preset.id).toBe(presetId);
+            expect(preset.label).toBeTruthy();
+            expect(preset.description).toBeTruthy();
+            expect(preset.recommendedSections.length).toBeGreaterThan(0);
+            expect(selected.id).toBe(presetId);
         });
     });
 });
