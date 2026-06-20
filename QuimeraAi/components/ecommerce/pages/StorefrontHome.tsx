@@ -11,7 +11,10 @@ import ProductSearchPage from '../search/ProductSearchPage';
 import { Project } from '../../../types';
 import { useStorefrontCart } from '../context';
 import StorefrontModuleRenderer from '../StorefrontModuleRenderer';
-import { getRenderableStorefrontSectionDecisions } from '../../../utils/storefrontRenderer';
+import {
+    getRenderableStorefrontSectionDecisions,
+    resolveStorefrontSectionDecisions,
+} from '../../../utils/storefrontRenderer';
 
 interface ThemeColors extends Record<string, string | undefined> {
     background?: string;
@@ -40,7 +43,7 @@ const getStorefrontEditorSections = (
     projectData: Project,
     isEditorPreview: boolean,
 ): unknown[] | undefined => {
-    const pageData = isRecord(projectData?.data) ? projectData.data : {};
+    const pageData = isRecord(projectData?.data) ? projectData.data as Record<string, any> : {};
     const editorState = isRecord(pageData.storefrontEditor)
         ? pageData.storefrontEditor
         : isRecord((projectData as any)?.storefrontEditor)
@@ -68,17 +71,26 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
     const isEditorPreview = typeof window !== 'undefined' &&
         new URLSearchParams(window.location.search).get('preview') === 'storefront-editor';
 
-    const sectionsToRender = useMemo(() => getRenderableStorefrontSectionDecisions({
-        pageData: projectData?.data,
-        componentOrder: projectData?.componentOrder,
-        sectionVisibility: projectData?.sectionVisibility,
-        blueprintSections: (
-            getStorefrontEditorSections(projectData, isEditorPreview) ||
-            projectData?.businessBlueprint?.storefrontBlueprint?.sections ||
-            projectData?.data?.businessBlueprint?.storefrontBlueprint?.sections
-        ),
-    }), [isEditorPreview, projectData]);
-    const hasRenderableSections = sectionsToRender.length > 0;
+    const sectionsToRender = useMemo(() => {
+        const resolverInput = {
+            pageData: projectData?.data,
+            componentOrder: projectData?.componentOrder,
+            sectionVisibility: projectData?.sectionVisibility,
+            blueprintSections: (
+                getStorefrontEditorSections(projectData, isEditorPreview) ||
+                projectData?.businessBlueprint?.storefrontBlueprint?.sections ||
+                projectData?.data?.businessBlueprint?.storefrontBlueprint?.sections
+            ),
+        };
+
+        return isEditorPreview
+            ? resolveStorefrontSectionDecisions(resolverInput)
+            : getRenderableStorefrontSectionDecisions(resolverInput);
+    }, [isEditorPreview, projectData]);
+    const hasRenderableSections = sectionsToRender.some(decision => (
+        decision.status === 'render' ||
+        (isEditorPreview && ['empty', 'invalid', 'unsupported'].includes(decision.status))
+    ));
 
     return (
         <div
@@ -93,6 +105,7 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
                     storeId={storeId}
                     decisions={sectionsToRender}
                     globalColors={themeColors}
+                    isEditorPreview={isEditorPreview}
                     onNavigateToProduct={onNavigateToProduct}
                     onNavigateToCategory={onNavigateToCategory}
                 />

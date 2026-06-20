@@ -13,11 +13,13 @@ import {
 } from './sections';
 import type { StorefrontSectionKind, StorefrontSectionRenderDecision } from '../../types/storefrontRenderer';
 import type { StorefrontGlobalColors } from './hooks/useUnifiedStorefrontColors';
+import { isStorefrontSectionKind, storefrontSectionRegistry } from '../../utils/storefrontRenderer';
 
 interface StorefrontModuleRendererProps {
     storeId: string;
     decisions: StorefrontSectionRenderDecision[];
     globalColors?: StorefrontGlobalColors;
+    isEditorPreview?: boolean;
     onNavigateToProduct: (slug: string) => void;
     onNavigateToCategory: (slug: string) => void;
 }
@@ -35,17 +37,90 @@ const storefrontComponentMap: Record<StorefrontSectionKind, React.FC<any>> = {
     productBundle: ProductBundle,
 };
 
+const shouldShowEditorPlaceholder = (decision: StorefrontSectionRenderDecision): boolean =>
+    decision.status === 'empty' || decision.status === 'invalid' || decision.status === 'unsupported';
+
+const getSectionLabel = (kind: string): string =>
+    isStorefrontSectionKind(kind) ? storefrontSectionRegistry[kind].label : kind;
+
+const StorefrontEditorSectionPlaceholder: React.FC<{
+    decision: StorefrontSectionRenderDecision;
+    globalColors?: StorefrontGlobalColors;
+}> = ({ decision, globalColors }) => {
+    const sectionLabel = getSectionLabel(String(decision.kind));
+    const accentColor = globalColors?.accent || globalColors?.priceColor || '#fbbf24';
+    const borderColor = globalColors?.border || globalColors?.borderColor || '#d1d5db';
+    const textColor = globalColors?.text || '#0f172a';
+    const mutedTextColor = globalColors?.mutedText || '#64748b';
+    const backgroundColor = globalColors?.cardBackground || globalColors?.background || '#ffffff';
+    const details = [...decision.reasons, ...decision.warnings].filter(Boolean).slice(0, 3);
+    const statusLabel = decision.status === 'invalid'
+        ? 'Requiere ajuste'
+        : decision.status === 'unsupported'
+            ? 'No soportado'
+            : 'Pendiente de contenido';
+
+    return (
+        <section className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8" data-storefront-editor-placeholder={decision.kind}>
+            <div
+                className="rounded-lg border border-dashed px-5 py-6"
+                style={{
+                    backgroundColor,
+                    borderColor,
+                    color: textColor,
+                }}
+            >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                        <span
+                            className="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
+                            style={{ backgroundColor: `${accentColor}22`, color: accentColor }}
+                        >
+                            {statusLabel}
+                        </span>
+                        <h2 className="mt-3 text-xl font-semibold sm:text-2xl">{sectionLabel}</h2>
+                        <p className="mt-2 max-w-2xl text-sm leading-6" style={{ color: mutedTextColor }}>
+                            Esta seccion ya esta en la plantilla del storefront. Completa sus controles para verla como modulo final en la tienda publicada.
+                        </p>
+                    </div>
+                    <div className="flex-shrink-0 rounded-md border px-3 py-2 text-xs font-medium" style={{ borderColor, color: mutedTextColor }}>
+                        {decision.source === 'blueprint' ? 'Blueprint' : 'Orden legacy'}
+                    </div>
+                </div>
+                {details.length > 0 && (
+                    <ul className="mt-4 space-y-1 text-sm" style={{ color: mutedTextColor }}>
+                        {details.map(detail => (
+                            <li key={detail}>- {detail}</li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+        </section>
+    );
+};
+
 const StorefrontModuleRenderer: React.FC<StorefrontModuleRendererProps> = ({
     storeId,
     decisions,
     globalColors,
+    isEditorPreview = false,
     onNavigateToProduct,
     onNavigateToCategory,
 }) => {
     return (
         <>
             {decisions.map((decision) => {
-                if (decision.status !== 'render') return null;
+                if (decision.status !== 'render') {
+                    if (!isEditorPreview || !shouldShowEditorPlaceholder(decision)) return null;
+
+                    return (
+                        <StorefrontEditorSectionPlaceholder
+                            key={decision.id}
+                            decision={decision}
+                            globalColors={globalColors}
+                        />
+                    );
+                }
 
                 const Component = storefrontComponentMap[decision.kind as StorefrontSectionKind];
                 if (!Component) return null;
