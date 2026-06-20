@@ -5,7 +5,7 @@
  * Now includes cart functionality via StorefrontCartProvider
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { doc, getDoc } from '@/utils/compatData';
 import { db } from '@/utils/compatData';
 import Header from '../Header';
@@ -75,6 +75,61 @@ const defaultHeaderData: HeaderData = {
         accent: '#4f46e5',
     },
     buttonBorderRadius: 'md',
+};
+
+const isRecord = (value: unknown): value is Record<string, any> =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const toRecord = (value: unknown): Record<string, any> =>
+    isRecord(value) ? value : {};
+
+const firstArray = <T,>(...values: unknown[]): T[] => {
+    const found = values.find(Array.isArray);
+    return (found || []) as T[];
+};
+
+const normalizeHeaderData = (value: unknown, fallbackName = 'Store', fallbackTheme: Record<string, any> = {}): HeaderData => {
+    const header = toRecord(value);
+    const globalColors = toRecord(fallbackTheme.globalColors);
+
+    return {
+        ...defaultHeaderData,
+        logoText: fallbackName || defaultHeaderData.logoText,
+        ...header,
+        colors: {
+            ...defaultHeaderData.colors,
+            ...(globalColors.background ? { background: globalColors.background } : {}),
+            ...(globalColors.text ? { text: globalColors.text } : {}),
+            ...(globalColors.primary || globalColors.accent ? { accent: globalColors.primary || globalColors.accent } : {}),
+            ...toRecord(header.colors),
+        },
+    } as HeaderData;
+};
+
+const normalizeProjectPublicData = (value: unknown): ProjectPublicData | null => {
+    if (!isRecord(value)) return null;
+
+    const root = value;
+    const firstData = toRecord(root.data);
+    const nestedData = toRecord(firstData.data);
+    const headerSource = root.header || firstData.header || nestedData.header;
+    const theme = toRecord(root.theme || firstData.theme || nestedData.theme) as ThemeData;
+    const name = String(
+        root.name ||
+        firstData.name ||
+        nestedData.name ||
+        toRecord(headerSource).logoText ||
+        'Store'
+    );
+    const header = normalizeHeaderData(headerSource, name, theme);
+
+    return {
+        header,
+        theme,
+        name,
+        pages: firstArray<SitePageNav>(root.pages, firstData.pages, nestedData.pages),
+        menus: firstArray<MenuNav>(root.menus, firstData.menus, nestedData.menus),
+    };
 };
 
 /**
@@ -176,6 +231,7 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
                         showCart={true}
                         cartItemCount={cart.itemCount}
                         onCartClick={cart.toggleCart}
+                        forceSolid={true}
                     />
                 </div>
             )}
@@ -301,9 +357,15 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
     onNavigateToAccount,
     projectData: initialProjectData,
 }) => {
-    const [projectData, setProjectData] = useState<ProjectPublicData | null>(initialProjectData || null);
+    const [fetchedProjectData, setFetchedProjectData] = useState<ProjectPublicData | null>(null);
     const [isLoading, setIsLoading] = useState(!initialProjectData);
     const [error, setError] = useState<string | null>(null);
+    const projectData = useMemo(
+        () => initialProjectData
+            ? normalizeProjectPublicData(initialProjectData)
+            : fetchedProjectData,
+        [fetchedProjectData, initialProjectData],
+    );
 
     useEffect(() => {
         const html = document.documentElement;
@@ -350,7 +412,7 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
                     // Check both root level (new) and nested in data (legacy fallback)
                     const headerData = data.header || data.data?.header;
                     if (headerData) {
-                        setProjectData({
+                        setFetchedProjectData({
                             header: headerData,
                             theme: data.theme || {},
                             name: data.name || 'Store',
@@ -371,7 +433,7 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
 
                     if (projectDoc.exists()) {
                         const project = projectDoc.data() as Project;
-                        setProjectData({
+                        setFetchedProjectData({
                             header: project.data?.header || defaultHeaderData,
                             theme: project.theme || {} as any,
                             name: project.name || 'Store',
@@ -384,7 +446,7 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
                 }
 
                 // Fallback to default header
-                setProjectData({
+                setFetchedProjectData({
                     header: defaultHeaderData,
                     theme: {} as any,
                     name: 'Store',
@@ -395,7 +457,7 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
                 console.error('Error fetching project data for storefront:', err);
                 setError(err.message);
                 // Use default header on error
-                setProjectData({
+                setFetchedProjectData({
                     header: defaultHeaderData,
                     theme: {} as any,
                     name: 'Store',
@@ -408,7 +470,7 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
         };
 
         fetchProjectData();
-    }, [storeId]);
+    }, [initialProjectData, storeId]);
 
     // Loading state
     if (isLoading) {
