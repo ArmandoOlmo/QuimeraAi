@@ -1135,13 +1135,18 @@ const StorefrontEditorView: React.FC = () => {
     };
 
     const addSection = (kind: StorefrontSectionKind) => {
-        setSections(prev => [...prev, kind]);
+        setSections(prev => prev.includes(kind) ? prev : [...prev, kind]);
         setSectionSettings(prev => ({
             ...prev,
-            [kind]: { ...storefrontSectionRegistry[kind].defaultSettings },
+            [kind]: {
+                ...storefrontSectionRegistry[kind].defaultSettings,
+                ...toSettingsRecord(prev[kind]),
+                enabled: true,
+            },
         }));
-        setSelectedSection(kind);
-        setSectionVisibility(kind, true);
+        setVisibility(prev => ({ ...prev, [kind]: true }));
+        selectSectionForEditing(kind);
+        markTemplateDirty();
     };
 
     const removeSection = (kind: StorefrontSectionKind) => {
