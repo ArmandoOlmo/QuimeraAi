@@ -717,10 +717,10 @@ const StorefrontEditorView: React.FC = () => {
     const projectVisibilitySignature = stableStringify(initialVisibility);
     const storedThemePresetId = getThemePresetIdFromTheme(settings?.storefrontTheme as Partial<StorefrontThemeWithPresetMetadata> | undefined);
     const persistedPresetId =
-        storedThemePresetId ||
         normalizeThemePresetId(draftEditorConfig.themePresetId) ||
         normalizeThemePresetId(editorState.themePresetId) ||
         normalizeThemePresetId(editorState.themePreset) ||
+        storedThemePresetId ||
         'minimal';
     const activePresetProjectKey = project?.id || projectId || storeId || 'storefront-editor';
 
