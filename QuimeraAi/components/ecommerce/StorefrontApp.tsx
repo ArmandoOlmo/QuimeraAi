@@ -24,23 +24,13 @@ import {
     applyResolvedStorefrontEditorConfig,
     type StorefrontEditorConfigMode,
 } from '../../utils/storefrontRenderer';
+import { parseStorefrontUrl, type StorefrontRouteState } from '../../utils/storefrontRouter';
 
 interface StorefrontAppProps {
     projectId: string;
     initialData?: any;
     hostname?: string;
     serverUrl?: string; // For SSR routing
-}
-
-type StorefrontView = 'home' | 'products' | 'product' | 'category' | 'checkout' | 'order-confirmation' | 'account';
-
-interface RouteState {
-    view: StorefrontView;
-    params: {
-        productSlug?: string;
-        categorySlug?: string;
-        orderId?: string;
-    };
 }
 
 interface StorefrontProductSearchProps {
@@ -190,49 +180,6 @@ const StorefrontProductSearch: React.FC<StorefrontProductSearchProps> = ({
     );
 };
 
-/**
- * Parse URL to determine view and params
- */
-function parseUrl(url: string): RouteState {
-    const path = url.replace(/^\/store\/[^\/]+/, '').replace(/^\//, '') || '/';
-
-    // Product listing page. The storefront home stays a landing page; catalog is a separate route.
-    if (/^(products|catalog|shop|tienda\/productos|tienda\/catalogo)\/?$/.test(path)) {
-        return { view: 'products', params: {} };
-    }
-
-    // Product page: /product/:slug
-    const productMatch = path.match(/^product\/([^\/]+)/);
-    if (productMatch) {
-        return { view: 'product', params: { productSlug: productMatch[1] } };
-    }
-
-    // Category page: /category/:slug
-    const categoryMatch = path.match(/^category\/([^\/]+)/);
-    if (categoryMatch) {
-        return { view: 'category', params: { categorySlug: categoryMatch[1] } };
-    }
-
-    // Checkout
-    if (path.startsWith('checkout')) {
-        return { view: 'checkout', params: {} };
-    }
-
-    // Customer account
-    if (path.startsWith('account')) {
-        return { view: 'account', params: {} };
-    }
-
-    // Order confirmation: /order/:orderId
-    const orderMatch = path.match(/^order\/([^\/]+)/);
-    if (orderMatch) {
-        return { view: 'order-confirmation', params: { orderId: orderMatch[1].split('?')[0] } };
-    }
-
-    // Default: home
-    return { view: 'home', params: {} };
-}
-
 const StorefrontApp: React.FC<StorefrontAppProps> = ({
     projectId,
     initialData,
@@ -243,10 +190,10 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     const initialConfigMode: StorefrontEditorConfigMode = initialPreviewData ? 'draft' : 'published';
 
     // Route state
-    const [route, setRoute] = useState<RouteState>(() => {
+    const [route, setRoute] = useState<StorefrontRouteState>(() => {
         // Use server URL for SSR, or window.location for client
         const url = serverUrl || (typeof window !== 'undefined' ? window.location.pathname : '/');
-        return parseUrl(url);
+        return parseStorefrontUrl(url);
     });
 
     // Project data
@@ -261,7 +208,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
         if (typeof window === 'undefined') return;
 
         const handlePopState = () => {
-            setRoute(parseUrl(window.location.pathname));
+            setRoute(parseStorefrontUrl(window.location.pathname));
         };
 
         window.addEventListener('popstate', handlePopState);
@@ -341,7 +288,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
             // For custom domain, use root paths
             const fullPath = hostname ? path : `/store/${projectId}${path}`;
             window.history.pushState({}, '', fullPath);
-            setRoute(parseUrl(path));
+            setRoute(parseStorefrontUrl(path));
         }
     };
 
