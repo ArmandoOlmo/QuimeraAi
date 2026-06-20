@@ -518,13 +518,7 @@ export function selectStorefrontThemePreset(input: StorefrontThemeSelectionInput
     const modules = input.enabledModules || ['ecommerce-engine'];
     const preferred = input.preferredPresetId ? STOREFRONT_THEME_PRESETS[input.preferredPresetId] : undefined;
 
-    if (
-        preferred &&
-        preferred.compatibility.catalogSizes.includes(catalogSize) &&
-        isIndustryCompatible(preferred, input.industry) &&
-        hasRequiredModules(preferred, modules) &&
-        !hasUnsupportedModules(preferred, modules)
-    ) {
+    if (preferred) {
         return preferred;
     }
 

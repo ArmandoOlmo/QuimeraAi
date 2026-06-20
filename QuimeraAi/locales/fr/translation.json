@@ -1369,6 +1369,18 @@
         "digital": {
           "label": "Digital",
           "description": "Boutique claire pour logiciels, téléchargements, cours et produits numériques."
+        },
+        "restaurant": {
+          "label": "Restaurant",
+          "description": "Boutique pour commerce de restaurant, réservations, cartes cadeaux et traiteur."
+        },
+        "realEstate": {
+          "label": "Immobilier",
+          "description": "Présentation pour annonces, guides, consultations et produits immobiliers."
+        },
+        "services": {
+          "label": "Services",
+          "description": "Boutique orientée services pour consultations, forfaits, acomptes et rendez-vous."
         }
       },
       "catalogSizes": {

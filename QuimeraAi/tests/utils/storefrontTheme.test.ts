@@ -53,6 +53,17 @@ describe('storefrontTheme presets', () => {
         expect(preset.compatibility.optionalModules).toContain('appointments-engine');
     });
 
+    it('honors a manually preferred preset without downgrading to automatic compatibility fallbacks', () => {
+        const selected = selectStorefrontThemePreset({
+            preferredPresetId: 'luxury',
+            industry: 'restaurant',
+            productCount: 250,
+            enabledModules: ['ecommerce-engine'],
+        });
+
+        expect(selected.id).toBe('luxury');
+    });
+
     it('falls back to marketplace for large ecommerce catalogs', () => {
         const preset = selectStorefrontThemePreset({
             industry: 'retail ecommerce',

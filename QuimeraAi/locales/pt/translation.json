@@ -1369,6 +1369,18 @@
         "digital": {
           "label": "Digital",
           "description": "Loja clara para software, downloads, cursos e produtos digitais."
+        },
+        "restaurant": {
+          "label": "Restaurante",
+          "description": "Loja para comércio de restaurante, reservas, gift cards e catering."
+        },
+        "realEstate": {
+          "label": "Imobiliário",
+          "description": "Apresentação para imóveis, guias, consultas e produtos imobiliários."
+        },
+        "services": {
+          "label": "Serviços",
+          "description": "Loja orientada a serviços para consultas, pacotes, depósitos e agendamentos."
         }
       },
       "catalogSizes": {

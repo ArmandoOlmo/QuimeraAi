@@ -3674,6 +3674,18 @@
         "digital": {
           "label": "Digital",
           "description": "Tienda clara para software, descargas, cursos y productos digitales."
+        },
+        "restaurant": {
+          "label": "Restaurante",
+          "description": "Tienda para comercio de restaurante, reservaciones, gift cards y catering."
+        },
+        "realEstate": {
+          "label": "Bienes raíces",
+          "description": "Presentación para listados, guías, consultas y productos inmobiliarios."
+        },
+        "services": {
+          "label": "Servicios",
+          "description": "Tienda orientada a consultas, paquetes, depósitos y citas."
         }
       },
       "catalogSizes": {

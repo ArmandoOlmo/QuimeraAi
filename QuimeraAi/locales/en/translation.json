@@ -3674,6 +3674,18 @@
         "digital": {
           "label": "Digital",
           "description": "High-clarity storefront for software, downloads, courses, and digital products."
+        },
+        "restaurant": {
+          "label": "Restaurant",
+          "description": "Storefront for restaurant commerce, reservations, gift cards, and catering."
+        },
+        "realEstate": {
+          "label": "Real Estate",
+          "description": "Presentation preset for listings, guides, consultations, and property products."
+        },
+        "services": {
+          "label": "Services",
+          "description": "Service-led storefront for consultations, packages, deposits, and appointments."
         }
       },
       "catalogSizes": {
