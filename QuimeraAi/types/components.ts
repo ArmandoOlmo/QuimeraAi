@@ -9,6 +9,7 @@ import type { WebsiteEcommerceCTARouteType, WebsiteEcommerceResponsiveBehavior }
 
 // Re-export Project from types/project for backward compatibility
 export type { Project } from './project';
+export type { BorderRadiusSize } from './ui';
 
 // Lumina Data Interfaces
 import { HeroLuminaData } from '../components/HeroLumina';
@@ -1683,7 +1684,7 @@ export interface FeaturedProductsData extends SectionBackgroundFields {
     // Styling
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    cardGap?: 'sm' | 'md' | 'lg';
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     borderRadius?: BorderRadiusSize;
@@ -1704,6 +1705,8 @@ export interface FeaturedProductsData extends SectionBackgroundFields {
         priceColor?: string;
         salePriceColor?: string;
         borderColor?: string;
+        overlayStart?: string;
+        overlayEnd?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -1804,6 +1807,7 @@ export interface ProductHeroData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     headlineFontSize?: FontSize;
     subheadlineFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
     buttonBorderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
     // Add to Cart
@@ -1867,6 +1871,7 @@ export interface SaleCountdownData extends SectionBackgroundFields {
     animationType?: AnimationType;
     // Card style for products
     cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     // Colors
     colors: {
         background: string;
@@ -1881,6 +1886,8 @@ export interface SaleCountdownData extends SectionBackgroundFields {
         buttonText?: string;
         cardBackground?: string;
         cardText?: string;
+        overlayStart?: string;
+        overlayEnd?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -1912,6 +1919,7 @@ export interface TrustBadgesData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     titleFontSize?: FontSize;
     borderRadius?: BorderRadiusSize;
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     // Colors
     colors: {
         background: string;
@@ -2004,6 +2012,7 @@ export interface ProductReviewsData extends SectionBackgroundFields {
     showProductInfo?: boolean;
     sortBy?: 'newest' | 'highest' | 'lowest' | 'helpful';
     maxReviews?: number;
+    columns?: 2 | 3 | 4 | 5 | 6;
     // Summary
     averageRating?: number;
     totalReviews?: number;
@@ -2013,6 +2022,7 @@ export interface ProductReviewsData extends SectionBackgroundFields {
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     borderRadius?: BorderRadiusSize;
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     animationType?: AnimationType;
     // Colors
     colors: {
@@ -2062,6 +2072,7 @@ export interface CollectionBannerData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     headlineFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
     buttonBorderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
     // Colors
@@ -2112,6 +2123,7 @@ export interface ProductBundleData extends SectionBackgroundFields {
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     borderRadius?: BorderRadiusSize;
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     animationType?: AnimationType;
     // Colors
     colors: {

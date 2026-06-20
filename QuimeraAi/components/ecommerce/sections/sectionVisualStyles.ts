@@ -3,6 +3,7 @@ import type { CornerGradientConfig, SectionBackgroundFields } from '../../../typ
 
 type SectionVisualData = SectionBackgroundFields & {
     cornerGradient?: Partial<CornerGradientConfig>;
+    height?: number;
 };
 
 const isHexColor = (value?: string): boolean =>
@@ -17,6 +18,110 @@ const hexToRgba = (color: string, alpha: number): string => {
     const g = parseInt(hex.slice(2, 4), 16);
     const b = parseInt(hex.slice(4, 6), 16);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+export const getStorefrontPaddingYClass = (value?: string, fallback = 'md'): string => {
+    const map: Record<string, string> = {
+        none: 'py-0',
+        sm: 'py-4',
+        md: 'py-8',
+        lg: 'py-12',
+        xl: 'py-16',
+    };
+    return map[value || fallback] || map[fallback] || map.md;
+};
+
+export const getStorefrontPaddingXClass = (value?: string, fallback = 'md'): string => {
+    const map: Record<string, string> = {
+        none: 'px-0',
+        sm: 'px-4',
+        md: 'px-6',
+        lg: 'px-8',
+        xl: 'px-12',
+    };
+    return map[value || fallback] || map[fallback] || map.md;
+};
+
+export const getStorefrontRadiusClass = (value?: string, fallback = 'xl'): string => {
+    const map: Record<string, string> = {
+        none: 'rounded-none',
+        sm: 'rounded-sm',
+        md: 'rounded-md',
+        lg: 'rounded-lg',
+        xl: 'rounded-xl',
+        '2xl': 'rounded-2xl',
+        full: 'rounded-full',
+    };
+    return map[value || fallback] || map[fallback] || map.xl;
+};
+
+export const getStorefrontCardGapClass = (value?: string, fallback = 'md'): string => {
+    const map: Record<string, string> = {
+        sm: 'gap-3',
+        md: 'gap-4 md:gap-6',
+        lg: 'gap-6 md:gap-8',
+        xl: 'gap-8 md:gap-10',
+    };
+    return map[value || fallback] || map[fallback] || map.md;
+};
+
+export const getStorefrontCardGapPx = (value?: string, fallback = 'md'): number => {
+    const map: Record<string, number> = {
+        sm: 12,
+        md: 24,
+        lg: 32,
+        xl: 40,
+    };
+    return map[value || fallback] || map[fallback] || map.md;
+};
+
+export const getStorefrontColumnsClass = (columns?: number, fallback = 4): string => {
+    switch (columns || fallback) {
+        case 2: return 'sm:grid-cols-2';
+        case 3: return 'sm:grid-cols-2 lg:grid-cols-3';
+        case 5: return 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5';
+        case 6: return 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6';
+        default: return 'sm:grid-cols-2 lg:grid-cols-4';
+    }
+};
+
+export const getStorefrontTextAlignmentClass = (value?: string, fallback = 'center'): string => {
+    const map: Record<string, string> = {
+        left: 'items-start text-left',
+        center: 'items-center text-center',
+        right: 'items-end text-right',
+    };
+    return map[value || fallback] || map[fallback] || map.center;
+};
+
+export const getStorefrontContentPositionClass = (value?: string, fallback = 'center'): string => {
+    const map: Record<string, string> = {
+        left: 'justify-start',
+        center: 'justify-center',
+        right: 'justify-end',
+    };
+    return map[value || fallback] || map[fallback] || map.center;
+};
+
+export const getStorefrontColorWithOpacity = (color: string | undefined, opacity: number, fallback = '#000000'): string => {
+    const safeColor = color || fallback;
+    const alpha = Math.max(0, Math.min(1, opacity));
+    return isHexColor(safeColor) ? hexToRgba(safeColor, alpha) : safeColor;
+};
+
+export const getStorefrontOverlayBackground = (
+    overlayStyle: unknown,
+    overlayColor: string | undefined,
+    overlayOpacity: number | undefined,
+): string => {
+    if (overlayStyle === 'none') return 'transparent';
+
+    const opacity = Math.max(0, Math.min(100, overlayOpacity ?? 55)) / 100;
+    if (overlayStyle === 'solid') {
+        return getStorefrontColorWithOpacity(overlayColor, opacity);
+    }
+
+    return `linear-gradient(to bottom, ${getStorefrontColorWithOpacity(overlayColor, opacity)} 0%, ${getStorefrontColorWithOpacity(overlayColor, opacity * 0.32)} 100%)`;
 };
 
 const getCornerGradientLayer = (cornerGradient?: Partial<CornerGradientConfig>): string | undefined => {
@@ -60,6 +165,9 @@ export const getStorefrontSectionBackgroundStyle = (
 
     return {
         backgroundColor,
+        ...(typeof data.height === 'number' && Number.isFinite(data.height) && data.height > 0
+            ? { minHeight: `${data.height}px` }
+            : {}),
         ...(layers.length > 0 ? {
             backgroundImage: layers.join(', '),
             backgroundPosition: data.backgroundImageUrl

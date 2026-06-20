@@ -7,6 +7,7 @@ import {
     resolveStorefrontEditorConfig,
     resolveStorefrontSectionVisibility,
     resolveStorefrontSectionDecisions,
+    STOREFRONT_SECTION_KINDS,
     validateStorefrontSectionSettings,
 } from '../../utils/storefrontRenderer';
 
@@ -25,6 +26,28 @@ describe('storefrontRenderer registry', () => {
             componentOrder: ['hero', 'announcementBar', 'featuredProducts', 'footer'],
             pageData: {},
         })).toHaveLength(2);
+    });
+
+    it('defaults an unconfigured storefront landing page to every storefront section', () => {
+        const decisions = resolveStorefrontSectionDecisions({
+            pageData: {},
+            componentOrder: [],
+            sectionVisibility: {},
+        });
+
+        expect(decisions.map(decision => decision.kind)).toEqual(STOREFRONT_SECTION_KINDS);
+        expect(decisions.every(decision => decision.status === 'render')).toBe(true);
+    });
+
+    it('completes legacy storefront editor config with every storefront section', () => {
+        const config = resolveStorefrontEditorConfig({
+            componentOrder: ['announcementBar'],
+            sectionVisibility: { announcementBar: true },
+            data: {},
+        }, { mode: 'draft' });
+
+        expect(config.source).toBe('legacy');
+        expect(config.componentOrder).toEqual(STOREFRONT_SECTION_KINDS);
     });
 
     it('uses blueprint sections before componentOrder when supported blueprint sections exist', () => {
@@ -118,7 +141,7 @@ describe('storefrontRenderer registry', () => {
         expect(blueprintHidden[0].status).toBe('hidden');
     });
 
-    it('marks invalid settings and hides empty sections with hide behavior', () => {
+    it('marks invalid settings and keeps incomplete storefront modules renderable', () => {
         const invalid = resolveStorefrontSectionDecisions({
             componentOrder: ['featuredProducts'],
             pageData: {
@@ -139,11 +162,11 @@ describe('storefrontRenderer registry', () => {
             },
         });
 
-        expect(empty.map(decision => decision.status)).toEqual(['empty', 'empty']);
+        expect(empty.map(decision => decision.status)).toEqual(['render', 'render']);
         expect(getRenderableStorefrontSectionDecisions({
             componentOrder: ['productBundle'],
             pageData: { productBundle: { productIds: [] } },
-        })).toHaveLength(0);
+        })).toHaveLength(1);
     });
 
     it('validates section settings with warnings for reviewable incomplete states', () => {
@@ -180,7 +203,7 @@ describe('storefrontRenderer registry', () => {
         })).toBe(true);
     });
 
-    it('keeps manual all-hidden state so StorefrontHome can render the product-grid fallback', () => {
+    it('keeps manual all-hidden state for explicit user visibility choices', () => {
         const visibility = normalizeStorefrontSectionVisibility({
             sections: ['productHero', 'featuredProducts'],
             previousVisibility: {

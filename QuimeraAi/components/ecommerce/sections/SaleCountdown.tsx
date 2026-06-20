@@ -9,7 +9,13 @@ import { SaleCountdownData, StorefrontProductItem } from '../../../types/compone
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
-import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
+import {
+    getStorefrontCardGapClass,
+    getStorefrontPaddingXClass,
+    getStorefrontPaddingYClass,
+    getStorefrontRadiusClass,
+    getStorefrontSectionBackgroundStyle,
+} from './sectionVisualStyles';
 
 interface SaleCountdownProps {
     data: SaleCountdownData;
@@ -34,6 +40,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
+    const productListUrl = effectiveStoreId ? `/store/${effectiveStoreId}/products` : '/products';
 
     const { products: allProducts } = usePublicProducts(effectiveStoreId, {
         limitCount: data.productsToShow || 4,
@@ -54,7 +61,11 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
 
     useEffect(() => {
         const calculateTimeLeft = () => {
-            const endDate = new Date(data.endDate).getTime();
+            const endDate = Date.parse(data.endDate || '');
+            if (!Number.isFinite(endDate)) {
+                setIsExpired(false);
+                return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+            }
             const now = new Date().getTime();
             const difference = endDate - now;
 
@@ -81,33 +92,16 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     }, [data.endDate]);
 
     // Style helpers
-    const getPaddingY = () => {
-        const map = { sm: 'py-8', md: 'py-12', lg: 'py-16' };
-        return map[data.paddingY] || 'py-12';
-    };
-
-    const getPaddingX = () => {
-        const map = { sm: 'px-4', md: 'px-6', lg: 'px-8' };
-        return map[data.paddingX] || 'px-6';
-    };
+    const getPaddingY = () => getStorefrontPaddingYClass(data.paddingY, 'lg');
+    const getPaddingX = () => getStorefrontPaddingXClass(data.paddingX, 'md');
+    const getCardGap = () => getStorefrontCardGapClass(data.cardGap, 'md');
 
     const getTitleSize = () => {
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
         return map[data.titleFontSize || 'lg'] || 'text-3xl';
     };
 
-    const getBorderRadius = () => {
-        const map: Record<string, string> = { 
-            none: 'rounded-none', 
-            sm: 'rounded-sm', 
-            md: 'rounded-md', 
-            lg: 'rounded-lg', 
-            xl: 'rounded-xl', 
-            '2xl': 'rounded-2xl', 
-            full: 'rounded-full' 
-        };
-        return map[data.borderRadius || 'xl'] || 'rounded-xl';
-    };
+    const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
 
     // Time unit component
     const TimeUnit = ({ value, label }: { value: number; label: string }) => (
@@ -167,7 +161,12 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                         )}
                         
                         {/* Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+                        <div
+                            className="absolute inset-0"
+                            style={{
+                                background: `linear-gradient(to top, ${colors?.overlayEnd || 'rgba(0,0,0,0.85)'} 0%, rgba(0,0,0,0.35) 55%, ${colors?.overlayStart || 'transparent'} 100%)`,
+                            }}
+                        />
                         
                         {/* Discount Badge */}
                         {discount > 0 && (
@@ -321,7 +320,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
 
                 {/* Products */}
                 {data.showProducts && saleProducts.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                    <div className={`grid grid-cols-2 md:grid-cols-4 ${getCardGap()} mt-8`}>
                         {saleProducts.slice(0, data.productsToShow || 4).map(product => (
                             <SaleProductCard key={product.id} product={product} />
                         ))}
@@ -389,7 +388,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                 )}
 
                 <a
-                    href="/tienda"
+                    href={productListUrl}
                     className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                     style={{
                         backgroundColor: colors?.buttonBackground,
@@ -402,7 +401,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
 
                 {/* Products */}
                 {data.showProducts && saleProducts.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
+                    <div className={`grid grid-cols-2 md:grid-cols-4 ${getCardGap()} mt-10`}>
                         {saleProducts.slice(0, data.productsToShow || 4).map(product => (
                             <SaleProductCard key={product.id} product={product} />
                         ))}
@@ -501,7 +500,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                     </div>
                 )}
                 <a
-                    href="/tienda"
+                    href={productListUrl}
                     className="px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
                     style={{
                         backgroundColor: colors?.buttonBackground,

@@ -96,6 +96,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
             paddingX: 'lg',
             headlineFontSize: 'xl',
             subheadlineFontSize: 'md',
+            borderRadius: 'xl',
             buttonBorderRadius: 'xl',
             colors: {
                 background: '#f8fafc',
@@ -137,7 +138,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
             showRating: true,
             showAddToCart: true,
             showViewAll: true,
-            viewAllUrl: '/tienda',
+            viewAllUrl: '/products',
             cardStyle: 'overlay',
             paddingY: 'lg',
             paddingX: 'md',
@@ -225,6 +226,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
             paddingX: 'md',
             titleFontSize: 'md',
             borderRadius: 'xl',
+            cardGap: 'md',
             colors: {
                 background: '#ffffff',
                 heading: '#0f172a',
@@ -263,6 +265,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
             descriptionFontSize: 'md',
             borderRadius: 'xl',
             cardStyle: 'overlay',
+            cardGap: 'md',
             colors: {
                 background: '#111827',
                 heading: '#ffffff',
@@ -276,6 +279,8 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
                 buttonText: '#111827',
                 cardBackground: '#1f2937',
                 cardText: '#ffffff',
+                overlayStart: 'transparent',
+                overlayEnd: 'rgba(0,0,0,0.76)',
             },
         },
         isEmpty: settings => !isNonEmptyString(settings.endDate) && !isNonEmptyString(settings.title),
@@ -284,7 +289,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         kind: 'collectionBanner',
         label: 'Collection Banner',
         moduleRegistryId: 'storefront-home-sections',
-        emptyBehavior: 'hide',
+        emptyBehavior: 'render',
         defaultVisible: true,
         validVariants: ['hero', 'split', 'minimal', 'overlay'],
         defaultSettings: {
@@ -304,6 +309,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
             paddingX: 'lg',
             headlineFontSize: 'xl',
             descriptionFontSize: 'md',
+            borderRadius: 'xl',
             buttonBorderRadius: 'xl',
             colors: {
                 background: '#111827',
@@ -381,11 +387,13 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
             showProductInfo: false,
             sortBy: 'newest',
             maxReviews: 6,
+            columns: 3,
             paddingY: 'lg',
             paddingX: 'md',
             titleFontSize: 'lg',
             descriptionFontSize: 'md',
             borderRadius: 'xl',
+            cardGap: 'md',
             colors: {
                 background: '#f8fafc',
                 heading: '#0f172a',
@@ -404,7 +412,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         kind: 'productBundle',
         label: 'Product Bundle',
         moduleRegistryId: 'storefront-home-sections',
-        emptyBehavior: 'hide',
+        emptyBehavior: 'render',
         defaultVisible: true,
         validVariants: ['horizontal', 'vertical', 'compact'],
         defaultSettings: {
@@ -428,6 +436,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
             titleFontSize: 'lg',
             descriptionFontSize: 'md',
             borderRadius: 'xl',
+            cardGap: 'md',
             colors: {
                 background: '#ffffff',
                 heading: '#0f172a',
@@ -482,7 +491,7 @@ export function validateStorefrontSectionSettings(
     }
 
     if (kind === 'productBundle' && !isNonEmptyArray(settings.productIds)) {
-        warnings.push('Product bundle has no productIds and will be hidden in storefront rendering.');
+        warnings.push('Product bundle has no productIds yet.');
     }
 
     return {
@@ -639,8 +648,10 @@ export function resolveStorefrontSectionDecisions(input: StorefrontSectionResolv
         ));
     }
 
-    return (input.componentOrder || [])
-        .filter(isStorefrontSectionKind)
+    const componentSections = (input.componentOrder || []).filter(isStorefrontSectionKind);
+    const sectionsToRender = componentSections.length > 0 ? componentSections : STOREFRONT_SECTION_KINDS;
+
+    return sectionsToRender
         .map((kind, index) => buildDecision(kind, index, 'componentOrder', pageData, input.sectionVisibility));
 }
 

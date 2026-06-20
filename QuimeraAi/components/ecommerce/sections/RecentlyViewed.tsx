@@ -9,7 +9,12 @@ import { RecentlyViewedData, StorefrontProductItem } from '../../../types/compon
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
-import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
+import {
+    getStorefrontPaddingXClass,
+    getStorefrontPaddingYClass,
+    getStorefrontRadiusClass,
+    getStorefrontSectionBackgroundStyle,
+} from './sectionVisualStyles';
 
 interface RecentlyViewedProps {
     data: RecentlyViewedData;
@@ -79,25 +84,15 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
     const handleNext = () => setCurrentIndex(prev => Math.min(maxIndex, prev + 1));
 
     // Style helpers
-    const getPaddingY = () => {
-        const map = { sm: 'py-8', md: 'py-12', lg: 'py-16' };
-        return map[data.paddingY] || 'py-12';
-    };
-
-    const getPaddingX = () => {
-        const map = { sm: 'px-4', md: 'px-6', lg: 'px-8' };
-        return map[data.paddingX] || 'px-6';
-    };
+    const getPaddingY = () => getStorefrontPaddingYClass(data.paddingY, 'md');
+    const getPaddingX = () => getStorefrontPaddingXClass(data.paddingX, 'md');
 
     const getTitleSize = () => {
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
         return map[data.titleFontSize || 'lg'] || 'text-3xl';
     };
 
-    const getBorderRadius = () => {
-        const map = { none: 'rounded-none', md: 'rounded-lg', xl: 'rounded-xl', full: 'rounded-3xl' };
-        return map[data.borderRadius || 'xl'] || 'rounded-xl';
-    };
+    const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
 
     const getCardGap = () => {
         const map: Record<string, string> = {
@@ -250,9 +245,40 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
         );
     };
 
-    // Don't render if no recent products
     if (!isLoading && recentProducts.length === 0) {
-        return null;
+        return (
+            <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
+                <div className="max-w-7xl mx-auto">
+                    {(data.title || data.description) && (
+                        <div className="mb-6">
+                            {data.title && (
+                                <h2
+                                    className={`${getTitleSize()} font-bold mb-2`}
+                                    style={{ color: colors?.heading }}
+                                >
+                                    {data.title}
+                                </h2>
+                            )}
+                            {data.description && (
+                                <p style={{ color: colors?.text }}>
+                                    {data.description}
+                                </p>
+                            )}
+                        </div>
+                    )}
+                    <div
+                        className={`${getBorderRadius()} border border-dashed px-5 py-8 text-center`}
+                        style={{
+                            borderColor: colors?.borderColor,
+                            backgroundColor: colors?.cardBackground || colors?.background,
+                            color: colors?.text,
+                        }}
+                    >
+                        Los productos vistos recientemente aparecerán aquí.
+                    </div>
+                </div>
+            </section>
+        );
     }
 
     // Carousel variant

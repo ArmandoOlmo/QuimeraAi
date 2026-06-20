@@ -11,7 +11,14 @@ import { resolveI18nField } from '../../../utils/i18nContent';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import AppSelect from '../../ui/AppSelect';
-import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
+import {
+    getStorefrontCardGapClass,
+    getStorefrontColumnsClass,
+    getStorefrontPaddingXClass,
+    getStorefrontPaddingYClass,
+    getStorefrontRadiusClass,
+    getStorefrontSectionBackgroundStyle,
+} from './sectionVisualStyles';
 
 interface ProductReviewsProps {
     data: ProductReviewsData;
@@ -104,25 +111,17 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
     }, [reviews]);
 
     // Style helpers
-    const getPaddingY = () => {
-        const map = { sm: 'py-8', md: 'py-12', lg: 'py-16' };
-        return map[data.paddingY] || 'py-12';
-    };
-
-    const getPaddingX = () => {
-        const map = { sm: 'px-4', md: 'px-6', lg: 'px-8' };
-        return map[data.paddingX] || 'px-6';
-    };
+    const getPaddingY = () => getStorefrontPaddingYClass(data.paddingY, 'lg');
+    const getPaddingX = () => getStorefrontPaddingXClass(data.paddingX, 'md');
+    const getCardGap = () => getStorefrontCardGapClass(data.cardGap, 'md');
+    const getGridCols = () => getStorefrontColumnsClass(data.columns, 3);
 
     const getTitleSize = () => {
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
         return map[data.titleFontSize || 'lg'] || 'text-3xl';
     };
 
-    const getBorderRadius = () => {
-        const map = { none: 'rounded-none', md: 'rounded-lg', xl: 'rounded-xl', full: 'rounded-3xl' };
-        return map[data.borderRadius || 'xl'] || 'rounded-xl';
-    };
+    const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
 
     // Stars component
     const Stars = ({ rating, size = 16 }: { rating: number; size?: number }) => (
@@ -140,7 +139,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
 
     // Rating summary
     const RatingSummary = () => (
-        <div className="flex flex-col md:flex-row gap-8 mb-8 p-6 rounded-xl" style={{ backgroundColor: colors?.cardBackground }}>
+        <div className={`flex flex-col md:flex-row ${getCardGap()} mb-8 p-6 ${getBorderRadius()}`} style={{ backgroundColor: colors?.cardBackground }}>
             {/* Average rating */}
             <div className="text-center md:text-left md:pr-8 md:border-r" style={{ borderColor: `${colors?.text}20` }}>
                 <div className="text-5xl font-bold" style={{ color: colors?.heading }}>
@@ -282,7 +281,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
 
     // List variant
     const renderList = () => (
-        <div className="space-y-4">
+        <div className={data.cardGap === 'sm' ? 'space-y-3' : data.cardGap === 'lg' ? 'space-y-8' : data.cardGap === 'xl' ? 'space-y-10' : 'space-y-4'}>
             {displayedReviews.map((review) => (
                 <ReviewCard key={review.id} review={review} />
             ))}
@@ -291,7 +290,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
 
     // Cards variant
     const renderCards = () => (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className={`grid grid-cols-1 ${getGridCols()} ${getCardGap()}`}>
             {displayedReviews.map((review) => (
                 <ReviewCard key={review.id} review={review} />
             ))}
@@ -300,7 +299,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
 
     // Masonry variant
     const renderMasonry = () => (
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
+        <div className={`${data.columns === 2 ? 'columns-1 md:columns-2' : data.columns === 4 ? 'columns-1 md:columns-2 xl:columns-4' : data.columns === 5 ? 'columns-1 md:columns-2 xl:columns-5' : data.columns === 6 ? 'columns-1 md:columns-3 xl:columns-6' : 'columns-1 md:columns-2 lg:columns-3'} ${data.cardGap === 'sm' ? 'gap-3 space-y-3' : data.cardGap === 'lg' ? 'gap-8 space-y-8' : data.cardGap === 'xl' ? 'gap-10 space-y-10' : 'gap-6 space-y-6'}`}>
             {displayedReviews.map((review) => (
                 <div key={review.id} className="break-inside-avoid">
                     <ReviewCard review={review} />
@@ -318,7 +317,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
         const featuredTitle = text(featuredReview?.title as any);
 
         return (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className={`grid grid-cols-1 lg:grid-cols-2 ${getCardGap()}`}>
                 {/* Featured review */}
                 {featuredReview && (
                     <div
@@ -365,7 +364,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ data, storeId, globalCo
                 )}
 
                 {/* Other reviews */}
-                <div className="space-y-4">
+                <div className={data.cardGap === 'sm' ? 'space-y-3' : data.cardGap === 'lg' ? 'space-y-8' : data.cardGap === 'xl' ? 'space-y-10' : 'space-y-4'}>
                     {otherReviews.map((review) => (
                         <ReviewCard key={review.id} review={review} />
                     ))}

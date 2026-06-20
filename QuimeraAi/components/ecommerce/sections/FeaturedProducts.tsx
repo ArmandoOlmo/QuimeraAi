@@ -17,7 +17,11 @@ import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { resolveI18nField } from '../../../utils/i18nContent';
 import { createProductCardViewModel } from '../../../utils/productCard';
-import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
+import {
+    getStorefrontCardGapClass,
+    getStorefrontCardGapPx,
+    getStorefrontSectionBackgroundStyle,
+} from './sectionVisualStyles';
 
 interface FeaturedProductsProps {
     data: FeaturedProductsData;
@@ -39,6 +43,14 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
     const title = resolveI18nField(data.title as any, i18n.language);
     const description = resolveI18nField(data.description as any, i18n.language);
+    const productListUrl = React.useMemo(() => {
+        const rawUrl = typeof data.viewAllUrl === 'string' ? data.viewAllUrl.trim() : '';
+        const normalizedUrl = rawUrl.toLowerCase();
+        const storefrontProductsUrl = effectiveStoreId ? `/store/${effectiveStoreId}/products` : '/products';
+        const genericStoreLinks = new Set(['', '#products', '#store', '#tienda', '/tienda', '/shop', '/catalog', '/products']);
+
+        return genericStoreLinks.has(normalizedUrl) ? storefrontProductsUrl : rawUrl;
+    }, [data.viewAllUrl, effectiveStoreId]);
     
     // Unified colors system - merges global theme with component-specific colors
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
@@ -152,12 +164,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     };
 
     const getCardGap = () => {
-        const map: Record<string, string> = {
-            sm: 'gap-3',
-            md: 'gap-4 md:gap-6',
-            lg: 'gap-6 md:gap-8',
-        };
-        return map[data.cardGap || 'md'] || 'gap-4 md:gap-6';
+        return getStorefrontCardGapClass(data.cardGap, 'md');
     };
 
     const getBorderRadius = () => {
@@ -323,17 +330,16 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
         <div className="relative">
             <div ref={carouselRef} className="overflow-hidden">
                 <div
-                    className="flex transition-transform duration-500 ease-out"
+                    className={`flex transition-transform duration-500 ease-out ${getCardGap()}`}
                     style={{
                         transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
-                        gap: '1rem',
                     }}
                 >
                     {products.map((product) => (
                         <div
                             key={product.id}
                             className="flex-shrink-0"
-                            style={{ width: `calc(${100 / itemsPerView}% - ${(itemsPerView - 1) / itemsPerView}rem)` }}
+                            style={{ width: `calc(${100 / itemsPerView}% - ${(itemsPerView - 1) * getStorefrontCardGapPx(data.cardGap) / itemsPerView}px)` }}
                         >
                             <ProductCard product={product} />
                         </div>
@@ -463,6 +469,23 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
         return (
             <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
                 <div className="max-w-7xl mx-auto">
+                    {(title || description) && (
+                        <div className="mb-8">
+                            {title && (
+                                <h2
+                                    className={`${getTitleSize()} font-bold mb-2`}
+                                    style={{ color: colors?.heading, fontFamily: colors?.headingFontFamily }}
+                                >
+                                    {title}
+                                </h2>
+                            )}
+                            {description && (
+                                <p className="text-lg" style={{ color: colors?.text }}>
+                                    {description}
+                                </p>
+                            )}
+                        </div>
+                    )}
                     <div className="animate-pulse">
                         <div className="h-8 rounded w-1/3 mb-4" style={{ backgroundColor: colors?.border }} />
                         <div className="h-4 rounded w-1/2 mb-8" style={{ backgroundColor: colors?.border }} />
@@ -522,7 +545,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                 {data.showViewAll && (
                     <div className="flex justify-center mt-10">
                         <a
-                            href={data.viewAllUrl || '/tienda'}
+                            href={productListUrl}
                             className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                             style={{
                                 backgroundColor: colors?.buttonBackground,

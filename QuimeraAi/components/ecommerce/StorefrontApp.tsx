@@ -5,7 +5,7 @@
  * server (SSR) and client (hydration). Used for custom domains.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { doc, getDoc } from '@/utils/compatData';
 import { db } from '@/utils/compatData';
 import StorefrontLayout from './StorefrontLayout';
@@ -22,7 +22,6 @@ import StorefrontCategory from './pages/StorefrontCategory';
 import ProductSearchPage from './search/ProductSearchPage';
 import {
     applyResolvedStorefrontEditorConfig,
-    isStorefrontSectionKind,
     type StorefrontEditorConfigMode,
 } from '../../utils/storefrontRenderer';
 
@@ -33,7 +32,7 @@ interface StorefrontAppProps {
     serverUrl?: string; // For SSR routing
 }
 
-type StorefrontView = 'home' | 'product' | 'category' | 'checkout' | 'order-confirmation' | 'account';
+type StorefrontView = 'home' | 'products' | 'product' | 'category' | 'checkout' | 'order-confirmation' | 'account';
 
 interface RouteState {
     view: StorefrontView;
@@ -48,6 +47,7 @@ interface StorefrontProductSearchProps {
     projectId: string;
     projectData: any;
     onProductClick: (slug: string) => void;
+    title?: string;
 }
 
 const STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX = 'quimera:storefront-editor-preview:';
@@ -94,10 +94,21 @@ const parsePreviewPayload = (payload: unknown): any | null => {
     return payload && typeof payload === 'object' ? payload : null;
 };
 
+const getPreviewPayloadSignature = (payload: unknown): string => {
+    if (typeof payload === 'string') return payload;
+
+    try {
+        return JSON.stringify(payload ?? null);
+    } catch {
+        return String(payload ?? '');
+    }
+};
+
 const StorefrontProductSearch: React.FC<StorefrontProductSearchProps> = ({
     projectId,
     projectData,
     onProductClick,
+    title = 'Todos los productos',
 }) => {
     const cart = useStorefrontCart();
     const primaryColor = projectData?.theme?.globalColors?.primary ||
@@ -118,7 +129,7 @@ const StorefrontProductSearch: React.FC<StorefrontProductSearchProps> = ({
             defaultViewMode="grid"
             gridColumns={4}
             cardStyle="modern"
-            title="Tienda"
+            title={title}
             themeColors={{
                 background: projectData?.theme?.pageBackground || '#f8fafc',
                 text: projectData?.header?.colors?.text || projectData?.data?.header?.colors?.text || '#334155',
@@ -137,6 +148,11 @@ const StorefrontProductSearch: React.FC<StorefrontProductSearchProps> = ({
  */
 function parseUrl(url: string): RouteState {
     const path = url.replace(/^\/store\/[^\/]+/, '').replace(/^\//, '') || '/';
+
+    // Product listing page. The storefront home stays a landing page; catalog is a separate route.
+    if (/^(products|catalog|shop|tienda)\/?$/.test(path)) {
+        return { view: 'products', params: {} };
+    }
 
     // Product page: /product/:slug
     const productMatch = path.match(/^product\/([^\/]+)/);
@@ -190,6 +206,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     const [projectData, setProjectData] = useState<any>(initialData || initialPreviewData || null);
     const [isLoading, setIsLoading] = useState(!initialData && !initialPreviewData);
     const [storefrontConfigMode, setStorefrontConfigMode] = useState<StorefrontEditorConfigMode>(initialConfigMode);
+    const previewPayloadSignatureRef = useRef(initialPreviewData ? getPreviewPayloadSignature(initialPreviewData) : '');
 
     // Handle browser navigation (client-side only)
     useEffect(() => {
@@ -211,6 +228,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
             try {
                 const previewData = getStorefrontEditorPreviewData(projectId);
                 if (previewData) {
+                    previewPayloadSignatureRef.current = getPreviewPayloadSignature(previewData);
                     setProjectData(previewData);
                     setStorefrontConfigMode('draft');
                     setIsLoading(false);
@@ -248,6 +266,10 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
             const nextProjectData = parsePreviewPayload(message.payload);
             if (!nextProjectData) return;
 
+            const nextSignature = getPreviewPayloadSignature(message.payload);
+            if (nextSignature === previewPayloadSignatureRef.current) return;
+
+            previewPayloadSignatureRef.current = nextSignature;
             setProjectData(nextProjectData);
             setStorefrontConfigMode('draft');
             setIsLoading(false);
@@ -295,6 +317,15 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     // Render based on route
     const renderContent = () => {
         switch (route.view) {
+            case 'products':
+                return (
+                    <StorefrontProductSearch
+                        projectId={projectId}
+                        projectData={resolvedProjectData}
+                        onProductClick={navigateToProduct}
+                    />
+                );
+
             case 'product':
                 return (
                     <ProductDetailPageWithCart
@@ -352,38 +383,23 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
 
             case 'home':
             default:
-                // Check if user has configured specific storefront sections
-                const hasConfiguredHome = resolvedProjectData?.componentOrder?.some((key: string) =>
-                    isStorefrontSectionKind(key)
-                );
-
-                if (hasConfiguredHome) {
-                    return (
-                        <StorefrontHome
-                            storeId={projectId}
-                            projectData={resolvedProjectData}
-                            onNavigateToProduct={navigateToProduct}
-                            onNavigateToCategory={navigateToCategory}
-                            themeColors={{
-                                background: resolvedProjectData?.theme?.pageBackground || '#ffffff',
-                                text: resolvedProjectData?.theme?.globalColors?.text || '#334155',
-                                heading: resolvedProjectData?.theme?.globalColors?.heading || '#0f172a',
-                                cardBackground: resolvedProjectData?.theme?.globalColors?.surface || '#ffffff',
-                                cardText: resolvedProjectData?.theme?.globalColors?.text || '#334155',
-                                border: resolvedProjectData?.theme?.globalColors?.border || '#e2e8f0',
-                                priceColor: resolvedProjectData?.theme?.globalColors?.primary || '#4f46e5',
-                                salePriceColor: '#ef4444',
-                                mutedText: '#64748b'
-                            }}
-                        />
-                    );
-                }
-
                 return (
-                    <StorefrontProductSearch
-                        projectId={projectId}
+                    <StorefrontHome
+                        storeId={projectId}
                         projectData={resolvedProjectData}
-                        onProductClick={navigateToProduct}
+                        onNavigateToProduct={navigateToProduct}
+                        onNavigateToCategory={navigateToCategory}
+                        themeColors={{
+                            background: resolvedProjectData?.theme?.pageBackground || '#ffffff',
+                            text: resolvedProjectData?.theme?.globalColors?.text || '#334155',
+                            heading: resolvedProjectData?.theme?.globalColors?.heading || '#0f172a',
+                            cardBackground: resolvedProjectData?.theme?.globalColors?.surface || '#ffffff',
+                            cardText: resolvedProjectData?.theme?.globalColors?.text || '#334155',
+                            border: resolvedProjectData?.theme?.globalColors?.border || '#e2e8f0',
+                            priceColor: resolvedProjectData?.theme?.globalColors?.primary || '#4f46e5',
+                            salePriceColor: '#ef4444',
+                            mutedText: '#64748b'
+                        }}
                     />
                 );
         }

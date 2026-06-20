@@ -3,14 +3,12 @@
  * 
  * Renders the Storefront Homepage based on the user's project configuration (`componentOrder`).
  * If components are configured, it renders them in order.
- * If no components are configured, it falls back to a default layout or empty state.
+ * If no components are configured, it falls back to an empty state in editor preview.
  */
 
 import React, { useMemo } from 'react';
-import ProductSearchPage from '../search/ProductSearchPage';
 import { Project } from '../../../types';
 import type { StorefrontSectionBlueprint } from '../../../types/businessBlueprint';
-import { useStorefrontCart } from '../context';
 import StorefrontModuleRenderer from '../StorefrontModuleRenderer';
 import {
     getRenderableStorefrontSectionDecisions,
@@ -79,7 +77,6 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
     onNavigateToCategory,
     themeColors
 }) => {
-    const cart = useStorefrontCart();
     const isEditorPreview = typeof window !== 'undefined' &&
         new URLSearchParams(window.location.search).get('preview') === 'storefront-editor';
     const pageData = useMemo(() => resolveStorefrontPageData(projectData), [projectData]);
@@ -128,29 +125,6 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
                     </div>
                 </div>
             ) : null}
-
-            {/* Always render the full product search/grid at the bottom for the core ecommerce experience */}
-            <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-                <ProductSearchPage
-                    storeId={storeId}
-                    // Pass null userId as we are in public view
-                    userId={null}
-                    embedded={true}
-                    // Ensure it receives style props
-                    themeColors={themeColors}
-                    title="Todos los Productos" // "All Products"
-                    showFilterSidebar={true}
-                    showSearchBar={true}
-                    showSortOptions={true}
-                    showViewModeToggle={true}
-                    defaultViewMode="grid"
-                    gridColumns={4}
-                    // Use project primary color if available
-                    primaryColor={themeColors.priceColor || '#6366f1'}
-                    onProductClick={onNavigateToProduct}
-                    onAddToCart={(product) => cart.addItem(product, 1)}
-                />
-            </div>
         </div>
     );
 };

@@ -1,6 +1,6 @@
 import type { PageSection } from '../../types';
 import type { StorefrontSectionKind } from '../../types/storefrontRenderer';
-import { isStorefrontSectionKind } from './registry';
+import { STOREFRONT_SECTION_KINDS, isStorefrontSectionKind } from './registry';
 
 export type StorefrontEditorConfigMode = 'draft' | 'published';
 
@@ -40,6 +40,11 @@ const normalizeSettings = (value: unknown): Record<string, Record<string, unknow
         return acc;
     }, {} as Record<string, Record<string, unknown>>);
 };
+
+const appendDefaultStorefrontSections = (order: StorefrontSectionKind[]): StorefrontSectionKind[] => [
+    ...order,
+    ...STOREFRONT_SECTION_KINDS.filter(section => !order.includes(section)),
+];
 
 export function resolveStorefrontPageData(projectData: any): Record<string, any> {
     const rootData = toRecord(projectData?.data);
@@ -90,8 +95,10 @@ export function resolveStorefrontEditorConfig(
     const selectedVisibility = toRecord(selectedConfig?.sectionVisibility) as Record<string, boolean>;
     const selectedSettings = normalizeSettings(selectedConfig?.sectionSettings);
 
+    const resolvedOrder = selectedOrder.length > 0 ? selectedOrder : legacyOrder;
+
     return {
-        componentOrder: selectedOrder.length > 0 ? selectedOrder : legacyOrder,
+        componentOrder: selectedConfig ? resolvedOrder : appendDefaultStorefrontSections(resolvedOrder),
         sectionVisibility: {
             ...legacyVisibility,
             ...selectedVisibility,

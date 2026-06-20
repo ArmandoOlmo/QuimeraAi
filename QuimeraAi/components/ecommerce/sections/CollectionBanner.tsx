@@ -8,7 +8,15 @@ import { ArrowRight } from 'lucide-react';
 import { CollectionBannerData } from '../../../types/components';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
-import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
+import {
+    getStorefrontContentPositionClass,
+    getStorefrontOverlayBackground,
+    getStorefrontPaddingXClass,
+    getStorefrontPaddingYClass,
+    getStorefrontRadiusClass,
+    getStorefrontSectionBackgroundStyle,
+    getStorefrontTextAlignmentClass,
+} from './sectionVisualStyles';
 
 interface CollectionBannerProps {
     data: CollectionBannerData;
@@ -28,15 +36,8 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
 
     // Style helpers
-    const getPaddingY = () => {
-        const map = { sm: 'py-8', md: 'py-12', lg: 'py-16' };
-        return map[data.paddingY] || 'py-12';
-    };
-
-    const getPaddingX = () => {
-        const map = { sm: 'px-4', md: 'px-6', lg: 'px-8' };
-        return map[data.paddingX] || 'px-6';
-    };
+    const getPaddingY = () => getStorefrontPaddingYClass(data.paddingY, 'lg');
+    const getPaddingX = () => getStorefrontPaddingXClass(data.paddingX, 'lg');
 
     const getHeadlineSize = () => {
         const map = { sm: 'text-2xl', md: 'text-3xl', lg: 'text-4xl', xl: 'text-5xl' };
@@ -48,40 +49,11 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
         return map[data.descriptionFontSize || 'md'] || 'text-base';
     };
 
-    const getBorderRadius = () => {
-        const map = { none: 'rounded-none', md: 'rounded-lg', xl: 'rounded-xl', full: 'rounded-3xl' };
-        return map[data.buttonBorderRadius || 'xl'] || 'rounded-xl';
-    };
-
-    const getTextAlignment = () => {
-        const map = {
-            left: 'text-left items-start',
-            center: 'text-center items-center',
-            right: 'text-right items-end',
-        };
-        return map[data.textAlignment] || 'text-center items-center';
-    };
-
-    const getContentPosition = () => {
-        const map = {
-            left: 'justify-start',
-            center: 'justify-center',
-            right: 'justify-end',
-        };
-        return map[data.contentPosition] || 'justify-center';
-    };
-
-    const getOverlayStyle = () => {
-        if (data.overlayStyle === 'none') return 'transparent';
-        if (data.overlayStyle === 'solid') {
-            const opacity = Math.round((data.overlayOpacity / 100) * 255).toString(16).padStart(2, '0');
-            return `${colors?.overlayColor}${opacity}`;
-        }
-        // Gradient
-        const opacity = data.overlayOpacity / 100;
-        const opacityHex = Math.round(opacity * 255).toString(16).padStart(2, '0');
-        return `linear-gradient(to bottom, ${colors?.overlayColor}${opacityHex}, ${colors?.overlayColor}${Math.round(opacity * 0.3 * 255).toString(16).padStart(2, '0')})`;
-    };
+    const getButtonRadius = () => getStorefrontRadiusClass(data.buttonBorderRadius, 'xl');
+    const getSectionRadius = () => getStorefrontRadiusClass(data.borderRadius || data.buttonBorderRadius, 'xl');
+    const getTextAlignment = () => getStorefrontTextAlignmentClass(data.textAlignment, 'center');
+    const getContentPosition = () => getStorefrontContentPositionClass(data.contentPosition, 'center');
+    const getOverlayStyle = () => getStorefrontOverlayBackground(data.overlayStyle, colors?.overlayColor, data.overlayOpacity);
 
     const handleButtonClick = () => {
         if (data.buttonUrl) {
@@ -94,7 +66,7 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
     // Hero variant - full width with big text
     const renderHero = () => (
         <div
-            className="relative overflow-hidden"
+            className={`relative overflow-hidden ${getSectionRadius()}`}
             style={{
                 ...getStorefrontSectionBackgroundStyle(data, colors?.background),
                 height: `${data.height || 400}px`,
@@ -137,7 +109,7 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
                     {data.showButton && data.buttonText && (
                         <button
                             onClick={handleButtonClick}
-                            className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                            className={`inline-flex items-center gap-2 px-6 py-3 ${getButtonRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                             style={{
                                 backgroundColor: colors?.buttonBackground,
                                 color: colors?.buttonText,
@@ -155,7 +127,7 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
     // Split variant - image on one side, content on other
     const renderSplit = () => (
         <div
-            className="relative overflow-hidden"
+            className={`relative overflow-hidden ${getSectionRadius()}`}
                 style={{
                     ...getStorefrontSectionBackgroundStyle(data, colors?.background),
                     height: `${data.height || 400}px`,
@@ -181,7 +153,7 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
                     {data.showButton && data.buttonText && (
                         <button
                             onClick={handleButtonClick}
-                            className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                            className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getButtonRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                             style={{
                                 backgroundColor: colors?.buttonBackground,
                                 color: colors?.buttonText,
@@ -231,7 +203,7 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
                 {data.showButton && data.buttonText && (
                     <button
                         onClick={handleButtonClick}
-                        className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                    className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getButtonRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                         style={{
                             backgroundColor: colors?.buttonBackground,
                             color: colors?.buttonText,
@@ -248,7 +220,7 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
     // Overlay variant - image with text overlay card
     const renderOverlay = () => (
         <div
-            className="relative overflow-hidden"
+            className={`relative overflow-hidden ${getSectionRadius()}`}
             style={{
                 ...getStorefrontSectionBackgroundStyle(data, colors?.background),
                 height: `${data.height || 400}px`,
@@ -264,12 +236,12 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
             )}
 
             {/* Dark overlay */}
-            <div className="absolute inset-0 bg-black/30" />
+            <div className="absolute inset-0" style={{ background: getOverlayStyle() }} />
 
             {/* Content Card */}
             <div className={`relative h-full ${getPaddingX()} ${getPaddingY()} flex items-center ${getContentPosition()}`}>
                 <div
-                    className={`max-w-lg p-8 rounded-2xl backdrop-blur-md ${getTextAlignment()} flex flex-col`}
+                    className={`max-w-lg p-8 ${getSectionRadius()} backdrop-blur-md ${getTextAlignment()} flex flex-col`}
                     style={{
                         backgroundColor: `${colors?.overlayColor}cc`,
                     }}
@@ -291,7 +263,7 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
                     {data.showButton && data.buttonText && (
                         <button
                             onClick={handleButtonClick}
-                            className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                            className={`inline-flex items-center gap-2 w-fit px-6 py-3 ${getButtonRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                             style={{
                                 backgroundColor: colors?.buttonBackground,
                                 color: colors?.buttonText,
@@ -317,7 +289,6 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
 };
 
 export default CollectionBanner;
-
 
 
 

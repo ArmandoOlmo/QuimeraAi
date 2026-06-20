@@ -6,6 +6,24 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+    DndContext,
+    KeyboardSensor,
+    PointerSensor,
+    TouchSensor,
+    closestCenter,
+    type DragEndEvent,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import {
+    SortableContext,
+    arrayMove,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
     AlertCircle,
     AlignHorizontalJustifyCenter,
     Box,
@@ -17,13 +35,12 @@ import {
     Eye,
     EyeOff,
     FileText,
+    GripVertical,
     Image as ImageIcon,
     LayoutTemplate,
     Maximize2,
     Loader2,
     Monitor,
-    MoveDown,
-    MoveUp,
     Palette,
     PanelRightClose,
     PanelRightOpen,
@@ -84,13 +101,7 @@ type StorefrontThemeWithPresetMetadata = StorefrontThemeSettings & {
     presetId?: StorefrontThemePresetId;
 };
 
-const defaultSections: StorefrontSectionKind[] = [
-    'announcementBar',
-    'productHero',
-    'featuredProducts',
-    'categoryGrid',
-    'trustBadges',
-];
+const defaultSections: StorefrontSectionKind[] = [...STOREFRONT_SECTION_KINDS];
 
 const previewWidths: Record<PreviewMode, string> = {
     desktop: '100%',
@@ -486,6 +497,109 @@ const buildPreviewHeader = (
     };
 };
 
+interface SortableStorefrontSectionItemProps {
+    section: StorefrontSectionKind;
+    index: number;
+    label: string;
+    variant: string;
+    isVisible: boolean;
+    isSelected: boolean;
+    onSelect: () => void;
+    onToggleVisibility: () => void;
+    onRemove: () => void;
+    hideLabel: string;
+    showLabel: string;
+    removeLabel: string;
+}
+
+const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps> = ({
+    section,
+    index,
+    label,
+    variant,
+    isVisible,
+    isSelected,
+    onSelect,
+    onToggleVisibility,
+    onRemove,
+    hideLabel,
+    showLabel,
+    removeLabel,
+}) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: section });
+
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 20 : undefined,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`group flex w-full items-center gap-2 rounded-lg border p-2.5 text-left transition-colors ${
+                isSelected
+                    ? 'border-primary/30 bg-primary/10'
+                    : 'border-transparent hover:bg-secondary/50'
+            } ${!isVisible ? 'opacity-50' : ''} ${isDragging ? 'shadow-lg ring-1 ring-primary/30' : ''}`}
+        >
+            <button
+                type="button"
+                {...attributes}
+                {...listeners}
+                onClick={(event) => event.stopPropagation()}
+                className="flex h-7 w-7 flex-shrink-0 touch-none items-center justify-center rounded-md bg-muted text-q-text-muted transition-colors cursor-grab active:cursor-grabbing hover:bg-secondary hover:text-foreground"
+                aria-label={`Reordenar ${label}`}
+            >
+                <GripVertical size={14} />
+            </button>
+            <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-muted text-xs font-bold text-q-text-muted">
+                {index + 1}
+            </span>
+            <button
+                type="button"
+                onClick={onSelect}
+                className="min-w-0 flex-1 text-left"
+            >
+                <span className="block truncate text-sm font-medium text-foreground">{label}</span>
+                <span className="block truncate text-xs text-q-text-muted">{variant}</span>
+            </button>
+            <span className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                <button
+                    type="button"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onToggleVisibility();
+                    }}
+                    className="rounded p-1 text-q-text-muted hover:bg-secondary hover:text-foreground"
+                    aria-label={isVisible ? hideLabel : showLabel}
+                >
+                    {isVisible ? <Eye size={13} /> : <EyeOff size={13} />}
+                </button>
+                <button
+                    type="button"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onRemove();
+                    }}
+                    className="rounded p-1 text-red-400 hover:bg-red-500/10"
+                    aria-label={removeLabel}
+                >
+                    <Trash2 size={13} />
+                </button>
+            </span>
+        </div>
+    );
+};
+
 const StorefrontEditorView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
@@ -573,7 +687,6 @@ const StorefrontEditorView: React.FC = () => {
     const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
     const selectedPresetOverrideRef = useRef<StorefrontThemePresetId | null>(null);
     const presetProjectKeyRef = useRef(activePresetProjectKey);
-    const [previewRevision, setPreviewRevision] = useState(0);
     const [selectedPresetId, setSelectedPresetId] = useState<StorefrontThemePresetId>(persistedPresetId);
     const [isSavingTemplate, setIsSavingTemplate] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -582,6 +695,17 @@ const StorefrontEditorView: React.FC = () => {
     const [isStructureExpanded, setIsStructureExpanded] = useState(true);
     const [isContentExpanded, setIsContentExpanded] = useState(true);
     const [isControlsPanelOpen, setIsControlsPanelOpen] = useState(true);
+    const sectionDragSensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 6 },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: { delay: 120, tolerance: 8 },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        }),
+    );
 
     useEffect(() => {
         setSections(prev => areArraysEqual(prev, initialOrder) ? prev : initialOrder);
@@ -623,7 +747,7 @@ const StorefrontEditorView: React.FC = () => {
     const availableSections = STOREFRONT_SECTION_KINDS.filter(kind => !sections.includes(kind));
     const storefrontUrl = `/store/${storeId}`;
     const previewSessionKey = `${STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX}${storeId}`;
-    const previewUrl = `${storefrontUrl}?preview=storefront-editor&editorSession=${encodeURIComponent(previewSessionKey)}&previewRevision=${previewRevision}`;
+    const previewUrl = `${storefrontUrl}?preview=storefront-editor&editorSession=${encodeURIComponent(previewSessionKey)}`;
     const selectedSectionSettings = {
         ...storefrontSectionRegistry[selectedSection].defaultSettings,
         ...toSettingsRecord(sectionSettings[selectedSection]),
@@ -767,11 +891,24 @@ const StorefrontEditorView: React.FC = () => {
 
     const refreshPreview = () => {
         postPreviewPayload();
-        setPreviewRevision(prev => prev + 1);
     };
 
     const markTemplateDirty = () => {
         setTemplateState(prev => prev === 'published' ? 'draft' : prev);
+    };
+
+    const handleSectionDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        const activeSection = active.id as StorefrontSectionKind;
+        const overSection = over.id as StorefrontSectionKind;
+        const oldIndex = sections.indexOf(activeSection);
+        const newIndex = sections.indexOf(overSection);
+        if (oldIndex < 0 || newIndex < 0) return;
+
+        setSections(arrayMove(sections, oldIndex, newIndex));
+        markTemplateDirty();
     };
 
     const updateSectionSetting = (section: StorefrontSectionKind, key: string, value: unknown) => {
@@ -862,18 +999,6 @@ const StorefrontEditorView: React.FC = () => {
         markTemplateDirty();
     };
 
-    const moveSection = (kind: StorefrontSectionKind, direction: -1 | 1) => {
-        setSections(prev => {
-            const index = prev.indexOf(kind);
-            const target = index + direction;
-            if (index < 0 || target < 0 || target >= prev.length) return prev;
-            const next = [...prev];
-            [next[index], next[target]] = [next[target], next[index]];
-            return next;
-        });
-        markTemplateDirty();
-    };
-
     const addSection = (kind: StorefrontSectionKind) => {
         setSections(prev => [...prev, kind]);
         setSectionSettings(prev => ({
@@ -890,15 +1015,12 @@ const StorefrontEditorView: React.FC = () => {
         markTemplateDirty();
     };
 
-    const applySectionPresetById = (presetId: StorefrontThemePresetId) => {
-        const preset = STOREFRONT_THEME_PRESETS[presetId];
-        const nextSections = preset.recommendedSections.filter(isStorefrontKind);
-        const nextOrder = nextSections.length > 0 ? nextSections : defaultSections;
+    const showAllStorefrontSections = () => {
+        const missingSections = STOREFRONT_SECTION_KINDS.filter(section => !sections.includes(section));
+        const nextOrder = [...sections, ...missingSections];
 
         setSections(nextOrder);
         setVisibility(prev => buildCurrentStorefrontVisibility(nextOrder, prev, {
-            recommendedSections: nextOrder,
-            forceRecommendedVisible: true,
             ensureAtLeastOneVisible: true,
         }));
         setSectionSettings(prev => nextOrder.reduce((acc, section) => {
@@ -910,12 +1032,12 @@ const StorefrontEditorView: React.FC = () => {
             };
             return acc;
         }, { ...prev } as SectionSettingsMap));
-        setSelectedSection(nextOrder[0] || defaultSections[0]);
+        setSelectedSection(prev => nextOrder.includes(prev) ? prev : nextOrder[0] || defaultSections[0]);
         setTemplateState('draft');
     };
 
     const applySectionPreset = () => {
-        applySectionPresetById(selectedPresetId);
+        showAllStorefrontSections();
     };
 
     const applyThemePreset = async (presetId: StorefrontThemePresetId) => {
@@ -923,7 +1045,6 @@ const StorefrontEditorView: React.FC = () => {
         setStatusMessage(null);
         selectedPresetOverrideRef.current = presetId;
         setSelectedPresetId(presetId);
-        applySectionPresetById(presetId);
 
         try {
             await replaceStorefrontTheme(mergeTheme(currentTheme, presetId));
@@ -1164,6 +1285,42 @@ const StorefrontEditorView: React.FC = () => {
         : selectedStructurePanel === 'template'
             ? LayoutTemplate
             : SlidersHorizontal;
+    const renderSortableSectionList = (className = 'space-y-1') => (
+        <DndContext
+            sensors={sectionDragSensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleSectionDragEnd}
+        >
+            <SortableContext items={sections} strategy={verticalListSortingStrategy}>
+                <div className={className}>
+                    {sections.map((section, index) => {
+                        const item = storefrontSectionRegistry[section];
+                        const isVisible = visibility[section] !== false;
+                        const isSelected = !selectedStructurePanel && selectedSection === section;
+                        const currentVariant = String(toSettingsRecord(sectionSettings[section]).variant || item.defaultSettings.variant || section);
+
+                        return (
+                            <SortableStorefrontSectionItem
+                                key={section}
+                                section={section}
+                                index={index}
+                                label={getSectionLabel(section)}
+                                variant={currentVariant}
+                                isVisible={isVisible}
+                                isSelected={isSelected}
+                                onSelect={() => selectSectionForEditing(section)}
+                                onToggleVisibility={() => setSectionVisibility(section, !isVisible)}
+                                onRemove={() => removeSection(section)}
+                                hideLabel={t('common.hide', 'Ocultar')}
+                                showLabel={t('common.show', 'Mostrar')}
+                                removeLabel={t('common.remove', 'Eliminar')}
+                            />
+                        );
+                    })}
+                </div>
+            </SortableContext>
+        </DndContext>
+    );
 
     const renderTemplateControls = () => (
         <div className="space-y-4">
@@ -1285,12 +1442,12 @@ const StorefrontEditorView: React.FC = () => {
         const validVariants = storefrontSectionRegistry[selectedSection].validVariants || [];
         const colors = toSettingsRecord(selectedSectionSettings.colors);
         const supportsProductCards = ['featuredProducts', 'recentlyViewed', 'saleCountdown'].includes(selectedSection);
-        const supportsProductCount = ['featuredProducts', 'saleCountdown', 'recentlyViewed'].includes(selectedSection);
-        const supportsColumns = ['featuredProducts', 'categoryGrid', 'recentlyViewed', 'trustBadges'].includes(selectedSection);
-        const supportsHeight = ['announcementBar', 'productHero', 'saleCountdown', 'collectionBanner'].includes(selectedSection);
+        const supportsProductCount = ['featuredProducts', 'saleCountdown', 'recentlyViewed', 'productReviews'].includes(selectedSection);
+        const supportsColumns = ['featuredProducts', 'categoryGrid', 'recentlyViewed', 'trustBadges', 'productReviews'].includes(selectedSection);
+        const supportsHeight = true;
         const supportsHeroControls = selectedSection === 'productHero' || selectedSection === 'collectionBanner';
         const supportsBackgroundImage = true;
-        const supportsCardGap = ['featuredProducts', 'categoryGrid', 'recentlyViewed'].includes(selectedSection);
+        const supportsCardGap = ['featuredProducts', 'categoryGrid', 'trustBadges', 'saleCountdown', 'recentlyViewed', 'productReviews', 'productBundle'].includes(selectedSection);
         const sectionTitleValue = String(
             selectedSection === 'productHero'
                 ? selectedSectionSettings.headline || ''
@@ -1301,6 +1458,21 @@ const StorefrontEditorView: React.FC = () => {
                 ? selectedSectionSettings.subheadline || ''
                 : selectedSectionSettings.description || selectedSectionSettings.subtitle || '',
         );
+        const countSettingKey = selectedSection === 'recentlyViewed'
+            ? 'maxProducts'
+            : selectedSection === 'productReviews'
+                ? 'maxReviews'
+                : 'productsToShow';
+        const countFallback = selectedSection === 'recentlyViewed'
+            ? 10
+            : selectedSection === 'productReviews'
+                ? 6
+                : 8;
+        const heightFallback = selectedSection === 'announcementBar'
+            ? 44
+            : selectedSection === 'collectionBanner' || selectedSection === 'productHero'
+                ? 520
+                : 360;
 
         const renderSectionHeader = () => (
             <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
@@ -1556,10 +1728,10 @@ const StorefrontEditorView: React.FC = () => {
                     {supportsHeight && (
                         <SliderControl
                             label={t('ecommerce.storefrontEditor.height', 'Altura')}
-                            value={getSettingNumber(selectedSectionSettings, 'height', selectedSection === 'announcementBar' ? 44 : 420)}
+                            value={getSettingNumber(selectedSectionSettings, 'height', heightFallback)}
                             onChange={value => updateSelectedSectionSetting('height', value)}
-                            min={selectedSection === 'announcementBar' ? 28 : 220}
-                            max={selectedSection === 'announcementBar' ? 96 : 760}
+                            min={selectedSection === 'announcementBar' ? 28 : 160}
+                            max={selectedSection === 'announcementBar' ? 96 : 900}
                             step={selectedSection === 'announcementBar' ? 2 : 10}
                             suffix="px"
                         />
@@ -1599,17 +1771,29 @@ const StorefrontEditorView: React.FC = () => {
                             {t('ecommerce.storefrontEditor.positionControls', 'Posición')}
                         </label>
                         {selectedSection === 'productHero' && (
-                            <Select
-                                label={t('ecommerce.storefrontEditor.layout', 'Layout')}
-                                value={String(selectedSectionSettings.layout || 'split')}
-                                onChange={value => updateSelectedSectionSetting('layout', value)}
-                                options={[
-                                    { value: 'split', label: 'Split izquierda' },
-                                    { value: 'split-right', label: 'Split derecha' },
-                                    { value: 'full', label: 'Full image' },
-                                    { value: 'centered', label: 'Centrado' },
-                                ]}
-                            />
+                            <>
+                                <Select
+                                    label={t('ecommerce.storefrontEditor.layout', 'Layout')}
+                                    value={String(selectedSectionSettings.layout || 'split')}
+                                    onChange={value => updateSelectedSectionSetting('layout', value)}
+                                    options={[
+                                        { value: 'split', label: 'Split izquierda' },
+                                        { value: 'split-right', label: 'Split derecha' },
+                                        { value: 'full', label: 'Full image' },
+                                        { value: 'centered', label: 'Centrado' },
+                                    ]}
+                                />
+                                <Select
+                                    label={t('ecommerce.storefrontEditor.imageSize', 'Tamaño de imagen')}
+                                    value={String(selectedSectionSettings.imageSize || 'medium')}
+                                    onChange={value => updateSelectedSectionSetting('imageSize', value)}
+                                    options={[
+                                        { value: 'small', label: 'Pequeña' },
+                                        { value: 'medium', label: 'Media' },
+                                        { value: 'large', label: 'Grande' },
+                                    ]}
+                                />
+                            </>
                         )}
                         <Select
                             label={t('ecommerce.storefrontEditor.contentPosition', 'Posición de contenido')}
@@ -1649,6 +1833,18 @@ const StorefrontEditorView: React.FC = () => {
                                 options={storefrontSelectOptions.cardGap}
                             />
                         )}
+                        {selectedSection === 'trustBadges' && (
+                            <Select
+                                label={t('ecommerce.storefrontEditor.iconSize', 'Tamaño de icono')}
+                                value={String(selectedSectionSettings.iconSize || 'md')}
+                                onChange={value => updateSelectedSectionSetting('iconSize', value)}
+                                options={[
+                                    { value: 'sm', label: 'Pequeño' },
+                                    { value: 'md', label: 'Medio' },
+                                    { value: 'lg', label: 'Grande' },
+                                ]}
+                            />
+                        )}
                         {selectedSection === 'categoryGrid' && (
                             <>
                                 <Select
@@ -1675,9 +1871,11 @@ const StorefrontEditorView: React.FC = () => {
                             <SliderControl
                                 label={selectedSection === 'recentlyViewed'
                                     ? t('ecommerce.storefrontEditor.maxProducts', 'Máximo')
+                                    : selectedSection === 'productReviews'
+                                        ? t('ecommerce.storefrontEditor.maxReviews', 'Reseñas')
                                     : t('ecommerce.storefrontEditor.productsToShow', 'Productos')}
-                                value={getSettingNumber(selectedSectionSettings, selectedSection === 'recentlyViewed' ? 'maxProducts' : 'productsToShow', selectedSection === 'recentlyViewed' ? 10 : 8)}
-                                onChange={value => updateSelectedSectionSetting(selectedSection === 'recentlyViewed' ? 'maxProducts' : 'productsToShow', value)}
+                                value={getSettingNumber(selectedSectionSettings, countSettingKey, countFallback)}
+                                onChange={value => updateSelectedSectionSetting(countSettingKey, value)}
                                 min={1}
                                 max={24}
                                 step={1}
@@ -1982,7 +2180,7 @@ const StorefrontEditorView: React.FC = () => {
                             type="button"
                             onClick={applySectionPreset}
                             className="flex h-7 w-7 items-center justify-center rounded-md text-primary transition-colors hover:bg-secondary/50"
-                            title={t('ecommerce.storefrontEditor.applyPreset', 'Preset')}
+                            title={t('ecommerce.storefrontEditor.showAllSections', 'Mostrar todos los componentes')}
                         >
                             <Plus size={15} />
                         </button>
@@ -2038,90 +2236,7 @@ const StorefrontEditorView: React.FC = () => {
                             </button>
 
                             {isContentExpanded && (
-                                <div className="mt-1 space-y-1 pl-2">
-                                    {sections.map((section, index) => {
-                                        const item = storefrontSectionRegistry[section];
-                                        const isVisible = visibility[section] !== false;
-                                        const isSelected = !selectedStructurePanel && selectedSection === section;
-                                        const currentVariant = String(toSettingsRecord(sectionSettings[section]).variant || item.defaultSettings.variant || section);
-
-                                        return (
-                                            <div
-                                                key={section}
-                                                role="button"
-                                                tabIndex={0}
-                                                onClick={() => selectSectionForEditing(section)}
-                                                onKeyDown={(event) => {
-                                                    if (event.key === 'Enter' || event.key === ' ') {
-                                                        event.preventDefault();
-                                                        selectSectionForEditing(section);
-                                                    }
-                                                }}
-                                                className={`group flex w-full cursor-pointer items-center gap-2 rounded-lg border p-2.5 text-left transition-colors ${
-                                                    isSelected
-                                                        ? 'border-primary/30 bg-primary/10'
-                                                        : 'border-transparent hover:bg-secondary/50'
-                                                } ${!isVisible ? 'opacity-50' : ''}`}
-                                            >
-                                                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-muted text-xs font-bold text-q-text-muted">
-                                                    {index + 1}
-                                                </span>
-                                                <span className="min-w-0 flex-1">
-                                                    <span className="block truncate text-sm font-medium text-foreground">{getSectionLabel(section)}</span>
-                                                    <span className="block truncate text-xs text-q-text-muted">{currentVariant}</span>
-                                                </span>
-                                                <span className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                                                    <button
-                                                        type="button"
-                                                        disabled={index === 0}
-                                                        onClick={(event) => {
-                                                            event.stopPropagation();
-                                                            moveSection(section, -1);
-                                                        }}
-                                                        className="rounded p-1 text-q-text-muted hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
-                                                        aria-label={t('common.moveUp', 'Mover arriba')}
-                                                    >
-                                                        <MoveUp size={13} />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        disabled={index === sections.length - 1}
-                                                        onClick={(event) => {
-                                                            event.stopPropagation();
-                                                            moveSection(section, 1);
-                                                        }}
-                                                        className="rounded p-1 text-q-text-muted hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
-                                                        aria-label={t('common.moveDown', 'Mover abajo')}
-                                                    >
-                                                        <MoveDown size={13} />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={(event) => {
-                                                            event.stopPropagation();
-                                                            setSectionVisibility(section, !isVisible);
-                                                        }}
-                                                        className="rounded p-1 text-q-text-muted hover:bg-secondary hover:text-foreground"
-                                                        aria-label={isVisible ? t('common.hide', 'Ocultar') : t('common.show', 'Mostrar')}
-                                                    >
-                                                        {isVisible ? <Eye size={13} /> : <EyeOff size={13} />}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={(event) => {
-                                                            event.stopPropagation();
-                                                            removeSection(section);
-                                                        }}
-                                                        className="rounded p-1 text-red-400 hover:bg-red-500/10"
-                                                        aria-label={t('common.remove', 'Eliminar')}
-                                                    >
-                                                        <Trash2 size={13} />
-                                                    </button>
-                                                </span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                                renderSortableSectionList('mt-1 space-y-1 pl-2')
                             )}
                         </div>
 
@@ -2334,74 +2449,11 @@ const StorefrontEditorView: React.FC = () => {
                                 onClick={applySectionPreset}
                                 className="rounded-lg bg-muted/60 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
                             >
-                                {t('ecommerce.storefrontEditor.applyPreset', 'Preset')}
+                                {t('ecommerce.storefrontEditor.showAllSections', 'Mostrar todos')}
                             </button>
                         </div>
 
-                        <div className="space-y-2">
-                            {sections.map((section, index) => {
-                                const item = storefrontSectionRegistry[section];
-                                const isVisible = visibility[section] !== false;
-                                const isSelected = selectedSection === section;
-                                const currentVariant = String(toSettingsRecord(sectionSettings[section]).variant || item.defaultSettings.variant || section);
-
-                                return (
-                                    <div
-                                        key={section}
-                                        onClick={() => setSelectedSection(section)}
-                                        className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2 transition-colors ${
-                                            isSelected
-                                                ? 'border-primary bg-primary/10'
-                                                : 'border-q-border bg-q-bg/60 hover:bg-muted/60'
-                                        }`}
-                                    >
-                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-bold text-q-text-muted">
-                                            {index + 1}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-semibold text-foreground">{getSectionLabel(section)}</p>
-                                            <p className="truncate text-xs text-q-text-muted">
-                                                {currentVariant}
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => moveSection(section, -1)}
-                                            disabled={index === 0}
-                                            className="rounded-md p-1.5 text-q-text-muted hover:bg-muted hover:text-foreground disabled:opacity-30"
-                                            aria-label={t('common.moveUp', 'Mover arriba')}
-                                        >
-                                            <MoveUp size={15} />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => moveSection(section, 1)}
-                                            disabled={index === sections.length - 1}
-                                            className="rounded-md p-1.5 text-q-text-muted hover:bg-muted hover:text-foreground disabled:opacity-30"
-                                            aria-label={t('common.moveDown', 'Mover abajo')}
-                                        >
-                                            <MoveDown size={15} />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setSectionVisibility(section, !isVisible)}
-                                            className="rounded-md p-1.5 text-q-text-muted hover:bg-muted hover:text-foreground"
-                                            aria-label={isVisible ? t('common.hide', 'Ocultar') : t('common.show', 'Mostrar')}
-                                        >
-                                            {isVisible ? <Eye size={15} /> : <EyeOff size={15} />}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => removeSection(section)}
-                                            className="rounded-md p-1.5 text-red-400 hover:bg-red-500/10"
-                                            aria-label={t('common.remove', 'Eliminar')}
-                                        >
-                                            <Trash2 size={15} />
-                                        </button>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                        {renderSortableSectionList('space-y-2')}
 
                         {sections.includes(selectedSection) && (
                             <div className="mt-4 rounded-lg border border-q-border bg-q-bg/50 p-3">

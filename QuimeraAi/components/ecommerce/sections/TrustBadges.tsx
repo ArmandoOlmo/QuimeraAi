@@ -15,7 +15,14 @@ import { TrustBadgesData, TrustBadgeIcon, TrustBadgeItem } from '../../../types/
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { resolveI18nField } from '../../../utils/i18nContent';
-import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
+import {
+    getStorefrontCardGapClass,
+    getStorefrontColumnsClass,
+    getStorefrontPaddingXClass,
+    getStorefrontPaddingYClass,
+    getStorefrontRadiusClass,
+    getStorefrontSectionBackgroundStyle,
+} from './sectionVisualStyles';
 
 interface TrustBadgesProps {
     data: TrustBadgesData;
@@ -56,25 +63,17 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId, globalColors }
     ];
 
     // Style helpers
-    const getPaddingY = () => {
-        const map = { sm: 'py-4', md: 'py-6', lg: 'py-8' };
-        return map[data.paddingY] || 'py-6';
-    };
-
-    const getPaddingX = () => {
-        const map = { sm: 'px-4', md: 'px-6', lg: 'px-8' };
-        return map[data.paddingX] || 'px-6';
-    };
+    const getPaddingY = () => getStorefrontPaddingYClass(data.paddingY, 'md');
+    const getPaddingX = () => getStorefrontPaddingXClass(data.paddingX, 'md');
+    const getCardGap = () => getStorefrontCardGapClass(data.cardGap, 'md');
+    const getGridCols = () => getStorefrontColumnsClass(data.columns, 4);
 
     const getIconSize = () => {
         const map = { sm: 20, md: 28, lg: 36 };
         return map[data.iconSize] || 28;
     };
 
-    const getBorderRadius = () => {
-        const map = { none: 'rounded-none', md: 'rounded-lg', xl: 'rounded-xl', full: 'rounded-full' };
-        return map[data.borderRadius || 'xl'] || 'rounded-xl';
-    };
+    const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
 
     // Badge Component
     const Badge = ({ badge }: { badge: TrustBadgeItem }) => {
@@ -111,7 +110,7 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId, globalColors }
 
     // Horizontal variant
     const renderHorizontal = () => (
-        <div className="flex flex-wrap justify-center lg:justify-between items-center gap-6 lg:gap-4">
+        <div className={`flex flex-wrap justify-center lg:justify-between items-center ${getCardGap()}`}>
             {badges.map((badge, index) => (
                 <Badge key={index} badge={badge} />
             ))}
@@ -120,7 +119,7 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId, globalColors }
 
     // Grid variant
     const renderGrid = () => (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className={`grid grid-cols-1 ${getGridCols()} ${getCardGap()}`}>
             {badges.map((badge, index) => {
                 const IconComponent = iconMap[badge.icon] || CheckCircle;
                 const badgeTitle = text(badge.title as any);
@@ -163,7 +162,7 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId, globalColors }
 
     // Minimal variant
     const renderMinimal = () => (
-        <div className="flex flex-wrap justify-center items-center gap-8">
+        <div className={`flex flex-wrap justify-center items-center ${getCardGap()}`}>
             {badges.map((badge, index) => {
                 const IconComponent = iconMap[badge.icon] || CheckCircle;
                 const badgeTitle = text(badge.title as any);
@@ -183,7 +182,7 @@ const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId, globalColors }
 
     // Detailed variant
     const renderDetailed = () => (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className={`grid grid-cols-1 ${getGridCols()} ${getCardGap()}`}>
             {badges.map((badge, index) => {
                 const IconComponent = iconMap[badge.icon] || CheckCircle;
                 const badgeTitle = text(badge.title as any);

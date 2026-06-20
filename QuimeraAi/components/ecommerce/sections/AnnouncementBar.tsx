@@ -34,6 +34,7 @@ const iconMap: Record<string, React.FC<{ size?: number; className?: string }>> =
 const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, globalColors }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
+    const productListUrl = effectiveStoreId ? `/store/${effectiveStoreId}/products` : '/products';
 
     // Unified colors system
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
@@ -94,6 +95,10 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
     // Build href based on linkType
     const getMessageHref = (message: AnnouncementMessage): string => {
         if (!message.link) return '';
+        const normalizedLink = message.link.trim().toLowerCase();
+        if (['/tienda', '#products', '#store', '#tienda', '/shop', '/catalog', '/products'].includes(normalizedLink)) {
+            return productListUrl;
+        }
         switch (message.linkType) {
             case 'phone': return `tel:${message.link.replace(/\s/g, '')}`;
             case 'email': return `mailto:${message.link}`;

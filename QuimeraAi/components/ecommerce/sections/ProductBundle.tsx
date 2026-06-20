@@ -10,7 +10,13 @@ import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { createProductCardViewModel } from '../../../utils/productCard';
-import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
+import {
+    getStorefrontCardGapClass,
+    getStorefrontPaddingXClass,
+    getStorefrontPaddingYClass,
+    getStorefrontRadiusClass,
+    getStorefrontSectionBackgroundStyle,
+} from './sectionVisualStyles';
 
 interface ProductBundleProps {
     data: ProductBundleData;
@@ -29,7 +35,6 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
 }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
-    const isEditorMode = !!projectContext;
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
 
     const { products: allProducts, isLoading } = usePublicProducts(effectiveStoreId);
@@ -51,25 +56,16 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     const savingsPercent = originalPrice > 0 ? Math.round((savings / originalPrice) * 100) : discountPercent;
 
     // Style helpers
-    const getPaddingY = () => {
-        const map = { sm: 'py-8', md: 'py-12', lg: 'py-16' };
-        return map[data.paddingY] || 'py-12';
-    };
-
-    const getPaddingX = () => {
-        const map = { sm: 'px-4', md: 'px-6', lg: 'px-8' };
-        return map[data.paddingX] || 'px-6';
-    };
+    const getPaddingY = () => getStorefrontPaddingYClass(data.paddingY, 'lg');
+    const getPaddingX = () => getStorefrontPaddingXClass(data.paddingX, 'md');
+    const getCardGap = () => getStorefrontCardGapClass(data.cardGap, 'md');
 
     const getTitleSize = () => {
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
         return map[data.titleFontSize || 'lg'] || 'text-3xl';
     };
 
-    const getBorderRadius = () => {
-        const map = { none: 'rounded-none', md: 'rounded-lg', xl: 'rounded-xl', full: 'rounded-3xl' };
-        return map[data.borderRadius || 'xl'] || 'rounded-xl';
-    };
+    const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
 
     const handleAddBundle = () => {
         if (onAddToCart && data.productIds) {
@@ -89,7 +85,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
         });
 
         return (
-            <div className="flex items-center gap-4">
+            <div className={`flex items-center ${data.cardGap === 'sm' ? 'gap-3' : data.cardGap === 'lg' ? 'gap-6' : data.cardGap === 'xl' ? 'gap-8' : 'gap-4'}`}>
                 <div
                     className={`flex-shrink-0 w-24 h-24 ${getBorderRadius()} overflow-hidden cursor-pointer`}
                     onClick={() => product.slug && onProductClick?.(product.slug)}
@@ -139,11 +135,11 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     const renderHorizontal = () => (
         <div
             className={`${getBorderRadius()} overflow-hidden`}
-            style={{ backgroundColor: colors?.background }}
+            style={{ backgroundColor: colors?.cardBackground || colors?.background }}
         >
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+            <div className={`grid grid-cols-1 lg:grid-cols-3 ${getCardGap()} p-6`}>
                 {/* Products */}
-                <div className="lg:col-span-2 space-y-4">
+                <div className={`lg:col-span-2 ${data.cardGap === 'sm' ? 'space-y-3' : data.cardGap === 'lg' ? 'space-y-6' : data.cardGap === 'xl' ? 'space-y-8' : 'space-y-4'}`}>
                     {bundleProducts.map((product, index) => (
                         <BundleProductCard
                             key={product.id}
@@ -228,7 +224,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     const renderVertical = () => (
         <div
             className={`${getBorderRadius()} overflow-hidden max-w-md mx-auto`}
-            style={{ backgroundColor: colors?.background }}
+            style={{ backgroundColor: colors?.cardBackground || colors?.background }}
         >
             <div className="p-6">
                 {data.showBadge && data.badgeText && (
@@ -258,7 +254,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                 )}
 
                 {/* Products */}
-                <div className="space-y-4 mb-6">
+                <div className={`${data.cardGap === 'sm' ? 'space-y-3' : data.cardGap === 'lg' ? 'space-y-6' : data.cardGap === 'xl' ? 'space-y-8' : 'space-y-4'} mb-6`}>
                     {bundleProducts.map((product, index) => (
                         <BundleProductCard
                             key={product.id}
@@ -313,8 +309,8 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     // Compact variant
     const renderCompact = () => (
         <div
-            className={`${getBorderRadius()} overflow-hidden flex items-center gap-4 p-4`}
-            style={{ backgroundColor: colors?.background }}
+            className={`${getBorderRadius()} overflow-hidden flex items-center ${data.cardGap === 'sm' ? 'gap-3' : data.cardGap === 'lg' ? 'gap-6' : data.cardGap === 'xl' ? 'gap-8' : 'gap-4'} p-4`}
+            style={{ backgroundColor: colors?.cardBackground || colors?.background }}
         >
             {/* Product thumbnails */}
             <div className="flex -space-x-3">
@@ -418,12 +414,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
         );
     }
 
-    // Show empty state in editor mode when no products are selected
     if (bundleProducts.length === 0) {
-        // In production, hide the component if no products
-        if (!isEditorMode) return null;
-        
-        // In editor mode, show a helpful placeholder
         return (
             <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
                 <div className="max-w-4xl mx-auto">

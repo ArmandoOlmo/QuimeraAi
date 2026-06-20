@@ -14,7 +14,13 @@ import { useSafeProject } from '../../../contexts/project';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { resolveI18nField } from '../../../utils/i18nContent';
-import { getStorefrontSectionBackgroundStyle } from './sectionVisualStyles';
+import {
+    getStorefrontCardGapClass,
+    getStorefrontPaddingXClass,
+    getStorefrontPaddingYClass,
+    getStorefrontRadiusClass,
+    getStorefrontSectionBackgroundStyle,
+} from './sectionVisualStyles';
 
 interface CategoryGridProps {
     data: CategoryGridData;
@@ -58,15 +64,8 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
     }, [data.categories, storeCategories]);
 
     // Style helpers
-    const getPaddingY = () => {
-        const map = { sm: 'py-8', md: 'py-12', lg: 'py-16' };
-        return map[data.paddingY] || 'py-12';
-    };
-
-    const getPaddingX = () => {
-        const map = { sm: 'px-4', md: 'px-6', lg: 'px-8' };
-        return map[data.paddingX] || 'px-6';
-    };
+    const getPaddingY = () => getStorefrontPaddingYClass(data.paddingY, 'lg');
+    const getPaddingX = () => getStorefrontPaddingXClass(data.paddingX, 'md');
 
     const getTitleSize = () => {
         const map = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' };
@@ -84,10 +83,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
         }
     };
 
-    const getBorderRadius = () => {
-        const map = { none: 'rounded-none', md: 'rounded-lg', xl: 'rounded-xl', full: 'rounded-3xl' };
-        return map[data.borderRadius || 'xl'] || 'rounded-xl';
-    };
+    const getBorderRadius = () => getStorefrontRadiusClass(data.borderRadius, 'xl');
 
     const getAspectRatio = () => {
         const map = {
@@ -106,13 +102,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
     };
 
     const getCardGap = () => {
-        const map: Record<string, string> = {
-            sm: 'gap-3',
-            md: 'gap-4 md:gap-6',
-            lg: 'gap-6 md:gap-8',
-            xl: 'gap-8 md:gap-10',
-        };
-        return map[data.cardGap || 'md'] || 'gap-4 md:gap-6';
+        return getStorefrontCardGapClass(data.cardGap, 'md');
     };
 
     // Category Card Component
@@ -298,6 +288,23 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
         return (
             <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
                 <div className="max-w-7xl mx-auto">
+                    {(title || description) && (
+                        <div className="mb-8">
+                            {title && (
+                                <h2
+                                    className={`${getTitleSize()} font-bold mb-2`}
+                                    style={{ color: colors?.heading }}
+                                >
+                                    {title}
+                                </h2>
+                            )}
+                            {description && (
+                                <p className="text-lg" style={{ color: colors?.text }}>
+                                    {description}
+                                </p>
+                            )}
+                        </div>
+                    )}
                     <div className="animate-pulse">
                         <div className="h-8 rounded w-1/3 mb-4" style={{ backgroundColor: colors?.border }} />
                         <div className="h-4 rounded w-1/2 mb-8" style={{ backgroundColor: colors?.border }} />
