@@ -727,7 +727,7 @@ export function resolveStorefrontSectionDecisions(input: StorefrontSectionResolv
 
     const sectionsToRender = componentSections.length > 0
         ? (includeMissingSections ? appendMissingStorefrontSections(componentSections) : componentSections)
-        : STOREFRONT_SECTION_KINDS;
+        : (includeMissingSections ? STOREFRONT_SECTION_KINDS : []);
 
     return sectionsToRender
         .map((kind, index) => buildDecision(kind, index, 'componentOrder', pageData, input.sectionVisibility));

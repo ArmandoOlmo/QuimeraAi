@@ -54,6 +54,33 @@ describe('storefrontRenderer registry', () => {
         expect(decisions.map(decision => decision.kind)).toEqual(['announcementBar', 'featuredProducts']);
     });
 
+    it('preserves an explicitly empty storefront editor layout', () => {
+        const decisions = resolveStorefrontSectionDecisions({
+            pageData: {},
+            componentOrder: [],
+            blueprintSections: [],
+            sectionVisibility: {},
+            includeMissingSections: false,
+        });
+
+        expect(decisions).toEqual([]);
+
+        expect(resolveStorefrontEditorConfig({
+            data: {
+                storefrontEditor: {
+                    draft: {
+                        componentOrder: [],
+                        sections: [],
+                        sectionVisibility: {},
+                    },
+                },
+            },
+        }, { mode: 'draft' })).toMatchObject({
+            componentOrder: [],
+            source: 'draft',
+        });
+    });
+
     it('completes legacy storefront editor config with every storefront section', () => {
         const config = resolveStorefrontEditorConfig({
             componentOrder: ['announcementBar'],

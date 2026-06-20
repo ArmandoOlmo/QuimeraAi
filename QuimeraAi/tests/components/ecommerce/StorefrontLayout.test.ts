@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeProjectPublicData } from '../../../components/ecommerce/StorefrontLayout';
+import {
+    calculateStorefrontHeaderClearance,
+    normalizeProjectPublicData,
+} from '../../../components/ecommerce/StorefrontLayout';
 
 describe('StorefrontLayout data normalization', () => {
+    it('calculates clearance for floating headers that visually overlap content', () => {
+        expect(calculateStorefrontHeaderClearance({ bottom: 0 }, { bottom: 96 })).toBe(96);
+        expect(calculateStorefrontHeaderClearance({ bottom: 48 }, { bottom: 124.2 })).toBe(77);
+    });
+
+    it('does not add duplicate clearance when the header already participates in layout flow', () => {
+        expect(calculateStorefrontHeaderClearance({ bottom: 128 }, { bottom: 112 })).toBe(0);
+        expect(calculateStorefrontHeaderClearance({ bottom: 128 }, { bottom: 128 })).toBe(0);
+    });
+
     it('keeps root published header settings for floating storefront headers', () => {
         const normalized = normalizeProjectPublicData({
             name: 'Galeria Root',

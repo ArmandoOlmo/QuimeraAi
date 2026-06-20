@@ -5,7 +5,7 @@
  * Now includes cart functionality via StorefrontCartProvider
  */
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { doc, getDoc } from '@/utils/compatData';
 import { db } from '@/utils/compatData';
 import Header from '../Header';
@@ -106,6 +106,16 @@ const normalizeHeaderData = (value: unknown, fallbackName = 'Store', fallbackThe
     } as HeaderData;
 };
 
+export const calculateStorefrontHeaderClearance = (
+    shellRect: Pick<DOMRectReadOnly, 'bottom'> | null | undefined,
+    headerRect: Pick<DOMRectReadOnly, 'bottom'> | null | undefined,
+): number => {
+    const shellBottom = typeof shellRect?.bottom === 'number' ? shellRect.bottom : 0;
+    const headerBottom = typeof headerRect?.bottom === 'number' ? headerRect.bottom : 0;
+
+    return Math.max(0, Math.ceil(headerBottom - shellBottom));
+};
+
 export const normalizeProjectPublicData = (value: unknown): ProjectPublicData | null => {
     if (!isRecord(value)) return null;
 
@@ -144,6 +154,8 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
     projectData,
 }) => {
     const cart = useStorefrontCart();
+    const headerShellRef = useRef<HTMLDivElement>(null);
+    const [headerClearance, setHeaderClearance] = useState(0);
 
     // Get primary color from theme
     const primaryColor = projectData?.theme?.globalColors?.primary ||
@@ -214,6 +226,46 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
         }
     };
 
+    const measureHeaderClearance = useCallback(() => {
+        const shell = headerShellRef.current;
+        if (!shell) {
+            setHeaderClearance(0);
+            return;
+        }
+
+        const headerSurface = shell.querySelector<HTMLElement>('[data-site-header-surface="true"]');
+        const header = headerSurface || shell.querySelector<HTMLElement>('[data-site-header="true"]');
+        const nextClearance = calculateStorefrontHeaderClearance(
+            shell.getBoundingClientRect(),
+            header?.getBoundingClientRect(),
+        );
+
+        setHeaderClearance(previous => previous === nextClearance ? previous : nextClearance);
+    }, []);
+
+    useEffect(() => {
+        measureHeaderClearance();
+        const shell = headerShellRef.current;
+        if (!shell) return;
+
+        const headerSurface = shell.querySelector<HTMLElement>('[data-site-header-surface="true"]');
+        const header = headerSurface || shell.querySelector<HTMLElement>('[data-site-header="true"]');
+        const resizeObserver = typeof ResizeObserver !== 'undefined'
+            ? new ResizeObserver(measureHeaderClearance)
+            : null;
+        const raf = requestAnimationFrame(measureHeaderClearance);
+
+        resizeObserver?.observe(shell);
+        if (header) resizeObserver?.observe(header);
+        window.addEventListener('resize', measureHeaderClearance);
+
+        return () => {
+            cancelAnimationFrame(raf);
+            resizeObserver?.disconnect();
+            window.removeEventListener('resize', measureHeaderClearance);
+        };
+    }, [measureHeaderClearance, projectData?.header]);
+
     return (
         <div
             className="min-h-screen"
@@ -221,7 +273,7 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
         >
             {/* Header from the project */}
             {projectData?.header && (
-                <div className="relative">
+                <div ref={headerShellRef} className="relative" data-storefront-header-shell="true">
                     <Header
                         {...projectData.header}
                         links={headerLinks}
@@ -238,7 +290,9 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
 
             <div
                 className="border-b"
+                data-storefront-trust-bar="true"
                 style={{
+                    marginTop: headerClearance ? `${headerClearance}px` : undefined,
                     backgroundColor: projectData?.header?.colors?.background || '#ffffff',
                     borderColor: 'rgba(15,23,42,0.08)',
                 }}
