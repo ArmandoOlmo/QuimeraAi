@@ -114,6 +114,7 @@ const STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX = 'quimera:storefront-editor-prev
 const STOREFRONT_EDITOR_PREVIEW_UPDATE = 'quimera:storefront-editor-preview:update';
 const STOREFRONT_EDITOR_SELECT_SECTION = 'quimera:storefront-editor:select-section';
 const STOREFRONT_EDITOR_SECTION_CLICK = 'quimera:storefront-editor:section-click';
+const SIDEBAR_SECTION_SCROLL_RETRY_DELAYS = [0, 80, 180, 320];
 
 const isRecord = (value: unknown): value is Record<string, any> =>
     typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -310,6 +311,14 @@ const storefrontSelectOptions = {
         { value: 'imageFirst', label: 'Image First' },
         { value: 'quickBuy', label: 'Quick Buy' },
         { value: 'compact', label: 'Compact' },
+    ],
+    categoryCardStyle: [
+        { value: 'overlay', label: 'Imagen completa' },
+        { value: 'bento-overlay', label: 'Bento overlay' },
+        { value: 'editorial', label: 'Editorial' },
+        { value: 'cards', label: 'Cards' },
+        { value: 'banner', label: 'Banner' },
+        { value: 'minimal', label: 'Minimal' },
     ],
     cardGap: [
         { value: 'sm', label: 'Compacto' },
@@ -784,12 +793,28 @@ const StorefrontEditorView: React.FC = () => {
     }, []);
 
     const scrollSidebarSectionIntoView = useCallback((section: StorefrontSectionKind) => {
-        window.requestAnimationFrame(() => {
-            sidebarSectionItemRefs.current[section]?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'nearest',
+        if (typeof window === 'undefined') return;
+
+        const scrollToSidebarItem = (attempt = 0) => {
+            window.requestAnimationFrame(() => {
+                const target = sidebarSectionItemRefs.current[section];
+
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                    });
+                    return;
+                }
+
+                const nextDelay = SIDEBAR_SECTION_SCROLL_RETRY_DELAYS[attempt + 1];
+                if (nextDelay !== undefined) {
+                    window.setTimeout(() => scrollToSidebarItem(attempt + 1), nextDelay);
+                }
             });
-        });
+        };
+
+        scrollToSidebarItem();
     }, []);
 
     const scrollPreviewSectionIntoView = useCallback((section: StorefrontSectionKind) => {
@@ -1969,7 +1994,7 @@ const StorefrontEditorView: React.FC = () => {
                                     label={t('ecommerce.storefrontEditor.categoryCardStyle', 'Diseño de categoría')}
                                     value={String(selectedSectionSettings.variant || 'overlay')}
                                     onChange={value => updateSelectedSectionSetting('variant', value)}
-                                    options={(storefrontSectionRegistry.categoryGrid.validVariants || []).map(variant => ({ value: variant, label: variant }))}
+                                    options={storefrontSelectOptions.categoryCardStyle}
                                 />
                                 <Select
                                     label={t('ecommerce.storefrontEditor.imageRatio', 'Proporción de imagen')}

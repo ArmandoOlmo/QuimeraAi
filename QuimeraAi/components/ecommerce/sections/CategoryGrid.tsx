@@ -106,34 +106,46 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
     };
 
     // Category Card Component
-    const CategoryCard = ({ category }: { category: CategoryItem }) => {
+    const CategoryCard = ({ category, index }: { category: CategoryItem; index: number }) => {
         const categoryName = text(category.name as any);
+        const categoryDescription = category.description ? text(category.description as any) : '';
+        const imageAlt = category.imageUrl ? categoryName : '';
         const handleClick = () => {
             if (category.slug) {
                 onCategoryClick?.(category.slug);
             }
         };
+        const baseCardButtonClass = `group relative block w-full text-left ${getBorderRadius()} overflow-hidden transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2`;
+        const focusStyle = {
+            '--tw-ring-color': colors?.accent || '#4f46e5',
+        } as React.CSSProperties;
+        const placeholderStyle: React.CSSProperties = {
+            background: `radial-gradient(circle at top left, rgba(255,255,255,0.24), transparent 42%), linear-gradient(135deg, ${colors?.accent || '#4f46e5'}66, ${colors?.cardBackground || '#0f172a'})`,
+        };
+        const overlayTextColor = colors?.buttonText || '#ffffff';
+        const productCountLabel = data.showProductCount && category.productCount !== undefined
+            ? `${category.productCount} productos`
+            : '';
 
         // Cards variant
         if (data.variant === 'cards') {
             return (
-                <div
+                <button
+                    type="button"
                     onClick={handleClick}
-                    className={`group cursor-pointer ${getBorderRadius()} overflow-hidden shadow-lg ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl`}
-                    style={{ backgroundColor: colors?.cardBackground }}
+                    className={`${baseCardButtonClass} shadow-lg ring-1 ring-black/5 hover:-translate-y-1 hover:shadow-2xl`}
+                    style={{ ...focusStyle, backgroundColor: colors?.cardBackground }}
                 >
                     <div className={`relative ${getAspectRatio()} overflow-hidden`}>
                         {category.imageUrl ? (
                             <img
                                 src={category.imageUrl}
-                                alt={categoryName}
+                                alt={imageAlt}
                                 className="w-full h-full transition-transform duration-500 group-hover:scale-110"
                                 style={{ objectFit: getObjectFit() }}
                             />
                         ) : (
-                            <div
-                                className="h-full w-full bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.24),transparent_42%),linear-gradient(135deg,rgba(79,70,229,0.36),rgba(15,23,42,0.92))]"
-                            >
+                            <div className="h-full w-full" style={placeholderStyle}>
                                 <span className="sr-only">Sin imagen</span>
                             </div>
                         )}
@@ -146,43 +158,40 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                             <h3 className="text-xl font-bold leading-tight drop-shadow-sm" style={{ color: colors?.buttonText || '#ffffff' }}>
                                 {categoryName}
                             </h3>
-                            {category.description && (
+                            {categoryDescription && (
                                 <p className="mt-1 line-clamp-2 text-sm" style={{ color: colors?.buttonText || '#ffffff', opacity: 0.82 }}>
-                                    {text(category.description as any)}
+                                    {categoryDescription}
                                 </p>
                             )}
-                            {data.showProductCount && category.productCount !== undefined && (
+                            {productCountLabel && (
                                 <p className="mt-2 text-sm font-medium" style={{ color: colors?.buttonText || '#ffffff', opacity: 0.86 }}>
-                                    {category.productCount} productos
+                                    {productCountLabel}
                                 </p>
                             )}
                         </div>
                     </div>
-                </div>
+                </button>
             );
         }
 
         // Overlay variant
         if (data.variant === 'overlay') {
             return (
-                <div
+                <button
+                    type="button"
                     onClick={handleClick}
-                    className={`group cursor-pointer ${getBorderRadius()} overflow-hidden relative ${getAspectRatio()}`}
+                    className={`${baseCardButtonClass} ${getAspectRatio()} hover:-translate-y-1 hover:shadow-2xl`}
+                    style={focusStyle}
                 >
                     {category.imageUrl ? (
                         <img
                             src={category.imageUrl}
-                            alt={categoryName}
+                            alt={imageAlt}
                             className="w-full h-full transition-transform duration-500 group-hover:scale-110"
                             style={{ objectFit: getObjectFit() }}
                         />
                     ) : (
-                        <div
-                            className="w-full h-full"
-                            style={{
-                                background: `linear-gradient(135deg, ${colors?.accent}55, ${colors?.cardBackground})`,
-                            }}
-                        />
+                        <div className="w-full h-full" style={placeholderStyle} />
                     )}
                     <div
                         className="absolute inset-0 flex flex-col justify-end p-4 transition-opacity"
@@ -191,25 +200,123 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                         }}
                     >
                         <h3 className="text-xl font-bold leading-tight drop-shadow-sm" style={{ color: colors?.buttonText }}>{categoryName}</h3>
-                        {category.description && (
+                        {categoryDescription && (
                             <p className="mt-1 line-clamp-2 text-sm" style={{ color: colors?.buttonText, opacity: 0.82 }}>
-                                {text(category.description as any)}
+                                {categoryDescription}
                             </p>
                         )}
-                        {data.showProductCount && category.productCount !== undefined && (
-                            <p className="mt-2 text-sm" style={{ color: colors?.buttonText, opacity: 0.82 }}>{category.productCount} productos</p>
+                        {productCountLabel && (
+                            <p className="mt-2 text-sm" style={{ color: colors?.buttonText, opacity: 0.82 }}>{productCountLabel}</p>
                         )}
                     </div>
-                </div>
+                </button>
+            );
+        }
+
+        if (data.variant === 'editorial') {
+            return (
+                <button
+                    type="button"
+                    onClick={handleClick}
+                    className={`${baseCardButtonClass} min-h-[22rem] shadow-[0_22px_70px_rgba(15,23,42,0.18)] hover:-translate-y-1 hover:shadow-[0_28px_90px_rgba(15,23,42,0.24)]`}
+                    style={focusStyle}
+                >
+                    {category.imageUrl ? (
+                        <img
+                            src={category.imageUrl}
+                            alt={imageAlt}
+                            className="absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-105"
+                            style={{ objectFit: getObjectFit() }}
+                        />
+                    ) : (
+                        <div className="absolute inset-0" style={placeholderStyle} />
+                    )}
+                    <div
+                        className="absolute inset-0"
+                        style={{ background: getStorefrontOverlayGradient(colors?.overlayStart, colors?.overlayEnd, 'rgba(0,0,0,0.2)') }}
+                    />
+                    {productCountLabel && (
+                        <span
+                            className="absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide backdrop-blur-md"
+                            style={{
+                                backgroundColor: 'rgba(255,255,255,0.16)',
+                                color: overlayTextColor,
+                            }}
+                        >
+                            {productCountLabel}
+                        </span>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+                        <h3 className="text-2xl font-bold leading-tight drop-shadow-sm" style={{ color: overlayTextColor }}>
+                            {categoryName}
+                        </h3>
+                        {categoryDescription && (
+                            <p className="mt-2 line-clamp-2 max-w-sm text-sm leading-6" style={{ color: overlayTextColor, opacity: 0.84 }}>
+                                {categoryDescription}
+                            </p>
+                        )}
+                    </div>
+                </button>
+            );
+        }
+
+        if (data.variant === 'bento-overlay') {
+            const isFeaturedCard = index === 0;
+
+            return (
+                <button
+                    type="button"
+                    onClick={handleClick}
+                    className={`${baseCardButtonClass} ${isFeaturedCard ? 'min-h-[28rem] sm:col-span-2 sm:row-span-2' : 'min-h-[14rem]'} shadow-lg hover:-translate-y-1 hover:shadow-2xl`}
+                    style={focusStyle}
+                >
+                    {category.imageUrl ? (
+                        <img
+                            src={category.imageUrl}
+                            alt={imageAlt}
+                            className="absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-110"
+                            style={{ objectFit: getObjectFit() }}
+                        />
+                    ) : (
+                        <div className="absolute inset-0" style={placeholderStyle} />
+                    )}
+                    <div
+                        className="absolute inset-0"
+                        style={{ background: getStorefrontOverlayGradient(colors?.overlayStart, colors?.overlayEnd, 'rgba(0,0,0,0.22)') }}
+                    />
+                    <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                        {productCountLabel && (
+                            <span
+                                className="mb-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide backdrop-blur-md"
+                                style={{
+                                    backgroundColor: 'rgba(255,255,255,0.16)',
+                                    color: overlayTextColor,
+                                }}
+                            >
+                                {productCountLabel}
+                            </span>
+                        )}
+                        <h3 className={`${isFeaturedCard ? 'text-3xl' : 'text-xl'} font-bold leading-tight drop-shadow-sm`} style={{ color: overlayTextColor }}>
+                            {categoryName}
+                        </h3>
+                        {categoryDescription && (
+                            <p className="mt-2 line-clamp-2 text-sm leading-6" style={{ color: overlayTextColor, opacity: 0.84 }}>
+                                {categoryDescription}
+                            </p>
+                        )}
+                    </div>
+                </button>
             );
         }
 
         // Minimal variant
         if (data.variant === 'minimal') {
             return (
-                <div
+                <button
+                    type="button"
                     onClick={handleClick}
-                    className="group cursor-pointer text-center"
+                    className="group w-full cursor-pointer text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                    style={focusStyle}
                 >
                     <div className={`${getAspectRatio()} ${getBorderRadius()} overflow-hidden mb-3 border-2 border-transparent group-hover:border-current transition-colors`}
                         style={{ borderColor: 'transparent' }}
@@ -219,7 +326,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                         {category.imageUrl ? (
                             <img
                                 src={category.imageUrl}
-                                alt={categoryName}
+                                alt={imageAlt}
                                 className="w-full h-full transition-transform duration-300 group-hover:scale-105"
                                 style={{ objectFit: getObjectFit() }}
                             />
@@ -243,31 +350,28 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                             {category.productCount} productos
                         </p>
                     )}
-                </div>
+                </button>
             );
         }
 
         // Banner variant
         if (data.variant === 'banner') {
             return (
-                <div
+                <button
+                    type="button"
                     onClick={handleClick}
-                    className={`group cursor-pointer ${getBorderRadius()} overflow-hidden relative h-48`}
+                    className={`${baseCardButtonClass} h-48 hover:-translate-y-1 hover:shadow-2xl`}
+                    style={focusStyle}
                 >
                     {category.imageUrl ? (
                         <img
                             src={category.imageUrl}
-                            alt={categoryName}
+                            alt={imageAlt}
                             className="w-full h-full transition-transform duration-500 group-hover:scale-105"
                             style={{ objectFit: getObjectFit() }}
                         />
                     ) : (
-                        <div
-                            className="w-full h-full"
-                            style={{
-                                background: `linear-gradient(135deg, ${colors?.accent}55, ${colors?.cardBackground})`,
-                            }}
-                        />
+                        <div className="w-full h-full" style={placeholderStyle} />
                     )}
                     <div
                         className="absolute inset-0 flex items-end justify-start p-5"
@@ -277,12 +381,12 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                     >
                         <div>
                             <h3 className="text-2xl font-bold leading-tight drop-shadow-sm" style={{ color: colors?.buttonText }}>{categoryName}</h3>
-                            {data.showProductCount && category.productCount !== undefined && (
-                                <p className="mt-1" style={{ color: colors?.buttonText, opacity: 0.82 }}>{category.productCount} productos</p>
+                            {productCountLabel && (
+                                <p className="mt-1" style={{ color: colors?.buttonText, opacity: 0.82 }}>{productCountLabel}</p>
                             )}
                         </div>
                     </div>
-                </div>
+                </button>
             );
         }
 
@@ -360,9 +464,9 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
                     </div>
                 ) : (
                     <div className={`flex ${getContentPosition()}`}>
-                        <div className={`grid w-full grid-cols-1 ${getGridCols()} ${getCardGap()}`}>
-                            {categories.map((category) => (
-                                <CategoryCard key={category.id} category={category} />
+                        <div className={`grid w-full grid-cols-1 ${getGridCols()} ${getCardGap()} ${data.variant === 'bento-overlay' ? 'auto-rows-[minmax(220px,auto)]' : ''}`}>
+                            {categories.map((category, index) => (
+                                <CategoryCard key={category.id} category={category} index={index} />
                             ))}
                         </div>
                     </div>

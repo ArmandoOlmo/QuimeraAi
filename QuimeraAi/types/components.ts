@@ -1719,7 +1719,7 @@ export interface FeaturedProductsData extends SectionBackgroundFields {
 // =============================================================================
 // ECOMMERCE - CATEGORY GRID
 // =============================================================================
-export type CategoryGridVariant = 'cards' | 'overlay' | 'minimal' | 'banner';
+export type CategoryGridVariant = 'cards' | 'overlay' | 'minimal' | 'banner' | 'editorial' | 'bento-overlay';
 
 export interface CategoryItem {
     id: string;

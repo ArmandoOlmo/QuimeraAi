@@ -53,6 +53,7 @@ interface StorefrontProductSearchProps {
 const STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX = 'quimera:storefront-editor-preview:';
 const STOREFRONT_EDITOR_PREVIEW_UPDATE = 'quimera:storefront-editor-preview:update';
 const STOREFRONT_EDITOR_SELECT_SECTION = 'quimera:storefront-editor:select-section';
+const STOREFRONT_EDITOR_SECTION_SCROLL_RETRY_DELAYS = [0, 80, 180, 320, 520];
 
 const getStorefrontEditorSectionSelector = (section: string): string =>
     `[data-storefront-editor-section="${section}"]`;
@@ -68,7 +69,9 @@ const clearStorefrontEditorSectionHighlights = () => {
 };
 
 const scrollStorefrontEditorSectionIntoView = (section: string) => {
-    const scrollToSection = () => {
+    if (typeof window === 'undefined') return;
+
+    const scrollToSection = (): boolean => {
         const target = document.querySelector<HTMLElement>(getStorefrontEditorSectionSelector(section));
         if (!target) return false;
 
@@ -83,11 +86,18 @@ const scrollStorefrontEditorSectionIntoView = (section: string) => {
         return true;
     };
 
-    window.requestAnimationFrame(() => {
-        if (!scrollToSection()) {
-            window.setTimeout(scrollToSection, 120);
-        }
-    });
+    const attemptScroll = (attempt = 0) => {
+        window.requestAnimationFrame(() => {
+            if (scrollToSection()) return;
+
+            const nextDelay = STOREFRONT_EDITOR_SECTION_SCROLL_RETRY_DELAYS[attempt + 1];
+            if (nextDelay !== undefined) {
+                window.setTimeout(() => attemptScroll(attempt + 1), nextDelay);
+            }
+        });
+    };
+
+    attemptScroll();
 };
 
 const getStorefrontEditorPreviewData = (projectId: string): any | null => {

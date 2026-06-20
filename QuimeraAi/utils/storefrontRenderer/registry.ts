@@ -178,7 +178,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         emptyBehavior: 'render',
         defaultVisible: true,
         isCoreSection: true,
-        validVariants: ['cards', 'overlay', 'minimal', 'banner'],
+        validVariants: ['cards', 'overlay', 'minimal', 'banner', 'editorial', 'bento-overlay'],
         defaultSettings: {
             variant: 'overlay',
             categories: [],
