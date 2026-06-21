@@ -752,7 +752,7 @@ const AiStarterContentPrompt: React.FC<AiStarterContentPromptProps> = ({
                 return;
             }
 
-            await persistStatus('previewed', previewResult);
+            setLocalStatus('previewed');
         } catch (caughtError) {
             setError(caughtError instanceof Error ? caughtError.message : String(caughtError));
         } finally {
