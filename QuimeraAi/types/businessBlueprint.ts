@@ -147,6 +147,35 @@ export interface StarterProductBlueprint {
     discountStatus?: 'none' | 'draft';
 }
 
+export type EcommerceStarterContentStatus = 'not_started' | 'previewed' | 'created_draft' | 'dismissed';
+
+export interface EcommerceStarterContentRefs {
+    categoryIds: string[];
+    productIds: string[];
+    giftCardIds: string[];
+}
+
+export interface EcommerceStarterContentReadiness {
+    productsDrafted: boolean;
+    needsMerchantReview: boolean;
+    paymentsConfigured: false;
+    inventoryConfigured: false;
+    storefrontPublished: false;
+}
+
+export interface EcommerceStarterContentSummary {
+    categoriesSuggested?: number;
+    productsSuggested?: number;
+    giftCardsSuggested?: number;
+    categoriesCreated?: number;
+    productsCreated?: number;
+    giftCardsCreated?: number;
+    skipped?: number;
+    lastPreviewedAt?: string;
+    lastCreatedAt?: string;
+    dismissedAt?: string;
+}
+
 export interface EcommerceBlueprint extends BlueprintModuleState {
     storeType?: string;
     catalogStrategy?: string;
@@ -164,6 +193,10 @@ export interface EcommerceBlueprint extends BlueprintModuleState {
     giftCardsEnabled?: boolean;
     digitalProductsEnabled?: boolean;
     recommendations?: string[];
+    starterContentStatus?: EcommerceStarterContentStatus;
+    createdContentRefs?: EcommerceStarterContentRefs;
+    starterContentReadiness?: EcommerceStarterContentReadiness;
+    starterContentSummary?: EcommerceStarterContentSummary;
 }
 
 export interface ChatbotBlueprint extends BlueprintModuleState {

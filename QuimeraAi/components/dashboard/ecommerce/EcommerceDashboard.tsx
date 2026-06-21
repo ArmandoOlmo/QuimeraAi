@@ -40,6 +40,8 @@ import {
     Inbox,
     Clock,
     PackageCheck,
+    Eye,
+    X,
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import QuimeraLoader from '../../ui/QuimeraLoader';
@@ -47,8 +49,16 @@ import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
+import { supabase } from '../../../supabase';
 import type { Category, Customer, EcommerceView, Order, Product, Review, StoreSettings } from '../../../types/ecommerce';
+import type { Project } from '../../../types/project';
+import type { BusinessBlueprint, EcommerceStarterContentStatus } from '../../../types/businessBlueprint';
 import { EcommerceContext, useEcommerceContext } from './EcommerceContext';
+import {
+    buildStarterContentBusinessBlueprintUpdate,
+    createStarterContentFromBlueprint,
+    type StarterContentResult,
+} from '../../../utils/ecommerce/createStarterContentFromBlueprint';
 
 // Import views
 import ProductsView from './views/ProductsView';
@@ -126,7 +136,7 @@ const EcommerceDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { setView } = useUI();
-    const { projects, activeProject, activeProjectId, loadProject } = useProject();
+    const { projects, activeProject, activeProjectId, refreshProjects } = useProject();
     const [activeView, setActiveView] = useState<EcommerceView>(getInitialEcommerceView);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
@@ -235,7 +245,9 @@ const EcommerceDashboard: React.FC = () => {
                     <OverviewDataView
                         userId={userId || ''}
                         storeId={storeId}
+                        project={effectiveProject}
                         onNavigate={handleViewChange}
+                        onBusinessBlueprintRefresh={refreshProjects}
                         showDemoSeeder={showDemoSeeder}
                         onDemoSeederClose={() => setShowDemoSeeder(false)}
                     />
@@ -545,7 +557,9 @@ const EcommerceDashboard: React.FC = () => {
 interface OverviewDataViewProps {
     userId: string;
     storeId: string;
+    project?: Project | null;
     onNavigate: (view: EcommerceView) => void;
+    onBusinessBlueprintRefresh: () => Promise<void>;
     showDemoSeeder: boolean;
     onDemoSeederClose: () => void;
 }
@@ -553,7 +567,9 @@ interface OverviewDataViewProps {
 const OverviewDataView: React.FC<OverviewDataViewProps> = ({
     userId,
     storeId,
+    project,
     onNavigate,
+    onBusinessBlueprintRefresh,
     showDemoSeeder,
     onDemoSeederClose,
 }) => {
@@ -582,6 +598,16 @@ const OverviewDataView: React.FC<OverviewDataViewProps> = ({
     } = useReviews(userId, storeId);
     const { settings, isLoading: settingsLoading } = useStoreSettings(userId, storeId);
     const pendingOrders = orders.filter((order) => order.status === 'pending' || order.status === 'paid').length;
+    const starterContentPrompt = project?.businessBlueprint ? (
+        <AiStarterContentPrompt
+            userId={userId}
+            storeId={storeId}
+            project={project}
+            businessBlueprint={project.businessBlueprint}
+            onBusinessBlueprintRefresh={onBusinessBlueprintRefresh}
+            onNavigate={onNavigate}
+        />
+    ) : null;
 
     return (
         <OverviewView
@@ -608,9 +634,276 @@ const OverviewDataView: React.FC<OverviewDataViewProps> = ({
             isLoading={analyticsLoading || categoriesLoading || reviewsLoading || settingsLoading}
             onNavigate={onNavigate}
             totalProducts={products.length}
+            starterContentPrompt={starterContentPrompt}
             showDemoSeeder={showDemoSeeder}
             onDemoSeederClose={onDemoSeederClose}
         />
+    );
+};
+
+interface AiStarterContentPromptProps {
+    userId: string;
+    storeId: string;
+    project: Project;
+    businessBlueprint: BusinessBlueprint;
+    onBusinessBlueprintRefresh: () => Promise<void>;
+    onNavigate: (view: EcommerceView) => void;
+}
+
+const uniqueStarterNames = (values: Array<string | undefined | null>): string[] => {
+    const seen = new Set<string>();
+    const result: string[] = [];
+
+    for (const value of values) {
+        const trimmed = value?.trim();
+        if (!trimmed) continue;
+        const key = trimmed.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        result.push(trimmed);
+    }
+
+    return result;
+};
+
+const formatStarterError = (result: StarterContentResult): string | null =>
+    result.errors.length > 0 ? result.errors.join(' ') : null;
+
+const AiStarterContentPrompt: React.FC<AiStarterContentPromptProps> = ({
+    userId,
+    storeId,
+    project,
+    businessBlueprint,
+    onBusinessBlueprintRefresh,
+    onNavigate,
+}) => {
+    const { t } = useTranslation();
+    const [result, setResult] = useState<StarterContentResult | null>(null);
+    const [localStatus, setLocalStatus] = useState<EcommerceStarterContentStatus | null>(null);
+    const [action, setAction] = useState<'preview' | 'create' | 'dismiss' | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const ecommerceBlueprint = businessBlueprint.ecommerceBlueprint;
+    const storefrontBlueprint = businessBlueprint.storefrontBlueprint;
+    const starterStatus = localStatus || ecommerceBlueprint.starterContentStatus || 'not_started';
+    const isVisible = ecommerceBlueprint.enabled &&
+        starterStatus !== 'created_draft' &&
+        starterStatus !== 'dismissed' &&
+        ((ecommerceBlueprint.productCategories || ecommerceBlueprint.categories || []).length > 0 ||
+            ecommerceBlueprint.starterProducts.length > 0);
+
+    if (!isVisible) return null;
+
+    const categoryNames = uniqueStarterNames([
+        ...(ecommerceBlueprint.productCategories || ecommerceBlueprint.categories || []),
+        ...ecommerceBlueprint.starterProducts.map(product => product.category),
+    ]);
+    const starterProducts = ecommerceBlueprint.starterProducts;
+    const suggestedProductCount = starterProducts.length;
+    const suggestedGiftCards = ecommerceBlueprint.giftCardsEnabled || ecommerceBlueprint.giftCards?.enabled;
+    const preset = storefrontBlueprint.themePreset || storefrontBlueprint.templatePreset || t('common.draft', 'Borrador');
+    const isBusy = Boolean(action);
+
+    const persistStatus = async (status: EcommerceStarterContentStatus, nextResult?: StarterContentResult) => {
+        const now = new Date().toISOString();
+        const nextBlueprint = buildStarterContentBusinessBlueprintUpdate({
+            businessBlueprint,
+            result: nextResult,
+            status,
+            now,
+        });
+        const nextData = {
+            ...(project.data || {}),
+            businessBlueprint: nextBlueprint,
+            lastUpdated: now,
+        };
+
+        const { error: updateError } = await supabase
+            .from('projects')
+            .update({
+                data: nextData,
+                last_updated: now,
+            })
+            .eq('id', project.id);
+
+        if (updateError) throw updateError;
+
+        setLocalStatus(status);
+        await onBusinessBlueprintRefresh();
+    };
+
+    const runPreview = async () => {
+        setAction('preview');
+        setError(null);
+        try {
+            const previewResult = await createStarterContentFromBlueprint({
+                projectId: project.id,
+                storeId,
+                userId,
+                businessBlueprint,
+                ecommerceBlueprint,
+                storefrontBlueprint,
+                options: { dryRun: true, overwriteExisting: false },
+            });
+            setResult(previewResult);
+
+            const previewError = formatStarterError(previewResult);
+            if (previewError) {
+                setError(previewError);
+                return;
+            }
+
+            await persistStatus('previewed', previewResult);
+        } catch (caughtError) {
+            setError(caughtError instanceof Error ? caughtError.message : String(caughtError));
+        } finally {
+            setAction(null);
+        }
+    };
+
+    const createDraftContent = async () => {
+        setAction('create');
+        setError(null);
+        try {
+            const createResult = await createStarterContentFromBlueprint({
+                projectId: project.id,
+                storeId,
+                userId,
+                businessBlueprint,
+                ecommerceBlueprint,
+                storefrontBlueprint,
+                options: { dryRun: false, overwriteExisting: false },
+            });
+            setResult(createResult);
+
+            const createError = formatStarterError(createResult);
+            if (createError) {
+                setError(createError);
+                return;
+            }
+
+            await persistStatus('created_draft', createResult);
+            onNavigate('products');
+        } catch (caughtError) {
+            setError(caughtError instanceof Error ? caughtError.message : String(caughtError));
+        } finally {
+            setAction(null);
+        }
+    };
+
+    const dismissPrompt = async () => {
+        setAction('dismiss');
+        setError(null);
+        try {
+            await persistStatus('dismissed', result || undefined);
+        } catch (caughtError) {
+            setError(caughtError instanceof Error ? caughtError.message : String(caughtError));
+        } finally {
+            setAction(null);
+        }
+    };
+
+    return (
+        <section className="quimera-dashboard-panel-card border-q-accent/30 bg-q-accent/5 p-4 sm:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0">
+                    <div className="mb-3 flex items-center gap-3">
+                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-q-accent/15 text-q-accent">
+                            <Sparkles size={20} />
+                        </span>
+                        <div className="min-w-0">
+                            <h3 className="text-base font-bold text-foreground">
+                                {t('ecommerce.aiStarterContent.title', 'Contenido ecommerce sugerido por AI')}
+                            </h3>
+                            <p className="text-sm text-q-text-muted">
+                                {t('ecommerce.aiStarterContent.subtitle', '{{categories}} categorías sugeridas · {{products}} productos draft · preset {{preset}}', {
+                                    categories: categoryNames.length,
+                                    products: suggestedProductCount,
+                                    preset,
+                                })}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                        <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1 text-q-text-muted">
+                            {t('ecommerce.aiStarterContent.needsReview', 'Necesita revisión')}
+                        </span>
+                        <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1 text-q-text-muted">
+                            {t('ecommerce.aiStarterContent.draftOnly', 'Draft only')}
+                        </span>
+                        {suggestedGiftCards && (
+                            <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1 text-q-text-muted">
+                                {t('ecommerce.aiStarterContent.giftCards', 'Gift cards draft')}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-2 sm:flex-row lg:flex-shrink-0">
+                    <button
+                        type="button"
+                        onClick={runPreview}
+                        disabled={isBusy}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-q-border bg-q-surface px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-60"
+                    >
+                        {action === 'preview' ? <RefreshCw size={16} className="animate-spin" /> : <Eye size={16} />}
+                        {t('ecommerce.aiStarterContent.preview', 'Ver preview')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={createDraftContent}
+                        disabled={isBusy}
+                        className="quimera-guide-cta inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                    >
+                        {action === 'create' ? <RefreshCw size={16} className="animate-spin" /> : <PackageCheck size={16} />}
+                        {t('ecommerce.aiStarterContent.createDraft', 'Crear contenido draft')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={dismissPrompt}
+                        disabled={isBusy}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-q-border bg-q-surface text-q-text-muted transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60"
+                        aria-label={t('ecommerce.aiStarterContent.dismiss', 'Omitir')}
+                    >
+                        {action === 'dismiss' ? <RefreshCw size={16} className="animate-spin" /> : <X size={16} />}
+                    </button>
+                </div>
+            </div>
+
+            {error && (
+                <div className="mt-4 flex items-start gap-2 rounded-lg border border-q-error/30 bg-q-error/10 p-3 text-sm text-q-error">
+                    <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                    <span>{error}</span>
+                </div>
+            )}
+
+            {result && (
+                <div className="mt-4 rounded-lg border border-q-border/70 bg-q-bg/50 p-3">
+                    <div className="grid gap-3 text-sm text-q-text-muted sm:grid-cols-3">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.categories', 'Categorías')}</p>
+                            <p className="mt-1 font-semibold text-foreground">
+                                {result.summary.categoriesCreated > 0 ? result.summary.categoriesCreated : result.summary.categoriesPlanned}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.products', 'Productos')}</p>
+                            <p className="mt-1 font-semibold text-foreground">
+                                {result.summary.productsCreated > 0 ? result.summary.productsCreated : result.summary.productsPlanned}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.aiStarterContent.skipped', 'Omitidos')}</p>
+                            <p className="mt-1 font-semibold text-foreground">{result.summary.skipped}</p>
+                        </div>
+                    </div>
+                    {result.dryRunPreview.warnings.length > 0 && (
+                        <p className="mt-3 text-xs leading-5 text-q-text-muted">
+                            {result.dryRunPreview.warnings[0]}
+                        </p>
+                    )}
+                </div>
+            )}
+        </section>
     );
 };
 
@@ -638,6 +931,7 @@ interface OverviewProps {
     isLoading: boolean;
     onNavigate: (view: EcommerceView) => void;
     totalProducts: number;
+    starterContentPrompt?: React.ReactNode;
     showDemoSeeder: boolean;
     onDemoSeederClose: () => void;
 }
@@ -732,6 +1026,7 @@ const OverviewView: React.FC<OverviewProps> = ({
     isLoading,
     onNavigate,
     totalProducts,
+    starterContentPrompt,
     showDemoSeeder,
     onDemoSeederClose,
 }) => {
@@ -1032,6 +1327,8 @@ const OverviewView: React.FC<OverviewProps> = ({
 
     return (
         <div className="space-y-5">
+            {starterContentPrompt}
+
             <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)] gap-4">
                 <section className="quimera-dashboard-panel-card p-5 sm:p-6">
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
