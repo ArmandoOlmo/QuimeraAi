@@ -334,7 +334,10 @@ const EcommerceDashboard: React.FC = () => {
                                 )}
                             </button>
                             <button
-                                onClick={() => setSelectedProjectId(null)}
+                                onClick={() => {
+                                    setIsProjectSelectorOpen(false);
+                                    setShowAllProjects(true);
+                                }}
                                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-muted text-foreground rounded-xl hover:bg-muted/80 transition-colors font-medium"
                             >
                                 {t('ecommerce.changeProject', 'Cambiar Proyecto')}
