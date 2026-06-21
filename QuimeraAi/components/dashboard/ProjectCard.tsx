@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Project } from '../../types';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useProject } from '../../contexts/project';
@@ -12,6 +13,7 @@ import ThumbnailEditor from '../ui/ThumbnailEditor';
 import Modal from '../ui/Modal';
 import { getDynamicThumbnailUrl } from '../../utils/thumbnailHelper';
 import ProjectThumbnailFallback from './ProjectThumbnailFallback';
+import { cardMotionHover, createCardMotionVariants } from '../../utils/cardMotion';
 
 interface ProjectCardProps {
   project: Project;
@@ -40,6 +42,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   const [showThumbnailEditor, setShowThumbnailEditor] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
 
   const isTemplate = project.status === 'Template';
 
@@ -161,10 +164,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   // Visual Helpers
   const getStatusBadge = (status: string) => {
     const styles = {
-      'Published': 'bg-green-500/90 text-white border-green-500/50',
-      'Draft': 'bg-slate-500/90 text-white border-slate-500/50',
-      'Template': 'bg-amber-500/90 text-white border-amber-500/50',
-    }[status] || 'bg-blue-500/90 text-white border-blue-500/50';
+      'Published': 'bg-q-success/90 text-white border-q-success/50',
+      'Draft': 'bg-q-surface-overlay/90 text-q-text border-q-border',
+      'Template': 'bg-q-accent/90 text-q-text-on-accent border-q-accent/50',
+    }[status] || 'bg-q-info/90 text-white border-q-info/50';
 
     const translatedStatus = {
       'Published': t('dashboard.published'),
@@ -187,17 +190,21 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   };
 
   return (
-    <article
-      className={`group relative rounded-2xl overflow-hidden transition-all duration-500 ${compact ? 'h-[260px]' : 'h-[400px]'} ${isSelected ? 'ring-4 ring-q-accent shadow-2xl shadow-q-accent/30' : 'hover:shadow-2xl hover:scale-[1.02]'
+    <motion.article
+      initial={shouldReduceMotion ? false : 'hidden'}
+      animate={shouldReduceMotion ? undefined : 'visible'}
+      variants={shouldReduceMotion ? undefined : createCardMotionVariants()}
+      whileHover={shouldReduceMotion ? undefined : { ...cardMotionHover, scale: isSelected ? 1 : 1.01 }}
+      className={`group relative rounded-[var(--radius-card)] overflow-hidden transition-all duration-300 ${compact ? 'h-[260px]' : 'h-[400px]'} ${isSelected ? 'ring-2 ring-q-accent shadow-[var(--shadow-elevated)]' : 'hover:shadow-[var(--shadow-card-hover)] hover:scale-[1.01]'
         }`}
       aria-label={projectLabel}
     >
 
       {/* Loading Overlay */}
       {isDeleting && (
-        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center" role="status" aria-live="polite">
-          <Loader2 className="w-8 h-8 text-red-500 animate-spin mb-2" aria-hidden="true" />
-          <span className="text-xs font-bold text-red-500">{t('project.actions.deleting')}</span>
+        <div className="absolute inset-0 z-50 bg-q-text/80 backdrop-blur-sm flex flex-col items-center justify-center" role="status" aria-live="polite">
+          <Loader2 className="w-8 h-8 text-q-error animate-spin mb-2" aria-hidden="true" />
+          <span className="text-xs font-bold text-q-error">{t('project.actions.deleting')}</span>
         </div>
       )}
 
@@ -240,7 +247,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                   checked={isSelected}
                   onChange={handleCheckboxClick}
                   onClick={handleCheckboxClick}
-                  className="w-5 h-5 rounded border-2 border-white/50 bg-black/30 backdrop-blur-md checked:bg-q-accent checked:border-q-accent cursor-pointer transition-all"
+                  className="w-5 h-5 rounded border-2 border-q-border/50 bg-q-text/30 backdrop-blur-md checked:bg-q-accent checked:border-q-accent cursor-pointer transition-all"
                   aria-label={t('project.aria.select', { name: project.name })}
                 />
               </div>
@@ -258,7 +265,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                 {themeColors.map((color, index) => (
                   <div
                     key={index}
-                    className="w-3 h-3 flex-shrink-0 rounded-full border border-white/20"
+                    className="w-3 h-3 flex-shrink-0 rounded-full border border-q-border/20"
                     style={{ backgroundColor: color }}
                   />
                 ))}
@@ -273,7 +280,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                   e.stopPropagation();
                   toggleMenu(e);
                 }}
-                className="w-9 h-9 min-w-[36px] min-h-[36px] flex-shrink-0 flex items-center justify-center rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-colors shadow-lg pointer-events-auto"
+                className="w-9 h-9 min-w-[36px] min-h-[36px] flex-shrink-0 flex items-center justify-center rounded-full bg-q-text/30 backdrop-blur-md text-white hover:bg-q-text/50 transition-colors shadow-lg pointer-events-auto"
                 aria-label={t('project.aria.optionsMenu')}
                 aria-expanded={showMenu}
                 aria-haspopup="true"
@@ -322,7 +329,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                   {canDeleteTemplate() && (
                     <button
                       onClick={handleDeleteClick}
-                      className="text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-3"
+                      className="text-left px-4 py-2.5 text-sm text-q-error hover:bg-q-error/10 flex items-center gap-3"
                       role="menuitem"
                     >
                       <Trash2 size={16} aria-hidden="true" />
@@ -337,8 +344,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
 
         {/* Hover Actions Overlay */}
-        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px] pointer-events-none">
-          <span className="bg-white text-black font-bold py-3 px-6 rounded-full shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex items-center gap-2">
+        <div className="absolute inset-0 bg-q-text/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px] pointer-events-none">
+          <span className="bg-q-surface text-black font-bold py-3 px-6 rounded-full shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex items-center gap-2">
             {isTemplate ? <Copy size={16} /> : <ExternalLink size={16} />}
             {isTemplate ? t('project.actions.useTemplate') : t('project.actions.open')}
           </span>
@@ -351,7 +358,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               <img
                 src={project.faviconUrl}
                 alt="Favicon"
-                className={`${compact ? 'w-6 h-6' : 'w-8 h-8'} rounded-md object-contain bg-white/10 backdrop-blur-sm p-1 flex-shrink-0 border border-white/20`}
+                className={`${compact ? 'w-6 h-6' : 'w-8 h-8'} rounded-md object-contain bg-q-surface/10 backdrop-blur-sm p-1 flex-shrink-0 border border-q-border/20`}
               />
             )}
             <h3
@@ -377,14 +384,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           {!isTemplate && (
             <div className="mt-2">
               <div className="flex items-center gap-1.5 mb-1">
-                <Zap size={12} className="text-yellow-400" aria-hidden="true" />
+                <Zap size={12} className="text-q-accent" aria-hidden="true" />
                 <span className="text-xs font-semibold text-white/90">
                   {(tokenUsage?.creditsUsed || 0).toLocaleString()} créditos
                 </span>
               </div>
-              <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+              <div className="w-full h-1.5 bg-q-surface/10 rounded-full overflow-hidden backdrop-blur-sm">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-700 ease-out"
+                  className="h-full rounded-full bg-q-accent transition-all duration-700 ease-out"
                   style={{
                     width: `${Math.min(100, maxTokens > 0 && tokenUsage ? (tokenUsage.creditsUsed / maxTokens) * 100 : 0)}%`,
                     minWidth: tokenUsage && tokenUsage.creditsUsed > 0 ? '4%' : '0%',
@@ -433,14 +440,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             <button
               onClick={() => setShowDeleteConfirm(false)}
               disabled={isDeleting}
-              className="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors"
+              className="px-4 py-2 rounded-lg hover:bg-q-surface/10 transition-colors"
             >
               {t('common.cancel')}
             </button>
             <button
               onClick={handleConfirmDelete}
               disabled={isDeleting}
-              className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-q-error hover:bg-q-error text-white transition-colors flex items-center gap-2"
             >
               {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
               {t('common.delete')}
@@ -448,7 +455,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </div>
         </div>
       </Modal>
-    </article>
+    </motion.article>
   );
 };
 

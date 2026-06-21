@@ -108,8 +108,8 @@ const Step0WebsiteAnalyzer: React.FC<Step0WebsiteAnalyzerProps> = ({
         <div className="max-w-xl mx-auto space-y-6">
             {/* Header */}
             <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                    <Globe size={32} className="text-white" />
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center text-q-accent">
+                    <Globe size={32} />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">
                     {t('onboarding.step0Heading', 'Already have a website?')}
@@ -199,9 +199,9 @@ const Step0WebsiteAnalyzer: React.FC<Step0WebsiteAnalyzerProps> = ({
             {/* Analysis Results Preview */}
             {analysisResult && (
                 <div className="space-y-4">
-                    <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+                    <div className="p-4 bg-q-success/10 border border-q-success/30 rounded-xl">
                         <div className="flex items-center gap-2 mb-3">
-                            <CheckCircle2 size={20} className="text-green-500" />
+                            <CheckCircle2 size={20} className="text-q-success" />
                             <span className="font-medium text-foreground">
                                 {t('onboarding.analysisComplete', 'Analysis Complete!')}
                             </span>

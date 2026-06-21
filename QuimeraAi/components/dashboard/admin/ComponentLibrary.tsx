@@ -31,7 +31,7 @@ const ToggleControl: React.FC<{ label?: string; checked: boolean; onChange: (che
         >
             <span
                 aria-hidden="true"
-                className={`${checked ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                className={`${checked ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-q-surface shadow ring-0 transition duration-200 ease-in-out`}
             />
         </button>
     </div>
@@ -256,7 +256,7 @@ const ComponentLibrary: React.FC = () => {
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-4 mt-1">
-                                        <p className={`text-sm ${componentStatus[key] ? 'text-green-400' : 'text-red-400'}`}>
+                                        <p className={`text-sm ${componentStatus[key] ? 'text-q-success' : 'text-q-error'}`}>
                                             {componentStatus[key] ? 'Enabled' : 'Disabled'}
                                         </p>
                                         <p className="text-sm text-q-text-secondary">
@@ -301,7 +301,7 @@ const ComponentLibrary: React.FC = () => {
                                         className="bg-q-surface border border-q-border rounded-lg overflow-hidden hover:border-q-accent transition-colors group"
                                     >
                                         {/* Thumbnail */}
-                                        <div className="w-full h-40 bg-gradient-to-br from-purple-600 to-indigo-600 relative overflow-hidden">
+                                        <div className="w-full h-40 bg-gradient-to-br from-q-accent to-q-accent relative overflow-hidden">
                                             {component.styles?.thumbnail ? (
                                                 <img
                                                     src={(component.styles as any).thumbnail}
@@ -328,7 +328,7 @@ const ComponentLibrary: React.FC = () => {
                                                     {component.baseComponent}
                                                 </span>
                                                 {component.version && (
-                                                    <span className="px-2 py-0.5 bg-purple-600/20 text-purple-400 rounded-full">
+                                                    <span className="px-2 py-0.5 bg-q-accent/20 text-q-accent rounded-full">
                                                         v{component.version}
                                                     </span>
                                                 )}

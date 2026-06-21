@@ -173,18 +173,18 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                 </div>
                 <div className="flex items-center gap-3">
                     {hasChanges && (
-                        <span className="text-xs text-orange-500 font-medium">{t('contentManagement.legal.unsavedChanges', 'Cambios sin guardar')}</span>
+                        <span className="text-xs text-q-warning font-medium">{t('contentManagement.legal.unsavedChanges', 'Cambios sin guardar')}</span>
                     )}
                     <div className="flex items-center gap-3">
                     <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
-                        <button 
-                            onClick={() => setFormData(prev => ({ ...prev, language: 'es' }))} 
+                        <button
+                            onClick={() => setFormData(prev => ({ ...prev, language: 'es' }))}
                             className={`px-3 py-1.5 rounded-md transition-all ${formData.language === 'es' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}
                         >
                             Español
                         </button>
-                        <button 
-                            onClick={() => setFormData(prev => ({ ...prev, language: 'en' }))} 
+                        <button
+                            onClick={() => setFormData(prev => ({ ...prev, language: 'en' }))}
                             className={`px-3 py-1.5 rounded-md transition-all ${formData.language === 'en' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}
                         >
                             English
@@ -319,7 +319,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                                     </button>
                                                     <button
                                                         onClick={() => deleteSection(section.id)}
-                                                        className="p-1.5 text-q-text-muted hover:text-red-500 transition-colors"
+                                                        className="p-1.5 text-q-text-muted hover:text-q-error transition-colors"
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>

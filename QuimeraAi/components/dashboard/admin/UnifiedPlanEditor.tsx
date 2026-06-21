@@ -84,7 +84,7 @@ const TabButton: React.FC<{
         className={`
             flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
             ${active
-                ? 'bg-q-accent text-white'
+                ? 'bg-q-accent text-q-text-on-accent'
                 : 'bg-q-bg text-q-text-secondary hover:text-q-text'
             }
         `}
@@ -162,7 +162,7 @@ const NumberInput: React.FC<{
                     className={`
                         px-3 py-2 rounded-lg text-sm font-medium transition-colors
                         ${value === -1
-                            ? 'bg-q-accent text-white'
+                            ? 'bg-q-accent text-q-text-on-accent'
                             : 'bg-q-surface-overlay text-q-text-secondary hover:bg-q-surface-overlay/80'
                         }
                     `}
@@ -199,10 +199,10 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
         analytics: true,
         advanced: true,
     });
-    
+
     // Form state
     const [formData, setFormData] = useState<Partial<StoredPlan>>(createEmptyPlan());
-    
+
     // Initialize form when plan changes
     useEffect(() => {
         if (plan) {
@@ -213,41 +213,41 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
         setErrors([]);
         setActiveTab('general');
     }, [plan, isOpen]);
-    
+
     if (!isOpen) return null;
-    
+
     const isNewPlan = !plan;
-    
+
     // Update handlers
     const updateField = <K extends keyof StoredPlan>(field: K, value: StoredPlan[K]) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
-    
+
     const updateLimit = <K extends keyof PlanLimits>(key: K, value: PlanLimits[K]) => {
         setFormData(prev => ({
             ...prev,
             limits: { ...prev.limits!, [key]: value },
         }));
     };
-    
+
     const updateFeature = <K extends keyof PlanFeatures>(key: K, value: PlanFeatures[K]) => {
         setFormData(prev => ({
             ...prev,
             features: { ...prev.features!, [key]: value },
         }));
     };
-    
+
     const updatePrice = (cycle: 'monthly' | 'annually', value: number) => {
         setFormData(prev => ({
             ...prev,
             price: { ...prev.price!, [cycle]: value },
         }));
     };
-    
+
     const toggleSection = (section: string) => {
         setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
     };
-    
+
     // Handle save
     const handleSave = async () => {
         const validation = validatePlan(formData);
@@ -255,10 +255,10 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
             setErrors(validation.errors);
             return;
         }
-        
+
         setIsLoading(true);
         setErrors([]);
-        
+
         try {
             await onSave(formData as StoredPlan);
             onClose();
@@ -268,7 +268,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
             setIsLoading(false);
         }
     };
-    
+
     // Render section header
     const SectionHeader: React.FC<{ id: string; title: string; icon: React.ReactNode }> = ({ id, title, icon }) => (
         <button
@@ -282,9 +282,9 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
             {expandedSections[id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
     );
-    
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/50 backdrop-blur-sm p-4">
             <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-4xl max-h-[90vh] flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-q-border">
@@ -311,7 +311,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                         <X className="w-5 h-5" />
                     </button>
                 </div>
-                
+
                 {/* Tabs */}
                 <div className="flex gap-2 p-4 border-b border-q-border overflow-x-auto">
                     <TabButton
@@ -339,22 +339,22 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                         label="Stripe"
                     />
                 </div>
-                
+
                 {/* Errors */}
                 {errors.length > 0 && (
-                    <div className="mx-6 mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <div className="flex items-center gap-2 text-red-400 mb-2">
+                    <div className="mx-6 mt-4 p-4 bg-q-error/10 border border-q-error/20 rounded-lg">
+                        <div className="flex items-center gap-2 text-q-error mb-2">
                             <AlertCircle className="w-5 h-5" />
                             <span className="font-medium">Errores de validación</span>
                         </div>
-                        <ul className="list-disc list-inside text-sm text-red-400/80">
+                        <ul className="list-disc list-inside text-sm text-q-error/80">
                             {errors.map((error, i) => (
                                 <li key={i}>{error}</li>
                             ))}
                         </ul>
                     </div>
                 )}
-                
+
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6">
                     {/* General Tab */}
@@ -378,7 +378,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                         Solo letras minúsculas, números y guiones bajos
                                     </p>
                                 </div>
-                                
+
                                 {/* Name */}
                                 <div>
                                     <label className="block text-sm text-q-text-secondary mb-1.5">
@@ -393,7 +393,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     />
                                 </div>
                             </div>
-                            
+
                             {/* Description */}
                             <div>
                                 <label className="block text-sm text-q-text-secondary mb-1.5">
@@ -407,7 +407,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent resize-none"
                                 />
                             </div>
-                            
+
                             {/* Pricing */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
@@ -442,17 +442,17 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                         />
                                     </div>
                                     {formData.price?.monthly && formData.price.monthly > 0 && formData.price?.annually && formData.price.annually > 0 && (
-                                        <p className="text-xs text-green-400 mt-1">
+                                        <p className="text-xs text-q-success mt-1">
                                             Ahorro: {Math.round(((formData.price.monthly - formData.price.annually) / formData.price.monthly) * 100)}% vs mensual
                                         </p>
                                     )}
                                 </div>
                             </div>
-                            
+
                             {/* Landing Page Visibility */}
                             <div className="p-4 bg-q-bg rounded-lg border border-q-border">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <Globe className="w-4 h-4 text-green-400" />
+                                    <Globe className="w-4 h-4 text-q-success" />
                                     <h4 className="text-sm font-medium text-q-text">Visibilidad en Landing Page</h4>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-6">
@@ -463,7 +463,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                             onChange={(e) => updateField('showInLanding', e.target.checked)}
                                             className="sr-only"
                                         />
-                                        <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${formData.showInLanding ? 'bg-green-500' : 'bg-q-surface-overlay'}`}>
+                                        <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${formData.showInLanding ? 'bg-q-success' : 'bg-q-surface-overlay'}`}>
                                             {formData.showInLanding && <Check className="w-4 h-4 text-white" />}
                                         </div>
                                         <span className="text-q-text font-medium">Mostrar en Landing Page</span>
@@ -477,7 +477,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                                 onChange={(e) => updateField('landingOrder', parseInt(e.target.value) || 1)}
                                                 min={1}
                                                 max={10}
-                                                className="w-16 px-2 py-1.5 bg-q-surface border border-q-border rounded text-q-text text-center focus:outline-none focus:border-green-500"
+                                                className="w-16 px-2 py-1.5 bg-q-surface border border-q-border rounded text-q-text text-center focus:outline-none focus:border-q-success/25"
                                             />
                                             <span className="text-xs text-q-text-secondary">(1 = primero)</span>
                                         </div>
@@ -487,7 +487,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     Los planes activados aparecerán en el landing page público
                                 </p>
                             </div>
-                            
+
                             {/* Color & Icon */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
@@ -521,7 +521,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     </AppSelect>
                                 </div>
                             </div>
-                            
+
                             {/* Badges */}
                             <div className="flex flex-wrap gap-4">
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -551,7 +551,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Limits Tab */}
                     {activeTab === 'limits' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -612,7 +612,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             />
                         </div>
                     )}
-                    
+
                     {/* Features Tab */}
                     {activeTab === 'features' && (
                         <div className="space-y-4">
@@ -642,7 +642,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     </div>
                                 )}
                             </div>
-                            
+
                             {/* CMS */}
                             <div>
                                 <SectionHeader id="cms" title="CMS" icon={<Database className="w-4 h-4" />} />
@@ -663,7 +663,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     </div>
                                 )}
                             </div>
-                            
+
                             {/* CRM */}
                             <div>
                                 <SectionHeader id="crm" title="CRM" icon={<Users className="w-4 h-4" />} />
@@ -690,7 +690,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     </div>
                                 )}
                             </div>
-                            
+
                             {/* E-commerce */}
                             <div>
                                 <SectionHeader id="ecommerce" title="E-Commerce" icon={<ShoppingCart className="w-4 h-4" />} />
@@ -719,7 +719,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     </div>
                                 )}
                             </div>
-                            
+
                             {/* AI Features */}
                             <div>
                                 <SectionHeader id="ai" title="IA & Chatbot" icon={<MessageSquare className="w-4 h-4" />} />
@@ -752,7 +752,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     </div>
                                 )}
                             </div>
-                            
+
                             {/* Communication */}
                             <div>
                                 <SectionHeader id="communication" title="Comunicación" icon={<Mail className="w-4 h-4" />} />
@@ -773,7 +773,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     </div>
                                 )}
                             </div>
-                            
+
                             {/* Branding */}
                             <div>
                                 <SectionHeader id="branding" title="Branding" icon={<Palette className="w-4 h-4" />} />
@@ -800,7 +800,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     </div>
                                 )}
                             </div>
-                            
+
                             {/* Analytics */}
                             <div>
                                 <SectionHeader id="analytics" title="Analytics" icon={<BarChart3 className="w-4 h-4" />} />
@@ -821,7 +821,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     </div>
                                 )}
                             </div>
-                            
+
                             {/* Advanced */}
                             <div>
                                 <SectionHeader id="advanced" title="Avanzado" icon={<Code className="w-4 h-4" />} />
@@ -858,7 +858,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Stripe Tab */}
                     {activeTab === 'stripe' && (
                         <div className="space-y-6">
@@ -868,7 +868,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     Puedes editarlos manualmente si ya tienes productos/precios creados.
                                 </p>
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm text-q-text-secondary mb-1.5">
                                     Stripe Product ID
@@ -881,7 +881,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent font-mono text-sm"
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm text-q-text-secondary mb-1.5">
                                     Stripe Price ID (Mensual)
@@ -894,7 +894,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent font-mono text-sm"
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm text-q-text-secondary mb-1.5">
                                     Stripe Price ID (Anual)
@@ -910,7 +910,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                         </div>
                     )}
                 </div>
-                
+
                 {/* Footer */}
                 <div className="flex items-center justify-end gap-3 p-6 border-t border-q-border">
                     <button
@@ -922,11 +922,11 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                     <button
                         onClick={handleSave}
                         disabled={isLoading}
-                        className="px-6 py-2 rounded-lg bg-q-accent text-white hover:opacity-90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                        className="px-6 py-2 rounded-lg bg-q-accent text-q-text-on-accent hover:opacity-90 transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
                         {isLoading ? (
                             <>
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <div className="w-4 h-4 border-2 border-q-border/30 border-t-white rounded-full animate-spin" />
                                 Guardando...
                             </>
                         ) : (

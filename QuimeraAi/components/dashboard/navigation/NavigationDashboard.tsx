@@ -424,7 +424,7 @@ const NavigationDashboard: React.FC = () => {
                                             {/* Preview of Items */}
                                             <div className="space-y-2 mb-6 min-h-[80px]">
                                                 {isEmpty ? (
-                                                    <div className="flex items-center gap-2 text-sm text-orange-500 bg-orange-500/5 p-3 rounded-lg border border-orange-500/10">
+                                                    <div className="flex items-center gap-2 text-sm text-q-warning bg-q-warning/5 p-3 rounded-lg border border-q-warning/10">
                                                         <AlertCircle size={16} />
                                                         <span>{t('navigationDashboard.emptyMenuDescShort', 'Este menú está vacío')}</span>
                                                     </div>
@@ -461,14 +461,14 @@ const NavigationDashboard: React.FC = () => {
                                                     </button>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleDuplicate(menu); }}
-                                                        className="p-2 text-q-text-muted hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                        className="p-2 text-q-text-muted hover:text-q-accent hover:bg-q-accent/10 rounded-lg transition-colors"
                                                         title={t('common.duplicate')}
                                                     >
                                                         <Copy size={16} />
                                                     </button>
                                                     <button
                                                         onClick={(e) => handleDelete(e, menu.id)}
-                                                        className="p-2 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                        className="p-2 text-q-text-muted hover:text-q-error hover:bg-q-error/10 rounded-lg transition-colors"
                                                         title={t('common.delete')}
                                                     >
                                                         <Trash2 size={16} />
@@ -506,7 +506,7 @@ const NavigationDashboard: React.FC = () => {
                                                     >
                                                         <td className="p-4">
                                                             <div className="flex items-center gap-3">
-                                                                <div className={`p-2 rounded-lg ${isEmpty ? 'bg-orange-500/10 text-orange-500' : 'bg-primary/10 text-primary'}`}>
+                                                                <div className={`p-2 rounded-lg ${isEmpty ? 'bg-q-warning/10 text-q-warning' : 'bg-primary/10 text-primary'}`}>
                                                                     <MenuIcon size={18} />
                                                                 </div>
                                                                 <div>
@@ -517,7 +517,7 @@ const NavigationDashboard: React.FC = () => {
                                                         </td>
                                                         <td className="p-4 text-sm">
                                                             {isEmpty ? (
-                                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-orange-600 bg-orange-500/10 rounded-full">
+                                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-q-warning bg-q-warning/10 rounded-full">
                                                                     <AlertCircle size={12} />
                                                                     {t('navigationDashboard.empty')}
                                                                 </span>
@@ -531,13 +531,13 @@ const NavigationDashboard: React.FC = () => {
                                                         <td className="p-4">
                                                             <div className="flex gap-2 flex-wrap">
                                                                 {usedInHeader && (
-                                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-blue-600 bg-blue-500/10 rounded-full border border-blue-200 dark:border-blue-900/30">
+                                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-q-accent bg-q-accent/10 rounded-full border border-q-accent/25 dark:border-q-accent/25">
                                                                         <Layout size={12} />
                                                                         {t('sections.header')}
                                                                     </span>
                                                                 )}
                                                                 {usedInFooter && (
-                                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-purple-600 bg-purple-500/10 rounded-full border border-purple-200 dark:border-purple-900/30">
+                                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-q-accent bg-q-accent/10 rounded-full border border-q-accent/25 dark:border-q-accent/25">
                                                                         <LayoutGrid size={12} />
                                                                         {t('sections.footer')}
                                                                     </span>
@@ -560,14 +560,14 @@ const NavigationDashboard: React.FC = () => {
                                                                 </button>
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); handleDuplicate(menu); }}
-                                                                    className="p-2 text-q-text-muted hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
+                                                                    className="p-2 text-q-text-muted hover:text-q-accent hover:bg-q-accent/10 rounded-lg transition-all"
                                                                     title={t('common.duplicate')}
                                                                 >
                                                                     <Copy size={16} />
                                                                 </button>
                                                                 <button
                                                                     onClick={(e) => handleDelete(e, menu.id)}
-                                                                    className="p-2 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                                                    className="p-2 text-q-text-muted hover:text-q-error hover:bg-q-error/10 rounded-lg transition-all"
                                                                     title={t('common.delete')}
                                                                 >
                                                                     <Trash2 size={16} />

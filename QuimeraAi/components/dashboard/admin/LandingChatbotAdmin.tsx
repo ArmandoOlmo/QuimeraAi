@@ -376,10 +376,10 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         {/* Status Card */}
-                        <div className={`relative overflow-hidden rounded-2xl border p-6 ${formData.isActive ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+                        <div className={`relative overflow-hidden rounded-2xl border p-6 ${formData.isActive ? 'bg-q-success/10 border-q-success/30' : 'bg-q-error/10 border-q-error/30'}`}>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${formData.isActive ? 'bg-green-500' : 'bg-red-500'}`}>
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${formData.isActive ? 'bg-q-success' : 'bg-q-error'}`}>
                                         <Power size={24} className="text-white" />
                                     </div>
                                     <div>
@@ -396,9 +396,9 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 </div>
                                 <button
                                     onClick={() => updateForm('isActive', !formData.isActive)}
-                                    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${formData.isActive ? 'bg-green-500' : 'bg-secondary'}`}
+                                    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${formData.isActive ? 'bg-q-success' : 'bg-secondary'}`}
                                 >
-                                    <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition ${formData.isActive ? 'translate-x-7' : 'translate-x-1'}`} />
+                                    <span className={`inline-block h-6 w-6 transform rounded-full bg-q-surface transition ${formData.isActive ? 'translate-x-7' : 'translate-x-1'}`} />
                                 </button>
                             </div>
                         </div>
@@ -418,7 +418,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     <Users size={14} />
                                     {t('landingChatbot.stats.leads', 'Leads')}
                                 </div>
-                                <div className="text-2xl font-bold text-green-500">0</div>
+                                <div className="text-2xl font-bold text-q-success">0</div>
                                 <div className="text-xs text-q-text-muted">Capturados por chat</div>
                             </div>
                             <div className="bg-q-surface border border-q-border rounded-xl p-4">
@@ -426,7 +426,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     <Target size={14} />
                                     {t('landingChatbot.stats.conversion', 'Conversión')}
                                 </div>
-                                <div className="text-2xl font-bold text-amber-500">0%</div>
+                                <div className="text-2xl font-bold text-q-accent">0%</div>
                                 <div className="text-xs text-q-text-muted">Tasa de conversión</div>
                             </div>
                             <div className="bg-q-surface border border-q-border rounded-xl p-4">
@@ -434,7 +434,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     <Clock size={14} />
                                     {t('landingChatbot.stats.responseTime', 'Tiempo Respuesta')}
                                 </div>
-                                <div className="text-2xl font-bold text-blue-500">--</div>
+                                <div className="text-2xl font-bold text-q-accent">--</div>
                                 <div className="text-xs text-q-text-muted">Promedio</div>
                             </div>
                         </div>
@@ -449,10 +449,10 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 {/* Knowledge Base */}
                                 <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                     <div className="flex items-center gap-3">
-                                        <span className={`w-2 h-2 rounded-full ${formData.knowledgeBase.companyInfo || formData.knowledgeBase.faqs.length > 0 ? 'bg-green-500' : 'bg-amber-500'}`} />
+                                        <span className={`w-2 h-2 rounded-full ${formData.knowledgeBase.companyInfo || formData.knowledgeBase.faqs.length > 0 ? 'bg-q-success' : 'bg-q-accent'}`} />
                                         <span className="text-sm font-medium">{t('landingChatbot.tabs.knowledge', 'Base de Conocimiento')}</span>
                                     </div>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.knowledgeBase.companyInfo || formData.knowledgeBase.faqs.length > 0 ? 'text-green-500 bg-green-500/10' : 'text-amber-500 bg-amber-500/10'}`}>
+                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.knowledgeBase.companyInfo || formData.knowledgeBase.faqs.length > 0 ? 'text-q-success bg-q-success/10' : 'text-q-accent bg-q-accent/10'}`}>
                                         {formData.knowledgeBase.faqs.length} FAQs, {formData.knowledgeBase.documents.length} docs
                                     </span>
                                 </div>
@@ -460,7 +460,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 {/* Personality */}
                                 <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                     <div className="flex items-center gap-3">
-                                        <span className={`w-2 h-2 rounded-full ${formData.personality.systemPrompt ? 'bg-green-500' : 'bg-amber-500'}`} />
+                                        <span className={`w-2 h-2 rounded-full ${formData.personality.systemPrompt ? 'bg-q-success' : 'bg-q-accent'}`} />
                                         <span className="text-sm font-medium">{t('landingChatbot.tabs.personality', 'Personalidad')}</span>
                                     </div>
                                     <span className="text-xs font-bold px-2 py-1 rounded text-primary bg-primary/10 capitalize">
@@ -471,10 +471,10 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 {/* Voice */}
                                 <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                     <div className="flex items-center gap-3">
-                                        <span className={`w-2 h-2 rounded-full ${formData.voice.enabled ? 'bg-green-500' : 'bg-red-500'}`} />
+                                        <span className={`w-2 h-2 rounded-full ${formData.voice.enabled ? 'bg-q-success' : 'bg-q-error'}`} />
                                         <span className="text-sm font-medium">{t('landingChatbot.tabs.voice', 'Voz')}</span>
                                     </div>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.voice.enabled ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`}>
+                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.voice.enabled ? 'text-q-success bg-q-success/10' : 'text-q-error bg-q-error/10'}`}>
                                         {formData.voice.enabled ? formData.voice.voiceName : 'Desactivado'}
                                     </span>
                                 </div>
@@ -482,10 +482,10 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 {/* Lead Capture */}
                                 <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                     <div className="flex items-center gap-3">
-                                        <span className={`w-2 h-2 rounded-full ${formData.leadCapture.enabled ? 'bg-green-500' : 'bg-red-500'}`} />
+                                        <span className={`w-2 h-2 rounded-full ${formData.leadCapture.enabled ? 'bg-q-success' : 'bg-q-error'}`} />
                                         <span className="text-sm font-medium">{t('landingChatbot.tabs.leadCapture', 'Captura de Leads')}</span>
                                     </div>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.leadCapture.enabled ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`}>
+                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.leadCapture.enabled ? 'text-q-success bg-q-success/10' : 'text-q-error bg-q-error/10'}`}>
                                         {formData.leadCapture.enabled ? 'Activo' : 'Desactivado'}
                                     </span>
                                 </div>
@@ -493,7 +493,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 {/* Appearance */}
                                 <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                     <div className="flex items-center gap-3">
-                                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                                        <span className="w-2 h-2 rounded-full bg-q-success" />
                                         <span className="text-sm font-medium">{t('landingChatbot.tabs.appearance', 'Apariencia')}</span>
                                     </div>
                                     <span className="text-xs font-bold px-2 py-1 rounded text-primary bg-primary/10">
@@ -604,7 +604,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             </div>
                                             <button
                                                 onClick={() => removeFeature(index)}
-                                                className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                className="p-2 text-q-error hover:bg-q-error/10 rounded-lg transition-colors"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -691,7 +691,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             </div>
                                             <button
                                                 onClick={() => removePricingPlan(index)}
-                                                className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                className="p-2 text-q-error hover:bg-q-error/10 rounded-lg transition-colors"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -886,7 +886,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 onClick={() => updateNestedForm('voice', 'enabled', !formData.voice.enabled)}
                                 className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.voice.enabled ? 'bg-primary' : 'bg-secondary'}`}
                             >
-                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.voice.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.voice.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
                             </button>
                         </div>
 
@@ -921,7 +921,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                 onClick={() => updateNestedForm('voice', 'voiceName', v.name)}
                                                 className={`p-4 rounded-xl border text-left transition-all hover:shadow-md flex items-center ${formData.voice.voiceName === v.name ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-q-border bg-secondary/10 hover:border-primary/50'}`}
                                             >
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${formData.voice.voiceName === v.name ? 'bg-primary text-white' : 'bg-secondary text-q-text-muted'}`}>
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${formData.voice.voiceName === v.name ? 'bg-primary text-primary-foreground' : 'bg-secondary text-q-text-muted'}`}>
                                                     {v.gender === 'Male' ? '♂' : '♀'}
                                                 </div>
                                                 <div>
@@ -947,7 +947,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         onClick={() => updateNestedForm('voice', 'autoPlayGreeting', !formData.voice.autoPlayGreeting)}
                                         className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.voice.autoPlayGreeting ? 'bg-primary' : 'bg-secondary'}`}
                                     >
-                                        <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.voice.autoPlayGreeting ? 'translate-x-6' : 'translate-x-1'}`} />
+                                        <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.voice.autoPlayGreeting ? 'translate-x-6' : 'translate-x-1'}`} />
                                     </button>
                                 </div>
                             </>
@@ -973,7 +973,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 onClick={() => updateNestedForm('leadCapture', 'enabled', !formData.leadCapture.enabled)}
                                 className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.leadCapture.enabled ? 'bg-primary' : 'bg-secondary'}`}
                             >
-                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.leadCapture.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.leadCapture.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
                             </button>
                         </div>
 
@@ -1006,7 +1006,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             onClick={() => updateNestedForm('leadCapture', 'preChatForm', !formData.leadCapture.preChatForm)}
                                             className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.leadCapture.preChatForm ? 'bg-primary' : 'bg-secondary'}`}
                                         >
-                                            <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.leadCapture.preChatForm ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.leadCapture.preChatForm ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
 
@@ -1019,7 +1019,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             onClick={() => updateNestedForm('leadCapture', 'progressiveProfilingEnabled', !formData.leadCapture.progressiveProfilingEnabled)}
                                             className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.leadCapture.progressiveProfilingEnabled ? 'bg-primary' : 'bg-secondary'}`}
                                         >
-                                            <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.leadCapture.progressiveProfilingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.leadCapture.progressiveProfilingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
                                 </div>
@@ -1037,7 +1037,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             onClick={() => updateNestedForm('leadCapture', 'requireEmailForPricing', !formData.leadCapture.requireEmailForPricing)}
                                             className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.leadCapture.requireEmailForPricing ? 'bg-primary' : 'bg-secondary'}`}
                                         >
-                                            <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.leadCapture.requireEmailForPricing ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.leadCapture.requireEmailForPricing ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
 
@@ -1050,7 +1050,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             onClick={() => updateNestedForm('leadCapture', 'requireEmailForDemo', !formData.leadCapture.requireEmailForDemo)}
                                             className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.leadCapture.requireEmailForDemo ? 'bg-primary' : 'bg-secondary'}`}
                                         >
-                                            <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.leadCapture.requireEmailForDemo ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.leadCapture.requireEmailForDemo ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
                                 </div>
@@ -1066,7 +1066,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             onClick={() => updateNestedForm('leadCapture', 'exitIntentEnabled', !formData.leadCapture.exitIntentEnabled)}
                                             className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.leadCapture.exitIntentEnabled ? 'bg-primary' : 'bg-secondary'}`}
                                         >
-                                            <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.leadCapture.exitIntentEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.leadCapture.exitIntentEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
 
@@ -1184,7 +1184,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     className={`p-4 rounded-xl border text-left transition-all ${colorSource === 'custom' ? 'bg-primary/10 border-primary ring-2 ring-primary/30' : 'bg-secondary/20 border-q-border hover:border-primary/50'}`}
                                 >
                                     <div className="flex items-center gap-3 mb-2">
-                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-q-accent to-q-accent flex items-center justify-center">
                                             <Palette size={16} className="text-white" />
                                         </div>
                                         <span className="font-medium">Personalizados</span>
@@ -1384,7 +1384,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         {formData.appearance.avatarUrl && (
                                             <button
                                                 onClick={() => updateNestedForm('appearance', 'avatarUrl', '')}
-                                                className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                                                className="p-2 rounded-lg bg-q-error/10 text-q-error hover:bg-q-error/20 transition-colors"
                                                 title="Eliminar logo"
                                             >
                                                 <X size={16} />
@@ -1570,7 +1570,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     onClick={() => updateNestedForm('appearance', 'pulseEffect', !formData.appearance.pulseEffect)}
                                     className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.appearance.pulseEffect ? 'bg-primary' : 'bg-secondary'}`}
                                 >
-                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.appearance.pulseEffect ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.appearance.pulseEffect ? 'translate-x-6' : 'translate-x-1'}`} />
                                 </button>
                             </div>
                         </div>
@@ -1588,7 +1588,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     onClick={() => updateNestedForm('appearance', 'showOnAllPages', !formData.appearance.showOnAllPages)}
                                     className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.appearance.showOnAllPages ? 'bg-primary' : 'bg-secondary'}`}
                                 >
-                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.appearance.showOnAllPages ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.appearance.showOnAllPages ? 'translate-x-6' : 'translate-x-1'}`} />
                                 </button>
                             </div>
 
@@ -1627,7 +1627,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             <div className="p-4 bg-secondary/20 rounded-lg border border-q-border/50 mb-4">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center shrink-0">
+                                        <div className="w-10 h-10 rounded-full bg-q-success flex items-center justify-center shrink-0">
                                             <Phone size={20} className="text-white" />
                                         </div>
                                         <div>
@@ -1635,7 +1635,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             <p className="text-sm text-q-text-muted">Conectar con WhatsApp</p>
                                         </div>
                                     </div>
-                                    <span className="px-3 py-1 bg-amber-500/20 text-amber-500 text-xs font-medium rounded-full">
+                                    <span className="px-3 py-1 bg-q-accent/20 text-q-accent text-xs font-medium rounded-full">
                                         Próximamente
                                     </span>
                                 </div>
@@ -1645,7 +1645,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             <div className="p-4 bg-secondary/20 rounded-lg border border-q-border/50 mb-4">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+                                        <div className="w-10 h-10 rounded-full bg-q-accent flex items-center justify-center shrink-0">
                                             <Facebook size={20} className="text-white" />
                                         </div>
                                         <div>
@@ -1653,7 +1653,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             <p className="text-sm text-q-text-muted">Conectar con Messenger</p>
                                         </div>
                                     </div>
-                                    <span className="px-3 py-1 bg-amber-500/20 text-amber-500 text-xs font-medium rounded-full">
+                                    <span className="px-3 py-1 bg-q-accent/20 text-q-accent text-xs font-medium rounded-full">
                                         Próximamente
                                     </span>
                                 </div>
@@ -1663,7 +1663,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             <div className="p-4 bg-secondary/20 rounded-lg border border-q-border/50">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center shrink-0">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-q-accent via-q-accent/80 to-q-warning flex items-center justify-center shrink-0">
                                             <Instagram size={20} className="text-white" />
                                         </div>
                                         <div>
@@ -1671,7 +1671,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             <p className="text-sm text-q-text-muted">Conectar con Instagram</p>
                                         </div>
                                     </div>
-                                    <span className="px-3 py-1 bg-amber-500/20 text-amber-500 text-xs font-medium rounded-full">
+                                    <span className="px-3 py-1 bg-q-accent/20 text-q-accent text-xs font-medium rounded-full">
                                         Próximamente
                                     </span>
                                 </div>
@@ -1698,7 +1698,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 onClick={() => updateForm('isActive', !formData.isActive)}
                                 className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isActive ? 'bg-primary' : 'bg-secondary'}`}
                             >
-                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
                             </button>
                         </div>
 
@@ -1758,7 +1758,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     onClick={() => updateNestedForm('behavior', 'autoOpen', !formData.behavior.autoOpen)}
                                     className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.behavior.autoOpen ? 'bg-primary' : 'bg-secondary'}`}
                                 >
-                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.behavior.autoOpen ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.behavior.autoOpen ? 'translate-x-6' : 'translate-x-1'}`} />
                                 </button>
                             </div>
 
@@ -1800,7 +1800,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                 onClick={() => updateProactiveMessage(index, 'enabled', !msg.enabled)}
                                                 className={`mt-1 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${msg.enabled ? 'bg-primary' : 'bg-secondary'}`}
                                             >
-                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${msg.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${msg.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                             </button>
                                             <div className="flex-1 space-y-2">
                                                 <div className="grid grid-cols-2 gap-2">
@@ -1831,7 +1831,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             </div>
                                             <button
                                                 onClick={() => removeProactiveMessage(index)}
-                                                className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                className="p-2 text-q-error hover:bg-q-error/10 rounded-lg transition-colors"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -1874,8 +1874,8 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 {t('landingChatbot.title', 'Landing Page Chatbot')}
                             </h1>
                             {formData.isActive && (
-                                <span className="flex items-center gap-1 px-2 py-0.5 bg-green-500/20 text-green-500 text-xs font-medium rounded-full">
-                                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                <span className="flex items-center gap-1 px-2 py-0.5 bg-q-success/20 text-q-success text-xs font-medium rounded-full">
+                                    <span className="w-1.5 h-1.5 bg-q-success rounded-full animate-pulse" />
                                     Activo
                                 </span>
                             )}
@@ -1883,7 +1883,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2">
                         {showSuccess && (
-                            <span className="text-sm text-green-500 flex items-center animate-fade-in-up">
+                            <span className="text-sm text-q-success flex items-center animate-fade-in-up">
                                 <CheckCircle size={16} className="mr-1.5" />
                                 <span className="hidden sm:inline">Guardado</span>
                             </span>
@@ -1892,7 +1892,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             onClick={handleSave}
                             disabled={isSaving}
                             className={`flex items-center gap-1.5 h-9 px-2 sm:px-4 rounded-lg text-sm font-medium transition-all disabled:opacity-50 ${hasLocalChanges
-                                ? 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse'
+                                ? 'bg-q-accent hover:bg-q-accent text-q-text-on-accent animate-pulse'
                                 : 'bg-primary text-primary-foreground hover:bg-primary/90'
                                 }`}
                         >
@@ -1963,16 +1963,16 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             {/* iPhone-style Phone Mockup */}
                             <div className="relative">
                                 {/* Phone Frame */}
-                                <div className="w-[320px] h-[650px] bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-[50px] p-[10px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),0_30px_60px_-30px_rgba(0,0,0,0.6)] relative">
+                                <div className="w-[320px] h-[650px] bg-gradient-to-b from-q-surface-overlay to-q-surface-overlay rounded-[50px] p-[10px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),0_30px_60px_-30px_rgba(0,0,0,0.6)] relative">
                                     {/* Inner bezel highlight */}
-                                    <div className="absolute inset-[2px] rounded-[48px] bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 pointer-events-none"></div>
+                                    <div className="absolute inset-[2px] rounded-[48px] bg-gradient-to-b from-q-surface-overlay via-q-surface-overlay to-q-surface-overlay pointer-events-none"></div>
 
                                     {/* Screen */}
                                     <div className="relative w-full h-full bg-q-surface rounded-[40px] overflow-hidden flex flex-col">
                                         {/* Dynamic Island */}
-                                        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[100px] h-[28px] bg-black rounded-full z-30 flex items-center justify-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-zinc-800"></div>
-                                            <div className="w-3 h-3 rounded-full bg-zinc-800 ring-1 ring-zinc-700"></div>
+                                        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[100px] h-[28px] bg-q-text rounded-full z-30 flex items-center justify-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-q-surface-overlay"></div>
+                                            <div className="w-3 h-3 rounded-full bg-q-surface-overlay ring-1 ring-q-accent/25"></div>
                                         </div>
 
                                         {/* Status Bar */}
@@ -2003,7 +2003,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         {/* Browser URL Bar */}
                                         <div className="px-3 pb-2">
                                             <div className="h-8 bg-muted/60 rounded-full flex items-center justify-center gap-2 px-3">
-                                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                                <div className="w-3 h-3 rounded-full bg-q-success"></div>
                                                 <span className="text-[10px] text-q-text-muted truncate">quimera.ai</span>
                                             </div>
                                         </div>
@@ -2063,10 +2063,10 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 </div>
 
                                 {/* Side buttons */}
-                                <div className="absolute left-[-2px] top-28 w-[3px] h-8 bg-zinc-700 rounded-l-sm"></div>
-                                <div className="absolute left-[-2px] top-44 w-[3px] h-14 bg-zinc-700 rounded-l-sm"></div>
-                                <div className="absolute left-[-2px] top-60 w-[3px] h-14 bg-zinc-700 rounded-l-sm"></div>
-                                <div className="absolute right-[-2px] top-36 w-[3px] h-20 bg-zinc-700 rounded-r-sm"></div>
+                                <div className="absolute left-[-2px] top-28 w-[3px] h-8 bg-q-surface-overlay rounded-l-sm"></div>
+                                <div className="absolute left-[-2px] top-44 w-[3px] h-14 bg-q-surface-overlay rounded-l-sm"></div>
+                                <div className="absolute left-[-2px] top-60 w-[3px] h-14 bg-q-surface-overlay rounded-l-sm"></div>
+                                <div className="absolute right-[-2px] top-36 w-[3px] h-20 bg-q-surface-overlay rounded-r-sm"></div>
                             </div>
                         </div>
                     </div>

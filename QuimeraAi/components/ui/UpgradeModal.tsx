@@ -21,7 +21,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
     metadata
 }) => {
     const { navigate } = useRouter();
-    
+
     if (!isOpen) return null;
 
     const handleViewPricingPlans = () => {
@@ -30,7 +30,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-q-text/50 backdrop-blur-sm">
             <div className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-q-bg border border-q-border shadow-2xl">
                 <button
                     onClick={onClose}
@@ -47,7 +47,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
                     </p>
 
                     <div className="space-y-4">
-                        <button 
+                        <button
                             onClick={handleViewPricingPlans}
                             className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity"
                         >

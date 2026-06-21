@@ -1,7 +1,7 @@
 /**
  * ButtonBlockControls
  * Controls for editing Button block content and styles
- * Includes link type selector (manual URL, product, collection, content) 
+ * Includes link type selector (manual URL, product, collection, content)
  * mirroring the web editor's CTA link functionality
  */
 
@@ -42,7 +42,7 @@ const ToggleControl: React.FC<{ label: string; checked: boolean; onChange: (chec
             onClick={() => onChange(!checked)}
             className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors`}
         >
-            <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow transition mt-0.5 ml-0.5`} />
+            <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-q-surface shadow transition mt-0.5 ml-0.5`} />
         </button>
     </div>
 );
@@ -134,16 +134,16 @@ const ButtonBlockControls: React.FC<ButtonBlockControlsProps> = ({ block, active
     const { t } = useTranslation();
     const { updateBlock } = useEmailEditor();
     const { activeProject } = useProject();
-    
+
     const content = block.content as EmailButtonContent;
     const styles = block.styles;
-    
+
     const updateContent = (updates: Partial<EmailButtonContent>) => {
         updateBlock(block.id, {
             content: { ...content, ...updates },
         });
     };
-    
+
     const updateStyles = (updates: Partial<EmailBlockStyles>) => {
         updateBlock(block.id, {
             styles: { ...styles, ...updates },
@@ -151,7 +151,7 @@ const ButtonBlockControls: React.FC<ButtonBlockControlsProps> = ({ block, active
     };
 
     const currentLinkType = content.linkType || 'manual';
-    
+
     if (activeTab === 'content') {
         return (
             <div className="space-y-4">
@@ -246,7 +246,7 @@ const ButtonBlockControls: React.FC<ButtonBlockControlsProps> = ({ block, active
                         label={t('email.selectContent', 'Seleccionar contenido')}
                     />
                 )}
-                
+
                 <ToggleControl
                     label={t('email.fullWidth', 'Ancho completo')}
                     checked={content.fullWidth ?? false}
@@ -255,7 +255,7 @@ const ButtonBlockControls: React.FC<ButtonBlockControlsProps> = ({ block, active
             </div>
         );
     }
-    
+
     // Style tab
     return (
         <div className="space-y-4">
@@ -264,27 +264,27 @@ const ButtonBlockControls: React.FC<ButtonBlockControlsProps> = ({ block, active
                 value={styles.buttonColor || '#4f46e5'}
                 onChange={(color) => updateStyles({ buttonColor: color })}
             />
-            
+
             <ColorControl
                 label={t('email.buttonTextColor', 'Color del texto')}
                 value={styles.buttonTextColor || '#ffffff'}
                 onChange={(color) => updateStyles({ buttonTextColor: color })}
             />
-            
+
             <hr className="border-q-border" />
-            
+
             <BorderRadiusSelector
                 label={t('email.borderRadius', 'Bordes redondeados')}
                 value={styles.borderRadius || 'md'}
                 onChange={(val) => updateStyles({ borderRadius: val as any })}
             />
-            
+
             <AlignmentSelector
                 label={t('email.alignment', 'Alineación')}
                 value={styles.alignment || 'center'}
                 onChange={(val) => updateStyles({ alignment: val as any })}
             />
-            
+
             <PaddingSelector
                 label={t('email.padding', 'Espaciado exterior')}
                 value={styles.padding || 'md'}

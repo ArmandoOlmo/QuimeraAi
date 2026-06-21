@@ -64,7 +64,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-q-text/60 backdrop-blur-sm animate-fade-in">
             <div
                 className="relative w-full max-w-2xl bg-q-surface border border-q-border rounded-2xl shadow-2xl overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
@@ -73,8 +73,8 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                 <div className="relative px-6 py-5 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 border-b border-q-border">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg shadow-yellow-500/20">
-                                <Zap className="w-5 h-5 text-white" />
+                            <div className="flex h-10 w-10 items-center justify-center text-q-accent">
+                                <Zap className="h-5 w-5" />
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-foreground">{t('credits.purchaseTitle')}</h2>
@@ -97,9 +97,9 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
 
                 {/* Agency indicator */}
                 {isAgency && (
-                    <div className="mx-6 mt-4 px-4 py-2.5 bg-purple-500/10 border border-purple-500/20 rounded-lg flex items-center gap-2">
-                        <Crown className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                        <span className="text-xs text-purple-300">
+                    <div className="mx-6 mt-4 px-4 py-2.5 bg-q-accent/10 border border-q-accent/20 rounded-lg flex items-center gap-2">
+                        <Crown className="w-4 h-4 text-q-accent flex-shrink-0" />
+                        <span className="text-xs text-q-accent">
                             <strong>{t('credits.sharedPool')}</strong> — {t('credits.sharedPoolDescription')}
                         </span>
                     </div>
@@ -107,9 +107,9 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
 
                 {/* Error */}
                 {error && (
-                    <div className="mx-6 mt-4 px-4 py-2.5 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
-                        <span className="text-xs text-red-300">{error}</span>
+                    <div className="mx-6 mt-4 px-4 py-2.5 bg-q-error/10 border border-q-error/20 rounded-lg flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-q-error flex-shrink-0" />
+                        <span className="text-xs text-q-error">{error}</span>
                     </div>
                 )}
 
@@ -127,14 +127,14 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                         >
                             {/* Popular badge */}
                             {pkg.isPopular && (
-                                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] font-bold rounded-full shadow-md uppercase tracking-wider">
+                                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-gradient-to-r from-q-accent to-q-warning text-q-text-on-accent text-[10px] font-bold rounded-full shadow-md uppercase tracking-wider">
                                     {t('credits.popular')}
                                 </div>
                             )}
 
                             {/* Credits amount */}
                             <div className="flex items-center gap-2 mb-2">
-                                <Sparkles className={`w-4 h-4 ${pkg.isPopular ? 'text-yellow-400' : 'text-primary'}`} />
+                                <Sparkles className={`w-4 h-4 ${pkg.isPopular ? 'text-q-accent' : 'text-primary'}`} />
                                 <span className="font-bold text-foreground text-lg">
                                     {pkg.credits.toLocaleString()}
                                 </span>
@@ -151,7 +151,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                             <div className="text-xs text-q-text-muted mb-3">
                                 ${pkg.pricePerCredit.toFixed(3)} {t('credits.perCredit')}
                                 {pkg.discount > 0 && (
-                                    <span className="ml-1.5 text-green-400 font-semibold">
+                                    <span className="ml-1.5 text-q-success font-semibold">
                                         -{pkg.discount}%
                                     </span>
                                 )}
@@ -166,7 +166,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                                 disabled={!!loading}
                                 className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
                                     pkg.isPopular
-                                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white hover:shadow-lg hover:shadow-yellow-500/20'
+                                        ? 'bg-gradient-to-r from-q-accent to-q-warning text-q-text-on-accent hover:shadow-lg hover:shadow-q-accent/20'
                                         : 'bg-primary/10 text-primary hover:bg-primary/20'
                                 } ${loading === pkg.id ? 'opacity-75' : ''} disabled:opacity-50 disabled:cursor-not-allowed`}
                             >

@@ -1192,7 +1192,7 @@ const GlobalAiAssistant: React.FC = () => {
             const newProject = {
                 id: `proj_${Date.now()}`,
                 name: businessName,
-                thumbnailUrl: 'https://picsum.photos/seed/newproject/800/600',
+                thumbnailUrl: 'https://picsum.photos/seed/newproject/80/600',
                 status: 'Draft' as 'Draft',
                 lastUpdated: new Date().toISOString(),
                 data: safeData,
@@ -1674,8 +1674,8 @@ const GlobalAiAssistant: React.FC = () => {
                 }
 
                 // 2. Supabase Search (Products, Orders, Appointments) -> Async
-                // We user limit() to avoid fetching too much, effectively doing a "recent + filter" 
-                // because we assume the item is likely relevant or recent. 
+                // We user limit() to avoid fetching too much, effectively doing a "recent + filter"
+                // because we assume the item is likely relevant or recent.
                 // Real deep search would require a dedicated search service (e.g. Algolia/Elastic).
                 if (projectId) {
                     const fetchFromSupabase = async (table: string, filterFn: (data: any) => boolean, mapFn: (data: any) => any) => {
@@ -1685,16 +1685,16 @@ const GlobalAiAssistant: React.FC = () => {
                                 .select('*')
                                 .eq('project_id', projectId)
                                 .limit(50);
-                            
+
                             if (error) throw error;
-                            
+
                             if (!data) return null;
 
                             const matches = data
                                 .filter(filterFn)
                                 .map(mapFn)
                                 .slice(0, 5);
-                                
+
                             return matches.length > 0 ? matches : null;
                         } catch (e) {
                             console.error(`Search error for ${table}:`, e);
@@ -2067,7 +2067,7 @@ const GlobalAiAssistant: React.FC = () => {
                     if (startIso) updatePayload.start_date = startIso;
                     if (endIso) updatePayload.end_date = endIso;
                     if (status) updatePayload.status = status;
-                    
+
                     const { error } = await supabase.from('project_appointments').update(updatePayload).eq('id', id);
                     if (error) return { error: `Failed to update appointment: ${error.message}` };
                     return { result: "Appointment updated." };
@@ -3333,7 +3333,7 @@ Usuario: ${userMsg}`;
             <button
                 onClick={() => { setIsMinimized(false); setIsOpen(true); }}
                 className={`pointer-events-auto flex items-center justify-center w-14 h-14 rounded-full shadow-xl transition-all hover:scale-105 active:scale-95 ${isLiveActive
-                    ? 'bg-q-surface border-2 border-red-500 animate-pulse'
+                    ? 'bg-q-surface border-2 border-q-error/25 animate-pulse'
                     : 'bg-q-surface border border-q-border hover:border-primary/50'
                     }`}
             >
@@ -3341,10 +3341,10 @@ Usuario: ${userMsg}`;
                 <div className="relative flex items-center justify-center w-full h-full">
                     <img src={LOGO_URL} alt="Quimera" className={`w-8 h-8 object-contain ${isLiveActive ? 'animate-pulse' : ''}`} />
                     {isLiveActive && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-card animate-pulse" />
+                        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-q-error border-2 border-card animate-pulse" />
                     )}
                     {!isLiveActive && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-card" />
+                        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-q-success border-2 border-card" />
                     )}
                 </div>
             </button>
@@ -3356,7 +3356,7 @@ Usuario: ${userMsg}`;
                 {/* Logo with voice-active indicator */}
                 <div className="relative shrink-0">
                     <img src={LOGO_URL} alt="Quimera" className={`w-9 h-9 object-contain transition-transform ${isLiveActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                    <div className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card ${isLiveActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
+                    <div className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card ${isLiveActive ? 'bg-q-error animate-pulse' : 'bg-q-success'}`} />
                 </div>
 
                 {/* Content area - shows voice visualizer when active, otherwise input placeholder */}
@@ -3374,7 +3374,7 @@ Usuario: ${userMsg}`;
                                 ))}
                             </div>
                             <span className="text-sm text-primary font-medium flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                <span className="w-1.5 h-1.5 rounded-full bg-q-error animate-pulse" />
                                 Escuchando...
                             </span>
                         </div>
@@ -3399,7 +3399,7 @@ Usuario: ${userMsg}`;
                                     startLiveSession();
                                 }
                             }}
-                            className={`shrink-0 self-center flex items-center justify-center rounded-full transition-all ${isLiveActive ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'hover:bg-primary/10 text-q-text-muted hover:text-primary'}`}
+                            className={`shrink-0 self-center flex items-center justify-center rounded-full transition-all ${isLiveActive ? 'bg-q-error/20 text-q-error hover:bg-q-error/30' : 'hover:bg-primary/10 text-q-text-muted hover:text-primary'}`}
                             style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxHeight: '36px' }}
                         >
                             {isLiveActive ? <PhoneOff size={18} /> : <Mic size={18} />}
@@ -3457,7 +3457,7 @@ Usuario: ${userMsg}`;
 
                     <div className="relative">
                         <img src={LOGO_URL} alt="Quimera Logo" className="w-10 h-10 object-contain bg-secondary/30 rounded-full p-1 border border-q-border" />
-                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-q-surface ${isLiveActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
+                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-q-surface ${isLiveActive ? 'bg-q-error animate-pulse' : 'bg-q-success'}`} />
                     </div>
                     <div>
                         <h3 className="font-semibold text-sm leading-tight text-foreground">Quimera Assistant</h3>
@@ -3553,7 +3553,7 @@ Usuario: ${userMsg}`;
             {/* Input Area */}
             <div className="p-4 bg-q-surface border-t border-q-border shrink-0 safe-area-inset-bottom">
                 <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-full border border-q-border focus-within:ring-2 focus-within:ring-primary/50 transition-all">
-                    <button onClick={() => setMessages([])} className="p-2 text-q-text-muted hover:text-red-500 hover:bg-secondary rounded-full transition-colors" title="Clear Chat">
+                    <button onClick={() => setMessages([])} className="p-2 text-q-text-muted hover:text-q-error hover:bg-secondary rounded-full transition-colors" title="Clear Chat">
                         <Trash2 size={18} />
                     </button>
                     <input
@@ -3589,11 +3589,11 @@ Usuario: ${userMsg}`;
                 {/* Status Bar */}
                 <div className="mt-2 flex justify-between items-center px-2">
                     <p className="text-[10px] text-q-text-muted flex items-center">
-                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${activeProject ? 'bg-green-500' : 'bg-gray-400'}`} />
+                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${activeProject ? 'bg-q-success' : 'bg-q-surface-overlay'}`} />
                         {activeProject ? `Activo: ${activeProject.name}` : 'Dashboard Mode'}
                     </p>
                     <div className="flex items-center gap-2">
-                        {(userDocument?.role === 'owner' || userDocument?.role === 'superadmin') && <Shield size={10} className="text-yellow-500" />}
+                        {(userDocument?.role === 'owner' || userDocument?.role === 'superadmin') && <Shield size={10} className="text-q-accent" />}
                         <p className="text-[10px] text-q-text-muted">
                             {userDocument?.role === 'owner' ? 'Owner' : userDocument?.role === 'superadmin' ? 'Admin' : 'Usuario'}
                         </p>

@@ -31,9 +31,9 @@ interface InvoiceManagerProps {
 
 const STATUS_STYLES: Record<InvoiceStatus, { bg: string; text: string; icon: any }> = {
     draft: { bg: 'bg-secondary/50', text: 'text-q-text-muted', icon: Edit2 },
-    sent: { bg: 'bg-blue-500/20', text: 'text-blue-400', icon: Send },
-    paid: { bg: 'bg-green-500/20', text: 'text-green-400', icon: CheckCircle2 },
-    overdue: { bg: 'bg-red-500/20', text: 'text-red-400', icon: AlertTriangle },
+    sent: { bg: 'bg-q-accent/20', text: 'text-q-accent', icon: Send },
+    paid: { bg: 'bg-q-success/20', text: 'text-q-success', icon: CheckCircle2 },
+    overdue: { bg: 'bg-q-error/20', text: 'text-q-error', icon: AlertTriangle },
     cancelled: { bg: 'bg-secondary/30', text: 'text-q-text-muted', icon: Ban },
 };
 
@@ -210,8 +210,8 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                                 <div className="flex items-center gap-4 flex-shrink-0">
                                     <div className="text-right"><p className="text-lg font-bold text-foreground">${inv.total.toFixed(2)}</p><p className="text-xs text-q-text-muted flex items-center gap-1 justify-end"><Calendar size={10} />{inv.dueDate}</p></div>
                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                                        {inv.status === 'draft' && <button onClick={() => onMarkAsSent(inv.id)} className="p-1.5 rounded-lg text-blue-400 hover:bg-blue-500/10"><Send size={14} /></button>}
-                                        {(inv.status === 'sent' || inv.status === 'overdue') && <button onClick={() => onMarkAsPaid(inv.id)} className="p-1.5 rounded-lg text-green-400 hover:bg-green-500/10"><CheckCircle2 size={14} /></button>}
+                                        {inv.status === 'draft' && <button onClick={() => onMarkAsSent(inv.id)} className="p-1.5 rounded-lg text-q-accent hover:bg-q-accent/10"><Send size={14} /></button>}
+                                        {(inv.status === 'sent' || inv.status === 'overdue') && <button onClick={() => onMarkAsPaid(inv.id)} className="p-1.5 rounded-lg text-q-success hover:bg-q-success/10"><CheckCircle2 size={14} /></button>}
                                         <button onClick={() => setDeleteId(inv.id)} className="p-1.5 rounded-lg text-q-text-muted hover:text-destructive hover:bg-destructive/10"><Trash2 size={14} /></button>
                                     </div>
                                 </div>

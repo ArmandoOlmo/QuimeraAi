@@ -174,10 +174,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             case 'bioPageQuimera': return 'features';
             case 'emailMarketingQuimera': return 'features';
 
-            
+
             // Legacy / Fallbacks
             case 'screenshotCarousel': return 'features';
-            
+
             default: return type;
         }
     };
@@ -187,23 +187,23 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     // Landing Page format: onUpdateSection(section.id, (prevData) => ({...prevData, headline: 'Value'}))
     const setNestedData = (path: string, value: any) => {
         if (!section) return;
-        
+
         // Extract the property path (e.g., 'hero.headline' -> 'headline')
         const parts = path.replace(/\?\./g, '.').split('.');
-        
+
         // Safety check for empty paths if passed without prefix by accident
         const propertyPath = parts.length > 1 ? parts.slice(1) : parts;
-        
+
         onUpdateSection(section.id, (prevData: any) => {
             const newData = JSON.parse(JSON.stringify(prevData || {}));
             let current = newData;
-            
+
             for (let i = 0; i < propertyPath.length - 1; i++) {
                 const key = propertyPath[i];
                 if (!current[key]) current[key] = {};
                 current = current[key];
             }
-            
+
             current[propertyPath[propertyPath.length - 1]] = value;
             return newData;
         });
@@ -242,7 +242,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 const timestamp = Date.now();
                 const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
                 const path = `admin/landing_page/assets/${timestamp}_${safeFileName}`;
-                
+
                 const { error: uploadError } = await supabase.storage
                     .from('platform-assets')
                     .upload(path, file, { upsert: true });
@@ -301,7 +301,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </p>
                         <button
                             onClick={() => navigate('/admin/landing-navigation')}
-                            className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition-colors w-full"
+                            className="px-4 py-2 bg-q-accent text-black font-semibold rounded-lg hover:bg-q-accent/10 transition-colors w-full"
                         >
                             {t('editor.controls.navigation.openManager', 'Abrir Gestor de Navegación')}
                         </button>
@@ -310,7 +310,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 </div>
             );
         }
-        
+
         if (structureItemId === 'footerGlobal') {
             return (
                 <div className="w-full text-center p-6 bg-q-surface/50 border border-q-border rounded-xl mt-4">
@@ -320,7 +320,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     </p>
                     <button
                         onClick={() => navigate('/admin/landing-navigation')}
-                        className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition-colors w-full"
+                        className="px-4 py-2 bg-q-accent text-black font-semibold rounded-lg hover:bg-q-accent/10 transition-colors w-full"
                     >
                         Abrir Gestor del Footer
                     </button>
@@ -329,7 +329,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
         }
 
         if (structureItemId === 'colors' || structureItemId === 'typography') {
-             // Since GlobalStylesControl requires ProjectContext, we will just render a placeholder 
+             // Since GlobalStylesControl requires ProjectContext, we will just render a placeholder
              // or a stripped down version, but wait, the landing page is not a project.
              // For now, render standard global controls if possible or a message to use theme settings.
              return (
@@ -398,7 +398,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                               />
                                           </div>
                                       </div>
-                                      
+
                                       <div className="bg-q-surface/50 p-3 rounded-lg border border-q-border">
                                           <FontFamilyPicker
                                               label="Fuente de Cuerpo"
@@ -434,10 +434,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                       </div>
                                   </div>
                               </div>
-                              
+
                               <div className="border-t border-q-border pt-4">
                                   <h4 className="text-sm font-semibold text-q-text mb-3">Estilos Todo Mayúsculas</h4>
-                                  
+
                                   <div className="space-y-3">
                                       <label className="flex items-center justify-between p-3 border border-q-border rounded-lg hover:border-q-accent transition-colors cursor-pointer">
                                           <span className="text-sm font-medium text-q-text">Títulos en Mayúsculas</span>
@@ -448,7 +448,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                               className="w-4 h-4 text-q-accent bg-q-bg border-q-border rounded focus:ring-q-accent"
                                           />
                                       </label>
-                                      
+
                                       <label className="flex items-center justify-between p-3 border border-q-border rounded-lg hover:border-q-accent transition-colors cursor-pointer">
                                           <span className="text-sm font-medium text-q-text">Botones en Mayúsculas</span>
                                           <input
@@ -458,7 +458,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                               className="w-4 h-4 text-q-accent bg-q-bg border-q-border rounded focus:ring-q-accent"
                                           />
                                       </label>
-                                      
+
                                       <label className="flex items-center justify-between p-3 border border-q-border rounded-lg hover:border-q-accent transition-colors cursor-pointer">
                                           <span className="text-sm font-medium text-q-text">Menú en Mayúsculas</span>
                                           <input
@@ -497,7 +497,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             case 'video': return renderVideoControlsWithTabs(deps);
             case 'footer': return renderFooterControlsWithTabs(deps);
             case 'map': return <TabbedControls contentControls={renderMapControls(deps)} />;
-            
+
             // Extended Sections
             case 'topBar': return <TabbedControls contentControls={renderTopBarControls(deps)} />;
             case 'logoBanner': return <TabbedControls contentControls={renderLogoBannerControls(deps)} />;

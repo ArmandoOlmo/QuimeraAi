@@ -15,8 +15,8 @@ import {
     ResponsiveContainer,
     Cell,
 } from 'recharts';
-import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 interface ClientRevenue {
     name: string;
@@ -51,10 +51,10 @@ export function RevenueByClientChart({ data, isLoading }: RevenueByClientChartPr
             return (
                 <div className="bg-q-surface border border-q-border rounded-lg p-3 shadow-lg">
                     <p className="text-sm font-medium text-q-text mb-1">{label}</p>
-                    <p className="text-sm text-emerald-400">
+                    <p className="text-sm text-q-success">
                         {t('dashboard.agency.charts.revenueByClient.revenue', 'Ingresos')}: {formatCurrency(data.revenue)}
                     </p>
-                    <p className="text-sm text-blue-400">
+                    <p className="text-sm text-q-accent">
                         {t('dashboard.agency.charts.revenueByClient.projects', 'Proyectos')}: {data.projects}
                     </p>
                 </div>
@@ -82,12 +82,7 @@ export function RevenueByClientChart({ data, isLoading }: RevenueByClientChartPr
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="bg-q-surface border border-q-border rounded-xl p-6"
-        >
+        <MotionCard motionDelay={0.1} hoverMotion className="bg-q-surface border border-q-border rounded-xl p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
@@ -152,7 +147,7 @@ export function RevenueByClientChart({ data, isLoading }: RevenueByClientChartPr
                     {formatCurrency(totalRevenue)}
                 </span>
             </div>
-        </motion.div>
+        </MotionCard>
     );
 }
 

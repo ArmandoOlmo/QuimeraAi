@@ -55,7 +55,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
     setSaveStatus('saving');
 
     try {
-      // Como updateLanguageConfig ya guarda en Supabase cada cambio, 
+      // Como updateLanguageConfig ya guarda en Supabase cada cambio,
       // aquí solo simulamos un "guardado final" o forzamos una actualización si fuera necesario.
       // Para mantener la UX, podemos simplemente mostrar éxito.
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -82,7 +82,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
   const handleExportAll = async () => {
     try {
       const allTranslations: Record<string, Record<string, unknown>> = {};
-      
+
       for (const lang of enabledLanguages) {
         try {
           // Get translations from i18n resources
@@ -168,39 +168,39 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
   // Flatten nested object to dot notation
   const flattenObject = (obj: Record<string, unknown>, prefix = ''): Record<string, string> => {
     const result: Record<string, string> = {};
-    
+
     for (const key in obj) {
       const value = obj[key];
       const newKey = prefix ? `${prefix}.${key}` : key;
-      
+
       if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
         Object.assign(result, flattenObject(value as Record<string, unknown>, newKey));
       } else {
         result[newKey] = String(value);
       }
     }
-    
+
     return result;
   };
 
   // Unflatten dot notation back to nested object
   const unflattenObject = (obj: Record<string, string>): Record<string, unknown> => {
     const result: Record<string, unknown> = {};
-    
+
     for (const key in obj) {
       const keys = key.split('.');
       let current: Record<string, unknown> = result;
-      
+
       for (let i = 0; i < keys.length - 1; i++) {
         if (!(keys[i] in current)) {
           current[keys[i]] = {};
         }
         current = current[keys[i]] as Record<string, unknown>;
       }
-      
+
       current[keys[keys.length - 1]] = obj[key];
     }
-    
+
     return result;
   };
 
@@ -223,8 +223,8 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
   };
 
   // Filter translations by search
-  const filteredTranslations = Object.entries(editingTranslations).filter(([key, value]) => 
-    key.toLowerCase().includes(searchKey.toLowerCase()) || 
+  const filteredTranslations = Object.entries(editingTranslations).filter(([key, value]) =>
+    key.toLowerCase().includes(searchKey.toLowerCase()) ||
     value.toLowerCase().includes(searchKey.toLowerCase())
   );
 
@@ -253,13 +253,13 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
           <div className="flex items-center gap-3">
             <HeaderBackButton onClick={onBack} label={t('superadmin.backToAdmin')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
             {saveStatus === 'success' && (
-              <div className="flex items-center gap-2 text-green-500 text-sm">
+              <div className="flex items-center gap-2 text-q-success text-sm">
                 <Check size={16} />
                 <span>{t('superadmin.savedSuccessfully')}</span>
               </div>
             )}
             {saveStatus === 'error' && (
-              <div className="flex items-center gap-2 text-red-500 text-sm">
+              <div className="flex items-center gap-2 text-q-error text-sm">
                 <AlertCircle size={16} />
                 <span>{t('superadmin.errorSaving')}</span>
               </div>
@@ -340,7 +340,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                           <div className="flex items-center gap-3 mt-2">
                             <div className="flex-1 bg-q-surface-overlay rounded-full h-2 overflow-hidden">
                               <div
-                                className="bg-green-500 h-full transition-all"
+                                className="bg-q-success h-full transition-all"
                                 style={{ width: `${lang.completeness}%` }}
                               />
                             </div>
@@ -363,7 +363,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                         <button
                           onClick={() => handleToggleEnabled(lang.code)}
                           disabled={lang.isDefault}
-                          className="px-3 py-1.5 text-sm bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-3 py-1.5 text-sm bg-q-error/10 hover:bg-q-error/20 text-q-error rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {t('superadmin.disable')}
                         </button>
@@ -407,7 +407,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                       </button>
                     </div>
                     {lang.completeness === 0 && (
-                      <div className="mt-3 flex items-center gap-2 text-yellow-500 text-xs">
+                      <div className="mt-3 flex items-center gap-2 text-q-accent text-xs">
                         <AlertCircle size={14} />
                         <span>{t('superadmin.translationFileNotAvailable')}</span>
                       </div>
@@ -434,14 +434,14 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                   onChange={handleImportTranslations}
                   className="hidden"
                 />
-                <button 
+                <button
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center gap-2 px-4 py-2 bg-q-surface-overlay hover:bg-q-bg-secondary text-q-text rounded-lg transition-colors"
                 >
                   <Upload size={16} />
                   {t('superadmin.importTranslations')}
                 </button>
-                <button 
+                <button
                   onClick={handleExportAll}
                   className="flex items-center gap-2 px-4 py-2 bg-q-surface-overlay hover:bg-q-bg-secondary text-q-text rounded-lg transition-colors"
                 >
@@ -493,7 +493,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                   <div key={lang.code} className="flex items-center gap-2 text-q-text-secondary">
                     <span className="text-q-accent">{lang.flag}</span>
                     <code className="text-q-text">/locales/{lang.code}/translation.json</code>
-                    <span className="ml-auto text-green-500 flex items-center gap-1">
+                    <span className="ml-auto text-q-success flex items-center gap-1">
                       <Check size={14} />
                       {t('superadmin.available')}
                     </span>
@@ -503,15 +503,15 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             </div>
 
             {/* Info Box */}
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+            <div className="bg-q-accent/10 border border-q-accent/20 rounded-lg p-4">
               <div className="flex gap-3">
-                <AlertCircle className="text-blue-400 flex-shrink-0" size={20} />
-                <div className="text-sm text-blue-400">
+                <AlertCircle className="text-q-accent flex-shrink-0" size={20} />
+                <div className="text-sm text-q-accent">
                   <p className="font-semibold mb-1">{t('superadmin.aboutLanguageManagement')}</p>
                   <ul className="space-y-1 list-disc list-inside">
                     <li>{t('superadmin.usersCanSelectLanguage')}</li>
                     <li>{t('superadmin.defaultLanguageUsed')}</li>
-                    <li>{t('superadmin.translationFilesLocation')} <code className="bg-black/20 px-1 rounded">/locales/[code]/</code></li>
+                    <li>{t('superadmin.translationFilesLocation')} <code className="bg-q-text/20 px-1 rounded">/locales/[code]/</code></li>
                     <li>{t('superadmin.completenessShows')}</li>
                     <li>{t('superadmin.changesApplyImmediately')}</li>
                   </ul>
@@ -524,7 +524,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
 
       {/* Edit Translations Modal */}
       {showEditModal && editingLang && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50 p-4">
           <div className="bg-q-surface border border-q-border rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-q-border">
@@ -608,7 +608,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                 </button>
                 <button
                   onClick={handleSaveTranslations}
-                  className="flex items-center gap-2 px-4 py-2 bg-q-accent text-white rounded-lg hover:bg-q-accent/90 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent/90 transition-colors"
                 >
                   <Save size={16} />
                   {t('superadmin.applyChanges', 'Aplicar cambios')}

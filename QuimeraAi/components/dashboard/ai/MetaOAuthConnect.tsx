@@ -70,10 +70,10 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
     // Render disconnected state
     if (!isConnected && status !== 'connecting') {
         return (
-            <div className="bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10 border border-blue-500/20 rounded-2xl p-6 animate-fade-in-up">
+            <div className="bg-gradient-to-br from-q-accent via-q-accent/80 to-q-accent border border-q-accent/20 rounded-2xl p-6 animate-fade-in-up">
                 {/* Header */}
                 <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                    <div className="p-3 bg-gradient-to-br from-q-accent to-q-accent rounded-xl shadow-lg">
                         <Globe className="text-white" size={24} />
                     </div>
                     <div>
@@ -84,39 +84,39 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
 
                 {/* Features */}
                 <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-center">
-                        <Phone className="mx-auto mb-2 text-green-500" size={20} />
-                        <span className="text-xs font-medium text-green-600">WhatsApp</span>
+                    <div className="bg-q-success/10 border border-q-success/20 rounded-xl p-3 text-center">
+                        <Phone className="mx-auto mb-2 text-q-success" size={20} />
+                        <span className="text-xs font-medium text-q-success">WhatsApp</span>
                     </div>
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-center">
-                        <Facebook className="mx-auto mb-2 text-blue-500" size={20} />
-                        <span className="text-xs font-medium text-blue-600">Messenger</span>
+                    <div className="bg-q-accent/10 border border-q-accent/20 rounded-xl p-3 text-center">
+                        <Facebook className="mx-auto mb-2 text-q-accent" size={20} />
+                        <span className="text-xs font-medium text-q-accent">Messenger</span>
                     </div>
-                    <div className="bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10 border border-pink-500/20 rounded-xl p-3 text-center">
-                        <Instagram className="mx-auto mb-2 text-pink-500" size={20} />
-                        <span className="text-xs font-medium text-pink-600">Instagram</span>
+                    <div className="bg-gradient-to-br from-q-accent/10 via-q-accent/10 to-q-warning/10 border border-q-accent/20 rounded-xl p-3 text-center">
+                        <Instagram className="mx-auto mb-2 text-q-accent" size={20} />
+                        <span className="text-xs font-medium text-q-accent">Instagram</span>
                     </div>
                 </div>
 
                 {/* Benefits */}
                 <div className="space-y-2 mb-6">
                     <div className="flex items-center gap-2 text-sm text-q-text-muted">
-                        <CheckCircle size={14} className="text-green-500" />
+                        <CheckCircle size={14} className="text-q-success" />
                         <span>Configuración automática sin copiar tokens</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-q-text-muted">
-                        <CheckCircle size={14} className="text-green-500" />
+                        <CheckCircle size={14} className="text-q-success" />
                         <span>Selecciona tus páginas y números con un clic</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-q-text-muted">
-                        <Shield size={14} className="text-blue-500" />
+                        <Shield size={14} className="text-q-accent" />
                         <span>Conexión segura con OAuth de Meta</span>
                     </div>
                 </div>
 
                 {/* Error display */}
                 {error && (
-                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm flex items-center gap-2">
+                    <div className="mb-4 p-3 bg-q-error/10 border border-q-error/20 rounded-lg text-q-error text-sm flex items-center gap-2">
                         <AlertTriangle size={16} />
                         {error}
                     </div>
@@ -126,7 +126,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                 <button
                     onClick={connect}
                     disabled={isLoading || status === 'connecting'}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-3 px-4 bg-gradient-to-r from-q-accent to-q-accent hover:from-q-accent hover:to-q-accent text-q-text-on-accent font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                     {status === 'connecting' ? (
                         <>
@@ -164,24 +164,24 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
     return (
         <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
             {/* Connected Header */}
-            <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-b border-green-500/20">
+            <div className="p-4 bg-gradient-to-r from-q-success/10 to-q-success/10 border-b border-q-success/20">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         {connection?.metaUserPicture ? (
                             <img
                                 src={connection.metaUserPicture}
                                 alt=""
-                                className="w-10 h-10 rounded-full border-2 border-green-500"
+                                className="w-10 h-10 rounded-full border-2 border-q-success/25"
                             />
                         ) : (
-                            <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-q-success flex items-center justify-center">
                                 <User size={20} className="text-white" />
                             </div>
                         )}
                         <div>
                             <div className="flex items-center gap-2">
                                 <span className="font-semibold">{connection?.metaUserName || 'Meta Account'}</span>
-                                <CheckCircle size={14} className="text-green-500" />
+                                <CheckCircle size={14} className="text-q-success" />
                             </div>
                             <span className="text-xs text-q-text-muted">Conectado con Meta</span>
                         </div>
@@ -190,7 +190,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                         {status === 'token_expired' && (
                             <button
                                 onClick={refreshToken}
-                                className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-lg transition-colors"
+                                className="p-2 text-q-accent hover:bg-q-accent/10 rounded-lg transition-colors"
                                 title="Token expirado - Renovar"
                             >
                                 <RefreshCw size={16} />
@@ -199,7 +199,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                         <button
                             onClick={disconnect}
                             disabled={isLoading}
-                            className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                            className="p-2 text-q-error hover:bg-q-error/10 rounded-lg transition-colors"
                             title="Desconectar"
                         >
                             <LogOut size={16} />
@@ -208,7 +208,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                 </div>
 
                 {status === 'token_expired' && (
-                    <div className="mt-3 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-600 text-xs flex items-center gap-2">
+                    <div className="mt-3 p-2 bg-q-accent/10 border border-q-accent/20 rounded-lg text-q-accent text-xs flex items-center gap-2">
                         <AlertTriangle size={14} />
                         Tu token ha expirado. Haz clic en renovar para continuar.
                     </div>
@@ -219,9 +219,9 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
             <div className="p-4 space-y-3">
                 {/* Facebook Pages */}
                 {hasPages && (
-                    <div className="flex items-center justify-between p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl">
+                    <div className="flex items-center justify-between p-3 bg-q-accent/5 border border-q-accent/20 rounded-xl">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-500 rounded-lg">
+                            <div className="p-2 bg-q-accent rounded-lg">
                                 <Facebook size={16} className="text-white" />
                             </div>
                             <div>
@@ -231,16 +231,16 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                         {pages.find(p => p.id === selectedPageId)?.name || 'Página seleccionada'}
                                     </p>
                                 ) : (
-                                    <p className="text-xs text-yellow-500">{pages.length} página(s) disponibles</p>
+                                    <p className="text-xs text-q-accent">{pages.length} página(s) disponibles</p>
                                 )}
                             </div>
                         </div>
                         {selectedPageId ? (
-                            <CheckCircle size={18} className="text-green-500" />
+                            <CheckCircle size={18} className="text-q-success" />
                         ) : (
                             <button
                                 onClick={openAssetSelector}
-                                className="text-xs text-blue-500 hover:underline"
+                                className="text-xs text-q-accent hover:underline"
                             >
                                 Configurar
                             </button>
@@ -250,9 +250,9 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
 
                 {/* WhatsApp */}
                 {hasWhatsApp && (
-                    <div className="flex items-center justify-between p-3 bg-green-500/5 border border-green-500/20 rounded-xl">
+                    <div className="flex items-center justify-between p-3 bg-q-success/5 border border-q-success/20 rounded-xl">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-green-500 rounded-lg">
+                            <div className="p-2 bg-q-success rounded-lg">
                                 <Phone size={16} className="text-white" />
                             </div>
                             <div>
@@ -262,16 +262,16 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                         {whatsappAccounts.find(w => w.phoneNumberId === selectedWhatsAppPhoneNumberId)?.displayPhoneNumber || 'Número seleccionado'}
                                     </p>
                                 ) : (
-                                    <p className="text-xs text-yellow-500">{whatsappAccounts.length} número(s) disponibles</p>
+                                    <p className="text-xs text-q-accent">{whatsappAccounts.length} número(s) disponibles</p>
                                 )}
                             </div>
                         </div>
                         {selectedWhatsAppPhoneNumberId ? (
-                            <CheckCircle size={18} className="text-green-500" />
+                            <CheckCircle size={18} className="text-q-success" />
                         ) : (
                             <button
                                 onClick={openAssetSelector}
-                                className="text-xs text-green-500 hover:underline"
+                                className="text-xs text-q-success hover:underline"
                             >
                                 Configurar
                             </button>
@@ -281,9 +281,9 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
 
                 {/* Instagram */}
                 {hasInstagram && (
-                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-orange-500/5 border border-pink-500/20 rounded-xl">
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-q-accent/5 via-q-accent/5 to-q-warning/5 border border-q-accent/20 rounded-xl">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 rounded-lg">
+                            <div className="p-2 bg-gradient-to-br from-q-accent via-q-accent/80 to-q-warning rounded-lg">
                                 <Instagram size={16} className="text-white" />
                             </div>
                             <div>
@@ -293,16 +293,16 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                         @{instagramAccounts.find(i => i.id === selectedInstagramAccountId)?.username || 'Cuenta seleccionada'}
                                     </p>
                                 ) : (
-                                    <p className="text-xs text-yellow-500">{instagramAccounts.length} cuenta(s) disponibles</p>
+                                    <p className="text-xs text-q-accent">{instagramAccounts.length} cuenta(s) disponibles</p>
                                 )}
                             </div>
                         </div>
                         {selectedInstagramAccountId ? (
-                            <CheckCircle size={18} className="text-green-500" />
+                            <CheckCircle size={18} className="text-q-success" />
                         ) : (
                             <button
                                 onClick={openAssetSelector}
-                                className="text-xs text-pink-500 hover:underline"
+                                className="text-xs text-q-accent hover:underline"
                             >
                                 Configurar
                             </button>
@@ -312,9 +312,9 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
 
                 {/* No assets warning */}
                 {!hasPages && !hasWhatsApp && !hasInstagram && (
-                    <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-center">
-                        <AlertTriangle className="mx-auto mb-2 text-yellow-500" size={24} />
-                        <p className="text-sm font-medium text-yellow-600">No se encontraron páginas o cuentas</p>
+                    <div className="p-4 bg-q-accent/10 border border-q-accent/20 rounded-xl text-center">
+                        <AlertTriangle className="mx-auto mb-2 text-q-accent" size={24} />
+                        <p className="text-sm font-medium text-q-accent">No se encontraron páginas o cuentas</p>
                         <p className="text-xs text-q-text-muted mt-1">
                             Asegúrate de tener una página de Facebook con permisos de administrador
                         </p>
@@ -336,7 +336,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
 
             {/* Asset Selector Modal */}
             {showAssetSelector && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-q-surface border border-q-border rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden animate-fade-in-up">
                         {/* Modal Header */}
                         <div className="p-4 border-b border-q-border">
@@ -352,7 +352,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                             {hasPages && (
                                 <div>
                                     <label className="text-sm font-medium flex items-center gap-2 mb-2">
-                                        <Facebook size={14} className="text-blue-500" />
+                                        <Facebook size={14} className="text-q-accent" />
                                         Página de Facebook
                                     </label>
                                     <div className="space-y-2">
@@ -361,8 +361,8 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                                 key={page.id}
                                                 className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
                                                     selectedAssets.pageId === page.id
-                                                        ? 'border-blue-500 bg-blue-500/10'
-                                                        : 'border-q-border hover:border-blue-500/50'
+                                                        ? 'border-q-accent/25 bg-q-accent/10'
+                                                        : 'border-q-border hover:border-q-accent/50'
                                                 }`}
                                             >
                                                 <input
@@ -376,18 +376,18 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                                 {page.pictureUrl ? (
                                                     <img src={page.pictureUrl} alt="" className="w-8 h-8 rounded-lg" />
                                                 ) : (
-                                                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                                                        <Facebook size={16} className="text-blue-500" />
+                                                    <div className="w-8 h-8 bg-q-accent/20 rounded-lg flex items-center justify-center">
+                                                        <Facebook size={16} className="text-q-accent" />
                                                     </div>
                                                 )}
                                                 <div className="flex-1">
                                                     <span className="font-medium text-sm">{page.name}</span>
                                                     {page.hasInstagram && (
-                                                        <span className="ml-2 text-xs text-pink-500">+ Instagram</span>
+                                                        <span className="ml-2 text-xs text-q-accent">+ Instagram</span>
                                                     )}
                                                 </div>
                                                 {selectedAssets.pageId === page.id && (
-                                                    <CheckCircle size={18} className="text-blue-500" />
+                                                    <CheckCircle size={18} className="text-q-accent" />
                                                 )}
                                             </label>
                                         ))}
@@ -399,7 +399,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                             {hasWhatsApp && (
                                 <div>
                                     <label className="text-sm font-medium flex items-center gap-2 mb-2">
-                                        <Phone size={14} className="text-green-500" />
+                                        <Phone size={14} className="text-q-success" />
                                         Número de WhatsApp
                                     </label>
                                     <div className="space-y-2">
@@ -408,8 +408,8 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                                 key={account.phoneNumberId}
                                                 className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
                                                     selectedAssets.whatsappPhoneNumberId === account.phoneNumberId
-                                                        ? 'border-green-500 bg-green-500/10'
-                                                        : 'border-q-border hover:border-green-500/50'
+                                                        ? 'border-q-success/25 bg-q-success/10'
+                                                        : 'border-q-border hover:border-q-success/50'
                                                 }`}
                                             >
                                                 <input
@@ -420,15 +420,15 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                                     onChange={() => setSelectedAssets(prev => ({ ...prev, whatsappPhoneNumberId: account.phoneNumberId }))}
                                                     className="sr-only"
                                                 />
-                                                <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
-                                                    <Phone size={16} className="text-green-500" />
+                                                <div className="w-8 h-8 bg-q-success/20 rounded-lg flex items-center justify-center">
+                                                    <Phone size={16} className="text-q-success" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <span className="font-medium text-sm">{account.displayPhoneNumber}</span>
                                                     <p className="text-xs text-q-text-muted">{account.verifiedName}</p>
                                                 </div>
                                                 {selectedAssets.whatsappPhoneNumberId === account.phoneNumberId && (
-                                                    <CheckCircle size={18} className="text-green-500" />
+                                                    <CheckCircle size={18} className="text-q-success" />
                                                 )}
                                             </label>
                                         ))}
@@ -440,7 +440,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                             {hasInstagram && (
                                 <div>
                                     <label className="text-sm font-medium flex items-center gap-2 mb-2">
-                                        <Instagram size={14} className="text-pink-500" />
+                                        <Instagram size={14} className="text-q-accent" />
                                         Cuenta de Instagram
                                     </label>
                                     <div className="space-y-2">
@@ -449,8 +449,8 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                                 key={account.id}
                                                 className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
                                                     selectedAssets.instagramAccountId === account.id
-                                                        ? 'border-pink-500 bg-pink-500/10'
-                                                        : 'border-q-border hover:border-pink-500/50'
+                                                        ? 'border-q-accent/25 bg-q-accent/10'
+                                                        : 'border-q-border hover:border-q-accent/50'
                                                 }`}
                                             >
                                                 <input
@@ -464,7 +464,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                                 {account.profilePictureUrl ? (
                                                     <img src={account.profilePictureUrl} alt="" className="w-8 h-8 rounded-lg" />
                                                 ) : (
-                                                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 rounded-lg flex items-center justify-center">
+                                                    <div className="w-8 h-8 bg-gradient-to-br from-q-accent via-q-accent/80 to-q-warning rounded-lg flex items-center justify-center">
                                                         <Instagram size={16} className="text-white" />
                                                     </div>
                                                 )}
@@ -472,7 +472,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                                     <span className="font-medium text-sm">@{account.username}</span>
                                                 </div>
                                                 {selectedAssets.instagramAccountId === account.id && (
-                                                    <CheckCircle size={18} className="text-pink-500" />
+                                                    <CheckCircle size={18} className="text-q-accent" />
                                                 )}
                                             </label>
                                         ))}

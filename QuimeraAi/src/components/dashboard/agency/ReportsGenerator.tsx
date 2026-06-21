@@ -169,18 +169,18 @@ export function ReportsGenerator() {
       </div>
 
       {generatedReport && (
-        <Card className="p-6 border-green-200 bg-green-50/30">
+        <Card className="p-6 border-q-success/25 bg-q-success/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-full">
-                <Download className="w-6 h-6 text-green-600" />
+              <div className="p-2 bg-q-success/10 rounded-full">
+                <Download className="w-6 h-6 text-q-success" />
               </div>
               <div>
-                <h4 className="font-semibold text-green-900">Reporte Listo</h4>
-                <p className="text-sm text-green-700">El reporte consolidado se ha generado correctamente.</p>
+                <h4 className="font-semibold text-q-success">Reporte Listo</h4>
+                <p className="text-sm text-q-success">El reporte consolidado se ha generado correctamente.</p>
               </div>
             </div>
-            <Button variant="outline" className="border-green-300 text-green-700 hover:bg-green-100">
+            <Button variant="outline" className="border-q-success/25 text-q-success hover:bg-q-success/10">
               Descargar PDF
             </Button>
           </div>

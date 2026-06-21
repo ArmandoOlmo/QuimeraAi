@@ -1,20 +1,27 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { motion, useReducedMotion, type HTMLMotionProps } from "framer-motion"
 import { cn } from "@/utils"
+import {
+  cardMotionHover,
+  cardMotionStagger,
+  cardMotionViewport,
+  createCardMotionVariants,
+} from "@/utils/cardMotion"
 
 const cardVariants = cva(
-  "rounded-[var(--q-radius-lg,12px)] text-q-text transition-all duration-[var(--q-duration-normal,200ms)]",
+  "rounded-[var(--radius-card)] text-q-text transition-all duration-[var(--q-duration-normal,200ms)]",
   {
     variants: {
       variant: {
-        default: "bg-q-surface border border-q-border",
-        glass: "bg-q-surface/var(--q-glass-opacity,0.55) backdrop-blur-[var(--q-glass-blur,24px)] saturate-[var(--q-glass-saturation,1.6)] border border-q-border/35",
-        elevated: "bg-q-surface-elevated border border-q-border shadow-md",
+        default: "bg-q-surface border border-border-subtle shadow-[var(--shadow-card)]",
+        glass: "bg-q-surface/90 backdrop-blur-sm border border-border-subtle shadow-[var(--shadow-card)]",
+        elevated: "bg-q-surface-elevated border border-border-subtle shadow-[var(--shadow-elevated)]",
       },
       hover: {
         none: "",
-        lift: "hover:-translate-y-1 hover:shadow-lg hover:border-q-accent/50",
-        glow: "hover:border-q-accent hover:shadow-[0_0_15px_rgba(var(--q-accent-rgb),0.2)]",
+        lift: "hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)] hover:border-q-border",
+        glow: "hover:border-q-accent/45 hover:shadow-[0_10px_28px_rgba(var(--q-accent-rgb),0.14)]",
       }
     },
     defaultVariants: {
@@ -28,6 +35,16 @@ export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof cardVariants> {}
 
+export interface MotionCardProps
+  extends Omit<HTMLMotionProps<"div">, "ref">,
+    VariantProps<typeof cardVariants> {
+  motionDelay?: number
+  motionPreset?: "card" | "none"
+  staggerIndex?: number
+  viewportMotion?: boolean
+  hoverMotion?: boolean
+}
+
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant, hover, ...props }, ref) => (
     <div
@@ -38,6 +55,60 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
   )
 )
 Card.displayName = "Card"
+
+const MotionCard = React.forwardRef<HTMLDivElement, MotionCardProps>(
+  (
+    {
+      className,
+      variant,
+      hover,
+      motionDelay = 0,
+      motionPreset = "card",
+      staggerIndex = 0,
+      viewportMotion = false,
+      hoverMotion = false,
+      variants,
+      initial,
+      animate,
+      whileInView,
+      viewport,
+      whileHover,
+      ...props
+    },
+    ref
+  ) => {
+    const shouldReduceMotion = useReducedMotion()
+    const shouldAnimate = motionPreset !== "none" && !shouldReduceMotion
+    const delay = motionDelay + staggerIndex * cardMotionStagger
+    const animationProps: Partial<HTMLMotionProps<"div">> = shouldAnimate
+      ? {
+          initial: initial ?? "hidden",
+          animate: viewportMotion ? animate : animate ?? "visible",
+          whileInView: viewportMotion ? whileInView ?? "visible" : whileInView,
+          viewport: viewportMotion ? viewport ?? cardMotionViewport : viewport,
+          variants: variants ?? createCardMotionVariants(delay),
+          whileHover: whileHover ?? (hoverMotion ? cardMotionHover : undefined),
+        }
+      : {
+          initial: false,
+          animate,
+          whileInView,
+          viewport,
+          variants,
+          whileHover,
+        }
+
+    return (
+      <motion.div
+        ref={ref}
+        className={cn(cardVariants({ variant, hover, className }))}
+        {...animationProps}
+        {...props}
+      />
+    )
+  }
+)
+MotionCard.displayName = "MotionCard"
 
 const CardHeader = React.forwardRef<
   HTMLDivElement,
@@ -98,4 +169,4 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, cardVariants }
+export { Card, MotionCard, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, cardVariants }

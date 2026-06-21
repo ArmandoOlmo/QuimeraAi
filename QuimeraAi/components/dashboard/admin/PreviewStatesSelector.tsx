@@ -11,10 +11,10 @@ export type PreviewState = 'normal' | 'loading' | 'error' | 'empty' | 'success';
 
 const states: { value: PreviewState; label: string; icon: React.ReactNode; color: string }[] = [
     { value: 'normal', label: 'Normal', icon: <CheckCircle size={16} />, color: 'text-q-text' },
-    { value: 'loading', label: 'Loading', icon: <Loader2 size={16} className="animate-spin" />, color: 'text-blue-400' },
-    { value: 'error', label: 'Error', icon: <AlertCircle size={16} />, color: 'text-red-400' },
-    { value: 'empty', label: 'Empty', icon: <FileQuestion size={16} />, color: 'text-yellow-400' },
-    { value: 'success', label: 'Success', icon: <CheckCircle size={16} />, color: 'text-green-400' }
+    { value: 'loading', label: 'Loading', icon: <Loader2 size={16} className="animate-spin" />, color: 'text-q-accent' },
+    { value: 'error', label: 'Error', icon: <AlertCircle size={16} />, color: 'text-q-error' },
+    { value: 'empty', label: 'Empty', icon: <FileQuestion size={16} />, color: 'text-q-accent' },
+    { value: 'success', label: 'Success', icon: <CheckCircle size={16} />, color: 'text-q-success' }
 ];
 
 const PreviewStatesSelector: React.FC<PreviewStatesSelectorProps> = ({ onStateChange, currentState }) => {

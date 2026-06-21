@@ -83,7 +83,7 @@ export function AgencyPlanDropdown({
                 onClick={() => !disabled && !loading && setIsOpen(!isOpen)}
                 disabled={disabled || loading}
                 className={`
-                    w-full flex items-center justify-between px-4 py-2.5 
+                    w-full flex items-center justify-between px-4 py-2.5
                     bg-q-bg border border-q-border rounded-lg text-left
                     transition-colors
                     ${disabled || loading ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary cursor-pointer'}
@@ -107,7 +107,7 @@ export function AgencyPlanDropdown({
                             <div className="flex items-center gap-2">
                                 <span className="font-medium text-foreground truncate">{selectedPlan.name}</span>
                                 {selectedPlan.isDefault && (
-                                    <Star className="w-3 h-3 text-amber-500 flex-shrink-0" />
+                                    <Star className="w-3 h-3 text-q-accent flex-shrink-0" />
                                 )}
                             </div>
                             {showPricing && (
@@ -169,7 +169,7 @@ export function AgencyPlanDropdown({
                                 <div className="flex items-center gap-2">
                                     <span className="font-medium text-foreground">{plan.name}</span>
                                     {plan.isDefault && (
-                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-q-accent/10 dark:bg-q-accent/12 text-q-accent dark:text-q-accent">
                                             <Star className="w-3 h-3" />
                                             Default
                                         </span>
@@ -276,8 +276,8 @@ export function AgencyPlanCardSelector({
                         onClick={() => onChange(isSelected ? null : plan)}
                         className={`
                             relative p-4 rounded-xl border-2 text-left transition-all
-                            ${isSelected 
-                                ? 'border-primary bg-primary/5' 
+                            ${isSelected
+                                ? 'border-primary bg-primary/5'
                                 : 'border-q-border hover:border-primary/50 hover:bg-muted/30'
                             }
                         `}
@@ -303,7 +303,7 @@ export function AgencyPlanCardSelector({
                                 <div className="flex items-center gap-2">
                                     <span className="font-semibold text-foreground">{plan.name}</span>
                                     {plan.isDefault && (
-                                        <Star className="w-4 h-4 text-amber-500" />
+                                        <Star className="w-4 h-4 text-q-accent" />
                                     )}
                                 </div>
                                 <span className="text-lg font-bold text-foreground">
@@ -413,7 +413,7 @@ export function AssignPlanModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/50 backdrop-blur-sm p-4">
             <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-lg shadow-xl">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-q-border">

@@ -479,7 +479,7 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
                                                             {curated ? t(curated.labelKey, { defaultValue: curated.id }) : model.name}
                                                         </span>
                                                         {model.comingSoon && (
-                                                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                                                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-q-accent/20 text-q-accent">
                                                                 {t('mediaGeneration.comingSoon', { defaultValue: 'Coming soon' })}
                                                             </span>
                                                         )}
@@ -741,7 +741,7 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
                                             <button
                                                 type="button"
                                                 onClick={() => setReferenceImages(prev => prev.filter((_, j) => j !== i))}
-                                                className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center text-white"
+                                                className="absolute inset-0 bg-q-text/50 opacity-0 hover:opacity-100 flex items-center justify-center text-white"
                                             >
                                                 <X size={12} />
                                             </button>

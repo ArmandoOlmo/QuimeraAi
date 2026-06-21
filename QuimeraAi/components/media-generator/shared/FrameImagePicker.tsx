@@ -122,14 +122,14 @@ const FrameImagePicker: React.FC<FrameImagePickerProps> = ({
                             >
                                 <img src={slot.url} alt="" className="w-full h-full object-cover" />
                                 {draggingSlot === slot.type && (
-                                    <div className="absolute inset-0 grid place-items-center bg-black/55 text-[10px] font-bold uppercase text-white">
+                                    <div className="absolute inset-0 grid place-items-center bg-q-text/55 text-[10px] font-bold uppercase text-white">
                                         {t('mediaGeneration.dropFrame', { defaultValue: 'Drop to replace' })}
                                     </div>
                                 )}
                                 <button
                                     type="button"
                                     onClick={() => setFrame(slot.type, null)}
-                                    className="absolute top-1 right-1 p-1 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="absolute top-1 right-1 p-1 rounded-full bg-q-text/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                     <X size={12} />
                                 </button>
@@ -202,7 +202,7 @@ const FrameImagePicker: React.FC<FrameImagePickerProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => onPickFromSession?.(url, 'first_frame')}
-                                        className="flex-1 rounded bg-black/70 px-1 py-0.5 text-[9px] font-bold text-white"
+                                        className="flex-1 rounded bg-q-text/70 px-1 py-0.5 text-[9px] font-bold text-white"
                                         title={t('mediaGeneration.useAsStartFrame', { defaultValue: 'Use as start frame' })}
                                     >
                                         {t('mediaGeneration.startShort', { defaultValue: 'Start' })}
@@ -211,7 +211,7 @@ const FrameImagePicker: React.FC<FrameImagePickerProps> = ({
                                         <button
                                             type="button"
                                             onClick={() => onPickFromSession?.(url, 'last_frame')}
-                                            className="flex-1 rounded bg-black/70 px-1 py-0.5 text-[9px] font-bold text-white"
+                                            className="flex-1 rounded bg-q-text/70 px-1 py-0.5 text-[9px] font-bold text-white"
                                             title={t('mediaGeneration.useAsEndFrame', { defaultValue: 'Use as end frame' })}
                                         >
                                             {t('mediaGeneration.endShort', { defaultValue: 'End' })}

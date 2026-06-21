@@ -32,7 +32,7 @@ export const SectionHeader = React.forwardRef<HTMLDivElement, SectionHeaderProps
   const titleContent = (
     <>
       {icon && (
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-q-accent/10 text-q-accent">
+        <span className="mt-0.5 flex shrink-0 items-center justify-center text-q-text-muted [&_svg]:h-[var(--icon-md)] [&_svg]:w-[var(--icon-md)]">
           {icon}
         </span>
       )}

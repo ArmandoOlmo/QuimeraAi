@@ -22,7 +22,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
     const { portalConfig, theme, isLoadingPortal, error } = usePortal();
     const { user, userDocument, logout } = useAuth();
     const { navigate, goBack } = useRouter();
-    
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
@@ -61,7 +61,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
     }
 
     return (
-        <div 
+        <div
             className="min-h-screen bg-q-bg"
             style={{
                 '--primary': theme.primaryColor,
@@ -72,7 +72,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
             {/* Mobile menu overlay */}
             {isMobileMenuOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    className="fixed inset-0 bg-q-text/50 z-40 lg:hidden"
                     onClick={() => setIsMobileMenuOpen(false)}
                 />
             )}
@@ -109,7 +109,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
                         <button className="p-2 rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors relative">
                             <Bell size={20} />
                             {/* Notification badge */}
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-q-error rounded-full" />
                         </button>
 
                         {/* User menu */}

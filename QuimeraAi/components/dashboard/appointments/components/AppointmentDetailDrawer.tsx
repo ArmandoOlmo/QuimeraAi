@@ -166,14 +166,14 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
     const duration = calculateDuration(appointment.startDate, appointment.endDate);
 
     const gradientClasses: Record<string, string> = {
-        blue: 'from-blue-500 to-blue-600',
-        violet: 'from-violet-500 to-purple-600',
-        emerald: 'from-emerald-500 to-teal-600',
-        orange: 'from-orange-500 to-amber-600',
-        cyan: 'from-cyan-500 to-sky-600',
-        yellow: 'from-yellow-500 to-amber-500',
-        pink: 'from-pink-500 to-rose-600',
-        green: 'from-green-500 to-emerald-600',
+        blue: 'from-q-accent to-q-accent',
+        violet: 'from-q-accent to-q-accent',
+        emerald: 'from-q-success to-q-success',
+        orange: 'from-q-warning to-q-accent',
+        cyan: 'from-q-accent to-q-accent',
+        yellow: 'from-q-accent to-q-accent',
+        pink: 'from-q-accent to-q-error',
+        green: 'from-q-success to-q-success',
     };
 
     const handleStatusChange = async (status: AppointmentStatus) => {
@@ -192,7 +192,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
             {/* Backdrop */}
             <div
                 className={`
-                    fixed inset-0 bg-black/40 backdrop-blur-sm z-40
+                    fixed inset-0 bg-q-text/40 backdrop-blur-sm z-40
                     transition-opacity duration-300
                     ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
                 `}
@@ -221,14 +221,14 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                 `}>
                     {/* Background pattern - hidden on small screens for performance */}
                     <div className="absolute inset-0 opacity-10 hidden sm:block">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
-                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-q-surface rounded-full -translate-y-1/2 translate-x-1/2" />
+                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-q-surface rounded-full translate-y-1/2 -translate-x-1/2" />
                     </div>
 
                     {/* Close button */}
                     <button
                         onClick={onClose}
-                        className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
+                        className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-lg bg-q-surface/10 hover:bg-q-surface/20 text-white transition-colors z-10"
                     >
                         <X size={18} className="sm:w-5 sm:h-5" />
                     </button>
@@ -242,7 +242,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                             <span className="text-white/40">·</span>
                             <span className={`
                                 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold
-                                bg-white/20 text-white
+                                bg-q-surface/20 text-white
                             `}>
                                 {statusConfig.label}
                             </span>
@@ -395,7 +395,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                             onDelete();
                                             setShowMoreMenu(false);
                                         }}
-                                        className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-secondary transition-colors text-red-500"
+                                        className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-secondary transition-colors text-q-error"
                                     >
                                         <Trash2 size={16} />
                                         {t('appointments.deleteAppointment')}
@@ -541,7 +541,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                             key={reminder.id}
                                             className="flex items-center gap-3 p-2 bg-secondary/30 rounded-lg"
                                         >
-                                            <Bell size={14} className={reminder.sent ? 'text-green-500' : 'text-q-text-muted'} />
+                                            <Bell size={14} className={reminder.sent ? 'text-q-success' : 'text-q-text-muted'} />
                                             <span className="text-sm text-foreground flex-1">
                                                 {reminder.minutesBefore < 60
                                                     ? t('appointments.drawer.minutesBefore', { count: reminder.minutesBefore })
@@ -551,7 +551,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                                 }
                                             </span>
                                             {reminder.sent && (
-                                                <Check size={14} className="text-green-500" />
+                                                <Check size={14} className="text-q-success" />
                                             )}
                                         </div>
                                     ))}
@@ -587,7 +587,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                                 </span>
                                             )}
                                             {participant.type === 'lead' && (
-                                                <span className="px-1.5 py-0.5 bg-purple-500/10 text-purple-500 rounded text-xs font-medium">
+                                                <span className="px-1.5 py-0.5 bg-q-accent/10 text-q-accent rounded text-xs font-medium">
                                                     Lead
                                                 </span>
                                             )}
@@ -599,9 +599,9 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                     </div>
                                     <div className={`
                                         px-2.5 py-1 rounded-full text-xs font-medium
-                                        ${participant.status === 'accepted' ? 'bg-green-500/10 text-green-500' :
-                                            participant.status === 'declined' ? 'bg-red-500/10 text-red-500' :
-                                                participant.status === 'tentative' ? 'bg-yellow-500/10 text-yellow-500' :
+                                        ${participant.status === 'accepted' ? 'bg-q-success/10 text-q-success' :
+                                            participant.status === 'declined' ? 'bg-q-error/10 text-q-error' :
+                                                participant.status === 'tentative' ? 'bg-q-accent/10 text-q-accent' :
                                                     'bg-muted text-q-text-muted'}
                                     `}>
                                         {participant.status === 'accepted' ? t('appointments.drawer.accepted') :
@@ -625,12 +625,12 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                             {appointment.participants && appointment.participants.some(p => p.email) && (
                                 <div className="pt-4 border-t border-q-border">
                                     <h4 className="text-xs font-semibold text-q-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                                        <Megaphone size={12} className="text-purple-500" />
+                                        <Megaphone size={12} className="text-q-accent" />
                                         Email Marketing
                                     </h4>
                                     <button
                                         onClick={() => setShowAddToAudience(true)}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-purple-500/30 bg-purple-500/5 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 transition-all text-sm font-medium"
+                                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-q-accent/30 bg-q-accent/5 text-q-accent dark:text-q-accent hover:bg-q-accent/10 transition-all text-sm font-medium"
                                     >
                                         <Mail size={14} />
                                         {t('appointments.drawer.addToAudience')}
@@ -703,7 +703,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                             {timestampToDate(note.createdAt).toLocaleDateString(i18n.language)}
                                         </span>
                                         {note.aiGenerated && (
-                                            <span className="flex items-center gap-1 text-xs text-purple-500">
+                                            <span className="flex items-center gap-1 text-xs text-q-accent">
                                                 <Sparkles size={12} />
                                                 {t('appointments.notes.aiGenerated')}
                                             </span>
@@ -756,7 +756,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                     {onDelete && (
                         <button
                             onClick={onDelete}
-                            className="py-2 sm:py-2.5 px-3 sm:px-4 text-red-500 hover:bg-red-500/10 rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors"
+                            className="py-2 sm:py-2.5 px-3 sm:px-4 text-q-error hover:bg-q-error/10 rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors"
                         >
                             <Trash2 size={14} className="sm:w-4 sm:h-4" />
                         </button>

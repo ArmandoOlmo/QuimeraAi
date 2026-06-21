@@ -47,7 +47,7 @@ const DashboardDraggableSection: React.FC<DashboardDraggableSectionProps> = ({
             role="button"
             tabIndex={0}
         >
-            <div className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-secondary/80 transition-colors">
+            <div className="flex items-center justify-center w-6 h-6 rounded-[var(--q-radius-sm)] hover:bg-q-surface-overlay transition-colors">
                 <GripVertical size={14} className="text-q-text-muted/60" />
             </div>
         </div>
@@ -65,14 +65,13 @@ const DashboardDraggableSection: React.FC<DashboardDraggableSectionProps> = ({
                         {dragHandle}
                         <button
                             onClick={onToggleCollapse}
-                            className="text-lg sm:text-2xl font-bold text-foreground flex items-center gap-2 sm:gap-3 hover:text-primary/90 transition-colors"
+                            className="text-lg sm:text-2xl font-bold text-foreground flex items-center gap-2 sm:gap-3 hover:text-q-text transition-colors"
                             aria-expanded={!isCollapsed}
                         >
-                            <Icon className="text-primary" size={20} />
+                            <Icon className="icon-lg text-q-text-muted" strokeWidth={2} />
                             {title}
                             <ChevronDown
-                                size={18}
-                                className={`text-q-text-muted transition-transform duration-300 ${
+                                className={`icon-md text-q-text-muted transition-transform duration-300 ${
                                     isCollapsed ? '-rotate-90' : 'rotate-0'
                                 }`}
                             />

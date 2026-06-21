@@ -210,10 +210,10 @@ export function AddonsManager() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h2 className="text-2xl font-bold text-q-text dark:text-white">
           Complementos (Add-ons)
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-q-text-muted dark:text-gray-400 mt-1">
           Personaliza tu plan agregando recursos adicionales
         </p>
       </div>
@@ -230,14 +230,14 @@ export function AddonsManager() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <h3 className="text-lg font-semibold text-q-text dark:text-white">
                         {addon.name}
                       </h3>
                       <Badge variant="primary">
                         ${addon.pricePerUnit}/{addon.unit}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-q-text-muted dark:text-gray-400">
                       {addon.description}
                     </p>
 
@@ -253,10 +253,10 @@ export function AddonsManager() {
                       </Button>
 
                       <div className="text-center min-w-[60px]">
-                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                        <div className="text-2xl font-bold text-q-text dark:text-white">
                           {addon.currentQuantity}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <div className="text-xs text-q-text-muted dark:text-gray-400">
                           {addon.unit}
                         </div>
                       </div>
@@ -274,12 +274,12 @@ export function AddonsManager() {
                 </div>
 
                 <div className="text-right">
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  <div className="text-sm text-q-text-muted dark:text-gray-400 mb-1">
                     Subtotal
                   </div>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <div className="text-2xl font-bold text-q-text dark:text-white">
                     ${addon.currentQuantity * addon.pricePerUnit}
-                    <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                    <span className="text-sm font-normal text-q-text-muted dark:text-gray-400">
                       /mes
                     </span>
                   </div>
@@ -295,20 +295,20 @@ export function AddonsManager() {
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-q-text dark:text-white">
                 Resumen de Add-ons
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-q-text-muted dark:text-gray-400 mt-1">
                 Costo mensual que se suma a tu plan base
               </p>
             </div>
             <div className="text-right">
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+              <div className="text-sm text-q-text-muted dark:text-gray-400 mb-1">
                 Total Mensual
               </div>
               <div className="text-3xl font-bold text-primary-600 dark:text-primary-400">
                 ${calculateTotalPrice()}
-                <span className="text-lg font-normal text-gray-500 dark:text-gray-400">
+                <span className="text-lg font-normal text-q-text-muted dark:text-gray-400">
                   /mes
                 </span>
               </div>
@@ -316,7 +316,7 @@ export function AddonsManager() {
           </div>
 
           {/* Breakdown */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-2">
+          <div className="bg-q-surface-overlay dark:bg-gray-800 rounded-lg p-4 space-y-2">
             {addonsList.map((addon) => {
               const subtotal = addon.currentQuantity * addon.pricePerUnit;
               if (subtotal === 0) return null;
@@ -326,10 +326,10 @@ export function AddonsManager() {
                   key={addon.id}
                   className="flex items-center justify-between text-sm"
                 >
-                  <span className="text-gray-700 dark:text-gray-300">
+                  <span className="text-q-text dark:text-gray-300">
                     {addon.name} ({addon.currentQuantity} × ${addon.pricePerUnit})
                   </span>
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <span className="font-medium text-q-text dark:text-white">
                     ${subtotal}/mes
                   </span>
                 </div>
@@ -337,7 +337,7 @@ export function AddonsManager() {
             })}
 
             {calculateTotalPrice() === 0 && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
+              <p className="text-sm text-q-text-muted dark:text-gray-400 text-center py-2">
                 No hay add-ons seleccionados
               </p>
             )}
@@ -371,10 +371,10 @@ export function AddonsManager() {
       {/* Info Card */}
       <Card>
         <div className="p-6">
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+          <h4 className="text-sm font-semibold text-q-text dark:text-white mb-3">
             Información Importante
           </h4>
-          <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+          <ul className="text-sm text-q-text-muted dark:text-gray-400 space-y-2">
             <li className="flex items-start">
               <span className="mr-2">•</span>
               <span>
@@ -407,8 +407,8 @@ export function AddonsManager() {
 
       {/* Proration Notice */}
       {hasChanges() && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
+        <div className="bg-q-accent/10 dark:bg-q-accent/12 border border-q-accent/25 dark:border-q-accent/30 rounded-lg p-4">
+          <p className="text-sm text-q-accent dark:text-q-accent">
             <strong>Nota sobre proration:</strong> Al cambiar tus add-ons, Stripe
             ajustará automáticamente tu próxima factura. Si aumentas la cantidad, se te
             cobrará la porción proporcional para el resto del mes. Si reduces, se

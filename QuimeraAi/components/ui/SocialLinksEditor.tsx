@@ -7,7 +7,7 @@ import {
   Share2, Trash2, Plus, ChevronDown
 } from 'lucide-react';
 
-// Map platform → Lucide icon component  
+// Map platform → Lucide icon component
 const socialPlatformIcons: Record<SocialPlatform, React.ElementType> = {
   twitter: Twitter,
   x: Twitter,
@@ -140,7 +140,7 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({
                   {/* Delete button */}
                   <button
                     onClick={() => handleRemove(index)}
-                    className="text-q-text-secondary hover:text-red-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/10"
+                    className="text-q-text-secondary hover:text-q-error flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-q-error/10"
                     title={`Remove ${label}`}
                   >
                     <Trash2 size={13} />

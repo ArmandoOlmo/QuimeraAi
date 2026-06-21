@@ -247,9 +247,9 @@ const ChatCustomizationSettings: React.FC = () => {
                         {t('chatCustomization.autoSaveNote')}
                     </p>
                 </div>
-                <div className="flex items-center gap-1.5 px-2 py-1 sm:px-4 sm:py-2 bg-green-500/10 border border-green-500/20 rounded-md sm:rounded-lg shrink-0">
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-[10px] sm:text-sm font-medium text-green-600 dark:text-green-400 whitespace-nowrap">{t('chatCustomization.livePreview')}</span>
+                <div className="flex items-center gap-1.5 px-2 py-1 sm:px-4 sm:py-2 bg-q-success/10 border border-q-success/20 rounded-md sm:rounded-lg shrink-0">
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-q-success rounded-full animate-pulse"></div>
+                    <span className="text-[10px] sm:text-sm font-medium text-q-success dark:text-q-success whitespace-nowrap">{t('chatCustomization.livePreview')}</span>
                 </div>
             </div>
 
@@ -383,7 +383,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                     <div className="border border-dashed border-q-border rounded-xl p-4 flex flex-col items-center gap-3 bg-q-surface/30">
                                         {config.branding.logoUrl ? (
                                             <div className="relative group">
-                                                <div className="w-20 h-20 rounded-xl overflow-hidden border border-q-border shadow-sm bg-white/5">
+                                                <div className="w-20 h-20 rounded-xl overflow-hidden border border-q-border shadow-sm bg-q-surface/5">
                                                     <img
                                                         src={config.branding.logoUrl}
                                                         alt={t('chatCustomization.chatLogoAlt')}
@@ -468,7 +468,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                         onChange={(e) => updateBranding('showBotAvatar', e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-secondary rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
+                                    <div className="w-11 h-6 bg-secondary rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-q-surface after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
                                 </label>
                             </div>
                         </div>
@@ -523,7 +523,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                         onChange={(e) => updateBehavior('autoOpen', e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-secondary rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
+                                    <div className="w-11 h-6 bg-secondary rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-q-surface after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
                                 </label>
                             </div>
 
@@ -577,7 +577,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             <span className="flex-1 text-sm text-foreground">{qr.text}</span>
                                             <button
                                                 onClick={() => removeQuickReply(qr.id)}
-                                                className="p-1.5 hover:bg-red-500/20 rounded text-red-500 transition-colors"
+                                                className="p-1.5 hover:bg-q-error/20 rounded text-q-error transition-colors"
                                             >
                                                 <X size={16} />
                                             </button>
@@ -702,7 +702,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                     <div className="border border-dashed border-q-border rounded-xl p-4 flex flex-col items-center gap-3 bg-q-surface/30">
                                         {config.button.customIconUrl ? (
                                             <div className="relative group">
-                                                <div className="w-16 h-16 rounded-xl overflow-hidden border border-q-border shadow-sm bg-white/5">
+                                                <div className="w-16 h-16 rounded-xl overflow-hidden border border-q-border shadow-sm bg-q-surface/5">
                                                     <img
                                                         src={config.button.customIconUrl}
                                                         alt={t('chatCustomization.customButtonImageAlt', 'Button icon')}
@@ -742,7 +742,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                         onChange={(e) => updateButton('pulseEffect', e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-secondary rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
+                                    <div className="w-11 h-6 bg-secondary rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-q-surface after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
                                 </label>
                             </div>
 

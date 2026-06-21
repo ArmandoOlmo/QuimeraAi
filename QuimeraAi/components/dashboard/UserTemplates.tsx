@@ -213,7 +213,7 @@ const UserTemplates: React.FC = () => {
                                                 t('userTemplates.step4', 'Personaliza colores, textos e imágenes en el editor para hacerla tuya'),
                                             ].map((step) => (
                                                 <li key={step} className="flex items-center gap-2">
-                                                    <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" strokeWidth={2} />
+                                                    <CheckCircle className="w-4 h-4 text-q-success flex-shrink-0" strokeWidth={2} />
                                                     <span>{step}</span>
                                                 </li>
                                             ))}
@@ -324,7 +324,7 @@ const UserTemplates: React.FC = () => {
                                                     {getThemeColors(template).slice(0, 4).map((color, index) => (
                                                         <div
                                                             key={index}
-                                                            className="w-4 h-4 rounded-full shadow-md border-2 border-white/40"
+                                                            className="w-4 h-4 rounded-full shadow-md border-2 border-q-border/40"
                                                             style={{ backgroundColor: color }}
                                                         />
                                                     ))}
@@ -332,8 +332,8 @@ const UserTemplates: React.FC = () => {
                                             )}
 
                                             {/* Hover overlay */}
-                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-sm">
-                                                <button className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full font-semibold shadow-lg hover:scale-105 transition-transform">
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-q-text/40 backdrop-blur-sm">
+                                                <button className="flex items-center gap-2 px-4 py-2 bg-q-surface text-black rounded-full font-semibold shadow-lg hover:scale-105 transition-transform">
                                                     <Eye size={18} />
                                                     {t('userTemplates.preview', 'Vista previa')}
                                                 </button>
@@ -394,7 +394,7 @@ const UserTemplates: React.FC = () => {
                                                     {getThemeColors(template).slice(0, 3).map((color, index) => (
                                                         <div
                                                             key={index}
-                                                            className="w-2.5 h-2.5 rounded-full shadow border border-white/50"
+                                                            className="w-2.5 h-2.5 rounded-full shadow border border-q-border/50"
                                                             style={{ backgroundColor: color }}
                                                         />
                                                     ))}
@@ -451,7 +451,7 @@ const UserTemplates: React.FC = () => {
             {/* Preview Modal */}
             {previewTemplate && (
                 <div
-                    className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                    className="fixed inset-0 z-50 bg-q-text/80 backdrop-blur-sm flex items-center justify-center p-4"
                     onClick={() => setPreviewTemplate(null)}
                 >
                     <div
@@ -485,12 +485,12 @@ const UserTemplates: React.FC = () => {
                                     className="w-full h-auto"
                                 />
                                 {getThemeColors(previewTemplate).length > 0 && (
-                                    <div className="absolute bottom-4 right-4 flex gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-2">
+                                    <div className="absolute bottom-4 right-4 flex gap-2 bg-q-text/50 backdrop-blur-sm rounded-full px-3 py-2">
                                         <Palette className="w-4 h-4 text-white" />
                                         {getThemeColors(previewTemplate).map((color, index) => (
                                             <div
                                                 key={index}
-                                                className="w-5 h-5 rounded-full shadow-lg border-2 border-white/40"
+                                                className="w-5 h-5 rounded-full shadow-lg border-2 border-q-border/40"
                                                 style={{ backgroundColor: color }}
                                             />
                                         ))}
@@ -539,22 +539,22 @@ const UserTemplates: React.FC = () => {
                             </div>
 
                             {/* Instructions */}
-                            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl p-4 mb-6">
+                            <div className="bg-gradient-to-r from-q-success/10 to-q-success/10 border border-q-success/20 rounded-xl p-4 mb-6">
                                 <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                                    <Info className="w-4 h-4 text-green-500" />
+                                    <Info className="w-4 h-4 text-q-success" />
                                     {t('userTemplates.whatHappensNext', '¿Qué pasa después?')}
                                 </h3>
                                 <ul className="space-y-2 text-sm text-q-text-muted">
                                     <li className="flex items-start gap-2">
-                                        <ChevronRight className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                        <ChevronRight className="w-4 h-4 text-q-success flex-shrink-0 mt-0.5" />
                                         {t('userTemplates.nextStep1', 'Se creará una copia de esta plantilla como tu nuevo proyecto')}
                                     </li>
                                     <li className="flex items-start gap-2">
-                                        <ChevronRight className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                        <ChevronRight className="w-4 h-4 text-q-success flex-shrink-0 mt-0.5" />
                                         {t('userTemplates.nextStep2', 'Serás redirigido al editor para personalizar tu sitio')}
                                     </li>
                                     <li className="flex items-start gap-2">
-                                        <ChevronRight className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                        <ChevronRight className="w-4 h-4 text-q-success flex-shrink-0 mt-0.5" />
                                         {t('userTemplates.nextStep3', 'Podrás modificar textos, colores, imágenes y más')}
                                     </li>
                                 </ul>

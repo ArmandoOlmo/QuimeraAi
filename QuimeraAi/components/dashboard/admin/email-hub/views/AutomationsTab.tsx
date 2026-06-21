@@ -165,11 +165,11 @@ const WorkflowNode: React.FC<{
                         {step.type === 'email' && (
                             <div className="flex items-center gap-1.5 mt-1">
                                 {step.emailConfig?.emailDocumentId || step.emailConfig?.campaignId ? (
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-400 bg-green-500/10 border border-green-500/20 rounded-md px-1.5 py-0.5">
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-q-success bg-q-success/10 border border-q-success/20 rounded-md px-1.5 py-0.5">
                                         <CheckCircle size={10} /> Contenido diseñado
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md px-1.5 py-0.5">
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-q-accent bg-q-accent/10 border border-q-accent/20 rounded-md px-1.5 py-0.5">
                                         <AlertCircle size={10} /> Sin contenido
                                     </span>
                                 )}
@@ -200,9 +200,9 @@ const WorkflowNode: React.FC<{
                         {!readOnly && step.type !== 'trigger' && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                                className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                className="p-1.5 hover:bg-q-error/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                             >
-                                <Trash2 size={13} className="text-red-400" />
+                                <Trash2 size={13} className="text-q-error" />
                             </button>
                         )}
                         <ChevronDown
@@ -255,8 +255,8 @@ const WorkflowNode: React.FC<{
                                         onClick={(e) => { e.stopPropagation(); onDesignEmail(step); }}
                                         className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
                                             step.emailConfig?.emailDocumentId || step.emailConfig?.campaignId
-                                                ? 'bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20'
-                                                : 'bg-purple-500/10 border-purple-500/30 text-purple-400 hover:bg-purple-500/20'
+                                                ? 'bg-q-success/10 border-q-success/30 text-q-success hover:bg-q-success/20'
+                                                : 'bg-q-accent/10 border-q-accent/30 text-q-accent hover:bg-q-accent/20'
                                         }`}
                                     >
                                         <Edit2 size={14} />
@@ -596,8 +596,8 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                         <button
                             onClick={isEditing ? updateAutomation : createAutomation}
                             disabled={!newAutomation.name}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl
-                                hover:shadow-lg hover:shadow-purple-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent text-sm font-bold rounded-xl
+                                hover:shadow-lg hover:shadow-q-accent/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <CheckCircle size={16} />
                             {isEditing ? t('adminEmail.automations.saveChanges') : t('adminEmail.automations.createAutomation')}
@@ -617,7 +617,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                     type="text"
                                     value={newAutomation.name}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, name: e.target.value }))}
-                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50"
                                     placeholder={t('adminEmail.automations.namePlaceholder')}
                                 />
                             </div>
@@ -628,7 +628,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                     value={newAutomation.description}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, description: e.target.value }))}
                                     rows={2}
-                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50 resize-none"
                                     placeholder={t('adminEmail.automations.descPlaceholder')}
                                 />
                             </div>
@@ -638,7 +638,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                 <AppSelect
                                     value={newAutomation.category}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, category: e.target.value as AutomationCategory }))}
-                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50"
                                 >
                                     <option value="lifecycle">🔄 {t('adminEmail.automations.catLifecycle')}</option>
                                     <option value="conversion">💰 {t('adminEmail.automations.catConversion')}</option>
@@ -652,7 +652,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                 <AppSelect
                                     value={newAutomation.audienceId}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, audienceId: e.target.value }))}
-                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50"
                                 >
                                     <option value="">{t('adminEmail.automations.allMatchingTrigger')}</option>
                                     {audiences.map(a => (
@@ -666,7 +666,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                 <AppSelect
                                     value={newAutomation.status}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, status: e.target.value as any }))}
-                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50"
                                 >
                                     <option value="draft">{t('adminEmail.automations.draftStatus')}</option>
                                     <option value="active">{t('adminEmail.automations.activeStatus')}</option>
@@ -794,7 +794,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                         onClick={() => setShowTemplateGallery(!showTemplateGallery)}
                         className="flex items-center gap-2 px-4 py-2.5 bg-q-surface border border-q-border text-sm font-medium text-q-text rounded-xl hover:border-q-accent/30 transition-all"
                     >
-                        <Sparkles size={16} className="text-purple-400" />
+                        <Sparkles size={16} className="text-q-accent" />
                         {t('adminEmail.automations.templates')}
                     </button>
                     <button
@@ -804,7 +804,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                             setSelectedTemplate(null);
                             setShowCreateAutomation(true);
                         }}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-purple-500/20 transition-all"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-q-accent/20 transition-all"
                     >
                         <Plus size={16} />
                         {t('adminEmail.automations.newAutomation')}
@@ -815,10 +815,10 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                    { label: t('adminEmail.automations.total'), value: stats.total, icon: <Zap size={18} />, gradient: 'from-purple-500/20 to-blue-500/20', border: 'border-purple-500/20', textColor: 'text-purple-400' },
-                    { label: t('adminEmail.automations.active').replace('✅ ', ''), value: stats.active, icon: <Play size={18} />, gradient: 'from-green-500/20 to-emerald-500/20', border: 'border-green-500/20', textColor: 'text-green-400' },
-                    { label: t('adminEmail.automations.activations'), value: stats.totalTriggered.toLocaleString(), icon: <Activity size={18} />, gradient: 'from-blue-500/20 to-cyan-500/20', border: 'border-blue-500/20', textColor: 'text-blue-400' },
-                    { label: t('adminEmail.automations.convRate'), value: `${stats.convRate}%`, icon: <Target size={18} />, gradient: 'from-amber-500/20 to-orange-500/20', border: 'border-amber-500/20', textColor: 'text-amber-400' },
+                    { label: t('adminEmail.automations.total'), value: stats.total, icon: <Zap size={18} />, gradient: 'from-q-accent/20 to-q-accent/20', border: 'border-q-accent/20', textColor: 'text-q-accent' },
+                    { label: t('adminEmail.automations.active').replace('✅ ', ''), value: stats.active, icon: <Play size={18} />, gradient: 'from-q-success/20 to-q-success/20', border: 'border-q-success/20', textColor: 'text-q-success' },
+                    { label: t('adminEmail.automations.activations'), value: stats.totalTriggered.toLocaleString(), icon: <Activity size={18} />, gradient: 'from-q-accent/20 to-q-accent/20', border: 'border-q-accent/20', textColor: 'text-q-accent' },
+                    { label: t('adminEmail.automations.convRate'), value: `${stats.convRate}%`, icon: <Target size={18} />, gradient: 'from-q-accent/20 to-q-warning/20', border: 'border-q-accent/20', textColor: 'text-q-accent' },
                 ].map((stat, i) => (
                     <div key={i} className={`bg-gradient-to-br ${stat.gradient} border ${stat.border} rounded-xl p-4`}>
                         <div className="flex items-center gap-2 mb-2">
@@ -863,7 +863,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                 <div className="bg-q-surface border border-q-border rounded-xl p-6 animate-in slide-in-from-top-2 duration-300">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
-                            <Sparkles size={14} className="text-purple-400" />
+                            <Sparkles size={14} className="text-q-accent" />
                             {t('adminEmail.automations.templates')}
                         </h3>
                         <button onClick={() => setShowTemplateGallery(false)} className="p-1.5 hover:bg-q-surface-overlay/40 rounded-lg">
@@ -909,7 +909,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                             >
                                 {/* Icon */}
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                                    AUTOMATION_TEMPLATES.find(t => t.type === auto.type)?.color || 'text-gray-400 bg-gray-500/10'
+                                    AUTOMATION_TEMPLATES.find(t => t.type === auto.type)?.color || 'text-q-text-muted bg-q-surface-overlay/10'
                                 }`}>
                                     {AUTOMATION_TEMPLATES.find(t => t.type === auto.type)?.icon || <Zap size={20} />}
                                 </div>
@@ -973,7 +973,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                         className="p-2 hover:bg-q-surface-overlay/40 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                         title={auto.status === 'active' ? 'Pausar' : 'Activar'}
                                     >
-                                        {auto.status === 'active' ? <Pause size={14} className="text-amber-400" /> : <Play size={14} className="text-green-400" />}
+                                        {auto.status === 'active' ? <Pause size={14} className="text-q-accent" /> : <Play size={14} className="text-q-success" />}
                                     </button>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); openEditAutomation(auto); }}
@@ -1002,10 +1002,10 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                                 },
                                             });
                                         }}
-                                        className="p-2 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                        className="p-2 hover:bg-q-error/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                         title="Eliminar"
                                     >
-                                        <Trash2 size={14} className="text-red-400" />
+                                        <Trash2 size={14} className="text-q-error" />
                                     </button>
                                 </div>
                             </div>
@@ -1028,7 +1028,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                             onClick={() => setShowTemplateGallery(true)}
                             className="flex items-center gap-2 px-4 py-2.5 bg-q-bg border border-q-border text-sm font-medium text-q-text rounded-xl hover:border-q-accent/30 transition-all"
                         >
-                            <Sparkles size={16} className="text-purple-400" />
+                            <Sparkles size={16} className="text-q-accent" />
                             Usar Template
                         </button>
                         <button
@@ -1037,7 +1037,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                 setEditingAutomationId(null);
                                 setShowCreateAutomation(true);
                             }}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl"
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent text-sm font-bold rounded-xl"
                         >
                             <Plus size={16} />
                             Crear desde Cero
@@ -1049,7 +1049,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
             {/* ============ DETAIL SIDE PANEL ============ */}
             {detailAutomation && (
                 <div className="fixed inset-0 z-[180] flex" onClick={() => setDetailAutomation(null)}>
-                    <div className="flex-1 bg-black/40 backdrop-blur-sm" />
+                    <div className="flex-1 bg-q-text/40 backdrop-blur-sm" />
                     <div
                         className="w-full max-w-lg bg-q-bg border-l border-q-border shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300"
                         onClick={e => e.stopPropagation()}
@@ -1059,7 +1059,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-3">
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                                        AUTOMATION_TEMPLATES.find(t => t.type === detailAutomation.type)?.color || 'text-gray-400 bg-gray-500/10'
+                                        AUTOMATION_TEMPLATES.find(t => t.type === detailAutomation.type)?.color || 'text-q-text-muted bg-q-surface-overlay/10'
                                     }`}>
                                         {AUTOMATION_TEMPLATES.find(t => t.type === detailAutomation.type)?.icon || <Zap size={20} />}
                                     </div>
@@ -1087,8 +1087,8 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                         onClick={() => { toggleAutomationStatus(detailAutomation); setDetailAutomation({ ...detailAutomation, status: detailAutomation.status === 'active' ? 'paused' : 'active' }); }}
                                         className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                                             detailAutomation.status === 'active'
-                                                ? 'border-amber-500/30 text-amber-400 hover:bg-amber-500/10'
-                                                : 'border-green-500/30 text-green-400 hover:bg-green-500/10'
+                                                ? 'border-q-accent/30 text-q-accent hover:bg-q-accent/10'
+                                                : 'border-q-success/30 text-q-success hover:bg-q-success/10'
                                         }`}
                                     >
                                         {detailAutomation.status === 'active' ? 'Pausar' : 'Activar'}
@@ -1113,21 +1113,21 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                 </label>
                                 <div className="grid grid-cols-2 gap-3">
                                     {[
-                                        { label: 'Activaciones', value: (detailAutomation.stats?.triggered || 0).toLocaleString(), color: 'text-purple-400' },
-                                        { label: 'Enviados', value: (detailAutomation.stats?.sent || 0).toLocaleString(), color: 'text-blue-400' },
-                                        { label: 'Abiertos', value: (detailAutomation.stats?.opened || 0).toLocaleString(), color: 'text-green-400' },
-                                        { label: 'Clics', value: (detailAutomation.stats?.clicked || 0).toLocaleString(), color: 'text-amber-400' },
+                                        { label: 'Activaciones', value: (detailAutomation.stats?.triggered || 0).toLocaleString(), color: 'text-q-accent' },
+                                        { label: 'Enviados', value: (detailAutomation.stats?.sent || 0).toLocaleString(), color: 'text-q-accent' },
+                                        { label: 'Abiertos', value: (detailAutomation.stats?.opened || 0).toLocaleString(), color: 'text-q-success' },
+                                        { label: 'Clics', value: (detailAutomation.stats?.clicked || 0).toLocaleString(), color: 'text-q-accent' },
                                         {
                                             label: 'Tasa apertura',
                                             value: detailAutomation.stats?.sent > 0
                                                 ? `${((detailAutomation.stats.opened / detailAutomation.stats.sent) * 100).toFixed(1)}%`
                                                 : '—',
-                                            color: 'text-cyan-400',
+                                            color: 'text-q-accent',
                                         },
                                         {
                                             label: 'Conversiones',
                                             value: (detailAutomation.stats?.converted || 0).toLocaleString(),
-                                            color: 'text-emerald-400',
+                                            color: 'text-q-success',
                                         },
                                     ].map((s, i) => (
                                         <div key={i} className="bg-q-surface border border-q-border rounded-xl p-3">
@@ -1204,9 +1204,9 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 block">{t('adminEmail.detailPanel.actions')}</label>
                                 <button
                                     onClick={() => { setDetailAutomation(null); openEditAutomation(detailAutomation); }}
-                                    className="w-full flex items-center gap-3 px-4 py-3 bg-q-surface border border-q-border rounded-xl hover:border-purple-500/50 hover:bg-purple-500/5 transition-all text-left"
+                                    className="w-full flex items-center gap-3 px-4 py-3 bg-q-surface border border-q-border rounded-xl hover:border-q-accent/50 hover:bg-q-accent/5 transition-all text-left"
                                 >
-                                    <Edit2 size={18} className="text-purple-400" />
+                                    <Edit2 size={18} className="text-q-accent" />
                                     <div>
                                         <p className="text-sm font-medium text-q-text">{t('adminEmail.automations.editAutomation')}</p>
                                         <p className="text-xs text-q-text-secondary">{t('adminEmail.automations.editFlow')}</p>
@@ -1232,7 +1232,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                                 },
                                             });
                                         }}
-                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-red-500/5 border border-red-500/20 rounded-xl text-sm text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all"
+                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-q-error/5 border border-q-error/20 rounded-xl text-sm text-q-error hover:bg-q-error/10 hover:border-q-error/30 transition-all"
                                     >
                                         <Trash2 size={14} /> {t('adminEmail.detailPanel.delete')}
                                     </button>

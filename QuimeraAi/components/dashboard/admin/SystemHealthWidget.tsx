@@ -1,9 +1,9 @@
 import React from 'react';
-import { 
-    Activity, 
-    Server, 
-    Database, 
-    Wifi, 
+import {
+    Activity,
+    Server,
+    Database,
+    Wifi,
     Cpu,
     HardDrive,
     AlertCircle,
@@ -34,9 +34,9 @@ interface SystemHealthWidgetProps {
 const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({ health, onRefresh }) => {
     const getStatusColor = (status: 'healthy' | 'degraded' | 'down') => {
         switch (status) {
-            case 'healthy': return 'text-green-400';
-            case 'degraded': return 'text-yellow-400';
-            case 'down': return 'text-red-400';
+            case 'healthy': return 'text-q-success';
+            case 'degraded': return 'text-q-accent';
+            case 'down': return 'text-q-error';
         }
     };
 
@@ -57,13 +57,13 @@ const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({ health, onRefre
     };
 
     const getLoadColor = (load: number) => {
-        if (load < 50) return 'bg-green-500';
-        if (load < 80) return 'bg-yellow-500';
-        return 'bg-red-500';
+        if (load < 50) return 'bg-q-success';
+        if (load < 80) return 'bg-q-accent';
+        return 'bg-q-error';
     };
 
-    const overallStatus = health.apiStatus === 'healthy' && health.databaseStatus === 'healthy' 
-        ? 'healthy' 
+    const overallStatus = health.apiStatus === 'healthy' && health.databaseStatus === 'healthy'
+        ? 'healthy'
         : health.apiStatus === 'down' || health.databaseStatus === 'down'
         ? 'down'
         : 'degraded';

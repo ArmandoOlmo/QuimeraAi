@@ -26,10 +26,10 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         {/* Main KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-                { label: t('email.hub.analytics.emailsSent'), value: stats.totalSent.toLocaleString(), icon: <Send size={20} className="text-blue-400" />, bg: 'bg-blue-500/10' },
-                { label: t('email.hub.analytics.openRate'), value: `${stats.openRate}%`, icon: <Eye size={20} className="text-purple-400" />, bg: 'bg-purple-500/10', sub: `${stats.opened.toLocaleString()} ${t('email.hub.analytics.opened')}` },
-                { label: t('email.hub.analytics.clickRate'), value: `${stats.clickRate}%`, icon: <MousePointer size={20} className="text-amber-400" />, bg: 'bg-amber-500/10', sub: `${stats.clicked.toLocaleString()} ${t('email.hub.analytics.clicks')}` },
-                { label: t('email.hub.analytics.bounceRate'), value: `${stats.bounceRate}%`, icon: <AlertCircle size={20} className="text-red-400" />, bg: 'bg-red-500/10', sub: `${stats.bounced.toLocaleString()} ${t('email.hub.analytics.bounced')}` },
+                { label: t('email.hub.analytics.emailsSent'), value: stats.totalSent.toLocaleString(), icon: <Send size={20} className="text-q-accent" />, bg: 'bg-q-accent/10' },
+                { label: t('email.hub.analytics.openRate'), value: `${stats.openRate}%`, icon: <Eye size={20} className="text-q-accent" />, bg: 'bg-q-accent/10', sub: `${stats.opened.toLocaleString()} ${t('email.hub.analytics.opened')}` },
+                { label: t('email.hub.analytics.clickRate'), value: `${stats.clickRate}%`, icon: <MousePointer size={20} className="text-q-accent" />, bg: 'bg-q-accent/10', sub: `${stats.clicked.toLocaleString()} ${t('email.hub.analytics.clicks')}` },
+                { label: t('email.hub.analytics.bounceRate'), value: `${stats.bounceRate}%`, icon: <AlertCircle size={20} className="text-q-error" />, bg: 'bg-q-error/10', sub: `${stats.bounced.toLocaleString()} ${t('email.hub.analytics.bounced')}` },
             ].map((metric, i) => (
                 <div key={i} className="bg-q-surface border border-q-border rounded-xl p-5">
                     <div className={`p-2 ${metric.bg} rounded-lg w-fit mb-3`}>{metric.icon}</div>
@@ -56,7 +56,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
                                         <div className="w-full flex flex-col gap-0.5 min-h-[4px]">
                                             <div className="w-full bg-q-accent/80 rounded-t transition-all" style={{ height: `${Math.max(height * 1.5, data.sent > 0 ? 4 : 0)}px` }} />
-                                            <div className="w-full bg-purple-500/60 rounded transition-all" style={{ height: `${Math.max(openedHeight * 1.5, data.opened > 0 ? 2 : 0)}px` }} />
+                                            <div className="w-full bg-q-accent/60 rounded transition-all" style={{ height: `${Math.max(openedHeight * 1.5, data.opened > 0 ? 2 : 0)}px` }} />
                                         </div>
                                         <span className="text-xs text-q-text-secondary">{data.month}</span>
                                         <span className="text-xs font-medium text-q-text">{data.sent}</span>
@@ -70,7 +70,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                                 <span className="text-sm text-q-text-secondary">{t('email.hub.analytics.sent')}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-purple-500/60 rounded" />
+                                <div className="w-3 h-3 bg-q-accent/60 rounded" />
                                 <span className="text-sm text-q-text-secondary">{t('email.hub.analytics.openedLabel')}</span>
                             </div>
                         </div>
@@ -88,7 +88,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
             {/* Email Health */}
             <div className="bg-q-surface border border-q-border rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-q-text mb-4 flex items-center gap-2">
-                    <Activity size={18} className="text-green-400" />
+                    <Activity size={18} className="text-q-success" />
                     {t('email.hub.analytics.emailHealth')}
                 </h3>
                 <div className="space-y-4">
@@ -103,8 +103,8 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                         const isWarn = metric.inverted
                             ? metric.value <= metric.threshold.warn
                             : metric.value >= metric.threshold.warn;
-                        const color = isGood ? 'text-green-400' : isWarn ? 'text-amber-400' : 'text-red-400';
-                        const bgColor = isGood ? 'bg-green-400' : isWarn ? 'bg-amber-400' : 'bg-red-400';
+                        const color = isGood ? 'text-q-success' : isWarn ? 'text-q-accent' : 'text-q-error';
+                        const bgColor = isGood ? 'bg-q-success' : isWarn ? 'bg-q-accent' : 'bg-q-error';
                         return (
                             <div key={i}>
                                 <div className="flex justify-between items-center mb-1">
@@ -129,7 +129,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         <div className="grid md:grid-cols-3 gap-4">
             <div className="bg-q-surface border border-q-border rounded-xl p-5">
                 <div className="flex items-center gap-3 mb-2">
-                    <TrendingUp className="text-green-500" size={20} />
+                    <TrendingUp className="text-q-success" size={20} />
                     <span className="text-q-text-secondary text-sm">{t('email.hub.analytics.deliveryRate')}</span>
                 </div>
                 <p className="text-2xl font-bold text-q-text">{stats.deliveryRate}%</p>
@@ -139,7 +139,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
             </div>
             <div className="bg-q-surface border border-q-border rounded-xl p-5">
                 <div className="flex items-center gap-3 mb-2">
-                    <AlertCircle className="text-amber-500" size={20} />
+                    <AlertCircle className="text-q-accent" size={20} />
                     <span className="text-q-text-secondary text-sm">{t('email.hub.analytics.bounces')}</span>
                 </div>
                 <p className="text-2xl font-bold text-q-text">{stats.bounced.toLocaleString()}</p>
@@ -147,7 +147,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
             </div>
             <div className="bg-q-surface border border-q-border rounded-xl p-5">
                 <div className="flex items-center gap-3 mb-2">
-                    <Layers className="text-indigo-500" size={20} />
+                    <Layers className="text-q-accent" size={20} />
                     <span className="text-q-text-secondary text-sm">{t('email.hub.analytics.totalCampaigns')}</span>
                 </div>
                 <p className="text-2xl font-bold text-q-text">{stats.totalCampaigns}</p>
@@ -209,30 +209,30 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                                             <td className="px-3 py-3 text-center text-sm text-q-text font-medium">{sent.toLocaleString()}</td>
                                             <td className="px-3 py-3 text-center text-sm text-q-text">{delivered.toLocaleString()}</td>
                                             <td className="px-3 py-3 text-center">
-                                                <p className="text-sm font-semibold text-purple-400">{uniqueOpens.toLocaleString()}</p>
+                                                <p className="text-sm font-semibold text-q-accent">{uniqueOpens.toLocaleString()}</p>
                                                 {totalOpens > uniqueOpens && (
                                                     <p className="text-[10px] text-q-text-secondary">{totalOpens} {t('email.hub.analytics.total')}</p>
                                                 )}
                                             </td>
                                             <td className="px-3 py-3 text-center">
                                                 <div className="flex flex-col items-center">
-                                                    <span className={`text-sm font-bold ${openRateNum > 25 ? 'text-green-400' : openRateNum > 15 ? 'text-amber-400' : 'text-red-400'}`}>
+                                                    <span className={`text-sm font-bold ${openRateNum > 25 ? 'text-q-success' : openRateNum > 15 ? 'text-q-accent' : 'text-q-error'}`}>
                                                         {openRate}%
                                                     </span>
                                                     <div className="w-16 h-1.5 bg-q-surface-overlay rounded-full mt-1">
                                                         <div
-                                                            className={`h-full rounded-full ${openRateNum > 25 ? 'bg-green-400' : openRateNum > 15 ? 'bg-amber-400' : 'bg-red-400'}`}
+                                                            className={`h-full rounded-full ${openRateNum > 25 ? 'bg-q-success' : openRateNum > 15 ? 'bg-q-accent' : 'bg-q-error'}`}
                                                             style={{ width: `${Math.min(openRateNum, 100)}%` }}
                                                         />
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-3 py-3 text-center">
-                                                <p className="text-sm font-semibold text-amber-400">{uniqueClicks.toLocaleString()}</p>
+                                                <p className="text-sm font-semibold text-q-accent">{uniqueClicks.toLocaleString()}</p>
                                             </td>
                                             <td className="px-3 py-3 text-center text-sm font-medium text-q-text">{clickRate}%</td>
                                             <td className="px-3 py-3 text-center">
-                                                <span className={`text-sm font-medium ${bounceRate > 5 ? 'text-red-400' : bounceRate > 2 ? 'text-amber-400' : 'text-green-400'}`}>
+                                                <span className={`text-sm font-medium ${bounceRate > 5 ? 'text-q-error' : bounceRate > 2 ? 'text-q-accent' : 'text-q-success'}`}>
                                                     {bounced}
                                                 </span>
                                                 {bounceRate > 0 && (

@@ -31,6 +31,7 @@ import { useEcommerceContext } from '../EcommerceContext';
 import { FilterChipRow } from '../../filters';
 import type { FilterChipOption } from '../../filters';
 import AppSelect from '../../../ui/AppSelect';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 type StatusFilter = ReviewStatus | 'all';
 
@@ -175,9 +176,9 @@ const ReviewsView: React.FC = () => {
     // Status badge component
     const StatusBadge: React.FC<{ status: ReviewStatus }> = ({ status }) => {
         const styles = {
-            pending: 'bg-yellow-500/20 text-yellow-400',
-            approved: 'bg-green-500/20 text-green-400',
-            rejected: 'bg-red-500/20 text-red-400',
+            pending: 'bg-q-accent/20 text-q-accent',
+            approved: 'bg-q-success/20 text-q-success',
+            rejected: 'bg-q-error/20 text-q-error',
         };
 
         const labels = {
@@ -200,7 +201,7 @@ const ReviewsView: React.FC = () => {
                 <Star
                     key={i}
                     size={14}
-                    className={i < rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}
+                    className={i < rating ? 'text-q-accent' : 'text-q-text-muted dark:text-gray-600'}
                     fill={i < rating ? 'currentColor' : 'none'}
                 />
             ))}
@@ -231,7 +232,7 @@ const ReviewsView: React.FC = () => {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
+                <MotionCard staggerIndex={0} hoverMotion className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <MessageSquare className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
@@ -239,34 +240,34 @@ const ReviewsView: React.FC = () => {
                             <p className="text-2xl font-bold text-foreground">{totalReviews}</p>
                         </div>
                     </div>
-                </div>
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
+                </MotionCard>
+                <MotionCard staggerIndex={1} hoverMotion className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <Clock className="text-yellow-400 flex-shrink-0" size={20} strokeWidth={2} />
+                        <Clock className="text-q-accent flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-q-text-muted text-sm">Pendientes</p>
                             <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
                         </div>
                     </div>
-                </div>
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
+                </MotionCard>
+                <MotionCard staggerIndex={2} hoverMotion className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <Check className="text-green-400 flex-shrink-0" size={20} strokeWidth={2} />
+                        <Check className="text-q-success flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-q-text-muted text-sm">Aprobadas</p>
                             <p className="text-2xl font-bold text-foreground">{approvedCount}</p>
                         </div>
                     </div>
-                </div>
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
+                </MotionCard>
+                <MotionCard staggerIndex={3} hoverMotion className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <X className="text-red-400 flex-shrink-0" size={20} strokeWidth={2} />
+                        <X className="text-q-error flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-q-text-muted text-sm">Rechazadas</p>
                             <p className="text-2xl font-bold text-foreground">{rejectedCount}</p>
                         </div>
                     </div>
-                </div>
+                </MotionCard>
             </div>
 
             {/* Search and filters */}
@@ -306,12 +307,12 @@ const ReviewsView: React.FC = () => {
                                 <Filter className="h-3.5 w-3.5" />
                                 <span>{t('ecommerce.reviewStatusFilter', 'Estado')}</span>
                             </div>
-                            <FilterChipRow
-                                options={statusFilterOptions}
-                                value={statusFilter}
-                                onChange={setStatusFilter}
-                                className="min-w-0"
-                            />
+                                <FilterChipRow
+                                    options={statusFilterOptions}
+                                    value={statusFilter}
+                                    onChange={(value) => setStatusFilter(value as StatusFilter)}
+                                    className="min-w-0"
+                                />
                         </div>
 
                         <label className="block min-w-0">
@@ -385,7 +386,7 @@ const ReviewsView: React.FC = () => {
                                             </span>
                                             <StatusBadge status={review.status} />
                                             {review.verifiedPurchase && (
-                                                <span className="text-xs text-green-400 flex items-center gap-1">
+                                                <span className="text-xs text-q-success flex items-center gap-1">
                                                     <Check size={12} />
                                                     Verificada
                                                 </span>
@@ -441,7 +442,7 @@ const ReviewsView: React.FC = () => {
                                         <button
                                             onClick={() => handleApprove(review.id)}
                                             disabled={isProcessing === review.id}
-                                            className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors disabled:opacity-50"
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-q-success/20 text-q-success rounded-lg hover:bg-q-success/30 transition-colors disabled:opacity-50"
                                         >
                                             {isProcessing === review.id ? (
                                                 <Loader2 size={16} className="animate-spin" />
@@ -453,7 +454,7 @@ const ReviewsView: React.FC = () => {
                                         <button
                                             onClick={() => handleReject(review.id)}
                                             disabled={isProcessing === review.id}
-                                            className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-q-error/20 text-q-error rounded-lg hover:bg-q-error/30 transition-colors disabled:opacity-50"
                                         >
                                             <X size={16} />
                                             Rechazar
@@ -487,7 +488,7 @@ const ReviewsView: React.FC = () => {
 
             {/* Response Modal */}
             {showResponseModal && selectedReview && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+                <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
                     <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-lg max-h-[92vh] overflow-y-auto">
                         <div className="p-4 border-b border-q-border sm:p-6">
                             <h3 className="text-lg font-bold text-foreground">

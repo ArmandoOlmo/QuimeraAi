@@ -108,17 +108,17 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
     };
 
     const channels: { id: ChannelTab; name: string; icon: React.ReactNode; color: string; enabled: boolean }[] = [
-        { id: 'whatsapp', name: 'WhatsApp Business', icon: <Phone size={20} />, color: 'bg-green-500', enabled: whatsappConfig.enabled },
-        { id: 'facebook', name: 'Facebook Messenger', icon: <Facebook size={20} />, color: 'bg-blue-600', enabled: facebookConfig.enabled },
-        { id: 'instagram', name: 'Instagram DMs', icon: <Instagram size={20} />, color: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400', enabled: instagramConfig.enabled },
+        { id: 'whatsapp', name: 'WhatsApp Business', icon: <Phone size={20} />, color: 'bg-q-success', enabled: whatsappConfig.enabled },
+        { id: 'facebook', name: 'Facebook Messenger', icon: <Facebook size={20} />, color: 'bg-q-accent', enabled: facebookConfig.enabled },
+        { id: 'instagram', name: 'Instagram DMs', icon: <Instagram size={20} />, color: 'bg-gradient-to-br from-q-accent via-q-accent/80 to-q-warning', enabled: instagramConfig.enabled },
     ];
 
     const renderWhatsAppSettings = () => (
         <div className="space-y-6 animate-fade-in-up">
             {/* Enable Toggle */}
-            <div className="flex items-center justify-between p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-q-success/10 border border-q-success/20 rounded-xl">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-500 rounded-lg">
+                    <div className="p-2 bg-q-success rounded-lg">
                         <Phone size={20} className="text-white" />
                     </div>
                     <div>
@@ -133,7 +133,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                         onChange={(e) => setWhatsappConfig(prev => ({ ...prev, enabled: e.target.checked }))}
                         className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-green-500 peer-focus:ring-2 peer-focus:ring-green-500/50 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                    <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-q-success peer-focus:ring-2 peer-focus:ring-q-success/50 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-q-surface after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                 </label>
             </div>
 
@@ -157,7 +157,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                                 onClick={() => copyToClipboard(getWebhookUrl('whatsapp'), 'wa-webhook')}
                                 className="p-2 hover:bg-secondary rounded-lg transition-colors"
                             >
-                                {copied === 'wa-webhook' ? <CheckCircle size={16} className="text-green-500" /> : <Copy size={16} />}
+                                {copied === 'wa-webhook' ? <CheckCircle size={16} className="text-q-success" /> : <Copy size={16} />}
                             </button>
                         </div>
                     </div>
@@ -174,7 +174,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                                 onClick={() => copyToClipboard(whatsappConfig.webhookVerifyToken, 'wa-verify')}
                                 className="p-2 hover:bg-secondary rounded-lg transition-colors"
                             >
-                                {copied === 'wa-verify' ? <CheckCircle size={16} className="text-green-500" /> : <Copy size={16} />}
+                                {copied === 'wa-verify' ? <CheckCircle size={16} className="text-q-success" /> : <Copy size={16} />}
                             </button>
                         </div>
                     </div>
@@ -251,9 +251,9 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
     const renderFacebookSettings = () => (
         <div className="space-y-6 animate-fade-in-up">
             {/* Enable Toggle */}
-            <div className="flex items-center justify-between p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-q-accent/10 border border-q-accent/20 rounded-xl">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-600 rounded-lg">
+                    <div className="p-2 bg-q-accent rounded-lg">
                         <Facebook size={20} className="text-white" />
                     </div>
                     <div>
@@ -268,7 +268,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                         onChange={(e) => setFacebookConfig(prev => ({ ...prev, enabled: e.target.checked }))}
                         className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-blue-600 peer-focus:ring-2 peer-focus:ring-blue-600/50 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                    <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-q-accent peer-focus:ring-2 peer-focus:ring-q-accent/50 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-q-surface after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                 </label>
             </div>
 
@@ -292,7 +292,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                                 onClick={() => copyToClipboard(getWebhookUrl('facebook'), 'fb-webhook')}
                                 className="p-2 hover:bg-secondary rounded-lg transition-colors"
                             >
-                                {copied === 'fb-webhook' ? <CheckCircle size={16} className="text-green-500" /> : <Copy size={16} />}
+                                {copied === 'fb-webhook' ? <CheckCircle size={16} className="text-q-success" /> : <Copy size={16} />}
                             </button>
                         </div>
                     </div>
@@ -309,7 +309,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                                 onClick={() => copyToClipboard(facebookConfig.webhookVerifyToken, 'fb-verify')}
                                 className="p-2 hover:bg-secondary rounded-lg transition-colors"
                             >
-                                {copied === 'fb-verify' ? <CheckCircle size={16} className="text-green-500" /> : <Copy size={16} />}
+                                {copied === 'fb-verify' ? <CheckCircle size={16} className="text-q-success" /> : <Copy size={16} />}
                             </button>
                         </div>
                     </div>
@@ -372,9 +372,9 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
     const renderInstagramSettings = () => (
         <div className="space-y-6 animate-fade-in-up">
             {/* Enable Toggle */}
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-orange-500/10 border border-pink-500/20 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-q-accent/10 via-q-accent/10 to-q-warning/10 border border-q-accent/20 rounded-xl">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 rounded-lg">
+                    <div className="p-2 bg-gradient-to-br from-q-accent via-q-accent/80 to-q-warning rounded-lg">
                         <Instagram size={20} className="text-white" />
                     </div>
                     <div>
@@ -389,7 +389,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                         onChange={(e) => setInstagramConfig(prev => ({ ...prev, enabled: e.target.checked }))}
                         className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-pink-500 peer-focus:ring-2 peer-focus:ring-pink-500/50 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                    <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-q-accent peer-focus:ring-2 peer-focus:ring-q-accent/50 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-q-surface after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                 </label>
             </div>
 
@@ -413,7 +413,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                                 onClick={() => copyToClipboard(getWebhookUrl('instagram'), 'ig-webhook')}
                                 className="p-2 hover:bg-secondary rounded-lg transition-colors"
                             >
-                                {copied === 'ig-webhook' ? <CheckCircle size={16} className="text-green-500" /> : <Copy size={16} />}
+                                {copied === 'ig-webhook' ? <CheckCircle size={16} className="text-q-success" /> : <Copy size={16} />}
                             </button>
                         </div>
                     </div>
@@ -430,7 +430,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                                 onClick={() => copyToClipboard(instagramConfig.webhookVerifyToken, 'ig-verify')}
                                 className="p-2 hover:bg-secondary rounded-lg transition-colors"
                             >
-                                {copied === 'ig-verify' ? <CheckCircle size={16} className="text-green-500" /> : <Copy size={16} />}
+                                {copied === 'ig-verify' ? <CheckCircle size={16} className="text-q-success" /> : <Copy size={16} />}
                             </button>
                         </div>
                     </div>
@@ -531,10 +531,10 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
 
             {/* Auto-configured notice */}
             {isAutoConfigured && (
-                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                <div className="p-4 bg-q-success/10 border border-q-success/20 rounded-xl">
                     <div className="flex items-center gap-2">
-                        <Sparkles size={18} className="text-green-500" />
-                        <span className="font-medium text-green-600">Canales configurados automáticamente</span>
+                        <Sparkles size={18} className="text-q-success" />
+                        <span className="font-medium text-q-success">Canales configurados automáticamente</span>
                     </div>
                     <p className="text-sm text-q-text-muted mt-1">
                         Tus credenciales fueron configuradas mediante la conexión con Meta.
@@ -579,7 +579,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                                 </span>
                                 <span className="hidden sm:inline">{channel.name}</span>
                                 {channel.enabled && (
-                                    <span className="w-2 h-2 bg-green-500 rounded-full" />
+                                    <span className="w-2 h-2 bg-q-success rounded-full" />
                                 )}
                             </button>
                         ))}
@@ -595,8 +595,8 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
             )}
 
             {/* Security Notice */}
-            <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                <Shield size={20} className="text-amber-500 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-3 p-4 bg-q-accent/10 border border-q-accent/20 rounded-xl">
+                <Shield size={20} className="text-q-accent shrink-0 mt-0.5" />
                 <div>
                     <h4 className="font-semibold text-foreground text-sm">Seguridad de Credenciales</h4>
                     <p className="text-xs text-q-text-muted mt-1">

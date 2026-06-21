@@ -109,19 +109,19 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
             <div className={`
                 flex items-center gap-4 p-4 rounded-xl transition-all
                 ${status === 'active' ? 'bg-primary/10 border border-primary/30' : ''}
-                ${status === 'completed' ? 'bg-green-500/10 border border-green-500/30' : ''}
+                ${status === 'completed' ? 'bg-q-success/10 border border-q-success/30' : ''}
                 ${status === 'pending' ? 'bg-q-surface/50 border border-q-border' : ''}
                 ${status === 'error' ? 'bg-destructive/10 border border-destructive/30' : ''}
             `}>
                 <div className={`
                     w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
                     ${status === 'active' ? 'bg-primary/20' : ''}
-                    ${status === 'completed' ? 'bg-green-500/20' : ''}
+                    ${status === 'completed' ? 'bg-q-success/20' : ''}
                     ${status === 'pending' ? 'bg-muted' : ''}
                     ${status === 'error' ? 'bg-destructive/20' : ''}
                 `}>
                     {status === 'active' && <Loader2 size={20} className="text-primary animate-spin" />}
-                    {status === 'completed' && <Check size={20} className="text-green-400" />}
+                    {status === 'completed' && <Check size={20} className="text-q-success" />}
                     {status === 'pending' && <div className="text-q-text-muted">{icon}</div>}
                     {status === 'error' && <AlertCircle size={20} className="text-destructive" />}
                 </div>
@@ -130,14 +130,14 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                         <p className={`
                             font-medium
                             ${status === 'active' ? 'text-primary' : ''}
-                            ${status === 'completed' ? 'text-green-400' : ''}
+                            ${status === 'completed' ? 'text-q-success' : ''}
                             ${status === 'pending' ? 'text-q-text-muted' : ''}
                             ${status === 'error' ? 'text-destructive' : ''}
                         `}>
                             {label}
                         </p>
                         {(status === 'active' || status === 'completed') && (
-                            <span className={`text-xs font-medium ${status === 'completed' ? 'text-green-400' : 'text-primary'}`}>
+                            <span className={`text-xs font-medium ${status === 'completed' ? 'text-q-success' : 'text-primary'}`}>
                                 {phaseProgress}%
                             </span>
                         )}
@@ -163,10 +163,10 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
         return (
             <div className="max-w-xl mx-auto text-center space-y-8">
                 <div className="relative">
-                    <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center animate-bounce">
+                    <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-q-success to-q-success flex items-center justify-center animate-bounce">
                         <Check size={48} className="text-white" />
                     </div>
-                    <div className="absolute inset-0 w-24 h-24 mx-auto rounded-full bg-green-400/30 animate-ping" />
+                    <div className="absolute inset-0 w-24 h-24 mx-auto rounded-full bg-q-success/30 animate-ping" />
                 </div>
 
                 <div>
@@ -178,9 +178,9 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                     </p>
                 </div>
 
-                <div className="p-6 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-2xl">
+                <div className="p-6 bg-gradient-to-r from-q-success/10 to-q-success/10 border border-q-success/30 rounded-2xl">
                     <div className="flex items-center justify-center gap-3 mb-4">
-                        <Sparkles size={24} className="text-green-400" />
+                        <Sparkles size={24} className="text-q-success" />
                         <span className="text-lg font-semibold text-foreground">
                             {progress.businessName}
                         </span>
@@ -254,7 +254,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
             {/* Header with animated logo */}
             <div className="text-center">
                 <div className="relative w-20 h-20 mx-auto mb-4">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-orange-500 to-pink-500 animate-spin-slow opacity-50 blur-xl" />
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-q-warning to-q-accent-tertiary animate-spin-slow opacity-50 blur-xl" />
                     <div className="relative w-20 h-20 rounded-full bg-q-surface border-2 border-q-border flex items-center justify-center">
                         <img
                             src={QUIMERA_LOGO}
@@ -346,18 +346,18 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
 
             {/* Elapsed time and emergency reset option - shown after 60 seconds */}
             {elapsedTime >= 60 && (
-                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                <div className="p-4 bg-q-accent/10 border border-q-accent/30 rounded-xl">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <Clock size={16} className="text-amber-500" />
-                            <span className="text-sm text-amber-500">
+                            <Clock size={16} className="text-q-accent" />
+                            <span className="text-sm text-q-accent">
                                 {t('onboarding.elapsedTime', 'Elapsed')}: {formatTime(elapsedTime)}
                             </span>
                         </div>
                         {onReset && elapsedTime >= 120 && (
                             <button
                                 onClick={onReset}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 rounded-lg transition-colors"
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-q-accent/20 text-q-accent hover:bg-q-accent/30 rounded-lg transition-colors"
                             >
                                 <RotateCcw size={14} />
                                 {t('onboarding.startOver', 'Start Over')}
@@ -365,7 +365,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                         )}
                     </div>
                     {elapsedTime >= 120 && (
-                        <p className="text-xs text-amber-500/80 mt-2">
+                        <p className="text-xs text-q-accent/80 mt-2">
                             {t('onboarding.generationStuck', 'Generation is taking longer than expected. You can start over if it appears stuck.')}
                         </p>
                     )}

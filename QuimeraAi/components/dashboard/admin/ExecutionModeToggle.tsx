@@ -14,13 +14,13 @@ interface ExecutionModeToggleProps {
 
 /**
  * Execution Mode Toggle (DISABLED / Coming Soon)
- * 
+ *
  * This component displays a read-only toggle for the future Execution Mode feature.
  * Currently:
  * - Toggle is disabled and cannot be changed
  * - Shows "Instant" as the locked default
  * - Shows "Coming Soon" badge
- * 
+ *
  * NO LOGIC IS CONNECTED - this is UI preparation only.
  */
 const ExecutionModeToggle: React.FC<ExecutionModeToggleProps> = ({ onBack }) => {
@@ -38,7 +38,7 @@ const ExecutionModeToggle: React.FC<ExecutionModeToggleProps> = ({ onBack }) => 
                         <h1 className="text-2xl font-bold text-q-text">
                             ⚡ Execution Mode
                         </h1>
-                        <span className="px-2 py-0.5 text-xs font-semibold bg-amber-500/20 text-amber-400 rounded-full">
+                        <span className="px-2 py-0.5 text-xs font-semibold bg-q-accent/20 text-q-accent rounded-full">
                             Coming Soon
                         </span>
                     </div>
@@ -49,10 +49,10 @@ const ExecutionModeToggle: React.FC<ExecutionModeToggleProps> = ({ onBack }) => 
             </div>
 
             {/* Info Banner */}
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-8 flex items-start gap-3">
-                <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="bg-q-accent/10 border border-q-accent/30 rounded-xl p-4 mb-8 flex items-start gap-3">
+                <Info className="w-5 h-5 text-q-accent flex-shrink-0 mt-0.5" />
                 <div>
-                    <p className="text-blue-400 font-medium">Feature in Development</p>
+                    <p className="text-q-accent font-medium">Feature in Development</p>
                     <p className="text-q-text-secondary text-sm mt-1">
                         This feature is being prepared for a future release. The current behavior (Instant mode) will remain unchanged until this feature is activated.
                     </p>
@@ -94,7 +94,7 @@ const ExecutionModeToggle: React.FC<ExecutionModeToggleProps> = ({ onBack }) => 
                                 </p>
                             </div>
                             <div className="w-5 h-5 rounded-full border-2 border-q-accent bg-q-accent flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-white" />
+                                <div className="w-2 h-2 rounded-full bg-q-surface" />
                             </div>
                         </div>
                     </div>
@@ -107,7 +107,7 @@ const ExecutionModeToggle: React.FC<ExecutionModeToggleProps> = ({ onBack }) => 
             `}
                     >
                         <div className="flex items-start gap-4">
-                            <div className="p-2 rounded-lg bg-gray-500/20">
+                            <div className="p-2 rounded-lg bg-q-surface-overlay/20">
                                 <span className="text-2xl">🛡️</span>
                             </div>
                             <div className="flex-1">
@@ -115,7 +115,7 @@ const ExecutionModeToggle: React.FC<ExecutionModeToggleProps> = ({ onBack }) => 
                                     <h3 className="font-semibold text-q-text">
                                         {EXECUTION_MODE_LABELS.safe}
                                     </h3>
-                                    <span className="px-2 py-0.5 text-xs font-medium bg-gray-500/20 text-gray-400 rounded">
+                                    <span className="px-2 py-0.5 text-xs font-medium bg-q-surface-overlay/20 text-q-text-muted rounded">
                                         Not Available
                                     </span>
                                 </div>

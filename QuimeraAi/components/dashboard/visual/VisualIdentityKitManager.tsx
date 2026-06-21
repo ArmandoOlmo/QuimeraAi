@@ -195,7 +195,7 @@ export default function VisualIdentityKitManager({ onBack, projectId, kitScope =
             </header>
 
             {kitScope === 'admin' && (
-                <div className="px-6 py-2 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-200/90">
+                <div className="px-6 py-2 bg-q-accent/10 border-b border-q-accent/20 text-xs text-q-accent/90">
                     {t('visualKit.adminScopeBanner', {
                         defaultValue: 'Estas referencias se usan al generar imágenes en esta librería de administración.',
                     })}
@@ -209,7 +209,7 @@ export default function VisualIdentityKitManager({ onBack, projectId, kitScope =
                         <span>{t('common.loading', { defaultValue: 'Loading...' })}</span>
                     </div>
                 ) : error ? (
-                    <div className="flex items-center justify-center h-full text-red-400">
+                    <div className="flex items-center justify-center h-full text-q-error">
                         <span>{error}</span>
                     </div>
                 ) : totalRefs === 0 ? (
@@ -259,24 +259,24 @@ export default function VisualIdentityKitManager({ onBack, projectId, kitScope =
                                                             alt={ref.label}
                                                             className="w-full h-full object-cover"
                                                         />
-                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2">
+                                                        <div className="absolute inset-0 bg-q-text/0 group-hover:bg-q-text/40 transition-colors flex items-center justify-center gap-2">
                                                             <button
                                                                 onClick={() => openEditModal(ref)}
-                                                                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white opacity-0 group-hover:opacity-100 transition-all"
+                                                                className="p-2 rounded-lg bg-q-surface/10 hover:bg-q-surface/20 text-white opacity-0 group-hover:opacity-100 transition-all"
                                                             >
                                                                 <Edit3 size={14} />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDelete(ref.id)}
-                                                                className="p-2 rounded-lg bg-white/10 hover:bg-red-500/50 text-white opacity-0 group-hover:opacity-100 transition-all"
+                                                                className="p-2 rounded-lg bg-q-surface/10 hover:bg-q-error/50 text-white opacity-0 group-hover:opacity-100 transition-all"
                                                             >
                                                                 <Trash2 size={14} />
                                                             </button>
                                                         </div>
                                                         {/* Usage badge */}
                                                         <span className={`absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                                                            ref.usage === 'always' ? 'bg-green-500/80 text-white' :
-                                                            ref.usage === 'contextual' ? 'bg-blue-500/80 text-white' :
+                                                            ref.usage === 'always' ? 'bg-q-success/80 text-white' :
+                                                            ref.usage === 'contextual' ? 'bg-q-accent/80 text-q-text-on-accent' :
                                                             'bg-q-surface/80 text-q-text-secondary'
                                                         }`}>
                                                             {ref.usage === 'always' ? 'Siempre' : ref.usage === 'contextual' ? 'Contextual' : 'Opcional'}
@@ -319,12 +319,12 @@ export default function VisualIdentityKitManager({ onBack, projectId, kitScope =
 
             {/* Add Modal */}
             {showAddModal && createPortal(
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowAddModal(false)}>
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[rgba(9,4,17,0.72)] p-4 backdrop-blur-sm" onClick={() => setShowAddModal(false)}>
                     <div
-                        className="bg-q-surface border border-q-border rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto mx-4"
+                        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-q-border bg-q-surface shadow-2xl sm:max-h-[90vh]"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="flex items-center justify-between p-5 border-b border-q-border">
+                        <div className="flex shrink-0 items-center justify-between border-b border-q-border p-5">
                             <h3 className="text-lg font-bold text-q-text">
                                 {t('visualKit.addReference', { defaultValue: 'Añadir Referencia' })}
                             </h3>
@@ -332,7 +332,7 @@ export default function VisualIdentityKitManager({ onBack, projectId, kitScope =
                                 <X size={18} />
                             </button>
                         </div>
-                        <div className="p-5 space-y-4">
+                        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5 custom-scrollbar">
                             {/* Image */}
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wide block mb-2">
@@ -470,7 +470,7 @@ export default function VisualIdentityKitManager({ onBack, projectId, kitScope =
                                 />
                             </div>
                         </div>
-                        <div className="flex items-center justify-end gap-3 p-5 border-t border-q-border">
+                        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-q-border p-5">
                             <button
                                 onClick={() => setShowAddModal(false)}
                                 className="px-4 py-2 text-sm text-q-text-secondary hover:text-q-text transition-colors"
@@ -493,18 +493,18 @@ export default function VisualIdentityKitManager({ onBack, projectId, kitScope =
 
             {/* Edit Modal */}
             {editingRef && createPortal(
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setEditingRef(null)}>
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[rgba(9,4,17,0.72)] p-4 backdrop-blur-sm" onClick={() => setEditingRef(null)}>
                     <div
-                        className="bg-q-surface border border-q-border rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto mx-4"
+                        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-q-border bg-q-surface shadow-2xl sm:max-h-[90vh]"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="flex items-center justify-between p-5 border-b border-q-border">
+                        <div className="flex shrink-0 items-center justify-between border-b border-q-border p-5">
                             <h3 className="text-lg font-bold text-q-text">Editar Referencia</h3>
                             <button onClick={() => setEditingRef(null)} className="p-1.5 hover:bg-q-bg rounded-lg text-q-text-secondary hover:text-q-text transition-colors">
                                 <X size={18} />
                             </button>
                         </div>
-                        <div className="p-5 space-y-4">
+                        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5 custom-scrollbar">
                             {/* Preview */}
                             <div className="flex items-center gap-3 p-3 bg-q-bg rounded-xl">
                                 <img src={editImageUrl} alt="Preview" className="w-14 h-14 rounded-lg object-cover border border-q-border" />
@@ -572,7 +572,7 @@ export default function VisualIdentityKitManager({ onBack, projectId, kitScope =
                                 </div>
                             </label>
                         </div>
-                        <div className="flex items-center justify-end gap-3 p-5 border-t border-q-border">
+                        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-q-border p-5">
                             <button onClick={() => setEditingRef(null)} className="px-4 py-2 text-sm text-q-text-secondary hover:text-q-text transition-colors">Cancelar</button>
                             <button onClick={handleSaveEdit} className="flex items-center gap-2 bg-q-accent hover:bg-q-accent/80 text-primary-foreground px-5 py-2 rounded-xl text-sm font-bold transition-colors">
                                 <CheckCircle2 size={16} />

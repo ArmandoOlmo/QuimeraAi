@@ -46,21 +46,21 @@ const DragDropZone: React.FC<DragDropZoneProps> = ({
 
     const handleFiles = async (files: FileList | null) => {
         if (!files || files.length === 0) return;
-        
+
         setError(null);
         setIsUploading(true);
 
         try {
             const fileArray = Array.from(files);
-            
+
             for (const file of fileArray) {
                 const validation = validateFile(file);
-                
+
                 if (!validation.valid) {
                     setError(validation.error || 'Invalid file');
                     continue;
                 }
-                
+
                 await onFileSelect(file);
             }
         } catch (err) {
@@ -92,7 +92,7 @@ const DragDropZone: React.FC<DragDropZoneProps> = ({
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
-        
+
         if (!disabled) {
             handleFiles(e.dataTransfer.files);
         }
@@ -129,7 +129,7 @@ const DragDropZone: React.FC<DragDropZoneProps> = ({
                     {children}
                 </div>
                 {error && (
-                    <div className="absolute top-full left-0 right-0 mt-2 text-xs text-red-500 bg-red-50 dark:bg-red-900/20 p-2 rounded-md z-10">
+                    <div className="absolute top-full left-0 right-0 mt-2 text-xs text-q-error bg-q-error/10 dark:bg-q-error/12 p-2 rounded-md z-10">
                         {error}
                     </div>
                 )}
@@ -145,8 +145,8 @@ const DragDropZone: React.FC<DragDropZoneProps> = ({
             onClick={handleClick}
             className={`
                 relative border-2 border-dashed rounded-xl transition-all cursor-pointer
-                ${isDragging 
-                    ? 'border-q-accent bg-q-accent/10 scale-[1.02]' 
+                ${isDragging
+                    ? 'border-q-accent bg-q-accent/10 scale-[1.02]'
                     : 'border-q-border hover:border-q-accent/50 bg-q-surface/30'
                 }
                 ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-q-surface/50'}
@@ -162,7 +162,7 @@ const DragDropZone: React.FC<DragDropZoneProps> = ({
                 disabled={disabled}
                 multiple={multiple}
             />
-            
+
             <div className="p-8 text-center">
                 {isUploading ? (
                     <div className="flex flex-col items-center">
@@ -178,15 +178,15 @@ const DragDropZone: React.FC<DragDropZoneProps> = ({
                                 <Upload size={32} className="text-q-accent" />
                             )}
                         </div>
-                        
+
                         <h3 className="text-base font-bold text-q-text mb-2">
                             {isDragging ? 'Drop files here' : 'Drag & drop files here'}
                         </h3>
-                        
+
                         <p className="text-sm text-q-text-secondary mb-4">
                             or click to browse
                         </p>
-                        
+
                         <div className="text-xs text-q-text-secondary space-y-1">
                             {accept !== '*' && (
                                 <p>Accepted: {accept}</p>
@@ -196,9 +196,9 @@ const DragDropZone: React.FC<DragDropZoneProps> = ({
                     </>
                 )}
             </div>
-            
+
             {error && (
-                <div className="absolute bottom-2 left-2 right-2 text-xs text-red-500 bg-red-50 dark:bg-red-900/20 p-2 rounded-md">
+                <div className="absolute bottom-2 left-2 right-2 text-xs text-q-error bg-q-error/10 dark:bg-q-error/12 p-2 rounded-md">
                     {error}
                 </div>
             )}

@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import ConfirmationModal from '../../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
     DndContext,
     closestCenter,
@@ -70,19 +71,22 @@ const blockIcons: Record<EmailBlockType, React.ElementType> = {
     footer: AlignJustify,
 };
 
-const blockLabels: Record<EmailBlockType, string> = {
+const blockLabelFallbacks: Record<EmailBlockType, string> = {
     logo: 'Logo',
     hero: 'Hero',
-    text: 'Texto',
-    image: 'Imagen',
-    button: 'Botón',
-    divider: 'Divisor',
-    spacer: 'Espaciador',
-    columns: 'Columnas',
-    products: 'Productos',
-    social: 'Redes Sociales',
-    footer: 'Pie de Email',
+    text: 'Text',
+    image: 'Image',
+    button: 'Button',
+    divider: 'Divider',
+    spacer: 'Spacer',
+    columns: 'Columns',
+    products: 'Products',
+    social: 'Social Media',
+    footer: 'Footer',
 };
+
+const getBlockLabel = (type: EmailBlockType, t: TFunction) =>
+    t(`email.blockTypes.${type}`, blockLabelFallbacks[type]);
 
 // Available blocks for adding
 const AVAILABLE_BLOCKS: EmailBlockType[] = [
@@ -137,6 +141,7 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
     };
 
     const Icon = blockIcons[block.type] || Type;
+    const label = getBlockLabel(block.type, t);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
     return (
@@ -172,7 +177,7 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
 
             {/* Label */}
             <span className="flex-1 text-sm font-medium truncate">
-                {blockLabels[block.type]}
+                {label}
             </span>
 
             {/* Action buttons */}
@@ -202,7 +207,7 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                         e.stopPropagation();
                         setDeleteConfirmOpen(true);
                     }}
-                    className="flex-shrink-0 p-1.5 rounded text-q-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                    className="flex-shrink-0 p-1.5 rounded text-q-text-secondary hover:text-q-error hover:bg-q-error/10 transition-colors"
                     title={t('email.deleteBlock', 'Eliminar')}
                 >
                     <Trash2 size={14} />
@@ -227,6 +232,7 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
 // =============================================================================
 
 const DragOverlayItem: React.FC<{ block: EmailBlock }> = ({ block }) => {
+    const { t } = useTranslation();
     const Icon = blockIcons[block.type] || Type;
 
     return (
@@ -234,7 +240,7 @@ const DragOverlayItem: React.FC<{ block: EmailBlock }> = ({ block }) => {
             <GripVertical size={14} className="text-q-accent" />
             <Icon size={16} className="text-q-accent" />
             <span className="text-sm font-medium text-q-text">
-                {blockLabels[block.type]}
+                {getBlockLabel(block.type, t)}
             </span>
         </div>
     );
@@ -288,13 +294,13 @@ const EmailBlockTree: React.FC = () => {
     // Filter blocks by search
     const filteredBlocks = document.blocks.filter(block => {
         if (!searchTerm) return true;
-        return blockLabels[block.type].toLowerCase().includes(searchTerm.toLowerCase());
+        return getBlockLabel(block.type, t).toLowerCase().includes(searchTerm.toLowerCase());
     });
 
     // Filter available blocks by search (using service-filtered list)
     const filteredAvailableBlocks = effectiveAvailableBlocks.filter(type => {
         if (!searchTerm) return true;
-        return blockLabels[type].toLowerCase().includes(searchTerm.toLowerCase());
+        return getBlockLabel(type, t).toLowerCase().includes(searchTerm.toLowerCase());
     });
 
     // Drag handlers
@@ -382,7 +388,7 @@ const EmailBlockTree: React.FC = () => {
                                         <Icon size={16} className="text-q-accent" />
                                     </div>
                                     <span className="text-sm text-q-text font-medium">
-                                        {blockLabels[type]}
+                                        {getBlockLabel(type, t)}
                                     </span>
                                 </button>
                             );
@@ -401,7 +407,7 @@ const EmailBlockTree: React.FC = () => {
                         </p>
                         <button
                             onClick={() => setShowAddMenu(true)}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-q-accent text-white rounded-lg hover:bg-q-accent/90 transition-colors text-sm font-medium"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent/90 transition-colors text-sm font-medium"
                         >
                             <Plus size={16} />
                             {t('email.addFirstBlock', 'Agregar primer bloque')}
@@ -457,7 +463,6 @@ const EmailBlockTree: React.FC = () => {
 };
 
 export default EmailBlockTree;
-
 
 
 

@@ -118,36 +118,36 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
     // Gradient classes based on type
     const gradientClasses: Record<string, string> = {
-        blue: 'from-blue-500/20 via-blue-500/5 to-transparent',
-        violet: 'from-violet-500/20 via-violet-500/5 to-transparent',
-        emerald: 'from-emerald-500/20 via-emerald-500/5 to-transparent',
-        orange: 'from-orange-500/20 via-orange-500/5 to-transparent',
-        cyan: 'from-cyan-500/20 via-cyan-500/5 to-transparent',
-        yellow: 'from-yellow-500/20 via-yellow-500/5 to-transparent',
-        pink: 'from-pink-500/20 via-pink-500/5 to-transparent',
-        green: 'from-green-500/20 via-green-500/5 to-transparent',
+        blue: 'from-q-accent/20 via-q-accent/5 to-transparent',
+        violet: 'from-q-accent/20 via-q-accent/5 to-transparent',
+        emerald: 'from-q-success/20 via-q-success/5 to-transparent',
+        orange: 'from-q-warning/20 via-q-warning/5 to-transparent',
+        cyan: 'from-q-accent/20 via-q-accent/5 to-transparent',
+        yellow: 'from-q-accent/20 via-q-accent/5 to-transparent',
+        pink: 'from-q-accent/20 via-q-accent/5 to-transparent',
+        green: 'from-q-success/20 via-q-success/5 to-transparent',
     };
 
     const solidColorClasses: Record<string, string> = {
-        blue: 'bg-blue-500',
-        violet: 'bg-violet-500',
-        emerald: 'bg-emerald-500',
-        orange: 'bg-orange-500',
-        cyan: 'bg-cyan-500',
-        yellow: 'bg-yellow-500',
-        pink: 'bg-pink-500',
-        green: 'bg-green-500',
+        blue: 'bg-q-accent',
+        violet: 'bg-q-accent',
+        emerald: 'bg-q-success',
+        orange: 'bg-q-warning',
+        cyan: 'bg-q-accent',
+        yellow: 'bg-q-accent',
+        pink: 'bg-q-accent',
+        green: 'bg-q-success',
     };
 
     const textColorClasses: Record<string, string> = {
-        blue: 'text-blue-500',
-        violet: 'text-violet-500',
-        emerald: 'text-emerald-500',
-        orange: 'text-orange-500',
-        cyan: 'text-cyan-500',
-        yellow: 'text-yellow-500',
-        pink: 'text-pink-500',
-        green: 'text-green-500',
+        blue: 'text-q-accent',
+        violet: 'text-q-accent',
+        emerald: 'text-q-success',
+        orange: 'text-q-warning',
+        cyan: 'text-q-accent',
+        yellow: 'text-q-accent',
+        pink: 'text-q-accent',
+        green: 'text-q-success',
     };
 
     // ==========================================================================
@@ -215,8 +215,8 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
             <div
                 onClick={onClick}
                 className={`
-                    ${solidColorClasses[typeConfig.color]} 
-                    text-white text-xs px-2 py-1 rounded-md cursor-pointer 
+                    ${solidColorClasses[typeConfig.color]}
+                    text-white text-xs px-2 py-1 rounded-md cursor-pointer
                     truncate hover:opacity-90 transition-all duration-200
                     ${className}
                 `}
@@ -242,7 +242,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 onMouseLeave={() => setIsHovered(false)}
                 className={`
                     group relative overflow-hidden
-                    bg-q-surface/50 backdrop-blur-xl 
+                    bg-q-surface/50 backdrop-blur-xl
                     border border-q-border/50 rounded-xl
                     p-3 cursor-pointer
                     transition-all duration-300 ease-out
@@ -259,7 +259,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 <div className="flex items-center gap-3 pl-2">
                     {/* Icon */}
                     <div className={`
-                        ${solidColorClasses[typeConfig.color]} 
+                        ${solidColorClasses[typeConfig.color]}
                         p-2 rounded-lg text-white
                         transition-transform duration-300
                         group-hover:scale-110
@@ -309,7 +309,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
             className={`
                 group relative overflow-hidden
                 bg-q-surface/40 backdrop-blur-2xl
-                border border-white/10 dark:border-white/5
+                border border-q-border/10 dark:border-white/5
                 rounded-2xl
                 transition-all duration-500 ease-out
                 hover:bg-q-surface/60 hover:border-q-border/60
@@ -343,7 +343,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
             {/* Left color indicator with animation */}
             <div className={`
-                absolute left-0 top-0 bottom-0 w-1.5 
+                absolute left-0 top-0 bottom-0 w-1.5
                 ${solidColorClasses[typeConfig.color]}
                 rounded-l-2xl
                 transition-all duration-300
@@ -408,7 +408,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                     className={`
                                         p-1.5 rounded-lg
                                         text-q-text-muted hover:text-foreground
-                                        hover:bg-white/10
+                                        hover:bg-q-surface/10
                                         transition-all duration-200
                                         opacity-0 group-hover:opacity-100
                                     `}
@@ -428,7 +428,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                         {onEdit && (
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onEdit(); setShowMenu(false); }}
-                                                className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-white/5 flex items-center gap-2"
+                                                className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-q-surface/5 flex items-center gap-2"
                                             >
                                                 <Edit size={14} />
                                                 {t('appointments.actions.edit')}
@@ -436,14 +436,14 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                         )}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setShowMenu(false); }}
-                                            className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-white/5 flex items-center gap-2"
+                                            className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-q-surface/5 flex items-center gap-2"
                                         >
                                             <Copy size={14} />
                                             {t('common.duplicate')}
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setShowMenu(false); }}
-                                            className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-white/5 flex items-center gap-2"
+                                            className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-q-surface/5 flex items-center gap-2"
                                         >
                                             <Bell size={14} />
                                             {t('appointments.form.reminders')}
@@ -452,7 +452,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                         {onDelete && (
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onDelete(); setShowMenu(false); }}
-                                                className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2"
+                                                className="w-full px-3 py-2 text-left text-sm text-q-error hover:bg-q-error/10 flex items-center gap-2"
                                             >
                                                 <Trash2 size={14} />
                                                 {t('appointments.actions.delete')}
@@ -470,7 +470,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                     {/* Date & Time */}
                     <div className="flex items-center gap-2 text-xs sm:text-sm">
                         <div className={`
-                            p-1 sm:p-1.5 rounded-lg bg-white/5 
+                            p-1 sm:p-1.5 rounded-lg bg-q-surface/5
                             ${textColorClasses[typeConfig.color]}
                         `}>
                             <Clock size={12} className="sm:w-3.5 sm:h-3.5" />
@@ -496,7 +496,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                     {appointment.location && (
                         <div className="hidden xs:flex items-center gap-2 text-xs sm:text-sm">
                             <div className={`
-                                p-1 sm:p-1.5 rounded-lg bg-white/5 
+                                p-1 sm:p-1.5 rounded-lg bg-q-surface/5
                                 ${textColorClasses[typeConfig.color]}
                             `}>
                                 {appointment.location.type === 'virtual' ? (
@@ -520,7 +520,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 </div>
 
                 {/* Participants */}
-                <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-white/5">
+                <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-q-border/5">
                     <div className="flex items-center gap-1 sm:gap-2">
                         {/* Avatar stack */}
                         <div className="flex -space-x-1.5 sm:-space-x-2">
@@ -528,7 +528,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                 <div
                                     key={participant.id}
                                     className={`
-                                        relative w-6 h-6 sm:w-8 sm:h-8 rounded-full 
+                                        relative w-6 h-6 sm:w-8 sm:h-8 rounded-full
                                         ${getAvatarColor(participant.name)}
                                         flex items-center justify-center
                                         text-[10px] sm:text-xs font-bold text-white
@@ -553,7 +553,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
                             {appointment.participants.length > 3 && (
                                 <div className="
-                                    relative w-6 h-6 sm:w-8 sm:h-8 rounded-full 
+                                    relative w-6 h-6 sm:w-8 sm:h-8 rounded-full
                                     bg-muted
                                     flex items-center justify-center
                                     text-[10px] sm:text-xs font-bold text-q-text-muted
@@ -576,7 +576,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                         {appointment.aiInsights && (
                             <div className={`
                                 flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full
-                                bg-purple-500/10 text-purple-500
+                                bg-q-accent/10 text-q-accent
                                 text-[10px] sm:text-xs font-medium
                             `}>
                                 <Sparkles size={10} className="sm:w-3 sm:h-3" />
@@ -592,7 +592,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
                 {/* Quick actions (visible on hover) */}
                 <div className={`
-                    mt-4 pt-3 border-t border-white/5
+                    mt-4 pt-3 border-t border-q-border/5
                     flex gap-2
                     transition-all duration-300
                     opacity-0 max-h-0 overflow-hidden
@@ -628,7 +628,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                             onClick={(e) => { e.stopPropagation(); onEdit(); }}
                             className="
                                 flex-1 py-2 rounded-xl
-                                bg-white/5 hover:bg-white/10
+                                bg-q-surface/5 hover:bg-q-surface/10
                                 text-foreground font-medium text-sm
                                 flex items-center justify-center gap-2
                                 transition-colors
@@ -646,7 +646,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 <div className={`
                     absolute top-3 right-3
                     w-2 h-2 rounded-full
-                    ${appointment.priority === 'critical' ? 'bg-red-500' : 'bg-orange-500'}
+                    ${appointment.priority === 'critical' ? 'bg-q-error' : 'bg-q-warning'}
                     animate-pulse
                 `} />
             ) : null}

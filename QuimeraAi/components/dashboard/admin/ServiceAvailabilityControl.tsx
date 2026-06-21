@@ -148,11 +148,11 @@ const StatusSelector: React.FC<{
 
             {/* Reason Modal */}
             {showReasonModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/60">
                     <div className="bg-q-surface border border-q-border rounded-xl p-6 max-w-md w-full mx-4">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                                <AlertTriangle className="w-5 h-5 text-amber-400" />
+                            <div className="w-10 h-10 rounded-full bg-q-accent/20 flex items-center justify-center">
+                                <AlertTriangle className="w-5 h-5 text-q-accent" />
                             </div>
                             <div>
                                 <h3 className="font-semibold text-q-text">
@@ -192,7 +192,7 @@ const StatusSelector: React.FC<{
                             </button>
                             <button
                                 onClick={handleConfirm}
-                                className="px-4 py-2 text-sm font-medium bg-q-accent text-white rounded-lg hover:bg-q-accent/90 transition-colors"
+                                className="px-4 py-2 text-sm font-medium bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent/90 transition-colors"
                             >
                                 {t('common.confirm', 'Confirmar')}
                             </button>
@@ -232,7 +232,7 @@ const ServiceCard: React.FC<{
                             {t(service.descriptionKey, '')}
                         </p>
                         {statusReason && (
-                            <p className="text-xs text-amber-400 mt-2 flex items-center gap-1.5">
+                            <p className="text-xs text-q-accent mt-2 flex items-center gap-1.5">
                                 <AlertTriangle size={12} />
                                 {statusReason}
                             </p>
@@ -432,7 +432,7 @@ const ServiceAvailabilityControl: React.FC<ServiceAvailabilityControlProps> = ({
                 {/* Content */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6">
                     {error && (
-                        <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                        <div className="mb-4 p-4 bg-q-error/10 border border-q-error/30 rounded-lg text-q-error text-sm">
                             {error}
                         </div>
                     )}

@@ -46,12 +46,12 @@ const SettingsView: React.FC = () => {
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const theme = useEcommerceTheme();
-    const { 
-        settings, 
-        isLoading, 
-        isSaving, 
-        updateSettings, 
-        addShippingZone, 
+    const {
+        settings,
+        isLoading,
+        isSaving,
+        updateSettings,
+        addShippingZone,
         updatePaymentSettings,
     } = useStoreSettings(user?.id || '', storeId);
 
@@ -343,7 +343,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
     // Handle starting the Connect onboarding
     const handleStartConnect = async () => {
         if (!connectEmail || !connectBusinessName) return;
-        
+
         const success = await startOnboarding(connectEmail, connectBusinessName);
         if (success) {
             setShowConnectForm(false);
@@ -361,24 +361,24 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
     // Get status badge
     const getStatusBadge = () => {
         if (!isConnected) return null;
-        
+
         if (isActive && canAcceptPayments) {
             return (
-                <span className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium">
+                <span className="flex items-center gap-1 px-2 py-1 bg-q-success/20 text-q-success rounded-full text-xs font-medium">
                     <CheckCircle2 size={12} />
                     Activo
                 </span>
             );
         } else if (connectStatus?.detailsSubmitted) {
             return (
-                <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-medium">
+                <span className="flex items-center gap-1 px-2 py-1 bg-q-accent/20 text-q-accent rounded-full text-xs font-medium">
                     <AlertCircle size={12} />
                     Restringido
                 </span>
             );
         } else {
             return (
-                <span className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium">
+                <span className="flex items-center gap-1 px-2 py-1 bg-q-accent/20 text-q-accent rounded-full text-xs font-medium">
                     <Clock size={12} />
                     Pendiente
                 </span>
@@ -393,11 +393,11 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
             </h3>
 
             {/* Stripe Connect - Main Payment Method */}
-            <div className="p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20">
+            <div className="p-4 bg-gradient-to-r from-q-accent/10 to-q-accent/10 rounded-lg border border-q-accent/20">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
-                        <div className="flex-shrink-0 p-2 rounded-lg bg-purple-500/20">
-                            <CreditCard className="text-purple-400" size={24} />
+                        <div className="flex-shrink-0 p-2 rounded-lg bg-q-accent/20">
+                            <CreditCard className="text-q-accent" size={24} />
                         </div>
                         <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
@@ -414,8 +414,8 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                 {/* Connect Status & Actions */}
                 <div className="mt-4 pt-4 border-t border-q-border/50">
                     {connectError && (
-                        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                            <p className="text-red-400 text-sm">{connectError}</p>
+                        <div className="mb-4 p-3 bg-q-error/10 border border-q-error/20 rounded-lg">
+                            <p className="text-q-error text-sm">{connectError}</p>
                         </div>
                     )}
 
@@ -423,14 +423,14 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                         // Not connected - Show connect button or form
                         <div className="space-y-4">
                             <p className="text-q-text-muted text-sm">
-                                Conecta tu cuenta de Stripe para empezar a recibir pagos. 
+                                Conecta tu cuenta de Stripe para empezar a recibir pagos.
                                 El proceso es guiado y solo toma unos minutos.
                             </p>
 
                             {!showConnectForm ? (
                                 <button
                                     onClick={() => setShowConnectForm(true)}
-                                    className="flex w-full items-center justify-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors sm:w-auto"
+                                    className="flex w-full items-center justify-center gap-2 px-4 py-2 bg-q-accent hover:bg-q-accent text-q-text-on-accent rounded-lg transition-colors sm:w-auto"
                                 >
                                     <CreditCard size={18} />
                                     Conectar con Stripe
@@ -465,7 +465,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                         <button
                                             onClick={handleStartConnect}
                                             disabled={connectLoading || !connectEmail || !connectBusinessName}
-                                            className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                                            className="flex items-center justify-center gap-2 px-4 py-2 bg-q-accent hover:bg-q-accent text-q-text-on-accent rounded-lg transition-colors disabled:opacity-50"
                                         >
                                             {connectLoading ? (
                                                 <Loader2 size={18} className="animate-spin" />
@@ -504,21 +504,21 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                     className="p-2 hover:bg-muted rounded-lg transition-colors"
                                     title="Actualizar estado"
                                 >
-                                    <Loader2 
-                                        size={16} 
-                                        className={connectLoading ? 'animate-spin text-primary' : 'text-q-text-muted'} 
+                                    <Loader2
+                                        size={16}
+                                        className={connectLoading ? 'animate-spin text-primary' : 'text-q-text-muted'}
                                     />
                                 </button>
                             </div>
 
                             {/* Capabilities */}
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <div className={`p-3 rounded-lg ${canAcceptPayments ? 'bg-green-500/10' : 'bg-yellow-500/10'}`}>
+                                <div className={`p-3 rounded-lg ${canAcceptPayments ? 'bg-q-success/10' : 'bg-q-accent/10'}`}>
                                     <div className="flex items-center gap-2">
                                         {canAcceptPayments ? (
-                                            <CheckCircle2 size={16} className="text-green-400" />
+                                            <CheckCircle2 size={16} className="text-q-success" />
                                         ) : (
-                                            <AlertCircle size={16} className="text-yellow-400" />
+                                            <AlertCircle size={16} className="text-q-accent" />
                                         )}
                                         <span className="text-sm font-medium text-foreground">
                                             Recibir pagos
@@ -528,12 +528,12 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                         {canAcceptPayments ? 'Habilitado' : 'Pendiente de verificación'}
                                     </p>
                                 </div>
-                                <div className={`p-3 rounded-lg ${connectStatus?.payoutsEnabled ? 'bg-green-500/10' : 'bg-yellow-500/10'}`}>
+                                <div className={`p-3 rounded-lg ${connectStatus?.payoutsEnabled ? 'bg-q-success/10' : 'bg-q-accent/10'}`}>
                                     <div className="flex items-center gap-2">
                                         {connectStatus?.payoutsEnabled ? (
-                                            <CheckCircle2 size={16} className="text-green-400" />
+                                            <CheckCircle2 size={16} className="text-q-success" />
                                         ) : (
-                                            <AlertCircle size={16} className="text-yellow-400" />
+                                            <AlertCircle size={16} className="text-q-accent" />
                                         )}
                                         <span className="text-sm font-medium text-foreground">
                                             Transferencias
@@ -547,10 +547,10 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
 
                             {/* Pending requirements warning */}
                             {connectStatus?.requirements?.currentlyDue && connectStatus.requirements.currentlyDue.length > 0 && (
-                                <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                                <div className="p-3 bg-q-accent/10 border border-q-accent/20 rounded-lg">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <AlertCircle size={16} className="text-yellow-400" />
-                                        <span className="text-sm font-medium text-yellow-400">
+                                        <AlertCircle size={16} className="text-q-accent" />
+                                        <span className="text-sm font-medium text-q-accent">
                                             Información pendiente
                                         </span>
                                     </div>
@@ -559,7 +559,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                     </p>
                                     <button
                                         onClick={() => startOnboarding(settings.storeEmail || '', settings.storeName || '')}
-                                        className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                                        className="text-xs text-q-accent hover:text-q-accent flex items-center gap-1"
                                     >
                                         Completar información <ExternalLink size={12} />
                                     </button>
@@ -578,7 +578,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                 </button>
                                 <button
                                     onClick={() => setShowDisconnectConfirm(true)}
-                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors"
+                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-q-error/10 hover:bg-q-error/20 text-q-error rounded-lg transition-colors"
                                 >
                                     <Unlink size={16} />
                                     Desconectar
@@ -590,13 +590,13 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
 
                 {/* Disconnect confirmation modal */}
                 {showDisconnectConfirm && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+                    <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
                         <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md p-4 sm:p-6">
                             <h3 className="text-lg font-bold text-foreground mb-2">
                                 ¿Desconectar Stripe?
                             </h3>
                             <p className="text-q-text-muted text-sm mb-4">
-                                Si desconectas tu cuenta de Stripe, no podrás recibir pagos en tu tienda. 
+                                Si desconectas tu cuenta de Stripe, no podrás recibir pagos en tu tienda.
                                 Puedes volver a conectarla en cualquier momento.
                             </p>
                             <div className="flex flex-col gap-3 sm:flex-row">
@@ -609,7 +609,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                 <button
                                     onClick={handleDisconnect}
                                     disabled={connectLoading}
-                                    className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                                    className="flex-1 px-4 py-2 bg-q-error hover:bg-q-error text-white rounded-lg transition-colors"
                                 >
                                     {connectLoading ? (
                                         <Loader2 size={16} className="animate-spin mx-auto" />
@@ -627,7 +627,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
             <div className="p-4 bg-muted/30 rounded-lg">
                 <div className="mb-4 flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-start gap-3">
-                        <DollarSign className="text-blue-400 flex-shrink-0" size={24} strokeWidth={2} />
+                        <DollarSign className="text-q-accent flex-shrink-0" size={24} strokeWidth={2} />
                         <div className="min-w-0">
                             <h4 className="text-foreground font-medium">PayPal</h4>
                             <p className="text-q-text-muted text-sm">
@@ -666,7 +666,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
             <div className="p-4 bg-muted/30 rounded-lg">
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-start gap-3">
-                        <Truck className="text-green-400 flex-shrink-0" size={24} strokeWidth={2} />
+                        <Truck className="text-q-success flex-shrink-0" size={24} strokeWidth={2} />
                         <div className="min-w-0">
                             <h4 className="text-foreground font-medium">
                                 {t('ecommerce.cod', 'Pago Contra Entrega')}
@@ -754,7 +754,7 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
                                 {zone.rates.map((rate) => (
                                     <div key={rate.id} className="flex items-center justify-between gap-3 text-sm">
                                         <span className="min-w-0 truncate text-q-text-muted">{rate.name}</span>
-                                        <span className="flex-shrink-0 text-green-400">
+                                        <span className="flex-shrink-0 text-q-success">
                                             ${rate.price.toFixed(2)}
                                             {rate.minOrder && (
                                                 <span className="text-q-text-muted ml-2">
@@ -800,7 +800,7 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
 
             {/* Add Zone Modal */}
             {showAddZone && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+                <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
                     <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md max-h-[92vh] overflow-y-auto">
                         <div className="p-4 border-b border-q-border sm:p-6">
                             <h3 className="text-lg font-bold text-foreground">
@@ -1165,7 +1165,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                     {/* Order Confirmation */}
                     <label className="flex items-center justify-between p-4 bg-muted/30 rounded-lg cursor-pointer">
                         <div className="flex items-center gap-3">
-                            <Check className="text-green-500" size={20} />
+                            <Check className="text-q-success" size={20} />
                             <div>
                                 <p className="text-foreground font-medium">
                                     {t('ecommerce.orderConfirmation', 'Confirmación de Pedido')}
@@ -1186,7 +1186,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                     {/* Order Shipped */}
                     <label className="flex items-center justify-between p-4 bg-muted/30 rounded-lg cursor-pointer">
                         <div className="flex items-center gap-3">
-                            <Truck className="text-blue-500" size={20} />
+                            <Truck className="text-q-accent" size={20} />
                             <div>
                                 <p className="text-foreground font-medium">
                                     {t('ecommerce.orderShipped', 'Pedido Enviado')}
@@ -1207,7 +1207,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                     {/* Order Delivered */}
                     <label className="flex items-center justify-between p-4 bg-muted/30 rounded-lg cursor-pointer">
                         <div className="flex items-center gap-3">
-                            <Package className="text-emerald-500" size={20} />
+                            <Package className="text-q-success" size={20} />
                             <div>
                                 <p className="text-foreground font-medium">
                                     {t('ecommerce.orderDelivered', 'Pedido Entregado')}
@@ -1228,7 +1228,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                     {/* Review Request */}
                     <label className="flex items-center justify-between p-4 bg-muted/30 rounded-lg cursor-pointer">
                         <div className="flex items-center gap-3">
-                            <Send className="text-amber-500" size={20} />
+                            <Send className="text-q-accent" size={20} />
                             <div>
                                 <p className="text-foreground font-medium">
                                     {t('ecommerce.reviewRequest', 'Solicitud de Reseña')}
@@ -1263,7 +1263,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                     {/* New Order */}
                     <label className="flex items-center justify-between p-4 bg-muted/30 rounded-lg cursor-pointer">
                         <div className="flex items-center gap-3">
-                            <DollarSign className="text-green-500" size={20} />
+                            <DollarSign className="text-q-success" size={20} />
                             <div>
                                 <p className="text-foreground font-medium">
                                     {t('ecommerce.newOrderNotification', 'Nueva Orden')}
@@ -1284,7 +1284,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                     {/* Low Stock */}
                     <label className="flex items-center justify-between p-4 bg-muted/30 rounded-lg cursor-pointer">
                         <div className="flex items-center gap-3">
-                            <Package className="text-red-500" size={20} />
+                            <Package className="text-q-error" size={20} />
                             <div>
                                 <p className="text-foreground font-medium">
                                     {t('ecommerce.lowStockNotification', 'Stock Bajo')}

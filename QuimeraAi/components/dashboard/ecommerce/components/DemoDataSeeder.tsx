@@ -47,7 +47,7 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId, projectName } = useEcommerceContext();
-    
+
     const [isSeeding, setIsSeeding] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [steps, setSteps] = useState<SeedStep[]>([
@@ -114,7 +114,7 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
         } catch (err: any) {
             console.error('Error seeding store:', err);
             setError(err.message || 'Error desconocido');
-            
+
             // Mark current loading step as error
             setSteps((prev) =>
                 prev.map((step) =>
@@ -131,9 +131,9 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
             case 'loading':
                 return <Loader2 className="animate-spin text-primary" size={20} />;
             case 'success':
-                return <CheckCircle2 className="text-green-500" size={20} />;
+                return <CheckCircle2 className="text-q-success" size={20} />;
             case 'error':
-                return <XCircle className="text-red-500" size={20} />;
+                return <XCircle className="text-q-error" size={20} />;
             default:
                 return <Icon className="text-q-text-muted" size={20} />;
         }
@@ -162,7 +162,7 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                         </p>
                         {storeId && (
                             <div className="flex items-center gap-2 mt-1">
-                                <code className="text-xs bg-black/20 px-2 py-0.5 rounded text-q-text-muted">
+                                <code className="text-xs bg-q-text/20 px-2 py-0.5 rounded text-q-text-muted">
                                     ID: {storeId}
                                 </code>
                                 <button
@@ -202,11 +202,11 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                             <span>{DEMO_PRODUCTS.length} productos</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-q-text-muted">
-                            <Settings size={16} className="text-orange-400" />
+                            <Settings size={16} className="text-q-warning" />
                             <span>Configuración completa</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-q-text-muted">
-                            <Zap size={16} className="text-yellow-400" />
+                            <Zap size={16} className="text-q-accent" />
                             <span>Imágenes de muestra</span>
                         </div>
                     </div>
@@ -223,17 +223,17 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                                     step.status === 'loading'
                                         ? 'border-primary bg-primary/5'
                                         : step.status === 'success'
-                                        ? 'border-green-500/30 bg-green-500/5'
+                                        ? 'border-q-success/30 bg-q-success/5'
                                         : step.status === 'error'
-                                        ? 'border-red-500/30 bg-red-500/5'
+                                        ? 'border-q-error/30 bg-q-error/5'
                                         : 'border-q-border'
                                 }`}
                             >
                                 <div className="flex items-center gap-3">
                                     {getStatusIcon(step.status, Icon)}
                                     <span className={`text-sm font-medium ${
-                                        step.status === 'success' ? 'text-green-500' :
-                                        step.status === 'error' ? 'text-red-500' :
+                                        step.status === 'success' ? 'text-q-success' :
+                                        step.status === 'error' ? 'text-q-error' :
                                         step.status === 'loading' ? 'text-primary' :
                                         'text-foreground'
                                     }`}>
@@ -252,7 +252,7 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
 
                 {/* Error */}
                 {error && (
-                    <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm mb-4">
+                    <div className="flex items-center gap-2 p-3 bg-q-error/10 border border-q-error/30 rounded-lg text-q-error text-sm mb-4">
                         <AlertCircle size={18} />
                         <span>{error}</span>
                     </div>
@@ -261,13 +261,13 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                 {/* Success */}
                 {allComplete && (
                     <div className="space-y-3 mb-4">
-                        <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 text-sm">
+                        <div className="flex items-center gap-2 p-3 bg-q-success/10 border border-q-success/30 rounded-lg text-q-success text-sm">
                             <CheckCircle2 size={18} />
                             <span>
                                 {t('ecommerce.seedComplete', '¡Tienda poblada exitosamente!')}
                             </span>
                         </div>
-                        
+
                         {/* Store URL */}
                         <div className="p-3 bg-muted/50 rounded-lg border border-q-border">
                             <p className="text-xs text-q-text-muted mb-2">
@@ -334,7 +334,7 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                     ) : (
                         <button
                             onClick={onClose || onComplete}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-q-success text-white rounded-lg font-medium hover:bg-q-success transition-colors"
                         >
                             <CheckCircle2 size={18} />
                             {t('ecommerce.viewProducts', 'Ver Productos')}

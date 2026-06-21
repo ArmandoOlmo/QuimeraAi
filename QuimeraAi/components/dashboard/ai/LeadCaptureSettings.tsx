@@ -106,7 +106,7 @@ const LeadCaptureSettings: React.FC = () => {
                             onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
                             className="sr-only peer"
                         />
-                        <div className="w-14 h-7 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
+                        <div className="w-14 h-7 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                 </div>
             </div>
@@ -128,7 +128,7 @@ const LeadCaptureSettings: React.FC = () => {
                                 disabled={!config.enabled}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
+                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
                     <p className="text-q-text-muted text-sm">
@@ -151,7 +151,7 @@ const LeadCaptureSettings: React.FC = () => {
                                 disabled={!config.enabled}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
+                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
                     <p className="text-q-text-muted text-sm">
@@ -174,7 +174,7 @@ const LeadCaptureSettings: React.FC = () => {
                                 disabled={!config.enabled}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
+                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
                     <p className="text-q-text-muted text-sm">
@@ -197,7 +197,7 @@ const LeadCaptureSettings: React.FC = () => {
                                 disabled={!config.enabled}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
+                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
                     <p className="text-q-text-muted text-sm">
@@ -220,7 +220,7 @@ const LeadCaptureSettings: React.FC = () => {
                                 disabled={!config.enabled}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
+                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
                     <p className="text-q-text-muted text-sm">

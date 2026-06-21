@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../../../contexts/core/AuthContext';
 import { useAdmin } from '../../../../../contexts/admin/AdminContext';
 import {
@@ -69,6 +70,7 @@ export function useAIEmailStudio(
     data: AdminEmailDataReturn,
     activeTab: AdminEmailTab,
 ): AIEmailStudioReturn {
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const { tenants } = useAdmin();
     const { stats, tenantPerformance, campaigns, setCampaigns, audiences, setAudiences } = data;
@@ -105,6 +107,8 @@ export function useAIEmailStudio(
     // =========================================================================
 
     const buildEmailStudioSystemPrompt = useCallback(() => {
+        const responseLanguage = i18n.language?.toLowerCase().startsWith('en') ? 'inglés' : 'español';
+
         return `Eres un experto en Email Marketing para la plataforma Quimera.ai.
 Tienes acceso a datos reales del sistema:
 - ${tenants.length} tenants activos
@@ -155,35 +159,20 @@ IMPORTANTE: El administrador puede pedirte que CREES campañas, audiencias o aut
 Cuando te pida crear algo, genera la respuesta normal conversacional describiendo lo que crearás.
 El usuario usará los botones de acción en la interfaz para materializar la creación.
 
-Responde siempre en español. Sé conciso pero informativo. Usa formato markdown.`;
-    }, [stats, tenants, tenantPerformance]);
+Responde siempre en ${responseLanguage}. Sé conciso pero informativo. Usa formato markdown.`;
+    }, [stats, tenants, tenantPerformance, i18n.language]);
 
     // =========================================================================
     // INIT / WELCOME
     // =========================================================================
 
     const initAIStudio = useCallback(() => {
-        const welcomeText = `¡Hola! 👋 Soy tu **Asistente AI de Email Marketing** para Quimera.ai.
-
-Puedo ayudarte a:
-
-- 📧 **Planificar** campañas de email completas
-- ✍️ **Generar** subject lines, preview text y contenido HTML
-- 🎯 **Recomendar** audiencias y segmentos óptimos
-- ⏰ **Sugerir** horarios de envío basados en mejores prácticas
-- 📊 **Analizar** el rendimiento de campañas anteriores
-- 🤖 **Crear** flujos de automatización inteligentes
-- 🎤 **Habla conmigo** usando el modo de voz
-
-**Datos actuales del sistema:**
-- ${stats.totalCampaigns} campañas totales
-- ${stats.totalContacts.toLocaleString()} contactos en audiencias
-- ${stats.totalSent.toLocaleString()} emails enviados
-- ${stats.openRate}% tasa de apertura promedio
-
-💡 **Usa los botones de acción** para crear campañas, audiencias y automatizaciones directamente desde esta conversación.
-
-¿Qué tipo de campaña o estrategia de email necesitas crear hoy?`;
+        const welcomeText = t('aiEmailStudio.welcome.admin', {
+            totalCampaigns: stats.totalCampaigns,
+            totalContacts: stats.totalContacts.toLocaleString(i18n.language),
+            totalSent: stats.totalSent.toLocaleString(i18n.language),
+            openRate: stats.openRate,
+        });
 
         const welcomeMsg: DisplayMessage = { role: 'model', text: welcomeText, timestamp: Date.now() };
         setAiMessages([welcomeMsg]);
@@ -195,13 +184,19 @@ Puedo ayudarte a:
             { role: 'user', text: `[CONTEXT] ${systemContext}` },
             { role: 'model', text: welcomeText },
         ];
-    }, [stats, tenants, tenantPerformance, buildEmailStudioSystemPrompt]);
+    }, [stats, tenants, tenantPerformance, buildEmailStudioSystemPrompt, t, i18n.language]);
 
     useEffect(() => {
         if (activeTab === 'ai-studio' && aiMessages.length === 0) {
             initAIStudio();
         }
     }, [activeTab, initAIStudio]);
+
+    useEffect(() => {
+        if (activeTab === 'ai-studio' && aiMessages.length === 1 && aiMessages[0]?.role === 'model') {
+            initAIStudio();
+        }
+    }, [activeTab, i18n.language]);
 
     // Auto-scroll AI chat
     useEffect(() => {

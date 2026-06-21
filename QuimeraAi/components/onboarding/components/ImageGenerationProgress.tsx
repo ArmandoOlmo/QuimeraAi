@@ -37,11 +37,11 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
     const getStatusIcon = (status: ImageGenerationItem['status']) => {
         switch (status) {
             case 'completed':
-                return <Check size={14} className="text-green-400" />;
+                return <Check size={14} className="text-q-success" />;
             case 'failed':
-                return <X size={14} className="text-red-400" />;
+                return <X size={14} className="text-q-error" />;
             case 'generating':
-                return <Loader2 size={14} className="text-yellow-400 animate-spin" />;
+                return <Loader2 size={14} className="text-q-accent animate-spin" />;
             default:
                 return <div className="w-3.5 h-3.5 rounded-full bg-q-surface-hover" />;
         }
@@ -52,7 +52,7 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
             {/* Header with progress */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Image size={20} className="text-purple-400" />
+                    <Image size={20} className="text-q-accent" />
                     <span className="font-medium text-q-text">
                         {t('onboarding.generatingImages', 'Generating Images')}
                     </span>
@@ -86,7 +86,7 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
             {progress.currentImage && progress.currentImage.status === 'generating' && (
                 <div className="p-3 bg-q-surface-hover/50 rounded-xl border border-q-border">
                     <div className="flex items-center gap-2 mb-2">
-                        <Loader2 size={16} className="text-yellow-400 animate-spin" />
+                        <Loader2 size={16} className="text-q-accent animate-spin" />
                         <span className="text-sm font-medium text-q-text">
                             {t('onboarding.currentlyGenerating', 'Currently generating...')}
                         </span>
@@ -104,9 +104,9 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
                         key={img.id}
                         className={`
                             flex items-center gap-3 p-2 rounded-lg transition-all
-                            ${img.status === 'generating' ? 'bg-yellow-500/10 border border-yellow-500/30' : ''}
-                            ${img.status === 'completed' ? 'bg-green-500/10' : ''}
-                            ${img.status === 'failed' ? 'bg-red-500/10' : ''}
+                            ${img.status === 'generating' ? 'bg-q-accent/10 border border-q-accent/30' : ''}
+                            ${img.status === 'completed' ? 'bg-q-success/10' : ''}
+                            ${img.status === 'failed' ? 'bg-q-error/10' : ''}
                         `}
                     >
                         <div className="flex-shrink-0">

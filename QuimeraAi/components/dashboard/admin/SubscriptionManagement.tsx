@@ -353,7 +353,7 @@ const AddCreditsModal: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/50 backdrop-blur-sm">
             <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md p-6">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-q-text flex items-center gap-2">
@@ -390,7 +390,7 @@ const AddCreditsModal: React.FC<{
                                     className={`
                                         px-3 py-2 rounded-lg text-sm font-medium transition-colors
                                         ${credits === amount
-                                            ? 'bg-q-accent text-white'
+                                            ? 'bg-q-accent text-q-text-on-accent'
                                             : 'bg-q-surface-overlay text-q-text-secondary hover:bg-q-surface-overlay/80'
                                         }
                                     `}
@@ -432,7 +432,7 @@ const AddCreditsModal: React.FC<{
                         <button
                             type="submit"
                             disabled={isLoading || credits <= 0}
-                            className="flex-1 px-4 py-2 rounded-lg bg-q-accent text-white hover:opacity-90 transition-colors disabled:opacity-50"
+                            className="flex-1 px-4 py-2 rounded-lg bg-q-accent text-q-text-on-accent hover:opacity-90 transition-colors disabled:opacity-50"
                         >
                             {isLoading ? 'Agregando...' : `Agregar ${credits} Credits`}
                         </button>
@@ -998,12 +998,12 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                     {/* Content */}
                     <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
                         {error && (
-                            <div className="mb-6 flex items-center gap-2 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400">
+                            <div className="mb-6 flex items-center gap-2 p-4 bg-q-error/10 border border-q-error/20 rounded-lg text-q-error">
                                 <AlertCircle className="w-5 h-5" />
                                 <span>{error}</span>
                                 <button
                                     onClick={() => setError(null)}
-                                    className="ml-auto hover:text-red-300"
+                                    className="ml-auto hover:text-q-error"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
@@ -1049,7 +1049,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                     {/* Alertas */}
                                     <div className="lg:col-span-2 bg-q-surface p-6 rounded-xl border border-q-border">
                                         <h3 className="text-lg font-semibold text-q-text mb-4 flex items-center gap-2">
-                                            <AlertCircle className="w-5 h-5 text-amber-400" />
+                                            <AlertCircle className="w-5 h-5 text-q-accent" />
                                             Tenants que Requieren Atención
                                         </h3>
                                         <div className="space-y-3">
@@ -1186,7 +1186,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                     <div className="flex items-center gap-3">
                                                         <div className={`
                                                             w-10 h-10 rounded-lg flex items-center justify-center
-                                                            ${tx.creditsUsed < 0 ? 'bg-green-500/20 text-green-400' : 'bg-q-accent/20 text-q-accent'}
+                                                            ${tx.creditsUsed < 0 ? 'bg-q-success/20 text-q-success' : 'bg-q-accent/20 text-q-accent'}
                                                         `}>
                                                             {tx.creditsUsed < 0 ? <Plus className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
                                                         </div>
@@ -1200,7 +1200,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className={`font-semibold ${tx.creditsUsed < 0 ? 'text-green-400' : 'text-q-text'}`}>
+                                                        <p className={`font-semibold ${tx.creditsUsed < 0 ? 'text-q-success' : 'text-q-text'}`}>
                                                             {tx.creditsUsed < 0 ? '+' : '-'}{Math.abs(tx.creditsUsed)} credits
                                                         </p>
                                                         <p className="text-xs text-q-text-secondary">
@@ -1229,32 +1229,32 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                             <div className="space-y-6">
                                 {/* Migration Banner */}
                                 {needsMigration && (
-                                    <div className="p-4 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/30 rounded-xl">
+                                    <div className="p-4 bg-gradient-to-r from-q-accent/20 to-q-accent/20 border border-q-accent/30 rounded-xl">
                                         <div className="flex items-start gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                                                <Zap className="w-5 h-5 text-purple-400" />
+                                            <div className="w-10 h-10 rounded-lg bg-q-accent/20 flex items-center justify-center flex-shrink-0">
+                                                <Zap className="w-5 h-5 text-q-accent" />
                                             </div>
                                             <div className="flex-1">
-                                                <h4 className="font-semibold text-purple-300 mb-1">
+                                                <h4 className="font-semibold text-q-accent mb-1">
                                                     Nueva Estructura de Planes Disponible
                                                 </h4>
-                                                <p className="text-sm text-purple-300/80 mb-3">
+                                                <p className="text-sm text-q-accent/80 mb-3">
                                                     Hay una nueva estructura de planes lista para implementar:
                                                 </p>
-                                                <ul className="text-sm text-purple-300/70 space-y-1 mb-3">
+                                                <ul className="text-sm text-q-accent/70 space-y-1 mb-3">
                                                     <li>• <strong>Individual</strong> - $49/mes con 7 días trial, todas las features</li>
                                                     <li>• <strong>Agency Starter</strong> - $99/mes + $29/proyecto, pool 2,000 créditos</li>
                                                     <li>• <strong>Agency Pro</strong> - $199/mes + $29/proyecto, pool 5,000 créditos</li>
                                                     <li>• <strong>Agency Scale</strong> - $399/mes + $29/proyecto, pool 15,000 créditos</li>
                                                 </ul>
-                                                <p className="text-xs text-purple-300/60">
+                                                <p className="text-xs text-q-accent/60">
                                                     Los planes legacy (Hobby, Starter, Pro, Agency, Agency Plus) serán archivados. Los usuarios existentes no serán afectados.
                                                 </p>
                                             </div>
                                             <button
                                                 onClick={handleMigrateToNewPlans}
                                                 disabled={isMigrating}
-                                                className="px-4 py-2 rounded-lg bg-purple-500 text-white text-sm font-medium hover:bg-purple-600 transition-colors flex items-center gap-2 flex-shrink-0"
+                                                className="px-4 py-2 rounded-lg bg-q-accent text-q-text-on-accent text-sm font-medium hover:bg-q-accent transition-colors flex items-center gap-2 flex-shrink-0"
                                             >
                                                 {isMigrating ? (
                                                     <>
@@ -1288,7 +1288,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                             className={`
                                                 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2
                                                 ${showArchivedPlans
-                                                    ? 'bg-q-accent text-white'
+                                                    ? 'bg-q-accent text-q-text-on-accent'
                                                     : 'bg-q-surface-overlay text-q-text-secondary hover:text-q-text'
                                                 }
                                             `}
@@ -1300,7 +1300,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                             <button
                                                 onClick={handleInitializePlans}
                                                 disabled={isRefreshing}
-                                                className="px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 text-sm font-medium hover:bg-amber-500/30 transition-colors flex items-center gap-2"
+                                                className="px-4 py-2 rounded-lg bg-q-accent/20 text-q-accent text-sm font-medium hover:bg-q-accent/30 transition-colors flex items-center gap-2"
                                             >
                                                 <Zap className="w-4 h-4" />
                                                 Inicializar Planes
@@ -1310,8 +1310,8 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                             onClick={handleMigrateToNewPlans}
                                             disabled={isMigrating || isRefreshing}
                                             className={`px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-colors flex items-center gap-2 ${needsMigration
-                                                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 animate-pulse'
-                                                    : 'bg-purple-600'
+                                                    ? 'bg-gradient-to-r from-q-accent to-q-accent animate-pulse'
+                                                    : 'bg-q-accent'
                                                 }`}
                                             title="Migrar a los nuevos planes (Individual, Agency Starter/Pro/Scale)"
                                         >
@@ -1325,7 +1325,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                         <button
                                             onClick={handleSyncPlansFromCode}
                                             disabled={isRefreshing}
-                                            className="px-4 py-2 rounded-lg bg-cyan-500/20 text-cyan-400 text-sm font-medium hover:bg-cyan-500/30 transition-colors flex items-center gap-2"
+                                            className="px-4 py-2 rounded-lg bg-q-accent/20 text-q-accent text-sm font-medium hover:bg-q-accent/30 transition-colors flex items-center gap-2"
                                             title="Sincronizar planes del código a Supabase"
                                         >
                                             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -1333,7 +1333,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                         </button>
                                         <button
                                             onClick={() => setPlanEditorModal({ isOpen: true, plan: null })}
-                                            className="px-4 py-2 rounded-lg bg-q-accent text-white text-sm font-medium hover:opacity-90 transition-colors flex items-center gap-2"
+                                            className="px-4 py-2 rounded-lg bg-q-accent text-q-text-on-accent text-sm font-medium hover:opacity-90 transition-colors flex items-center gap-2"
                                         >
                                             <Plus className="w-4 h-4" />
                                             Nuevo Plan
@@ -1375,17 +1375,17 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                                     <h4 className="font-semibold text-q-text flex items-center gap-2">
                                                                         {plan.name}
                                                                         {plan._fromCode && (
-                                                                            <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full animate-pulse">
+                                                                            <span className="px-2 py-0.5 bg-q-accent/20 text-q-accent text-xs rounded-full animate-pulse">
                                                                                 Nuevo
                                                                             </span>
                                                                         )}
                                                                         {plan.isPopular && (
-                                                                            <span className="px-2 py-0.5 bg-q-accent text-white text-xs rounded-full">
+                                                                            <span className="px-2 py-0.5 bg-q-accent text-q-text-on-accent text-xs rounded-full">
                                                                                 Popular
                                                                             </span>
                                                                         )}
                                                                         {plan.isArchived && (
-                                                                            <span className="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full">
+                                                                            <span className="px-2 py-0.5 bg-q-error/20 text-q-error text-xs rounded-full">
                                                                                 Archivado
                                                                             </span>
                                                                         )}
@@ -1404,7 +1404,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                                 {plan.isArchived ? (
                                                                     <button
                                                                         onClick={() => handleRestorePlan(plan.id)}
-                                                                        className="p-1.5 rounded-lg hover:bg-green-500/20 text-green-400 transition-colors"
+                                                                        className="p-1.5 rounded-lg hover:bg-q-success/20 text-q-success transition-colors"
                                                                         title="Restaurar"
                                                                     >
                                                                         <RotateCcw className="w-4 h-4" />
@@ -1412,7 +1412,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                                 ) : (
                                                                     <button
                                                                         onClick={() => handleArchivePlan(plan.id)}
-                                                                        className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors"
+                                                                        className="p-1.5 rounded-lg hover:bg-q-error/20 text-q-error transition-colors"
                                                                         title="Archivar"
                                                                     >
                                                                         <Archive className="w-4 h-4" />
@@ -1434,7 +1434,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                             <span className="text-q-text-secondary">/mes</span>
                                                         </div>
                                                         {plan.price?.annually && plan.price.annually > 0 && plan.price.annually < (plan.price?.monthly || 0) && (
-                                                            <p className="text-xs text-green-400 mt-1">
+                                                            <p className="text-xs text-q-success mt-1">
                                                                 ${plan.price.annually}/mes si pagas anual
                                                             </p>
                                                         )}
@@ -1488,7 +1488,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                                         <span className="text-xs text-q-text-secondary">
                                                                             MRR
                                                                         </span>
-                                                                        <span className="text-sm font-semibold text-green-400">
+                                                                        <span className="text-sm font-semibold text-q-success">
                                                                             ${stats.mrr.toLocaleString()}
                                                                         </span>
                                                                     </div>
@@ -1513,13 +1513,13 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                         <div className="flex justify-center gap-3">
                                             <button
                                                 onClick={handleInitializePlans}
-                                                className="px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 font-medium hover:bg-amber-500/30 transition-colors"
+                                                className="px-4 py-2 rounded-lg bg-q-accent/20 text-q-accent font-medium hover:bg-q-accent/30 transition-colors"
                                             >
                                                 Inicializar Predefinidos
                                             </button>
                                             <button
                                                 onClick={() => setPlanEditorModal({ isOpen: true, plan: null })}
-                                                className="px-4 py-2 rounded-lg bg-q-accent text-white font-medium hover:opacity-90 transition-colors"
+                                                className="px-4 py-2 rounded-lg bg-q-accent text-q-text-on-accent font-medium hover:opacity-90 transition-colors"
                                             >
                                                 Crear Plan Nuevo
                                             </button>

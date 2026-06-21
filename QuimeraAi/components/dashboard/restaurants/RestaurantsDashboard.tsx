@@ -205,7 +205,7 @@ const RestaurantsDashboard: React.FC = () => {
               </h1>
             </div>
           </div>
-          
+
           <div className="ml-auto flex items-center gap-2">
             {restaurantState.restaurants.length > 1 && (
               <AppSelect
@@ -377,7 +377,7 @@ const DishCard = ({ item, onEdit, onDelete, onToggle, onAi }: { item: Restaurant
           <button onClick={() => onToggle({ isFeatured: !item.isFeatured })} className="px-3 py-1.5 rounded-lg bg-muted text-xs">{item.isFeatured ? t('restaurants.unfeature', 'Unfeature') : t('restaurants.feature', 'Feature')}</button>
           <button onClick={() => onAi(item, 'improve description')} className="px-3 py-1.5 rounded-lg bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text text-xs">{t('restaurants.aiAssist', 'AI')}</button>
           <button onClick={onEdit} className="p-2 rounded-lg hover:bg-muted"><Pencil size={16} /></button>
-          <button onClick={onDelete} className="p-2 rounded-lg hover:bg-muted text-red-500"><Trash2 size={16} /></button>
+          <button onClick={onDelete} className="p-2 rounded-lg hover:bg-muted text-q-error"><Trash2 size={16} /></button>
         </div>
       </div>
     </div>
@@ -389,7 +389,7 @@ const DishForm = ({ initial, onClose, onSave }: { initial: Partial<RestaurantMen
   const [form, setForm] = useState<Partial<RestaurantMenuItem>>(initial);
   const update = (key: keyof RestaurantMenuItem, value: any) => setForm((prev) => ({ ...prev, [key]: value }));
   return (
-    <div className="fixed inset-0 z-[80] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[80] bg-q-text/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-q-border bg-q-bg p-5">
         <div className="flex justify-between mb-4"><h2 className="text-xl font-bold">{form.id ? t('restaurants.editDish', 'Edit dish') : t('restaurants.createDish', 'Create dish')}</h2><button onClick={onClose}><X size={20} /></button></div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -423,7 +423,7 @@ const DigitalMenuView = ({ restaurant, items, publicUrl }: { restaurant: any; it
           <button onClick={copy} className="quimera-guide-cta w-full flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium"><Clipboard size={18} />{t('restaurants.copyMenuLink', 'Copy Menu Link')}</button>
           <button onClick={() => window.open(publicUrl, '_blank')} className="w-full flex items-center justify-center gap-2 rounded-lg bg-muted px-4 py-2.5 font-medium hover:bg-muted/80 transition-colors"><ExternalLink size={18} />{t('restaurants.previewPublicMenu', 'Preview Public Menu')}</button>
           <div className="rounded-lg border border-q-border bg-q-bg p-6 text-center mt-4">
-            <div className="mx-auto grid h-44 w-44 grid-cols-7 gap-1 rounded bg-white p-3">{Array.from({ length: 49 }).map((_, i) => <span key={i} className={`${(i * 7 + i) % 5 === 0 || i < 7 || i % 7 === 0 ? 'bg-black' : 'bg-white'}`} />)}</div>
+            <div className="mx-auto grid h-44 w-44 grid-cols-7 gap-1 rounded bg-q-surface p-3">{Array.from({ length: 49 }).map((_, i) => <span key={i} className={`${(i * 7 + i) % 5 === 0 || i < 7 || i % 7 === 0 ? 'bg-q-text' : 'bg-q-surface'}`} />)}</div>
             <p className="text-xs text-q-text-muted mt-4">{t('restaurants.qrFallback', 'QR visual fallback. The menu link is ready to copy.')}</p>
           </div>
         </div>
@@ -447,12 +447,12 @@ const PublicMenuPreview = ({ restaurant, items }: { restaurant: any; items: Rest
 
 const ReservationCard = ({ item, onEdit, onUpdateStatus }: { item: RestaurantReservation; onEdit: () => void; onUpdateStatus: (status: string) => void }) => {
   const { t } = useTranslation();
-  
+
   const statusColors: Record<string, string> = {
-    pending: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-    confirmed: 'bg-green-500/10 text-green-500 border-green-500/20',
-    cancelled: 'bg-red-500/10 text-red-500 border-red-500/20',
-    completed: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+    pending: 'bg-q-accent/10 text-q-accent border-q-accent/20',
+    confirmed: 'bg-q-success/10 text-q-success border-q-success/20',
+    cancelled: 'bg-q-error/10 text-q-error border-q-error/20',
+    completed: 'bg-q-accent/10 text-q-accent border-q-accent/20',
     noShow: 'bg-muted text-q-text-muted border-q-border',
   };
 
@@ -490,9 +490,9 @@ const ReservationCard = ({ item, onEdit, onUpdateStatus }: { item: RestaurantRes
       <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-q-border/50">
         <div className="flex-1 flex gap-2 overflow-x-auto scrollbar-hide">
           {['confirmed', 'cancelled', 'completed', 'noShow'].map((s) => (
-            <button 
-              key={s} 
-              onClick={() => onUpdateStatus(s)} 
+            <button
+              key={s}
+              onClick={() => onUpdateStatus(s)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${item.status === s ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_20%,transparent)] quimera-status-card-accent-text pointer-events-none' : 'bg-muted hover:bg-muted/80 text-foreground'}`}
             >
               {t(`restaurants.status.${s}`, s)}
@@ -650,7 +650,7 @@ const EditorDatePicker = ({ label, value, onChange }: { label: string; value: st
               const isSelected = dateStr === selectedDateStr;
               const isToday = dateStr === todayStr;
               const isPast = new Date(viewYear, viewMonth, day) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-              
+
               return (
                 <button
                   key={day}
@@ -715,7 +715,7 @@ const ReservationForm = ({ initial, onClose, onSave, onAi }: { initial: Partial<
           </div>
           <button type="button" onClick={onClose} className="p-2 rounded-lg hover:bg-muted text-q-text-muted transition-colors"><X size={16} /></button>
         </div>
-        
+
         <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-4 custom-scrollbar">
           <div className="flex items-center gap-2 mb-2">
             <Clipboard size={16} className="text-q-text-muted" />
@@ -831,7 +831,7 @@ const ImageField = ({ label, value, onChange }: { label: string; value: string; 
           </div>
           <button
             onClick={() => onChange('')}
-            className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+            className="absolute top-2 right-2 p-1 bg-q-text/50 hover:bg-q-text/70 text-white rounded-full transition-colors"
           >
             <X size={12} />
           </button>
@@ -867,7 +867,7 @@ const ScheduleEditor = ({ schedule, onChange }: { schedule: WeekSchedule; onChan
                 className={`shrink-0 w-10 h-6 rounded-full relative transition-colors ${d.open ? 'bg-[var(--quimera-status-accent-from)]' : 'bg-muted'
                   }`}
               >
-                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${d.open ? 'left-[18px]' : 'left-0.5'
+                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-q-surface shadow transition-transform ${d.open ? 'left-[18px]' : 'left-0.5'
                   }`} />
               </button>
               <span className={`w-24 text-sm font-medium ${d.open ? 'text-foreground' : 'text-q-text-muted'

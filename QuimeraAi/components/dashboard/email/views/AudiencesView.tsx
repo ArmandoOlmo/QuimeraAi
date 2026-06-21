@@ -303,10 +303,10 @@ const AudiencesView: React.FC = () => {
                                         {!audience.isDefault && (
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleDeleteAudience(audience.id!, audience.isDefault); }}
-                                                className="p-1.5 hover:bg-red-500/20 rounded-lg"
+                                                className="p-1.5 hover:bg-q-error/20 rounded-lg"
                                                 title={t('email.delete', 'Eliminar')}
                                             >
-                                                <Trash2 size={14} className="text-red-400" />
+                                                <Trash2 size={14} className="text-q-error" />
                                             </button>
                                         )}
                                     </div>
@@ -381,7 +381,7 @@ const AudiencesView: React.FC = () => {
 
             {/* New/Edit Audience Modal */}
             {showNewAudienceModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-q-border flex items-center justify-between">
                             <h3 className="text-lg font-bold text-foreground">
@@ -534,10 +534,10 @@ const AudiencesView: React.FC = () => {
 
             {/* Delete Audience Confirmation Modal */}
             {deleteConfirmId && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in" style={{ zIndex: 9999 }}>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-q-text/50 backdrop-blur-sm p-4 animate-fade-in" style={{ zIndex: 9999 }}>
                     <div className="bg-q-surface w-full max-w-md rounded-xl border border-q-border shadow-2xl overflow-hidden animate-scale-in">
                         <div className="p-6">
-                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 text-red-500 mx-auto">
+                            <div className="w-12 h-12 rounded-full bg-q-error/10 flex items-center justify-center mb-4 text-q-error mx-auto">
                                 <Trash2 size={24} />
                             </div>
                             <h3 className="text-xl font-bold text-center text-foreground mb-2">
@@ -557,7 +557,7 @@ const AudiencesView: React.FC = () => {
                                 <button
                                     onClick={confirmDeleteAudience}
                                     disabled={isDeleting}
-                                    className="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors font-medium text-sm flex items-center gap-2"
+                                    className="px-5 py-2.5 rounded-lg bg-q-error hover:bg-q-error text-white transition-colors font-medium text-sm flex items-center gap-2"
                                 >
                                     {isDeleting ? (
                                         <>

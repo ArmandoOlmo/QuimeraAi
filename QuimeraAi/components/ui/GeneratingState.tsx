@@ -24,8 +24,8 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
             <div className="flex flex-col items-center justify-center p-8 md:p-12 text-center h-full">
                 {/* Animated Quimera Logo */}
                 <div className="relative w-24 h-24 mb-6">
-                    <div className="absolute inset-0 rounded-full bg-yellow-400/20 animate-ping"></div>
-                    <div className="absolute inset-0 rounded-full bg-yellow-400/10 animate-pulse"></div>
+                    <div className="absolute inset-0 rounded-full bg-q-accent/20 animate-ping"></div>
+                    <div className="absolute inset-0 rounded-full bg-q-accent/10 animate-pulse"></div>
                     <img
                         src={QUIMERA_LOGO}
                         alt="Quimera AI"
@@ -53,8 +53,8 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
     return (
         <div className="flex flex-col items-center justify-center p-8 md:p-12 text-center h-full">
             {/* Header */}
-            <div className="w-16 h-16 rounded-full bg-yellow-400/20 flex items-center justify-center mb-6">
-                <ImageIcon className="w-8 h-8 text-yellow-400 animate-pulse" />
+            <div className="w-16 h-16 rounded-full bg-q-accent/20 flex items-center justify-center mb-6">
+                <ImageIcon className="w-8 h-8 text-q-accent animate-pulse" />
             </div>
 
             <h2 className="text-2xl font-bold text-white mb-2">
@@ -67,14 +67,14 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
             {/* Progress Bar */}
             <div className="w-full max-w-md mb-4">
                 <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-q-text-muted">
                         {t('imageGeneration.imageOf', { current: progress.current, total: progress.total })}
                     </span>
-                    <span className="text-sm font-bold text-yellow-400">{progressPercentage}%</span>
+                    <span className="text-sm font-bold text-q-accent">{progressPercentage}%</span>
                 </div>
-                <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-3 bg-q-surface/10 rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-500 ease-out"
+                        className="h-full bg-gradient-to-r from-q-accent to-q-warning transition-all duration-500 ease-out"
                         style={{ width: `${progressPercentage}%` }}
                     />
                 </div>
@@ -92,7 +92,7 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
 
             {/* Estimated Time */}
             {remainingImages > 0 && (
-                <p className="text-xs text-gray-500 mb-6">
+                <p className="text-xs text-q-text-muted mb-6">
                     {t('imageGeneration.estimatedTime')} {estimatedMinutes > 0 && `${estimatedMinutes} ${t('imageGeneration.minutes')} `}
                     {estimatedSeconds} {t('imageGeneration.seconds')}
                 </p>
@@ -101,14 +101,14 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
             {/* Thumbnail Grid */}
             {progress.completedImages.length > 0 && (
                 <div className="w-full max-w-md">
-                    <p className="text-xs text-gray-500 mb-3">
+                    <p className="text-xs text-q-text-muted mb-3">
                         {progress.completedImages.length} {t('imageGeneration.imagesGenerated')}
                     </p>
                     <div className="grid grid-cols-4 gap-2">
                         {progress.completedImages.slice(-8).map((url, index) => (
                             <div
                                 key={index}
-                                className="aspect-square rounded-lg overflow-hidden bg-white/5 ring-1 ring-white/10"
+                                className="aspect-square rounded-lg overflow-hidden bg-q-surface/5 ring-1 ring-white/10"
                             >
                                 <img
                                     src={url}
@@ -119,7 +119,7 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
                         ))}
                         {/* Placeholder for current generating */}
                         {progress.current < progress.total && (
-                            <div className="aspect-square rounded-lg bg-white/5 ring-1 ring-white/10 flex items-center justify-center">
+                            <div className="aspect-square rounded-lg bg-q-surface/5 ring-1 ring-white/10 flex items-center justify-center">
                                 <img src={QUIMERA_LOGO} alt="Generating..." className="w-6 h-6 object-contain animate-pulse" />
                             </div>
                         )}
@@ -129,14 +129,14 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
 
             {/* Failed Images Warning */}
             {progress.failedPaths.length > 0 && (
-                <div className="mt-4 bg-orange-500/10 border border-orange-500/20 rounded-lg px-4 py-3 max-w-md">
+                <div className="mt-4 bg-q-warning/10 border border-q-warning/20 rounded-lg px-4 py-3 max-w-md">
                     <div className="flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
+                        <AlertCircle className="w-4 h-4 text-q-warning mt-0.5 flex-shrink-0" />
                         <div className="text-left">
-                            <p className="text-sm text-orange-400 font-medium">
+                            <p className="text-sm text-q-warning font-medium">
                                 {t('imageGeneration.failed')}
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">
+                            <p className="text-xs text-q-text-muted mt-1">
                                 {t('imageGeneration.failedDesc')}
                             </p>
                         </div>
@@ -146,7 +146,7 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
 
             {/* Completion State */}
             {progress.current === progress.total && progress.total > 0 && (
-                <div className="mt-4 flex items-center gap-2 text-green-400">
+                <div className="mt-4 flex items-center gap-2 text-q-success">
                     <CheckCircle2 className="w-5 h-5" />
                     <span className="font-medium">All images generated!</span>
                 </div>

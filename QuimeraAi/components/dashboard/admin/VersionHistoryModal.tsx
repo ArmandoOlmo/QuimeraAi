@@ -87,35 +87,35 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-q-surface rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-q-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-q-accent to-q-accent flex items-center justify-center">
               <Clock className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Historial de Versiones</h2>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <h2 className="text-2xl font-bold text-q-text">Historial de Versiones</h2>
+              <p className="text-sm text-q-text-muted mt-0.5">
                 {component.name} · {versions.length} versión{versions.length !== 1 ? 'es' : ''}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-q-surface-overlay rounded-lg transition-colors"
             disabled={isReverting}
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-q-text-muted" />
           </button>
         </div>
 
         {/* Success Message */}
         {revertSuccess && (
-          <div className="mx-6 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-            <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-            <p className="text-green-800 font-medium">
+          <div className="mx-6 mt-4 p-4 bg-q-success/10 border border-q-success/25 rounded-lg flex items-center gap-3">
+            <Check className="w-5 h-5 text-q-success flex-shrink-0" />
+            <p className="text-q-success font-medium">
               ¡Versión restaurada exitosamente!
             </p>
           </div>
@@ -125,9 +125,9 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6">
           {versions.length === 0 ? (
             <div className="text-center py-12">
-              <GitBranch className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">No hay versiones disponibles</p>
-              <p className="text-gray-400 text-sm mt-2">
+              <GitBranch className="w-16 h-16 text-q-text-muted mx-auto mb-4" />
+              <p className="text-q-text-muted text-lg">No hay versiones disponibles</p>
+              <p className="text-q-text-muted text-sm mt-2">
                 Las versiones se crearán automáticamente al guardar cambios
               </p>
             </div>
@@ -142,8 +142,8 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                   <div
                     key={version.version}
                     className={`border rounded-xl transition-all ${isCurrentVersion
-                        ? 'border-purple-300 bg-purple-50'
-                        : 'border-gray-200 bg-white hover:border-gray-300'
+                        ? 'border-q-accent/25 bg-q-accent/10'
+                        : 'border-q-border bg-q-surface hover:border-q-border'
                       } ${isExpanded ? 'shadow-md' : 'shadow-sm'}`}
                   >
                     {/* Version Header */}
@@ -153,8 +153,8 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                           {/* Version Badge */}
                           <div
                             className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${isCurrentVersion
-                                ? 'bg-purple-600 text-white'
-                                : 'bg-gray-100 text-gray-700'
+                                ? 'bg-q-accent text-q-text-on-accent'
+                                : 'bg-q-surface-overlay text-q-text'
                               }`}
                           >
                             v{version.version}
@@ -163,18 +163,18 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                           {/* Version Info */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
-                              <h3 className="font-semibold text-gray-900">
+                              <h3 className="font-semibold text-q-text">
                                 Versión {version.version}
                               </h3>
                               {isCurrentVersion && (
-                                <span className="px-2 py-0.5 bg-purple-600 text-white text-xs font-medium rounded-full">
+                                <span className="px-2 py-0.5 bg-q-accent text-q-text-on-accent text-xs font-medium rounded-full">
                                   Actual
                                 </span>
                               )}
                             </div>
 
                             {/* Metadata */}
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-q-text-muted">
                               <div className="flex items-center gap-1.5">
                                 <Calendar className="w-4 h-4" />
                                 <span>{formatDate(version.createdAt)}</span>
@@ -189,7 +189,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
 
                             {/* Notes Preview */}
                             {version.notes && !isExpanded && (
-                              <p className="mt-2 text-sm text-gray-600 line-clamp-1">
+                              <p className="mt-2 text-sm text-q-text-muted line-clamp-1">
                                 {version.notes}
                               </p>
                             )}
@@ -200,13 +200,13 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => toggleExpanded(version.version)}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="p-2 hover:bg-q-surface-overlay rounded-lg transition-colors"
                             title={isExpanded ? "Ocultar detalles" : "Ver detalles"}
                           >
                             {isExpanded ? (
-                              <ChevronUp className="w-5 h-5 text-gray-500" />
+                              <ChevronUp className="w-5 h-5 text-q-text-muted" />
                             ) : (
-                              <ChevronDown className="w-5 h-5 text-gray-500" />
+                              <ChevronDown className="w-5 h-5 text-q-text-muted" />
                             )}
                           </button>
 
@@ -214,7 +214,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                             <button
                               onClick={() => handleRevert(version.version)}
                               disabled={isReverting}
-                              className="px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                              className="px-3 py-2 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent text-sm font-medium rounded-lg hover:from-q-accent hover:to-q-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                               title="Revertir a esta versión"
                             >
                               <RotateCcw className="w-4 h-4" />
@@ -226,27 +226,27 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
 
                       {/* Expanded Details */}
                       {isExpanded && (
-                        <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                        <div className="mt-4 pt-4 border-t border-q-border space-y-3">
                           {version.notes && (
                             <div>
                               <div className="flex items-center gap-2 mb-2">
-                                <FileText className="w-4 h-4 text-gray-500" />
-                                <span className="text-sm font-medium text-gray-700">Notas:</span>
+                                <FileText className="w-4 h-4 text-q-text-muted" />
+                                <span className="text-sm font-medium text-q-text">Notas:</span>
                               </div>
-                              <p className="text-sm text-gray-600 pl-6">{version.notes}</p>
+                              <p className="text-sm text-q-text-muted pl-6">{version.notes}</p>
                             </div>
                           )}
 
                           {/* Styles Preview */}
                           <div>
                             <div className="flex items-center gap-2 mb-2">
-                              <GitBranch className="w-4 h-4 text-gray-500" />
-                              <span className="text-sm font-medium text-gray-700">
+                              <GitBranch className="w-4 h-4 text-q-text-muted" />
+                              <span className="text-sm font-medium text-q-text">
                                 Configuración:
                               </span>
                             </div>
-                            <div className="pl-6 bg-gray-50 rounded-lg p-3 max-h-48 overflow-y-auto">
-                              <pre className="text-xs text-gray-700 font-mono">
+                            <div className="pl-6 bg-q-surface-overlay rounded-lg p-3 max-h-48 overflow-y-auto">
+                              <pre className="text-xs text-q-text font-mono">
                                 {JSON.stringify(version.styles, null, 2)}
                               </pre>
                             </div>
@@ -262,8 +262,8 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-          <div className="text-sm text-gray-600">
+        <div className="flex items-center justify-between p-6 border-t border-q-border bg-q-surface-overlay">
+          <div className="text-sm text-q-text-muted">
             <span className="font-medium">{versions.length}</span> versión{versions.length !== 1 ? 'es' : ''}
             {versions.length > 0 && (
               <>
@@ -275,7 +275,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
           <button
             onClick={onClose}
             disabled={isReverting}
-            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-q-surface border border-q-border text-q-text rounded-lg hover:bg-q-surface-overlay disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Cerrar
           </button>

@@ -294,7 +294,7 @@ const GlobalStylesControls: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* Quimera.ai Brand Import — always available */}
-            <div className="p-4 bg-gradient-to-br from-[#FBB92B]/10 via-[#7f22dd]/10 to-[#10b981]/10 border border-q-border rounded-lg">
+            <div className="p-4 bg-gradient-to-br from-q-accent/10 via-q-accent/10 to-q-accent/10 border border-q-border rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                     <Sparkles className="w-4 h-4 text-[#FBB92B]" />
                     <h4 className="text-sm font-bold text-q-text">

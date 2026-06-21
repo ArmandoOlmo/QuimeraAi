@@ -232,8 +232,8 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
 
                 <div className="bg-q-surface p-4 rounded-xl border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-500/10 rounded-lg">
-                            <Filter className="text-blue-500" size={20} />
+                        <div className="p-2 bg-q-accent/10 rounded-lg">
+                            <Filter className="text-q-accent" size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{audience.estimatedCount || 0}</p>
@@ -246,8 +246,8 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
 
                 <div className="bg-q-surface p-4 rounded-xl border border-q-border">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-500/10 rounded-lg">
-                            <UserPlus className="text-green-500" size={20} />
+                        <div className="p-2 bg-q-success/10 rounded-lg">
+                            <UserPlus className="text-q-success" size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{totalStaticMembers}</p>
@@ -439,7 +439,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
 
             {/* Edit Lead Modal */}
             {editingLead && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md">
                         {/* Header */}
                         <div className="p-6 border-b border-q-border flex items-center justify-between">

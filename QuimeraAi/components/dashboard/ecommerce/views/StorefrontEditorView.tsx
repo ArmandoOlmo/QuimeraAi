@@ -585,10 +585,10 @@ const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps
                 event.preventDefault();
                 onSelect();
             }}
-            className={`group flex w-full cursor-pointer items-center gap-2 rounded-lg border p-2.5 text-left transition-colors ${
+            className={`group flex w-full cursor-pointer items-center gap-2 rounded-[var(--q-radius-md)] border p-2.5 text-left transition-all ${
                 isSelected
-                    ? 'border-primary/30 bg-primary/10'
-                    : 'border-transparent hover:bg-secondary/50'
+                    ? 'border-q-accent bg-q-accent text-q-text-on-accent shadow-[var(--shadow-card)] dark:bg-q-accent/10 dark:text-q-accent dark:border-q-accent/30 dark:shadow-none black:bg-q-accent/10 black:text-q-accent black:border-q-accent/30 black:shadow-none'
+                    : 'border-transparent hover:border-structure-control-border hover:bg-structure-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))]'
             } ${!isVisible ? 'opacity-50' : ''} ${isDragging ? 'shadow-lg ring-1 ring-primary/30' : ''}`}
         >
             <button
@@ -596,18 +596,26 @@ const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps
                 {...attributes}
                 {...listeners}
                 onClick={(event) => event.stopPropagation()}
-                className="flex h-7 w-7 flex-shrink-0 touch-none items-center justify-center rounded-md bg-muted text-q-text-muted transition-colors cursor-grab active:cursor-grabbing hover:bg-secondary hover:text-foreground"
+                className={`flex h-7 w-7 flex-shrink-0 touch-none items-center justify-center rounded-[var(--q-radius-md)] transition-colors cursor-grab active:cursor-grabbing ${
+                    isSelected
+                        ? 'bg-q-text-on-accent/12 text-q-text-on-accent/75 hover:text-q-text-on-accent dark:bg-q-accent/12 dark:text-q-accent/75 dark:hover:text-q-accent black:bg-q-accent/12 black:text-q-accent/75 black:hover:text-q-accent'
+                        : 'bg-structure-control text-q-text-muted hover:bg-structure-control-hover hover:text-q-text'
+                }`}
                 aria-label={`${dragHandleLabel}: ${label}`}
                 title={`${dragHandleLabel}: ${label}`}
             >
                 <GripVertical size={14} />
             </button>
-            <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-muted text-xs font-bold text-q-text-muted">
+            <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[var(--q-radius-md)] text-xs font-bold ${
+                isSelected
+                    ? 'bg-q-text-on-accent/12 text-q-text-on-accent dark:bg-q-accent/12 dark:text-q-accent black:bg-q-accent/12 black:text-q-accent'
+                    : 'bg-structure-control text-q-text-muted group-hover:text-q-text'
+            }`}>
                 {index + 1}
             </span>
             <div className="min-w-0 flex-1 text-left">
-                <span className="block truncate text-sm font-medium text-foreground">{label}</span>
-                <span className="block truncate text-xs text-q-text-muted">{variant}</span>
+                <span className={isSelected ? 'block truncate text-sm font-medium text-q-text-on-accent dark:text-q-accent black:text-q-accent' : 'block truncate text-sm font-medium text-foreground'}>{label}</span>
+                <span className={isSelected ? 'block truncate text-xs text-q-text-on-accent/75 dark:text-q-accent/75 black:text-q-accent/75' : 'block truncate text-xs text-q-text-muted'}>{variant}</span>
             </div>
             <span className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                 <button
@@ -616,7 +624,7 @@ const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps
                         event.stopPropagation();
                         onToggleVisibility();
                     }}
-                    className="rounded p-1 text-q-text-muted hover:bg-secondary hover:text-foreground"
+                    className={isSelected ? 'rounded p-1 text-q-text-on-accent/75 hover:bg-q-text-on-accent/12 hover:text-q-text-on-accent dark:text-q-accent/75 dark:hover:bg-q-accent/12 dark:hover:text-q-accent black:text-q-accent/75 black:hover:bg-q-accent/12 black:hover:text-q-accent' : 'rounded p-1 text-q-text-muted hover:bg-structure-control-hover hover:text-q-text'}
                     aria-label={isVisible ? hideLabel : showLabel}
                 >
                     {isVisible ? <Eye size={13} /> : <EyeOff size={13} />}
@@ -627,7 +635,7 @@ const SortableStorefrontSectionItem: React.FC<SortableStorefrontSectionItemProps
                         event.stopPropagation();
                         onRemove();
                     }}
-                    className="rounded p-1 text-red-400 hover:bg-red-500/10"
+                    className={isSelected ? 'rounded p-1 text-q-text-on-accent/75 hover:bg-q-surface/25 hover:text-q-error dark:text-q-accent/75 dark:hover:bg-q-error/10 dark:hover:text-q-error black:text-q-accent/75 black:hover:bg-q-error/10 black:hover:text-q-error' : 'rounded p-1 text-q-error hover:bg-q-error/10'}
                     aria-label={removeLabel}
                 >
                     <Trash2 size={13} />
@@ -797,15 +805,15 @@ const StorefrontProductChooser: React.FC<StorefrontProductChooserProps> = ({
             )}
 
             {missingIds.length > 0 && (
-                <div className="space-y-1 rounded-md border border-amber-500/20 bg-amber-500/10 p-2">
-                    <p className="text-[11px] text-amber-300">{notFoundLabel}</p>
+                <div className="space-y-1 rounded-md border border-q-accent/20 bg-q-accent/10 p-2">
+                    <p className="text-[11px] text-q-accent">{notFoundLabel}</p>
                     <div className="flex flex-wrap gap-1">
                         {missingIds.map(id => (
                             <button
                                 key={id}
                                 type="button"
                                 onClick={() => onChange(selectedIds.filter(selectedId => selectedId !== id))}
-                                className="rounded bg-amber-500/15 px-2 py-0.5 text-[11px] text-amber-200 hover:bg-amber-500/25"
+                                className="rounded bg-q-accent/15 px-2 py-0.5 text-[11px] text-q-accent hover:bg-q-accent/25"
                             >
                                 {id}
                             </button>
@@ -1747,8 +1755,8 @@ const StorefrontEditorView: React.FC = () => {
                     </div>
                     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                         templateState === 'published'
-                            ? 'bg-emerald-500/15 text-emerald-400'
-                            : 'bg-amber-500/15 text-amber-400'
+                            ? 'bg-q-success/15 text-q-success'
+                            : 'bg-q-accent/15 text-q-accent'
                     }`}>
                         {templateState === 'published'
                             ? t('common.published', 'Publicado')
@@ -1867,12 +1875,12 @@ const StorefrontEditorView: React.FC = () => {
                 {(selectedSectionValidation.errors.length > 0 || selectedSectionValidation.warnings.length > 0) && (
                     <div className="mt-3 space-y-1">
                         {selectedSectionValidation.errors.map(message => (
-                            <p key={message} className="rounded-md bg-red-500/10 px-2 py-1 text-xs text-red-400">
+                            <p key={message} className="rounded-md bg-q-error/10 px-2 py-1 text-xs text-q-error">
                                 {translateValidationMessage(message)}
                             </p>
                         ))}
                         {selectedSectionValidation.warnings.map(message => (
-                            <p key={message} className="rounded-md bg-amber-500/10 px-2 py-1 text-xs text-amber-400">
+                            <p key={message} className="rounded-md bg-q-accent/10 px-2 py-1 text-xs text-q-accent">
                                 {translateValidationMessage(message)}
                             </p>
                         ))}
@@ -2525,8 +2533,8 @@ const StorefrontEditorView: React.FC = () => {
                     </div>
                     <span className={`hidden rounded-full px-2.5 py-1 text-xs font-semibold md:inline-flex ${
                         templateState === 'published'
-                            ? 'bg-emerald-500/15 text-emerald-400'
-                            : 'bg-amber-500/15 text-amber-400'
+                            ? 'bg-q-success/15 text-q-success'
+                            : 'bg-q-accent/15 text-q-accent'
                     }`}>
                         {templateState === 'published'
                             ? t('common.published', 'Publicado')
@@ -2601,8 +2609,8 @@ const StorefrontEditorView: React.FC = () => {
             {(statusMessage || error) && (
                 <div className={`z-20 flex flex-shrink-0 items-center gap-2 border-b px-4 py-2 text-sm ${
                     error
-                        ? 'border-red-500/30 bg-red-500/10 text-red-400'
-                        : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                        ? 'border-q-error/30 bg-q-error/10 text-q-error'
+                        : 'border-q-success/30 bg-q-success/10 text-q-success'
                 }`}>
                     {error ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
                     <span className="truncate">{error || statusMessage}</span>
@@ -2631,7 +2639,7 @@ const StorefrontEditorView: React.FC = () => {
                         <button
                             type="button"
                             onClick={applySectionPreset}
-                            className="flex h-7 w-7 items-center justify-center rounded-md text-primary transition-colors hover:bg-secondary/50"
+                            className="flex h-7 w-7 items-center justify-center rounded-[var(--q-radius-md)] text-q-accent transition-colors hover:bg-structure-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))]"
                             title={t('ecommerce.storefrontEditor.showAllSections', 'Mostrar todos los componentes')}
                         >
                             <Plus size={15} />
@@ -2643,7 +2651,7 @@ const StorefrontEditorView: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => setIsStructureExpanded(prev => !prev)}
-                                className="flex w-full items-center gap-2 rounded px-2 py-2 text-xs font-bold uppercase tracking-wider text-primary transition-colors hover:bg-secondary/30"
+                                className="flex w-full items-center gap-2 rounded-[var(--q-radius-md)] px-2 py-2 text-xs font-bold uppercase tracking-wider text-q-accent transition-all hover:bg-structure-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))]"
                             >
                                 <ChevronDown size={14} className={`transition-transform ${isStructureExpanded ? '' : '-rotate-90'}`} />
                                 <Settings size={14} />
@@ -2660,13 +2668,13 @@ const StorefrontEditorView: React.FC = () => {
                                             key={panel}
                                             type="button"
                                             onClick={() => selectStructurePanel(panel)}
-                                            className={`flex w-full cursor-pointer items-center gap-2 rounded-lg border p-2.5 text-left transition-colors ${
+                                            className={`flex w-full cursor-pointer items-center gap-2 rounded-[var(--q-radius-md)] border p-2.5 text-left transition-all ${
                                                 selectedStructurePanel === panel
-                                                    ? 'border-primary/30 bg-primary/10'
-                                                    : 'border-transparent hover:bg-secondary/50'
+                                                    ? 'border-q-accent bg-q-accent text-q-text-on-accent shadow-[var(--shadow-card)] dark:bg-q-accent/10 dark:text-q-accent dark:border-q-accent/30 dark:shadow-none black:bg-q-accent/10 black:text-q-accent black:border-q-accent/30 black:shadow-none'
+                                                    : 'border-transparent hover:border-structure-control-border hover:bg-structure-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))]'
                                             }`}
                                         >
-                                            <Icon size={16} className="flex-shrink-0 text-q-text-muted" />
+                                            <Icon size={16} className={selectedStructurePanel === panel ? 'flex-shrink-0 text-q-text-on-accent dark:text-q-accent black:text-q-accent' : 'flex-shrink-0 text-q-text-muted'} />
                                             <span className="truncate text-sm font-medium">{label}</span>
                                         </button>
                                     ))}
@@ -2678,7 +2686,7 @@ const StorefrontEditorView: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => setIsContentExpanded(prev => !prev)}
-                                className="flex w-full items-center gap-2 rounded px-2 py-2 text-xs font-bold uppercase tracking-wider text-primary transition-colors hover:bg-secondary/30"
+                                className="flex w-full items-center gap-2 rounded-[var(--q-radius-md)] px-2 py-2 text-xs font-bold uppercase tracking-wider text-q-accent transition-all hover:bg-structure-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))]"
                             >
                                 <ChevronDown size={14} className={`transition-transform ${isContentExpanded ? '' : '-rotate-90'}`} />
                                 <FileText size={14} />
@@ -2707,7 +2715,7 @@ const StorefrontEditorView: React.FC = () => {
                                             key={section}
                                             type="button"
                                             onClick={() => addSection(section)}
-                                            className="flex w-full items-center justify-between rounded-lg border border-q-border bg-q-bg/40 px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted"
+                                            className="flex w-full items-center justify-between rounded-[var(--q-radius-md)] border border-q-border bg-q-bg/40 px-3 py-2 text-left text-sm text-foreground transition-all hover:border-structure-control-border hover:bg-structure-control-hover hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))]"
                                         >
                                             <span className="truncate">{getSectionLabel(section)}</span>
                                             <Plus size={15} />
@@ -2729,9 +2737,9 @@ const StorefrontEditorView: React.FC = () => {
                     >
                         <div className="flex h-11 flex-shrink-0 items-center border-b border-q-border bg-q-bg px-4">
                             <div className="flex gap-2">
-                                <span className="h-3 w-3 rounded-full bg-red-500" />
-                                <span className="h-3 w-3 rounded-full bg-yellow-500" />
-                                <span className="h-3 w-3 rounded-full bg-green-500" />
+                                <span className="h-3 w-3 rounded-full bg-q-error" />
+                                <span className="h-3 w-3 rounded-full bg-q-accent" />
+                                <span className="h-3 w-3 rounded-full bg-q-success" />
                             </div>
                             <div className="flex flex-1 items-center justify-center px-4">
                                 <div className="flex w-full max-w-md items-center justify-center truncate rounded-full border border-q-border/50 bg-secondary/50 px-4 py-1 text-center text-xs text-q-text-muted sm:text-sm">
@@ -2751,7 +2759,7 @@ const StorefrontEditorView: React.FC = () => {
                             }}
                             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                             scrolling="yes"
-                            className="h-full min-h-0 flex-1 border-0 bg-white"
+                            className="h-full min-h-0 flex-1 border-0 bg-q-surface"
                         />
                     </div>
                 </section>

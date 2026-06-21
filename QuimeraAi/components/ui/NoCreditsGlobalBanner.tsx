@@ -47,21 +47,21 @@ const NoCreditsGlobalBanner: React.FC<NoCreditsGlobalBannerProps> = ({ className
     return (
         <>
             <div
-                className={`w-full bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white px-4 py-3 shadow-lg shadow-red-500/20 z-50 ${className}`}
+                className={`w-full bg-gradient-to-r from-q-error via-q-error to-q-error text-white px-4 py-3 shadow-lg shadow-q-error/20 z-50 ${className}`}
                 role="alert"
                 aria-live="assertive"
             >
                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
                     {/* Left — Message */}
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-9 h-9 rounded-full bg-white/20 flex-shrink-0">
+                        <div className="flex items-center justify-center w-9 h-9 rounded-full bg-q-surface/20 flex-shrink-0">
                             <AlertTriangle className="w-5 h-5" />
                         </div>
                         <div>
                             <p className="font-bold text-sm sm:text-base">
                                 {t('credits.noCreditsTitle')}
                             </p>
-                            <p className="text-xs sm:text-sm text-red-100">
+                            <p className="text-xs sm:text-sm text-q-error">
                                 {t('credits.noCreditsDescription')}
                             </p>
                         </div>
@@ -71,14 +71,14 @@ const NoCreditsGlobalBanner: React.FC<NoCreditsGlobalBannerProps> = ({ className
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <button
                             onClick={() => setShowPurchaseModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-white text-red-600 rounded-lg text-sm font-bold hover:bg-red-50 transition-colors shadow-md"
+                            className="flex items-center gap-2 px-4 py-2 bg-q-surface text-q-error rounded-lg text-sm font-bold hover:bg-q-error/10 transition-colors shadow-md"
                         >
                             <ShoppingCart className="w-4 h-4" />
                             {t('credits.buyCredits')}
                         </button>
                         <button
                             onClick={handleUpgradeClick}
-                            className="flex items-center gap-2 px-4 py-2 bg-white/20 text-white rounded-lg text-sm font-semibold hover:bg-white/30 transition-colors border border-white/30"
+                            className="flex items-center gap-2 px-4 py-2 bg-q-surface/20 text-white rounded-lg text-sm font-semibold hover:bg-q-surface/30 transition-colors border border-q-border/30"
                         >
                             <Crown className="w-4 h-4" />
                             {t('credits.upgradePlan')}

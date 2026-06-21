@@ -1,13 +1,13 @@
 /**
  * ConfirmationModal
- * 
+ *
  * A reusable premium confirmation modal component that replaces native browser confirm dialogs.
  * Provides a consistent, branded user experience with support for:
  * - Different variants (danger, warning, info)
  * - Loading states during async operations
  * - Keyboard navigation (Escape to close)
  * - Customizable content and actions
- * 
+ *
  * @example
  * // Basic usage
  * <ConfirmationModal
@@ -85,21 +85,21 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     // Variant styles
     const variantStyles = {
         danger: {
-            iconBg: 'bg-red-500/10',
-            iconColor: 'text-red-500',
-            buttonBg: 'bg-red-600 hover:bg-red-700',
+            iconBg: 'bg-q-error/10',
+            iconColor: 'text-q-error',
+            buttonBg: 'bg-q-error hover:bg-q-error',
             DefaultIcon: Trash2,
         },
         warning: {
-            iconBg: 'bg-amber-500/10',
-            iconColor: 'text-amber-500',
-            buttonBg: 'bg-amber-600 hover:bg-amber-700',
+            iconBg: 'bg-q-accent/10',
+            iconColor: 'text-q-accent',
+            buttonBg: 'bg-q-accent hover:bg-q-accent',
             DefaultIcon: AlertTriangle,
         },
         info: {
-            iconBg: 'bg-blue-500/10',
-            iconColor: 'text-blue-500',
-            buttonBg: 'bg-blue-600 hover:bg-blue-700',
+            iconBg: 'bg-q-accent/10',
+            iconColor: 'text-q-accent',
+            buttonBg: 'bg-q-accent hover:bg-q-accent',
             DefaultIcon: Info,
         },
     };
@@ -131,7 +131,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
     return createPortal(
         <div
-            className="fixed inset-0 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 animate-fade-in"
+            className="fixed inset-0 flex items-end sm:items-center justify-center bg-q-text/50 backdrop-blur-sm p-0 sm:p-4 animate-fade-in"
             style={{ zIndex: 99999 }}
             onClick={(e) => {
                 if (e.target === e.currentTarget && !isLoading) {

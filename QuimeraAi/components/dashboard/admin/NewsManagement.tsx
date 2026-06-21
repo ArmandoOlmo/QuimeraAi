@@ -261,7 +261,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handleAiCreate}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:shadow-lg hover:shadow-blue-500/20 transition-all"
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent rounded-lg font-medium hover:shadow-lg hover:shadow-q-accent/20 transition-all"
                         >
                             <Sparkles size={18} />
                             <span className="hidden sm:inline">
@@ -299,45 +299,45 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                 <span className="text-xs text-q-text-secondary uppercase">
                                     {t('superadmin.news.stats.published', 'Publicadas')}
                                 </span>
-                                <Send size={16} className="text-green-500" />
+                                <Send size={16} className="text-q-success" />
                             </div>
-                            <p className="text-2xl font-bold text-green-500">{stats.published}</p>
+                            <p className="text-2xl font-bold text-q-success">{stats.published}</p>
                         </div>
                         <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-xs text-q-text-secondary uppercase">
                                     {t('superadmin.news.stats.draft', 'Borradores')}
                                 </span>
-                                <Edit size={16} className="text-gray-500" />
+                                <Edit size={16} className="text-q-text-muted" />
                             </div>
-                            <p className="text-2xl font-bold text-gray-500">{stats.draft}</p>
+                            <p className="text-2xl font-bold text-q-text-muted">{stats.draft}</p>
                         </div>
                         <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-xs text-q-text-secondary uppercase">
                                     {t('superadmin.news.stats.scheduled', 'Programadas')}
                                 </span>
-                                <Clock size={16} className="text-blue-500" />
+                                <Clock size={16} className="text-q-accent" />
                             </div>
-                            <p className="text-2xl font-bold text-blue-500">{stats.scheduled}</p>
+                            <p className="text-2xl font-bold text-q-accent">{stats.scheduled}</p>
                         </div>
                         <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-xs text-q-text-secondary uppercase">
                                     {t('superadmin.news.stats.archived', 'Archivadas')}
                                 </span>
-                                <Archive size={16} className="text-orange-500" />
+                                <Archive size={16} className="text-q-warning" />
                             </div>
-                            <p className="text-2xl font-bold text-orange-500">{stats.archived}</p>
+                            <p className="text-2xl font-bold text-q-warning">{stats.archived}</p>
                         </div>
                         <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-xs text-q-text-secondary uppercase">
                                     {t('superadmin.news.stats.featured', 'Destacadas')}
                                 </span>
-                                <Star size={16} className="text-yellow-500" />
+                                <Star size={16} className="text-q-accent" />
                             </div>
-                            <p className="text-2xl font-bold text-yellow-500">{stats.featured}</p>
+                            <p className="text-2xl font-bold text-q-accent">{stats.featured}</p>
                         </div>
                     </div>
 
@@ -454,12 +454,12 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
 
                     {/* Error State */}
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 flex items-center gap-3">
-                            <AlertCircle className="text-red-500" size={20} />
-                            <span className="text-red-500">{error}</span>
+                        <div className="bg-q-error/10 border border-q-error/30 rounded-lg p-4 mb-6 flex items-center gap-3">
+                            <AlertCircle className="text-q-error" size={20} />
+                            <span className="text-q-error">{error}</span>
                             <button
                                 onClick={() => fetchNews()}
-                                className="ml-auto text-sm text-red-500 hover:underline"
+                                className="ml-auto text-sm text-q-error hover:underline"
                             >
                                 {t('common.retry', 'Reintentar')}
                             </button>
@@ -533,7 +533,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                                     {news.featured && (
                                                         <Star
                                                             size={16}
-                                                            className="text-yellow-500 fill-yellow-500"
+                                                            className="text-q-accent fill-yellow-500"
                                                         />
                                                     )}
                                                     <h3
@@ -581,7 +581,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                                                     size={16}
                                                                     className={
                                                                         news.featured
-                                                                            ? 'text-yellow-500 fill-yellow-500'
+                                                                            ? 'text-q-accent fill-yellow-500'
                                                                             : ''
                                                                     }
                                                                 />
@@ -592,7 +592,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                                             {news.status !== 'published' && (
                                                                 <button
                                                                     onClick={() => handlePublish(news)}
-                                                                    className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-q-surface-overlay transition-colors text-green-500"
+                                                                    className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-q-surface-overlay transition-colors text-q-success"
                                                                 >
                                                                     <Send size={16} />
                                                                     {t('superadmin.news.publish', 'Publicar')}
@@ -610,7 +610,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                                             <hr className="my-1 border-q-border" />
                                                             <button
                                                                 onClick={() => setShowDeleteConfirm(news.id)}
-                                                                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-red-500/10 transition-colors text-red-500"
+                                                                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-q-error/10 transition-colors text-q-error"
                                                             >
                                                                 <Trash2 size={16} />
                                                                 {t('common.delete', 'Eliminar')}
@@ -669,11 +669,11 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
 
             {/* Delete Confirmation Modal */}
             {showDeleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-q-surface border border-q-border rounded-xl max-w-md w-full p-6">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-red-500/10 rounded-lg">
-                                <Trash2 className="text-red-500" size={24} />
+                            <div className="p-2 bg-q-error/10 rounded-lg">
+                                <Trash2 className="text-q-error" size={24} />
                             </div>
                             <h3 className="text-lg font-semibold">
                                 {t('superadmin.news.deleteConfirmTitle', 'Eliminar noticia')}
@@ -694,7 +694,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                             </button>
                             <button
                                 onClick={() => handleDelete(showDeleteConfirm)}
-                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                className="px-4 py-2 bg-q-error text-white rounded-lg hover:bg-q-error transition-colors"
                             >
                                 {t('common.delete', 'Eliminar')}
                             </button>

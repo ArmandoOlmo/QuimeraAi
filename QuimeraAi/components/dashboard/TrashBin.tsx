@@ -66,21 +66,21 @@ const TrashBin: React.FC = () => {
             {/* Trash Bin Toggle Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="group flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/30 transition-all duration-300"
+                className="group flex items-center gap-2 px-4 py-2.5 rounded-xl bg-q-error/10 border border-q-error/20 hover:bg-q-error/20 hover:border-q-error/30 transition-all duration-300"
                 aria-expanded={isOpen}
                 aria-controls="trash-panel"
             >
-                <Trash2 size={18} className="text-red-400" />
-                <span className="text-sm font-medium text-red-400">
+                <Trash2 size={18} className="text-q-error" />
+                <span className="text-sm font-medium text-q-error">
                     {t('trash.title')}
                 </span>
-                <span className="bg-red-500/30 text-red-300 text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                <span className="bg-q-error/30 text-q-error text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
                     {deletedProjects.length}
                 </span>
                 {isOpen ? (
-                    <ChevronUp size={16} className="text-red-400/60" />
+                    <ChevronUp size={16} className="text-q-error/60" />
                 ) : (
-                    <ChevronDown size={16} className="text-red-400/60" />
+                    <ChevronDown size={16} className="text-q-error/60" />
                 )}
             </button>
 
@@ -88,13 +88,13 @@ const TrashBin: React.FC = () => {
             {isOpen && (
                 <div
                     id="trash-panel"
-                    className="mt-4 rounded-2xl border border-red-500/15 bg-gradient-to-br from-red-950/20 via-background to-background overflow-hidden animate-fade-in"
+                    className="mt-4 rounded-2xl border border-q-error/15 bg-gradient-to-br from-q-error via-background to-background overflow-hidden animate-fade-in"
                 >
                     {/* Panel Header */}
-                    <div className="px-6 py-4 border-b border-red-500/10 flex items-center justify-between">
+                    <div className="px-6 py-4 border-b border-q-error/10 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-red-500/15">
-                                <Trash2 size={20} className="text-red-400" />
+                            <div className="p-2 rounded-xl bg-q-error/15">
+                                <Trash2 size={20} className="text-q-error" />
                             </div>
                             <div>
                                 <h3 className="text-base font-bold text-foreground">{t('trash.title')}</h3>
@@ -103,7 +103,7 @@ const TrashBin: React.FC = () => {
                         </div>
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-q-text-muted"
+                            className="p-1.5 rounded-lg hover:bg-q-surface/5 transition-colors text-q-text-muted"
                             aria-label={t('common.close')}
                         >
                             <X size={18} />
@@ -111,9 +111,9 @@ const TrashBin: React.FC = () => {
                     </div>
 
                     {/* Auto-delete Warning */}
-                    <div className="px-6 py-3 bg-amber-500/5 border-b border-amber-500/10 flex items-center gap-2">
-                        <AlertTriangle size={14} className="text-amber-400 flex-shrink-0" />
-                        <span className="text-xs text-amber-400/80">{t('trash.autoDeleteWarning')}</span>
+                    <div className="px-6 py-3 bg-q-accent/5 border-b border-q-accent/10 flex items-center gap-2">
+                        <AlertTriangle size={14} className="text-q-accent flex-shrink-0" />
+                        <span className="text-xs text-q-accent/80">{t('trash.autoDeleteWarning')}</span>
                     </div>
 
                     {/* Project List */}
@@ -128,7 +128,7 @@ const TrashBin: React.FC = () => {
                             return (
                                 <div
                                     key={project.id}
-                                    className="px-6 py-4 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors"
+                                    className="px-6 py-4 flex items-center justify-between gap-4 hover:bg-q-surface/[0.02] transition-colors"
                                 >
                                     {/* Project Info */}
                                     <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -154,7 +154,7 @@ const TrashBin: React.FC = () => {
                                                 <span className="text-xs text-q-text-muted/60">
                                                     {t('trash.deletedAgo', { time: deletedAt ? getTimeAgo(deletedAt) : '' })}
                                                 </span>
-                                                <span className="text-[10px] text-red-400/60 font-medium">
+                                                <span className="text-[10px] text-q-error/60 font-medium">
                                                     • {t('trash.daysLeft', { count: daysLeft })}
                                                 </span>
                                             </div>
@@ -166,7 +166,7 @@ const TrashBin: React.FC = () => {
                                         <button
                                             onClick={() => handleRestore(project.id)}
                                             disabled={isRestoring || isDeleting}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/30 transition-all text-xs font-medium disabled:opacity-50"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-q-success/10 border border-q-success/20 text-q-success hover:bg-q-success/20 hover:border-q-success/30 transition-all text-xs font-medium disabled:opacity-50"
                                             aria-label={t('trash.restore')}
                                         >
                                             {isRestoring ? (
@@ -179,7 +179,7 @@ const TrashBin: React.FC = () => {
                                         <button
                                             onClick={() => setConfirmDeleteId(project.id)}
                                             disabled={isRestoring || isDeleting}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:border-red-500/30 transition-all text-xs font-medium disabled:opacity-50"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-q-error/10 border border-q-error/20 text-q-error hover:bg-q-error/20 hover:border-q-error/30 transition-all text-xs font-medium disabled:opacity-50"
                                             aria-label={t('trash.permanentDelete')}
                                         >
                                             {isDeleting ? (
@@ -205,24 +205,24 @@ const TrashBin: React.FC = () => {
             >
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 rounded-full bg-red-500/15">
-                            <AlertTriangle size={24} className="text-red-400" />
+                        <div className="p-2 rounded-full bg-q-error/15">
+                            <AlertTriangle size={24} className="text-q-error" />
                         </div>
                         <h3 className="text-xl font-bold">{t('trash.permanentDeleteTitle')}</h3>
                     </div>
-                    <p className="text-gray-400 mb-6">{t('trash.permanentDeleteMessage')}</p>
+                    <p className="text-q-text-muted mb-6">{t('trash.permanentDeleteMessage')}</p>
                     <div className="flex justify-end gap-3">
                         <button
                             onClick={() => setConfirmDeleteId(null)}
                             disabled={!!deletingId}
-                            className="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors"
+                            className="px-4 py-2 rounded-lg hover:bg-q-surface/10 transition-colors"
                         >
                             {t('common.cancel')}
                         </button>
                         <button
                             onClick={() => confirmDeleteId && handlePermanentDelete(confirmDeleteId)}
                             disabled={!!deletingId}
-                            className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors flex items-center gap-2"
+                            className="px-4 py-2 rounded-lg bg-q-error hover:bg-q-error text-white transition-colors flex items-center gap-2"
                         >
                             {deletingId && <Loader2 className="w-4 h-4 animate-spin" />}
                             {t('trash.permanentDelete')}

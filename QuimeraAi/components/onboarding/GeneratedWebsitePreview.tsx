@@ -132,7 +132,7 @@ export function GeneratedWebsitePreview({
             <div className="border-b border-q-border/70 bg-q-bg/95 px-4 py-4 backdrop-blur-xl lg:px-6">
                 <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="min-w-0">
-                        <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-green-500/25 bg-green-500/10 px-3 py-1 text-xs font-semibold text-green-500">
+                        <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-q-success/25 bg-q-success/10 px-3 py-1 text-xs font-semibold text-q-success">
                             <Check className="h-3.5 w-3.5" />
                             Generacion completada
                         </div>
@@ -182,7 +182,7 @@ export function GeneratedWebsitePreview({
                     </div>
                 </div>
                 {saveError && (
-                    <div className="mx-auto mt-3 max-w-7xl rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+                    <div className="mx-auto mt-3 max-w-7xl rounded-lg border border-q-error/25 bg-q-error/10 px-3 py-2 text-sm text-q-error">
                         {saveError}
                     </div>
                 )}
@@ -213,9 +213,9 @@ export function GeneratedWebsitePreview({
                     <div className="min-w-0 rounded-2xl border border-q-border bg-q-surface shadow-2xl shadow-black/10">
                         <div className="flex h-11 items-center gap-2 border-b border-q-border bg-q-bg/80 px-4">
                             <div className="flex gap-1.5">
-                                <span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />
-                                <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/80" />
-                                <span className="h-2.5 w-2.5 rounded-full bg-green-400/80" />
+                                <span className="h-2.5 w-2.5 rounded-full bg-q-error/80" />
+                                <span className="h-2.5 w-2.5 rounded-full bg-q-accent/80" />
+                                <span className="h-2.5 w-2.5 rounded-full bg-q-success/80" />
                             </div>
                             <div className="mx-auto max-w-[70%] truncate rounded-full border border-q-border bg-q-surface px-3 py-1 text-center text-[11px] text-q-text-secondary">
                                 quimera.ai/{project.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}
@@ -223,7 +223,7 @@ export function GeneratedWebsitePreview({
                             <div className="w-12" />
                         </div>
                         <div
-                            className="h-[68vh] min-h-[560px] overflow-y-auto bg-white custom-scrollbar"
+                            className="h-[68vh] min-h-[560px] overflow-y-auto bg-q-surface custom-scrollbar"
                             style={{ backgroundColor: project.theme?.pageBackground || project.theme?.globalColors?.background || '#ffffff' }}
                         >
                             <PageRenderer

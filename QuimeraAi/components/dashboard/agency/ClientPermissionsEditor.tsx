@@ -149,10 +149,10 @@ const DEFAULT_PERMISSIONS: ClientPermissions = {
     canInviteUsers: false,
 };
 
-export function ClientPermissionsEditor({ 
-    clientTenantId, 
+export function ClientPermissionsEditor({
+    clientTenantId,
     clientName,
-    onClose 
+    onClose
 }: ClientPermissionsEditorProps) {
     const [permissions, setPermissions] = useState<ClientPermissions>(DEFAULT_PERMISSIONS);
     const [originalPermissions, setOriginalPermissions] = useState<ClientPermissions>(DEFAULT_PERMISSIONS);
@@ -169,7 +169,7 @@ export function ClientPermissionsEditor({
 
             try {
                 const tenantDoc = await getDoc(doc(db, 'tenants', clientTenantId));
-                
+
                 if (tenantDoc.exists()) {
                     const data = tenantDoc.data();
                     const loadedPermissions = data.clientPermissions || DEFAULT_PERMISSIONS;
@@ -292,7 +292,7 @@ export function ClientPermissionsEditor({
 
                     <div className="flex items-center gap-2">
                         {hasChanges && (
-                            <span className="text-xs text-yellow-500">
+                            <span className="text-xs text-q-accent">
                                 • Cambios sin guardar
                             </span>
                         )}
@@ -419,12 +419,12 @@ interface PermissionToggleProps {
     onToggle: () => void;
 }
 
-function PermissionToggle({ 
-    icon: Icon, 
-    label, 
-    description, 
-    enabled, 
-    onToggle 
+function PermissionToggle({
+    icon: Icon,
+    label,
+    description,
+    enabled,
+    onToggle
 }: PermissionToggleProps) {
     return (
         <motion.div
@@ -462,7 +462,7 @@ function PermissionToggle({
             }`}>
                 <motion.div
                     layout
-                    className="w-4 h-4 rounded-full bg-white shadow-sm"
+                    className="w-4 h-4 rounded-full bg-q-surface shadow-sm"
                     animate={{ x: enabled ? 16 : 0 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />

@@ -279,17 +279,17 @@ export const getPriorityConfig = (priority: AppointmentPriority) => {
  */
 export const getTypeBackgroundColor = (type: AppointmentType): string => {
     const colorMap: Record<string, string> = {
-        blue: 'bg-blue-500/10',
-        violet: 'bg-violet-500/10',
-        emerald: 'bg-emerald-500/10',
-        orange: 'bg-orange-500/10',
-        cyan: 'bg-cyan-500/10',
-        yellow: 'bg-yellow-500/10',
-        pink: 'bg-pink-500/10',
-        green: 'bg-green-500/10',
+        blue: 'bg-q-accent/10',
+        violet: 'bg-q-accent/10',
+        emerald: 'bg-q-success/10',
+        orange: 'bg-q-warning/10',
+        cyan: 'bg-q-accent/10',
+        yellow: 'bg-q-accent/10',
+        pink: 'bg-q-accent/10',
+        green: 'bg-q-success/10',
     };
     const config = getTypeConfig(type);
-    return colorMap[config.color] || 'bg-gray-500/10';
+    return colorMap[config.color] || 'bg-q-surface-overlay/10';
 };
 
 /**
@@ -317,16 +317,16 @@ export const getInitials = (name: string): string => {
  */
 export const getAvatarColor = (name: string): string => {
     const colors = [
-        'bg-blue-500',
-        'bg-green-500',
-        'bg-purple-500',
-        'bg-orange-500',
-        'bg-pink-500',
-        'bg-cyan-500',
-        'bg-yellow-500',
-        'bg-red-500',
-        'bg-indigo-500',
-        'bg-teal-500',
+        'bg-q-accent',
+        'bg-q-success',
+        'bg-q-accent',
+        'bg-q-warning',
+        'bg-q-accent',
+        'bg-q-accent',
+        'bg-q-accent',
+        'bg-q-error',
+        'bg-q-accent',
+        'bg-q-success',
     ];
 
     let hash = 0;

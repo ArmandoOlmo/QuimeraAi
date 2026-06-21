@@ -151,7 +151,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
             Link.configure({
                 openOnClick: false,
                 HTMLAttributes: {
-                    class: 'text-blue-500 underline hover:text-blue-600 cursor-pointer',
+                    class: 'text-q-accent underline hover:text-q-accent cursor-pointer',
                 },
             }),
             TextStyle,
@@ -171,12 +171,12 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
             TableRow,
             TableHeader.configure({
                 HTMLAttributes: {
-                    class: 'border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 p-2 font-bold'
+                    class: 'border border-q-border dark:border-gray-600 bg-q-surface-overlay dark:bg-gray-800 p-2 font-bold'
                 }
             }),
             TableCell.configure({
                 HTMLAttributes: {
-                    class: 'border border-gray-300 dark:border-gray-600 p-2'
+                    class: 'border border-q-border dark:border-gray-600 p-2'
                 }
             }),
             TextAlign.configure({
@@ -331,7 +331,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const filteredLibraryImages = useMemo(() => {
         if (!contentImageSearch) return allLibraryImages;
         const q = contentImageSearch.toLowerCase();
-        return allLibraryImages.filter(a => 
+        return allLibraryImages.filter(a =>
             a.name?.toLowerCase().includes(q) || a.folder?.toLowerCase().includes(q)
         );
     }, [allLibraryImages, contentImageSearch]);
@@ -794,7 +794,7 @@ Text to format:
 
                 {/* Content Image Picker Modal */}
                 {showContentImagePicker && (
-                    <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setShowContentImagePicker(false)}>
+                    <div className="fixed inset-0 bg-q-text/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setShowContentImagePicker(false)}>
                         <div className="bg-q-surface w-full max-w-3xl max-h-[80vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-q-border" onClick={(e) => e.stopPropagation()}>
                             {/* Header */}
                             <div className="p-4 border-b border-q-border flex justify-between items-center bg-muted/50">
@@ -849,13 +849,13 @@ Text to format:
                                             setShowContentImagePicker(false);
                                             setShowContentImageGenerator(true);
                                         }}
-                                        className="w-44 flex-shrink-0 border-2 border-dashed border-purple-500/30 rounded-xl p-5 text-center hover:border-purple-500/60 hover:bg-purple-500/5 transition-all cursor-pointer group"
+                                        className="w-44 flex-shrink-0 border-2 border-dashed border-q-accent/30 rounded-xl p-5 text-center hover:border-q-accent/60 hover:bg-q-accent/5 transition-all cursor-pointer group"
                                     >
                                         <div className="flex flex-col items-center gap-2">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-q-accent to-q-accent flex items-center justify-center group-hover:scale-110 transition-transform">
                                                 <Zap className="w-5 h-5 text-white" />
                                             </div>
-                                            <p className="text-sm font-bold text-purple-400">Generar con IA</p>
+                                            <p className="text-sm font-bold text-q-accent">Generar con IA</p>
                                             <p className="text-[10px] text-q-text-muted">Crea imágenes únicas</p>
                                         </div>
                                     </button>
@@ -904,7 +904,7 @@ Text to format:
                                                     title={asset.name || 'Imagen'}
                                                 >
                                                     <img src={asset.downloadURL} alt={asset.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1">
+                                                    <div className="absolute inset-0 bg-q-text/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1">
                                                         <span className="text-white text-[10px] font-bold text-center line-clamp-2">{asset.name}</span>
                                                         {asset.folder && asset.folder !== 'uploads' && (
                                                             <span className="text-white/70 text-[9px] mt-0.5 capitalize">{asset.folder}</span>
@@ -956,29 +956,29 @@ Text to format:
 
                 {/* Link Modal */}
                 {showLinkModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96">
-                            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">Editar Enlace</h3>
+                    <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50">
+                        <div className="bg-q-surface dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96">
+                            <h3 className="text-lg font-bold mb-4 text-q-text dark:text-gray-100">Editar Enlace</h3>
                             <input
                                 type="url"
                                 value={linkUrl}
                                 onChange={(e) => setLinkUrl(e.target.value)}
                                 placeholder="https://ejemplo.com"
-                                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-primary outline-none text-gray-900 dark:text-gray-100"
+                                className="w-full bg-q-surface-overlay dark:bg-gray-900 border border-q-border dark:border-gray-700 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-primary outline-none text-q-text dark:text-gray-100"
                                 autoFocus
                                 onKeyDown={(e) => e.key === 'Enter' && applyLink()}
                             />
                             <div className="flex justify-between">
                                 <button
                                     onClick={removeLink}
-                                    className="text-sm text-red-500 hover:text-red-600 font-medium"
+                                    className="text-sm text-q-error hover:text-q-error font-medium"
                                 >
                                     Eliminar Enlace
                                 </button>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => setShowLinkModal(false)}
-                                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                                        className="px-4 py-2 bg-q-border dark:bg-gray-700 hover:bg-q-border dark:hover:bg-gray-600 rounded-lg text-q-text dark:text-gray-100"
                                     >
                                         Cancelar
                                     </button>
@@ -1009,13 +1009,13 @@ Text to format:
                     <div className="flex items-center gap-3">
                         {lastSaved && (
                             <span className="text-xs text-q-text-muted flex items-center gap-1">
-                                <Check size={12} className="text-green-500" />
+                                <Check size={12} className="text-q-success" />
                                 Guardado {lastSaved.toLocaleTimeString()}
                             </span>
                         )}
                         <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
                             <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}>{t('contentManagement.status.draft', 'Borrador')}</button>
-                            <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-q-text-muted hover:text-foreground'}`}>{t('contentManagement.status.published', 'Publicado')}</button>
+                            <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-q-success/20 text-q-success' : 'text-q-text-muted hover:text-foreground'}`}>{t('contentManagement.status.published', 'Publicado')}</button>
                         </div>
                         <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-md">
                             {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} {t('common.save', 'Guardar')}
@@ -1063,7 +1063,7 @@ Text to format:
                                         </button>
                                         <button
                                             onClick={handleDeleteSelectedImage}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors text-xs font-bold"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-q-error/10 text-q-error hover:bg-q-error/20 transition-colors text-xs font-bold"
                                         >
                                             <Trash2 size={14} />
                                             Eliminar
@@ -1087,14 +1087,14 @@ Text to format:
                                 <div>
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.filters.language', 'Idioma')}</label>
                                     <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
-                                        <button 
-                                            onClick={() => setLanguage('es')} 
+                                        <button
+                                            onClick={() => setLanguage('es')}
                                             className={`flex-1 py-1.5 rounded-md transition-all ${language === 'es' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}
                                         >
                                             Español
                                         </button>
-                                        <button 
-                                            onClick={() => setLanguage('en')} 
+                                        <button
+                                            onClick={() => setLanguage('en')}
                                             className={`flex-1 py-1.5 rounded-md transition-all ${language === 'en' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}
                                         >
                                             English
@@ -1173,14 +1173,14 @@ Text to format:
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                                                <div className="w-full h-full bg-gradient-to-br from-q-accent to-q-accent flex items-center justify-center">
                                                     <span className="text-white text-sm font-bold select-none">
                                                         {author ? author.charAt(0).toUpperCase() : 'A'}
                                                     </span>
                                                 </div>
                                             )}
                                             {/* Hover overlay */}
-                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                                            <div className="absolute inset-0 bg-q-text/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
                                                 <ImageIcon className="w-4 h-4 text-white" />
                                             </div>
                                         </button>
@@ -1194,7 +1194,7 @@ Text to format:
                                                 <button
                                                     type="button"
                                                     onClick={() => setAuthorImage(null)}
-                                                    className="mt-1 text-[10px] text-red-400 hover:text-red-300 transition-colors"
+                                                    className="mt-1 text-[10px] text-q-error hover:text-q-error transition-colors"
                                                 >
                                                     Eliminar foto
                                                 </button>
@@ -1246,7 +1246,7 @@ Text to format:
                                             onChange={(e) => setShowAuthor(e.target.checked)}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                        <div className="w-11 h-6 bg-q-border peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
                                     </label>
                                 </div>
 
@@ -1263,7 +1263,7 @@ Text to format:
                                             onChange={(e) => setShowDate(e.target.checked)}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                        <div className="w-11 h-6 bg-q-border peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
                                     </label>
                                 </div>
 
@@ -1280,7 +1280,7 @@ Text to format:
                                                 {tag}
                                                 <button
                                                     onClick={() => handleRemoveTag(tag)}
-                                                    className="hover:text-red-500 transition-colors"
+                                                    className="hover:text-q-error transition-colors"
                                                 >
                                                     <XIcon size={12} />
                                                 </button>
@@ -1306,9 +1306,9 @@ Text to format:
                                 </div>
 
                                 {/* Featured Toggle */}
-                                <div className="flex items-center justify-between p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-lg">
+                                <div className="flex items-center justify-between p-4 bg-q-accent/5 border border-q-accent/20 rounded-lg">
                                     <div className="flex items-center gap-3">
-                                        <Star className="text-yellow-500" size={18} />
+                                        <Star className="text-q-accent" size={18} />
                                         <div>
                                             <p className="text-sm font-medium">{t('contentManagement.editor.featuredArticle', 'Artículo Destacado')}</p>
                                             <p className="text-xs text-q-text-muted">{t('contentManagement.editor.featuredArticleDescription', 'Mostrar en homepage')}</p>
@@ -1321,7 +1321,7 @@ Text to format:
                                             onChange={(e) => setFeatured(e.target.checked)}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-yellow-500"></div>
+                                        <div className="w-11 h-6 bg-q-border peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-q-accent"></div>
                                     </label>
                                 </div>
 
@@ -1329,7 +1329,7 @@ Text to format:
                                 <div className="pt-6 border-t border-q-border">
                                     <div className="flex justify-between items-center mb-4">
                                         <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> SEO</h4>
-                                        <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> {t('contentManagement.editor.autoGen', 'Auto-Gen')}</button>
+                                        <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-q-accent hover:text-q-accent flex items-center"><Sparkles size={12} className="mr-1" /> {t('contentManagement.editor.autoGen', 'Auto-Gen')}</button>
                                     </div>
 
                                     <div className="space-y-4">
@@ -1350,16 +1350,16 @@ Text to format:
                                 {/* Translation Section */}
                                 <div className="pt-6 border-t border-q-border">
                                     <h4 className="font-bold text-sm flex items-center mb-4">
-                                        <Languages size={16} className="mr-2 text-blue-400" />
+                                        <Languages size={16} className="mr-2 text-q-accent" />
                                         {language === 'es' ? 'Traducción' : 'Translation'}
                                     </h4>
 
                                     {/* Translation Status Badge */}
                                     {article?.translationStatus && (
                                         <div className={`mb-3 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 ${
-                                            article.translationStatus === 'original' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                                            article.translationStatus === 'reviewed' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
-                                            'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                            article.translationStatus === 'original' ? 'bg-q-accent/10 text-q-accent border border-q-accent/20' :
+                                            article.translationStatus === 'reviewed' ? 'bg-q-success/10 text-q-success border border-q-success/20' :
+                                            'bg-q-accent/10 text-q-accent border border-q-accent/20'
                                         }`}>
                                             {article.translationStatus === 'original' && '📝'}
                                             {article.translationStatus === 'auto-translated' && '⚡'}
@@ -1383,7 +1383,7 @@ Text to format:
                                                     );
                                                 }
                                             }}
-                                            className="w-full mb-3 px-3 py-2 bg-green-500/10 text-green-400 border border-green-500/20 rounded-lg text-xs font-medium hover:bg-green-500/20 transition-colors flex items-center justify-center gap-2"
+                                            className="w-full mb-3 px-3 py-2 bg-q-success/10 text-q-success border border-q-success/20 rounded-lg text-xs font-medium hover:bg-q-success/20 transition-colors flex items-center justify-center gap-2"
                                         >
                                             <Check size={14} />
                                             {language === 'es' ? 'Marcar como revisado' : 'Mark as reviewed'}
@@ -1404,11 +1404,11 @@ Text to format:
                                                     </div>
                                                     <div className="flex items-center gap-1 flex-shrink-0">
                                                         <span className={`w-2 h-2 rounded-full ${
-                                                            tr.translationStatus === 'reviewed' ? 'bg-green-400' :
-                                                            tr.translationStatus === 'auto-translated' ? 'bg-amber-400' : 'bg-blue-400'
+                                                            tr.translationStatus === 'reviewed' ? 'bg-q-success' :
+                                                            tr.translationStatus === 'auto-translated' ? 'bg-q-accent' : 'bg-q-accent'
                                                         }`} />
                                                         <span className={`px-1.5 py-0.5 text-[10px] rounded font-medium ${
-                                                            tr.status === 'published' ? 'bg-green-500/10 text-green-400' : 'bg-secondary text-q-text-muted'
+                                                            tr.status === 'published' ? 'bg-q-success/10 text-q-success' : 'bg-secondary text-q-text-muted'
                                                         }`}>{tr.status === 'published' ? '●' : '○'}</span>
                                                     </div>
                                                 </div>
@@ -1427,7 +1427,7 @@ Text to format:
                                                 setTranslationConfirmOpen(true);
                                             }}
                                             disabled={isTranslating || !title}
-                                            className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-40 disabled:hover:shadow-none"
+                                            className="w-full px-4 py-3 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-q-accent/20 transition-all disabled:opacity-40 disabled:hover:shadow-none"
                                         >
                                             {isTranslating ? (
                                                 <>

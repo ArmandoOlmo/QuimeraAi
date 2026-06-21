@@ -213,7 +213,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, siz
                                     onChange('none');
                                     setIsOpen(false);
                                 }}
-                                className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${!value || value === 'none' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-q-bg text-q-text-secondary border border-q-border hover:text-red-400'}`}
+                                className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${!value || value === 'none' ? 'bg-q-error/10 text-q-error border border-q-error/20' : 'bg-q-bg text-q-text-secondary border border-q-border hover:text-q-error'}`}
                             >
                                 {!value || value === 'none' ? 'Apagado' : 'Apagar'}
                             </button>

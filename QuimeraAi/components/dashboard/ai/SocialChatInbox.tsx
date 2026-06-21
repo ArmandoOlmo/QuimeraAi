@@ -32,7 +32,7 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
 }) => {
     const { t, i18n } = useTranslation();
     const locale = i18n.language === 'es' ? es : enUS;
-    
+
     const {
         conversations,
         activeConversation,
@@ -101,11 +101,11 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
     const getChannelColor = (channel: SocialChannel) => {
         switch (channel) {
             case 'whatsapp':
-                return 'bg-green-500';
+                return 'bg-q-success';
             case 'facebook':
-                return 'bg-blue-600';
+                return 'bg-q-accent';
             case 'instagram':
-                return 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400';
+                return 'bg-gradient-to-br from-q-accent via-q-accent/80 to-q-warning';
             case 'web':
                 return 'bg-primary';
             default:
@@ -117,11 +117,11 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'active':
-                return <span className="px-2 py-0.5 text-xs bg-green-500/20 text-green-500 rounded-full">Activo</span>;
+                return <span className="px-2 py-0.5 text-xs bg-q-success/20 text-q-success rounded-full">Activo</span>;
             case 'pending':
-                return <span className="px-2 py-0.5 text-xs bg-yellow-500/20 text-yellow-500 rounded-full">Pendiente</span>;
+                return <span className="px-2 py-0.5 text-xs bg-q-accent/20 text-q-accent rounded-full">Pendiente</span>;
             case 'escalated':
-                return <span className="px-2 py-0.5 text-xs bg-red-500/20 text-red-500 rounded-full">Escalado</span>;
+                return <span className="px-2 py-0.5 text-xs bg-q-error/20 text-q-error rounded-full">Escalado</span>;
             case 'closed':
                 return <span className="px-2 py-0.5 text-xs bg-muted text-q-text-muted rounded-full">Cerrado</span>;
             default:
@@ -230,9 +230,9 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
             {/* Stats Summary */}
             <div className="p-3 border-b border-q-border grid grid-cols-4 gap-2">
                 {[
-                    { channel: 'whatsapp' as SocialChannel, icon: <Phone size={12} />, color: 'text-green-500' },
-                    { channel: 'facebook' as SocialChannel, icon: <Facebook size={12} />, color: 'text-blue-500' },
-                    { channel: 'instagram' as SocialChannel, icon: <Instagram size={12} />, color: 'text-pink-500' },
+                    { channel: 'whatsapp' as SocialChannel, icon: <Phone size={12} />, color: 'text-q-success' },
+                    { channel: 'facebook' as SocialChannel, icon: <Facebook size={12} />, color: 'text-q-accent' },
+                    { channel: 'instagram' as SocialChannel, icon: <Instagram size={12} />, color: 'text-q-accent' },
                     { channel: 'web' as SocialChannel, icon: <Globe size={12} />, color: 'text-primary' },
                 ].map(({ channel, icon, color }) => (
                     <div key={channel} className="text-center p-2 bg-secondary/30 rounded-lg">

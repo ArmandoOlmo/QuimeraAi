@@ -291,7 +291,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                 {branding.logoUrl ? (
                                     <img src={branding.logoUrl} alt="logo" className="w-6 h-6 rounded object-cover" />
                                 ) : (
-                                    <div className="w-6 h-6 rounded bg-white/20 flex items-center justify-center text-white text-xs font-bold">
+                                    <div className="w-6 h-6 rounded bg-q-surface/20 flex items-center justify-center text-white text-xs font-bold">
                                         {(branding.companyName || currentTenant.name || 'Q').charAt(0).toUpperCase()}
                                     </div>
                                 )}
@@ -334,7 +334,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                 </p>
                             )}
                             {saveSuccess && (
-                                <p className="text-sm text-green-500 flex items-center gap-1">
+                                <p className="text-sm text-q-success flex items-center gap-1">
                                     <Check size={14} />
                                     {t('common.savedSuccessfully', 'Guardado correctamente')}
                                 </p>
@@ -433,22 +433,22 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                     {/* ── Quimera Subdomain ── */}
                     <div className="space-y-3">
                         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                            <Sparkles size={14} className="text-emerald-500" />
+                            <Sparkles size={14} className="text-q-success" />
                             {t('branding.quimeraSubdomain', 'Subdominio Quimera')}
-                            <span className="text-[10px] font-normal text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] font-normal text-q-success bg-q-success/10 px-2 py-0.5 rounded-full">
                                 {t('common.free', 'Gratis')}
                             </span>
                         </h3>
 
                         {currentTenant.branding?.quimeraSubdomain ? (
-                            <div className="flex items-center justify-between p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+                            <div className="flex items-center justify-between p-3.5 bg-q-success/5 border border-q-success/20 rounded-xl">
                                 <div className="flex items-center gap-3">
-                                    <Globe size={16} className="text-emerald-500" />
+                                    <Globe size={16} className="text-q-success" />
                                     <div>
                                         <p className="font-medium text-foreground text-sm">
                                             {currentTenant.branding.quimeraSubdomain}.quimera.ai
                                         </p>
-                                        <p className="text-xs text-emerald-500">
+                                        <p className="text-xs text-q-success">
                                             ✓ {t('branding.subdomainActive', 'Activo')}
                                         </p>
                                     </div>
@@ -548,12 +548,12 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                             </p>
                                             <div className="flex items-center gap-2 mt-0.5">
                                                 {currentTenant.branding.customDomainVerified ? (
-                                                    <span className="flex items-center gap-1 text-xs text-green-500">
+                                                    <span className="flex items-center gap-1 text-xs text-q-success">
                                                         <Check size={12} />
                                                         {t('branding.verified', 'Verificado')}
                                                     </span>
                                                 ) : (
-                                                    <span className="flex items-center gap-1 text-xs text-yellow-500">
+                                                    <span className="flex items-center gap-1 text-xs text-q-accent">
                                                         <AlertCircle size={12} />
                                                         {t('branding.pendingVerification', 'Pendiente de verificación')}
                                                     </span>
@@ -670,14 +670,14 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
 
                                 {/* Verification result */}
                                 {verificationResult && (
-                                    <div className={`p-3.5 rounded-xl ${verificationResult.verified ? 'bg-green-500/10 border border-green-500/30' : 'bg-yellow-500/10 border border-yellow-500/30'}`}>
+                                    <div className={`p-3.5 rounded-xl ${verificationResult.verified ? 'bg-q-success/10 border border-q-success/30' : 'bg-q-accent/10 border border-q-accent/30'}`}>
                                         <div className="flex items-center gap-2 mb-1">
                                             {verificationResult.verified ? (
-                                                <Check size={16} className="text-green-500" />
+                                                <Check size={16} className="text-q-success" />
                                             ) : (
-                                                <AlertCircle size={16} className="text-yellow-500" />
+                                                <AlertCircle size={16} className="text-q-accent" />
                                             )}
-                                            <span className={`text-sm font-medium ${verificationResult.verified ? 'text-green-500' : 'text-yellow-500'}`}>
+                                            <span className={`text-sm font-medium ${verificationResult.verified ? 'text-q-success' : 'text-q-accent'}`}>
                                                 {verificationResult.verified ? t('branding.verificationSuccess', 'Verificación exitosa') : t('branding.verificationIncomplete', 'Verificación incompleta')}
                                             </span>
                                         </div>
@@ -703,7 +703,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                     </p>
                                 )}
                                 {domainSuccess && (
-                                    <p className="text-sm text-green-500 flex items-center gap-1">
+                                    <p className="text-sm text-q-success flex items-center gap-1">
                                         <Check size={14} />
                                         {domainSuccess}
                                     </p>

@@ -263,7 +263,7 @@ const UserRolesManager: React.FC<UserRolesManagerProps> = ({
                                                             style={value ? { backgroundColor: primaryColor } : {}}
                                                         >
                                                             <span
-                                                                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                                                                className={`absolute top-0.5 w-4 h-4 bg-q-surface rounded-full transition-transform ${
                                                                     value ? 'translate-x-5' : 'translate-x-0.5'
                                                                 }`}
                                                             />
@@ -271,7 +271,7 @@ const UserRolesManager: React.FC<UserRolesManagerProps> = ({
                                                     ) : (
                                                         <span
                                                             className={`p-1 rounded ${
-                                                                value ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
+                                                                value ? 'bg-q-success/20 text-q-success' : 'bg-q-error/20 text-q-error'
                                                             }`}
                                                         >
                                                             {value ? <Check size={14} /> : <X size={14} />}

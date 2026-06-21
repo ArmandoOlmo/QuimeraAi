@@ -217,7 +217,7 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
     return (
         <>
             {/* Backdrop */}
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={onClose} />
+            <div className="fixed inset-0 bg-q-text/60 backdrop-blur-sm z-50" onClick={onClose} />
 
             {/* Drawer */}
             <div className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-q-bg border-l border-q-border shadow-2xl z-50 flex flex-col">
@@ -266,10 +266,10 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
                                 <span
                                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-white ${
                                         user.status === 'active'
-                                            ? 'bg-green-500'
+                                            ? 'bg-q-success'
                                             : user.status === 'inactive'
-                                            ? 'bg-gray-500'
-                                            : 'bg-red-500'
+                                            ? 'bg-q-surface-overlay'
+                                            : 'bg-q-error'
                                     }`}
                                 >
                                     {user.status === 'active' && <UserCheck size={10} />}
@@ -543,9 +543,9 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
             {/* Confirm Ban Modal */}
             {showConfirmBan && (
                 <>
-                    <div className="fixed inset-0 bg-black/80 z-[60]" onClick={() => setShowConfirmBan(false)} />
+                    <div className="fixed inset-0 bg-q-text/80 z-[60]" onClick={() => setShowConfirmBan(false)} />
                     <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-q-bg rounded-xl border border-q-border shadow-2xl z-[60] p-6">
-                        <div className="flex items-center gap-3 mb-4 text-red-500">
+                        <div className="flex items-center gap-3 mb-4 text-q-error">
                             <AlertTriangle size={24} />
                             <h3 className="text-lg font-semibold">
                                 {t('storeUsers.confirmBan', 'Confirmar Bloqueo')}
@@ -564,7 +564,7 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
                             <button
                                 onClick={confirmBan}
                                 disabled={isUpdating}
-                                className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 flex items-center gap-2"
+                                className="px-4 py-2 text-sm font-medium text-white bg-q-error rounded-lg hover:bg-q-error flex items-center gap-2"
                             >
                                 {isUpdating && <Loader2 className="animate-spin" size={16} />}
                                 {t('storeUsers.banUser', 'Bloquear Usuario')}

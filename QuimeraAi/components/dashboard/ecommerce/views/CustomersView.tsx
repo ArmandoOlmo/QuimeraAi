@@ -13,22 +13,22 @@ import {
     MapPin,
     ShoppingBag,
     DollarSign,
-    Tag,
     Loader2,
     Eye,
-    MoreVertical,
-    Star,
     X,
+    Crown,
+    UserCheck,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useCustomers } from '../hooks/useCustomers';
 import { Customer } from '../../../../types/ecommerce';
 import type { StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
-import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
+import { useEcommerceTheme } from '../hooks/useEcommerceTheme';
 import { useEcommerceContext } from '../EcommerceContext';
 import AddToAudienceModal from '../../email/AddToAudienceModal';
 import { useProject } from '../../../../contexts/project';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 const CustomersView: React.FC = () => {
     const { t } = useTranslation();
@@ -45,9 +45,9 @@ const CustomersView: React.FC = () => {
 
     // Filter customers
     const filteredCustomers = useMemo(() => {
-        if (!searchTerm) return customers;
+        const term = searchTerm.trim().toLowerCase();
+        if (!term) return customers;
 
-        const term = searchTerm.toLowerCase();
         return customers.filter(
             (customer) =>
                 customer.email.toLowerCase().includes(term) ||
@@ -68,6 +68,51 @@ const CustomersView: React.FC = () => {
     }, [customers]);
 
     const topCustomers = getTopCustomers(5);
+    const visibleCustomersLabel = `${filteredCustomers.length} de ${customers.length} cliente${customers.length !== 1 ? 's' : ''}`;
+    const hasActiveFilters = Boolean(searchTerm.trim());
+
+    const clearFilters = () => {
+        setSearchTerm('');
+    };
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: amount >= 1000 ? 0 : 2,
+        }).format(amount || 0);
+    };
+
+    const customerStats = [
+        {
+            icon: Users,
+            value: customers.length,
+            label: t('ecommerce.totalCustomers', 'Total Clientes'),
+            helper: `${filteredCustomers.length} ${t('ecommerce.visibleLower', 'visibles')}`,
+            iconClassName: 'quimera-dashboard-header-icon',
+        },
+        {
+            icon: DollarSign,
+            value: formatCurrency(stats.totalSpent),
+            label: t('ecommerce.totalSpent', 'Total Gastado'),
+            helper: `${formatCurrency(stats.avgOrderValue)} ${t('ecommerce.avgOrderValueShort', 'promedio')}`,
+            iconClassName: 'text-q-success',
+        },
+        {
+            icon: ShoppingBag,
+            value: stats.totalOrders,
+            label: t('ecommerce.totalOrders', 'Total Pedidos'),
+            helper: t('ecommerce.customerOrderHistory', 'Historial de compras'),
+            iconClassName: 'text-primary',
+        },
+        {
+            icon: Mail,
+            value: stats.marketingSubscribed,
+            label: t('ecommerce.subscribers', 'Suscritos'),
+            helper: `${customers.length > 0 ? Math.round((stats.marketingSubscribed / customers.length) * 100) : 0}% ${t('ecommerce.optInRate', 'opt-in')}`,
+            iconClassName: 'text-q-warning',
+        },
+    ];
 
     const formatDate = (timestamp?: StoredTimestamp) => {
         if (!timestamp) return '-';
@@ -92,63 +137,60 @@ const CustomersView: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-28 md:pb-0">
             {/* Header */}
-            <div>
+            <div className="min-w-0">
+                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-q-border bg-q-surface/50 px-3 py-1 text-xs font-medium text-q-text-muted">
+                    <Users size={14} />
+                    {t('ecommerce.customerIntelligence', 'Inteligencia de clientes')}
+                </div>
                 <h2 className="text-2xl font-bold text-foreground">
                     {t('ecommerce.customers', 'Clientes')}
                 </h2>
-                <p className="text-q-text-muted">
-                    {customers.length} {t('ecommerce.customersTotal', 'clientes registrados')}
+                <p className="max-w-2xl text-q-text-muted">
+                    {t('ecommerce.manageCustomersPro', 'Consulta compradores, valor acumulado, permisos de marketing y segmentos de relación.')}
                 </p>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                    { icon: Users, value: customers.length, label: t('ecommerce.totalCustomers', 'Total Clientes') },
-                    { icon: DollarSign, value: `$${stats.totalSpent.toFixed(0)}`, label: t('ecommerce.totalSpent', 'Total Gastado') },
-                    { icon: ShoppingBag, value: stats.totalOrders, label: t('ecommerce.totalOrders', 'Total Pedidos') },
-                    { icon: Mail, value: stats.marketingSubscribed, label: t('ecommerce.subscribers', 'Suscritos') },
-                ].map((card) => {
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                {customerStats.map((card, index) => {
                     const Icon = card.icon;
 
                     return (
-                        <div
-                            key={card.label}
-                            className="group relative overflow-hidden rounded-xl border border-q-border/60
-                                bg-q-surface/80 backdrop-blur-xl p-4 hover:border-q-border transition-all duration-300"
-                        >
-                            <div
-                                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl
-                                    group-hover:scale-110 transition-all duration-500"
-                                aria-hidden="true"
-                            />
-                            <div className="relative z-10">
-                                <div className="mb-1 md:mb-2">
-                                    <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                        <MotionCard key={card.label} staggerIndex={index} hoverMotion className="rounded-xl border border-q-border bg-q-surface/50 p-4">
+                            <div className="flex items-center gap-3">
+                                <Icon className={`h-5 w-5 flex-shrink-0 ${card.iconClassName}`} strokeWidth={2} />
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm text-q-text-muted">{card.label}</p>
+                                    <p className="truncate text-2xl font-bold text-foreground">{card.value}</p>
+                                    <p className="truncate text-xs text-q-text-muted">{card.helper}</p>
                                 </div>
-                                <div className="text-xl md:text-3xl font-extrabold text-foreground">{card.value}</div>
-                                <p className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{card.label}</p>
                             </div>
-                        </div>
+                        </MotionCard>
                     );
                 })}
             </div>
 
             {/* Top Customers */}
             {topCustomers.length > 0 && (
-                <div className="quimera-dashboard-panel-card group p-4">
-                    <h3 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <Star className="w-4 h-4 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
-                        {t('ecommerce.topCustomers', 'Mejores Clientes')}
-                    </h3>
+                <div className="rounded-xl border border-q-border bg-q-surface/50 p-4">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                        <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-q-text-secondary">
+                            <Crown className="h-4 w-4 text-q-warning" strokeWidth={2} />
+                            {t('ecommerce.topCustomers', 'Mejores Clientes')}
+                        </h3>
+                        <span className="text-xs text-q-text-muted">
+                            {t('ecommerce.byLifetimeValue', 'Por valor acumulado')}
+                        </span>
+                    </div>
                     <div className="flex gap-4 overflow-x-auto pb-2">
                         {topCustomers.map((customer, index) => (
-                            <div
+                            <button
+                                type="button"
                                 key={customer.id}
                                 onClick={() => handleViewCustomer(customer)}
-                                className="flex-shrink-0 w-48 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                                className="w-52 flex-shrink-0 rounded-lg border border-q-border bg-muted/20 p-4 text-left transition-colors hover:border-primary/30 hover:bg-muted/40"
                             >
                                 <div className="flex items-center gap-3 mb-2">
                                     <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary text-primary-foreground font-bold">
@@ -161,43 +203,82 @@ const CustomersView: React.FC = () => {
                                         <p className="text-q-text-muted text-xs">#{index + 1}</p>
                                     </div>
                                 </div>
-                                <p className="text-green-400 font-semibold">${customer.totalSpent.toFixed(2)}</p>
+                                <p className="text-q-success font-semibold">{formatCurrency(customer.totalSpent)}</p>
                                 <p className="text-q-text-muted text-sm">{customer.totalOrders} pedidos</p>
-                            </div>
+                            </button>
                         ))}
                     </div>
                 </div>
             )}
 
             {/* Search */}
-            <div className="flex items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
-                <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
-                <input
-                    type="text"
-                    placeholder={t('ecommerce.searchCustomers', 'Buscar por nombre, email o teléfono...')}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                />
-                {searchTerm && (
-                    <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
-                        <X size={16} />
-                    </button>
+            <div className="rounded-xl border border-q-border bg-q-surface/50 p-3 sm:p-4">
+                <label className="block min-w-0">
+                    <span className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold uppercase text-q-text-secondary">
+                        <span>{t('ecommerce.searchCustomersLabel', 'Buscar clientes')}</span>
+                        <span className="shrink-0 normal-case text-q-text-muted">{visibleCustomersLabel}</span>
+                    </span>
+                    <div className="flex h-12 items-center gap-3 rounded-lg border border-q-border/70 bg-q-bg/60 px-3 shadow-sm transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20">
+                        <Search className="h-4 w-4 flex-shrink-0 text-q-text-secondary" />
+                        <input
+                            type="text"
+                            placeholder={t('ecommerce.searchCustomers', 'Nombre, email o teléfono')}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-q-text-muted"
+                        />
+                        {searchTerm && (
+                            <button
+                                type="button"
+                                onClick={() => setSearchTerm('')}
+                                aria-label={t('common.clearSearch', 'Limpiar búsqueda')}
+                                title={t('common.clearSearch', 'Limpiar búsqueda')}
+                                className="grid h-7 w-7 flex-shrink-0 place-items-center rounded-md text-q-text-secondary transition-colors hover:bg-muted hover:text-foreground"
+                            >
+                                <X size={15} />
+                            </button>
+                        )}
+                    </div>
+                </label>
+                {hasActiveFilters && (
+                    <div className="mt-4 flex flex-col gap-3 border-t border-q-border/60 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm text-q-text-muted">
+                            {t('ecommerce.activeCustomerFilters', 'Mostrando clientes filtrados')}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={clearFilters}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-q-border px-3 py-2 text-sm font-medium text-q-text-muted transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary sm:w-auto"
+                        >
+                            <X size={15} />
+                            {t('ecommerce.clearFilters', 'Limpiar filtros')}
+                        </button>
+                    </div>
                 )}
             </div>
 
             {/* Customers List */}
             {filteredCustomers.length === 0 ? (
-                <div className="text-center py-12 bg-q-surface/50 rounded-xl border border-q-border">
-                    <Users className="mx-auto text-q-text-muted mb-4" size={48} />
-                    <h3 className="text-lg font-medium text-foreground mb-2">
+                <div className="rounded-xl border border-dashed border-q-border bg-q-surface/40 px-6 py-12 text-center">
+                    <Users className="mx-auto mb-4 text-q-text-muted" size={48} />
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">
                         {t('ecommerce.noCustomers', 'No hay clientes')}
                     </h3>
-                    <p className="text-q-text-muted">
+                    <p className="mx-auto max-w-md text-q-text-muted">
                         {searchTerm
                             ? t('ecommerce.noCustomersFilter', 'No se encontraron clientes con ese criterio')
                             : t('ecommerce.noCustomersYet', 'Los clientes aparecerán aquí cuando realicen compras')}
                     </p>
+                    {hasActiveFilters && (
+                        <button
+                            type="button"
+                            onClick={clearFilters}
+                            className="mt-5 inline-flex items-center gap-2 rounded-lg border border-q-border px-4 py-2 font-medium text-q-text-muted transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                        >
+                            <X size={18} />
+                            {t('ecommerce.clearFilters', 'Limpiar filtros')}
+                        </button>
+                    )}
                 </div>
             ) : (
                 <>
@@ -211,67 +292,79 @@ const CustomersView: React.FC = () => {
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0">
-                                            <p className="truncate font-medium text-foreground">
-                                                {customer.firstName} {customer.lastName}
-                                            </p>
-                                            <p className="truncate text-xs text-q-text-muted">{customer.email}</p>
-                                        </div>
-                                        <p className="flex-shrink-0 font-semibold text-foreground">${customer.totalSpent.toFixed(2)}</p>
-                                    </div>
-                                    <div className="mt-3 flex items-center justify-between gap-3">
-                                        <p className="text-xs text-q-text-muted">
-                                            {customer.totalOrders} {t('ecommerce.orders', 'Pedidos')}
+                                        <p className="truncate font-medium text-foreground">
+                                            {customer.firstName} {customer.lastName}
                                         </p>
+                                        <p className="truncate text-xs text-q-text-muted">{customer.email}</p>
+                                    </div>
+                                        <p className="flex-shrink-0 font-semibold text-foreground">{formatCurrency(customer.totalSpent)}</p>
+                                    </div>
+                                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                                        <span className="rounded-full border border-q-border bg-muted/30 px-2.5 py-1 text-xs font-medium text-q-text-muted">
+                                            {customer.totalOrders} {t('ecommerce.orders', 'Pedidos')}
+                                        </span>
+                                        {customer.acceptsMarketing && (
+                                            <span className="inline-flex items-center gap-1 rounded-full border border-q-success/20 bg-q-success/10 px-2.5 py-1 text-xs font-medium text-q-success">
+                                                <UserCheck size={12} />
+                                                {t('ecommerce.marketing', 'Marketing')}
+                                            </span>
+                                        )}
+                                        <div className="ml-auto">
                                         <button
+                                            type="button"
                                             onClick={() => handleViewCustomer(customer)}
-                                            className="flex-shrink-0 p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                            title={t('ecommerce.viewCustomer', 'Ver cliente')}
+                                            aria-label={t('ecommerce.viewCustomer', 'Ver cliente')}
+                                            className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg text-q-text-muted transition-colors hover:bg-muted hover:text-foreground"
                                         >
                                             <Eye size={18} />
                                         </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
-                <div className="hidden overflow-x-auto rounded-xl border border-q-border bg-q-surface/50 sm:block">
-                    <table className="w-full min-w-[700px]">
+                <div className="hidden overflow-hidden rounded-xl border border-q-border bg-q-surface/50 sm:block">
+                    <div className="overflow-x-auto">
+                    <table className="w-full min-w-[760px]">
                         <thead className="bg-muted/30">
                             <tr>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-q-text-muted">
                                     {t('ecommerce.customer', 'Cliente')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden md:table-cell">
+                                <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase text-q-text-muted md:table-cell">
                                     {t('ecommerce.contact', 'Contacto')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden sm:table-cell">
+                                <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase text-q-text-muted sm:table-cell">
                                     {t('ecommerce.orders', 'Pedidos')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-q-text-muted">
                                     {t('ecommerce.spent', 'Gastado')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden lg:table-cell">
+                                <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase text-q-text-muted lg:table-cell">
                                     {t('ecommerce.lastOrder', 'Último Pedido')}
                                 </th>
-                                <th className="px-4 py-3 text-right text-sm font-medium text-q-text-muted">
+                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-q-text-muted">
                                     {t('ecommerce.actions', 'Acciones')}
                                 </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
                             {filteredCustomers.map((customer) => (
-                                <tr key={customer.id} className="hover:bg-muted/20">
+                                <tr key={customer.id} className="transition-colors hover:bg-muted/20">
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-foreground font-medium">
+                                            <div className="w-10 h-10 rounded-full bg-muted flex flex-shrink-0 items-center justify-center text-foreground font-medium">
                                                 {customer.firstName[0]}{customer.lastName[0]}
                                             </div>
-                                            <div>
-                                                <p className="text-foreground font-medium">
+                                            <div className="min-w-0">
+                                                <p className="truncate text-foreground font-medium">
                                                     {customer.firstName} {customer.lastName}
                                                 </p>
                                                 {customer.tags && customer.tags.length > 0 && (
-                                                    <div className="flex gap-1 mt-1">
+                                                    <div className="mt-1 flex flex-wrap gap-1">
                                                         {customer.tags.slice(0, 2).map((tag) => (
                                                             <span
                                                                 key={tag}
@@ -285,25 +378,33 @@ const CustomersView: React.FC = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 hidden md:table-cell">
+                                    <td className="hidden px-4 py-3 md:table-cell">
                                         <p className="text-q-text-muted text-sm">{customer.email}</p>
                                         {customer.phone && (
                                             <p className="text-q-text-muted text-sm">{customer.phone}</p>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-q-text-muted hidden sm:table-cell">
-                                        {customer.totalOrders}
+                                    <td className="hidden px-4 py-3 sm:table-cell">
+                                        <span className="rounded-full border border-q-border bg-muted/30 px-2.5 py-1 text-xs font-medium text-q-text-muted">
+                                            {customer.totalOrders}
+                                        </span>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <p className="text-foreground font-medium">${customer.totalSpent.toFixed(2)}</p>
+                                        <p className="text-foreground font-medium">{formatCurrency(customer.totalSpent)}</p>
+                                        {customer.acceptsMarketing && (
+                                            <p className="mt-1 text-xs text-q-success">{t('ecommerce.acceptsMarketing', 'Acepta marketing')}</p>
+                                        )}
                                     </td>
-                                    <td className="px-4 py-3 text-q-text-muted hidden lg:table-cell">
+                                    <td className="hidden px-4 py-3 text-q-text-muted lg:table-cell">
                                         {formatDate(customer.lastOrderAt)}
                                     </td>
                                     <td className="px-4 py-3 text-right">
                                         <button
+                                            type="button"
                                             onClick={() => handleViewCustomer(customer)}
-                                            className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                            title={t('ecommerce.viewCustomer', 'Ver cliente')}
+                                            aria-label={t('ecommerce.viewCustomer', 'Ver cliente')}
+                                            className="grid h-9 w-9 place-items-center rounded-lg text-q-text-muted transition-colors hover:bg-muted hover:text-foreground"
                                         >
                                             <Eye size={18} />
                                         </button>
@@ -312,6 +413,7 @@ const CustomersView: React.FC = () => {
                             ))}
                         </tbody>
                     </table>
+                    </div>
                 </div>
                 </>
             )}
@@ -355,7 +457,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
     const { t } = useTranslation();
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+        <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
             <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
                 <div className="p-4 border-b border-q-border sm:p-6">
                     <div className="flex items-center gap-3 sm:gap-4">
@@ -380,7 +482,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
                         </div>
                         <div className="bg-muted/30 rounded-lg p-4">
                             <p className="text-q-text-muted text-sm">{t('ecommerce.totalSpent', 'Total Gastado')}</p>
-                            <p className="text-2xl font-bold text-green-400">${customer.totalSpent.toFixed(2)}</p>
+                            <p className="text-2xl font-bold text-q-success">${customer.totalSpent.toFixed(2)}</p>
                         </div>
                     </div>
 
@@ -448,7 +550,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
 
                     {/* Marketing */}
                     <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${customer.acceptsMarketing ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+                        <div className={`w-3 h-3 rounded-full ${customer.acceptsMarketing ? 'bg-q-success' : 'bg-muted-foreground'}`} />
                         <span className="text-q-text-muted">
                             {customer.acceptsMarketing
                                 ? t('ecommerce.acceptsMarketing', 'Acepta marketing')

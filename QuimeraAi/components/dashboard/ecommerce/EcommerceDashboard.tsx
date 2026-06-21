@@ -663,39 +663,39 @@ interface OverviewReadinessItem {
 
 const toneClassMap: Record<OverviewTone, { border: string; bg: string; text: string; icon: string; bar: string }> = {
     emerald: {
-        border: 'border-emerald-500/30',
-        bg: 'bg-emerald-500/10',
-        text: 'text-emerald-300',
-        icon: 'text-emerald-300 bg-emerald-500/15',
-        bar: 'bg-emerald-400',
+        border: 'border-q-success/30',
+        bg: 'bg-q-success/10',
+        text: 'text-q-success',
+        icon: 'text-q-success bg-q-success/15',
+        bar: 'bg-q-success',
     },
     amber: {
-        border: 'border-amber-500/30',
-        bg: 'bg-amber-500/10',
-        text: 'text-amber-300',
-        icon: 'text-amber-300 bg-amber-500/15',
-        bar: 'bg-amber-400',
+        border: 'border-q-accent/30',
+        bg: 'bg-q-accent/10',
+        text: 'text-q-accent',
+        icon: 'text-q-accent bg-q-accent/15',
+        bar: 'bg-q-accent',
     },
     red: {
-        border: 'border-red-500/30',
-        bg: 'bg-red-500/10',
-        text: 'text-red-300',
-        icon: 'text-red-300 bg-red-500/15',
-        bar: 'bg-red-400',
+        border: 'border-q-error/30',
+        bg: 'bg-q-error/10',
+        text: 'text-q-error',
+        icon: 'text-q-error bg-q-error/15',
+        bar: 'bg-q-error',
     },
     blue: {
-        border: 'border-sky-500/30',
-        bg: 'bg-sky-500/10',
-        text: 'text-sky-300',
-        icon: 'text-sky-300 bg-sky-500/15',
-        bar: 'bg-sky-400',
+        border: 'border-q-accent/30',
+        bg: 'bg-q-accent/10',
+        text: 'text-q-accent',
+        icon: 'text-q-accent bg-q-accent/15',
+        bar: 'bg-q-accent',
     },
     purple: {
-        border: 'border-violet-500/30',
-        bg: 'bg-violet-500/10',
-        text: 'text-violet-300',
-        icon: 'text-violet-300 bg-violet-500/15',
-        bar: 'bg-violet-400',
+        border: 'border-q-accent/30',
+        bg: 'bg-q-accent/10',
+        text: 'text-q-accent',
+        icon: 'text-q-accent bg-q-accent/15',
+        bar: 'bg-q-accent',
     },
     neutral: {
         border: 'border-q-border/70',
@@ -1141,7 +1141,7 @@ const OverviewView: React.FC<OverviewProps> = ({
                                     onClick={() => onNavigate(item.view)}
                                     className="flex w-full items-start gap-3 rounded-lg border border-q-border/50 bg-q-bg/40 p-3 text-left transition-colors hover:bg-muted"
                                 >
-                                    <span className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md ${item.complete ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`}>
+                                    <span className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md ${item.complete ? 'bg-q-success/15 text-q-success' : 'bg-q-accent/15 text-q-accent'}`}>
                                         {item.complete ? <Check size={15} /> : <Icon size={15} />}
                                     </span>
                                     <span className="min-w-0 flex-1">
@@ -1290,8 +1290,8 @@ const OverviewView: React.FC<OverviewProps> = ({
                             })}
                         </div>
                     ) : (
-                        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
-                            <CheckCircle2 className="mb-3 h-6 w-6 text-emerald-300" />
+                        <div className="rounded-xl border border-q-success/30 bg-q-success/10 p-4">
+                            <CheckCircle2 className="mb-3 h-6 w-6 text-q-success" />
                             <p className="font-bold text-foreground">{t('ecommerce.overviewPro.noPriorityTitle', 'Operación estable')}</p>
                             <p className="text-sm text-q-text-muted">{t('ecommerce.overviewPro.noPriorityDesc', 'No hay alertas críticas. Mira analíticas para optimizar crecimiento.')}</p>
                         </div>
@@ -1305,7 +1305,7 @@ const OverviewView: React.FC<OverviewProps> = ({
                                 {bestLowStockProducts.map((product) => (
                                     <div key={product.id} className="flex items-center justify-between gap-3 text-sm">
                                         <span className="truncate text-q-text">{product.name}</span>
-                                        <span className="font-bold text-amber-300">{formatNumber(product.quantity)}</span>
+                                        <span className="font-bold text-q-accent">{formatNumber(product.quantity)}</span>
                                     </div>
                                 ))}
                             </div>
@@ -1475,7 +1475,7 @@ const OverviewView: React.FC<OverviewProps> = ({
 
             {/* Demo Data Seeder Modal */}
             {showSeeder && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-q-text/50 backdrop-blur-sm">
                     <div className="w-full max-w-lg animate-in fade-in zoom-in-95">
                         <DemoDataSeeder
                             onComplete={() => {

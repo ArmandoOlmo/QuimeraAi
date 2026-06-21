@@ -1,6 +1,6 @@
 /**
  * AIContentStudio
- * 
+ *
  * Conversational AI Content Assistant for Super Admin.
  * Replaces the old wizard-based AppContentCreatorAssistant with a
  * two-way interactive interface featuring:
@@ -115,12 +115,15 @@ const TONE_OPTIONS = [
 const MODEL_TEXT = 'gemini-3-flash-preview';
 const MODEL_VOICE = 'gemini-3.1-flash-live-preview';
 
+const resolveStudioLanguage = (language?: string): 'es' | 'en' =>
+    language?.toLowerCase().startsWith('en') ? 'en' : 'es';
+
 // =============================================================================
 // COMPONENT
 // =============================================================================
 
 const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCreated }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const { saveArticle, articles } = useAppContent();
 
@@ -134,7 +137,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
     const [category, setCategory] = useState<AppArticleCategory>('blog');
     const [audience, setAudience] = useState('');
     const [tone, setTone] = useState('Profesional');
-    const [language, setLanguage] = useState<'es' | 'en'>('es');
+    const [language, setLanguage] = useState<'es' | 'en'>(() => resolveStudioLanguage(i18n.language));
 
     // --------------- Generated Article State ---------------
     const [generatedArticle, setGeneratedArticle] = useState<Partial<AppArticle> | null>(null);
@@ -169,6 +172,16 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
     const currentModelResponseRef = useRef<string>('');
     const currentUserTranscriptRef = useRef<string>('');
 
+    const buildWelcomeText = useCallback((ctx: DynamicPlatformContext, selectedLanguage: 'es' | 'en' = language) => (
+        selectedLanguage === 'es'
+            ? `¡Hola! 👋 Soy tu **Estratega de Contenido AI** para ${ctx.appName}.\n\nConozco al detalle cada feature, servicio y capacidad de la plataforma. Puedo ayudarte a:\n\n- 📝 **Planificar** artículos, tutoriales y guías\n- 🎯 **Definir** audiencia, tono y ángulo perfecto\n- 💡 **Sugerir** temas basados en las capacidades de ${ctx.appName}\n- ✍️ **Generar** contenido completo optimizado para SEO\n\n¿Qué tipo de contenido necesitas crear hoy?`
+            : `Hello! 👋 I'm your **AI Content Strategist** for ${ctx.appName}.\n\nI know every feature, service, and capability of the platform in detail. I can help you:\n\n- 📝 **Plan** articles, tutorials, and guides\n- 🎯 **Define** the perfect audience, tone, and angle\n- 💡 **Suggest** topics based on ${ctx.appName}'s capabilities\n- ✍️ **Generate** complete SEO-optimized content\n\nWhat kind of content do you need to create today?`
+    ), [language]);
+
+    useEffect(() => {
+        setLanguage(resolveStudioLanguage(i18n.language));
+    }, [i18n.language]);
+
     // =============================================================================
     // INITIALIZATION
     // =============================================================================
@@ -179,10 +192,8 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
             setPlatformContext(ctx);
 
             // Welcome message (displayed to user)
-            const welcomeText = language === 'es'
-                ? `¡Hola! 👋 Soy tu **Estratega de Contenido AI** para ${ctx.appName}.\n\nConozco al detalle cada feature, servicio y capacidad de la plataforma. Puedo ayudarte a:\n\n- 📝 **Planificar** artículos, tutoriales y guías\n- 🎯 **Definir** audiencia, tono y ángulo perfecto\n- 💡 **Sugerir** temas basados en las capacidades de ${ctx.appName}\n- ✍️ **Generar** contenido completo optimizado para SEO\n\n¿Qué tipo de contenido necesitas crear hoy?`
-                : `Hello! 👋 I'm your **AI Content Strategist** for ${ctx.appName}.\n\nI know every feature, service, and capability of the platform in detail. I can help you:\n\n- 📝 **Plan** articles, tutorials, and guides\n- 🎯 **Define** the perfect audience, tone, and angle\n- 💡 **Suggest** topics based on ${ctx.appName}'s capabilities\n- ✍️ **Generate** complete SEO-optimized content\n\nWhat kind of content do you need to create today?`;
-            
+            const welcomeText = buildWelcomeText(ctx);
+
             const welcomeMsg: DisplayMessage = {
                 role: 'model',
                 text: welcomeText,
@@ -191,7 +202,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
             setMessages([welcomeMsg]);
 
             // Inject platform knowledge directly into conversation history.
-            // This ensures the AI ALWAYS has Quimera.ai context, even if 
+            // This ensures the AI ALWAYS has Quimera.ai context, even if
             // the backend system_instruction is not forwarded properly.
             const platformContextMessage = buildContentStudioSystemPrompt(ctx, language);
             historyRef.current = [
@@ -201,6 +212,19 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
         };
         init();
     }, []);
+
+    useEffect(() => {
+        if (!platformContext || messages.length !== 1 || messages[0]?.role !== 'model') return;
+
+        const welcomeText = buildWelcomeText(platformContext);
+        setMessages([{ ...messages[0], text: welcomeText, timestamp: Date.now() }]);
+
+        const platformContextMessage = buildContentStudioSystemPrompt(platformContext, language);
+        historyRef.current = [
+            { role: 'user', text: `[CONTEXT] ${platformContextMessage}` },
+            { role: 'model', text: welcomeText },
+        ];
+    }, [language, platformContext, buildWelcomeText]);
 
     // Auto-scroll chat
     useEffect(() => {
@@ -228,7 +252,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
             const systemPrompt = buildContentStudioSystemPrompt(platformContext, language);
 
             // Build conversation context from history for inclusion in the prompt.
-            // This ensures the model always has the full context even if the 
+            // This ensures the model always has the full context even if the
             // backend doesn't process systemInstruction or history fields properly.
             const conversationContext = historyRef.current
                 .slice(1) // Skip the injected [CONTEXT] message
@@ -381,7 +405,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                         }
 
                         // On turn/generation complete, commit as permanent messages
-                        const turnComplete = msg.serverContent?.turnComplete 
+                        const turnComplete = msg.serverContent?.turnComplete
                             || msg.serverContent?.generationComplete
                             || msg.turnComplete;
                         if (turnComplete) {
@@ -600,10 +624,10 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
             console.log('[AIContentStudio] Saving generated article...');
             const generatedId = `article_${Date.now()}`;
             const now = new Date().toISOString();
-            
+
             // Ensure readTime is a valid number
-            const readTime = typeof generatedArticle.readTime === 'number' 
-                ? generatedArticle.readTime 
+            const readTime = typeof generatedArticle.readTime === 'number'
+                ? generatedArticle.readTime
                 : parseInt(String(generatedArticle.readTime)) || 5;
 
             const newArticle: AppArticle = {
@@ -659,26 +683,26 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
 
     return (
         <>
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 lg:backdrop-blur-sm p-0 lg:p-4 animate-fade-in-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/60 lg:backdrop-blur-sm p-0 lg:p-4 animate-fade-in-up">
             <div className="bg-q-bg border-0 lg:border lg:border-q-border w-full h-full lg:h-auto lg:max-w-5xl rounded-none lg:rounded-2xl shadow-none lg:shadow-2xl overflow-hidden flex flex-col lg:max-h-[90vh]">
 
                 {/* ===== HEADER ===== */}
-                <div className="px-3 lg:p-4 py-2.5 lg:py-4 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-purple-500/10 via-blue-500/5 to-transparent">
+                <div className="px-3 lg:p-4 py-2.5 lg:py-4 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-q-accent/10 via-q-accent/5 to-transparent">
                     <div className="flex items-center gap-2 lg:gap-3 min-w-0">
-                        {/* Branding icon — condensed on mobile (no box), boxed on desktop */}
+                        {/* Branding icon */}
                         <div className="relative flex-shrink-0">
-                            <div className="hidden lg:flex bg-gradient-to-br from-purple-500 to-blue-500 p-2.5 rounded-xl shadow-lg shadow-purple-500/20">
-                                <Sparkles className="text-white w-5 h-5" />
+                            <div className="hidden h-10 w-10 items-center justify-center text-q-accent lg:flex">
+                                <Sparkles className="h-5 w-5" />
                             </div>
-                            <Sparkles className="lg:hidden w-5 h-5 text-purple-400" />
+                            <Sparkles className="h-5 w-5 text-q-accent lg:hidden" />
                             {isVoiceActive && (
-                                <span className="absolute -top-1 -right-1 w-2.5 lg:w-3 h-2.5 lg:h-3 bg-green-400 rounded-full border-2 border-q-bg animate-pulse" />
+                                <span className="absolute -top-1 -right-1 w-2.5 lg:w-3 h-2.5 lg:h-3 bg-q-success rounded-full border-2 border-q-bg animate-pulse" />
                             )}
                         </div>
                         <div className="min-w-0">
                             <h2 className="text-sm lg:text-lg font-bold text-q-text flex items-center gap-1.5 lg:gap-2">
                                 <span className="truncate">AI Content Studio</span>
-                                <span className="hidden sm:inline text-[10px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex-shrink-0">
+                                <span className="hidden sm:inline text-[10px] font-mono bg-q-accent/20 text-q-accent px-2 py-0.5 rounded-full flex-shrink-0">
                                     {isVoiceActive ? MODEL_VOICE.split('-').slice(-2).join('-') : MODEL_TEXT.split('-').slice(-2).join('-')}
                                 </span>
                             </h2>
@@ -693,7 +717,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                         {/* Mobile Content Plan toggle */}
                         <button
                             onClick={() => setIsMobilePlanOpen(!isMobilePlanOpen)}
-                            className="lg:hidden h-8 w-8 sm:w-auto sm:px-3 rounded-lg text-q-text-secondary text-xs hover:text-purple-400 hover:bg-purple-500/10 transition-colors flex items-center justify-center sm:justify-start gap-1.5"
+                            className="lg:hidden h-8 w-8 sm:w-auto sm:px-3 rounded-lg text-q-text-secondary text-xs hover:text-q-accent hover:bg-q-accent/10 transition-colors flex items-center justify-center sm:justify-start gap-1.5"
                             title={language === 'es' ? 'Plan de Contenido' : 'Content Plan'}
                         >
                             <FileText size={15} />
@@ -710,7 +734,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                         {/* Close */}
                         <button
                             onClick={() => { stopVoiceSession(); onClose(); }}
-                            className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                            className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-error hover:bg-q-error/10 transition-colors"
                         >
                             <X className="w-4 h-4" />
                         </button>
@@ -728,8 +752,8 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                             {messages.map((msg, i) => (
                                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user'
-                                        ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white rounded-br-md'
-                                        : 'bg-[#1e1b2e] border border-purple-500/15 text-gray-100 rounded-bl-md'
+                                        ? 'bg-gradient-to-br from-q-accent to-q-accent text-q-text-on-accent rounded-br-md'
+                                        : 'bg-[#1e1b2e] border border-q-accent/15 text-q-text-muted rounded-bl-md'
                                         }`}>
                                         {msg.isVoice && (
                                             <span className="inline-flex items-center gap-1 text-[10px] opacity-60 mb-1">
@@ -738,11 +762,11 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                         )}
                                         <ReactMarkdown
                                             components={{
-                                                p: ({ children }) => <p className="mb-2 last:mb-0 text-gray-100">{children}</p>,
+                                                p: ({ children }) => <p className="mb-2 last:mb-0 text-q-text-muted">{children}</p>,
                                                 strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-                                                ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-gray-200">{children}</ul>,
-                                                ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-gray-200">{children}</ol>,
-                                                li: ({ children }) => <li className="leading-relaxed text-gray-200">{children}</li>,
+                                                ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-q-text-muted">{children}</ul>,
+                                                ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-q-text-muted">{children}</ol>,
+                                                li: ({ children }) => <li className="leading-relaxed text-q-text-muted">{children}</li>,
                                             }}
                                         >
                                             {msg.text}
@@ -754,7 +778,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                             {isThinking && (
                                 <div className="flex justify-start">
                                     <div className="bg-q-surface border border-q-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-q-text-secondary">
-                                        <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                                        <Loader2 className="w-4 h-4 animate-spin text-q-accent" />
                                         {language === 'es' ? 'Pensando...' : 'Thinking...'}
                                     </div>
                                 </div>
@@ -763,21 +787,21 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                             {/* Live Voice Transcription */}
                             {isVoiceActive && liveUserTranscript && (
                                 <div className="flex justify-end animate-pulse">
-                                    <div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-purple-500/20 border border-purple-500/30 text-purple-200">
-                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-purple-400 mb-1">
+                                    <div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-q-accent/20 border border-q-accent/30 text-q-accent">
+                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1">
                                             <Mic className="w-3 h-3" /> {language === 'es' ? 'Hablando...' : 'Speaking...'}
                                         </span>
-                                        <p className="text-gray-100">{liveUserTranscript}</p>
+                                        <p className="text-q-text-muted">{liveUserTranscript}</p>
                                     </div>
                                 </div>
                             )}
                             {isVoiceActive && liveModelTranscript && (
                                 <div className="flex justify-start">
-                                    <div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-[#1e1b2e] border border-blue-500/20 text-gray-100">
-                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-blue-400 mb-1">
+                                    <div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-[#1e1b2e] border border-q-accent/20 text-q-text-muted">
+                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1">
                                             <Volume2 className="w-3 h-3" /> {language === 'es' ? 'Respondiendo...' : 'Responding...'}
                                         </span>
-                                        <p className="text-gray-100">{liveModelTranscript}</p>
+                                        <p className="text-q-text-muted">{liveModelTranscript}</p>
                                     </div>
                                 </div>
                             )}
@@ -787,8 +811,8 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                 <div className="flex justify-center py-8">
                                     <div className="text-center space-y-4">
                                         <div className="relative mx-auto w-16 h-16">
-                                            <div className="absolute inset-0 bg-purple-500 blur-xl opacity-20 rounded-full animate-pulse" />
-                                            <Loader2 className="w-16 h-16 text-purple-400 animate-spin relative z-10" />
+                                            <div className="absolute inset-0 bg-q-accent blur-xl opacity-20 rounded-full animate-pulse" />
+                                            <Loader2 className="w-16 h-16 text-q-accent animate-spin relative z-10" />
                                         </div>
                                         <div>
                                             <p className="font-bold text-q-text">
@@ -807,13 +831,13 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                             {/* Preview State */}
                             {phase === 'preview' && generatedArticle && (
                                 <div className="space-y-4 animate-fade-in-up">
-                                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex items-start gap-3">
-                                        <CheckCircle className="text-green-400 shrink-0 mt-0.5" size={20} />
+                                    <div className="bg-q-success/10 border border-q-success/20 rounded-xl p-4 flex items-start gap-3">
+                                        <CheckCircle className="text-q-success shrink-0 mt-0.5" size={20} />
                                         <div>
-                                            <p className="font-bold text-green-400">
+                                            <p className="font-bold text-q-success">
                                                 {language === 'es' ? '¡Contenido generado con éxito!' : 'Content generated successfully!'}
                                             </p>
-                                            <p className="text-xs text-green-400/70">
+                                            <p className="text-xs text-q-success/70">
                                                 {language === 'es' ? 'Revisa antes de abrir en el editor.' : 'Review before opening in editor.'}
                                             </p>
                                         </div>
@@ -830,7 +854,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                         </div>
 
                                         <div className="flex gap-2 flex-wrap">
-                                            <span className="px-2.5 py-1 text-xs font-medium bg-purple-500/15 text-purple-300 rounded-full">
+                                            <span className="px-2.5 py-1 text-xs font-medium bg-q-accent/15 text-q-accent rounded-full">
                                                 {generatedArticle.category || category}
                                             </span>
                                             {generatedArticle.readTime && (
@@ -886,7 +910,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                         <button
                                             onClick={handleConfirmArticle}
                                             disabled={isSavingArticle}
-                                            className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-green-500/20 transition-all text-sm disabled:opacity-50 disabled:cursor-wait"
+                                            className="bg-gradient-to-r from-q-success to-q-success text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-q-success/20 transition-all text-sm disabled:opacity-50 disabled:cursor-wait"
                                         >
                                             {isSavingArticle ? (
                                                 <><Loader2 size={16} className="animate-spin" /> {language === 'es' ? 'Guardando...' : 'Saving...'}</>
@@ -907,7 +931,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                     {isVoiceActive ? (
                                         <button
                                             onClick={stopVoiceSession}
-                                            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
+                                            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-error/20 text-q-error hover:bg-q-error/30 transition-all"
                                             title={language === 'es' ? 'Detener voz' : 'Stop voice'}
                                         >
                                             <PhoneOff className="w-4 h-4" />
@@ -916,7 +940,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                         <button
                                             onClick={startVoiceSession}
                                             disabled={isVoiceConnecting}
-                                            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-surface-overlay/40 text-q-text-secondary hover:text-purple-400 hover:bg-purple-500/10 transition-all disabled:opacity-50"
+                                            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-surface-overlay/40 text-q-text-secondary hover:text-q-accent hover:bg-q-accent/10 transition-all disabled:opacity-50"
                                             title={language === 'es' ? 'Iniciar voz (Gemini Live)' : 'Start voice (Gemini Live)'}
                                         >
                                             {isVoiceConnecting ? (
@@ -936,7 +960,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                         placeholder={isVoiceActive
                                             ? (language === 'es' ? 'Sesión de voz activa — habla o escribe...' : 'Voice session active — speak or type...')
                                             : (language === 'es' ? 'Escribe tu idea de contenido...' : 'Type your content idea...')}
-                                        className="flex-1 bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none min-h-[40px] max-h-[120px] text-q-text placeholder:text-q-text-secondary/50"
+                                        className="flex-1 bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-q-accent/50 resize-none min-h-[40px] max-h-[120px] text-q-text placeholder:text-q-text-secondary/50"
                                         rows={1}
                                         disabled={phase !== 'conversation'}
                                     />
@@ -945,7 +969,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                     <button
                                         onClick={handleSendClick}
                                         disabled={!inputText.trim() || isThinking}
-                                        className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 text-white hover:shadow-lg hover:shadow-purple-500/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
+                                        className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-br from-q-accent to-q-accent text-q-text-on-accent hover:shadow-lg hover:shadow-q-accent/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
                                     >
                                         <Send className="w-4 h-4" />
                                     </button>
@@ -953,9 +977,9 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
 
                                 {/* Voice Active Indicator */}
                                 {isVoiceActive && (
-                                    <div className="mt-2 flex items-center justify-center gap-2 text-xs text-green-400">
+                                    <div className="mt-2 flex items-center justify-center gap-2 text-xs text-q-success">
                                         <span className="flex items-center gap-1.5">
-                                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                                            <span className="w-2 h-2 bg-q-success rounded-full animate-pulse" />
                                             {language === 'es' ? 'Escuchando...' : 'Listening...'}
                                         </span>
                                         <span className="text-q-text-secondary">•</span>
@@ -974,7 +998,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                         {/* Content Parameters */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 mb-1">
-                                <FileText className="w-4 h-4 text-purple-400" />
+                                <FileText className="w-4 h-4 text-q-accent" />
                                 <h3 className="text-sm font-bold text-q-text">
                                     {language === 'es' ? 'Plan de Contenido' : 'Content Plan'}
                                 </h3>
@@ -991,8 +1015,8 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                             key={cat.value}
                                             onClick={() => setCategory(cat.value)}
                                             className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${category === cat.value
-                                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                                : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'
+                                                ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                                : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                                 }`}
                                         >
                                             {cat.fallback}
@@ -1010,8 +1034,8 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                     <button
                                         onClick={() => setLanguage('es')}
                                         className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'es'
-                                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'
+                                            ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                             }`}
                                     >
                                         🇪🇸 Español
@@ -1019,8 +1043,8 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                     <button
                                         onClick={() => setLanguage('en')}
                                         className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'en'
-                                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'
+                                            ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                             }`}
                                     >
                                         🇺🇸 English
@@ -1038,7 +1062,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                     value={audience}
                                     onChange={(e) => setAudience(e.target.value)}
                                     placeholder={language === 'es' ? 'Emprendedores, Devs...' : 'Entrepreneurs, Devs...'}
-                                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-purple-500/50 text-q-text placeholder:text-q-text-secondary/50"
+                                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-q-accent/50 text-q-text placeholder:text-q-text-secondary/50"
                                 />
                             </div>
 
@@ -1053,8 +1077,8 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                             key={t}
                                             onClick={() => setTone(t)}
                                             className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${tone === t
-                                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                                : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'
+                                                ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                                : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                                 }`}
                                         >
                                             {t}
@@ -1070,7 +1094,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                         {/* Model Info */}
                         <div className="bg-q-bg/50 rounded-xl p-3 space-y-2">
                             <div className="flex items-center gap-2">
-                                <Zap className="w-3.5 h-3.5 text-yellow-400" />
+                                <Zap className="w-3.5 h-3.5 text-q-accent" />
                                 <span className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider">
                                     {language === 'es' ? 'Modelos' : 'Models'}
                                 </span>
@@ -1078,15 +1102,15 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                             <div className="space-y-1.5 text-[11px]">
                                 <div className="flex items-center justify-between">
                                     <span className="text-q-text-secondary">💬 Chat:</span>
-                                    <span className="font-mono text-purple-300">flash-lite</span>
+                                    <span className="font-mono text-q-accent">flash-lite</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-q-text-secondary">🎤 Voz:</span>
-                                    <span className="font-mono text-blue-300">flash-live</span>
+                                    <span className="font-mono text-q-accent">flash-live</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-q-text-secondary">📝 Generar:</span>
-                                    <span className="font-mono text-green-300">lite + high</span>
+                                    <span className="font-mono text-q-success">lite + high</span>
                                 </div>
                             </div>
                         </div>
@@ -1114,7 +1138,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                             <button
                                 onClick={handleGenerate}
                                 disabled={messages.length < 2 || phase !== 'conversation' || isThinking}
-                                className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-purple-500/20 transition-all disabled:opacity-40 disabled:hover:shadow-none text-sm"
+                                className="w-full bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-q-accent/20 transition-all disabled:opacity-40 disabled:hover:shadow-none text-sm"
                             >
                                 <Sparkles className="w-4 h-4" />
                                 {language === 'es' ? 'Generar Artículo' : 'Generate Article'}
@@ -1132,7 +1156,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                     {/* ===== RIGHT: CONTENT PLAN PANEL (mobile bottom sheet) ===== */}
                     {isMobilePlanOpen && (
                         <div className="lg:hidden fixed inset-0 z-[60] flex flex-col justify-end">
-                            <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobilePlanOpen(false)} style={{ animation: 'acs-fadeIn 0.2s ease' }} />
+                            <div className="absolute inset-0 bg-q-text/50" onClick={() => setIsMobilePlanOpen(false)} style={{ animation: 'acs-fadeIn 0.2s ease' }} />
                             <div
                                 className="relative bg-q-surface border-t border-q-border rounded-t-2xl flex flex-col overflow-hidden"
                                 style={{ maxHeight: '75vh', animation: 'acs-slideUpSheet 0.3s cubic-bezier(0.32, 0.72, 0, 1)' }}
@@ -1144,7 +1168,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                 {/* Header */}
                                 <div className="flex items-center justify-between px-4 py-2 border-b border-q-border">
                                     <span className="text-sm font-semibold text-q-text flex items-center gap-2">
-                                        <FileText size={14} className="text-purple-400" />
+                                        <FileText size={14} className="text-q-accent" />
                                         {language === 'es' ? 'Plan de Contenido' : 'Content Plan'}
                                     </span>
                                     <button onClick={() => setIsMobilePlanOpen(false)} className="p-1.5 rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 transition-colors"><X size={16} /></button>
@@ -1154,7 +1178,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                     {/* Content Parameters */}
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <FileText className="w-4 h-4 text-purple-400" />
+                                            <FileText className="w-4 h-4 text-q-accent" />
                                             <h3 className="text-sm font-bold text-q-text">
                                                 {language === 'es' ? 'Parámetros' : 'Parameters'}
                                             </h3>
@@ -1170,8 +1194,8 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                                         key={cat.value}
                                                         onClick={() => setCategory(cat.value)}
                                                         className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${category === cat.value
-                                                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'
+                                                            ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                                         }`}
                                                     >
                                                         {cat.fallback}
@@ -1185,8 +1209,8 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                                 {language === 'es' ? 'Idioma' : 'Language'}
                                             </label>
                                             <div className="flex gap-1.5">
-                                                <button onClick={() => setLanguage('es')} className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'es' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'}`}>🇪🇸 Español</button>
-                                                <button onClick={() => setLanguage('en')} className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'en' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'}`}>🇺🇸 English</button>
+                                                <button onClick={() => setLanguage('es')} className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'es' ? 'bg-q-accent/20 text-q-accent border border-q-accent/30' : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'}`}>🇪🇸 Español</button>
+                                                <button onClick={() => setLanguage('en')} className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'en' ? 'bg-q-accent/20 text-q-accent border border-q-accent/30' : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'}`}>🇺🇸 English</button>
                                             </div>
                                         </div>
                                         {/* Audience */}
@@ -1194,7 +1218,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                             <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
                                                 {language === 'es' ? 'Audiencia' : 'Audience'}
                                             </label>
-                                            <input type="text" value={audience} onChange={(e) => setAudience(e.target.value)} placeholder={language === 'es' ? 'Emprendedores, Devs...' : 'Entrepreneurs, Devs...'} className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-purple-500/50 text-q-text placeholder:text-q-text-secondary/50" />
+                                            <input type="text" value={audience} onChange={(e) => setAudience(e.target.value)} placeholder={language === 'es' ? 'Emprendedores, Devs...' : 'Entrepreneurs, Devs...'} className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-q-accent/50 text-q-text placeholder:text-q-text-secondary/50" />
                                         </div>
                                         {/* Tone */}
                                         <div>
@@ -1203,7 +1227,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                             </label>
                                             <div className="grid grid-cols-3 gap-1.5">
                                                 {TONE_OPTIONS.map((t) => (
-                                                    <button key={t} onClick={() => setTone(t)} className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${tone === t ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'}`}>{t}</button>
+                                                    <button key={t} onClick={() => setTone(t)} className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${tone === t ? 'bg-q-accent/20 text-q-accent border border-q-accent/30' : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'}`}>{t}</button>
                                                 ))}
                                             </div>
                                         </div>
@@ -1213,7 +1237,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                                         <button
                                             onClick={() => { setIsMobilePlanOpen(false); handleGenerate(); }}
                                             disabled={messages.length < 2 || phase !== 'conversation' || isThinking}
-                                            className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-purple-500/20 transition-all disabled:opacity-40 disabled:hover:shadow-none text-sm"
+                                            className="w-full bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-q-accent/20 transition-all disabled:opacity-40 disabled:hover:shadow-none text-sm"
                                         >
                                             <Sparkles className="w-4 h-4" />
                                             {language === 'es' ? 'Generar Artículo' : 'Generate Article'}

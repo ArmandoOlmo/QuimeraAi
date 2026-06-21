@@ -1,13 +1,13 @@
 /**
  * Knowledge Document Uploader
- * 
+ *
  * NOTE: PDF extraction uses the Vision API which requires direct API access
- * or an extended proxy that supports file uploads. The current proxy only 
+ * or an extended proxy that supports file uploads. The current proxy only
  * supports text-based requests.
- * 
+ *
  * Text files (.txt, .md, .csv, .html) are extracted directly without API calls.
  * PDFs require the Vision API for text extraction.
- * 
+ *
  * TODO: Extend the Gemini proxy to support multimodal (file + text) requests
  */
 import React, { useState } from 'react';
@@ -73,11 +73,11 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
             'o usa archivos de texto (.txt, .md) en su lugar.'
         );
 
-        /* 
+        /*
         // Original implementation (requires Vision API with direct access):
         try {
             const ai = await getGoogleGenAI();
-            
+
             // Convert file to base64
             const base64Data = await new Promise<string>((resolve) => {
                 const reader = new FileReader();
@@ -231,8 +231,8 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
             {/* Status Message */}
             {uploadStatus !== 'idle' && (
                 <div className={`flex items-center gap-2 p-3 rounded-lg ${uploadStatus === 'success'
-                    ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
-                    : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
+                    ? 'bg-q-success/10 dark:bg-q-success/12 text-q-success dark:text-q-success border border-q-success/25 dark:border-q-success/30'
+                    : 'bg-q-error/10 dark:bg-q-error/12 text-q-error dark:text-q-error border border-q-error/25 dark:border-q-error/30'
                     }`}>
                     {uploadStatus === 'success' ? (
                         <CheckCircle size={18} />
@@ -266,7 +266,7 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
                                 </div>
                                 <button
                                     onClick={() => handleDeleteDocument(doc.id)}
-                                    className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-q-text-muted hover:text-red-600 dark:hover:text-red-400 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+                                    className="p-1 rounded-full hover:bg-q-error/10 dark:hover:bg-q-error/12 text-q-text-muted hover:text-q-error dark:hover:text-q-error transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
                                     title="Remove document"
                                 >
                                     <X size={16} />

@@ -30,7 +30,7 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
 
         if (documentation.changelog) {
             toc.push({ id: 'changelog', title: 'Changelog', level: 1 });
-            
+
             // Extract headings from changelog
             const headings = documentation.changelog.match(/^#{2,6}\s+.+$/gm) || [] as string[];
             headings.forEach((heading: string, index: number) => {
@@ -55,7 +55,7 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
         const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'));
         return parts.map((part, index) =>
             part.toLowerCase() === searchQuery.toLowerCase()
-                ? `<mark class="bg-yellow-300 text-black">${part}</mark>`
+                ? `<mark class="bg-q-accent/10 text-black">${part}</mark>`
                 : part
         ).join('');
     };
@@ -80,7 +80,7 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
     const hasContent = documentation.description || documentation.usageExamples?.length || documentation.properties?.length || documentation.changelog;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/50 p-4">
             <div className="bg-q-surface border border-q-border rounded-lg max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl">
                 {/* Header */}
                 <div className="p-4 border-b border-q-border flex items-center justify-between flex-shrink-0">
@@ -200,7 +200,7 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
                                                         </td>
                                                         <td className="px-4 py-3 text-q-text">
                                                             {prop.required ? (
-                                                                <span className="text-red-500 font-semibold">✓ Required</span>
+                                                                <span className="text-q-error font-semibold">✓ Required</span>
                                                             ) : (
                                                                 <span className="text-q-text-secondary">Optional</span>
                                                             )}

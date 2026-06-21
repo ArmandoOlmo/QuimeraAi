@@ -169,7 +169,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                     </div>
                 )}
                 <div className="text-center py-12 bg-q-surface/50 rounded-2xl border border-q-border">
-                    <CheckCircle className="mx-auto text-green-500 mb-4" size={40} />
+                    <CheckCircle className="mx-auto text-q-success mb-4" size={40} />
                     <p className="text-q-text-muted">
                         {t('dashboard.news.allCaughtUp', 'Estás al día con todas las novedades')}
                     </p>
@@ -235,8 +235,8 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                             {/* Video play button centered */}
                             {news.videoUrl && (
                                 <div className="absolute inset-0 flex items-center justify-center z-10">
-                                    <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                        <Play size={24} className="text-gray-800 fill-gray-800 ml-1" />
+                                    <div className="w-14 h-14 bg-q-surface/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                        <Play size={24} className="text-q-text fill-gray-800 ml-1" />
                                     </div>
                                 </div>
                             )}
@@ -251,7 +251,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                                 {/* Status + Menu */}
                                 <div className="flex items-center gap-2">
                                     {news.featured && (
-                                        <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                                        <Star size={14} className="text-q-accent fill-yellow-500" />
                                     )}
 
                                     {/* Menu button */}
@@ -261,7 +261,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                                                 e.stopPropagation();
                                                 setMenuOpenId(menuOpenId === news.id ? null : news.id);
                                             }}
-                                            className="p-1 hover:bg-white/20 rounded transition-colors"
+                                            className="p-1 hover:bg-q-surface/20 rounded transition-colors"
                                         >
                                             <MoreVertical size={16} className="text-white" />
                                         </button>
@@ -333,7 +333,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
             {/* Detail Modal - Unified design */}
             {selectedNews && (
                 <div
-                    className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4"
+                    className="fixed inset-0 bg-q-text/70 backdrop-blur-md flex items-center justify-center z-50 p-4"
                     onClick={() => setSelectedNews(null)}
                 >
                     <div
@@ -359,8 +359,8 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                                         className="absolute inset-0 flex items-center justify-center"
                                         onClick={e => e.stopPropagation()}
                                     >
-                                        <div className="w-16 h-16 bg-white/95 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
-                                            <Play size={28} className="text-gray-800 fill-gray-800 ml-1" />
+                                        <div className="w-16 h-16 bg-q-surface/95 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+                                            <Play size={28} className="text-q-text fill-gray-800 ml-1" />
                                         </div>
                                     </a>
                                 )}
@@ -368,7 +368,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                                 {/* Close button */}
                                 <button
                                     onClick={() => setSelectedNews(null)}
-                                    className="absolute top-4 right-4 p-2.5 bg-black/40 hover:bg-black/60 rounded-full text-white transition-colors"
+                                    className="absolute top-4 right-4 p-2.5 bg-q-text/40 hover:bg-q-text/60 rounded-full text-white transition-colors"
                                 >
                                     <X size={20} />
                                 </button>
@@ -377,7 +377,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                                 <div className="absolute bottom-0 left-0 right-0 p-6">
                                     <div className="flex items-center gap-2 mb-3">
                                         {selectedNews.featured && (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-bold backdrop-blur-sm">
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-q-accent/20 text-q-accent rounded-full text-xs font-bold backdrop-blur-sm">
                                                 <Star size={12} className="fill-yellow-400" />
                                                 {t('dashboard.news.featured', 'Destacado')}
                                             </span>
@@ -411,7 +411,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                                     </button>
                                     <div className="flex items-center gap-2 mb-3">
                                         {selectedNews.featured && (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-yellow-500/10 text-yellow-500 rounded-full text-xs font-bold">
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-q-accent/10 text-q-accent rounded-full text-xs font-bold">
                                                 <Star size={12} className="fill-yellow-500" />
                                                 {t('dashboard.news.featured', 'Destacado')}
                                             </span>

@@ -40,14 +40,14 @@ const ContactStep: React.FC<ContactStepProps> = ({ data, onChange, t }) => {
         <div className="space-y-6 animate-fade-in-up">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5 group">
-                    <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('common.name')} <span className="text-red-400">*</span></label>
+                    <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('common.name')} <span className="text-q-error">*</span></label>
                     <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-primary transition-colors" size={16} />
                         <input
                             required
                             value={data.name || ''}
                             onChange={e => onChange('name', e.target.value)}
-                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
+                            className="w-full bg-secondary/30 border border-q-border/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                             placeholder="e.g. Sarah Connor"
                             autoFocus
                         />
@@ -55,7 +55,7 @@ const ContactStep: React.FC<ContactStepProps> = ({ data, onChange, t }) => {
                 </div>
 
                 <div className="space-y-1.5 group">
-                    <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('leads.email')} <span className="text-red-400">*</span></label>
+                    <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('leads.email')} <span className="text-q-error">*</span></label>
                     <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-primary transition-colors" size={16} />
                         <input
@@ -63,7 +63,7 @@ const ContactStep: React.FC<ContactStepProps> = ({ data, onChange, t }) => {
                             type="email"
                             value={data.email || ''}
                             onChange={e => onChange('email', e.target.value)}
-                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
+                            className="w-full bg-secondary/30 border border-q-border/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                             placeholder="sarah@skynet.com"
                         />
                     </div>
@@ -77,7 +77,7 @@ const ContactStep: React.FC<ContactStepProps> = ({ data, onChange, t }) => {
                             type="tel"
                             value={data.phone || ''}
                             onChange={e => onChange('phone', e.target.value)}
-                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
+                            className="w-full bg-secondary/30 border border-q-border/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                             placeholder="+1 (555) 000-0000"
                         />
                     </div>
@@ -90,7 +90,7 @@ const ContactStep: React.FC<ContactStepProps> = ({ data, onChange, t }) => {
                         <input
                             value={data.jobTitle || ''}
                             onChange={e => onChange('jobTitle', e.target.value)}
-                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
+                            className="w-full bg-secondary/30 border border-q-border/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                             placeholder="e.g. CTO"
                         />
                     </div>
@@ -118,7 +118,7 @@ const CompanyStep: React.FC<CompanyStepProps> = ({ data, onChange, t }) => {
                         <input
                             value={data.company || ''}
                             onChange={e => onChange('company', e.target.value)}
-                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
+                            className="w-full bg-secondary/30 border border-q-border/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                             placeholder="e.g. Cyberdyne Systems"
                         />
                     </div>
@@ -131,7 +131,7 @@ const CompanyStep: React.FC<CompanyStepProps> = ({ data, onChange, t }) => {
                         <input
                             value={data.industry || ''}
                             onChange={e => onChange('industry', e.target.value)}
-                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
+                            className="w-full bg-secondary/30 border border-q-border/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                             placeholder="e.g. Technology"
                         />
                     </div>
@@ -139,15 +139,15 @@ const CompanyStep: React.FC<CompanyStepProps> = ({ data, onChange, t }) => {
             </div>
 
             <div className="space-y-1.5 group max-w-[50%]">
-                <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-green-500 transition-colors">{t('leads.dealValue')}</label>
+                <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-q-success transition-colors">{t('leads.dealValue')}</label>
                 <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-green-500 transition-colors" size={16} />
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-q-success transition-colors" size={16} />
                     <input
                         type="number"
                         min="0"
                         value={data.value || 0}
                         onChange={e => onChange('value', Number(e.target.value))}
-                        className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm font-bold text-green-500 outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
+                        className="w-full bg-secondary/30 border border-q-border/5 rounded-xl pl-10 pr-4 py-2.5 text-sm font-bold text-q-success outline-none focus:ring-2 focus:ring-q-success/30 focus:border-q-success/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                         placeholder="0.00"
                     />
                 </div>
@@ -215,7 +215,7 @@ const IndustryFieldsStep: React.FC<IndustryFieldsStepProps> = ({ fields, dynamic
                                     <AppSelect
                                         value={dynamicData[field.id] || ''}
                                         onChange={e => onDynamicChange(field.id, e.target.value)}
-                                        className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all hover:bg-secondary/50 appearance-none cursor-pointer"
+                                        className="w-full bg-secondary/30 border border-q-border/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all hover:bg-secondary/50 appearance-none cursor-pointer"
                                     >
                                         <option value="">{t('common.select', 'Select...')}</option>
                                         {field.options.map(opt => (
@@ -236,7 +236,7 @@ const IndustryFieldsStep: React.FC<IndustryFieldsStepProps> = ({ fields, dynamic
                                     type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
                                     value={dynamicData[field.id] || ''}
                                     onChange={e => onDynamicChange(field.id, field.type === 'number' ? Number(e.target.value) : e.target.value)}
-                                    className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
+                                    className="w-full bg-secondary/30 border border-q-border/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                                     placeholder={field.placeholder || field.name}
                                 />
                             </div>
@@ -388,11 +388,11 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit, 
             isOpen={isOpen}
             onClose={onClose}
             maxWidth="max-w-2xl"
-            className="bg-q-surface/95 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden"
+            className="bg-q-surface/95 backdrop-blur-xl border border-q-border/10 shadow-2xl overflow-hidden"
         >
             <div className="flex flex-col h-[70vh] max-h-[600px]">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <div className="flex items-center justify-between p-6 border-b border-q-border/10">
                     <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-primary/10 rounded-xl border border-primary/20 text-primary shadow-inner shadow-primary/5">
                             <Sparkles size={20} />
@@ -408,7 +408,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit, 
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-white/5 rounded-lg text-q-text-muted hover:text-foreground transition-all duration-200"
+                        className="p-2 hover:bg-q-surface/5 rounded-lg text-q-text-muted hover:text-foreground transition-all duration-200"
                     >
                         <X size={20} />
                     </button>
@@ -455,9 +455,9 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit, 
 
                 {/* Errors */}
                 {errors.length > 0 && (
-                    <div className="mx-6 mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <div className="mx-6 mt-4 p-3 bg-q-error/10 border border-q-error/20 rounded-lg">
                         {errors.map((error, i) => (
-                            <p key={i} className="text-sm text-red-500 flex items-center gap-2">
+                            <p key={i} className="text-sm text-q-error flex items-center gap-2">
                                 <AlertCircle size={14} />
                                 {error}
                             </p>
@@ -484,7 +484,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit, 
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between p-6 border-t border-white/5 bg-secondary/20">
+                <div className="flex items-center justify-between p-6 border-t border-q-border/5 bg-secondary/20">
                     <button
                         onClick={handlePrev}
                         disabled={isFirstStep}

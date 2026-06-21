@@ -137,7 +137,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                         )}
                         <span>
                             {getGreeting()},{' '}
-                            <span className="quimera-user-name-highlight text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+                            <span className="quimera-user-name-highlight">
                                 {userDocument?.name?.split(' ')[0] || 'Creator'}
                             </span>
                             .
@@ -151,12 +151,10 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                             <AppButton
                                 variant="danger"
                                 onClick={handlePlanAttentionClick}
-                                className="group relative flex !h-auto items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-red-600 via-orange-600 to-red-600 bg-[length:200%_100%] text-white font-bold rounded-xl sm:rounded-2xl border border-red-300/20 !shadow-md !shadow-red-500/20 hover:!opacity-100 hover:shadow-md hover:!shadow-red-500/30 transition-all duration-500 lg:hover:scale-[1.02] hover:bg-right flex-1 sm:flex-initial"
+                                className="group relative flex !h-auto items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-q-error text-white font-bold rounded-[var(--radius-card)] border border-q-error/35 !shadow-sm hover:!opacity-90 transition-all duration-200 lg:hover:scale-[1.01] flex-1 sm:flex-initial"
                                 aria-label={t('dashboard.planExpiredTitle', 'Tu plan está expirado')}
                             >
-                                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-white/25 rounded-lg sm:rounded-xl backdrop-blur-sm group-hover:bg-white/35 transition-colors flex-shrink-0">
-                                    <AlertTriangle className="size-5 sm:size-6" aria-hidden="true" />
-                                </div>
+                                <AlertTriangle className="icon-lg flex-shrink-0" aria-hidden="true" />
                                 <div className="flex flex-col items-start text-left min-w-0">
                                     <span className="text-sm sm:text-lg leading-tight">
                                         {t('dashboard.planExpiredTitle', 'Tu plan está expirado')}
@@ -175,12 +173,12 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                 <AppButton
                                     variant="premium"
                                     onClick={toggleUpgradeMinimized}
-                                    className="group relative flex !h-auto items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r !from-purple-600/80 !via-q-accent/60 !to-purple-600/80 bg-[length:200%_100%] !text-white/90 font-semibold rounded-2xl border border-purple-400/20 hover:!brightness-100 hover:border-purple-400/40 !shadow-md !shadow-purple-500/15 hover:!shadow-purple-500/30 transition-all duration-500 hover:scale-105 hover:bg-right"
+                                    className="quimera-dashboard-upgrade-cta group relative flex !h-auto items-center justify-center gap-2 px-6 py-3 font-semibold rounded-[var(--radius-card)] border border-q-accent/35 !shadow-sm transition-all duration-200 hover:scale-[1.01]"
                                     aria-label={t('dashboard.upgradeNow')}
                                 >
-                                    <Crown className="size-4" aria-hidden="true" />
+                                    <Crown className="icon-sm" aria-hidden="true" />
                                     <span className="text-sm">{t('dashboard.upgradeNow')}</span>
-                                    <ChevronDown className="size-3.5 opacity-60" aria-hidden="true" />
+                                    <ChevronDown className="icon-xs opacity-60" aria-hidden="true" />
                                 </AppButton>
                             ) : (
                                 /* Expanded upgrade button */
@@ -188,12 +186,10 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                     <AppButton
                                         variant="premium"
                                         onClick={handleUpgradeClick}
-                                        className="group relative flex !h-auto items-center gap-3 px-6 py-4 w-full bg-gradient-to-r !from-purple-600 !via-q-accent !to-purple-600 bg-[length:200%_100%] text-white font-bold rounded-2xl !shadow-lg !shadow-purple-500/25 hover:!brightness-100 hover:!shadow-purple-500/40 transition-all duration-500 hover:scale-105 hover:bg-right"
+                                        className="quimera-dashboard-upgrade-cta group relative flex !h-auto items-center gap-3 px-6 py-4 w-full font-bold rounded-[var(--radius-card)] border border-q-accent/35 !shadow-sm transition-all duration-200 hover:scale-[1.01]"
                                         aria-label={t('dashboard.upgradeNow')}
                                     >
-                                        <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-xl backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-                                            <Crown className="size-6" aria-hidden="true" />
-                                        </div>
+                                        <Crown className="icon-lg flex-shrink-0" aria-hidden="true" />
                                         <div className="flex flex-col items-start text-left">
                                             <span className="text-lg leading-tight">{nextPlan.name}</span>
                                             <span className="text-xs opacity-80 font-medium text-left">
@@ -210,7 +206,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                             e.stopPropagation();
                                             toggleUpgradeMinimized();
                                         }}
-                                        className="absolute -top-1.5 -right-1.5 !h-6 !w-6 flex items-center justify-center bg-q-surface-overlay/90 border border-q-border rounded-full text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay transition-colors shadow-sm z-10"
+                                        className="absolute -top-1.5 -right-1.5 !h-6 !w-6 flex items-center justify-center bg-q-surface-overlay/90 border border-border-subtle rounded-full text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay transition-colors shadow-[var(--shadow-card)] z-10"
                                         aria-label="Minimize"
                                     >
                                     <ChevronUp className="size-3.5" />
@@ -273,7 +269,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                             variant="outline"
                             type="button"
                             onClick={() => handleOpenAIStudio()}
-                            className="inline-flex min-w-0 !h-auto items-center gap-2 rounded-full border border-q-border/70 bg-q-surface-overlay/35 px-3 py-1.5 text-xs font-medium !text-q-text-secondary transition-colors hover:border-q-accent/50 hover:bg-q-accent/10 hover:!text-q-text"
+                            className="inline-flex min-w-0 !h-auto items-center gap-2 rounded-full border border-border-subtle bg-q-surface-overlay/60 px-3 py-1.5 text-xs font-medium !text-q-text-secondary transition-colors hover:border-q-accent/40 hover:bg-q-accent/10 hover:!text-q-text"
                         >
                             <Sparkles size={13} className="text-q-accent" />
                             <span className="truncate">Web Design Studio</span>

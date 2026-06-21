@@ -303,7 +303,7 @@ export function WhiteLabelSettings() {
                                             </button>
                                             <button
                                                 onClick={() => updateField('logoUrl', '')}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-q-error/10 text-q-error rounded-lg hover:bg-q-error/20 transition-colors"
                                             >
                                                 <Trash2 className="h-3 w-3" />
                                                 {t('common.delete')}
@@ -364,7 +364,7 @@ export function WhiteLabelSettings() {
                                             </button>
                                             <button
                                                 onClick={() => updateField('faviconUrl', '')}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-q-error/10 text-q-error rounded-lg hover:bg-q-error/20 transition-colors"
                                             >
                                                 <Trash2 className="h-3 w-3" />
                                                 {t('common.delete')}
@@ -506,10 +506,10 @@ export function WhiteLabelSettings() {
                                 <img
                                     src={branding.logoUrl}
                                     alt="Logo"
-                                    className="w-8 h-8 rounded-lg object-contain bg-white/20 p-0.5"
+                                    className="w-8 h-8 rounded-lg object-contain bg-q-surface/20 p-0.5"
                                 />
                             ) : (
-                                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                                <div className="w-8 h-8 rounded-lg bg-q-surface/20 flex items-center justify-center">
                                     <Building2 className="w-4 h-4 text-white" />
                                 </div>
                             )}
@@ -517,9 +517,9 @@ export function WhiteLabelSettings() {
                                 {branding.companyName || t('dashboard.agency.whiteLabel.companyNamePlaceholder')}
                             </span>
                             <div className="ml-auto flex gap-2">
-                                <div className="w-16 h-2 rounded-full bg-white/20" />
-                                <div className="w-12 h-2 rounded-full bg-white/20" />
-                                <div className="w-14 h-2 rounded-full bg-white/20" />
+                                <div className="w-16 h-2 rounded-full bg-q-surface/20" />
+                                <div className="w-12 h-2 rounded-full bg-q-surface/20" />
+                                <div className="w-14 h-2 rounded-full bg-q-surface/20" />
                             </div>
                         </div>
 

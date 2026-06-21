@@ -121,7 +121,7 @@ export function AgencyProjects() {
                     </p>
                 </div>
                 <div className="p-4 rounded-xl bg-secondary/30 border border-q-border/50">
-                    <p className="text-2xl font-bold text-emerald-400">
+                    <p className="text-2xl font-bold text-q-success">
                         {userProjects.filter(p => p.status === 'Published').length}
                     </p>
                     <p className="text-xs text-q-text-muted mt-1">
@@ -129,7 +129,7 @@ export function AgencyProjects() {
                     </p>
                 </div>
                 <div className="p-4 rounded-xl bg-secondary/30 border border-q-border/50">
-                    <p className="text-2xl font-bold text-amber-400">
+                    <p className="text-2xl font-bold text-q-accent">
                         {userProjects.filter(p => p.status === 'Draft').length}
                     </p>
                     <p className="text-xs text-q-text-muted mt-1">
@@ -181,8 +181,8 @@ export function AgencyProjects() {
                                 {/* Status Badge */}
                                 <div className="absolute top-2 right-2">
                                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${project.status === 'Published'
-                                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                            ? 'bg-q-success/20 text-q-success border border-q-success/30'
+                                            : 'bg-q-accent/20 text-q-accent border border-q-accent/30'
                                         }`}>
                                         {project.status === 'Published' ? (
                                             <>
@@ -201,7 +201,7 @@ export function AgencyProjects() {
                                 {/* Transfer badge if already transferred */}
                                 {(project as any).transferredFrom && (
                                     <div className="absolute top-2 left-2">
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-q-accent/20 text-q-accent border border-q-accent/30">
                                             <Send size={10} />
                                             Transferido
                                         </span>

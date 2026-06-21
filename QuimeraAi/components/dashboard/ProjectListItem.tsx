@@ -10,6 +10,7 @@ import { downloadProjectAsJSON } from '../../utils/projectExporter';
 import Modal from '../ui/Modal';
 import { getDynamicThumbnailUrl } from '../../utils/thumbnailHelper';
 import ProjectThumbnailFallback from './ProjectThumbnailFallback';
+import { MotionCard } from '../ui/primitives/Card';
 
 interface ProjectListItemProps {
   project: Project;
@@ -131,9 +132,9 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
   };
 
   const statusColor = {
-    'Published': 'bg-green-500/20 text-green-500',
+    'Published': 'bg-q-success/12 text-q-success',
     'Draft': 'bg-muted text-q-text-muted',
-    'Template': 'bg-primary/20 text-primary',
+    'Template': 'bg-q-accent/14 text-q-accent',
   }[project.status];
 
   const translatedStatus = {
@@ -143,12 +144,13 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
   }[project.status] || project.status;
 
   return (
-    <div
+    <MotionCard
       onClick={handleOpenProject}
+      hoverMotion
       className={`
-        group relative flex items-center gap-4 p-4 
-        bg-q-surface rounded-xl border border-q-border
-        hover:border-primary/50 hover:shadow-lg transition-all duration-200 cursor-pointer
+        group relative flex items-center gap-4 p-4
+        bg-q-surface rounded-[var(--radius-card)] border border-border-subtle shadow-[var(--shadow-card)]
+        hover:border-q-border hover:shadow-[var(--shadow-card-hover)] transition-all duration-200 cursor-pointer
         ${isDeleting ? 'opacity-50 pointer-events-none' : ''}
       `}
     >
@@ -168,7 +170,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-3 mb-1">
-          <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+          <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-q-text transition-colors">
             {project.name}
           </h3>
           <span className={`px-2 py-1 rounded-md text-xs font-medium ${statusColor}`}>
@@ -182,10 +184,10 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
         {/* Credit Usage Bar - List view */}
         {project.status !== 'Template' && (
           <div className="flex items-center gap-2 mt-1.5">
-            <Zap size={12} className="text-yellow-400 flex-shrink-0" aria-hidden="true" />
+            <Zap size={12} className="text-q-accent flex-shrink-0" aria-hidden="true" />
             <div className="w-32 h-1.5 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-700 ease-out"
+                className="h-full rounded-full bg-q-accent transition-all duration-700 ease-out"
                 style={{
                   width: `${Math.min(100, maxTokens > 0 && tokenUsage ? (tokenUsage.creditsUsed / maxTokens) * 100 : 0)}%`,
                   minWidth: tokenUsage && tokenUsage.creditsUsed > 0 ? '4%' : '0%',
@@ -203,7 +205,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
       <div className="flex-shrink-0 relative" ref={menuRef}>
         <button
           onClick={toggleMenu}
-          className="p-2 rounded-lg hover:bg-secondary transition-colors text-q-text-muted hover:text-foreground"
+          className="p-2 rounded-[var(--q-radius-md)] hover:bg-q-surface-overlay transition-colors text-q-text-muted hover:text-foreground"
           aria-label={t('common.openMenu')}
         >
           {isDeleting ? (
@@ -215,10 +217,10 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
 
         {/* Dropdown Menu */}
         {showMenu && !isDeleting && (
-          <div className="absolute right-0 top-full mt-2 w-48 bg-q-surface rounded-lg shadow-xl border border-q-border z-50 overflow-hidden">
+          <div className="absolute right-0 top-full mt-2 w-48 bg-q-surface rounded-[var(--radius-card-compact)] shadow-[var(--shadow-elevated)] border border-border-subtle z-50 overflow-hidden">
             <button
               onClick={handleEditClick}
-              className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-secondary transition-colors text-foreground"
+              className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-q-surface-overlay transition-colors text-foreground"
             >
               <Pencil size={16} />
               <span>{isTemplate ? t('project.actions.useTemplate') : t('project.actions.edit')}</span>
@@ -227,7 +229,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
             {!isTemplate && (
               <button
                 onClick={handleDuplicateClick}
-                className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-secondary transition-colors text-foreground"
+                className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-q-surface-overlay transition-colors text-foreground"
               >
                 <Copy size={16} />
                 <span>{t('project.actions.duplicate')}</span>
@@ -236,7 +238,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
 
             <button
               onClick={handleDownloadClick}
-              className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-secondary transition-colors text-foreground"
+              className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-q-surface-overlay transition-colors text-foreground"
             >
               <Download size={16} />
               <span>{t('project.actions.export')}</span>
@@ -260,7 +262,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
       >
         <div className="p-6">
           <h3 className="text-xl font-bold mb-4">{t('common.confirm')}</h3>
-          <p className="text-gray-400 mb-6">
+          <p className="text-q-text-muted mb-6">
             {isTemplate
               ? t('project.deleteConfirm.template')
               : t('project.deleteConfirm.project', { name: project.name })}
@@ -269,14 +271,14 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
             <button
               onClick={() => setShowDeleteConfirm(false)}
               disabled={isDeleting}
-              className="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors"
+              className="px-4 py-2 rounded-[var(--q-radius-md)] hover:bg-q-surface-overlay transition-colors"
             >
               {t('common.cancel')}
             </button>
             <button
               onClick={handleConfirmDelete}
               disabled={isDeleting}
-              className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors flex items-center gap-2"
+              className="px-4 py-2 rounded-[var(--q-radius-md)] bg-q-error hover:opacity-90 text-white transition-colors flex items-center gap-2"
             >
               {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
               {t('common.delete')}
@@ -284,7 +286,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
           </div>
         </div>
       </Modal>
-    </div>
+    </MotionCard>
   );
 };
 

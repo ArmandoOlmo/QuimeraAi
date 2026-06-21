@@ -151,7 +151,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/60 backdrop-blur-sm p-4 animate-fade-in-up">
             <div className="bg-q-surface border border-q-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="p-6 border-b border-q-border flex items-center justify-between">
@@ -262,7 +262,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                     {step === 'preview' && generatedSeo && (
                         <div className="space-y-6 animate-fade-in-up h-full flex flex-col">
                             <div className="quimera-guide-panel-accent p-4 flex items-start gap-3">
-                                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" strokeWidth={2} />
+                                <CheckCircle className="w-5 h-5 text-q-success flex-shrink-0" strokeWidth={2} />
                                 <div>
                                     <p className="font-bold text-foreground">{t('seo.seoGenerated', '¡Configuración SEO generada!')}</p>
                                     <p className="text-xs text-q-text-muted">{t('seo.reviewBeforeApply', 'Revisa los resultados antes de aplicarlos a tu proyecto.')}</p>
@@ -280,7 +280,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                         <span className="text-xs font-bold text-q-text-muted uppercase">{t('seo.pageTitle', 'Título')}</span>
                                         <p className="text-foreground font-semibold">{generatedSeo.title || '—'}</p>
                                         {generatedSeo.title && (
-                                            <p className={`text-xs mt-0.5 ${generatedSeo.title.length > 60 ? 'text-red-500' : 'text-q-text-muted'}`}>
+                                            <p className={`text-xs mt-0.5 ${generatedSeo.title.length > 60 ? 'text-q-error' : 'text-q-text-muted'}`}>
                                                 {generatedSeo.title.length} / 60
                                             </p>
                                         )}
@@ -289,7 +289,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                         <span className="text-xs font-bold text-q-text-muted uppercase">{t('seo.metaDescription', 'Meta Description')}</span>
                                         <p className="text-q-text-muted text-sm">{generatedSeo.description || '—'}</p>
                                         {generatedSeo.description && (
-                                            <p className={`text-xs mt-0.5 ${generatedSeo.description.length > 160 ? 'text-red-500' : 'text-q-text-muted'}`}>
+                                            <p className={`text-xs mt-0.5 ${generatedSeo.description.length > 160 ? 'text-q-error' : 'text-q-text-muted'}`}>
                                                 {generatedSeo.description.length} / 160
                                             </p>
                                         )}
@@ -377,15 +377,15 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                 )}
 
                                 {/* Google Preview */}
-                                <div className="bg-white dark:bg-secondary/30 rounded-xl p-4 border border-q-border/50 space-y-1">
+                                <div className="bg-q-surface dark:bg-secondary/30 rounded-xl p-4 border border-q-border/50 space-y-1">
                                     <div className="flex items-center gap-2 mb-3">
                                         <Search className="w-4 h-4 text-q-text-muted" />
                                         <span className="text-xs font-bold text-q-text-muted uppercase">{t('seo.googlePreview', 'Vista previa en Google')}</span>
                                     </div>
-                                    <p className="text-[#1a0dab] dark:text-blue-400 text-lg font-medium truncate leading-tight">
+                                    <p className="text-[#1a0dab] dark:text-q-accent text-lg font-medium truncate leading-tight">
                                         {generatedSeo.title || 'Título de la página'}
                                     </p>
-                                    <p className="text-[#006621] dark:text-green-400 text-sm truncate">
+                                    <p className="text-[#006621] dark:text-q-success text-sm truncate">
                                         {websiteUrl || 'https://tusitio.com'}
                                     </p>
                                     <p className="text-[#545454] dark:text-q-text-muted text-sm line-clamp-2">

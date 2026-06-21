@@ -143,21 +143,21 @@ const LeadsLibrary: React.FC = () => {
                     <div className="bg-q-surface border border-q-border p-4 rounded-xl">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-q-text-muted font-medium">{t('leads.imported')}</span>
-                            <CheckCircle2 size={16} className="text-green-500" />
+                            <CheckCircle2 size={16} className="text-q-success" />
                         </div>
                         <p className="text-2xl font-bold text-foreground">{metrics.imported}</p>
                     </div>
                     <div className="bg-q-surface border border-q-border p-4 rounded-xl">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-q-text-muted font-medium">{t('leads.pending')}</span>
-                            <Clock size={16} className="text-yellow-500" />
+                            <Clock size={16} className="text-q-accent" />
                         </div>
                         <p className="text-2xl font-bold text-foreground">{metrics.notImported}</p>
                     </div>
                     <div className="bg-q-surface border border-q-border p-4 rounded-xl">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-q-text-muted font-medium">{t('leads.importRate')}</span>
-                            <RefreshCw size={16} className="text-blue-500" />
+                            <RefreshCw size={16} className="text-q-accent" />
                         </div>
                         <p className="text-2xl font-bold text-foreground">{metrics.importRate}%</p>
                     </div>
@@ -190,14 +190,14 @@ const LeadsLibrary: React.FC = () => {
                         <button
                             onClick={handleImportSelected}
                             disabled={isImporting}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 hover:bg-green-500/20 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+                            className="flex items-center gap-2 px-3 py-1.5 bg-q-success/10 text-q-success hover:bg-q-success/20 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
                         >
                             <Upload size={14} />
                             {isImporting ? t('common.importing') : t('leads.importToCRM')}
                         </button>
                         <button
                             onClick={handleDeleteSelected}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-600 hover:bg-red-500/20 rounded-md text-sm font-medium transition-colors"
+                            className="flex items-center gap-2 px-3 py-1.5 bg-q-error/10 text-q-error hover:bg-q-error/20 rounded-md text-sm font-medium transition-colors"
                         >
                             <Trash2 size={14} />
                             {t('common.delete')}
@@ -262,11 +262,11 @@ const LeadsLibrary: React.FC = () => {
                                         </td>
                                         <td className="p-4">
                                             {lead.isImported ? (
-                                                <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 bg-green-500/10 px-2 py-1 rounded-full">
+                                                <span className="inline-flex items-center gap-1 text-xs font-medium text-q-success bg-q-success/10 px-2 py-1 rounded-full">
                                                     <CheckCircle2 size={12} /> Imported
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1 text-xs font-medium text-yellow-600 bg-yellow-500/10 px-2 py-1 rounded-full">
+                                                <span className="inline-flex items-center gap-1 text-xs font-medium text-q-accent bg-q-accent/10 px-2 py-1 rounded-full">
                                                     <Clock size={12} /> Pending
                                                 </span>
                                             )}

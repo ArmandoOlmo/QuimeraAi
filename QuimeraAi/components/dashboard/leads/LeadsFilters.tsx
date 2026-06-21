@@ -26,12 +26,12 @@ interface LeadsFiltersProps {
 }
 
 const LEAD_STATUSES: { id: LeadStatus; label: string; color: string }[] = [
-    { id: 'new', label: 'Nuevo', color: 'bg-blue-500' },
-    { id: 'contacted', label: 'Contactado', color: 'bg-yellow-500' },
-    { id: 'qualified', label: 'Calificado', color: 'bg-purple-500' },
-    { id: 'negotiation', label: 'Negociación', color: 'bg-orange-500' },
-    { id: 'won', label: 'Ganado', color: 'bg-green-500' },
-    { id: 'lost', label: 'Perdido', color: 'bg-red-500' },
+    { id: 'new', label: 'Nuevo', color: 'bg-q-accent' },
+    { id: 'contacted', label: 'Contactado', color: 'bg-q-accent' },
+    { id: 'qualified', label: 'Calificado', color: 'bg-q-accent' },
+    { id: 'negotiation', label: 'Negociación', color: 'bg-q-warning' },
+    { id: 'won', label: 'Ganado', color: 'bg-q-success' },
+    { id: 'lost', label: 'Perdido', color: 'bg-q-error' },
 ];
 
 const SOURCES = [
@@ -477,7 +477,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                 {activeFiltersCount > 0 && (
                     <button
                         onClick={clearAllFilters}
-                        className="no-min-touch inline-flex h-8 items-center gap-1 px-2 text-[11px] text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="no-min-touch inline-flex h-8 items-center gap-1 px-2 text-[11px] text-q-error hover:bg-q-error/10 rounded-lg transition-colors"
                     >
                         <RotateCcw size={12} />
                         <span>{t('leads.filters.clearAll')}</span>

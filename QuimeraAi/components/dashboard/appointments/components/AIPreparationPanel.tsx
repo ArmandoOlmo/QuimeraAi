@@ -100,7 +100,7 @@ const CopyButton: React.FC<{ text: string }> = ({ text }) => {
             onClick={handleCopy}
             className="p-1.5 text-q-text-muted hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
         >
-            {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+            {copied ? <Check size={14} className="text-q-success" /> : <Copy size={14} />}
         </button>
     );
 };
@@ -150,19 +150,19 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
 
             const prompt = `
                 Eres un asistente de ventas experto. Prepara un briefing completo para esta reunión.
-                
+
                 INFORMACIÓN DE LA REUNIÓN:
                 - Título: ${appointment.title}
                 - Tipo: ${appointment.type}
                 - Descripción: ${appointment.description || 'Sin descripción'}
                 - Fecha: ${formatDateOnly(appointment.startDate)}
                 - Hora: ${formatTime(appointment.startDate)} - ${formatTime(appointment.endDate)}
-                
+
                 PARTICIPANTES:
                 ${participantInfo}
-                
+
                 ${leadInfo ? `INFORMACIÓN DE LEADS VINCULADOS:\n${leadInfo}` : ''}
-                
+
                 Genera un JSON con la siguiente estructura:
                 {
                     "summary": "Resumen ejecutivo de 2-3 líneas sobre qué esperar de esta reunión",
@@ -174,13 +174,13 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     "successProbability": número del 0 al 100,
                     "recommendedDuration": número en minutos
                 }
-                
+
                 IMPORTANTE:
                 - Sé específico y práctico
                 - Las preguntas deben ser abiertas y estratégicas
                 - Los tips deben ser accionables
                 - Las objeciones deben incluir cómo responderlas
-                
+
                 Responde SOLO con el JSON válido.
             `;
 
@@ -261,7 +261,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         2. Descubrir pain points
                         3. Establecer urgencia
                         4. Avanzar en el proceso de venta
-                        
+
                         Devuelve SOLO JSON válido: { "questions": ["pregunta 1", "pregunta 2", ...] }
                     `;
                     break;
@@ -271,7 +271,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         Para una reunión de ${appointment.type} titulada "${appointment.title}",
                         genera las 5 objeciones más probables que el cliente podría presentar,
                         junto con respuestas efectivas para cada una.
-                        
+
                         Devuelve SOLO JSON válido: { "objections": ["Objeción: X | Respuesta: Y", ...] }
                     `;
                     break;
@@ -285,7 +285,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         - Qué preguntas hacer primero
                         - Cómo presentar la propuesta de valor
                         - Cómo cerrar o establecer próximos pasos
-                        
+
                         Devuelve SOLO JSON válido: { "strategy": "Estrategia completa en un párrafo" }
                     `;
                     break;
@@ -333,7 +333,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl text-white">
+                    <div className="p-2.5 bg-gradient-to-br from-q-accent to-q-accent rounded-xl text-q-text-on-accent">
                         <Sparkles size={20} />
                     </div>
                     <div>
@@ -347,7 +347,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                 <button
                     onClick={generateFullPreparation}
                     disabled={isGenerating}
-                    className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-medium text-sm flex items-center gap-2 transition-colors disabled:opacity-50"
+                    className="px-4 py-2 bg-q-accent hover:bg-q-accent text-q-text-on-accent rounded-xl font-medium text-sm flex items-center gap-2 transition-colors disabled:opacity-50"
                 >
                     {isGenerating && activeGeneration === 'full' ? (
                         <>
@@ -368,7 +368,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                 <div className="grid grid-cols-2 gap-3">
                     <div className="p-4 bg-secondary/30 rounded-xl">
                         <div className="flex items-center gap-2 mb-2">
-                            <TrendingUp size={16} className="text-green-500" />
+                            <TrendingUp size={16} className="text-q-success" />
                             <span className="text-xs font-semibold text-q-text-muted uppercase">
                                 {t('appointments.ai.successProbability')}
                             </span>
@@ -376,8 +376,8 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         <div className="flex items-end gap-2">
                             <span className={`
                                 text-3xl font-bold
-                                ${insights.successProbability >= 70 ? 'text-green-500' :
-                                    insights.successProbability >= 40 ? 'text-yellow-500' : 'text-red-500'}
+                                ${insights.successProbability >= 70 ? 'text-q-success' :
+                                    insights.successProbability >= 40 ? 'text-q-accent' : 'text-q-error'}
                             `}>
                                 {insights.successProbability}%
                             </span>
@@ -386,8 +386,8 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                             <div
                                 className={`
                                     h-full transition-all duration-1000
-                                    ${insights.successProbability >= 70 ? 'bg-green-500' :
-                                        insights.successProbability >= 40 ? 'bg-yellow-500' : 'bg-red-500'}
+                                    ${insights.successProbability >= 70 ? 'bg-q-success' :
+                                        insights.successProbability >= 40 ? 'bg-q-accent' : 'bg-q-error'}
                                 `}
                                 style={{ width: `${insights.successProbability}%` }}
                             />
@@ -397,7 +397,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     {insights.recommendedDuration && (
                         <div className="p-4 bg-secondary/30 rounded-xl">
                             <div className="flex items-center gap-2 mb-2">
-                                <Clock size={16} className="text-blue-500" />
+                                <Clock size={16} className="text-q-accent" />
                                 <span className="text-xs font-semibold text-q-text-muted uppercase">
                                     {t('appointments.ai.recommendedDuration')}
                                 </span>
@@ -413,7 +413,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
 
             {/* Summary */}
             {insights?.summary && (
-                <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+                <div className="p-4 bg-q-accent/10 border border-q-accent/20 rounded-xl">
                     <div className="flex items-start justify-between gap-2">
                         <p className="text-sm text-foreground leading-relaxed">
                             {insights.summary}
@@ -429,7 +429,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                 <ExpandableSection
                     title={t('appointments.ai.talkingPoints')}
                     icon={Target}
-                    iconColor="bg-blue-500"
+                    iconColor="bg-q-accent"
                 >
                     {insights?.preparationTips ? (
                         <ul className="space-y-2">
@@ -438,7 +438,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                                     key={i}
                                     className="flex items-start gap-3 p-2 bg-secondary/30 rounded-lg group"
                                 >
-                                    <span className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center text-xs font-bold shrink-0">
+                                    <span className="w-6 h-6 rounded-full bg-q-accent/20 text-q-accent flex items-center justify-center text-xs font-bold shrink-0">
                                         {i + 1}
                                     </span>
                                     <span className="text-sm text-foreground flex-1">{tip}</span>
@@ -457,7 +457,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                 <ExpandableSection
                     title={t('appointments.ai.suggestedQuestions')}
                     icon={MessageSquare}
-                    iconColor="bg-green-500"
+                    iconColor="bg-q-success"
                 >
                     <div className="space-y-2">
                         {insights?.suggestedQuestions ? (
@@ -478,7 +478,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                                 <button
                                     onClick={() => generateSection('questions')}
                                     disabled={isGenerating}
-                                    className="text-sm text-purple-500 hover:underline flex items-center gap-1 disabled:opacity-50"
+                                    className="text-sm text-q-accent hover:underline flex items-center gap-1 disabled:opacity-50"
                                 >
                                     {isGenerating && activeGeneration === 'questions' ? (
                                         <Loader2 size={14} className="animate-spin" />
@@ -496,7 +496,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                 <ExpandableSection
                     title={t('appointments.ai.possibleObjections')}
                     icon={AlertTriangle}
-                    iconColor="bg-orange-500"
+                    iconColor="bg-q-warning"
                 >
                     <div className="space-y-2">
                         {insights?.potentialObjections ? (
@@ -519,7 +519,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                                 <button
                                     onClick={() => generateSection('objections')}
                                     disabled={isGenerating}
-                                    className="text-sm text-purple-500 hover:underline flex items-center gap-1 disabled:opacity-50"
+                                    className="text-sm text-q-accent hover:underline flex items-center gap-1 disabled:opacity-50"
                                 >
                                     {isGenerating && activeGeneration === 'objections' ? (
                                         <Loader2 size={14} className="animate-spin" />
@@ -537,7 +537,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                 <ExpandableSection
                     title={t('appointments.ai.recommendedStrategy')}
                     icon={Zap}
-                    iconColor="bg-purple-500"
+                    iconColor="bg-q-accent"
                 >
                     {insights?.recommendedApproach ? (
                         <div className="p-3 bg-secondary/30 rounded-lg group">
@@ -556,7 +556,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                             <button
                                 onClick={() => generateSection('strategy')}
                                 disabled={isGenerating}
-                                className="text-sm text-purple-500 hover:underline flex items-center gap-1 disabled:opacity-50"
+                                className="text-sm text-q-accent hover:underline flex items-center gap-1 disabled:opacity-50"
                             >
                                 {isGenerating && activeGeneration === 'strategy' ? (
                                     <Loader2 size={14} className="animate-spin" />

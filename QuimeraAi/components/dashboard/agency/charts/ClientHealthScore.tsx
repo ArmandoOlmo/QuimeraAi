@@ -15,6 +15,7 @@ import {
     Clock,
     CreditCard,
 } from 'lucide-react';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 interface ClientHealth {
     clientId: string;
@@ -44,22 +45,22 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
     const getStatusIcon = (status: ClientHealth['status']) => {
         switch (status) {
             case 'healthy':
-                return <CheckCircle2 className="w-5 h-5 text-emerald-400" />;
+                return <CheckCircle2 className="w-5 h-5 text-q-success" />;
             case 'warning':
-                return <AlertCircle className="w-5 h-5 text-yellow-400" />;
+                return <AlertCircle className="w-5 h-5 text-q-accent" />;
             case 'critical':
-                return <XCircle className="w-5 h-5 text-red-400" />;
+                return <XCircle className="w-5 h-5 text-q-error" />;
         }
     };
 
     const getStatusColor = (status: ClientHealth['status']) => {
         switch (status) {
             case 'healthy':
-                return 'border-emerald-500/30 bg-emerald-500/10';
+                return 'border-q-success/30 bg-q-success/10';
             case 'warning':
-                return 'border-yellow-500/30 bg-yellow-500/10';
+                return 'border-q-accent/30 bg-q-accent/10';
             case 'critical':
-                return 'border-red-500/30 bg-red-500/10';
+                return 'border-q-error/30 bg-q-error/10';
         }
     };
 
@@ -67,19 +68,19 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
         switch (payment) {
             case 'ok':
                 return (
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-400">
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-q-success/20 text-q-success">
                         {t('dashboard.agency.charts.clientHealth.paymentOk', 'Al día')}
                     </span>
                 );
             case 'pending':
                 return (
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-500/20 text-yellow-400">
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-q-accent/20 text-q-accent">
                         {t('dashboard.agency.charts.clientHealth.paymentPending', 'Pendiente')}
                     </span>
                 );
             case 'overdue':
                 return (
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-red-500/20 text-red-400">
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-q-error/20 text-q-error">
                         {t('dashboard.agency.charts.clientHealth.paymentOverdue', 'Vencido')}
                     </span>
                 );
@@ -89,11 +90,11 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
     const getTrendIcon = (trend: ClientHealth['metrics']['trend']) => {
         switch (trend) {
             case 'up':
-                return <TrendingUp className="w-4 h-4 text-emerald-400" />;
+                return <TrendingUp className="w-4 h-4 text-q-success" />;
             case 'stable':
-                return <Activity className="w-4 h-4 text-blue-400" />;
+                return <Activity className="w-4 h-4 text-q-accent" />;
             case 'down':
-                return <TrendingUp className="w-4 h-4 text-red-400 rotate-180" />;
+                return <TrendingUp className="w-4 h-4 text-q-error rotate-180" />;
         }
     };
 
@@ -113,17 +114,12 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="bg-q-surface border border-q-border rounded-xl p-6"
-        >
+        <MotionCard motionDelay={0.4} hoverMotion className="bg-q-surface border border-q-border rounded-xl p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="text-lg font-semibold text-q-text flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-cyan-400" />
+                        <Activity className="w-5 h-5 text-q-accent" />
                         {t('dashboard.agency.charts.clientHealth.title', 'Salud de Clientes')}
                     </h3>
                     <p className="text-sm text-q-text-secondary">
@@ -134,21 +130,21 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
 
             {/* Summary badges */}
             <div className="flex gap-3 mb-6">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm font-medium text-emerald-400">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-q-success/10 border border-q-success/30">
+                    <CheckCircle2 className="w-4 h-4 text-q-success" />
+                    <span className="text-sm font-medium text-q-success">
                         {healthCounts.healthy}
                     </span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-                    <AlertCircle className="w-4 h-4 text-yellow-400" />
-                    <span className="text-sm font-medium text-yellow-400">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-q-accent/10 border border-q-accent/30">
+                    <AlertCircle className="w-4 h-4 text-q-accent" />
+                    <span className="text-sm font-medium text-q-accent">
                         {healthCounts.warning}
                     </span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30">
-                    <XCircle className="w-4 h-4 text-red-400" />
-                    <span className="text-sm font-medium text-red-400">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-q-error/10 border border-q-error/30">
+                    <XCircle className="w-4 h-4 text-q-error" />
+                    <span className="text-sm font-medium text-q-error">
                         {healthCounts.critical}
                     </span>
                 </div>
@@ -191,10 +187,10 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
                                         <div className="w-16 h-1.5 bg-q-surface-overlay rounded-full overflow-hidden">
                                             <div
                                                 className={`h-full rounded-full ${client.metrics.usage > 90
-                                                        ? 'bg-red-400'
+                                                        ? 'bg-q-error'
                                                         : client.metrics.usage > 70
-                                                            ? 'bg-yellow-400'
-                                                            : 'bg-emerald-400'
+                                                            ? 'bg-q-accent'
+                                                            : 'bg-q-success'
                                                     }`}
                                                 style={{ width: `${client.metrics.usage}%` }}
                                             />
@@ -221,7 +217,7 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
                         ))
                 )}
             </div>
-        </motion.div>
+        </MotionCard>
     );
 }
 

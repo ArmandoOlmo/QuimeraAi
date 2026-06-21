@@ -166,7 +166,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+        <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
             <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-4xl max-h-[90vh] flex flex-col">
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3 p-4 border-b border-q-border">
@@ -294,7 +294,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <div className="absolute inset-0 bg-q-text/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                                 <span className="text-white text-xs font-medium">
                                                                     {t('ecommerce.select', 'Seleccionar')}
                                                                 </span>

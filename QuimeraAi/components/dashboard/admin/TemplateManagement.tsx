@@ -398,7 +398,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                         <button
                             onClick={() => setShowAIGenerator(true)}
-                            className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all bg-gradient-to-r from-yellow-500/10 to-amber-600/10 text-yellow-400 hover:from-yellow-500/20 hover:to-amber-600/20 border border-yellow-500/20"
+                            className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all bg-gradient-to-r from-q-accent/10 to-q-accent text-q-accent hover:from-q-accent/20 hover:to-q-accent border border-q-accent/20"
                             title="Generar Template con IA"
                         >
                             <Sparkles className="w-5 h-5 sm:w-4 sm:h-4" />
@@ -534,37 +534,37 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         </div>
 
                         {/* Sites Created Card */}
-                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-q-border/50 hover:border-blue-500/40 transition-all duration-300 overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-q-border/50 hover:border-q-accent/40 transition-all duration-300 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-q-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-3">
-                                    <div className="p-2 sm:p-2.5 bg-blue-500/15 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                                        <Globe size={18} className="sm:w-5 sm:h-5 text-blue-500" />
+                                    <div className="p-2 sm:p-2.5 bg-q-accent/15 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                        <Globe size={18} className="sm:w-5 sm:h-5 text-q-accent" />
                                     </div>
-                                    <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded-full truncate max-w-[80px] sm:max-w-none">
+                                    <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 bg-q-accent/10 text-q-accent rounded-full truncate max-w-[80px] sm:max-w-none">
                                         {t('superadmin.templateManagement.fromTemplates', 'from templates')}
                                     </span>
                                 </div>
-                                <div className="text-2xl sm:text-3xl font-bold text-q-text mb-0.5 group-hover:text-blue-400 transition-colors">{totalSitesUsingTemplates}</div>
+                                <div className="text-2xl sm:text-3xl font-bold text-q-text mb-0.5 group-hover:text-q-accent transition-colors">{totalSitesUsingTemplates}</div>
                                 <p className="text-xs sm:text-sm text-q-text-secondary font-medium">{t('superadmin.templateManagement.sitesCreated', 'Sites Created')}</p>
                             </div>
                         </div>
 
                         {/* Most Popular Card */}
-                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-q-border/50 hover:border-green-500/40 transition-all duration-300 overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-q-border/50 hover:border-q-success/40 transition-all duration-300 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-q-success/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-3">
-                                    <div className="p-2 sm:p-2.5 bg-green-500/15 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                                        <TrendingUp size={18} className="sm:w-5 sm:h-5 text-green-500" />
+                                    <div className="p-2 sm:p-2.5 bg-q-success/15 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                        <TrendingUp size={18} className="sm:w-5 sm:h-5 text-q-success" />
                                     </div>
                                     {mostUsedTemplate && (
-                                        <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 bg-green-500/10 text-green-400 rounded-full">
+                                        <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 bg-q-success/10 text-q-success rounded-full">
                                             {getTemplateUsage(mostUsedTemplate.id)} {t('superadmin.templateManagement.uses', 'uses')}
                                         </span>
                                     )}
                                 </div>
-                                <div className="text-base sm:text-xl font-bold text-q-text mb-0.5 group-hover:text-green-400 transition-colors truncate" title={mostUsedTemplate?.name}>
+                                <div className="text-base sm:text-xl font-bold text-q-text mb-0.5 group-hover:text-q-success transition-colors truncate" title={mostUsedTemplate?.name}>
                                     {resolveText(mostUsedTemplate?.name) || 'N/A'}
                                 </div>
                                 <p className="text-xs sm:text-sm text-q-text-secondary font-medium">{t('superadmin.templateManagement.mostPopular', 'Most Popular')}</p>
@@ -572,18 +572,18 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         </div>
 
                         {/* Archived Card */}
-                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-q-border/50 hover:border-orange-500/40 transition-all duration-300 overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-q-border/50 hover:border-q-warning/40 transition-all duration-300 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-q-warning/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-3">
-                                    <div className="p-2 sm:p-2.5 bg-orange-500/15 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                                        <Archive size={18} className="sm:w-5 sm:h-5 text-orange-500" />
+                                    <div className="p-2 sm:p-2.5 bg-q-warning/15 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                        <Archive size={18} className="sm:w-5 sm:h-5 text-q-warning" />
                                     </div>
-                                    <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 bg-orange-500/10 text-orange-400 rounded-full">
+                                    <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 bg-q-warning/10 text-q-warning rounded-full">
                                         {t('superadmin.templateManagement.title', 'Templates')}
                                     </span>
                                 </div>
-                                <div className="text-2xl sm:text-3xl font-bold text-q-text mb-0.5 group-hover:text-orange-400 transition-colors">{archivedTemplates}</div>
+                                <div className="text-2xl sm:text-3xl font-bold text-q-text mb-0.5 group-hover:text-q-warning transition-colors">{archivedTemplates}</div>
                                 <p className="text-xs sm:text-sm text-q-text-secondary font-medium">{t('superadmin.templateManagement.archived', 'Archived')}</p>
                             </div>
                         </div>
@@ -633,7 +633,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                                         {/* Archived Overlay */}
                                         {template.isArchived && (
-                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
+                                            <div className="absolute inset-0 bg-q-text/60 flex items-center justify-center z-10">
                                                 <div className="text-center">
                                                     <Archive className="w-10 h-10 sm:w-12 sm:h-12 text-white mx-auto mb-2" />
                                                     <span className="text-white text-sm font-semibold">{t('superadmin.templateManagement.archivedLabel', 'Archived')}</span>
@@ -642,7 +642,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         )}
 
                                         {/* Hover Actions Overlay - Desktop only */}
-                                        <div className="absolute inset-0 bg-black/30 opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px] pointer-events-none" />
+                                        <div className="absolute inset-0 bg-q-text/30 opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px] pointer-events-none" />
                                     </div>
 
                                     {/* Top Section: Color Swatches */}
@@ -653,7 +653,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                 {getThemeColors(template).map((color, index) => (
                                                     <div
                                                         key={index}
-                                                        className="w-4 h-4 sm:w-3 sm:h-3 rounded-[4px] sm:rounded-[3px] shadow-md border border-white/40 transition-transform hover:scale-125"
+                                                        className="w-4 h-4 sm:w-3 sm:h-3 rounded-[4px] sm:rounded-[3px] shadow-md border border-q-border/40 transition-transform hover:scale-125"
                                                         style={{ backgroundColor: color }}
                                                     />
                                                 ))}
@@ -671,14 +671,14 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                 {template.industries.slice(0, 2).map(ind => (
                                                     <span
                                                         key={ind}
-                                                        className="inline-flex items-center gap-1 px-2 py-1 sm:py-0.5 bg-white/20 text-white text-xs rounded-lg sm:rounded backdrop-blur-sm"
+                                                        className="inline-flex items-center gap-1 px-2 py-1 sm:py-0.5 bg-q-surface/20 text-white text-xs rounded-lg sm:rounded backdrop-blur-sm"
                                                     >
                                                         <Building2 className="w-3 h-3" />
                                                         <span className="hidden xs:inline">{getIndustryLabel(ind)}</span>
                                                     </span>
                                                 ))}
                                                 {template.industries.length > 2 && (
-                                                    <span className="px-2 py-1 sm:py-0.5 bg-white/20 text-white text-xs rounded-lg sm:rounded backdrop-blur-sm">
+                                                    <span className="px-2 py-1 sm:py-0.5 bg-q-surface/20 text-white text-xs rounded-lg sm:rounded backdrop-blur-sm">
                                                         +{template.industries.length - 2}
                                                     </span>
                                                 )}
@@ -692,7 +692,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     e.stopPropagation();
                                                     loadProject(template.id, true);
                                                 }}
-                                                className="flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-4 py-2.5 sm:py-2 bg-white text-black rounded-full text-sm font-semibold active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
+                                                className="flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-4 py-2.5 sm:py-2 bg-q-surface text-black rounded-full text-sm font-semibold active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
                                                 title={t('common.edit')}
                                             >
                                                 <Edit size={16} />
@@ -703,7 +703,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     e.stopPropagation();
                                                     setEditingTemplate(template);
                                                 }}
-                                                className="p-3 sm:p-2.5 bg-white/90 text-purple-600 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
+                                                className="p-3 sm:p-2.5 bg-q-surface/90 text-q-accent rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
                                                 title={t('industries.title')}
                                             >
                                                 <Settings2 size={18} />
@@ -713,7 +713,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     e.stopPropagation();
                                                     setThumbnailEditTemplate(template);
                                                 }}
-                                                className="p-3 sm:p-2.5 bg-white/90 text-blue-600 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
+                                                className="p-3 sm:p-2.5 bg-q-surface/90 text-q-accent rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
                                                 title="Change Thumbnail"
                                             >
                                                 <ImageIcon size={18} />
@@ -723,7 +723,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     e.stopPropagation();
                                                     duplicateTemplate(template.id);
                                                 }}
-                                                className="p-3 sm:p-2.5 bg-white/90 text-green-600 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl hidden xs:flex"
+                                                className="p-3 sm:p-2.5 bg-q-surface/90 text-q-success rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl hidden xs:flex"
                                                 title={t('superadmin.duplicateTemplate')}
                                             >
                                                 <Copy size={18} />
@@ -734,7 +734,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                         e.stopPropagation();
                                                         setDeleteConfirmTemplate({ id: template.id, name: template.name });
                                                     }}
-                                                    className="p-3 sm:p-2.5 bg-white/90 text-red-500 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
+                                                    className="p-3 sm:p-2.5 bg-q-surface/90 text-q-error rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
                                                     title={t('superadmin.templateManagement.delete', 'Delete')}
                                                 >
                                                     <Trash2 size={18} />
@@ -785,14 +785,14 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                         {getThemeColors(template).map((color, index) => (
                                                             <div
                                                                 key={index}
-                                                                className="w-2.5 h-2.5 sm:w-2 sm:h-2 rounded-[3px] sm:rounded-[2px] shadow-sm border border-white/50"
+                                                                className="w-2.5 h-2.5 sm:w-2 sm:h-2 rounded-[3px] sm:rounded-[2px] shadow-sm border border-q-border/50"
                                                                 style={{ backgroundColor: color }}
                                                             />
                                                         ))}
                                                     </div>
                                                 )}
                                                 {template.isArchived && (
-                                                    <div className="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center">
+                                                    <div className="absolute inset-0 bg-q-text/60 rounded-lg flex items-center justify-center">
                                                         <Archive className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                                                     </div>
                                                 )}
@@ -824,7 +824,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                             </button>
                                             <button
                                                 onClick={() => loadProject(template.id, true)}
-                                                className="flex items-center gap-1.5 px-3 sm:px-3 py-2.5 sm:py-2 bg-q-accent text-white rounded-lg sm:rounded-md text-sm font-medium hover:bg-q-accent/90 transition-colors flex-shrink-0"
+                                                className="flex items-center gap-1.5 px-3 sm:px-3 py-2.5 sm:py-2 bg-q-accent text-q-text-on-accent rounded-lg sm:rounded-md text-sm font-medium hover:bg-q-accent/90 transition-colors flex-shrink-0"
                                                 title={t('common.edit')}
                                             >
                                                 <Edit size={16} className="sm:w-[14px] sm:h-[14px]" />
@@ -832,14 +832,14 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                             </button>
                                             <button
                                                 onClick={() => setEditingTemplate(template)}
-                                                className="p-2.5 sm:p-2 text-q-text-secondary rounded-lg sm:rounded-md hover:bg-q-surface-overlay hover:text-purple-400 transition-colors flex-shrink-0"
+                                                className="p-2.5 sm:p-2 text-q-text-secondary rounded-lg sm:rounded-md hover:bg-q-surface-overlay hover:text-q-accent transition-colors flex-shrink-0"
                                                 title={t('industries.title')}
                                             >
                                                 <Settings2 size={20} className="sm:w-[18px] sm:h-[18px]" />
                                             </button>
                                             <button
                                                 onClick={() => setThumbnailEditTemplate(template)}
-                                                className="p-2.5 sm:p-2 text-q-text-secondary rounded-lg sm:rounded-md hover:bg-q-surface-overlay hover:text-blue-400 transition-colors flex-shrink-0"
+                                                className="p-2.5 sm:p-2 text-q-text-secondary rounded-lg sm:rounded-md hover:bg-q-surface-overlay hover:text-q-accent transition-colors flex-shrink-0"
                                                 title="Change Thumbnail"
                                             >
                                                 <ImageIcon size={20} className="sm:w-[18px] sm:h-[18px]" />
@@ -856,7 +856,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     onClick={() => {
                                                         setDeleteConfirmTemplate({ id: template.id, name: template.name });
                                                     }}
-                                                    className="p-2.5 sm:p-2 text-q-text-secondary rounded-lg sm:rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors flex-shrink-0"
+                                                    className="p-2.5 sm:p-2 text-q-text-secondary rounded-lg sm:rounded-md hover:bg-q-error/10 hover:text-q-error transition-colors flex-shrink-0"
                                                     title="Delete"
                                                 >
                                                     <Trash2 size={20} className="sm:w-[18px] sm:h-[18px]" />
@@ -883,7 +883,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             {!(searchTerm || filterCategory !== 'all' || filterStatus !== 'all') && (
                                 <button
                                     onClick={createNewTemplate}
-                                    className="flex items-center gap-2 px-4 py-2 bg-q-accent text-white rounded-lg hover:bg-q-accent/90 transition-colors"
+                                    className="flex items-center gap-2 px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent/90 transition-colors"
                                 >
                                     <Plus size={18} />
                                     {t('superadmin.templateManagement.createTemplate', 'Create Template')}
@@ -917,7 +917,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
             {/* Preview Modal */}
             {previewTemplate && (
-                <div className="fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setPreviewTemplate(null)}>
+                <div className="fixed inset-0 z-50 bg-q-text/80 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setPreviewTemplate(null)}>
                     <div
                         className="bg-q-surface rounded-t-2xl sm:rounded-2xl w-full sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-auto"
                         onClick={(e) => e.stopPropagation()}
@@ -933,7 +933,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
                                         <h2 className="text-xl sm:text-2xl font-bold truncate">{resolveText(previewTemplate.name)}</h2>
                                         {previewTemplate.isFeatured && (
-                                            <Star className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                                            <Star className="w-5 h-5 sm:w-6 sm:h-6 text-q-accent fill-yellow-500 flex-shrink-0" />
                                         )}
                                     </div>
                                 </div>
@@ -972,7 +972,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         {getThemeColors(previewTemplate).map((color, index) => (
                                             <div
                                                 key={index}
-                                                className="w-6 h-6 sm:w-5 sm:h-5 rounded-lg sm:rounded-md shadow-lg border border-white/40"
+                                                className="w-6 h-6 sm:w-5 sm:h-5 rounded-lg sm:rounded-md shadow-lg border border-q-border/40"
                                                 style={{ backgroundColor: color }}
                                             />
                                         ))}
@@ -1007,7 +1007,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         )}
                                         <div className="flex justify-between items-center">
                                             <span className="text-q-text-secondary">{t('superadmin.templateManagement.metadata.status', 'Status')}:</span>
-                                            <span className={`font-medium ${previewTemplate.isArchived ? 'text-orange-500' : 'text-green-500'}`}>
+                                            <span className={`font-medium ${previewTemplate.isArchived ? 'text-q-warning' : 'text-q-success'}`}>
                                                 {previewTemplate.isArchived ? t('superadmin.templateManagement.archivedLabel', 'Archived') : t('superadmin.templateManagement.active', 'Active')}
                                             </span>
                                         </div>
@@ -1092,7 +1092,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         loadProject(previewTemplate.id, true);
                                         setPreviewTemplate(null);
                                     }}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-accent text-white rounded-xl sm:rounded-lg hover:bg-q-accent/90 transition-colors text-sm font-medium"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-accent text-q-text-on-accent rounded-xl sm:rounded-lg hover:bg-q-accent/90 transition-colors text-sm font-medium"
                                 >
                                     <Edit size={18} />
                                     <span className="hidden xs:inline">{t('superadmin.templateManagement.edit', 'Edit')}</span>
@@ -1102,7 +1102,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         setPreviewTemplate(null);
                                         setEditingTemplate(previewTemplate);
                                     }}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-purple-600 text-white rounded-xl sm:rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-accent text-q-text-on-accent rounded-xl sm:rounded-lg hover:bg-q-accent transition-colors text-sm font-medium"
                                 >
                                     <Settings2 size={18} />
                                     <span className="hidden xs:inline">{t('industries.title')}</span>
@@ -1112,7 +1112,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         setPreviewTemplate(null);
                                         setThumbnailEditTemplate(previewTemplate);
                                     }}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-blue-600 text-white rounded-xl sm:rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-accent text-q-text-on-accent rounded-xl sm:rounded-lg hover:bg-q-accent transition-colors text-sm font-medium"
                                 >
                                     <ImageIcon size={18} />
                                     <span className="hidden xs:inline">{t('superadmin.templateManagement.thumbnail', 'Thumbnail')}</span>
@@ -1142,7 +1142,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         onClick={() => {
                                             setDeleteConfirmTemplate({ id: previewTemplate.id, name: previewTemplate.name });
                                         }}
-                                        className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-red-500/10 text-red-500 rounded-xl sm:rounded-lg hover:bg-red-500/20 transition-colors text-sm font-medium"
+                                        className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-error/10 text-q-error rounded-xl sm:rounded-lg hover:bg-q-error/20 transition-colors text-sm font-medium"
                                     >
                                         <Trash2 size={18} />
                                         {t('superadmin.templateManagement.delete', 'Delete')}

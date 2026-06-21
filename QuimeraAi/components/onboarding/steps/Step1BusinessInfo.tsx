@@ -193,7 +193,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                         <>
                             {/* Backdrop to close dropdown when clicking outside */}
                             <div
-                                className="fixed inset-0 z-[60] bg-black/20"
+                                className="fixed inset-0 z-[60] bg-q-text/20"
                                 onClick={() => setIsDropdownOpen(false)}
                             />
                             <div
@@ -283,7 +283,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                             aria-checked={hasEcommerce}
                         >
                             <span
-                                className={`pointer-events-none absolute rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                                className={`pointer-events-none absolute rounded-full bg-q-surface shadow ring-0 transition duration-200 ease-in-out`}
                                 style={{
                                     width: 16,
                                     height: 16,
@@ -382,7 +382,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                     aria-checked={hasBioPage}
                 >
                     <span
-                        className={`pointer-events-none absolute rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                        className={`pointer-events-none absolute rounded-full bg-q-surface shadow ring-0 transition duration-200 ease-in-out`}
                         style={{
                             width: 16,
                             height: 16,

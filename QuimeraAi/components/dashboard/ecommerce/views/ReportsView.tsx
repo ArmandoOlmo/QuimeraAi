@@ -375,7 +375,7 @@ const ReportsView: React.FC = () => {
                                     disabled={isGenerating}
                                     className={`w-full py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors ${
                                         success
-                                            ? 'bg-green-500 text-white'
+                                            ? 'bg-q-success text-white'
                                             : 'bg-primary text-primary-foreground hover:bg-primary/90'
                                     } disabled:opacity-50`}
                                 >

@@ -144,7 +144,7 @@ export function ClientBillingManager() {
             // In production, you would collect payment method here using Stripe Elements
             // For now, we'll use a test payment method
             const result = await supabase.functions.invoke('stripe-api', {
-                body: { 
+                body: {
                     action: 'setupClientBilling',
                     clientTenantId: clientId,
                     monthlyPrice: parseFloat(setupPrice),
@@ -233,26 +233,26 @@ export function ClientBillingManager() {
     const getStatusBadge = (status?: string) => {
         const styles: Record<string, { bg: string; text: string; label: string; icon: any }> = {
             active: {
-                bg: 'bg-green-100 dark:bg-green-900/20',
-                text: 'text-green-800 dark:text-green-400',
+                bg: 'bg-q-success/10 dark:bg-q-success/12',
+                text: 'text-q-success dark:text-q-success',
                 label: 'Activo',
                 icon: CheckCircle,
             },
             payment_failed: {
-                bg: 'bg-red-100 dark:bg-red-900/20',
-                text: 'text-red-800 dark:text-red-400',
+                bg: 'bg-q-error/10 dark:bg-q-error/12',
+                text: 'text-q-error dark:text-q-error',
                 label: 'Pago Fallido',
                 icon: XCircle,
             },
             cancelling: {
-                bg: 'bg-yellow-100 dark:bg-yellow-900/20',
-                text: 'text-yellow-800 dark:text-yellow-400',
+                bg: 'bg-q-accent/10 dark:bg-q-accent/12',
+                text: 'text-q-accent dark:text-q-accent',
                 label: 'Cancelando',
                 icon: AlertCircle,
             },
             cancelled: {
-                bg: 'bg-gray-100 dark:bg-gray-900/20',
-                text: 'text-gray-800 dark:text-gray-400',
+                bg: 'bg-q-surface-overlay dark:bg-gray-900/20',
+                text: 'text-q-text dark:text-gray-400',
                 label: 'Cancelado',
                 icon: XCircle,
             },
@@ -260,7 +260,7 @@ export function ClientBillingManager() {
 
         if (!status) {
             return (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-400">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-q-surface-overlay dark:bg-gray-900/20 text-q-text dark:text-gray-400">
                     Sin configurar
                 </span>
             );
@@ -292,12 +292,12 @@ export function ClientBillingManager() {
         <div className="space-y-6">
             {/* Error Alert */}
             {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="bg-q-error/10 dark:bg-q-error/12 border border-q-error/25 dark:border-q-error/30 rounded-lg p-4">
                     <div className="flex items-start gap-3">
-                        <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                        <AlertCircle className="h-5 w-5 text-q-error dark:text-q-error flex-shrink-0 mt-0.5" />
                         <div>
-                            <h3 className="font-semibold text-red-900 dark:text-red-200">Error</h3>
-                            <p className="text-red-700 dark:text-red-300 text-sm mt-1">{error}</p>
+                            <h3 className="font-semibold text-q-error dark:text-q-error">Error</h3>
+                            <p className="text-q-error dark:text-q-error text-sm mt-1">{error}</p>
                         </div>
                     </div>
                 </div>
@@ -377,14 +377,14 @@ export function ClientBillingManager() {
                                         {editingClient === client.clientId ? (
                                             <div className="flex items-center gap-2">
                                                 <div className="relative">
-                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted">
                                                         $
                                                     </span>
                                                     <input
                                                         type="number"
                                                         value={editPrice}
                                                         onChange={(e) => setEditPrice(e.target.value)}
-                                                        className="w-32 pl-6 pr-3 py-1 border border-q-border rounded bg-q-bg text-foreground text-sm focus:ring-2 focus:ring-blue-500"
+                                                        className="w-32 pl-6 pr-3 py-1 border border-q-border rounded bg-q-bg text-foreground text-sm focus:ring-2 focus:ring-q-accent/35"
                                                         placeholder="0.00"
                                                         step="0.01"
                                                         min="0"
@@ -393,7 +393,7 @@ export function ClientBillingManager() {
                                                 <button
                                                     onClick={() => handleUpdatePrice(client.clientId)}
                                                     disabled={processingAction === client.clientId}
-                                                    className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50"
+                                                    className="p-1 text-q-success hover:text-q-success disabled:opacity-50"
                                                 >
                                                     {processingAction === client.clientId ? (
                                                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -406,7 +406,7 @@ export function ClientBillingManager() {
                                                         setEditingClient(null);
                                                         setEditPrice('');
                                                     }}
-                                                    className="p-1 text-gray-600 hover:text-gray-700"
+                                                    className="p-1 text-q-text-muted hover:text-q-text"
                                                 >
                                                     <XCircle className="h-4 w-4" />
                                                 </button>
@@ -416,10 +416,10 @@ export function ClientBillingManager() {
                                                 <span className="font-semibold text-foreground">
                                                     ${client.monthlyPrice.toFixed(2)}
                                                 </span>
-                                                <span className="text-sm text-gray-500">/mes</span>
+                                                <span className="text-sm text-q-text-muted">/mes</span>
                                             </div>
                                         ) : (
-                                            <span className="text-gray-400">-</span>
+                                            <span className="text-q-text-muted">-</span>
                                         )}
                                     </td>
 
@@ -436,7 +436,7 @@ export function ClientBillingManager() {
                                                 <span>Configurado</span>
                                             </div>
                                         ) : (
-                                            <span className="text-sm text-gray-400">Sin configurar</span>
+                                            <span className="text-sm text-q-text-muted">Sin configurar</span>
                                         )}
                                     </td>
 
@@ -464,7 +464,7 @@ export function ClientBillingManager() {
                                                         clientName: client.clientName,
                                                         currentPlanId: client.agencyPlanId || null,
                                                     })}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-q-accent hover:text-q-accent dark:text-q-accent dark:hover:text-q-accent hover:bg-q-accent/10 dark:hover:bg-q-accent/12 rounded-lg transition-colors"
                                                 >
                                                     <Plus className="h-4 w-4" />
                                                     Generar Link
@@ -477,7 +477,7 @@ export function ClientBillingManager() {
                                                                 setEditLimitsClient(client.clientId);
                                                                 setEditLimits({ ...(client as any).limits });
                                                             }}
-                                                            className="p-2 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+                                                            className="p-2 text-q-accent hover:text-q-accent dark:text-q-accent dark:hover:text-q-accent"
                                                             title="Editar límites"
                                                         >
                                                             <Settings className="h-4 w-4" />
@@ -491,7 +491,7 @@ export function ClientBillingManager() {
                                                                     client.monthlyPrice?.toString() || ''
                                                                 );
                                                             }}
-                                                            className="p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                                            className="p-2 text-q-accent hover:text-q-accent dark:text-q-accent dark:hover:text-q-accent"
                                                             title="Editar precio"
                                                         >
                                                             <Edit2 className="h-4 w-4" />
@@ -508,7 +508,7 @@ export function ClientBillingManager() {
                                                             disabled={
                                                                 processingAction === client.clientId
                                                             }
-                                                            className="p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
+                                                            className="p-2 text-q-error hover:text-q-error dark:text-q-error dark:hover:text-q-error disabled:opacity-50"
                                                             title="Cancelar suscripción"
                                                         >
                                                             {processingAction === client.clientId ? (
@@ -530,7 +530,7 @@ export function ClientBillingManager() {
 
                 {clientsBilling.length === 0 && (
                     <div className="text-center py-12">
-                        <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <DollarSign className="h-12 w-12 text-q-text-muted mx-auto mb-4" />
                         <p className="text-q-text-muted">
                             No hay clientes para facturar
                         </p>
@@ -540,7 +540,7 @@ export function ClientBillingManager() {
 
             {/* Edit Limits Modal */}
             {editLimitsClient && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50">
                     <div className="bg-q-surface rounded-lg shadow-xl max-w-md w-full mx-4">
                         <div className="px-6 py-4 border-b border-q-border">
                             <h3 className="text-lg font-semibold text-foreground">
@@ -636,7 +636,7 @@ export function ClientBillingManager() {
 
             {/* Setup Modal */}
             {setupModalClient && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50">
                     <div className="bg-q-surface rounded-lg shadow-xl max-w-md w-full mx-4">
                         <div className="px-6 py-4 border-b border-q-border">
                             <h3 className="text-lg font-semibold text-foreground">
@@ -655,26 +655,26 @@ export function ClientBillingManager() {
                                     Precio Mensual (USD)
                                 </label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted">
                                         $
                                     </span>
                                     <input
                                         type="number"
                                         value={setupPrice}
                                         onChange={(e) => setSetupPrice(e.target.value)}
-                                        className="w-full pl-8 pr-3 py-2 border border-q-border rounded-lg bg-q-bg text-foreground focus:ring-2 focus:ring-blue-500"
+                                        className="w-full pl-8 pr-3 py-2 border border-q-border rounded-lg bg-q-bg text-foreground focus:ring-2 focus:ring-q-accent/35"
                                         placeholder="0.00"
                                         step="0.01"
                                         min="0"
                                     />
                                 </div>
-                                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                <p className="text-xs text-q-text-muted dark:text-gray-500 mt-1">
                                     El cliente será facturado automáticamente cada mes
                                 </p>
                             </div>
 
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                                <p className="text-sm text-blue-900 dark:text-blue-200">
+                            <div className="bg-q-accent/10 dark:bg-q-accent/12 border border-q-accent/25 dark:border-q-accent/30 rounded-lg p-3">
+                                <p className="text-sm text-q-accent dark:text-q-accent">
                                     <strong>Nota:</strong> En producción, aquí se mostraría el formulario
                                     de Stripe Elements para capturar el método de pago del cliente.
                                 </p>
@@ -687,14 +687,14 @@ export function ClientBillingManager() {
                                     setSetupModalClient(null);
                                     setSetupPrice('');
                                 }}
-                                className="px-4 py-2 text-foreground hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                className="px-4 py-2 text-foreground hover:bg-q-surface-overlay dark:hover:bg-gray-700 rounded-lg transition-colors"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={() => handleSetupBilling(setupModalClient)}
                                 disabled={!setupPrice || processingAction === setupModalClient}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                                className="px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                             >
                                 {processingAction === setupModalClient ? (
                                     <>

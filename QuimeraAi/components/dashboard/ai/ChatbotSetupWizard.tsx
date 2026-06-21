@@ -6,13 +6,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-    MessageSquare, 
-    Sparkles, 
-    Users, 
-    Mail, 
-    Check, 
-    ChevronRight, 
+import {
+    MessageSquare,
+    Sparkles,
+    Users,
+    Mail,
+    Check,
+    ChevronRight,
     ChevronLeft,
     Eye,
     HelpCircle,
@@ -87,25 +87,25 @@ const WIZARD_STEPS: WizardStep[] = [
 // =============================================================================
 
 const TONE_OPTIONS: { value: ToneOption; emoji: string; example: string }[] = [
-    { 
-        value: 'Friendly', 
-        emoji: '😊', 
-        example: '¡Hola! ¿En qué puedo ayudarte hoy? Estoy aquí para lo que necesites.' 
+    {
+        value: 'Friendly',
+        emoji: '😊',
+        example: '¡Hola! ¿En qué puedo ayudarte hoy? Estoy aquí para lo que necesites.'
     },
-    { 
-        value: 'Professional', 
-        emoji: '💼', 
-        example: 'Buenos días. ¿En qué puedo asistirle? Estoy a su disposición.' 
+    {
+        value: 'Professional',
+        emoji: '💼',
+        example: 'Buenos días. ¿En qué puedo asistirle? Estoy a su disposición.'
     },
-    { 
-        value: 'Formal', 
-        emoji: '🎩', 
-        example: 'Estimado usuario, ¿en qué podemos servirle? Agradecemos su consulta.' 
+    {
+        value: 'Formal',
+        emoji: '🎩',
+        example: 'Estimado usuario, ¿en qué podemos servirle? Agradecemos su consulta.'
     },
-    { 
-        value: 'Casual', 
-        emoji: '✌️', 
-        example: '¡Hey! ¿Qué onda? ¿Cómo te puedo echar la mano?' 
+    {
+        value: 'Casual',
+        emoji: '✌️',
+        example: '¡Hey! ¿Qué onda? ¿Cómo te puedo echar la mano?'
     },
 ];
 
@@ -120,22 +120,22 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
 }) => {
     const { t } = useTranslation();
     const { activeProject } = useProject();
-    
+
     // Wizard state
     const [currentStep, setCurrentStep] = useState(0);
     const [isSaving, setIsSaving] = useState(false);
-    
+
     // Form state
     const [agentName, setAgentName] = useState(config.agentName || '');
     const [tone, setTone] = useState<ToneOption>((config.tone as ToneOption) || 'Friendly');
     const [faqs, setFaqs] = useState<FAQItem[]>(config.faqs || []);
     const [leadCaptureEnabled, setLeadCaptureEnabled] = useState(config.leadCaptureEnabled);
     const [preChatForm, setPreChatForm] = useState(config.leadCaptureConfig?.preChatForm || false);
-    
+
     // Get industry for suggestions
     const industry = activeProject?.brandIdentity?.industry || 'default';
     const industryTemplate = getIndustryTemplate(industry);
-    
+
     // Initialize FAQs from industry if empty
     useEffect(() => {
         if (faqs.length === 0 && industryTemplate) {
@@ -271,7 +271,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                     className="w-full px-4 py-3 text-lg border border-q-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent bg-q-bg text-foreground"
                     autoFocus
                 />
-                
+
                 <div className="mt-4 flex flex-wrap gap-2">
                     <span className="text-sm text-q-text-muted">
                         {t('chatbotWizard.nameStep.suggestions', 'Sugerencias:')}
@@ -440,7 +440,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                             <div className={`w-10 h-6 rounded-full transition-colors ${
                                 leadCaptureEnabled ? 'bg-primary' : 'bg-muted'
                             }`}>
-                                <div className={`w-5 h-5 mt-0.5 rounded-full bg-white shadow transition-transform ${
+                                <div className={`w-5 h-5 mt-0.5 rounded-full bg-q-surface shadow transition-transform ${
                                     leadCaptureEnabled ? 'translate-x-4' : 'translate-x-0.5'
                                 }`} />
                             </div>
@@ -466,7 +466,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                                 <div className={`w-10 h-6 rounded-full transition-colors ${
                                     preChatForm ? 'bg-primary' : 'bg-muted'
                                 }`}>
-                                    <div className={`w-5 h-5 mt-0.5 rounded-full bg-white shadow transition-transform ${
+                                    <div className={`w-5 h-5 mt-0.5 rounded-full bg-q-surface shadow transition-transform ${
                                         preChatForm ? 'translate-x-4' : 'translate-x-0.5'
                                     }`} />
                                 </div>
@@ -486,7 +486,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                 {/* Info box */}
                 <div className="p-4 bg-accent/30 rounded-xl">
                     <p className="text-sm text-q-text-muted">
-                        💡 {t('chatbotWizard.leadsStep.tip', 
+                        💡 {t('chatbotWizard.leadsStep.tip',
                             'Los leads capturados aparecerán automáticamente en tu CRM para que puedas darles seguimiento.'
                         )}
                     </p>
@@ -497,7 +497,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
 
     const renderPreviewStep = () => {
         const appearance = config.appearance || getDefaultAppearanceConfig();
-        
+
         return (
             <div className="space-y-6">
                 <div className="text-center mb-6">
@@ -547,7 +547,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
     // =============================================================================
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/50 backdrop-blur-sm p-4">
             <div className="bg-q-bg rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
                 {/* Header with Progress */}
                 <div className="p-6 border-b border-q-border">
@@ -585,7 +585,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                                         index === currentStep
                                             ? 'border-primary bg-primary/10'
                                             : index < currentStep
-                                            ? 'border-primary bg-primary text-white'
+                                            ? 'border-primary bg-primary text-primary-foreground'
                                             : 'border-muted-foreground/30'
                                     }`}>
                                         {index < currentStep ? (
@@ -649,7 +649,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                         >
                             {isSaving ? (
                                 <>
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <div className="w-5 h-5 border-2 border-q-border/30 border-t-white rounded-full animate-spin" />
                                     {t('common.saving', 'Guardando...')}
                                 </>
                             ) : (

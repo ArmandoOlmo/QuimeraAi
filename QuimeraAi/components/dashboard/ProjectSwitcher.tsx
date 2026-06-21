@@ -137,12 +137,12 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
     const triggerClasses = [
         'flex items-center gap-2 transition-all duration-200',
         collapsed
-            ? 'w-10 h-10 justify-center mx-auto rounded-lg hover:bg-q-surface-elevated/50'
-            : 'w-full p-2 rounded-lg bg-q-surface hover:bg-q-surface-elevated/50 border border-q-border',
-        isOpen && !collapsed ? 'ring-2 ring-q-accent/50' : '',
+            ? 'w-10 h-10 justify-center mx-auto rounded-[var(--q-radius-md)] hover:bg-sidebar-control-hover hover:shadow-[inset_0_0_0_1px_hsl(var(--sidebar-control-border))]'
+            : 'w-full p-2 rounded-[var(--q-radius-md)] bg-q-surface hover:bg-sidebar-control-hover border border-border-subtle hover:border-sidebar-control-border',
+        isOpen && !collapsed ? 'ring-2 ring-q-accent/25 border-q-accent/45' : '',
         isLoading ? 'opacity-50 cursor-wait' : '',
     ].filter(Boolean).join(' ');
-    const triggerIconWrapClasses = 'w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/80 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0 overflow-hidden';
+    const triggerIconWrapClasses = 'w-8 h-8 rounded-[var(--q-radius-md)] border border-border-subtle bg-q-surface-overlay flex items-center justify-center text-q-text-muted text-xs font-bold flex-shrink-0 overflow-hidden';
     const triggerTextWrapClasses = 'flex-1 min-w-0 text-left';
     const triggerTitleClasses = 'text-sm font-semibold text-q-text truncate';
     const chevronClasses = [
@@ -151,15 +151,15 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
     ].filter(Boolean).join(' ');
     const dropdownClasses = [
         'absolute z-50 mt-2 py-1',
-        'bg-q-surface-elevated border border-q-border rounded-xl shadow-xl',
+        'bg-q-surface-elevated border border-border-subtle rounded-[var(--radius-card-compact)] shadow-[var(--shadow-elevated)]',
         'animate-in fade-in-0 zoom-in-95 duration-200',
         collapsed ? 'left-full ml-2 top-0' : 'left-0 right-0',
         collapsed ? 'w-72' : 'w-full min-w-[280px]',
     ].join(' ');
-    const dropdownHeaderClasses = 'px-3 py-2 border-b border-q-border';
+    const dropdownHeaderClasses = 'px-3 py-2 border-b border-divider';
     const dropdownHeaderTitleClasses = 'text-xs font-semibold text-q-text-muted uppercase tracking-wider';
-    const searchSectionClasses = 'px-3 py-2 border-b border-q-border';
-    const searchInputWrapClasses = 'flex items-center gap-2 bg-q-surface-overlay/50 rounded-lg px-2 py-1.5';
+    const searchSectionClasses = 'px-3 py-2 border-b border-divider';
+    const searchInputWrapClasses = 'flex items-center gap-2 bg-q-surface-overlay rounded-[var(--q-radius-md)] px-2 py-1.5';
     const searchIconClasses = 'text-q-text-muted flex-shrink-0';
     const searchInputClasses = 'flex-1 bg-transparent outline-none text-sm min-w-0';
     const searchClearButtonClasses = 'text-q-text-muted hover:text-q-text';
@@ -167,14 +167,14 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
     const emptyStateClasses = 'px-3 py-4 text-center text-sm text-q-text-muted';
     const itemClasses = (isActive: boolean) => [
         'flex items-center gap-3 w-full px-3 py-2.5',
-        'hover:bg-q-surface-overlay/50 transition-colors',
-        isActive ? 'bg-q-accent/10' : '',
+        'hover:bg-sidebar-control-hover transition-colors',
+        isActive ? 'bg-q-accent/12 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--q-accent)_30%,transparent)]' : '',
     ].filter(Boolean).join(' ');
     const itemIconClasses = (isActive: boolean) => [
-        'w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden',
+        'w-9 h-9 rounded-[var(--q-radius-md)] border flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden',
         isActive
-            ? 'bg-gradient-to-br from-q-accent to-q-accent/80 shadow-md shadow-q-accent/30'
-            : 'bg-gradient-to-br from-q-text-muted/60 to-q-text-muted/40',
+            ? 'border-q-accent/35 bg-q-accent/12 text-q-accent'
+            : 'border-border-subtle bg-q-surface-overlay text-q-text-muted',
     ].join(' ');
     const itemTextClasses = 'flex-1 min-w-0 text-left';
     const itemTitleClasses = (isActive: boolean) => [
@@ -182,14 +182,14 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
         isActive ? 'text-q-accent' : 'text-q-text',
     ].join(' ');
     const activeIndicatorClasses = 'text-q-accent flex-shrink-0';
-    const dividerClasses = 'border-t border-q-border my-1';
+    const dividerClasses = 'border-t border-divider my-1';
     const actionButtonClasses = 'flex items-center gap-2 w-full px-3 py-2.5 text-q-accent hover:bg-q-accent/10 transition-colors';
     const actionLabelClasses = 'text-sm font-medium';
 
     const getStatusBadge = (status: string) => {
         if (status === 'Published') {
             return (
-                <span className="flex items-center gap-1 text-[10px] text-green-500">
+                <span className="flex items-center gap-1 text-[10px] text-q-success">
                     <Globe size={10} />
                     <span className="hidden sm:inline">{t('dashboard.published', 'Publicado')}</span>
                 </span>

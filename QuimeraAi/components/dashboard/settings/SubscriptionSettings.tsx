@@ -51,12 +51,12 @@ const PLAN_ICONS: Record<SubscriptionPlanId, React.ElementType> = {
 
 // Plan gradient accents
 const PLAN_GRADIENTS: Record<string, string> = {
-    free: 'from-gray-400 to-gray-500',
-    individual: 'from-pink-500 to-rose-500',
-    agency_starter: 'from-blue-500 to-cyan-500',
-    agency_pro: 'from-violet-500 to-purple-500',
-    agency_scale: 'from-amber-500 to-yellow-500',
-    enterprise: 'from-amber-500 to-yellow-500',
+    free: 'from-q-surface-overlay to-q-surface-overlay',
+    individual: 'from-q-accent to-q-error',
+    agency_starter: 'from-q-accent to-q-accent',
+    agency_pro: 'from-q-accent to-q-accent',
+    agency_scale: 'from-q-accent to-q-accent',
+    enterprise: 'from-q-accent to-q-accent',
 };
 
 interface SubscriptionDetails {
@@ -160,10 +160,10 @@ const SubscriptionSettings: React.FC = () => {
                     ? t('settings.subscription.statusCancelled', 'Cancelado')
                     : subscriptionStatus;
     const statusClass = requiresPayment
-        ? 'bg-red-500 text-white'
+        ? 'bg-q-error text-white'
         : subscriptionStatus === 'active'
             ? `bg-gradient-to-r ${currentGradient} text-white`
-            : 'bg-amber-500 text-white';
+            : 'bg-q-accent text-q-text-on-accent';
 
     const handleUpgradeClick = (trigger: 'generic' | 'credits' = 'generic') => {
         if (upgradeContext) {
@@ -421,7 +421,7 @@ const SubscriptionSettings: React.FC = () => {
                         <div className="lg:w-80 bg-q-bg rounded-2xl border border-q-border p-5">
                             <div className="flex items-center justify-between mb-4">
                                 <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                    <Zap size={14} className="text-amber-500" />
+                                    <Zap size={14} className="text-q-accent" />
                                     {t('settings.subscription.usageStatus', 'Uso de Créditos')}
                                 </h4>
                                 <button
@@ -490,15 +490,15 @@ const SubscriptionSettings: React.FC = () => {
                                     {/* Warnings */}
                                     {(usage?.isNearLimit || usage?.hasExceededLimit) && !isUserOwner && (
                                         <div className={`mt-3 p-3 rounded-xl border flex items-start gap-2 ${usage?.hasExceededLimit
-                                            ? 'bg-red-500/5 border-red-500/20'
-                                            : 'bg-amber-500/5 border-amber-500/20'
+                                            ? 'bg-q-error/5 border-q-error/20'
+                                            : 'bg-q-accent/5 border-q-accent/20'
                                             }`}>
-                                            <AlertTriangle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${usage?.hasExceededLimit ? 'text-red-500' : 'text-amber-500'
+                                            <AlertTriangle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${usage?.hasExceededLimit ? 'text-q-error' : 'text-q-accent'
                                                 }`} />
                                             <div className="flex-1">
                                                 <p className={`text-xs font-semibold ${usage?.hasExceededLimit
-                                                    ? 'text-red-600 dark:text-red-400'
-                                                    : 'text-amber-600 dark:text-amber-400'
+                                                    ? 'text-q-error dark:text-q-error'
+                                                    : 'text-q-accent dark:text-q-accent'
                                                     }`}>
                                                     {usage?.hasExceededLimit
                                                         ? t('settings.subscription.exceededLimit')
@@ -508,7 +508,7 @@ const SubscriptionSettings: React.FC = () => {
                                                 {usage?.hasExceededLimit && (
                                                     <button
                                                         onClick={() => handleUpgradeClick('credits')}
-                                                        className="mt-2 w-full py-1.5 text-xs font-semibold bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                                        className="mt-2 w-full py-1.5 text-xs font-semibold bg-q-error text-white rounded-lg hover:bg-q-error transition-colors"
                                                     >
                                                         {t('settings.subscription.upgradeNow')}
                                                     </button>
@@ -524,17 +524,17 @@ const SubscriptionSettings: React.FC = () => {
             </div>
 
             {requiresPayment && (
-                <div className="bg-red-500/10 border border-red-500/25 rounded-2xl p-5">
+                <div className="bg-q-error/10 border border-q-error/25 rounded-2xl p-5">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
-                                <AlertTriangle className="w-5 h-5 text-red-500" />
+                            <div className="w-10 h-10 rounded-xl bg-q-error/15 flex items-center justify-center flex-shrink-0">
+                                <AlertTriangle className="w-5 h-5 text-q-error" />
                             </div>
                             <div>
-                                <h3 className="font-semibold text-red-600 dark:text-red-400">
+                                <h3 className="font-semibold text-q-error dark:text-q-error">
                                     {t('settings.subscription.paymentRequiredTitle', 'Tu pago necesita atención')}
                                 </h3>
-                                <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-1">
+                                <p className="text-sm text-q-error/80 dark:text-q-error/80 mt-1">
                                     {subscriptionDetails?.stripe?.paymentIssue?.message ||
                                         t('settings.subscription.paymentRequiredDesc', 'Actualiza tu método de pago o paga la factura pendiente para mantener tu plan activo.')}
                                 </p>
@@ -545,7 +545,7 @@ const SubscriptionSettings: React.FC = () => {
                                 type="button"
                                 onClick={handlePayInvoice}
                                 disabled={isOpeningPortal}
-                                className="px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="px-4 py-2.5 rounded-xl bg-q-error text-white text-sm font-semibold hover:bg-q-error transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {isOpeningPortal ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
                                 {t('settings.subscription.payInvoice', 'Pagar factura')}
@@ -589,7 +589,7 @@ const SubscriptionSettings: React.FC = () => {
                                 {/* Recommended badge — outside overflow-hidden card so it isn't clipped */}
                                 {isRecommended && !isCurrentPlan && (
                                     <div className="absolute top-0 left-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
-                                        <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full shadow-md">
+                                        <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent rounded-full shadow-md">
                                             <Star size={11} />
                                             {t('settings.subscription.recommended', 'Recomendado')}
                                         </span>
@@ -600,7 +600,7 @@ const SubscriptionSettings: React.FC = () => {
                                     className={`relative flex flex-col overflow-hidden transition-all duration-300 ${settingsPanelClass} ${isCurrentPlan
                                         ? 'border-[color-mix(in_srgb,var(--quimera-status-accent-from)_40%,transparent)] bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_8%,transparent)]'
                                         : isRecommended
-                                            ? 'border-amber-500/50'
+                                            ? 'border-q-accent/50'
                                             : 'hover:border-q-border'
                                         }`}
                                 >
@@ -764,11 +764,11 @@ const SubscriptionSettings: React.FC = () => {
 
                         {/* Cancellation Warning */}
                         {subscriptionDetails.stripe.cancelAtPeriodEnd && (
-                            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                            <div className="p-4 rounded-xl bg-q-accent/10 border border-q-accent/20">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <AlertTriangle className="w-4 h-4 text-amber-500" />
-                                        <span className="text-sm text-amber-600 dark:text-amber-400">
+                                        <AlertTriangle className="w-4 h-4 text-q-accent" />
+                                        <span className="text-sm text-q-accent dark:text-q-accent">
                                             {t('settings.subscription.willCancel', 'Tu suscripción se cancelará el')} {new Date(subscriptionDetails.stripe.currentPeriodEnd).toLocaleDateString()}
                                         </span>
                                     </div>
@@ -819,7 +819,7 @@ const SubscriptionSettings: React.FC = () => {
                                 <button
                                     onClick={() => handleCancelSubscription(false)}
                                     disabled={isCancelling}
-                                    className="text-sm text-red-500 hover:text-red-600 dark:hover:text-red-400 flex items-center gap-2 disabled:opacity-50 transition-colors"
+                                    className="text-sm text-q-error hover:text-q-error dark:hover:text-q-error flex items-center gap-2 disabled:opacity-50 transition-colors"
                                 >
                                     {isCancelling ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -836,14 +836,14 @@ const SubscriptionSettings: React.FC = () => {
 
             {/* Checkout Error */}
             {checkoutError && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                <div className="bg-q-error/10 border border-q-error/20 rounded-xl p-4">
                     <div className="flex items-start gap-2">
-                        <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5" />
+                        <AlertTriangle className="w-4 h-4 text-q-error mt-0.5" />
                         <div>
-                            <p className="text-sm text-red-600 dark:text-red-400 font-semibold">
+                            <p className="text-sm text-q-error dark:text-q-error font-semibold">
                                 {t('settings.subscription.checkoutErrorTitle', 'Error al procesar')}
                             </p>
-                            <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-1">
+                            <p className="text-xs text-q-error/80 dark:text-q-error/80 mt-1">
                                 {checkoutError}
                             </p>
                         </div>

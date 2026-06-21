@@ -60,7 +60,7 @@ const ToggleControl = ({ label, checked, onChange }: { label?: string, checked: 
             onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
             className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
         >
-            <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`} />
+            <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-q-surface shadow-sm ring-0 transition duration-200 ease-in-out`} />
         </button>
     </div>
 );
@@ -635,7 +635,7 @@ export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ se
                     </div>
                     <button
                         onClick={() => selectProduct(undefined)}
-                        className="p-1 hover:bg-red-500/20 rounded text-red-400 hover:text-red-300 transition-colors"
+                        className="p-1 hover:bg-q-error/20 rounded text-q-error hover:text-q-error transition-colors"
                         title={t('editor.controls.ecommerce.singleProductSelector.remove', 'Remove product')}
                     >
                         <X size={16} />
@@ -833,7 +833,7 @@ export const SingleCollectionSelector: React.FC<SingleCollectionSelectorProps> =
                     </div>
                     <button
                         onClick={() => selectCollection(undefined)}
-                        className="p-1 hover:bg-red-500/20 rounded text-red-400 hover:text-red-300 transition-colors"
+                        className="p-1 hover:bg-q-error/20 rounded text-q-error hover:text-q-error transition-colors"
                         title={t('editor.controls.ecommerce.collectionSelector.remove', 'Remove collection')}
                     >
                         <X size={16} />
@@ -1048,7 +1048,7 @@ const ItemHeader = ({
         <button
             type="button"
             onClick={onRemove}
-            className="rounded p-1 text-q-text-secondary transition-colors hover:bg-red-500/10 hover:text-red-400"
+            className="rounded p-1 text-q-text-secondary transition-colors hover:bg-q-error/10 hover:text-q-error"
         >
             <Trash2 size={14} />
         </button>
@@ -2322,7 +2322,7 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
                         {messages.length > 1 && (
                             <button
                                 onClick={() => removeMessage(index)}
-                                className="text-red-400 hover:text-red-300 p-1"
+                                className="text-q-error hover:text-q-error p-1"
                                 title={t('common.delete', 'Delete')}
                             >
                                 <Trash2 size={14} />
@@ -3486,7 +3486,7 @@ export const SingleContentSelector: React.FC<SingleContentSelectorProps> = ({
                     </div>
                     <button
                         onClick={() => selectContent(undefined)}
-                        className="p-1 hover:bg-red-500/20 rounded text-red-400 hover:text-red-300 transition-colors"
+                        className="p-1 hover:bg-q-error/20 rounded text-q-error hover:text-q-error transition-colors"
                         title={t('ecommerce.removeContent')}
                     >
                         <X size={16} />

@@ -94,40 +94,40 @@ export function PortalLanguageSettings({
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Globe className="h-5 w-5 text-blue-600" />
+        <h3 className="text-lg font-semibold text-q-text flex items-center gap-2">
+          <Globe className="h-5 w-5 text-q-accent" />
           {t('portalLanguageSettings.title')}
         </h3>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-q-text-muted mt-1">
           {t('portalLanguageSettings.description')}
         </p>
       </div>
 
       {/* Success Message */}
       {successMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-          <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+        <div className="bg-q-success/10 border border-q-success/25 rounded-lg p-4 flex items-start gap-3">
+          <CheckCircle2 className="h-5 w-5 text-q-success mt-0.5" />
           <div>
-            <h4 className="font-semibold text-green-900">{t('portalLanguageSettings.saved')}</h4>
-            <p className="text-sm text-green-700">{successMessage}</p>
+            <h4 className="font-semibold text-q-success">{t('portalLanguageSettings.saved')}</h4>
+            <p className="text-sm text-q-success">{successMessage}</p>
           </div>
         </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+        <div className="bg-q-error/10 border border-q-error/25 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-q-error mt-0.5" />
           <div>
-            <h4 className="font-semibold text-red-900">{t('portalLanguageSettings.error')}</h4>
-            <p className="text-sm text-red-700">{error}</p>
+            <h4 className="font-semibold text-q-error">{t('portalLanguageSettings.error')}</h4>
+            <p className="text-sm text-q-error">{error}</p>
           </div>
         </div>
       )}
 
       {/* Language Selection */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <label className="block text-sm font-medium text-gray-700 mb-4">
+      <div className="bg-q-surface border border-q-border rounded-lg p-6">
+        <label className="block text-sm font-medium text-q-text mb-4">
           {t('portalLanguageSettings.defaultLanguageLabel')}
         </label>
 
@@ -141,18 +141,18 @@ export function PortalLanguageSettings({
                 onClick={() => setSelectedLanguage(lang.code)}
                 className={`relative flex items-start gap-4 p-4 border-2 rounded-lg transition-all ${
                   isSelected
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                    ? 'border-q-accent/25 bg-q-accent/10'
+                    : 'border-q-border hover:border-q-border bg-q-surface'
                 }`}
               >
                 {/* Radio Circle */}
                 <div className="mt-1">
                   {isSelected ? (
-                    <div className="h-5 w-5 rounded-full bg-blue-600 flex items-center justify-center">
-                      <div className="h-2 w-2 rounded-full bg-white" />
+                    <div className="h-5 w-5 rounded-full bg-q-accent flex items-center justify-center">
+                      <div className="h-2 w-2 rounded-full bg-q-surface" />
                     </div>
                   ) : (
-                    <div className="h-5 w-5 rounded-full border-2 border-gray-300" />
+                    <div className="h-5 w-5 rounded-full border-2 border-q-border" />
                   )}
                 </div>
 
@@ -161,16 +161,16 @@ export function PortalLanguageSettings({
 
                 {/* Language Info */}
                 <div className="flex-1 text-left">
-                  <div className="font-semibold text-gray-900">
+                  <div className="font-semibold text-q-text">
                     {lang.nativeName}
                   </div>
-                  <div className="text-sm text-gray-600">{lang.name}</div>
+                  <div className="text-sm text-q-text-muted">{lang.name}</div>
                 </div>
 
                 {/* Selected Badge */}
                 {isSelected && (
                   <div className="absolute top-2 right-2">
-                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                    <CheckCircle2 className="h-5 w-5 text-q-accent" />
                   </div>
                 )}
               </button>
@@ -180,17 +180,17 @@ export function PortalLanguageSettings({
       </div>
 
       {/* Auto-Translate Option */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="bg-q-surface border border-q-border rounded-lg p-6">
         <div className="flex items-start gap-4">
           {/* Toggle */}
           <button
             onClick={() => setAutoTranslate(!autoTranslate)}
-            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-              autoTranslate ? 'bg-blue-600' : 'bg-gray-200'
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-q-accent/35 focus:ring-offset-2 ${
+              autoTranslate ? 'bg-q-accent' : 'bg-q-border'
             }`}
           >
             <span
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-q-surface shadow ring-0 transition duration-200 ease-in-out ${
                 autoTranslate ? 'translate-x-5' : 'translate-x-0'
               }`}
             />
@@ -199,37 +199,37 @@ export function PortalLanguageSettings({
           {/* Description */}
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <Languages className="h-5 w-5 text-purple-600" />
-              <h4 className="font-semibold text-gray-900">
+              <Languages className="h-5 w-5 text-q-accent" />
+              <h4 className="font-semibold text-q-text">
                 {t('portalLanguageSettings.autoTranslateTitle')}
               </h4>
-              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded">
+              <span className="px-2 py-0.5 bg-q-accent/10 text-q-accent text-xs font-semibold rounded">
                 {t('portalLanguageSettings.autoTranslateBadge')}
               </span>
             </div>
-            <p className="text-sm text-gray-600 mb-3">
+            <p className="text-sm text-q-text-muted mb-3">
               {t('portalLanguageSettings.autoTranslateDescription')}
             </p>
 
             {/* Feature List */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <Sparkles className="h-4 w-4 text-purple-500" />
+              <div className="flex items-center gap-2 text-sm text-q-text">
+                <Sparkles className="h-4 w-4 text-q-accent" />
                 <span>{t('portalLanguageSettings.autoTranslateFeature1')}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <Sparkles className="h-4 w-4 text-purple-500" />
+              <div className="flex items-center gap-2 text-sm text-q-text">
+                <Sparkles className="h-4 w-4 text-q-accent" />
                 <span>{t('portalLanguageSettings.autoTranslateFeature2')}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <Sparkles className="h-4 w-4 text-purple-500" />
+              <div className="flex items-center gap-2 text-sm text-q-text">
+                <Sparkles className="h-4 w-4 text-q-accent" />
                 <span>{t('portalLanguageSettings.autoTranslateFeature3')}</span>
               </div>
             </div>
 
             {/* Warning */}
             {autoTranslate && (
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+              <div className="mt-4 p-3 bg-q-accent/10 border border-q-accent/25 rounded text-sm text-q-accent">
                 <strong>{t('portalLanguageSettings.autoTranslateWarning')}</strong> {t('portalLanguageSettings.autoTranslateWarningText')}
               </div>
             )}
@@ -238,22 +238,22 @@ export function PortalLanguageSettings({
       </div>
 
       {/* Language Preview */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
-        <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Globe className="h-5 w-5 text-blue-600" />
+      <div className="bg-gradient-to-br from-q-accent to-q-accent border border-q-accent/25 rounded-lg p-6">
+        <h4 className="font-semibold text-q-text mb-4 flex items-center gap-2">
+          <Globe className="h-5 w-5 text-q-accent" />
           {t('portalLanguageSettings.previewTitle')}
         </h4>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-q-surface rounded-lg p-6 border border-q-border">
           <div className="space-y-4">
-            <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+            <div className="flex items-center justify-between pb-4 border-b border-q-border">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-gray-200 rounded-full" />
+                <div className="h-10 w-10 bg-q-border rounded-full" />
                 <div>
-                  <div className="font-semibold text-gray-900">
+                  <div className="font-semibold text-q-text">
                     {currentTenant?.name || 'Tu Empresa'}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-q-text-muted">
                     {formatLanguageName(selectedLanguage, 'native')}
                   </div>
                 </div>
@@ -265,7 +265,7 @@ export function PortalLanguageSettings({
               </div>
             </div>
 
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-q-text-muted">
               {t('portalLanguageSettings.previewDescription')}{' '}
               <strong>{formatLanguageName(selectedLanguage, 'native')}</strong>{' '}
               {t('portalLanguageSettings.previewDescriptionDefault')}
@@ -277,7 +277,7 @@ export function PortalLanguageSettings({
 
       {/* Save Button */}
       {hasChanges && (
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 pt-4 border-t border-q-border">
           <button
             onClick={() => {
               setSelectedLanguage(
@@ -288,14 +288,14 @@ export function PortalLanguageSettings({
                 currentTenant?.settings?.autoTranslateContent || false
               );
             }}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold"
+            className="px-6 py-2 border border-q-border text-q-text rounded-lg hover:bg-q-surface-overlay font-semibold"
             disabled={isSaving}
           >
             {t('portalLanguageSettings.cancelButton')}
           </button>
           <button
             onClick={handleSave}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold disabled:opacity-50 flex items-center gap-2"
+            className="px-6 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent font-semibold disabled:opacity-50 flex items-center gap-2"
             disabled={isSaving}
           >
             {isSaving ? (

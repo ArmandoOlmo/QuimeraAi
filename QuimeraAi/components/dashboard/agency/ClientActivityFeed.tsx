@@ -60,7 +60,7 @@ export function ClientActivityFeed({
                     <p className="text-q-text-muted">
                         No hay actividad reciente
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                    <p className="text-sm text-q-text-muted dark:text-gray-500 mt-1">
                         La actividad de tus clientes aparecerá aquí
                     </p>
                 </div>
@@ -91,14 +91,14 @@ export function ClientActivityFeed({
                         {/* Icon */}
                         <div
                             className={`flex items-center justify-center h-10 w-10 rounded-full flex-shrink-0 ${activity.type === 'client_created'
-                                ? 'bg-green-100 dark:bg-green-900/20'
+                                ? 'bg-q-success/10 dark:bg-q-success/12'
                                 : activity.type === 'payment_received'
-                                    ? 'bg-emerald-100 dark:bg-emerald-900/20'
+                                    ? 'bg-q-success/10 dark:bg-q-success/12'
                                     : activity.type === 'report_generated'
-                                        ? 'bg-purple-100 dark:bg-purple-900/20'
+                                        ? 'bg-q-accent/10 dark:bg-q-accent/12'
                                         : activity.type === 'project_published'
-                                            ? 'bg-orange-100 dark:bg-orange-900/20'
-                                            : 'bg-blue-100 dark:bg-blue-900/20'
+                                            ? 'bg-q-warning/10 dark:bg-q-warning/12'
+                                            : 'bg-q-accent/10 dark:bg-q-accent/12'
                                 }`}
                         >
                             <span className={getActivityColor(activity.type)}>
@@ -119,7 +119,7 @@ export function ClientActivityFeed({
                                 )}
                                 {activity.userName && (
                                     <>
-                                        <span className="text-xs text-gray-400">•</span>
+                                        <span className="text-xs text-q-text-muted">•</span>
                                         <span className="text-xs text-q-text-muted">
                                             por {activity.userName}
                                         </span>

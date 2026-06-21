@@ -48,14 +48,14 @@ const DayAppointmentChip: React.FC<DayAppointmentChipProps> = ({ appointment, on
     const typeConfig = APPOINTMENT_TYPE_CONFIGS[appointment.type];
 
     const colorClasses: Record<string, string> = {
-        blue: 'bg-blue-500',
-        violet: 'bg-violet-500',
-        emerald: 'bg-emerald-500',
-        orange: 'bg-orange-500',
-        cyan: 'bg-cyan-500',
-        yellow: 'bg-yellow-500',
-        pink: 'bg-pink-500',
-        green: 'bg-green-500',
+        blue: 'bg-q-accent',
+        violet: 'bg-q-accent',
+        emerald: 'bg-q-success',
+        orange: 'bg-q-warning',
+        cyan: 'bg-q-accent',
+        yellow: 'bg-q-accent',
+        pink: 'bg-q-accent',
+        green: 'bg-q-success',
     };
 
     // Fallback to blue if typeConfig is undefined

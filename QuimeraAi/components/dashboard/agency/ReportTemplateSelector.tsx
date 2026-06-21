@@ -72,22 +72,22 @@ export function ReportTemplateSelector({ selected, onChange }: ReportTemplateSel
     const getColorClasses = (color: string, isSelected: boolean) => {
         const colors: Record<string, { bg: string; text: string; border: string; iconBg: string }> = {
             purple: {
-                bg: isSelected ? 'bg-purple-500/10' : 'bg-q-surface',
-                text: isSelected ? 'text-purple-600 dark:text-purple-400' : 'text-foreground',
-                border: isSelected ? 'border-purple-500' : 'border-q-border/50',
-                iconBg: isSelected ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400' : 'bg-muted text-q-text-muted',
+                bg: isSelected ? 'bg-q-accent/10' : 'bg-q-surface',
+                text: isSelected ? 'text-q-accent dark:text-q-accent' : 'text-foreground',
+                border: isSelected ? 'border-q-accent/25' : 'border-q-border/50',
+                iconBg: isSelected ? 'bg-q-accent/20 text-q-accent dark:text-q-accent' : 'bg-muted text-q-text-muted',
             },
             blue: {
-                bg: isSelected ? 'bg-blue-500/10' : 'bg-q-surface',
-                text: isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-foreground',
-                border: isSelected ? 'border-blue-500' : 'border-q-border/50',
-                iconBg: isSelected ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-muted text-q-text-muted',
+                bg: isSelected ? 'bg-q-accent/10' : 'bg-q-surface',
+                text: isSelected ? 'text-q-accent dark:text-q-accent' : 'text-foreground',
+                border: isSelected ? 'border-q-accent/25' : 'border-q-border/50',
+                iconBg: isSelected ? 'bg-q-accent/20 text-q-accent dark:text-q-accent' : 'bg-muted text-q-text-muted',
             },
             green: {
-                bg: isSelected ? 'bg-green-500/10' : 'bg-q-surface',
-                text: isSelected ? 'text-green-600 dark:text-green-400' : 'text-foreground',
-                border: isSelected ? 'border-green-500' : 'border-q-border/50',
-                iconBg: isSelected ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-muted text-q-text-muted',
+                bg: isSelected ? 'bg-q-success/10' : 'bg-q-surface',
+                text: isSelected ? 'text-q-success dark:text-q-success' : 'text-foreground',
+                border: isSelected ? 'border-q-success/25' : 'border-q-border/50',
+                iconBg: isSelected ? 'bg-q-success/20 text-q-success dark:text-q-success' : 'bg-muted text-q-text-muted',
             },
         };
         return colors[color] || colors.blue;
@@ -97,8 +97,8 @@ export function ReportTemplateSelector({ selected, onChange }: ReportTemplateSel
         <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
             <div className="p-5 border-b border-q-border/50 bg-muted/30">
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-purple-500" />
+                    <div className="h-10 w-10 rounded-xl bg-q-accent/10 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-q-accent" />
                     </div>
                     <div>
                         <h4 className="font-semibold text-foreground">
@@ -131,8 +131,8 @@ export function ReportTemplateSelector({ selected, onChange }: ReportTemplateSel
                                 {/* Selected indicator */}
                                 {isSelected && (
                                     <div className="absolute top-3 right-3">
-                                        <div className={`h-6 w-6 rounded-full flex items-center justify-center ${template.color === 'purple' ? 'bg-purple-500' :
-                                                template.color === 'blue' ? 'bg-blue-500' : 'bg-green-500'
+                                        <div className={`h-6 w-6 rounded-full flex items-center justify-center ${template.color === 'purple' ? 'bg-q-accent' :
+                                                template.color === 'blue' ? 'bg-q-accent' : 'bg-q-success'
                                             }`}>
                                             <Check className="h-3.5 w-3.5 text-white" />
                                         </div>
@@ -142,7 +142,7 @@ export function ReportTemplateSelector({ selected, onChange }: ReportTemplateSel
                                 {/* Recommended badge */}
                                 {template.recommended && (
                                     <div className="absolute -top-2.5 left-4">
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg">
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-q-accent to-q-warning text-q-text-on-accent shadow-lg">
                                             <Sparkles className="h-3 w-3" />
                                             {t('dashboard.agency.reports.templates.recommended', 'Recomendado')}
                                         </span>
@@ -175,8 +175,8 @@ export function ReportTemplateSelector({ selected, onChange }: ReportTemplateSel
                                             className="text-xs text-q-text-muted flex items-center gap-2"
                                         >
                                             <CheckCircle className={`h-3.5 w-3.5 flex-shrink-0 ${isSelected
-                                                    ? template.color === 'purple' ? 'text-purple-500' :
-                                                        template.color === 'blue' ? 'text-blue-500' : 'text-green-500'
+                                                    ? template.color === 'purple' ? 'text-q-accent' :
+                                                        template.color === 'blue' ? 'text-q-accent' : 'text-q-success'
                                                     : 'text-q-text-muted/50'
                                                 }`} />
                                             <span className="line-clamp-1">{feature}</span>

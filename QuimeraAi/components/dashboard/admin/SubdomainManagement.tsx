@@ -185,9 +185,9 @@ const SubdomainManagement: React.FC<SubdomainManagementProps> = ({ onBack }) => 
     };
 
     const statusColors: Record<string, string> = {
-        active: 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30',
-        reserved: 'bg-amber-500/20 text-amber-500 border-amber-500/30',
-        suspended: 'bg-red-500/20 text-red-500 border-red-500/30',
+        active: 'bg-q-success/20 text-q-success border-q-success/30',
+        reserved: 'bg-q-accent/20 text-q-accent border-q-accent/30',
+        suspended: 'bg-q-error/20 text-q-error border-q-error/30',
     };
 
     const typeLabels: Record<string, string> = {
@@ -209,19 +209,19 @@ const SubdomainManagement: React.FC<SubdomainManagementProps> = ({ onBack }) => 
                         <p className="text-xs text-q-text-secondary mt-1">Total Subdominios</p>
                     </div>
                     <div className="p-4 rounded-xl bg-q-surface border border-q-border">
-                        <p className="text-2xl font-bold text-emerald-400">
+                        <p className="text-2xl font-bold text-q-success">
                             {subdomains.filter(s => s.status === 'active').length}
                         </p>
                         <p className="text-xs text-q-text-secondary mt-1">Activos</p>
                     </div>
                     <div className="p-4 rounded-xl bg-q-surface border border-q-border">
-                        <p className="text-2xl font-bold text-amber-400">
+                        <p className="text-2xl font-bold text-q-accent">
                             {subdomains.filter(s => s.status === 'reserved').length}
                         </p>
                         <p className="text-xs text-q-text-secondary mt-1">Reservados</p>
                     </div>
                     <div className="p-4 rounded-xl bg-q-surface border border-q-border">
-                        <p className="text-2xl font-bold text-red-400">
+                        <p className="text-2xl font-bold text-q-error">
                             {subdomains.filter(s => s.status === 'suspended').length}
                         </p>
                         <p className="text-xs text-q-text-secondary mt-1">Suspendidos</p>
@@ -269,7 +269,7 @@ const SubdomainManagement: React.FC<SubdomainManagementProps> = ({ onBack }) => 
                     />
                     <button
                         onClick={() => setShowReserveModal(true)}
-                        className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-q-accent text-white rounded-lg hover:opacity-90 transition-opacity"
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-q-accent text-q-text-on-accent rounded-lg hover:opacity-90 transition-opacity"
                     >
                         <Plus size={14} />
                         Reservar
@@ -283,12 +283,12 @@ const SubdomainManagement: React.FC<SubdomainManagementProps> = ({ onBack }) => 
                 </div>
 
                 {/* Reserved Words Info */}
-                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs text-amber-400 flex items-start gap-2">
+                <div className="p-3 bg-q-accent/10 border border-q-accent/20 rounded-lg text-xs text-q-accent flex items-start gap-2">
                     <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
                     <div>
                         <strong>Subdominios protegidos por sistema:</strong>{' '}
                         {RESERVED_SUBDOMAINS.slice(0, 12).join(', ')}...
-                        <span className="text-amber-500/70"> ({RESERVED_SUBDOMAINS.length} protegidos)</span>
+                        <span className="text-q-accent/70"> ({RESERVED_SUBDOMAINS.length} protegidos)</span>
                     </div>
                 </div>
 
@@ -377,7 +377,7 @@ const SubdomainManagement: React.FC<SubdomainManagementProps> = ({ onBack }) => 
                                                     <button
                                                         onClick={() => handleSuspend(entry.id)}
                                                         disabled={actionLoading === entry.id}
-                                                        className="p-1.5 rounded-md hover:bg-red-500/20 text-q-text-secondary hover:text-red-500 transition-colors disabled:opacity-50"
+                                                        className="p-1.5 rounded-md hover:bg-q-error/20 text-q-text-secondary hover:text-q-error transition-colors disabled:opacity-50"
                                                         title="Suspender"
                                                     >
                                                         {actionLoading === entry.id ? <Loader2 size={14} className="animate-spin" /> : <Ban size={14} />}
@@ -386,7 +386,7 @@ const SubdomainManagement: React.FC<SubdomainManagementProps> = ({ onBack }) => 
                                                     <button
                                                         onClick={() => handleReactivate(entry.id)}
                                                         disabled={actionLoading === entry.id}
-                                                        className="p-1.5 rounded-md hover:bg-emerald-500/20 text-q-text-secondary hover:text-emerald-500 transition-colors disabled:opacity-50"
+                                                        className="p-1.5 rounded-md hover:bg-q-success/20 text-q-text-secondary hover:text-q-success transition-colors disabled:opacity-50"
                                                         title="Reactivar"
                                                     >
                                                         {actionLoading === entry.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
@@ -395,7 +395,7 @@ const SubdomainManagement: React.FC<SubdomainManagementProps> = ({ onBack }) => 
                                                 <button
                                                     onClick={() => handleDelete(entry.id)}
                                                     disabled={actionLoading === entry.id}
-                                                    className="p-1.5 rounded-md hover:bg-red-500/20 text-q-text-secondary hover:text-red-500 transition-colors disabled:opacity-50"
+                                                    className="p-1.5 rounded-md hover:bg-q-error/20 text-q-text-secondary hover:text-q-error transition-colors disabled:opacity-50"
                                                     title="Eliminar"
                                                 >
                                                     <Trash2 size={14} />
@@ -411,7 +411,7 @@ const SubdomainManagement: React.FC<SubdomainManagementProps> = ({ onBack }) => 
 
                 {/* Reserve Modal */}
                 {showReserveModal && (
-                    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm">
+                    <div className="fixed inset-0 bg-q-text/60 z-50 flex items-center justify-center backdrop-blur-sm">
                         <div className="bg-q-surface border border-q-border rounded-xl p-6 max-w-md w-full mx-4">
                             <h3 className="font-bold text-lg text-q-text mb-4 flex items-center gap-2">
                                 <Shield size={18} className="text-q-accent" />
@@ -439,7 +439,7 @@ const SubdomainManagement: React.FC<SubdomainManagementProps> = ({ onBack }) => 
                                 <button
                                     onClick={handleReserve}
                                     disabled={!reserveName}
-                                    className="flex-1 px-4 py-2 text-sm bg-q-accent text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                                    className="flex-1 px-4 py-2 text-sm bg-q-accent text-q-text-on-accent rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
                                 >
                                     Reservar
                                 </button>

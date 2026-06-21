@@ -31,7 +31,7 @@ export const TextArea = ({ label, className, ...props }: React.TextareaHTMLAttri
 
 export const I18nInput = ({ label, value, onChange, className, ...props }: Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> & { label?: string, value: string | Record<string, string> | undefined | null, onChange: (val: Record<string, string>) => void }) => {
   const [activeLang, setActiveLang] = useState<'es' | 'en'>('es');
-  
+
   const currentValue = typeof value === 'object' && value !== null
     ? (value[activeLang] || '')
     : (activeLang === 'es' ? ((value as string) || '') : '');
@@ -63,7 +63,7 @@ export const I18nInput = ({ label, value, onChange, className, ...props }: Omit<
 
 export const I18nTextArea = ({ label, value, onChange, className, ...props }: Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'> & { label?: string, value: string | Record<string, string> | undefined | null, onChange: (val: Record<string, string>) => void }) => {
   const [activeLang, setActiveLang] = useState<'es' | 'en'>('es');
-  
+
   const currentValue = typeof value === 'object' && value !== null
     ? (value[activeLang] || '')
     : (activeLang === 'es' ? ((value as string) || '') : '');
@@ -119,7 +119,7 @@ export const I18nStringArrayEditor = ({ label, value, onChange, placeholder, cla
                 const newItems = items.filter((_, i) => i !== index);
                 onChange(newItems);
               }}
-              className="mt-1 p-1.5 text-q-text-secondary hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
+              className="mt-1 p-1.5 text-q-text-secondary hover:text-q-error hover:bg-q-error/10 rounded transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
             </button>
@@ -269,7 +269,7 @@ export const ToggleControl = ({ label, checked, onChange }: { label?: string, ch
     >
       <span
         aria-hidden="true"
-        className={`${checked ? 'translate-x-5' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
+        className={`${checked ? 'translate-x-5' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-q-surface shadow-sm ring-0 transition duration-200 ease-in-out`}
       />
     </button>
   </div>

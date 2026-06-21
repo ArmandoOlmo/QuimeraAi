@@ -22,13 +22,13 @@ export interface AppButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEle
 }
 
 const variantClasses: Record<AppButtonVariant, string> = {
-  primary: 'bg-q-accent text-q-text-on-accent shadow-sm shadow-q-accent/20 hover:opacity-90 focus-visible:ring-q-accent/35',
-  secondary: 'border border-q-border bg-q-surface text-q-text hover:bg-q-surface-elevated focus-visible:ring-q-accent/25',
-  ghost: 'bg-transparent text-q-text-secondary hover:bg-q-surface-overlay hover:text-q-text focus-visible:ring-q-accent/25',
-  outline: 'border border-q-border bg-transparent text-q-text hover:bg-q-surface-overlay focus-visible:ring-q-accent/25',
+  primary: 'bg-q-accent text-q-text-on-accent shadow-sm shadow-q-accent/15 hover:opacity-90 focus-visible:ring-q-accent/35',
+  secondary: 'border border-border-subtle bg-q-surface text-q-text hover:bg-q-surface-overlay focus-visible:ring-q-accent/25',
+  ghost: 'bg-transparent text-q-text-muted hover:bg-q-surface-overlay hover:text-q-text focus-visible:ring-q-accent/25',
+  outline: 'border border-border-subtle bg-q-surface text-q-text hover:bg-q-surface-overlay focus-visible:ring-q-accent/25',
   danger: 'bg-q-error text-white shadow-sm shadow-q-error/20 hover:opacity-90 focus-visible:ring-q-error/30',
-  premium: 'bg-gradient-to-r from-q-accent-tertiary via-q-accent to-q-accent-tertiary text-white shadow-lg shadow-q-accent/20 hover:brightness-110 focus-visible:ring-q-accent/35',
-  icon: 'bg-transparent text-q-text-secondary hover:bg-q-surface-overlay hover:text-q-text focus-visible:ring-q-accent/25',
+  premium: 'bg-q-accent text-q-text-on-accent shadow-sm shadow-q-accent/15 hover:opacity-90 focus-visible:ring-q-accent/35 dark:text-q-text-on-accent dark:shadow-lg dark:shadow-q-accent/20 black:text-q-text-on-accent',
+  icon: 'bg-transparent text-q-text-muted hover:bg-q-surface-overlay hover:text-q-text focus-visible:ring-q-accent/25',
 };
 
 const sizeClasses: Record<AppButtonSize, string> = {
@@ -70,9 +70,9 @@ export const AppButton = React.forwardRef<HTMLButtonElement, AppButtonProps>(fun
       aria-busy={loading || undefined}
       data-loading={loading ? 'true' : undefined}
       className={joinClasses(
-        'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md font-semibold outline-none transition-all duration-150 ease-out',
+        'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--q-radius-md)] font-semibold outline-none transition-all duration-150 ease-out',
         'focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-55 active:scale-[0.98]',
-        '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:h-4 [&_svg:not([class*="size-"])]:w-4',
+        '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:h-[var(--icon-sm)] [&_svg:not([class*="size-"])]:w-[var(--icon-sm)]',
         variantClasses[variant],
         sizeClasses[size],
         shouldUseIconSizing && 'aspect-square',

@@ -35,18 +35,18 @@ interface RecentLeadsProps {
 
 // Source display config
 const SOURCE_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-    'chatbot': { label: 'Chatbot', icon: Bot, color: 'text-purple-400 bg-purple-500/10' },
-    'chatbot-widget': { label: 'Widget', icon: MessageSquare, color: 'text-blue-400 bg-blue-500/10' },
-    'contact-form': { label: 'Formulario', icon: FileText, color: 'text-green-400 bg-green-500/10' },
-    'form': { label: 'Formulario', icon: FileText, color: 'text-green-400 bg-green-500/10' },
-    'manual': { label: 'Manual', icon: UserPlus, color: 'text-gray-400 bg-gray-500/10' },
-    'referral': { label: 'Referido', icon: Users, color: 'text-yellow-400 bg-yellow-500/10' },
-    'linkedin': { label: 'LinkedIn', icon: Linkedin, color: 'text-blue-500 bg-blue-500/10' },
-    'cold_call': { label: 'Llamada', icon: PhoneCall, color: 'text-orange-400 bg-orange-500/10' },
-    'voice-call': { label: 'Llamada', icon: Phone, color: 'text-orange-400 bg-orange-500/10' },
-    'quimera-chat': { label: 'Quimera Chat', icon: Bot, color: 'text-yellow-400 bg-yellow-500/10' },
-    'import-csv': { label: 'CSV Import', icon: Upload, color: 'text-teal-400 bg-teal-500/10' },
-    'import-excel': { label: 'Excel Import', icon: Upload, color: 'text-teal-400 bg-teal-500/10' },
+    'chatbot': { label: 'Chatbot', icon: Bot, color: 'text-q-accent bg-q-accent/10' },
+    'chatbot-widget': { label: 'Widget', icon: MessageSquare, color: 'text-q-info bg-q-info/10' },
+    'contact-form': { label: 'Formulario', icon: FileText, color: 'text-q-success bg-q-success/10' },
+    'form': { label: 'Formulario', icon: FileText, color: 'text-q-success bg-q-success/10' },
+    'manual': { label: 'Manual', icon: UserPlus, color: 'text-q-text-muted bg-q-surface-overlay' },
+    'referral': { label: 'Referido', icon: Users, color: 'text-q-warning bg-q-warning/10' },
+    'linkedin': { label: 'LinkedIn', icon: Linkedin, color: 'text-q-info bg-q-info/10' },
+    'cold_call': { label: 'Llamada', icon: PhoneCall, color: 'text-q-warning bg-q-warning/10' },
+    'voice-call': { label: 'Llamada', icon: Phone, color: 'text-q-warning bg-q-warning/10' },
+    'quimera-chat': { label: 'Quimera Chat', icon: Bot, color: 'text-q-accent bg-q-accent/10' },
+    'import-csv': { label: 'CSV Import', icon: Upload, color: 'text-q-success bg-q-success/10' },
+    'import-excel': { label: 'Excel Import', icon: Upload, color: 'text-q-success bg-q-success/10' },
 };
 
 interface DashboardLead extends Lead {
@@ -179,19 +179,19 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
 
     // Get source config
     const getSource = (source: string) => {
-        return SOURCE_CONFIG[source] || { label: source, icon: Globe, color: 'text-q-text-muted bg-secondary/50' };
+        return SOURCE_CONFIG[source] || { label: source, icon: Globe, color: 'text-q-text-muted bg-q-surface-overlay' };
     };
 
     // Status badge color
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'new': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            case 'contacted': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-            case 'qualified': return 'bg-green-500/20 text-green-400 border-green-500/30';
-            case 'negotiation': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-            case 'won': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-            case 'lost': return 'bg-red-500/20 text-red-400 border-red-500/30';
-            default: return 'bg-secondary/50 text-q-text-muted border-q-border';
+            case 'new': return 'bg-q-info/12 text-q-info border-q-info/25';
+            case 'contacted': return 'bg-q-warning/14 text-q-warning border-q-warning/30';
+            case 'qualified': return 'bg-q-success/12 text-q-success border-q-success/25';
+            case 'negotiation': return 'bg-q-accent/14 text-q-accent border-q-accent/30';
+            case 'won': return 'bg-q-success/12 text-q-success border-q-success/25';
+            case 'lost': return 'bg-q-error/12 text-q-error border-q-error/25';
+            default: return 'bg-q-surface-overlay text-q-text-muted border-border-subtle';
         }
     };
 
@@ -211,7 +211,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="animate-spin text-primary" size={28} />
+                <Loader2 className="animate-spin text-q-accent icon-xl" />
             </div>
         );
     }
@@ -219,8 +219,8 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
     // Empty state
     if (recentLeads.length === 0) {
         return (
-            <div className="text-center py-10 bg-q-surface/50 rounded-2xl border border-q-border">
-                <Users className="mx-auto text-q-text-muted mb-3" size={36} />
+            <div className="text-center py-10 bg-q-surface rounded-[var(--radius-card)] border border-border-subtle shadow-[var(--shadow-card)]">
+                <Users className="mx-auto text-q-text-muted mb-3 icon-xl" />
                 <p className="text-q-text-muted text-sm">
                     {t('dashboard.leads.empty', 'No hay leads recientes')}
                 </p>
@@ -241,14 +241,14 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
                     <div
                         key={`${lead.projectId}-${lead.id}`}
                         onClick={() => handleOpenLeads(lead.projectId, lead.id)}
-                        className="group relative bg-q-surface/60 hover:bg-q-surface border border-q-border/50 hover:border-primary/30 rounded-xl p-4 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5"
+                        className="group relative bg-q-surface hover:bg-q-surface border border-border-subtle hover:border-q-border rounded-[var(--radius-card)] p-4 cursor-pointer transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 shadow-[var(--shadow-card)]"
                     >
                         {/* Top row: Name + Time */}
                         <div className="flex items-start justify-between gap-2 mb-2">
                             <div className="flex items-center gap-2 min-w-0 flex-1">
                                 {/* Avatar circle */}
-                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                                    <span className="text-xs font-bold text-primary">
+                                <div className="w-8 h-8 rounded-full bg-q-surface-overlay border border-border-subtle flex items-center justify-center flex-shrink-0">
+                                    <span className="text-xs font-bold text-q-text-muted">
                                         {(lead.name || lead.email || '?')[0].toUpperCase()}
                                     </span>
                                 </div>
@@ -297,7 +297,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
 
                         {/* Hover arrow */}
                         <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <ExternalLink size={14} className="text-primary" />
+                            <ExternalLink size={14} className="text-q-accent" />
                         </div>
                     </div>
                 );

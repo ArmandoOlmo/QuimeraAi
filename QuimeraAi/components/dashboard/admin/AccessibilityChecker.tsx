@@ -57,19 +57,19 @@ const AccessibilityChecker: React.FC = () => {
     const getSeverityIcon = (severity: A11yIssue['severity']) => {
         switch (severity) {
             case 'error':
-                return <AlertCircle size={20} className="text-red-400" />;
+                return <AlertCircle size={20} className="text-q-error" />;
             case 'warning':
-                return <AlertTriangle size={20} className="text-yellow-400" />;
+                return <AlertTriangle size={20} className="text-q-accent" />;
             case 'info':
-                return <Info size={20} className="text-blue-400" />;
+                return <Info size={20} className="text-q-accent" />;
         }
     };
 
     const getSeverityBadge = (severity: A11yIssue['severity']) => {
         const colors = {
-            error: 'bg-red-500/20 text-red-400',
-            warning: 'bg-yellow-500/20 text-yellow-400',
-            info: 'bg-blue-500/20 text-blue-400',
+            error: 'bg-q-error/20 text-q-error',
+            warning: 'bg-q-accent/20 text-q-accent',
+            info: 'bg-q-accent/20 text-q-accent',
         };
 
         return (
@@ -80,9 +80,9 @@ const AccessibilityChecker: React.FC = () => {
     };
 
     const getScoreColor = (score: number) => {
-        if (score >= 90) return 'text-green-400';
-        if (score >= 70) return 'text-yellow-400';
-        return 'text-red-400';
+        if (score >= 90) return 'text-q-success';
+        if (score >= 70) return 'text-q-accent';
+        return 'text-q-error';
     };
 
     const exportReport = () => {
@@ -135,10 +135,10 @@ const AccessibilityChecker: React.FC = () => {
 
             {/* No Project Warning */}
             {!activeProject && (
-                <div className="p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg flex items-center gap-3">
-                    <AlertTriangle className="text-yellow-400" size={24} />
+                <div className="p-4 bg-q-accent/20 border border-q-accent/50 rounded-lg flex items-center gap-3">
+                    <AlertTriangle className="text-q-accent" size={24} />
                     <div>
-                        <div className="font-bold text-yellow-400">No Project Selected</div>
+                        <div className="font-bold text-q-accent">No Project Selected</div>
                         <div className="text-sm text-q-text-secondary">
                             Please select a project to run accessibility checks
                         </div>
@@ -163,7 +163,7 @@ const AccessibilityChecker: React.FC = () => {
 
                     <div className="p-4 bg-q-surface border border-q-border rounded-lg">
                         <div className="flex items-center gap-3">
-                            <AlertCircle size={24} className="text-red-400" />
+                            <AlertCircle size={24} className="text-q-error" />
                             <div>
                                 <div className="text-2xl font-bold text-q-text">{stats.totalErrors}</div>
                                 <div className="text-sm text-q-text-secondary">Errors</div>
@@ -173,7 +173,7 @@ const AccessibilityChecker: React.FC = () => {
 
                     <div className="p-4 bg-q-surface border border-q-border rounded-lg">
                         <div className="flex items-center gap-3">
-                            <AlertTriangle size={24} className="text-yellow-400" />
+                            <AlertTriangle size={24} className="text-q-accent" />
                             <div>
                                 <div className="text-2xl font-bold text-q-text">{stats.totalWarnings}</div>
                                 <div className="text-sm text-q-text-secondary">Warnings</div>
@@ -183,7 +183,7 @@ const AccessibilityChecker: React.FC = () => {
 
                     <div className="p-4 bg-q-surface border border-q-border rounded-lg">
                         <div className="flex items-center gap-3">
-                            <Info size={24} className="text-blue-400" />
+                            <Info size={24} className="text-q-accent" />
                             <div>
                                 <div className="text-2xl font-bold text-q-text">{stats.totalInfo}</div>
                                 <div className="text-sm text-q-text-secondary">Info</div>
@@ -207,7 +207,7 @@ const AccessibilityChecker: React.FC = () => {
             {reports.length > 0 && (
                 <div className="space-y-4">
                     <h3 className="text-xl font-bold text-q-text">Component Reports</h3>
-                    
+
                     {reports.map((report) => (
                         <div
                             key={report.componentId}
@@ -233,20 +233,20 @@ const AccessibilityChecker: React.FC = () => {
                                         <div className="flex items-center gap-3 text-sm text-q-text-secondary">
                                             <span>{report.totalIssues} issues</span>
                                             {report.errors > 0 && (
-                                                <span className="text-red-400">{report.errors} errors</span>
+                                                <span className="text-q-error">{report.errors} errors</span>
                                             )}
                                             {report.warnings > 0 && (
-                                                <span className="text-yellow-400">{report.warnings} warnings</span>
+                                                <span className="text-q-accent">{report.warnings} warnings</span>
                                             )}
                                             {report.info > 0 && (
-                                                <span className="text-blue-400">{report.info} info</span>
+                                                <span className="text-q-accent">{report.info} info</span>
                                             )}
                                         </div>
                                     </div>
                                 </div>
 
                                 {report.totalIssues === 0 && (
-                                    <CheckCircle size={32} className="text-green-400" />
+                                    <CheckCircle size={32} className="text-q-success" />
                                 )}
                             </div>
 
@@ -267,7 +267,7 @@ const AccessibilityChecker: React.FC = () => {
                                                             {issue.category.replace('-', ' ')}
                                                         </span>
                                                         {issue.autoFixable && (
-                                                            <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">
+                                                            <span className="px-2 py-1 bg-q-success/20 text-q-success text-xs font-bold rounded">
                                                                 AUTO-FIXABLE
                                                             </span>
                                                         )}
@@ -300,7 +300,7 @@ const AccessibilityChecker: React.FC = () => {
                             {/* No Issues */}
                             {selectedComponent === report.componentId && report.issues.length === 0 && (
                                 <div className="border-t border-q-border p-8 text-center bg-q-bg">
-                                    <CheckCircle size={48} className="mx-auto text-green-400 mb-3" />
+                                    <CheckCircle size={48} className="mx-auto text-q-success mb-3" />
                                     <p className="text-q-text font-bold">
                                         No accessibility issues found!
                                     </p>

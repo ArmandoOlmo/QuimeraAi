@@ -66,7 +66,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<'header' | 'footer' | 'featured'>('header');
-    
+
     // Local state for editing
     const [localNav, setLocalNav] = useState<AppNavigation>(DEFAULT_APP_NAVIGATION);
     const [hasChanges, setHasChanges] = useState(false);
@@ -291,7 +291,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                     </div>
                     <div className="flex items-center gap-3">
                         {hasChanges && (
-                            <span className="text-xs text-orange-500 font-medium">{t('landingNavigation.unsavedChanges', 'Unsaved changes')}</span>
+                            <span className="text-xs text-q-warning font-medium">{t('landingNavigation.unsavedChanges', 'Unsaved changes')}</span>
                         )}
                         <button
                             onClick={handleSave}
@@ -307,11 +307,11 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
 
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto bg-q-bg">
                     <div className="max-w-5xl mx-auto">
-                        
+
                         {/* Info Banner */}
-                        <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                        <div className="mb-6 p-4 bg-q-accent/10 border border-q-accent/20 rounded-lg">
                             <div className="flex items-start gap-3">
-                                <Globe className="text-blue-500 flex-shrink-0 mt-0.5" size={20} />
+                                <Globe className="text-q-accent flex-shrink-0 mt-0.5" size={20} />
                                 <div>
                                     <h4 className="text-sm font-semibold text-q-text mb-1">
                                         {t('landingNavigation.configTitle', 'Public Landing Page Configuration')}
@@ -452,7 +452,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                         {item.type === 'article' && (
                                                             <AppSelect
                                                                 value={item.articleSlug || ''}
-                                                                onChange={(e) => updateHeaderItem(item.id, { 
+                                                                onChange={(e) => updateHeaderItem(item.id, {
                                                                     articleSlug: e.target.value,
                                                                     href: `/blog/${e.target.value}`
                                                                 })}
@@ -466,7 +466,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                         )}
                                                         <button
                                                             onClick={() => deleteHeaderItem(item.id)}
-                                                            className="p-1.5 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded opacity-0 group-hover:opacity-100 transition-all"
+                                                            className="p-1.5 text-q-text-muted hover:text-q-error hover:bg-q-error/10 rounded opacity-0 group-hover:opacity-100 transition-all"
                                                         >
                                                             <Trash2 size={14} />
                                                         </button>
@@ -550,7 +550,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                             />
                                                             <button
                                                                 onClick={() => deleteFooterColumn(column.id)}
-                                                                className="p-1 text-q-text-muted hover:text-red-500 transition-colors"
+                                                                className="p-1 text-q-text-muted hover:text-q-error transition-colors"
                                                             >
                                                                 <Trash2 size={14} />
                                                             </button>
@@ -575,7 +575,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                     />
                                                                     <button
                                                                         onClick={() => deleteFooterItem(column.id, item.id)}
-                                                                        className="p-1 text-q-text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                                                        className="p-1 text-q-text-muted hover:text-q-error opacity-0 group-hover:opacity-100 transition-all"
                                                                     >
                                                                         <X size={12} />
                                                                     </button>
@@ -634,7 +634,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                         />
                                                         <button
                                                             onClick={() => deleteSocialLink(link.id)}
-                                                            className="p-1.5 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded opacity-0 group-hover:opacity-100 transition-all"
+                                                            className="p-1.5 text-q-text-muted hover:text-q-error hover:bg-q-error/10 rounded opacity-0 group-hover:opacity-100 transition-all"
                                                         >
                                                             <Trash2 size={14} />
                                                         </button>
@@ -746,8 +746,8 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                             )}
                                                             <div className="p-4">
                                                                 <div className="flex items-center gap-2 mb-2">
-                                                                    <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                                                                    <span className="text-xs text-yellow-600 font-medium">{t('landingNavigation.featured.featuredLabel', 'Featured')}</span>
+                                                                    <Star size={14} className="text-q-accent fill-yellow-500" />
+                                                                    <span className="text-xs text-q-accent font-medium">{t('landingNavigation.featured.featuredLabel', 'Featured')}</span>
                                                                 </div>
                                                                 <h4 className="font-medium text-sm line-clamp-2 mb-2">
                                                                     {article.title}
@@ -773,7 +773,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             {article.featured && (
-                                                                <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                                                                <Star size={14} className="text-q-accent fill-yellow-500" />
                                                             )}
                                                             <span className="text-sm font-medium">{article.title}</span>
                                                             <span className="text-xs text-q-text-muted">

@@ -91,40 +91,40 @@ interface ColumnsBlockControlsProps {
 const ColumnsBlockControls: React.FC<ColumnsBlockControlsProps> = ({ block, activeTab }) => {
     const { t } = useTranslation();
     const { updateBlock } = useEmailEditor();
-    
+
     const content = block.content as EmailColumnsContent;
     const styles = block.styles;
-    
+
     const updateContent = (updates: Partial<EmailColumnsContent>) => {
         updateBlock(block.id, {
             content: { ...content, ...updates },
         });
     };
-    
+
     const updateStyles = (updates: Partial<EmailBlockStyles>) => {
         updateBlock(block.id, {
             styles: { ...styles, ...updates },
         });
     };
-    
+
     const handleColumnCountChange = (count: 2 | 3) => {
         // Adjust columns array when count changes
         const currentColumns = content.columns || [[], []];
         if (count === 3 && currentColumns.length === 2) {
-            updateContent({ 
+            updateContent({
                 columnCount: count,
-                columns: [...currentColumns, []] 
+                columns: [...currentColumns, []]
             });
         } else if (count === 2 && currentColumns.length === 3) {
-            updateContent({ 
+            updateContent({
                 columnCount: count,
-                columns: currentColumns.slice(0, 2) 
+                columns: currentColumns.slice(0, 2)
             });
         } else {
             updateContent({ columnCount: count });
         }
     };
-    
+
     if (activeTab === 'content') {
         return (
             <div className="space-y-4">
@@ -134,28 +134,28 @@ const ColumnsBlockControls: React.FC<ColumnsBlockControlsProps> = ({ block, acti
                         {t('email.columnsHint', 'Los bloques de columnas permiten dividir el contenido horizontalmente')}
                     </p>
                 </div>
-                
+
                 <ColumnCountSelector
                     label={t('email.columnCount', 'Número de columnas')}
                     value={content.columnCount || 2}
                     onChange={(val) => handleColumnCountChange(val as 2 | 3)}
                 />
-                
+
                 <GapSelector
                     label={t('email.columnGap', 'Espacio entre columnas')}
                     value={content.gap || 'md'}
                     onChange={(val) => updateContent({ gap: val as any })}
                 />
-                
-                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-                    <p className="text-xs text-amber-500">
+
+                <div className="bg-q-accent/10 border border-q-accent/20 rounded-lg p-3">
+                    <p className="text-xs text-q-accent">
                         {t('email.columnsNoteAdvanced', 'Nota: El soporte completo de contenido anidado en columnas llegará en una próxima actualización.')}
                     </p>
                 </div>
             </div>
         );
     }
-    
+
     // Style tab
     return (
         <div className="space-y-4">
@@ -164,7 +164,7 @@ const ColumnsBlockControls: React.FC<ColumnsBlockControlsProps> = ({ block, acti
                 value={styles.backgroundColor || 'transparent'}
                 onChange={(color) => updateStyles({ backgroundColor: color })}
             />
-            
+
             <PaddingSelector
                 label={t('email.padding', 'Espaciado')}
                 value={styles.padding || 'md'}

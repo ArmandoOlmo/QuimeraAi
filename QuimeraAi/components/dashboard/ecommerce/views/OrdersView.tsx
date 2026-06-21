@@ -18,8 +18,8 @@ import {
     Eye,
     Loader2,
     X,
+    Filter,
 } from 'lucide-react';
-import { useEditor } from '../../../../contexts/EditorContext';
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useOrders } from '../hooks/useOrders';
 import { useProducts } from '../hooks/useProducts';
@@ -28,19 +28,21 @@ import type { StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
 import OrderDetailDrawer from '../components/OrderDetailDrawer';
 import { useEcommerceContext } from '../EcommerceContext';
-import { CatalogFilterBar, FilterChipRow } from '../../filters';
+import { FilterChipRow } from '../../filters';
+import type { FilterChipOption } from '../../filters';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 type OrderStatusFilter = OrderStatus | 'all';
 type OrderStatusConfig = { icon: React.ElementType; color: string; bg: string; label: string };
 
 const ORDER_STATUS_CONFIGS: Record<OrderStatus, OrderStatusConfig> = {
-    pending: { icon: Clock, color: 'text-yellow-400', bg: 'bg-yellow-500/20', label: 'Pendiente' },
-    paid: { icon: DollarSign, color: 'text-green-400', bg: 'bg-green-500/20', label: 'Pagado' },
-    processing: { icon: Package, color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'Procesando' },
-    shipped: { icon: Truck, color: 'text-purple-400', bg: 'bg-purple-500/20', label: 'Enviado' },
-    delivered: { icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/20', label: 'Entregado' },
-    cancelled: { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/20', label: 'Cancelado' },
-    refunded: { icon: DollarSign, color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'Reembolsado' },
+    pending: { icon: Clock, color: 'text-q-accent', bg: 'bg-q-accent/20', label: 'Pendiente' },
+    paid: { icon: DollarSign, color: 'text-q-success', bg: 'bg-q-success/20', label: 'Pagado' },
+    processing: { icon: Package, color: 'text-q-accent', bg: 'bg-q-accent/20', label: 'Procesando' },
+    shipped: { icon: Truck, color: 'text-q-accent', bg: 'bg-q-accent/20', label: 'Enviado' },
+    delivered: { icon: CheckCircle, color: 'text-q-success', bg: 'bg-q-success/20', label: 'Entregado' },
+    cancelled: { icon: XCircle, color: 'text-q-error', bg: 'bg-q-error/20', label: 'Cancelado' },
+    refunded: { icon: DollarSign, color: 'text-q-warning', bg: 'bg-q-warning/20', label: 'Reembolsado' },
 };
 
 const getStatusConfig = (status: unknown): OrderStatusConfig => {
@@ -64,12 +66,14 @@ const OrdersView: React.FC = () => {
 
     // Filter orders
     const filteredOrders = useMemo(() => {
+        const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+
         return orders.filter((order) => {
             const matchesSearch =
-                !searchTerm ||
-                order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                order.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+                !normalizedSearchTerm ||
+                order.orderNumber.toLowerCase().includes(normalizedSearchTerm) ||
+                order.customerEmail.toLowerCase().includes(normalizedSearchTerm) ||
+                order.customerName.toLowerCase().includes(normalizedSearchTerm);
 
             const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
 
@@ -80,12 +84,35 @@ const OrdersView: React.FC = () => {
     // Order stats
     const stats = useMemo(() => {
         return {
+            total: orders.length,
             pending: orders.filter((o) => o.status === 'pending').length,
             paid: orders.filter((o) => o.status === 'paid').length,
+            processing: orders.filter((o) => o.status === 'processing').length,
             shipped: orders.filter((o) => o.status === 'shipped').length,
             delivered: orders.filter((o) => o.status === 'delivered').length,
+            cancelled: orders.filter((o) => o.status === 'cancelled').length,
+            refunded: orders.filter((o) => o.status === 'refunded').length,
+            revenue: orders.reduce((sum, order) => sum + (order.total || 0), 0),
+            items: orders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0),
         };
     }, [orders]);
+
+    const statusFilterOptions = useMemo<FilterChipOption<OrderStatusFilter>[]>(() => [
+        { id: 'all', label: t('ecommerce.all', 'Todos'), count: orders.length },
+        { id: 'pending', label: t('ecommerce.pending', 'Pendientes'), count: stats.pending, color: 'gray' },
+        { id: 'paid', label: t('ecommerce.paid', 'Pagados'), count: stats.paid, color: 'green' },
+        { id: 'processing', label: t('ecommerce.processing', 'Procesando'), count: stats.processing },
+        { id: 'shipped', label: t('ecommerce.shipped', 'Enviados'), count: stats.shipped },
+        { id: 'delivered', label: t('ecommerce.delivered', 'Entregados'), count: stats.delivered, color: 'green' },
+    ], [orders.length, stats.delivered, stats.paid, stats.pending, stats.processing, stats.shipped, t]);
+
+    const visibleOrdersLabel = `${filteredOrders.length} de ${orders.length} pedido${orders.length !== 1 ? 's' : ''}`;
+    const hasActiveFilters = Boolean(searchTerm.trim()) || selectedStatus !== 'all';
+
+    const clearFilters = () => {
+        setSearchTerm('');
+        setSelectedStatus('all');
+    };
 
     const handleViewOrder = (order: Order) => {
         setSelectedOrder(order);
@@ -147,6 +174,44 @@ const OrdersView: React.FC = () => {
         });
     };
 
+    const formatCurrency = (amount: number, currency = orders[0]?.currency || 'USD') => {
+        return new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency,
+        }).format(amount || 0);
+    };
+
+    const orderStats = [
+        {
+            label: t('ecommerce.ordersTotalLabel', 'Total'),
+            value: stats.total,
+            helper: `${stats.items} ${t('ecommerce.items', 'items')}`,
+            icon: ShoppingCart,
+            iconClassName: 'quimera-dashboard-header-icon',
+        },
+        {
+            label: t('ecommerce.pending', 'Pendientes'),
+            value: stats.pending,
+            helper: `${stats.processing} ${t('ecommerce.processingLower', 'procesando')}`,
+            icon: Clock,
+            iconClassName: stats.pending > 0 ? 'text-q-warning' : 'text-q-success',
+        },
+        {
+            label: t('ecommerce.fulfillment', 'Fulfillment'),
+            value: stats.shipped,
+            helper: `${stats.delivered} ${t('ecommerce.deliveredLower', 'entregados')}`,
+            icon: Truck,
+            iconClassName: 'text-primary',
+        },
+        {
+            label: t('ecommerce.grossRevenue', 'Ingresos'),
+            value: formatCurrency(stats.revenue),
+            helper: `${stats.cancelled + stats.refunded} ${t('ecommerce.problemOrdersLower', 'con incidencia')}`,
+            icon: DollarSign,
+            iconClassName: 'text-q-success',
+        },
+    ];
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -156,82 +221,125 @@ const OrdersView: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-28 md:pb-0">
             {/* Header */}
-            <div>
+            <div className="min-w-0">
+                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-q-border bg-q-surface/50 px-3 py-1 text-xs font-medium text-q-text-muted">
+                    <ShoppingCart size={14} />
+                    {t('ecommerce.orderOps', 'Operación de pedidos')}
+                </div>
                 <h2 className="text-2xl font-bold text-foreground">
                     {t('ecommerce.orders', 'Pedidos')}
                 </h2>
-                <p className="text-q-text-muted">
-                    {orders.length} {t('ecommerce.ordersTotal', 'pedidos en total')}
+                <p className="max-w-2xl text-q-text-muted">
+                    {t('ecommerce.manageOrdersPro', 'Revisa pagos, preparación, envíos e incidencias desde un panel compacto.')}
                 </p>
             </div>
 
-            {/* Status Filter Chips */}
-            <CatalogFilterBar
-                filters={
-                    <FilterChipRow
-                        value={selectedStatus}
-                        onChange={(value) => setSelectedStatus(value as OrderStatusFilter)}
-                        options={[
-                            { id: 'all', label: t('ecommerce.all', 'Todos'), count: orders.length },
-                            {
-                                id: 'pending',
-                                label: t('ecommerce.pending', 'Pendientes'),
-                                count: stats.pending,
-                                color: 'gray',
-                            },
-                            {
-                                id: 'paid',
-                                label: t('ecommerce.paid', 'Pagados'),
-                                count: stats.paid,
-                                color: 'green',
-                            },
-                            {
-                                id: 'shipped',
-                                label: t('ecommerce.shipped', 'Enviados'),
-                                count: stats.shipped,
-                            },
-                            {
-                                id: 'delivered',
-                                label: t('ecommerce.delivered', 'Entregados'),
-                                count: stats.delivered,
-                                color: 'green',
-                            },
-                        ]}
-                    />
-                }
-            />
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                {orderStats.map((stat, index) => {
+                    const Icon = stat.icon;
 
-            {/* Search */}
-            <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
-                <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
-                <input
-                    type="text"
-                    placeholder={t('ecommerce.searchOrders', 'Buscar por número, cliente o email...')}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                />
-                {searchTerm && (
-                    <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
-                        <X size={16} />
-                    </button>
+                    return (
+                        <MotionCard key={stat.label} staggerIndex={index} hoverMotion className="rounded-xl border border-q-border bg-q-surface/50 p-4">
+                            <div className="flex items-center gap-3">
+                                <Icon className={`h-5 w-5 flex-shrink-0 ${stat.iconClassName}`} strokeWidth={2} />
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm text-q-text-muted">{stat.label}</p>
+                                    <p className="truncate text-2xl font-bold text-foreground">{stat.value}</p>
+                                    <p className="truncate text-xs text-q-text-muted">{stat.helper}</p>
+                                </div>
+                            </div>
+                        </MotionCard>
+                    );
+                })}
+            </div>
+
+            {/* Search and filters */}
+            <div className="rounded-xl border border-q-border bg-q-surface/50 p-3 sm:p-4">
+                <div className="grid gap-4 xl:grid-cols-[minmax(18rem,1fr)_minmax(24rem,auto)] xl:items-end">
+                    <label className="block min-w-0">
+                        <span className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold uppercase text-q-text-secondary">
+                            <span>{t('ecommerce.searchOrdersLabel', 'Buscar pedidos')}</span>
+                            <span className="shrink-0 normal-case text-q-text-muted">{visibleOrdersLabel}</span>
+                        </span>
+                        <div className="flex h-12 items-center gap-3 rounded-lg border border-q-border/70 bg-q-bg/60 px-3 shadow-sm transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20">
+                            <Search className="h-4 w-4 flex-shrink-0 text-q-text-secondary" />
+                            <input
+                                type="text"
+                                placeholder={t('ecommerce.searchOrders', 'Número, cliente o email')}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-q-text-muted"
+                            />
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchTerm('')}
+                                    aria-label={t('common.clearSearch', 'Limpiar búsqueda')}
+                                    title={t('common.clearSearch', 'Limpiar búsqueda')}
+                                    className="grid h-7 w-7 flex-shrink-0 place-items-center rounded-md text-q-text-secondary transition-colors hover:bg-muted hover:text-foreground"
+                                >
+                                    <X size={15} />
+                                </button>
+                            )}
+                        </div>
+                    </label>
+
+                    <div className="min-w-0">
+                        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase text-q-text-secondary">
+                            <Filter className="h-3.5 w-3.5" />
+                            <span>{t('ecommerce.orderStatusFilter', 'Estado')}</span>
+                        </div>
+                        <FilterChipRow
+                            value={selectedStatus}
+                            onChange={(value) => setSelectedStatus(value as OrderStatusFilter)}
+                            options={statusFilterOptions}
+                            className="min-w-0"
+                        />
+                    </div>
+                </div>
+
+                {hasActiveFilters && (
+                    <div className="mt-4 flex flex-col gap-3 border-t border-q-border/60 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm text-q-text-muted">
+                            {t('ecommerce.activeOrderFilters', 'Mostrando pedidos filtrados')}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={clearFilters}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-q-border px-3 py-2 text-sm font-medium text-q-text-muted transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary sm:w-auto"
+                        >
+                            <X size={15} />
+                            {t('ecommerce.clearFilters', 'Limpiar filtros')}
+                        </button>
+                    </div>
                 )}
             </div>
 
             {/* Orders List */}
             {filteredOrders.length === 0 ? (
-                <div className="text-center py-12 bg-q-surface/50 rounded-xl border border-q-border">
-                    <ShoppingCart className="mx-auto text-q-text-muted mb-4" size={48} />
-                    <h3 className="text-lg font-medium text-foreground mb-2">
+                <div className="rounded-xl border border-dashed border-q-border bg-q-surface/40 px-6 py-12 text-center">
+                    <ShoppingCart className="mx-auto mb-4 text-q-text-muted" size={48} />
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">
                         {t('ecommerce.noOrders', 'No hay pedidos')}
                     </h3>
-                    <p className="text-q-text-muted">
-                        {searchTerm || selectedStatus !== 'all'
+                    <p className="mx-auto max-w-md text-q-text-muted">
+                        {hasActiveFilters
                             ? t('ecommerce.noOrdersFilter', 'No se encontraron pedidos con los filtros aplicados')
                             : t('ecommerce.noOrdersYet', 'Aún no has recibido ningún pedido')}
                     </p>
+                    {hasActiveFilters && (
+                        <button
+                            type="button"
+                            onClick={clearFilters}
+                            className="mt-5 inline-flex items-center gap-2 rounded-lg border border-q-border px-4 py-2 font-medium text-q-text-muted transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                        >
+                            <X size={18} />
+                            {t('ecommerce.clearFilters', 'Limpiar filtros')}
+                        </button>
+                    )}
                 </div>
             ) : (
                 <>
@@ -245,12 +353,14 @@ const OrdersView: React.FC = () => {
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
                                         <button
+                                            type="button"
                                             onClick={() => handleViewOrder(order)}
-                                            className="block max-w-full truncate text-left font-medium text-foreground hover:text-primary"
+                                            className="block max-w-full truncate text-left font-semibold text-foreground hover:text-primary"
                                         >
                                             {order.orderNumber}
                                         </button>
                                         <button
+                                            type="button"
                                             onClick={() => handleViewOrder(order)}
                                             className="block max-w-full truncate text-left text-sm text-q-text-muted hover:text-primary"
                                         >
@@ -259,7 +369,7 @@ const OrdersView: React.FC = () => {
                                         <p className="truncate text-xs text-q-text-muted">{order.customerEmail}</p>
                                     </div>
                                     <div className="flex-shrink-0 text-right">
-                                        <p className="font-semibold text-foreground">${order.total.toFixed(2)}</p>
+                                        <p className="font-semibold text-foreground">{formatCurrency(order.total, order.currency)}</p>
                                         <p className="text-xs text-q-text-muted">
                                             {order.items.length} {t('ecommerce.items', 'items')}
                                         </p>
@@ -273,8 +383,11 @@ const OrdersView: React.FC = () => {
                                         <span className="truncate">{statusConfig.label}</span>
                                     </span>
                                     <button
+                                        type="button"
                                         onClick={() => handleViewOrder(order)}
-                                        className="flex-shrink-0 p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                        title={t('ecommerce.viewOrder', 'Ver pedido')}
+                                        aria-label={t('ecommerce.viewOrder', 'Ver pedido')}
+                                        className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg text-q-text-muted transition-colors hover:bg-muted hover:text-foreground"
                                     >
                                         <Eye size={18} />
                                     </button>
@@ -283,26 +396,27 @@ const OrdersView: React.FC = () => {
                         );
                     })}
                 </div>
-                <div className="hidden overflow-x-auto rounded-xl border border-q-border bg-q-surface/50 sm:block">
-                    <table className="w-full min-w-[700px]">
+                <div className="hidden overflow-hidden rounded-xl border border-q-border bg-q-surface/50 sm:block">
+                    <div className="overflow-x-auto">
+                    <table className="w-full min-w-[760px]">
                         <thead className="bg-muted/30">
                             <tr>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-q-text-muted">
                                     {t('ecommerce.order', 'Pedido')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden md:table-cell">
+                                <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase text-q-text-muted md:table-cell">
                                     {t('ecommerce.customer', 'Cliente')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden sm:table-cell">
+                                <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase text-q-text-muted sm:table-cell">
                                     {t('ecommerce.date', 'Fecha')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-q-text-muted">
                                     {t('ecommerce.status', 'Estado')}
                                 </th>
-                                <th className="px-4 py-3 text-right text-sm font-medium text-q-text-muted">
+                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-q-text-muted">
                                     {t('ecommerce.total', 'Total')}
                                 </th>
-                                <th className="px-4 py-3 text-right text-sm font-medium text-q-text-muted">
+                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-q-text-muted">
                                     {t('ecommerce.actions', 'Acciones')}
                                 </th>
                             </tr>
@@ -313,23 +427,26 @@ const OrdersView: React.FC = () => {
                                 const StatusIcon = statusConfig.icon;
 
                                 return (
-                                    <tr key={order.id} className="hover:bg-muted/20">
+                                    <tr key={order.id} className="transition-colors hover:bg-muted/20">
                                         <td className="px-4 py-3">
                                             <button
+                                                type="button"
                                                 onClick={() => handleViewOrder(order)}
-                                                className="block max-w-full truncate text-left text-foreground font-medium hover:text-primary"
+                                                className="block max-w-full truncate text-left font-semibold text-foreground hover:text-primary"
                                             >
                                                 {order.orderNumber}
                                             </button>
                                             <button
+                                                type="button"
                                                 onClick={() => handleViewOrder(order)}
                                                 className="block max-w-full truncate text-left text-q-text-muted text-sm hover:text-primary md:hidden"
                                             >
                                                 {order.customerName}
                                             </button>
                                         </td>
-                                        <td className="px-4 py-3 hidden md:table-cell">
+                                        <td className="hidden px-4 py-3 md:table-cell">
                                             <button
+                                                type="button"
                                                 onClick={() => handleViewOrder(order)}
                                                 className="block max-w-full truncate text-left text-foreground hover:text-primary"
                                             >
@@ -337,7 +454,7 @@ const OrdersView: React.FC = () => {
                                             </button>
                                             <p className="text-q-text-muted text-sm">{order.customerEmail}</p>
                                         </td>
-                                        <td className="px-4 py-3 text-q-text-muted hidden sm:table-cell">
+                                        <td className="hidden px-4 py-3 text-q-text-muted sm:table-cell">
                                             {formatDate(order.createdAt)}
                                         </td>
                                         <td className="px-4 py-3">
@@ -350,7 +467,7 @@ const OrdersView: React.FC = () => {
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <p className="text-foreground font-medium">
-                                                ${order.total.toFixed(2)}
+                                                {formatCurrency(order.total, order.currency)}
                                             </p>
                                             <p className="text-q-text-muted text-sm">
                                                 {order.items.length} {t('ecommerce.items', 'items')}
@@ -358,8 +475,11 @@ const OrdersView: React.FC = () => {
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <button
+                                                type="button"
                                                 onClick={() => handleViewOrder(order)}
-                                                className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                                title={t('ecommerce.viewOrder', 'Ver pedido')}
+                                                aria-label={t('ecommerce.viewOrder', 'Ver pedido')}
+                                                className="grid h-9 w-9 place-items-center rounded-lg text-q-text-muted transition-colors hover:bg-muted hover:text-foreground"
                                             >
                                                 <Eye size={18} />
                                             </button>
@@ -369,6 +489,7 @@ const OrdersView: React.FC = () => {
                             })}
                         </tbody>
                     </table>
+                    </div>
                 </div>
                 </>
             )}

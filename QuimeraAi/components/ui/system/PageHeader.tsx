@@ -35,7 +35,7 @@ export const PageHeader = React.forwardRef<HTMLElement, PageHeaderProps>(functio
     <header
       ref={ref}
       className={joinClasses(
-        'flex flex-col gap-4 border-b border-q-border/70 pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6',
+        'flex flex-col gap-4 border-b border-divider pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6',
         className,
       )}
       {...props}
@@ -44,9 +44,9 @@ export const PageHeader = React.forwardRef<HTMLElement, PageHeaderProps>(functio
         {backAction && <div className="mb-3">{backAction}</div>}
         <div className="flex min-w-0 items-start gap-3">
           {icon && (
-            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-q-border bg-q-surface text-q-accent">
+            <span className="mt-1 flex shrink-0 items-center justify-center text-q-text-muted [&_svg]:h-[var(--icon-md)] [&_svg]:w-[var(--icon-md)]">
               {icon}
-            </div>
+            </span>
           )}
           <div className="min-w-0">
             {eyebrow && (

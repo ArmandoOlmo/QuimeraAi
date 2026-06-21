@@ -52,8 +52,8 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
         { clients: 0, mrr: 0, profit: 0, cost: 0 }
     );
 
-    const avgMarkup = totals.cost > 0 
-        ? ((totals.mrr - totals.cost) / totals.cost) * 100 
+    const avgMarkup = totals.cost > 0
+        ? ((totals.mrr - totals.cost) / totals.cost) * 100
         : 0;
 
     // Format currency
@@ -77,8 +77,8 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                 onClick={() => compact && setExpanded(!expanded)}
             >
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-                        <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <div className="p-2 rounded-lg bg-q-success/10 dark:bg-q-success/12">
+                        <TrendingUp className="w-5 h-5 text-q-success dark:text-q-success" />
                     </div>
                     <div>
                         <h3 className="font-semibold text-foreground">Resumen de Ganancias</h3>
@@ -121,7 +121,7 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                                 <th className="px-6 py-3 text-right text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                     MRR
                                 </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-green-600 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-right text-xs font-medium text-q-success uppercase tracking-wider">
                                     Ganancia/Mes
                                 </th>
                             </tr>
@@ -147,17 +147,17 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                                                 <span className="text-q-text-muted">{formatCurrency(summary.baseCost)}</span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                <span className="text-green-600 dark:text-green-400 font-medium">
+                                                <span className="text-q-success dark:text-q-success font-medium">
                                                     +{formatCurrency(summary.markup)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                    summary.markupPercentage >= 200 
-                                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                                    summary.markupPercentage >= 200
+                                                        ? 'bg-q-success/10 dark:bg-q-success/12 text-q-success dark:text-q-success'
                                                         : summary.markupPercentage >= 100
-                                                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                                                        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                                                        ? 'bg-q-accent/10 dark:bg-q-accent/12 text-q-accent dark:text-q-accent'
+                                                        : 'bg-q-accent/10 dark:bg-q-accent/12 text-q-accent dark:text-q-accent'
                                                 }`}>
                                                     {Math.round(summary.markupPercentage)}%
                                                 </span>
@@ -172,7 +172,7 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                                                 <span className="text-foreground">{formatCurrency(summary.mrr)}</span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                <span className="text-green-600 dark:text-green-400 font-bold">
+                                                <span className="text-q-success dark:text-q-success font-bold">
                                                     {formatCurrency(summary.monthlyProfit)}
                                                 </span>
                                             </td>
@@ -194,11 +194,11 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                                     <td className="px-6 py-4 text-right text-q-text-muted">
                                         {formatCurrency(totals.cost)}
                                     </td>
-                                    <td className="px-6 py-4 text-right text-green-600 dark:text-green-400">
+                                    <td className="px-6 py-4 text-right text-q-success dark:text-q-success">
                                         -
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-q-success/10 dark:bg-q-success/12 text-q-success dark:text-q-success">
                                             {Math.round(avgMarkup)}% avg
                                         </span>
                                     </td>
@@ -209,7 +209,7 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                                         {formatCurrency(totals.mrr)}
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <span className="text-green-600 dark:text-green-400 font-bold text-lg">
+                                        <span className="text-q-success dark:text-q-success font-bold text-lg">
                                             {formatCurrency(totals.profit)}
                                         </span>
                                     </td>
@@ -232,7 +232,7 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                         <p className="text-xs text-q-text-muted">MRR</p>
                     </div>
                     <div className="text-center">
-                        <p className="text-2xl font-bold text-green-600">{formatCurrency(totals.profit)}</p>
+                        <p className="text-2xl font-bold text-q-success">{formatCurrency(totals.profit)}</p>
                         <p className="text-xs text-q-text-muted">Ganancia/mes</p>
                     </div>
                 </div>

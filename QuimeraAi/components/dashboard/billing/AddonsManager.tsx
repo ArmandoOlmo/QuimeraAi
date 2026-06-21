@@ -276,33 +276,33 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Package className="h-7 w-7 text-blue-600" />
+        <h2 className="text-2xl font-bold text-q-text flex items-center gap-2">
+          <Package className="h-7 w-7 text-q-accent" />
           Complementos (Add-ons)
         </h2>
-        <p className="text-gray-600 mt-2">
+        <p className="text-q-text-muted mt-2">
           Personaliza tu plan agregando recursos adicionales según tus necesidades
         </p>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+        <div className="bg-q-error/10 border border-q-error/25 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-q-error mt-0.5" />
           <div>
-            <h4 className="font-semibold text-red-900">Error</h4>
-            <p className="text-red-700 text-sm">{error}</p>
+            <h4 className="font-semibold text-q-error">Error</h4>
+            <p className="text-q-error text-sm">{error}</p>
           </div>
         </div>
       )}
 
       {/* Success Message */}
       {successMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-          <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+        <div className="bg-q-success/10 border border-q-success/25 rounded-lg p-4 flex items-start gap-3">
+          <CheckCircle2 className="h-5 w-5 text-q-success mt-0.5" />
           <div>
-            <h4 className="font-semibold text-green-900">¡Éxito!</h4>
-            <p className="text-green-700 text-sm">{successMessage}</p>
+            <h4 className="font-semibold text-q-success">¡Éxito!</h4>
+            <p className="text-q-success text-sm">{successMessage}</p>
           </div>
         </div>
       )}
@@ -321,19 +321,19 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
       </div>
 
       {/* Summary Card */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+      <div className="bg-gradient-to-br from-q-accent to-q-accent border border-q-accent/25 rounded-lg p-6">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-blue-600" />
+            <h3 className="text-lg font-semibold text-q-text flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-q-accent" />
               Resumen de Costos
             </h3>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-q-text-muted mt-1">
               Costos mensuales de add-ons
             </p>
           </div>
           {hasChanges && (
-            <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+            <span className="px-3 py-1 bg-q-accent/10 text-q-accent text-xs font-semibold rounded-full">
               Cambios sin guardar
             </span>
           )}
@@ -342,8 +342,8 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
         <div className="space-y-3">
           {/* Current Add-ons Cost */}
           <div className="flex justify-between items-center">
-            <span className="text-gray-700">Costo Actual de Add-ons:</span>
-            <span className="text-xl font-bold text-gray-900">
+            <span className="text-q-text">Costo Actual de Add-ons:</span>
+            <span className="text-xl font-bold text-q-text">
               ${originalCost.toFixed(2)}/mes
             </span>
           </div>
@@ -352,23 +352,23 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
           {hasChanges && (
             <>
               <div className="flex justify-between items-center">
-                <span className="text-gray-700">Nuevo Costo de Add-ons:</span>
-                <span className="text-xl font-bold text-blue-600">
+                <span className="text-q-text">Nuevo Costo de Add-ons:</span>
+                <span className="text-xl font-bold text-q-accent">
                   ${currentCost.toFixed(2)}/mes
                 </span>
               </div>
 
-              <div className="flex justify-between items-center pt-3 border-t border-blue-200">
-                <span className="font-semibold text-gray-900 flex items-center gap-2">
+              <div className="flex justify-between items-center pt-3 border-t border-q-accent/25">
+                <span className="font-semibold text-q-text flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
                   Diferencia:
                 </span>
                 <span
                   className={`text-xl font-bold ${costDifference > 0
-                    ? 'text-red-600'
+                    ? 'text-q-error'
                     : costDifference < 0
-                      ? 'text-green-600'
-                      : 'text-gray-600'
+                      ? 'text-q-success'
+                      : 'text-q-text-muted'
                     }`}
                 >
                   {costDifference > 0 ? '+' : ''}${costDifference.toFixed(2)}/mes
@@ -379,8 +379,8 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
 
           {/* Breakdown */}
           {currentCost > 0 && (
-            <div className="pt-3 border-t border-blue-200">
-              <p className="text-xs text-gray-600 mb-2">Desglose:</p>
+            <div className="pt-3 border-t border-q-accent/25">
+              <p className="text-xs text-q-text-muted mb-2">Desglose:</p>
               <div className="space-y-1">
                 {addons.map((addon) => {
                   if (addon.currentQuantity > 0) {
@@ -388,7 +388,7 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
                     return (
                       <div
                         key={addon.id}
-                        className="flex justify-between text-sm text-gray-700"
+                        className="flex justify-between text-sm text-q-text"
                       >
                         <span>
                           {addon.name} ({addon.currentQuantity} {addon.unitLabel})
@@ -404,8 +404,8 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
           )}
 
           {/* Info Note */}
-          <div className="pt-3 border-t border-blue-200">
-            <p className="text-xs text-gray-600">
+          <div className="pt-3 border-t border-q-accent/25">
+            <p className="text-xs text-q-text-muted">
               💡 Los add-ons se suman a tu plan base. La facturación se actualiza
               inmediatamente y el cambio se prorratea en tu próxima factura.
             </p>
@@ -418,19 +418,19 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
         <div className="flex justify-end gap-4">
           <button
             onClick={handleCancel}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold"
+            className="px-6 py-2 border border-q-border text-q-text rounded-lg hover:bg-q-surface-overlay font-semibold"
             disabled={isSaving}
           >
             Cancelar
           </button>
           <button
             onClick={handleSaveChanges}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold disabled:opacity-50 flex items-center gap-2"
+            className="px-6 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent font-semibold disabled:opacity-50 flex items-center gap-2"
             disabled={isSaving}
           >
             {isSaving ? (
               <>
-                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                <div className="animate-spin h-4 w-4 border-2 border-q-border border-t-transparent rounded-full" />
                 Actualizando...
               </>
             ) : (
@@ -467,40 +467,40 @@ function AddonCard({
 
   return (
     <div
-      className={`bg-white border-2 rounded-lg p-6 transition-all ${addon.recommended
-        ? 'border-blue-500 shadow-md'
-        : 'border-gray-200 hover:border-gray-300'
+      className={`bg-q-surface border-2 rounded-lg p-6 transition-all ${addon.recommended
+        ? 'border-q-accent/25 shadow-md'
+        : 'border-q-border hover:border-q-border'
         }`}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div
-          className={`p-3 rounded-lg ${addon.recommended ? 'bg-blue-100' : 'bg-gray-100'
+          className={`p-3 rounded-lg ${addon.recommended ? 'bg-q-accent/10' : 'bg-q-surface-overlay'
             }`}
         >
           {React.cloneElement(addon.icon as React.ReactElement, {
-            className: `h-6 w-6 ${addon.recommended ? 'text-blue-600' : 'text-gray-600'
+            className: `h-6 w-6 ${addon.recommended ? 'text-q-accent' : 'text-q-text-muted'
               }`,
           })}
         </div>
         {addon.recommended && (
-          <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
+          <span className="px-2 py-1 bg-q-accent/10 text-q-accent text-xs font-semibold rounded">
             Recomendado
           </span>
         )}
       </div>
 
       {/* Info */}
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{addon.name}</h3>
-      <p className="text-sm text-gray-600 mb-4">{addon.description}</p>
+      <h3 className="text-lg font-semibold text-q-text mb-2">{addon.name}</h3>
+      <p className="text-sm text-q-text-muted mb-4">{addon.description}</p>
 
       {/* Pricing */}
       <div className="mb-4">
         <div className="flex items-baseline gap-1">
-          <span className="text-2xl font-bold text-gray-900">
+          <span className="text-2xl font-bold text-q-text">
             ${addon.pricePerUnit}
           </span>
-          <span className="text-sm text-gray-600">/ {addon.unit}</span>
+          <span className="text-sm text-q-text-muted">/ {addon.unit}</span>
         </div>
       </div>
 
@@ -510,7 +510,7 @@ function AddonCard({
           <button
             onClick={onDecrease}
             disabled={addon.currentQuantity <= addon.minQuantity}
-            className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-2 border border-q-border rounded-lg hover:bg-q-surface-overlay disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <Minus className="h-4 w-4" />
           </button>
@@ -521,30 +521,30 @@ function AddonCard({
             onChange={(e) => onQuantityChange(parseInt(e.target.value) || 0)}
             min={addon.minQuantity}
             max={addon.maxQuantity}
-            className="flex-1 text-center text-xl font-semibold border border-gray-300 rounded-lg py-2"
+            className="flex-1 text-center text-xl font-semibold border border-q-border rounded-lg py-2"
           />
 
           <button
             onClick={onIncrease}
             disabled={addon.currentQuantity >= addon.maxQuantity}
-            className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-2 border border-q-border rounded-lg hover:bg-q-surface-overlay disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <Plus className="h-4 w-4" />
           </button>
         </div>
 
-        <p className="text-xs text-center text-gray-600">
+        <p className="text-xs text-center text-q-text-muted">
           {addon.currentQuantity} {addon.unitLabel}
         </p>
       </div>
 
       {/* Total Cost */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
+      <div className="mt-4 pt-4 border-t border-q-border">
         <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-q-text">
             Costo Mensual:
           </span>
-          <span className="text-lg font-bold text-gray-900">
+          <span className="text-lg font-bold text-q-text">
             ${totalCost.toFixed(2)}
           </span>
         </div>

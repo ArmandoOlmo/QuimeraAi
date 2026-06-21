@@ -98,13 +98,13 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
     const getRoleIcon = (role: AgencyRole) => {
         switch (role) {
             case 'agency_owner':
-                return <Crown size={12} className="text-yellow-500" />;
+                return <Crown size={12} className="text-q-accent" />;
             case 'agency_admin':
-                return <Shield size={12} className="text-purple-500" />;
+                return <Shield size={12} className="text-q-text-muted" />;
             case 'agency_member':
-                return <Users size={12} className="text-blue-500" />;
+                return <Users size={12} className="text-q-text-muted" />;
             case 'client':
-                return <User size={12} className="text-green-500" />;
+                return <User size={12} className="text-q-success" />;
             default:
                 return null;
         }
@@ -119,7 +119,7 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
             .slice(0, 2);
     };
     const emptyCreateButtonClasses = [
-        'flex items-center gap-2 w-full p-2 rounded-lg',
+        'flex items-center gap-2 w-full p-2 rounded-[var(--q-radius-md)]',
         'bg-q-accent/10 border border-q-accent/30 border-dashed',
         'text-q-accent hover:bg-q-accent/20 transition-colors',
         className,
@@ -128,12 +128,12 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
     const loadingIconClasses = 'w-8 h-8 rounded-lg bg-q-surface-overlay animate-pulse';
     const loadingTextWrapClasses = 'flex-1 space-y-1';
     const singleTenantClasses = ['flex items-center gap-2 p-2', className].filter(Boolean).join(' ');
-    const tenantAvatarClasses = 'w-8 h-8 rounded-lg bg-gradient-to-br from-q-accent/80 to-q-accent flex items-center justify-center text-white text-xs font-bold shadow-sm';
+    const tenantAvatarClasses = 'w-8 h-8 rounded-[var(--q-radius-md)] border border-border-subtle bg-q-surface-overlay flex items-center justify-center text-q-text-muted text-xs font-bold';
     const triggerClasses = [
-        'flex items-center gap-2 w-full p-2 rounded-lg',
-        'bg-q-surface hover:bg-q-surface-elevated/50 border border-q-border',
+        'flex items-center gap-2 w-full p-2 rounded-[var(--q-radius-md)]',
+        'bg-q-surface hover:bg-sidebar-control-hover border border-border-subtle hover:border-sidebar-control-border',
         'transition-all duration-200',
-        isOpen ? 'ring-2 ring-q-accent/50' : '',
+        isOpen ? 'ring-2 ring-q-accent/25 border-q-accent/45' : '',
         isLoading ? 'opacity-50 cursor-wait' : '',
     ].filter(Boolean).join(' ');
     const triggerAvatarClasses = `${tenantAvatarClasses} flex-shrink-0`;
@@ -148,24 +148,24 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
     ].filter(Boolean).join(' ');
     const dropdownClasses = [
         'absolute z-50 mt-2 py-1',
-        'bg-q-surface-elevated border border-q-border rounded-xl shadow-xl',
+        'bg-q-surface-elevated border border-border-subtle rounded-[var(--radius-card-compact)] shadow-[var(--shadow-elevated)]',
         'animate-in fade-in-0 zoom-in-95 duration-200',
         collapsed ? 'left-full ml-2 top-0' : 'left-0 right-0',
         collapsed ? 'w-64' : 'w-full',
     ].join(' ');
-    const dropdownHeaderClasses = 'px-3 py-2 border-b border-q-border';
+    const dropdownHeaderClasses = 'px-3 py-2 border-b border-divider';
     const dropdownHeaderTitleClasses = 'text-xs font-semibold text-q-text-muted uppercase tracking-wider';
     const listClasses = 'max-h-64 overflow-y-auto py-1';
     const workspaceItemClasses = (isActive: boolean) => [
         'flex items-center gap-3 w-full px-3 py-2.5',
-        'hover:bg-q-surface-overlay/50 transition-colors',
-        isActive ? 'bg-q-accent/10' : '',
+        'hover:bg-sidebar-control-hover transition-colors',
+        isActive ? 'bg-q-accent/12 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--q-accent)_30%,transparent)]' : '',
     ].filter(Boolean).join(' ');
     const workspaceItemAvatarClasses = (isActive: boolean) => [
-        'w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0',
+        'w-9 h-9 rounded-[var(--q-radius-md)] border flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden',
         isActive
-            ? 'bg-gradient-to-br from-q-accent to-q-accent/80 shadow-md shadow-q-accent/30'
-            : 'bg-gradient-to-br from-q-text-muted/60 to-q-text-muted/40',
+            ? 'border-q-accent/35 bg-q-accent/12 text-q-accent'
+            : 'border-border-subtle bg-q-surface-overlay text-q-text-muted',
     ].join(' ');
     const workspaceItemTextClasses = 'flex-1 min-w-0 text-left';
     const workspaceItemTitleClasses = (isActive: boolean) => [
@@ -173,9 +173,9 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
         isActive ? 'text-q-accent' : 'text-q-text',
     ].join(' ');
     const workspaceMetaClasses = 'flex items-center gap-1.5';
-    const clientBadgeClasses = 'text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-500';
+    const clientBadgeClasses = 'text-[10px] px-1.5 py-0.5 rounded-full bg-q-info/10 text-q-info';
     const activeIndicatorClasses = 'text-q-accent flex-shrink-0';
-    const dividerClasses = 'border-t border-q-border my-1';
+    const dividerClasses = 'border-t border-divider my-1';
     const actionButtonClasses = 'flex items-center gap-2 w-full px-3 py-2.5 text-q-accent hover:bg-q-accent/10 transition-colors';
     const actionLabelClasses = 'text-sm font-medium';
 
@@ -378,8 +378,6 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
 };
 
 export default WorkspaceSwitcher;
-
-
 
 
 

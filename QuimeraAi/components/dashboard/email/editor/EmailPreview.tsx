@@ -27,7 +27,7 @@ const EmailPreview: React.FC = () => {
         setSelectedBlockId,
         previewDevice,
     } = useEmailEditor();
-    
+
     const containerWidth = DEVICE_WIDTHS[previewDevice];
 
     // Resolve the font-family: if it's a fontLoader key (e.g. 'inter'), get the CSS stack
@@ -45,7 +45,7 @@ const EmailPreview: React.FC = () => {
             loadGoogleFonts([resolved], 'email-editor-preview-font');
         }
     }, [rawFont, isKnownKey]);
-    
+
     return (
         <div className="h-full flex flex-col">
             {/* Preview Header */}
@@ -60,7 +60,7 @@ const EmailPreview: React.FC = () => {
                             {containerWidth}px
                         </span>
                     </div>
-                    
+
                     {/* Subject Line Preview */}
                     <div className="flex items-center gap-2 text-sm">
                         <span className="text-q-text-secondary">{t('email.subject', 'Asunto')}:</span>
@@ -70,28 +70,28 @@ const EmailPreview: React.FC = () => {
                     </div>
                 </div>
             </div>
-            
+
             {/* Preview Container */}
             <div className="flex-1 overflow-auto p-6">
                 <div className="flex justify-center">
                     {/* Email Frame */}
-                    <div 
-                        className="bg-white shadow-xl rounded-lg overflow-hidden transition-all duration-300"
-                        style={{ 
+                    <div
+                        className="bg-q-surface shadow-xl rounded-lg overflow-hidden transition-all duration-300"
+                        style={{
                             width: containerWidth,
                             maxWidth: '100%',
                         }}
                     >
                         {/* Email Body Background */}
-                        <div 
-                            style={{ 
+                        <div
+                            style={{
                                 backgroundColor: document.globalStyles.bodyBackgroundColor,
                                 minHeight: 400,
                             }}
                         >
                             {/* Email Content Container */}
-                            <div 
-                                style={{ 
+                            <div
+                                style={{
                                     backgroundColor: document.globalStyles.backgroundColor,
                                     fontFamily: resolvedFontStack,
                                     maxWidth: containerWidth,
@@ -101,11 +101,11 @@ const EmailPreview: React.FC = () => {
                                 {/* Render Blocks */}
                                 {document.blocks.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-                                        <Mail size={48} className="text-gray-300 mb-4" />
-                                        <h3 className="text-lg font-medium text-gray-500 mb-2">
+                                        <Mail size={48} className="text-q-text-muted mb-4" />
+                                        <h3 className="text-lg font-medium text-q-text-muted mb-2">
                                             {t('email.emptyEmail', 'Email vacío')}
                                         </h3>
-                                        <p className="text-sm text-gray-400 max-w-xs">
+                                        <p className="text-sm text-q-text-muted max-w-xs">
                                             {t('email.emptyEmailHint', 'Agrega bloques desde el panel izquierdo para comenzar a diseñar tu email')}
                                         </p>
                                     </div>
@@ -117,18 +117,18 @@ const EmailPreview: React.FC = () => {
                                                 key={block.id}
                                                 className={`
                                                     relative cursor-pointer transition-all duration-150
-                                                    ${selectedBlockId === block.id 
-                                                        ? 'ring-2 ring-blue-500 ring-offset-0' 
-                                                        : 'hover:ring-2 hover:ring-blue-300/50 hover:ring-offset-0'
+                                                    ${selectedBlockId === block.id
+                                                        ? 'ring-2 ring-q-accent/35 ring-offset-0'
+                                                        : 'hover:ring-2 hover:ring-q-accent/50 hover:ring-offset-0'
                                                     }
                                                 `}
                                                 onClick={() => setSelectedBlockId(block.id)}
                                             >
                                                 {renderEmailBlock(block, document.globalStyles)}
-                                                
+
                                                 {/* Selection Indicator */}
                                                 {selectedBlockId === block.id && (
-                                                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-full" />
+                                                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-q-accent rounded-full" />
                                                 )}
                                             </div>
                                         ))

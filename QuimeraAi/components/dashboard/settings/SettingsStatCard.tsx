@@ -1,4 +1,5 @@
 import React from 'react';
+import { MotionCard } from '../../ui/primitives/Card';
 
 export const SettingsStatCard = ({
     label,
@@ -15,7 +16,8 @@ export const SettingsStatCard = ({
     hint?: string;
     compact?: boolean;
 }) => (
-    <div
+    <MotionCard
+        hoverMotion
         className={`group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl hover:border-q-border transition-all duration-300 ease-out ${
             compact ? 'p-3 min-w-[7.5rem]' : 'p-2.5 md:p-4'
         }`}
@@ -48,7 +50,7 @@ export const SettingsStatCard = ({
                 <p className="text-[10px] text-q-text-muted/80 mt-0.5 hidden sm:block">{hint}</p>
             )}
         </div>
-    </div>
+    </MotionCard>
 );
 
 export const settingsPanelClass =

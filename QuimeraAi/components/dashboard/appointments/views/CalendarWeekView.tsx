@@ -93,9 +93,9 @@ const TimeSlotAppointment: React.FC<TimeSlotAppointmentProps> = ({
 
             {/* Resize handle (Visual only for now) */}
             <div className="
-                absolute bottom-0 left-0 right-0 h-1.5 
+                absolute bottom-0 left-0 right-0 h-1.5
                 cursor-s-resize opacity-0 hover:opacity-100
-                bg-black/10 transition-opacity
+                bg-q-text/10 transition-opacity
                 rounded-b-md
             " />
         </div>
@@ -223,11 +223,11 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                 style={{ top: `${currentTimeTop}px` }}
                             >
                                 <div className="w-12 sm:w-16 flex justify-end pr-1 sm:pr-2">
-                                    <span className="text-[8px] sm:text-[10px] font-bold text-red-500 bg-q-bg px-0.5 sm:px-1 rounded">
+                                    <span className="text-[8px] sm:text-[10px] font-bold text-q-error bg-q-bg px-0.5 sm:px-1 rounded">
                                         {new Date().toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
-                                <div className="flex-1 h-px bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]" />
+                                <div className="flex-1 h-px bg-q-error shadow-[0_0_4px_rgba(239,68,68,0.6)]" />
                             </div>
                         )}
 
@@ -298,7 +298,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                                         h-[64px] border-b border-q-border/20 cursor-pointer transition-colors relative
                                                         ${blocked
                                                             ? 'cursor-not-allowed'
-                                                            : 'hover:bg-black/[0.02]'
+                                                            : 'hover:bg-q-text/[0.02]'
                                                         }
                                                     `}
                                                 >

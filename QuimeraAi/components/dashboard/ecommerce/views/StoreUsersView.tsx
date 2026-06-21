@@ -40,6 +40,7 @@ import { useEcommerceContext } from '../EcommerceContext';
 import type { StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
 import StoreUserDetailDrawer from '../components/StoreUserDetailDrawer';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 const StoreUsersView: React.FC = () => {
     const { t } = useTranslation();
@@ -184,9 +185,9 @@ const StoreUsersView: React.FC = () => {
     // Status badge component
     const StatusBadge: React.FC<{ status: StoreUserStatus }> = ({ status }) => {
         const statusConfig = {
-            active: { label: t('storeUsers.statusActive', 'Activo'), color: 'bg-green-500', icon: UserCheck },
-            inactive: { label: t('storeUsers.statusInactive', 'Inactivo'), color: 'bg-gray-500', icon: UserMinus },
-            banned: { label: t('storeUsers.statusBanned', 'Bloqueado'), color: 'bg-red-500', icon: UserX },
+            active: { label: t('storeUsers.statusActive', 'Activo'), color: 'bg-q-success', icon: UserCheck },
+            inactive: { label: t('storeUsers.statusInactive', 'Inactivo'), color: 'bg-q-surface-overlay', icon: UserMinus },
+            banned: { label: t('storeUsers.statusBanned', 'Bloqueado'), color: 'bg-q-error', icon: UserX },
         };
         const config = statusConfig[status];
         const Icon = config.icon;
@@ -209,7 +210,7 @@ const StoreUsersView: React.FC = () => {
 
     if (error) {
         return (
-            <div className="flex flex-col items-center justify-center h-64 text-red-500">
+            <div className="flex flex-col items-center justify-center h-64 text-q-error">
                 <AlertTriangle size={48} className="mb-4" />
                 <p>{error}</p>
             </div>
@@ -243,7 +244,7 @@ const StoreUsersView: React.FC = () => {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
+                <MotionCard staggerIndex={0} hoverMotion className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <Users className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
@@ -251,51 +252,51 @@ const StoreUsersView: React.FC = () => {
                             <p className="text-sm text-q-text-muted">{t('storeUsers.total', 'Total')}</p>
                         </div>
                     </div>
-                </div>
+                </MotionCard>
 
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
+                <MotionCard staggerIndex={1} hoverMotion className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <UserCheck className="text-green-400 flex-shrink-0" size={20} strokeWidth={2} />
+                        <UserCheck className="text-q-success flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.activeUsers}</p>
                             <p className="text-sm text-q-text-muted">{t('storeUsers.active', 'Activos')}</p>
                         </div>
                     </div>
-                </div>
+                </MotionCard>
 
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
+                <MotionCard staggerIndex={2} hoverMotion className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <Crown className="text-yellow-400 flex-shrink-0" size={20} strokeWidth={2} />
+                        <Crown className="text-q-accent flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.usersByRole.vip}</p>
                             <p className="text-sm text-q-text-muted">VIP</p>
                         </div>
                     </div>
-                </div>
+                </MotionCard>
 
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
+                <MotionCard staggerIndex={3} hoverMotion className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <Shield className="text-purple-400 flex-shrink-0" size={20} strokeWidth={2} />
+                        <Shield className="text-q-accent flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.usersByRole.wholesale}</p>
                             <p className="text-sm text-q-text-muted">{t('storeUsers.wholesale', 'Mayoristas')}</p>
                         </div>
                     </div>
-                </div>
+                </MotionCard>
 
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
+                <MotionCard staggerIndex={4} hoverMotion className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         {stats.newUsersThisMonth >= stats.newUsersLastMonth ? (
-                            <TrendingUp className="text-blue-400 flex-shrink-0" size={20} strokeWidth={2} />
+                            <TrendingUp className="text-q-accent flex-shrink-0" size={20} strokeWidth={2} />
                         ) : (
-                            <TrendingDown className="text-blue-400 flex-shrink-0" size={20} strokeWidth={2} />
+                            <TrendingDown className="text-q-accent flex-shrink-0" size={20} strokeWidth={2} />
                         )}
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.newUsersThisMonth}</p>
                             <p className="text-sm text-q-text-muted">{t('storeUsers.newThisMonth', 'Nuevos este mes')}</p>
                         </div>
                     </div>
-                </div>
+                </MotionCard>
             </div>
 
             {/* Search and Filters */}
@@ -327,7 +328,7 @@ const StoreUsersView: React.FC = () => {
                     <Filter size={18} />
                     {t('storeUsers.filters', 'Filtros')}
                     {(selectedRoles.length > 0 || selectedStatuses.length > 0) && (
-                        <span className="px-1.5 py-0.5 text-xs rounded-full bg-primary text-white">
+                        <span className="px-1.5 py-0.5 text-xs rounded-full bg-primary text-primary-foreground">
                             {selectedRoles.length + selectedStatuses.length}
                         </span>
                     )}

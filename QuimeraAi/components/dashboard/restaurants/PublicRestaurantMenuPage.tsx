@@ -54,9 +54,9 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
           <h1 className="text-4xl font-bold text-white">{restaurant.name}</h1>
           <p className="mt-2 text-white/85">{restaurant.cuisineType}</p>
           <div className="mt-5 flex flex-wrap gap-2">
-            {restaurant.reservationEnabled && <a href="#reserve" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black"><Calendar size={16} />Reserve</a>}
-            {restaurant.phone && <a href={`tel:${restaurant.phone}`} className="inline-flex items-center gap-2 rounded-lg bg-white/15 px-4 py-2 text-sm font-medium text-white backdrop-blur"><Phone size={16} />Call</a>}
-            {restaurant.address && <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address)}`} className="inline-flex items-center gap-2 rounded-lg bg-white/15 px-4 py-2 text-sm font-medium text-white backdrop-blur"><MapPin size={16} />Map</a>}
+            {restaurant.reservationEnabled && <a href="#reserve" className="inline-flex items-center gap-2 rounded-lg bg-q-surface px-4 py-2 text-sm font-medium text-black"><Calendar size={16} />Reserve</a>}
+            {restaurant.phone && <a href={`tel:${restaurant.phone}`} className="inline-flex items-center gap-2 rounded-lg bg-q-surface/15 px-4 py-2 text-sm font-medium text-white backdrop-blur"><Phone size={16} />Call</a>}
+            {restaurant.address && <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address)}`} className="inline-flex items-center gap-2 rounded-lg bg-q-surface/15 px-4 py-2 text-sm font-medium text-white backdrop-blur"><MapPin size={16} />Map</a>}
           </div>
         </div>
       </section>

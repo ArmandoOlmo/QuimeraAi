@@ -199,7 +199,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                         <div className="flex items-center gap-1">
                             <HeaderBackButton onClick={onBack} label={t('common.back')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                             {showSuccess && (
-                                <span className="text-sm text-green-400 flex items-center animate-fade-in-up">
+                                <span className="text-sm text-q-success flex items-center animate-fade-in-up">
                                     <CheckCircle size={16} className="mr-1.5" /> {t('superadmin.globalAssistant.saved', 'Saved')}
                                 </span>
                             )}
@@ -232,7 +232,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                 onClick={() => updateForm('isEnabled', !formData.isEnabled)}
                                                 className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isEnabled ? 'bg-q-accent' : 'bg-q-surface-overlay'}`}
                                             >
-                                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.isEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.isEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                             </button>
                                         </div>
                                     </div>
@@ -250,9 +250,9 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                             </div>
                                             <button
                                                 onClick={() => updateForm('autoDetectLanguage', !formData.autoDetectLanguage)}
-                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.autoDetectLanguage ? 'bg-green-500' : 'bg-q-surface-overlay'}`}
+                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.autoDetectLanguage ? 'bg-q-success' : 'bg-q-surface-overlay'}`}
                                             >
-                                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.autoDetectLanguage ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.autoDetectLanguage ? 'translate-x-6' : 'translate-x-1'}`} />
                                             </button>
                                         </div>
 
@@ -279,9 +279,9 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                             </div>
                                             <button
                                                 onClick={() => updateForm('enableLiveVoice', !formData.enableLiveVoice)}
-                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-q-surface-overlay'}`}
+                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.enableLiveVoice ? 'bg-q-success' : 'bg-q-surface-overlay'}`}
                                             >
-                                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.enableLiveVoice ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.enableLiveVoice ? 'translate-x-6' : 'translate-x-1'}`} />
                                             </button>
                                         </div>
 
@@ -378,16 +378,16 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                         <div className="flex justify-end space-x-4 mb-2 text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                             <div className="flex items-center space-x-2">
                                                 <span>{t('superadmin.globalAssistant.scope.chatEnabled', 'Chat Enabled')}</span>
-                                                <button onClick={() => toggleAll('chat', true)} className="text-green-400 hover:underline">{t('superadmin.globalAssistant.scope.add', 'Add')}</button>
+                                                <button onClick={() => toggleAll('chat', true)} className="text-q-success hover:underline">{t('superadmin.globalAssistant.scope.add', 'Add')}</button>
                                                 <span>/</span>
-                                                <button onClick={() => toggleAll('chat', false)} className="text-red-400 hover:underline">{t('superadmin.globalAssistant.scope.remove', 'Remove')}</button>
+                                                <button onClick={() => toggleAll('chat', false)} className="text-q-error hover:underline">{t('superadmin.globalAssistant.scope.remove', 'Remove')}</button>
                                             </div>
                                             <div className="w-px h-4 bg-q-surface-overlay mx-2"></div>
                                             <div className="flex items-center space-x-2">
                                                 <span>{t('superadmin.globalAssistant.scope.voiceEnabled', 'Voice Enabled')}</span>
-                                                <button onClick={() => toggleAll('voice', true)} className="text-green-400 hover:underline">{t('superadmin.globalAssistant.scope.add', 'Add')}</button>
+                                                <button onClick={() => toggleAll('voice', true)} className="text-q-success hover:underline">{t('superadmin.globalAssistant.scope.add', 'Add')}</button>
                                                 <span>/</span>
-                                                <button onClick={() => toggleAll('voice', false)} className="text-red-400 hover:underline">{t('superadmin.globalAssistant.scope.remove', 'Remove')}</button>
+                                                <button onClick={() => toggleAll('voice', false)} className="text-q-error hover:underline">{t('superadmin.globalAssistant.scope.remove', 'Remove')}</button>
                                             </div>
                                         </div>
 
@@ -456,10 +456,10 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <h4 className="font-medium text-q-text">{template.name}</h4>
-                                                        <span className={`text-[10px] px-2 py-0.5 rounded ${template.category === 'core' ? 'bg-blue-500/20 text-blue-400' :
-                                                            template.category === 'multilingual' ? 'bg-green-500/20 text-green-400' :
-                                                                template.category === 'technical' ? 'bg-purple-500/20 text-purple-400' :
-                                                                    'bg-orange-500/20 text-orange-400'
+                                                        <span className={`text-[10px] px-2 py-0.5 rounded ${template.category === 'core' ? 'bg-q-accent/20 text-q-accent' :
+                                                            template.category === 'multilingual' ? 'bg-q-success/20 text-q-success' :
+                                                                template.category === 'technical' ? 'bg-q-accent/20 text-q-accent' :
+                                                                    'bg-q-warning/20 text-q-warning'
                                                             }`}>
                                                             {template.category === 'core' ? t('superadmin.categoryCore', 'Core') :
                                                                 template.category === 'multilingual' ? t('superadmin.categoryMultilingual', 'Multilingual') :
@@ -484,7 +484,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                         onChange={(e) => toggleTemplate(template.id, e.target.checked)}
                                                         className="sr-only peer"
                                                     />
-                                                    <div className="w-11 h-6 bg-q-bg peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-q-accent rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-q-accent"></div>
+                                                    <div className="w-11 h-6 bg-q-bg peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-q-accent rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-q-accent"></div>
                                                 </label>
                                             </div>
                                         </div>
@@ -610,7 +610,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
 
                 {/* Template Preview Modal */}
                 {previewTemplate && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setPreviewTemplate(null)}>
+                    <div className="fixed inset-0 bg-q-text/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setPreviewTemplate(null)}>
                         <div className="bg-q-surface border border-q-border rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-between p-6 border-b border-q-border">
                                 <div>
@@ -632,7 +632,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
 
                 {/* Final Instructions Preview Modal */}
                 {showFinalPreview && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowFinalPreview(false)}>
+                    <div className="fixed inset-0 bg-q-text/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowFinalPreview(false)}>
                         <div className="bg-q-surface border border-q-border rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-between p-6 border-b border-q-border">
                                 <div>
@@ -655,8 +655,8 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                     {'\n\n'}
                                     {compileTemplates(formData.enabledTemplates || getDefaultEnabledTemplates(), formData.customInstructions)}
                                 </pre>
-                                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                                    <p className="text-xs text-blue-400">
+                                <div className="mt-4 p-3 bg-q-accent/10 border border-q-accent/30 rounded-lg">
+                                    <p className="text-xs text-q-accent">
                                         <strong>Note:</strong> {t('superadmin.globalAssistant.templates.note', 'Scope permissions and contextual data (projects, leads, etc.) are added automatically at runtime and are not shown here.')}
                                     </p>
                                 </div>

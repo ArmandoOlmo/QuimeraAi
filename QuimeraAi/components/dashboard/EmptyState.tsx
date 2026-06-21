@@ -29,18 +29,18 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   const illustrations = {
     search: (
       <svg className="w-48 h-48 mx-auto mb-6" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="80" cy="80" r="40" stroke="currentColor" strokeWidth="4" className="text-yellow-400/30" />
-        <path d="M110 110L140 140" stroke="currentColor" strokeWidth="4" strokeLinecap="round" className="text-yellow-400/50" />
+        <circle cx="80" cy="80" r="40" stroke="currentColor" strokeWidth="4" className="text-q-accent/25" />
+        <path d="M110 110L140 140" stroke="currentColor" strokeWidth="4" strokeLinecap="round" className="text-q-accent/45" />
         <circle cx="100" cy="100" r="60" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" className="text-q-text-muted/20" />
       </svg>
     ),
     website: (
       <svg className="w-48 h-48 mx-auto mb-6" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="40" y="50" width="120" height="100" rx="8" stroke="currentColor" strokeWidth="3" className="text-yellow-400/30" />
-        <line x1="40" y1="70" x2="160" y2="70" stroke="currentColor" strokeWidth="3" className="text-yellow-400/30" />
-        <circle cx="55" cy="60" r="3" fill="currentColor" className="text-yellow-400/50" />
-        <circle cx="70" cy="60" r="3" fill="currentColor" className="text-yellow-400/50" />
-        <circle cx="85" cy="60" r="3" fill="currentColor" className="text-yellow-400/50" />
+        <rect x="40" y="50" width="120" height="100" rx="8" stroke="currentColor" strokeWidth="3" className="text-q-accent/25" />
+        <line x1="40" y1="70" x2="160" y2="70" stroke="currentColor" strokeWidth="3" className="text-q-accent/25" />
+        <circle cx="55" cy="60" r="3" fill="currentColor" className="text-q-accent/45" />
+        <circle cx="70" cy="60" r="3" fill="currentColor" className="text-q-accent/45" />
+        <circle cx="85" cy="60" r="3" fill="currentColor" className="text-q-accent/45" />
         <rect x="60" y="90" width="80" height="8" rx="4" fill="currentColor" className="text-q-text-muted/20" />
         <rect x="60" y="110" width="60" height="6" rx="3" fill="currentColor" className="text-q-text-muted/10" />
         <rect x="60" y="125" width="70" height="6" rx="3" fill="currentColor" className="text-q-text-muted/10" />
@@ -48,30 +48,30 @@ const EmptyState: React.FC<EmptyStateProps> = ({
     ),
     folder: (
       <svg className="w-48 h-48 mx-auto mb-6" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 70L70 50H130L150 70V150H50V70Z" stroke="currentColor" strokeWidth="3" className="text-yellow-400/30" />
-        <path d="M50 70H150" stroke="currentColor" strokeWidth="3" className="text-yellow-400/30" />
+        <path d="M50 70L70 50H130L150 70V150H50V70Z" stroke="currentColor" strokeWidth="3" className="text-q-accent/25" />
+        <path d="M50 70H150" stroke="currentColor" strokeWidth="3" className="text-q-accent/25" />
         <circle cx="100" cy="110" r="20" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" className="text-q-text-muted/20" />
       </svg>
     ),
     default: (
       <svg className="w-48 h-48 mx-auto mb-6" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="100" cy="100" r="60" stroke="currentColor" strokeWidth="3" className="text-yellow-400/30" />
-        <path d="M80 90L90 100L120 70" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-400/50" />
+        <circle cx="100" cy="100" r="60" stroke="currentColor" strokeWidth="3" className="text-q-accent/25" />
+        <path d="M80 90L90 100L120 70" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-q-accent/45" />
         <circle cx="100" cy="100" r="80" stroke="currentColor" strokeWidth="2" strokeDasharray="8 8" className="text-q-text-muted/10" />
       </svg>
     )
   };
 
   return (
-    <div className="text-center py-20 bg-gradient-to-br from-card/30 to-secondary/20 rounded-3xl border border-dashed border-q-border/50">
+    <div className="text-center py-20 bg-q-surface rounded-[var(--radius-card)] border border-dashed border-border-subtle shadow-[var(--shadow-card)]">
       {/* Illustration */}
       <div className="mb-6">
         {illustrations[illustration]}
       </div>
 
       {/* Icon Badge */}
-      <div className="w-20 h-20 bg-gradient-to-br from-yellow-400/20 to-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-        <Icon className="text-yellow-400" size={32} />
+      <div className="w-16 h-16 bg-q-accent/12 rounded-full flex items-center justify-center mx-auto mb-6">
+        <Icon className="text-q-accent" size={24} />
       </div>
 
       {/* Title */}
@@ -87,19 +87,19 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-4">
         {action && (
-          <button 
+          <button
             onClick={action.onClick}
-            className="bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg hover:shadow-lg hover:scale-105 transition-all inline-flex items-center gap-2"
+            className="bg-q-accent text-q-text-on-accent font-bold py-3 px-6 rounded-[var(--q-radius-md)] hover:opacity-90 transition-all inline-flex items-center gap-2"
           >
             {action.icon && <action.icon size={20} />}
             {action.label}
           </button>
         )}
-        
+
         {secondaryAction && (
-          <button 
+          <button
             onClick={secondaryAction.onClick}
-            className="text-yellow-400 font-bold hover:underline py-3 px-6"
+            className="text-q-accent font-bold hover:underline py-3 px-6"
           >
             {secondaryAction.label}
           </button>
@@ -110,4 +110,3 @@ const EmptyState: React.FC<EmptyStateProps> = ({
 };
 
 export default EmptyState;
-

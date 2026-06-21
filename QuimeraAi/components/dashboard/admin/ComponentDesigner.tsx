@@ -276,7 +276,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                             <X size={18} />
                         </button>
                     </div>
-                    
+
                     {/* Component Name Editor for Custom Components */}
                     {selectedComponent && (
                         <div className="mb-2">
@@ -330,12 +330,12 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                             </div>
                         </div>
                     )}
-                    
+
                     <div className="flex items-center gap-2">
                         {hasVersionHistory && (
-                            <button 
+                            <button
                                 onClick={() => setIsVersionHistoryOpen(true)}
-                                className="flex items-center gap-1.5 bg-purple-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-purple-700 transition-colors"
+                                className="flex items-center gap-1.5 bg-q-accent text-q-text-on-accent px-3 py-1.5 rounded-md text-xs font-bold hover:bg-q-accent transition-colors"
                                 title="Ver historial de versiones"
                             >
                                 <Clock size={14} />
@@ -343,7 +343,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                             </button>
                         )}
                         {selectedComponent && (
-                            <button 
+                            <button
                                 onClick={handleGenerateThumbnail}
                                 disabled={isGeneratingThumbnail}
                                 className="flex items-center gap-1.5 bg-q-accent text-q-text-on-accent px-3 py-1.5 rounded-full text-xs font-bold transition-colors disabled:opacity-50"
@@ -353,7 +353,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                                 <span className="hidden sm:inline">Thumbnail</span>
                             </button>
                         )}
-                        <button 
+                        <button
                             onClick={handleSave}
                             disabled={isSaving}
                             className="flex items-center gap-2 bg-q-accent text-q-bg px-3 py-1.5 rounded-md text-xs font-bold hover:bg-q-accent transition-colors disabled:opacity-50"
@@ -365,7 +365,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                 </div>
                 <div className="flex-1 overflow-y-auto">
                     <ComponentControls selectedComponentId={selectedComponentId} />
-                    
+
                     {/* Variants Section (for custom components only) */}
                     {selectedComponent && (
                         <div className="border-t border-q-border mt-4">
@@ -391,7 +391,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                             )}
                         </div>
                     )}
-                    
+
                     {/* Permissions Section (for custom components only) */}
                     {selectedComponent && (
                         <div className="border-t border-q-border">
@@ -418,7 +418,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                             )}
                         </div>
                     )}
-                    
+
                     {/* Documentation Section (for custom components only) */}
                     {selectedComponent && (
                         <div className="border-t border-q-border">
@@ -461,7 +461,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                     setSelectedComponentId(newComponent.id);
                 }}
             />
-            
+
             {selectedCustomComponent && (
                 <VersionHistoryModal
                     isOpen={isVersionHistoryOpen}
@@ -472,12 +472,12 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                     }}
                 />
             )}
-            
+
             <div className="flex h-full relative overflow-hidden">
                 {/* Mobile Backdrop */}
                 {activeMobilePanel !== 'none' && (
-                    <div 
-                        className="fixed inset-0 bg-black/50 z-40 xl:hidden"
+                    <div
+                        className="fixed inset-0 bg-q-text/50 z-40 xl:hidden"
                         onClick={() => setActiveMobilePanel('none')}
                     />
                 )}
@@ -488,14 +488,14 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                 <main className="flex-1 flex flex-col min-w-0 bg-q-bg relative z-0">
                     {/* Mobile/Tablet Toolbar */}
                     <div className="xl:hidden h-14 border-b border-q-border bg-q-surface flex items-center justify-between px-4 flex-shrink-0 z-30 relative gap-4">
-                         <button 
+                         <button
                             onClick={() => toggleMobilePanel('nav')}
                             className={`flex-1 p-2 rounded-md text-sm font-medium flex items-center justify-center transition-colors ${activeMobilePanel === 'nav' ? 'bg-q-accent/10 text-q-accent' : 'bg-q-bg text-q-text-secondary border border-q-border'}`}
                         >
                             <Menu size={18} className="mr-2" />
                             Components
                         </button>
-                        <button 
+                        <button
                             onClick={() => toggleMobilePanel('props')}
                              className={`flex-1 p-2 rounded-md text-sm font-medium flex items-center justify-center transition-colors ${activeMobilePanel === 'props' ? 'bg-q-accent/10 text-q-accent' : 'bg-q-bg text-q-text-secondary border border-q-border'}`}
                         >
@@ -505,8 +505,8 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                     </div>
 
                     <div className="flex-1 p-4 sm:p-8 overflow-y-auto flex justify-center items-start bg-q-bg">
-                        <ComponentPreview 
-                            selectedComponentId={selectedComponentId} 
+                        <ComponentPreview
+                            selectedComponentId={selectedComponentId}
                             previewDevice={previewDevice}
                             previewOrientation={previewOrientation}
                         />

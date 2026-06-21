@@ -166,18 +166,18 @@ export function PermissionTemplates() {
     const getRiskBadge = (riskLevel: 'low' | 'medium' | 'high') => {
         const styles = {
             low: {
-                bg: 'bg-green-100 dark:bg-green-900/20',
-                text: 'text-green-800 dark:text-green-400',
+                bg: 'bg-q-success/10 dark:bg-q-success/12',
+                text: 'text-q-success dark:text-q-success',
                 label: 'Riesgo Bajo',
             },
             medium: {
-                bg: 'bg-yellow-100 dark:bg-yellow-900/20',
-                text: 'text-yellow-800 dark:text-yellow-400',
+                bg: 'bg-q-accent/10 dark:bg-q-accent/12',
+                text: 'text-q-accent dark:text-q-accent',
                 label: 'Riesgo Medio',
             },
             high: {
-                bg: 'bg-red-100 dark:bg-red-900/20',
-                text: 'text-red-800 dark:text-red-400',
+                bg: 'bg-q-error/10 dark:bg-q-error/12',
+                text: 'text-q-error dark:text-q-error',
                 label: 'Riesgo Alto',
             },
         };
@@ -215,16 +215,16 @@ export function PermissionTemplates() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    <h1 className="text-3xl font-bold text-q-text dark:text-white">
                         Plantillas de Permisos
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-q-text-muted dark:text-gray-400 mt-1">
                         Crea plantillas reutilizables para roles específicos
                     </p>
                 </div>
                 <button
                     onClick={handleCreateTemplate}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent transition-colors"
                 >
                     <Plus className="h-5 w-5" />
                     Nueva Plantilla
@@ -233,12 +233,12 @@ export function PermissionTemplates() {
 
             {/* Error Alert */}
             {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="bg-q-error/10 dark:bg-q-error/12 border border-q-error/25 dark:border-q-error/30 rounded-lg p-4">
                     <div className="flex items-start gap-3">
-                        <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                        <AlertTriangle className="h-5 w-5 text-q-error dark:text-q-error flex-shrink-0 mt-0.5" />
                         <div>
-                            <h3 className="font-semibold text-red-900 dark:text-red-200">Error</h3>
-                            <p className="text-red-700 dark:text-red-300 text-sm mt-1">{error}</p>
+                            <h3 className="font-semibold text-q-error dark:text-q-error">Error</h3>
+                            <p className="text-q-error dark:text-q-error text-sm mt-1">{error}</p>
                         </div>
                     </div>
                 </div>
@@ -246,15 +246,15 @@ export function PermissionTemplates() {
 
             {loading ? (
                 <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-q-accent" />
                 </div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* System Templates */}
                     <div className="lg:col-span-1 space-y-4">
                         <div className="flex items-center gap-2">
-                            <Star className="h-5 w-5 text-yellow-500" />
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            <Star className="h-5 w-5 text-q-accent" />
+                            <h2 className="text-lg font-semibold text-q-text dark:text-white">
                                 Plantillas del Sistema
                             </h2>
                         </div>
@@ -277,12 +277,12 @@ export function PermissionTemplates() {
                                             });
                                         }}
                                         className={`w-full text-left p-4 rounded-lg border-2 transition-all ${selectedTemplate?.name === template.name
-                                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                                ? 'border-q-accent/25 bg-q-accent/10 dark:bg-q-accent/12'
+                                                : 'border-q-border dark:border-gray-700 hover:border-q-border dark:hover:border-gray-600'
                                             }`}
                                     >
                                         <div className="flex items-start justify-between gap-2 mb-2">
-                                            <h3 className="font-semibold text-gray-900 dark:text-white">
+                                            <h3 className="font-semibold text-q-text dark:text-white">
                                                 {template.name}
                                             </h3>
                                             <span
@@ -293,11 +293,11 @@ export function PermissionTemplates() {
                                                 {getCategoryLabel(template.category)}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                        <p className="text-sm text-q-text-muted dark:text-gray-400 mb-3">
                                             {template.description}
                                         </p>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-gray-500 dark:text-gray-500">
+                                            <span className="text-xs text-q-text-muted dark:text-gray-500">
                                                 {grantedPerms.length} permisos
                                             </span>
                                             {getRiskBadge(riskLevel)}
@@ -307,8 +307,8 @@ export function PermissionTemplates() {
                             })}
                         </div>
 
-                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                            <p className="text-sm text-blue-900 dark:text-blue-200">
+                        <div className="p-4 bg-q-accent/10 dark:bg-q-accent/12 border border-q-accent/25 dark:border-q-accent/30 rounded-lg">
+                            <p className="text-sm text-q-accent dark:text-q-accent">
                                 <strong>Tip:</strong> Puedes duplicar plantillas del sistema para
                                 personalizarlas
                             </p>
@@ -318,25 +318,25 @@ export function PermissionTemplates() {
                     {/* Custom Templates */}
                     <div className="lg:col-span-2 space-y-4">
                         <div className="flex items-center gap-2">
-                            <Users className="h-5 w-5 text-blue-500" />
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            <Users className="h-5 w-5 text-q-accent" />
+                            <h2 className="text-lg font-semibold text-q-text dark:text-white">
                                 Plantillas Personalizadas ({customTemplates.length})
                             </h2>
                         </div>
 
                         {customTemplates.length === 0 ? (
-                            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12">
+                            <div className="bg-q-surface dark:bg-gray-800 rounded-lg border border-q-border dark:border-gray-700 p-12">
                                 <div className="text-center">
-                                    <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                    <Shield className="h-12 w-12 text-q-text-muted mx-auto mb-4" />
+                                    <h3 className="text-lg font-semibold text-q-text dark:text-white mb-2">
                                         No hay plantillas personalizadas
                                     </h3>
-                                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                                    <p className="text-q-text-muted dark:text-gray-400 mb-6">
                                         Crea tu primera plantilla o duplica una del sistema
                                     </p>
                                     <button
                                         onClick={handleCreateTemplate}
-                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent transition-colors"
                                     >
                                         <Plus className="h-5 w-5" />
                                         Crear Primera Plantilla
@@ -352,15 +352,15 @@ export function PermissionTemplates() {
                                     return (
                                         <div
                                             key={template.id}
-                                            className={`bg-white dark:bg-gray-800 rounded-lg border-2 p-4 transition-all ${selectedTemplate?.id === template.id
-                                                    ? 'border-blue-500'
-                                                    : 'border-gray-200 dark:border-gray-700'
+                                            className={`bg-q-surface dark:bg-gray-800 rounded-lg border-2 p-4 transition-all ${selectedTemplate?.id === template.id
+                                                    ? 'border-q-accent/25'
+                                                    : 'border-q-border dark:border-gray-700'
                                                 }`}
                                         >
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <h3 className="font-semibold text-gray-900 dark:text-white">
+                                                        <h3 className="font-semibold text-q-text dark:text-white">
                                                             {template.name}
                                                         </h3>
                                                         {template.category && (
@@ -373,16 +373,16 @@ export function PermissionTemplates() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                                    <p className="text-sm text-q-text-muted dark:text-gray-400 mb-3">
                                                         {template.description}
                                                     </p>
                                                     <div className="flex items-center gap-4">
-                                                        <span className="text-xs text-gray-500 dark:text-gray-500">
+                                                        <span className="text-xs text-q-text-muted dark:text-gray-500">
                                                             {grantedPerms.length} permisos activos
                                                         </span>
                                                         {getRiskBadge(riskLevel)}
                                                         {template.usageCount && template.usageCount > 0 && (
-                                                            <span className="text-xs text-gray-500 dark:text-gray-500">
+                                                            <span className="text-xs text-q-text-muted dark:text-gray-500">
                                                                 Usado {template.usageCount} veces
                                                             </span>
                                                         )}
@@ -392,21 +392,21 @@ export function PermissionTemplates() {
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={() => handleEditTemplate(template)}
-                                                        className="p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                                                        className="p-2 text-q-accent hover:text-q-accent dark:text-q-accent dark:hover:text-q-accent transition-colors"
                                                         title="Editar"
                                                     >
                                                         <Edit2 className="h-4 w-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDuplicateTemplate(template)}
-                                                        className="p-2 text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
+                                                        className="p-2 text-q-text-muted hover:text-q-text dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
                                                         title="Duplicar"
                                                     >
                                                         <Copy className="h-4 w-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteTemplate(template.id)}
-                                                        className="p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                                                        className="p-2 text-q-error hover:text-q-error dark:text-q-error dark:hover:text-q-error transition-colors"
                                                         title="Eliminar"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
@@ -415,10 +415,10 @@ export function PermissionTemplates() {
                                             </div>
 
                                             {/* Permission Preview */}
-                                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                            <div className="mt-4 pt-4 border-t border-q-border dark:border-gray-700">
                                                 <button
                                                     onClick={() => setSelectedTemplate(template)}
-                                                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                                                    className="text-sm text-q-accent dark:text-q-accent hover:text-q-accent dark:hover:text-q-accent font-medium"
                                                 >
                                                     Ver detalles →
                                                 </button>
@@ -434,23 +434,23 @@ export function PermissionTemplates() {
 
             {/* Selected Template Details */}
             {selectedTemplate && !isEditing && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-q-surface dark:bg-gray-800 rounded-lg border border-q-border dark:border-gray-700 p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        <h3 className="text-lg font-semibold text-q-text dark:text-white">
                             Detalles de la Plantilla
                         </h3>
                         <div className="flex items-center gap-2">
                             {!selectedTemplate.isSystem && (
                                 <button
                                     onClick={() => handleEditTemplate(selectedTemplate)}
-                                    className="px-4 py-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                                    className="px-4 py-2 text-q-accent dark:text-q-accent hover:text-q-accent dark:hover:text-q-accent font-medium"
                                 >
                                     Editar Plantilla
                                 </button>
                             )}
                             <button
                                 onClick={() => handleDuplicateTemplate(selectedTemplate)}
-                                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                className="px-4 py-2 bg-q-surface-overlay dark:bg-gray-700 text-q-text dark:text-gray-300 rounded-lg hover:bg-q-border dark:hover:bg-gray-600 transition-colors"
                             >
                                 Duplicar
                             </button>
@@ -459,34 +459,34 @@ export function PermissionTemplates() {
 
                     <div className="grid grid-cols-2 gap-6">
                         <div>
-                            <h4 className="font-medium text-gray-900 dark:text-white mb-3">
+                            <h4 className="font-medium text-q-text dark:text-white mb-3">
                                 Permisos Otorgados
                             </h4>
                             <ul className="space-y-2">
                                 {getGrantedPermissions(selectedTemplate.permissions).map((perm, i) => (
                                     <li
                                         key={i}
-                                        className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
+                                        className="flex items-center gap-2 text-sm text-q-text dark:text-gray-300"
                                     >
-                                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                                        <CheckCircle className="h-4 w-4 text-q-success flex-shrink-0" />
                                         {perm}
                                     </li>
                                 ))}
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-medium text-gray-900 dark:text-white mb-3">
+                            <h4 className="font-medium text-q-text dark:text-white mb-3">
                                 Información
                             </h4>
                             <dl className="space-y-2 text-sm">
                                 <div>
-                                    <dt className="text-gray-600 dark:text-gray-400">Rol:</dt>
-                                    <dd className="font-medium text-gray-900 dark:text-white">
+                                    <dt className="text-q-text-muted dark:text-gray-400">Rol:</dt>
+                                    <dd className="font-medium text-q-text dark:text-white">
                                         {selectedTemplate.role}
                                     </dd>
                                 </div>
                                 <div>
-                                    <dt className="text-gray-600 dark:text-gray-400">
+                                    <dt className="text-q-text-muted dark:text-gray-400">
                                         Nivel de Riesgo:
                                     </dt>
                                     <dd className="mt-1">
@@ -495,8 +495,8 @@ export function PermissionTemplates() {
                                 </div>
                                 {selectedTemplate.usageCount && selectedTemplate.usageCount > 0 && (
                                     <div>
-                                        <dt className="text-gray-600 dark:text-gray-400">Uso:</dt>
-                                        <dd className="font-medium text-gray-900 dark:text-white">
+                                        <dt className="text-q-text-muted dark:text-gray-400">Uso:</dt>
+                                        <dd className="font-medium text-q-text dark:text-white">
                                             {selectedTemplate.usageCount} veces
                                         </dd>
                                     </div>

@@ -41,15 +41,15 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
         return (
             <div className={`${settingsPanelClass} p-6`}>
                 <div className="flex items-center gap-3 mb-4">
-                    <AlertCircle size={20} className="text-green-500 flex-shrink-0" strokeWidth={2} />
+                    <AlertCircle size={20} className="text-q-success flex-shrink-0" strokeWidth={2} />
                     <h3 className="text-lg font-semibold text-foreground">
                         Alertas de Recursos
                     </h3>
                 </div>
                 <div className="text-center py-8">
-                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/20 mb-4">
+                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-q-success/10 dark:bg-q-success/12 mb-4">
                         <svg
-                            className="h-8 w-8 text-green-600 dark:text-green-400"
+                            className="h-8 w-8 text-q-success dark:text-q-success"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -77,12 +77,12 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
         <div className={`${settingsPanelClass} p-6`}>
             <div className="flex items-center justify-between mb-4 gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                    <AlertTriangle size={20} className="text-red-500 flex-shrink-0" strokeWidth={2} />
+                    <AlertTriangle size={20} className="text-q-error flex-shrink-0" strokeWidth={2} />
                     <h3 className="text-lg font-semibold text-foreground">
                         Alertas de Recursos
                     </h3>
                 </div>
-                <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400">
+                <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-q-error/10 dark:bg-q-error/12 text-q-error dark:text-q-error">
                     {alerts.length}
                 </span>
             </div>

@@ -86,19 +86,19 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
 
     const getStatusIcon = (status: TenantStatus) => {
         switch (status) {
-            case 'active': return <CheckCircle size={16} className="text-green-500" />;
-            case 'trial': return <Clock size={16} className="text-blue-500" />;
-            case 'suspended': return <AlertCircle size={16} className="text-yellow-500" />;
-            case 'expired': return <XCircle size={16} className="text-red-500" />;
+            case 'active': return <CheckCircle size={16} className="text-q-success" />;
+            case 'trial': return <Clock size={16} className="text-q-accent" />;
+            case 'suspended': return <AlertCircle size={16} className="text-q-accent" />;
+            case 'expired': return <XCircle size={16} className="text-q-error" />;
         }
     };
 
     const getStatusColor = (status: TenantStatus) => {
         switch (status) {
-            case 'active': return 'bg-green-500/20 text-green-400 border-green-500/30';
-            case 'trial': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            case 'suspended': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-            case 'expired': return 'bg-red-500/20 text-red-400 border-red-500/30';
+            case 'active': return 'bg-q-success/20 text-q-success border-q-success/30';
+            case 'trial': return 'bg-q-accent/20 text-q-accent border-q-accent/30';
+            case 'suspended': return 'bg-q-accent/20 text-q-accent border-q-accent/30';
+            case 'expired': return 'bg-q-error/20 text-q-error border-q-error/30';
         }
     };
 
@@ -121,7 +121,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
             </div>
             <div className="text-2xl font-bold text-q-text mb-1">{value}</div>
             {subtitle && <div className="text-xs text-q-text-secondary">{subtitle}</div>}
-            {trend && <div className="text-xs text-green-500 mt-1">{trend}</div>}
+            {trend && <div className="text-xs text-q-success mt-1">{trend}</div>}
         </div>
     );
 
@@ -148,10 +148,10 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         )}
 
                         {/* Icono de tipo */}
-                        <div className={`p - 3 rounded - lg ${tenant.type === 'agency' ? 'bg-blue-500/20' : 'bg-purple-500/20'} `}>
+                        <div className={`p - 3 rounded - lg ${tenant.type === 'agency' ? 'bg-q-accent/20' : 'bg-q-accent/20'} `}>
                             {tenant.type === 'agency' ?
-                                <Building2 size={24} className="text-blue-400" /> :
-                                <User size={24} className="text-purple-400" />
+                                <Building2 size={24} className="text-q-accent" /> :
+                                <User size={24} className="text-q-accent" />
                             }
                         </div>
 
@@ -199,7 +199,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         <span className="text-xs text-q-text-secondary">{t('superadmin.tenant.metrics.storage', 'Almacenamiento')}</span>
                     </div>
 
-                    <div className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-md text-sm font-medium">
+                    <div className="px-3 py-1 bg-q-accent/20 text-q-accent rounded-md text-sm font-medium">
                         {tenant.subscriptionPlan}
                     </div>
                 </div>
@@ -216,7 +216,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                     {canPerform('canDeleteTenants') && (
                         <button
                             onClick={() => handleDeleteTenant(tenant.id)}
-                            className="p-2 text-q-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            className="p-2 text-q-text-secondary hover:text-q-error hover:bg-q-error/10 rounded-lg transition-colors"
                             title={t('superadmin.delete')}
                         >
                             <Trash2 size={18} />
@@ -411,7 +411,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
 
             {/* Modal de creación */}
             {showCreateModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-q-surface border border-q-border rounded-lg p-6 max-w-md w-full">
                         <h2 className="text-xl font-bold text-q-text mb-4">Crear Nuevo Tenant</h2>
                         <form onSubmit={async (e) => {
@@ -499,7 +499,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-1 px-4 py-2 bg-q-accent text-white rounded-lg hover:bg-q-accent/90 transition-colors disabled:opacity-50"
+                                    className="flex-1 px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent/90 transition-colors disabled:opacity-50"
                                 >
                                     {loading ? 'Creando...' : 'Crear Tenant'}
                                 </button>
@@ -672,10 +672,10 @@ const TenantDetailsModal: React.FC<{
 
     const getStatusIcon = (status: TenantStatus) => {
         switch (status) {
-            case 'active': return <CheckCircle size={16} className="text-green-500" />;
-            case 'trial': return <Clock size={16} className="text-blue-500" />;
-            case 'suspended': return <AlertCircle size={16} className="text-yellow-500" />;
-            case 'expired': return <XCircle size={16} className="text-red-500" />;
+            case 'active': return <CheckCircle size={16} className="text-q-success" />;
+            case 'trial': return <Clock size={16} className="text-q-accent" />;
+            case 'suspended': return <AlertCircle size={16} className="text-q-accent" />;
+            case 'expired': return <XCircle size={16} className="text-q-error" />;
         }
     };
 
@@ -692,14 +692,14 @@ const TenantDetailsModal: React.FC<{
     const readOnlyValueClass = "text-q-text font-medium";
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50 p-4">
             <div className="bg-q-surface border border-q-border rounded-xl p-6 max-w-4xl w-full max-h-[85vh] overflow-y-auto flex flex-col shadow-2xl">
                 <div className="flex items-center justify-between mb-6 flex-shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className={`p-2.5 rounded-lg ${tenant.type === 'agency' ? 'bg-blue-500/20' : 'bg-purple-500/20'}`}>
+                        <div className={`p-2.5 rounded-lg ${tenant.type === 'agency' ? 'bg-q-accent/20' : 'bg-q-accent/20'}`}>
                             {tenant.type === 'agency' ?
-                                <Building2 size={22} className="text-blue-400" /> :
-                                <User size={22} className="text-purple-400" />
+                                <Building2 size={22} className="text-q-accent" /> :
+                                <User size={22} className="text-q-accent" />
                             }
                         </div>
                         <div>
@@ -735,7 +735,7 @@ const TenantDetailsModal: React.FC<{
                                     }
                                 }}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isEditing
-                                    ? 'text-yellow-400 hover:text-yellow-300 bg-yellow-500/10 border border-yellow-500/30'
+                                    ? 'text-q-accent hover:text-q-accent bg-q-accent/10 border border-q-accent/30'
                                     : 'text-q-accent hover:text-q-accent/80 bg-q-accent/10 border border-q-accent/30'
                                     }`}
                             >
@@ -853,7 +853,7 @@ const TenantDetailsModal: React.FC<{
                                             </AppSelect>
                                         ) : (
                                             <div className="flex items-center gap-2">
-                                                {tenant.type === 'agency' ? <Building2 size={16} className="text-blue-400" /> : <User size={16} className="text-purple-400" />}
+                                                {tenant.type === 'agency' ? <Building2 size={16} className="text-q-accent" /> : <User size={16} className="text-q-accent" />}
                                                 <p className="text-q-text capitalize font-medium">{tenant.type === 'agency_client' ? 'Cliente de Agencia' : tenant.type}</p>
                                             </div>
                                         )}
@@ -899,7 +899,7 @@ const TenantDetailsModal: React.FC<{
                                                 <option value="enterprise">Enterprise</option>
                                             </AppSelect>
                                         ) : (
-                                            <span className="px-2.5 py-1 bg-purple-500/10 text-purple-400 rounded-md text-sm border border-purple-500/20 font-semibold capitalize inline-block">
+                                            <span className="px-2.5 py-1 bg-q-accent/10 text-q-accent rounded-md text-sm border border-q-accent/20 font-semibold capitalize inline-block">
                                                 {tenant.subscriptionPlan}
                                             </span>
                                         )}
@@ -949,7 +949,7 @@ const TenantDetailsModal: React.FC<{
                                     {tenant.trialEndsAt && (
                                         <div>
                                             <label className={labelClass}>Trial Expira</label>
-                                            <p className="text-yellow-400 font-medium">{formatDate(tenant.trialEndsAt)}</p>
+                                            <p className="text-q-accent font-medium">{formatDate(tenant.trialEndsAt)}</p>
                                         </div>
                                     )}
                                 </div>
@@ -1101,7 +1101,7 @@ const TenantDetailsModal: React.FC<{
                                 <div className="bg-q-surface border border-q-border rounded-lg p-5 grid grid-cols-2 gap-6">
                                     <div>
                                         <p className="text-sm text-q-text-secondary mb-1">Plan Actual</p>
-                                        <span className="px-3 py-1 bg-purple-500/10 text-purple-400 rounded-md text-sm border border-purple-500/20 font-medium capitalize inline-block mt-1">
+                                        <span className="px-3 py-1 bg-q-accent/10 text-q-accent rounded-md text-sm border border-q-accent/20 font-medium capitalize inline-block mt-1">
                                             {tenant.subscriptionPlan}
                                         </span>
                                     </div>
@@ -1244,7 +1244,7 @@ const TenantDetailsModal: React.FC<{
                                                     <button
                                                         onClick={handleAddCredits}
                                                         disabled={isAddingCredits || addCreditAmount <= 0}
-                                                        className="px-4 py-2 bg-q-accent text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 whitespace-nowrap"
+                                                        className="px-4 py-2 bg-q-accent text-q-text-on-accent font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 whitespace-nowrap"
                                                     >
                                                         {isAddingCredits ? '...' : t('common.add', 'Añadir')}
                                                     </button>
@@ -1265,7 +1265,7 @@ const TenantDetailsModal: React.FC<{
                                                 {creditTransactions.map(tx => (
                                                     <div key={tx.id} className="flex items-center justify-between p-3 bg-q-surface border border-q-border rounded-lg hover:border-q-accent/30 transition-colors">
                                                         <div className="flex items-center gap-4">
-                                                            <div className={`p-2 rounded-lg ${tx.type === 'deposit' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                            <div className={`p-2 rounded-lg ${tx.type === 'deposit' ? 'bg-q-success/20 text-q-success' : 'bg-q-error/20 text-q-error'}`}>
                                                                 {tx.type === 'deposit' ? <Plus size={16} /> : <Zap size={16} />}
                                                             </div>
                                                             <div>
@@ -1277,7 +1277,7 @@ const TenantDetailsModal: React.FC<{
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <div className={`font-semibold ${tx.type === 'deposit' ? 'text-green-500' : 'text-q-text'}`}>
+                                                        <div className={`font-semibold ${tx.type === 'deposit' ? 'text-q-success' : 'text-q-text'}`}>
                                                             {tx.type === 'deposit' ? '+' : ''}{tx.amount.toLocaleString()}
                                                         </div>
                                                     </div>
@@ -1307,7 +1307,7 @@ const TenantDetailsModal: React.FC<{
                                         className="flex items-center justify-between p-3 bg-q-surface border border-q-border rounded-lg hover:border-q-accent/50 cursor-pointer transition-colors group"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-q-bg rounded text-purple-400">
+                                            <div className="p-2 bg-q-bg rounded text-q-accent">
                                                 <User size={18} />
                                             </div>
                                             <div>
@@ -1346,7 +1346,7 @@ const TenantDetailsModal: React.FC<{
                 <div className="mt-6 flex justify-between items-center pt-4 border-t border-q-border flex-shrink-0">
                     <div>
                         {isEditing && (
-                            <p className="text-xs text-yellow-400 flex items-center gap-1">
+                            <p className="text-xs text-q-accent flex items-center gap-1">
                                 <Edit2 size={12} />
                                 Modo edición activo
                             </p>
@@ -1364,11 +1364,11 @@ const TenantDetailsModal: React.FC<{
                                 <button
                                     onClick={handleSave}
                                     disabled={isSaving}
-                                    className="px-5 py-2 bg-q-accent text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+                                    className="px-5 py-2 bg-q-accent text-q-text-on-accent font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
                                 >
                                     {isSaving ? (
                                         <>
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <div className="w-4 h-4 border-2 border-q-border/30 border-t-white rounded-full animate-spin" />
                                             Guardando...
                                         </>
                                     ) : (

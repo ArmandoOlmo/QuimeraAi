@@ -1,6 +1,6 @@
 /**
  * PageSettings Component
- * 
+ *
  * Modal/panel for editing page settings including:
  * - Page title
  * - URL slug
@@ -10,13 +10,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-    X, 
-    Save, 
-    Globe, 
-    Eye, 
-    EyeOff, 
-    Search, 
+import {
+    X,
+    Save,
+    Globe,
+    Eye,
+    EyeOff,
+    Search,
     Image as ImageIcon,
     Link,
     Type,
@@ -56,7 +56,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({
 
     // Track changes
     useEffect(() => {
-        const changed = 
+        const changed =
             title !== page.title ||
             slug !== page.slug ||
             seoTitle !== (page.seo.title || '') ||
@@ -65,7 +65,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({
             showInNavigation !== (page.showInNavigation ?? true) ||
             navigationOrder !== (page.navigationOrder || 0) ||
             isHomePage !== (page.isHomePage || false);
-        
+
         setHasChanges(changed);
     }, [title, slug, seoTitle, seoDescription, seoImage, showInNavigation, navigationOrder, isHomePage, page]);
 
@@ -123,7 +123,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/60 backdrop-blur-sm">
             <div className="bg-[var(--editor-panel-bg)] border border-[var(--editor-border)] rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--editor-border)]">
@@ -151,7 +151,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({
                             <FileText size={16} />
                             Información Básica
                         </h3>
-                        
+
                         <div className="space-y-4">
                             {/* Title */}
                             <div>
@@ -180,8 +180,8 @@ const PageSettings: React.FC<PageSettingsProps> = ({
                                             value={slug}
                                             onChange={(e) => setSlug(e.target.value)}
                                             className={`w-full pl-9 pr-3 py-2 bg-[var(--editor-input-bg)] border rounded-lg text-[var(--editor-text-primary)] focus:outline-none transition-colors ${
-                                                slugError 
-                                                    ? 'border-red-400 focus:border-red-400' 
+                                                slugError
+                                                    ? 'border-q-error/25 focus:border-q-error/25'
                                                     : 'border-[var(--editor-border)] focus:border-[var(--editor-accent)]'
                                             }`}
                                             placeholder="/mi-pagina"
@@ -199,7 +199,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({
                                     )}
                                 </div>
                                 {slugError && (
-                                    <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                                    <p className="mt-1 text-sm text-q-error flex items-center gap-1">
                                         <AlertCircle size={14} />
                                         {slugError}
                                     </p>
@@ -228,8 +228,8 @@ const PageSettings: React.FC<PageSettingsProps> = ({
                                             isHomePage ? 'bg-[var(--editor-accent)]' : 'bg-[var(--editor-border)]'
                                         }`}
                                     >
-                                        <span 
-                                            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                                        <span
+                                            className={`absolute top-1 w-4 h-4 bg-q-surface rounded-full transition-transform ${
                                                 isHomePage ? 'left-7' : 'left-1'
                                             }`}
                                         />
@@ -245,13 +245,13 @@ const PageSettings: React.FC<PageSettingsProps> = ({
                             <Globe size={16} />
                             Navegación
                         </h3>
-                        
+
                         <div className="space-y-4">
                             {/* Show in nav toggle */}
                             <div className="flex items-center justify-between p-3 bg-[var(--editor-input-bg)] rounded-lg">
                                 <div className="flex items-center gap-3">
                                     {showInNavigation ? (
-                                        <Eye size={18} className="text-green-400" />
+                                        <Eye size={18} className="text-q-success" />
                                     ) : (
                                         <EyeOff size={18} className="text-[var(--editor-text-secondary)]" />
                                     )}
@@ -267,11 +267,11 @@ const PageSettings: React.FC<PageSettingsProps> = ({
                                 <button
                                     onClick={() => setShowInNavigation(!showInNavigation)}
                                     className={`relative w-12 h-6 rounded-full transition-colors ${
-                                        showInNavigation ? 'bg-green-500' : 'bg-[var(--editor-border)]'
+                                        showInNavigation ? 'bg-q-success' : 'bg-[var(--editor-border)]'
                                     }`}
                                 >
-                                    <span 
-                                        className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                                    <span
+                                        className={`absolute top-1 w-4 h-4 bg-q-surface rounded-full transition-transform ${
                                             showInNavigation ? 'left-7' : 'left-1'
                                         }`}
                                     />
@@ -306,7 +306,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({
                             <Search size={16} />
                             SEO (Optimización para buscadores)
                         </h3>
-                        
+
                         <div className="space-y-4">
                             {/* SEO Title */}
                             <div>
@@ -370,16 +370,16 @@ const PageSettings: React.FC<PageSettingsProps> = ({
                             </div>
 
                             {/* Preview */}
-                            <div className="p-4 bg-white rounded-lg border">
-                                <p className="text-xs text-gray-500 mb-2">Vista previa en Google:</p>
+                            <div className="p-4 bg-q-surface rounded-lg border">
+                                <p className="text-xs text-q-text-muted mb-2">Vista previa en Google:</p>
                                 <div>
-                                    <p className="text-blue-600 text-lg truncate hover:underline cursor-pointer">
+                                    <p className="text-q-accent text-lg truncate hover:underline cursor-pointer">
                                         {seoTitle || title || 'Título de la página'}
                                     </p>
-                                    <p className="text-green-700 text-sm truncate">
+                                    <p className="text-q-success text-sm truncate">
                                         tudominio.com{slug}
                                     </p>
-                                    <p className="text-gray-600 text-sm line-clamp-2">
+                                    <p className="text-q-text-muted text-sm line-clamp-2">
                                         {seoDescription || 'Descripción de la página que aparecerá en los resultados de búsqueda...'}
                                     </p>
                                 </div>
@@ -401,7 +401,7 @@ const PageSettings: React.FC<PageSettingsProps> = ({
                         disabled={!hasChanges || !!slugError}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                             hasChanges && !slugError
-                                ? 'bg-[var(--editor-accent)] text-white hover:bg-[var(--editor-accent)]/90'
+                                ? 'bg-[var(--editor-accent)] text-q-text-on-accent hover:bg-[var(--editor-accent)]/90'
                                 : 'bg-[var(--editor-border)] text-[var(--editor-text-secondary)] cursor-not-allowed'
                         }`}
                     >

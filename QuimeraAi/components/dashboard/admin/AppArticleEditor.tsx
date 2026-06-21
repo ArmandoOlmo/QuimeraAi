@@ -10,11 +10,11 @@ import { useTranslation } from 'react-i18next';
 import { useAppContent } from '../../../contexts/appContent';
 import { useToast } from '../../../contexts/ToastContext';
 import { AppArticle, AppArticleCategory } from '../../../types/appContent';
-import { 
-    Save, 
-    Eye, 
-    Globe, 
-    FileText, 
+import {
+    Save,
+    Eye,
+    Globe,
+    FileText,
     Image as ImageIcon,
     Star,
     Clock,
@@ -54,10 +54,10 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
     const { t } = useTranslation();
     const { saveArticle } = useAppContent();
     const { showToast } = useToast();
-    
+
     const [isSaving, setIsSaving] = useState(false);
     const [isPreview, setIsPreview] = useState(false);
-    
+
     // Form state
     const [title, setTitle] = useState(article?.title || '');
     const [slug, setSlug] = useState(article?.slug || '');
@@ -70,7 +70,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
     const [tags, setTags] = useState<string[]>(article?.tags || []);
     const [tagInput, setTagInput] = useState('');
     const [author, setAuthor] = useState(article?.author || 'Quimera Team');
-    
+
     // SEO
     const [metaTitle, setMetaTitle] = useState(article?.seo?.metaTitle || '');
     const [metaDescription, setMetaDescription] = useState(article?.seo?.metaDescription || '');
@@ -137,9 +137,9 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
 
             await saveArticle(articleData);
             showToast(
-                publishStatus === 'published' 
-                    ? 'Article published successfully!' 
-                    : 'Article saved successfully!', 
+                publishStatus === 'published'
+                    ? 'Article published successfully!'
+                    : 'Article saved successfully!',
                 'success'
             );
             onClose();
@@ -158,14 +158,14 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
         const selectedText = content.substring(start, end);
-        
+
         let newText: string;
         if (wrap) {
             newText = `<${tag}>${selectedText || 'text'}</${tag}>`;
         } else {
             newText = `<${tag}>${selectedText || 'text'}</${tag}>`;
         }
-        
+
         const newContent = content.substring(0, start) + newText + content.substring(end);
         setContent(newContent);
     };
@@ -183,7 +183,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                             {article ? 'Edit Article' : 'New Article'}
                         </h1>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsPreview(!isPreview)}
@@ -194,7 +194,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                             <Eye size={14} />
                             Preview
                         </button>
-                        
+
                         <button
                             onClick={() => handleSave('draft')}
                             disabled={isSaving}
@@ -203,7 +203,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                             {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                             Save Draft
                         </button>
-                        
+
                         <button
                             onClick={() => handleSave('published')}
                             disabled={isSaving}
@@ -221,9 +221,9 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                         /* Preview Mode */
                         <div className="max-w-4xl mx-auto p-8">
                             {featuredImage && (
-                                <img 
-                                    src={featuredImage} 
-                                    alt={title} 
+                                <img
+                                    src={featuredImage}
+                                    alt={title}
                                     className="w-full h-64 object-cover rounded-xl mb-8"
                                 />
                             )}
@@ -232,7 +232,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                     {category}
                                 </span>
                                 {featured && (
-                                    <span className="px-3 py-1 text-xs font-medium bg-yellow-500/10 text-yellow-600 rounded-full flex items-center gap-1">
+                                    <span className="px-3 py-1 text-xs font-medium bg-q-accent/10 text-q-accent rounded-full flex items-center gap-1">
                                         <Star size={12} /> Featured
                                     </span>
                                 )}
@@ -244,7 +244,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                 <span>•</span>
                                 <span>{new Date().toLocaleDateString()}</span>
                             </div>
-                            <div 
+                            <div
                                 className="prose prose-lg dark:prose-invert max-w-none"
                                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                             />
@@ -279,14 +279,14 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                             <div className="border border-dashed border-q-border rounded-xl p-6">
                                 {featuredImage ? (
                                     <div className="relative">
-                                        <img 
-                                            src={featuredImage} 
-                                            alt="Featured" 
+                                        <img
+                                            src={featuredImage}
+                                            alt="Featured"
                                             className="w-full h-48 object-cover rounded-lg"
                                         />
                                         <button
                                             onClick={() => setFeaturedImage('')}
-                                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                                            className="absolute top-2 right-2 p-1.5 bg-q-error text-white rounded-full hover:bg-q-error transition-colors"
                                         >
                                             <X size={14} />
                                         </button>
@@ -325,7 +325,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                 <label className="block text-sm font-medium text-q-text-muted mb-2">
                                     Content (HTML)
                                 </label>
-                                
+
                                 {/* Toolbar */}
                                 <div className="flex items-center gap-1 p-2 bg-secondary/20 border border-q-border border-b-0 rounded-t-lg">
                                     <button
@@ -388,7 +388,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                         <Code size={14} />
                                     </button>
                                 </div>
-                                
+
                                 <textarea
                                     id="content-editor"
                                     value={content}
@@ -444,7 +444,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                                 {tag}
                                                 <button
                                                     onClick={() => handleRemoveTag(tag)}
-                                                    className="hover:text-red-500 transition-colors"
+                                                    className="hover:text-q-error transition-colors"
                                                 >
                                                     <X size={12} />
                                                 </button>
@@ -470,9 +470,9 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                 </div>
 
                                 {/* Featured Toggle */}
-                                <div className="md:col-span-2 flex items-center justify-between p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-lg">
+                                <div className="md:col-span-2 flex items-center justify-between p-4 bg-q-accent/5 border border-q-accent/20 rounded-lg">
                                     <div className="flex items-center gap-3">
-                                        <Star className="text-yellow-500" size={20} />
+                                        <Star className="text-q-accent" size={20} />
                                         <div>
                                             <p className="font-medium">Featured Article</p>
                                             <p className="text-sm text-q-text-muted">Show this article prominently on the homepage</p>
@@ -485,7 +485,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                             onChange={(e) => setFeatured(e.target.checked)}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-yellow-500"></div>
+                                        <div className="w-11 h-6 bg-q-border peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-q-accent"></div>
                                     </label>
                                 </div>
                             </div>

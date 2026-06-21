@@ -298,8 +298,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                 {/* Status Badge */}
                 <div className="absolute top-3 right-3">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Published'
-                        ? 'bg-green-500/90 text-white'
-                        : 'bg-slate-500/90 text-white'
+                        ? 'bg-q-success/90 text-white'
+                        : 'bg-q-surface-overlay/90 text-white'
                         }`}>
                         {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
                     </span>

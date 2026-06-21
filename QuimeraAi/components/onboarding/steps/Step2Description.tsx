@@ -47,8 +47,8 @@ const Step2Description: React.FC<Step2DescriptionProps> = ({
         <div className="max-w-xl mx-auto space-y-8">
             {/* Header */}
             <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-secondary flex items-center justify-center">
-                    <FileText size={32} className="text-secondary-foreground" />
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center text-q-accent">
+                    <FileText size={32} />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">
                     {t('onboarding.step2Heading', 'Describe your business')}
@@ -101,7 +101,7 @@ const Step2Description: React.FC<Step2DescriptionProps> = ({
                     className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-foreground placeholder:text-q-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                 />
                 <p className="text-xs text-q-text-muted text-right">
-                    {(tagline?.length || 0)}/100
+                    {(tagline?.length || 0)}
                 </p>
             </div>
 
@@ -112,7 +112,7 @@ const Step2Description: React.FC<Step2DescriptionProps> = ({
                         {t('onboarding.description', 'Description')} *
                     </label>
                     {description && (
-                        <span className="text-xs text-green-400 flex items-center gap-1">
+                        <span className="text-xs text-q-success flex items-center gap-1">
                             <Sparkles size={12} />
                             {t('onboarding.aiGenerated', 'AI Generated')}
                         </span>

@@ -1,18 +1,30 @@
 import * as React from 'react';
+import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion';
+import {
+  cardMotionHover,
+  cardMotionStagger,
+  cardMotionViewport,
+  createCardMotionVariants,
+} from '../../../utils/cardMotion';
 
 export type AppCardVariant = 'default' | 'muted' | 'elevated' | 'interactive' | 'premium';
 
-export interface AppCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onClick'> {
+export interface AppCardProps extends Omit<HTMLMotionProps<'div'>, 'onClick'> {
   variant?: AppCardVariant;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
+  motionDelay?: number;
+  motionPreset?: 'card' | 'none';
+  staggerIndex?: number;
+  viewportMotion?: boolean;
+  hoverMotion?: boolean;
 }
 
 const variantClasses: Record<AppCardVariant, string> = {
-  default: 'border border-q-border bg-q-surface text-q-text',
-  muted: 'border border-q-border/70 bg-q-surface-overlay/55 text-q-text',
-  elevated: 'border border-q-border bg-q-surface-elevated text-q-text shadow-md',
-  interactive: 'border border-q-border bg-q-surface text-q-text hover:-translate-y-0.5 hover:border-q-accent/45 hover:bg-q-surface-elevated hover:shadow-md',
-  premium: 'border border-q-accent/30 bg-q-surface-elevated text-q-text shadow-[0_18px_45px_rgba(var(--q-accent-rgb),0.10)]',
+  default: 'border border-border-subtle bg-q-surface text-q-text shadow-[var(--shadow-card)]',
+  muted: 'border border-border-subtle bg-q-surface-overlay text-q-text',
+  elevated: 'border border-border-subtle bg-q-surface-elevated text-q-text shadow-[var(--shadow-elevated)]',
+  interactive: 'border border-border-subtle bg-q-surface text-q-text hover:-translate-y-0.5 hover:border-q-border hover:bg-q-surface-elevated hover:shadow-[var(--shadow-card-hover)]',
+  premium: 'border border-q-accent/35 bg-q-surface-elevated text-q-text shadow-[0_14px_34px_rgba(var(--q-accent-rgb),0.12)]',
 };
 
 function joinClasses(...classes: Array<string | false | null | undefined>) {
@@ -29,11 +41,20 @@ export const AppCard = React.forwardRef<HTMLDivElement, AppCardProps>(function A
     role,
     tabIndex,
     'aria-label': ariaLabel,
+    motionDelay = 0,
+    motionPreset = 'card',
+    staggerIndex = 0,
+    viewportMotion = false,
+    hoverMotion,
     ...props
   },
   ref,
 ) {
   const isClickable = typeof onClick === 'function';
+  const shouldReduceMotion = useReducedMotion();
+  const shouldAnimate = motionPreset !== 'none' && !shouldReduceMotion;
+  const delay = motionDelay + staggerIndex * cardMotionStagger;
+  const resolvedHoverMotion = hoverMotion ?? (variant === 'interactive' || isClickable);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(event);
@@ -49,25 +70,31 @@ export const AppCard = React.forwardRef<HTMLDivElement, AppCardProps>(function A
   };
 
   return (
-    <div
+    <motion.div
       ref={ref}
+      initial={shouldAnimate ? 'hidden' : false}
+      animate={shouldAnimate && !viewportMotion ? 'visible' : undefined}
+      whileInView={shouldAnimate && viewportMotion ? 'visible' : undefined}
+      viewport={shouldAnimate && viewportMotion ? cardMotionViewport : undefined}
+      variants={shouldAnimate ? createCardMotionVariants(delay) : undefined}
+      whileHover={shouldAnimate && resolvedHoverMotion ? cardMotionHover : undefined}
       role={role ?? (isClickable ? 'button' : undefined)}
       tabIndex={tabIndex ?? (isClickable ? 0 : undefined)}
       aria-label={ariaLabel}
       onClick={onClick}
       onKeyDown={handleKeyDown}
       className={joinClasses(
-        'rounded-xl p-4 transition-all duration-200 ease-out',
+        'rounded-[var(--radius-card)] p-5 transition-all duration-200 ease-out',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-q-accent/30',
         variantClasses[variant],
         isClickable && 'cursor-pointer select-none',
-        isClickable && variant !== 'interactive' && 'hover:-translate-y-0.5 hover:border-q-accent/40 hover:shadow-md',
+        isClickable && variant !== 'interactive' && 'hover:-translate-y-0.5 hover:border-q-border hover:shadow-[var(--shadow-card-hover)]',
         className,
       )}
       {...props}
     >
       {children}
-    </div>
+    </motion.div>
   );
 });
 

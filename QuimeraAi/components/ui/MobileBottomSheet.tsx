@@ -126,7 +126,7 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
         <>
             {/* Backdrop Overlay */}
             <div
-                className="fixed inset-0 bg-black/60 z-50 transition-opacity duration-300 md:hidden"
+                className="fixed inset-0 bg-q-text/60 z-50 transition-opacity duration-300 md:hidden"
                 style={{ opacity: Math.max(0.3, 1 - (dragOffset / 300)) }}
                 onClick={onClose}
                 aria-hidden="true"

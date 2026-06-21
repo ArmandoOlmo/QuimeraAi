@@ -1,9 +1,9 @@
 /**
  * AddToAudienceModal
- * 
+ *
  * Reusable modal for adding contacts (from Leads, Appointments, etc.)
  * to an email audience in the Admin Email Hub.
- * 
+ *
  * This component is self-contained — it reads/writes to Supabase directly
  * so it can be used from any module without needing the Email Hub context.
  */
@@ -206,7 +206,7 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity"
+                className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 transition-opacity"
                 onClick={onClose}
             />
 
@@ -269,8 +269,8 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
                         {result && (
                             <div className={`mb-4 p-4 rounded-xl border ${
                                 result.success
-                                    ? 'bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400'
-                                    : 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400'
+                                    ? 'bg-q-success/10 border-q-success/20 text-q-success dark:text-q-success'
+                                    : 'bg-q-error/10 border-q-error/20 text-q-error dark:text-q-error'
                             }`}>
                                 <p className="text-sm font-medium">{result.message}</p>
                                 <button

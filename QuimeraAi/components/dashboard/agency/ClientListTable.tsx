@@ -30,26 +30,26 @@ export function ClientListTable({ clients }: ClientListTableProps) {
     const getStatusBadge = (status: Tenant['status']) => {
         const styles: Record<Tenant['status'], { bg: string; text: string; label: string; icon: React.ReactNode }> = {
             active: {
-                bg: 'bg-green-100 dark:bg-green-900/20',
-                text: 'text-green-800 dark:text-green-400',
+                bg: 'bg-q-success/10 dark:bg-q-success/12',
+                text: 'text-q-success dark:text-q-success',
                 label: 'Activo',
                 icon: <CheckCircle className="h-3.5 w-3.5" />,
             },
             trial: {
-                bg: 'bg-blue-100 dark:bg-blue-900/20',
-                text: 'text-blue-800 dark:text-blue-400',
+                bg: 'bg-q-accent/10 dark:bg-q-accent/12',
+                text: 'text-q-accent dark:text-q-accent',
                 label: 'Prueba',
                 icon: <Clock className="h-3.5 w-3.5" />,
             },
             suspended: {
-                bg: 'bg-yellow-100 dark:bg-yellow-900/20',
-                text: 'text-yellow-800 dark:text-yellow-400',
+                bg: 'bg-q-accent/10 dark:bg-q-accent/12',
+                text: 'text-q-accent dark:text-q-accent',
                 label: 'Suspendido',
                 icon: <AlertTriangle className="h-3.5 w-3.5" />,
             },
             expired: {
-                bg: 'bg-gray-100 dark:bg-gray-800',
-                text: 'text-gray-600 dark:text-gray-400',
+                bg: 'bg-q-surface-overlay dark:bg-gray-800',
+                text: 'text-q-text-muted dark:text-gray-400',
                 label: 'Expirado',
                 icon: <Clock className="h-3.5 w-3.5" />,
             },
@@ -73,9 +73,9 @@ export function ClientListTable({ clients }: ClientListTableProps) {
     };
 
     const getUsageColor = (percentage: number): string => {
-        if (percentage >= 95) return 'text-red-600 dark:text-red-400 font-semibold';
-        if (percentage >= 80) return 'text-yellow-600 dark:text-yellow-400 font-medium';
-        return 'text-gray-600 dark:text-gray-400';
+        if (percentage >= 95) return 'text-q-error dark:text-q-error font-semibold';
+        if (percentage >= 80) return 'text-q-accent dark:text-q-accent font-medium';
+        return 'text-q-text-muted dark:text-gray-400';
     };
 
     const handleExportClient = async (clientId: string) => {
@@ -172,7 +172,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                                 </div>
                                             </div>
                                             {hasAlerts && (
-                                                <AlertTriangle className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                                                <AlertTriangle className="h-4 w-4 text-q-accent flex-shrink-0" />
                                             )}
                                         </div>
                                     </td>
@@ -193,7 +193,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                                 </span>
                                             </span>
                                         ) : (
-                                            <span className="text-sm text-gray-400">-</span>
+                                            <span className="text-sm text-q-text-muted">-</span>
                                         )}
                                     </td>
                                     <td className="px-5 py-3.5 whitespace-nowrap">
@@ -205,7 +205,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                                 </span>
                                             </span>
                                         ) : (
-                                            <span className="text-sm text-gray-400">-</span>
+                                            <span className="text-sm text-q-text-muted">-</span>
                                         )}
                                     </td>
                                     <td className="px-5 py-3.5 whitespace-nowrap">
@@ -217,7 +217,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                                 </span>
                                             </span>
                                         ) : (
-                                            <span className="text-sm text-gray-400">-</span>
+                                            <span className="text-sm text-q-text-muted">-</span>
                                         )}
                                     </td>
                                     <td className="px-5 py-3.5 whitespace-nowrap">
@@ -226,7 +226,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                                 ${client.billing.mrr.toFixed(0)}
                                             </span>
                                         ) : (
-                                            <span className="text-sm text-gray-400">-</span>
+                                            <span className="text-sm text-q-text-muted">-</span>
                                         )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">

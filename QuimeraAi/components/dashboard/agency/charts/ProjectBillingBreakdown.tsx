@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
 import { Building2, FolderKanban, DollarSign, Calculator } from 'lucide-react';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 interface ProjectBreakdown {
     clientId: string;
@@ -69,17 +70,12 @@ export function ProjectBillingBreakdown({
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="bg-q-surface border border-q-border rounded-xl p-6"
-        >
+        <MotionCard motionDelay={0.3} hoverMotion className="bg-q-surface border border-q-border rounded-xl p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="text-lg font-semibold text-q-text flex items-center gap-2">
-                        <Calculator className="w-5 h-5 text-blue-400" />
+                        <Calculator className="w-5 h-5 text-q-accent" />
                         {t('dashboard.agency.charts.billingBreakdown.title', 'Desglose de Facturación')}
                     </h3>
                     <p className="text-sm text-q-text-secondary">
@@ -98,8 +94,8 @@ export function ProjectBillingBreakdown({
                     className="flex items-center justify-between p-4 bg-q-bg rounded-lg border border-q-border"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                            <Building2 className="w-5 h-5 text-blue-400" />
+                        <div className="w-10 h-10 rounded-lg bg-q-accent/20 flex items-center justify-center">
+                            <Building2 className="w-5 h-5 text-q-accent" />
                         </div>
                         <div>
                             <p className="font-medium text-q-text">{t('dashboard.agency.charts.billingBreakdown.monthlyBaseFee', 'Fee Base Mensual')}</p>
@@ -120,8 +116,8 @@ export function ProjectBillingBreakdown({
                 >
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                <FolderKanban className="w-5 h-5 text-emerald-400" />
+                            <div className="w-10 h-10 rounded-lg bg-q-success/20 flex items-center justify-center">
+                                <FolderKanban className="w-5 h-5 text-q-success" />
                             </div>
                             <div>
                                 <p className="font-medium text-q-text">
@@ -181,11 +177,11 @@ export function ProjectBillingBreakdown({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-lg border border-emerald-500/30"
+                    className="flex items-center justify-between p-4 bg-gradient-to-r from-q-success/10 to-q-accent/10 rounded-lg border border-q-success/30"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                            <DollarSign className="w-5 h-5 text-emerald-400" />
+                        <div className="w-10 h-10 rounded-lg bg-q-success/20 flex items-center justify-center">
+                            <DollarSign className="w-5 h-5 text-q-success" />
                         </div>
                         <div>
                             <p className="font-semibold text-q-text">{t('dashboard.agency.charts.billingBreakdown.monthlyTotal', 'Total Mensual')}</p>
@@ -194,7 +190,7 @@ export function ProjectBillingBreakdown({
                             </p>
                         </div>
                     </div>
-                    <span className="text-2xl font-bold text-emerald-400">
+                    <span className="text-2xl font-bold text-q-success">
                         <CountUp
                             start={0}
                             end={totalBill}
@@ -212,7 +208,7 @@ export function ProjectBillingBreakdown({
                     {formatCurrency(baseFee)} (base) + {totalProjects} × {formatCurrency(projectCost)} (proyectos) = {formatCurrency(totalBill)}
                 </p>
             </div>
-        </motion.div>
+        </MotionCard>
     );
 }
 

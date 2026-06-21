@@ -21,12 +21,12 @@ type SortField = 'name' | 'email' | 'company' | 'value' | 'status' | 'aiScore' |
 type SortDirection = 'asc' | 'desc';
 
 const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {
-    new: 'bg-blue-500',
-    contacted: 'bg-yellow-500',
-    qualified: 'bg-purple-500',
-    negotiation: 'bg-orange-500',
-    won: 'bg-green-500',
-    lost: 'bg-red-500',
+    new: 'bg-q-accent',
+    contacted: 'bg-q-accent',
+    qualified: 'bg-q-accent',
+    negotiation: 'bg-q-warning',
+    won: 'bg-q-success',
+    lost: 'bg-q-error',
 };
 
 const LeadsTableView: React.FC<LeadsTableViewProps> = ({
@@ -221,23 +221,23 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                         {/* Third Row: Value + Score + Source */}
                                         <div className="flex items-center gap-3 flex-wrap">
                                             {(lead.value || 0) > 0 && (
-                                                <span className="text-xs font-bold text-green-500">
+                                                <span className="text-xs font-bold text-q-success">
                                                     ${(lead.value || 0).toLocaleString()}
                                                 </span>
                                             )}
                                             {lead.aiScore !== undefined && (
                                                 <div className="flex items-center gap-1">
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${lead.aiScore > 75 ? 'bg-green-500' :
-                                                        lead.aiScore > 40 ? 'bg-yellow-500' : 'bg-red-500'
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${lead.aiScore > 75 ? 'bg-q-success' :
+                                                        lead.aiScore > 40 ? 'bg-q-accent' : 'bg-q-error'
                                                         }`} />
                                                     <span className="text-xs font-medium">{lead.aiScore}</span>
                                                 </div>
                                             )}
                                             <div className="flex items-center gap-1 text-xs text-q-text-muted">
                                                 {lead.source === 'chatbot' ? (
-                                                    <Bot size={12} className="text-purple-500" />
+                                                    <Bot size={12} className="text-q-accent" />
                                                 ) : (
-                                                    <LayoutGrid size={12} className="text-blue-500" />
+                                                    <LayoutGrid size={12} className="text-q-accent" />
                                                 )}
                                                 <span className="capitalize">{lead.source}</span>
                                             </div>
@@ -255,7 +255,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                         </button>
                                         <button
                                             onClick={() => setDeleteConfirmId(lead.id)}
-                                            className="p-2 hover:bg-red-500/10 rounded-lg text-red-500 transition-colors"
+                                            className="p-2 hover:bg-q-error/10 rounded-lg text-q-error transition-colors"
                                             title={t('leads.delete')}
                                         >
                                             <Trash2 size={16} />
@@ -397,7 +397,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                     <span className="text-sm text-foreground">{lead.company || '-'}</span>
                                 </td>
                                 <td className="px-4 py-3">
-                                    <span className="text-sm font-bold text-green-500">
+                                    <span className="text-sm font-bold text-q-success">
                                         ${(lead.value || 0).toLocaleString()}
                                     </span>
                                 </td>
@@ -409,9 +409,9 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                 <td className="px-4 py-3">
                                     {lead.aiScore !== undefined ? (
                                         <div className="flex items-center gap-1">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${lead.aiScore > 75 ? 'bg-green-500' :
-                                                lead.aiScore > 40 ? 'bg-yellow-500' :
-                                                    'bg-red-500'
+                                            <div className={`w-1.5 h-1.5 rounded-full ${lead.aiScore > 75 ? 'bg-q-success' :
+                                                lead.aiScore > 40 ? 'bg-q-accent' :
+                                                    'bg-q-error'
                                                 }`} />
                                             <span className="text-sm font-bold">{lead.aiScore}</span>
                                         </div>
@@ -422,9 +422,9 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                 <td className="px-4 py-3">
                                     <div className="flex items-center gap-1">
                                         {lead.source === 'chatbot' ? (
-                                            <Bot size={14} className="text-purple-500" />
+                                            <Bot size={14} className="text-q-accent" />
                                         ) : (
-                                            <LayoutGrid size={14} className="text-blue-500" />
+                                            <LayoutGrid size={14} className="text-q-accent" />
                                         )}
                                         <span className="text-xs text-q-text-muted capitalize">{lead.source}</span>
                                     </div>
@@ -440,7 +440,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                         </button>
                                         <button
                                             onClick={() => setDeleteConfirmId(lead.id)}
-                                            className="p-1.5 hover:bg-red-500/10 rounded text-red-500 transition-colors"
+                                            className="p-1.5 hover:bg-q-error/10 rounded text-q-error transition-colors"
                                             title="Delete"
                                         >
                                             <Trash2 size={14} />

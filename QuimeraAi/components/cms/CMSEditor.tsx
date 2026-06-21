@@ -40,14 +40,14 @@ interface CMSEditorProps {
 const ToolbarButton: React.FC<{ onClick: () => void; isActive?: boolean; title: string; children: React.ReactNode }> = ({ onClick, isActive, title, children }) => (
     <button
         onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-        className={`p-2 rounded-md transition-colors ${isActive ? 'bg-q-accent/10 text-q-accent' : 'text-gray-600 hover:bg-gray-100'}`}
+        className={`p-2 rounded-md transition-colors ${isActive ? 'bg-q-accent/10 text-q-accent' : 'text-q-text-muted hover:bg-q-surface-overlay'}`}
         title={title}
     >
         {children}
     </button>
 );
 
-const ToolbarDivider = () => <div className="w-px h-6 bg-gray-300 mx-1 self-center" />;
+const ToolbarDivider = () => <div className="w-px h-6 bg-q-border mx-1 self-center" />;
 
 const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
     const { t } = useTranslation();
@@ -101,7 +101,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
     // --- Initialization ---
     useEffect(() => {
         if (editorRef.current && post?.content) {
-            // Only set initial content if empty to avoid overwriting if react re-renders weirdly, 
+            // Only set initial content if empty to avoid overwriting if react re-renders weirdly,
             // but since we use key-based remounting or explicit open/close, straight assignment on mount is fine.
             // However, if we switch posts without unmounting, we need to handle it.
             // But typically CMSEditor is conditionally rendered.
@@ -545,7 +545,7 @@ IMPORTANT FORMATTING RULES:
                 <div className="flex items-center justify-end gap-3 w-1/3">
                     <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
                         <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}>Draft</button>
-                        <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-q-text-muted hover:text-foreground'}`}>Published</button>
+                        <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-q-success/20 text-q-success' : 'text-q-text-muted hover:text-foreground'}`}>Published</button>
                     </div>
                     <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-md">
                         {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save
@@ -563,10 +563,10 @@ IMPORTANT FORMATTING RULES:
                 <div className="flex-1 flex flex-col min-w-0 bg-[#e5e7eb] relative">
 
                     {/* --- Toolbar --- */}
-                    <div className="bg-[#f9fafb] border-b border-gray-300 p-2 flex flex-wrap gap-1 shrink-0 shadow-sm z-20 relative items-center text-black">
+                    <div className="bg-[#f9fafb] border-b border-q-border p-2 flex flex-wrap gap-1 shrink-0 shadow-sm z-20 relative items-center text-black">
 
                         {/* History */}
-                        <div className="flex bg-white border border-gray-300 rounded-md shadow-sm mr-2">
+                        <div className="flex bg-q-surface border border-q-border rounded-md shadow-sm mr-2">
                             <ToolbarButton onClick={() => execCmd('undo')} title="Undo"><Undo size={16} /></ToolbarButton>
                             <ToolbarButton onClick={() => execCmd('redo')} title="Redo"><Redo size={16} /></ToolbarButton>
                         </div>
@@ -575,19 +575,19 @@ IMPORTANT FORMATTING RULES:
                         <div className="relative mr-2">
                             <button
                                 onMouseDown={(e) => { e.preventDefault(); setShowHeadings(!showHeadings); }}
-                                className="flex items-center justify-between w-32 px-2 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm text-sm text-gray-700 hover:bg-gray-50"
+                                className="flex items-center justify-between w-32 px-2 py-1.5 bg-q-surface border border-q-border rounded-md shadow-sm text-sm text-q-text hover:bg-q-surface-overlay"
                             >
                                 <span className="truncate font-medium">{getBlockLabel()}</span>
                                 <ChevronDown size={14} className="ml-1 opacity-50" />
                             </button>
                             {showHeadings && (
-                                <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 py-1 text-black">
-                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('p'); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"><Type size={14} className="mr-2" /> Paragraph</button>
-                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('h1'); }} className="block w-full text-left px-4 py-2 text-lg font-bold text-gray-900 hover:bg-gray-100 flex items-center"><Heading1 size={18} className="mr-2" /> Heading 1</button>
-                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('h2'); }} className="block w-full text-left px-4 py-2 text-md font-bold text-gray-800 hover:bg-gray-100 flex items-center"><Heading2 size={16} className="mr-2" /> Heading 2</button>
-                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('h3'); }} className="block w-full text-left px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-100 flex items-center"><Heading3 size={14} className="mr-2" /> Heading 3</button>
+                                <div className="absolute top-full left-0 mt-1 w-48 bg-q-surface border border-q-border rounded-md shadow-lg z-50 py-1 text-black">
+                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('p'); }} className="block w-full text-left px-4 py-2 text-sm text-q-text hover:bg-q-surface-overlay flex items-center"><Type size={14} className="mr-2" /> Paragraph</button>
+                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('h1'); }} className="block w-full text-left px-4 py-2 text-lg font-bold text-q-text hover:bg-q-surface-overlay flex items-center"><Heading1 size={18} className="mr-2" /> Heading 1</button>
+                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('h2'); }} className="block w-full text-left px-4 py-2 text-md font-bold text-q-text hover:bg-q-surface-overlay flex items-center"><Heading2 size={16} className="mr-2" /> Heading 2</button>
+                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('h3'); }} className="block w-full text-left px-4 py-2 text-sm font-bold text-q-text hover:bg-q-surface-overlay flex items-center"><Heading3 size={14} className="mr-2" /> Heading 3</button>
                                     <div className="border-t my-1"></div>
-                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('blockquote'); }} className="block w-full text-left px-4 py-2 text-sm italic text-gray-600 hover:bg-gray-100 flex items-center"><Quote size={14} className="mr-2" /> Quote</button>
+                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('blockquote'); }} className="block w-full text-left px-4 py-2 text-sm italic text-q-text-muted hover:bg-q-surface-overlay flex items-center"><Quote size={14} className="mr-2" /> Quote</button>
                                 </div>
                             )}
                         </div>
@@ -595,7 +595,7 @@ IMPORTANT FORMATTING RULES:
                         <ToolbarDivider />
 
                         {/* Typography */}
-                        <div className="flex bg-white border border-gray-300 rounded-md shadow-sm mr-2">
+                        <div className="flex bg-q-surface border border-q-border rounded-md shadow-sm mr-2">
                             <ToolbarButton onClick={() => execCmd('bold')} isActive={activeFormats.bold} title="Bold"><Bold size={16} /></ToolbarButton>
                             <ToolbarButton onClick={() => execCmd('italic')} isActive={activeFormats.italic} title="Italic"><Italic size={16} /></ToolbarButton>
                             <ToolbarButton onClick={() => execCmd('underline')} isActive={activeFormats.underline} title="Underline"><Underline size={16} /></ToolbarButton>
@@ -606,22 +606,22 @@ IMPORTANT FORMATTING RULES:
                         <div className="relative mr-2">
                             <button
                                 onMouseDown={(e) => { e.preventDefault(); setShowColors(!showColors); }}
-                                className="p-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 flex items-center justify-center text-gray-700 relative group"
+                                className="p-2 bg-q-surface border border-q-border rounded-md shadow-sm hover:bg-q-surface-overlay flex items-center justify-center text-q-text relative group"
                                 title="Text Colors"
                             >
                                 <Palette size={16} />
-                                <div className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-gray-300" style={{ backgroundColor: currentColor }}></div>
+                                <div className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-q-border" style={{ backgroundColor: currentColor }}></div>
                             </button>
                             {showColors && (
-                                <div className="absolute top-full left-0 mt-1 p-3 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 w-64 animate-fade-in-up text-black">
-                                    <div className="flex mb-3 bg-gray-100 rounded-lg p-1">
-                                        <button onClick={() => setColorMode('text')} className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-colors ${colorMode === 'text' ? 'bg-white shadow text-black' : 'text-gray-500 hover:text-gray-700'}`}>Text</button>
-                                        <button onClick={() => setColorMode('background')} className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-colors ${colorMode === 'background' ? 'bg-white shadow text-black' : 'text-gray-500 hover:text-gray-700'}`}>Background</button>
+                                <div className="absolute top-full left-0 mt-1 p-3 bg-q-surface border border-q-border rounded-xl shadow-2xl z-50 w-64 animate-fade-in-up text-black">
+                                    <div className="flex mb-3 bg-q-surface-overlay rounded-lg p-1">
+                                        <button onClick={() => setColorMode('text')} className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-colors ${colorMode === 'text' ? 'bg-q-surface shadow text-black' : 'text-q-text-muted hover:text-q-text'}`}>Text</button>
+                                        <button onClick={() => setColorMode('background')} className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-colors ${colorMode === 'background' ? 'bg-q-surface shadow text-black' : 'text-q-text-muted hover:text-q-text'}`}>Background</button>
                                     </div>
 
                                     <div className="space-y-3">
-                                        <div className="flex items-center border border-gray-300 rounded-md px-2 bg-white">
-                                            <Hash size={14} className="text-gray-400 mr-1" />
+                                        <div className="flex items-center border border-q-border rounded-md px-2 bg-q-surface">
+                                            <Hash size={14} className="text-q-text-muted mr-1" />
                                             <input
                                                 type="text"
                                                 value={currentColor}
@@ -629,7 +629,7 @@ IMPORTANT FORMATTING RULES:
                                                 className="flex-1 text-xs py-1.5 focus:outline-none font-mono uppercase text-black"
                                                 placeholder="#000000"
                                             />
-                                            <div className="w-4 h-4 rounded border border-gray-200" style={{ backgroundColor: currentColor }}></div>
+                                            <div className="w-4 h-4 rounded border border-q-border" style={{ backgroundColor: currentColor }}></div>
                                         </div>
                                         <ColorControl
                                             label="Color"
@@ -637,19 +637,19 @@ IMPORTANT FORMATTING RULES:
                                             onChange={applyColor}
                                             variant="dashboard"
                                         />
-                                        <div className="h-px bg-gray-200"></div>
+                                        <div className="h-px bg-q-border"></div>
                                         <div>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase mb-1.5">Presets</p>
+                                            <p className="text-[10px] font-bold text-q-text-muted uppercase mb-1.5">Presets</p>
                                             <div className="grid grid-cols-6 gap-1.5">
                                                 {['#000000', '#4b5563', '#9ca3af', '#ffffff', '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', 'transparent'].map(c => (
                                                     <button
                                                         key={c}
                                                         onMouseDown={(e) => { e.preventDefault(); applyColor(c); }}
-                                                        className="w-6 h-6 rounded-full border border-gray-200 hover:scale-110 transition-transform relative"
+                                                        className="w-6 h-6 rounded-full border border-q-border hover:scale-110 transition-transform relative"
                                                         style={{ backgroundColor: c === 'transparent' ? 'white' : c }}
                                                         title={c}
                                                     >
-                                                        {c === 'transparent' && <div className="absolute inset-0 flex items-center justify-center text-red-500"><XIcon size={12} /></div>}
+                                                        {c === 'transparent' && <div className="absolute inset-0 flex items-center justify-center text-q-error"><XIcon size={12} /></div>}
                                                     </button>
                                                 ))}
                                             </div>
@@ -662,14 +662,14 @@ IMPORTANT FORMATTING RULES:
                         <ToolbarDivider />
 
                         {/* Alignment */}
-                        <div className="flex bg-white border border-gray-300 rounded-md shadow-sm mr-2">
+                        <div className="flex bg-q-surface border border-q-border rounded-md shadow-sm mr-2">
                             <ToolbarButton onClick={() => execCmd('justifyLeft')} isActive={activeFormats.justifyLeft} title="Align Left"><AlignLeft size={16} /></ToolbarButton>
                             <ToolbarButton onClick={() => execCmd('justifyCenter')} isActive={activeFormats.justifyCenter} title="Center"><AlignCenter size={16} /></ToolbarButton>
                             <ToolbarButton onClick={() => execCmd('justifyRight')} isActive={activeFormats.justifyRight} title="Align Right"><AlignRight size={16} /></ToolbarButton>
                         </div>
 
                         {/* Lists */}
-                        <div className="flex bg-white border border-gray-300 rounded-md shadow-sm mr-2">
+                        <div className="flex bg-q-surface border border-q-border rounded-md shadow-sm mr-2">
                             <ToolbarButton onClick={() => execCmd('insertUnorderedList')} isActive={activeFormats.insertUnorderedList} title="Bullet List"><List size={16} /></ToolbarButton>
                             <ToolbarButton onClick={() => execCmd('insertOrderedList')} isActive={activeFormats.insertOrderedList} title="Numbered List"><ListOrdered size={16} /></ToolbarButton>
                         </div>
@@ -677,30 +677,30 @@ IMPORTANT FORMATTING RULES:
                         <ToolbarDivider />
 
                         {/* Inserts */}
-                        <div className="flex bg-white border border-gray-300 rounded-md shadow-sm relative">
+                        <div className="flex bg-q-surface border border-q-border rounded-md shadow-sm relative">
                             {/* Link Popover Trigger */}
                             <ToolbarButton onClick={openLinkInput} title="Link" isActive={showLinkInput}><LinkIcon size={16} /></ToolbarButton>
 
                             {/* Link Popover */}
                             {showLinkInput && (
-                                <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-xl z-50 p-3 text-black">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Edit Link</label>
+                                <div className="absolute top-full left-0 mt-1 w-64 bg-q-surface border border-q-border rounded-md shadow-xl z-50 p-3 text-black">
+                                    <label className="block text-xs font-bold text-q-text-muted uppercase mb-1">Edit Link</label>
                                     <div className="flex gap-2 mb-2">
                                         <input
                                             type="text"
                                             value={linkUrl}
                                             onChange={(e) => setLinkUrl(e.target.value)}
                                             placeholder="https://example.com"
-                                            className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-blue-500 outline-none"
+                                            className="flex-1 border border-q-border rounded px-2 py-1 text-sm focus:ring-1 focus:ring-q-accent/35 outline-none"
                                             onKeyDown={(e) => e.key === 'Enter' && applyLink()}
                                             autoFocus
                                         />
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <button onMouseDown={(e) => { e.preventDefault(); removeLink(); }} className="text-xs text-red-500 hover:underline flex items-center"><Unlink size={10} className="mr-1" /> Remove</button>
+                                        <button onMouseDown={(e) => { e.preventDefault(); removeLink(); }} className="text-xs text-q-error hover:underline flex items-center"><Unlink size={10} className="mr-1" /> Remove</button>
                                         <div className="flex gap-2">
-                                            <button onMouseDown={(e) => { e.preventDefault(); setShowLinkInput(false); restoreSelection(); }} className="p-1 hover:bg-gray-100 rounded"><XIcon size={14} /></button>
-                                            <button onMouseDown={(e) => { e.preventDefault(); applyLink(); }} className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"><Check size={14} /></button>
+                                            <button onMouseDown={(e) => { e.preventDefault(); setShowLinkInput(false); restoreSelection(); }} className="p-1 hover:bg-q-surface-overlay rounded"><XIcon size={14} /></button>
+                                            <button onMouseDown={(e) => { e.preventDefault(); applyLink(); }} className="p-1 bg-q-accent text-q-text-on-accent rounded hover:bg-q-accent"><Check size={14} /></button>
                                         </div>
                                     </div>
                                 </div>
@@ -723,27 +723,27 @@ IMPORTANT FORMATTING RULES:
 
                         <div className="ml-auto flex items-center gap-2">
                             <ToolbarButton onClick={() => execCmd('removeFormat')} title="Clear Formatting"><RemoveFormatting size={16} /></ToolbarButton>
-                            <div className="bg-purple-50 border border-purple-200 rounded-md flex items-center p-0.5">
-                                <span className="px-2 text-xs font-bold text-purple-700 flex items-center"><Sparkles size={10} className="mr-1" /> AI</span>
-                                <button onMouseDown={(e) => { e.preventDefault(); aiMagicWrite('fix'); }} className="px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded disabled:opacity-50" disabled={isAiWorking}>{t('postEditor.fixGrammar')}</button>
-                                <button onMouseDown={(e) => { e.preventDefault(); aiMagicWrite('continue'); }} className="px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded disabled:opacity-50" disabled={isAiWorking}>{t('postEditor.continue')}</button>
+                            <div className="bg-q-accent/10 border border-q-accent/25 rounded-md flex items-center p-0.5">
+                                <span className="px-2 text-xs font-bold text-q-accent flex items-center"><Sparkles size={10} className="mr-1" /> AI</span>
+                                <button onMouseDown={(e) => { e.preventDefault(); aiMagicWrite('fix'); }} className="px-2 py-1 text-xs font-medium text-q-accent hover:bg-q-accent/10 rounded disabled:opacity-50" disabled={isAiWorking}>{t('postEditor.fixGrammar')}</button>
+                                <button onMouseDown={(e) => { e.preventDefault(); aiMagicWrite('continue'); }} className="px-2 py-1 text-xs font-medium text-q-accent hover:bg-q-accent/10 rounded disabled:opacity-50" disabled={isAiWorking}>{t('postEditor.continue')}</button>
                                 <div className="relative">
                                     <button
                                         onMouseDown={(e) => { e.preventDefault(); saveSelection(); setShowVisionPopover(!showVisionPopover); }}
-                                        className="px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded disabled:opacity-50 flex items-center gap-1"
+                                        className="px-2 py-1 text-xs font-medium text-q-accent hover:bg-q-accent/10 rounded disabled:opacity-50 flex items-center gap-1"
                                         disabled={isAiWorking}
                                         title="Write from Image/Video"
                                     >
                                         <Camera size={12} /> {t('postEditor.fromImage', { defaultValue: 'From Image' })}
                                     </button>
                                     {showVisionPopover && (
-                                        <div className="absolute top-full right-0 mt-1 w-72 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-4 text-black animate-fade-in-up">
+                                        <div className="absolute top-full right-0 mt-1 w-72 bg-q-surface border border-q-border rounded-xl shadow-2xl z-50 p-4 text-black animate-fade-in-up">
                                             <div className="flex justify-between items-center mb-3">
-                                                <h4 className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                                                    <Camera size={14} className="text-purple-600" />
+                                                <h4 className="text-sm font-bold text-q-text flex items-center gap-1.5">
+                                                    <Camera size={14} className="text-q-accent" />
                                                     {t('postEditor.visionTitle', { defaultValue: 'AI from Image/Video' })}
                                                 </h4>
-                                                <button onClick={() => setShowVisionPopover(false)} className="p-1 hover:bg-gray-100 rounded">
+                                                <button onClick={() => setShowVisionPopover(false)} className="p-1 hover:bg-q-surface-overlay rounded">
                                                     <XIcon size={14} />
                                                 </button>
                                             </div>
@@ -759,7 +759,7 @@ IMPORTANT FORMATTING RULES:
                                             {!visionMediaPreview ? (
                                                 <button
                                                     onClick={() => visionFileRef.current?.click()}
-                                                    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center gap-1.5 text-gray-500 hover:border-purple-400 hover:bg-purple-50/50 transition-all"
+                                                    className="w-full border-2 border-dashed border-q-border rounded-lg p-4 flex flex-col items-center gap-1.5 text-q-text-muted hover:border-q-accent/25 hover:bg-q-accent/50 transition-all"
                                                 >
                                                     <UploadIcon size={20} />
                                                     <span className="text-xs">{t('postEditor.visionUpload', { defaultValue: 'Upload image or video' })}</span>
@@ -773,7 +773,7 @@ IMPORTANT FORMATTING RULES:
                                                     )}
                                                     <button
                                                         onClick={() => { setVisionMedia(null); setVisionMediaPreview(null); }}
-                                                        className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full hover:bg-black/80"
+                                                        className="absolute top-1 right-1 bg-q-text/60 text-white p-1 rounded-full hover:bg-q-text/80"
                                                     >
                                                         <XIcon size={12} />
                                                     </button>
@@ -786,7 +786,7 @@ IMPORTANT FORMATTING RULES:
                                                     value={visionInstruction}
                                                     onChange={(e) => setVisionInstruction(e.target.value)}
                                                     placeholder={t('postEditor.visionInstructionPlaceholder', { defaultValue: 'e.g. Describe this product photo...' })}
-                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-500 outline-none"
+                                                    className="w-full border border-q-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-q-accent/35 outline-none"
                                                     onKeyDown={(e) => e.key === 'Enter' && visionMedia && handleVisionGenerate()}
                                                 />
                                             </div>
@@ -794,7 +794,7 @@ IMPORTANT FORMATTING RULES:
                                             <button
                                                 onClick={handleVisionGenerate}
                                                 disabled={!visionMedia || isAiWorking}
-                                                className="mt-3 w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-1.5 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="mt-3 w-full bg-gradient-to-r from-q-accent to-q-accent-tertiary text-q-text-on-accent py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-1.5 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 {isAiWorking ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                                                 {t('postEditor.visionGenerate', { defaultValue: 'Generate Content' })}
@@ -816,7 +816,7 @@ IMPORTANT FORMATTING RULES:
                         <div
                             ref={editorRef}
                             contentEditable
-                            className="w-full max-w-[816px] min-h-[1056px] bg-white text-black shadow-2xl p-[96px] outline-none prose prose-lg prose-slate max-w-none selection:bg-blue-200 selection:text-black [&_img]:inline-block [&_img]:mx-1 [&_img]:my-2 [&_img]:max-w-full"
+                            className="w-full max-w-[816px] min-h-[1056px] bg-q-surface text-black shadow-2xl p-[96px] outline-none prose prose-lg prose-slate max-w-none selection:bg-q-accent/10 selection:text-black [&_img]:inline-block [&_img]:mx-1 [&_img]:my-2 [&_img]:max-w-full"
                             style={{
                                 boxShadow: '0 20px 50px -12px rgba(0,0,0,0.25)',
                                 border: '1px solid #e5e7eb'
@@ -852,7 +852,7 @@ IMPORTANT FORMATTING RULES:
                             <div className="pt-6 border-t border-q-border">
                                 <div className="flex justify-between items-center mb-4">
                                     <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> {t('postEditor.seoSettings')}</h4>
-                                    <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> {t('postEditor.autoGenerate')}</button>
+                                    <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-q-accent hover:text-q-accent flex items-center"><Sparkles size={12} className="mr-1" /> {t('postEditor.autoGenerate')}</button>
                                 </div>
 
                                 <div className="space-y-4">

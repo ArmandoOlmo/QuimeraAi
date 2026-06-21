@@ -25,6 +25,7 @@ import { useProducts } from '../hooks/useProducts';
 import { supabase } from '../../../../supabase';
 import { createRealtimeChannelName } from '../hooks/realtimeChannel';
 import { useEcommerceContext } from '../EcommerceContext';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 interface StockNotificationSubscriber {
     id: string;
@@ -188,25 +189,25 @@ const StockAlertsView: React.FC = () => {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
+                <MotionCard staggerIndex={0} hoverMotion className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <AlertTriangle className="text-yellow-400 flex-shrink-0" size={20} strokeWidth={2} />
+                        <AlertTriangle className="text-q-accent flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-q-text-muted text-sm">Bajo Stock</p>
                             <p className="text-2xl font-bold text-foreground">{lowStockProducts.length}</p>
                         </div>
                     </div>
-                </div>
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
+                </MotionCard>
+                <MotionCard staggerIndex={1} hoverMotion className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
-                        <Package className="text-red-400 flex-shrink-0" size={20} strokeWidth={2} />
+                        <Package className="text-q-error flex-shrink-0" size={20} strokeWidth={2} />
                         <div>
                             <p className="text-q-text-muted text-sm">Agotados</p>
                             <p className="text-2xl font-bold text-foreground">{outOfStockProducts.length}</p>
                         </div>
                     </div>
-                </div>
-                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
+                </MotionCard>
+                <MotionCard staggerIndex={2} hoverMotion className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <Bell className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
                         <div>
@@ -214,7 +215,7 @@ const StockAlertsView: React.FC = () => {
                             <p className="text-2xl font-bold text-foreground">{subscribers.length}</p>
                         </div>
                     </div>
-                </div>
+                </MotionCard>
             </div>
 
             {/* Low Stock Products */}
@@ -222,13 +223,13 @@ const StockAlertsView: React.FC = () => {
                 <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden">
                     <div className="p-4 border-b border-q-border">
                         <h3 className="font-semibold text-foreground flex items-center gap-2">
-                            <AlertTriangle className="text-yellow-400" size={18} />
+                            <AlertTriangle className="text-q-accent" size={18} />
                             {t('ecommerce.stockWarnings', 'Productos con Stock Bajo')}
                         </h3>
                     </div>
                     <div className="divide-y divide-border">
                         {outOfStockProducts.map((product) => (
-                            <div key={product.id} className="p-4 flex items-center gap-4 bg-red-500/5">
+                            <div key={product.id} className="p-4 flex items-center gap-4 bg-q-error/5">
                                 <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden flex-shrink-0">
                                     {product.images?.[0]?.url ? (
                                         <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover" />
@@ -240,9 +241,9 @@ const StockAlertsView: React.FC = () => {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-medium text-foreground truncate">{product.name}</p>
-                                    <p className="text-sm text-red-500 font-medium">Agotado</p>
+                                    <p className="text-sm text-q-error font-medium">Agotado</p>
                                 </div>
-                                <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full">
+                                <span className="px-2 py-1 bg-q-error/20 text-q-error text-xs font-medium rounded-full">
                                     0 unidades
                                 </span>
                             </div>
@@ -260,9 +261,9 @@ const StockAlertsView: React.FC = () => {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-medium text-foreground truncate">{product.name}</p>
-                                    <p className="text-sm text-yellow-500">Bajo stock</p>
+                                    <p className="text-sm text-q-accent">Bajo stock</p>
                                 </div>
-                                <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-medium rounded-full">
+                                <span className="px-2 py-1 bg-q-accent/20 text-q-accent text-xs font-medium rounded-full">
                                     {product.quantity} unidades
                                 </span>
                             </div>
@@ -343,7 +344,7 @@ const StockAlertsView: React.FC = () => {
                                                     · {formatDate(sub.createdAt)}
                                                 </span>
                                                 {sub.notified && (
-                                                    <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">
+                                                    <span className="px-1.5 py-0.5 bg-q-success/20 text-q-success text-xs rounded">
                                                         Notificado
                                                     </span>
                                                 )}

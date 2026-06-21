@@ -76,14 +76,14 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
     return (
         <section className="w-full animate-fade-in">
             <div className="relative">
-                <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl overflow-hidden">
+                <div className="relative bg-q-surface border border-border-subtle rounded-[var(--radius-card)] overflow-hidden shadow-[var(--shadow-card)]">
                     {/* Background decoration */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-q-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
                     {/* Close button */}
                     <button
                         onClick={onClose}
-                        className="absolute top-3 right-3 p-1.5 rounded-full text-q-text-muted hover:text-foreground hover:bg-secondary/50 transition-colors z-20"
+                        className="absolute top-3 right-3 p-1.5 rounded-[var(--q-radius-md)] text-q-text-muted hover:text-foreground hover:bg-q-surface-overlay transition-colors z-20"
                         aria-label={t('common.close')}
                     >
                         <X size={16} />
@@ -93,9 +93,9 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
                         {/* Header with Progress */}
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                             <div>
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/20 text-xs font-semibold text-primary mb-2">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-q-accent/12 border border-q-accent/25 text-xs font-semibold text-q-accent mb-2">
                                     <span>{t('dashboard.helpGuide.badge', 'Configuración')}</span>
-                                    <span className="w-1 h-1 rounded-full bg-primary" />
+                                    <span className="w-1 h-1 rounded-full bg-q-accent" />
                                     <span>{progressPercentage}% {t('dashboard.helpGuide.completed', 'Completado')}</span>
                                 </div>
                                 <h2 className="text-2xl font-bold text-foreground">
@@ -116,13 +116,13 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
                                 return (
                                     <div
                                         key={step.id}
-                                        className={`
-                                            relative overflow-hidden rounded-xl border transition-all duration-300
+                                    className={`
+                                            relative overflow-hidden rounded-[var(--radius-card-compact)] border transition-all duration-300
                                             ${step.isCompleted
-                                                ? 'bg-primary/5 border-primary/20'
+                                                ? 'bg-q-accent/5 border-q-accent/20'
                                                 : isNext
-                                                    ? 'bg-q-surface border-primary shadow-sm ring-1 ring-primary/20'
-                                                    : 'bg-q-surface/40 border-q-border/50 opacity-60'
+                                                    ? 'bg-q-surface border-q-accent/45 shadow-[var(--shadow-card)] ring-1 ring-q-accent/15'
+                                                    : 'bg-q-surface-overlay/60 border-border-subtle opacity-70'
                                             }
                                         `}
                                     >
@@ -130,26 +130,25 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
                                             {/* Checkbox Status */}
                                             <div className="flex-shrink-0">
                                                 {step.isCompleted ? (
-                                                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm">
+                                                    <div className="w-8 h-8 rounded-full bg-q-accent text-q-text-on-accent flex items-center justify-center shadow-sm">
                                                         <CheckCircle2 size={18} />
                                                     </div>
                                                 ) : (
                                                     <div className={`
                                                         w-8 h-8 rounded-full border-2 flex items-center justify-center
-                                                        ${isNext ? 'border-primary border-dashed' : 'border-muted-foreground/30'}
+                                                        ${isNext ? 'border-q-accent border-dashed' : 'border-q-text-muted/30'}
                                                     `}>
-                                                        <Circle size={10} className={isNext ? 'text-primary' : 'text-transparent'} fill="currentColor" />
+                                                        <Circle size={10} className={isNext ? 'text-q-accent' : 'text-transparent'} fill="currentColor" />
                                                     </div>
                                                 )}
                                             </div>
 
                                             {/* Icon */}
-                                            <div className={`
-                                                w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-                                                ${step.isCompleted ? 'bg-primary/10 text-primary' : isNext ? 'bg-primary/10 text-primary' : 'bg-muted text-q-text-muted'}
-                                            `}>
-                                                <StepIcon size={20} />
-                                            </div>
+                                            <StepIcon
+                                                className={`icon-lg shrink-0 ${
+                                                    step.isCompleted || isNext ? 'text-q-accent' : 'text-q-text-muted'
+                                                }`}
+                                            />
 
                                             {/* Text Content */}
                                             <div className="flex-1 min-w-0">
@@ -158,7 +157,7 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
                                                         {step.title}
                                                     </h3>
                                                     {isNext && (
-                                                        <span className="hidden md:inline-flex text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded">
+                                                        <span className="hidden md:inline-flex text-[10px] font-bold uppercase tracking-wider text-q-accent bg-q-accent/10 px-2 py-0.5 rounded">
                                                             {t('dashboard.helpGuide.nextStep', 'Siguiente')}
                                                         </span>
                                                     )}
@@ -172,7 +171,7 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
                                             {isNext && step.action && (
                                                 <button
                                                     onClick={step.action}
-                                                    className="shrink-0 px-4 py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-lg hover:shadow-lg hover:shadow-primary/25 transition-all active:scale-95 flex items-center gap-2"
+                                                    className="shrink-0 px-4 py-2 bg-q-accent text-q-text-on-accent text-xs font-semibold rounded-[var(--q-radius-md)] hover:opacity-90 transition-all active:scale-95 flex items-center gap-2"
                                                 >
                                                     {step.actionLabel}
                                                     <ArrowRight size={14} />
@@ -185,13 +184,13 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
                         </div>
 
                         {/* Footer */}
-                        <div className="mt-6 pt-4 border-t border-q-border/50 flex items-center justify-between">
+                        <div className="mt-6 pt-4 border-t border-divider flex items-center justify-between">
                             <p className="text-xs text-q-text-muted">
                                 {t('dashboard.helpGuide.proTip', 'Tip: Sigue esta guía para completar tu configuración.')}
                             </p>
                             <button
                                 onClick={onClose}
-                                className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                                className="text-xs font-medium text-q-accent hover:text-q-text transition-colors"
                             >
                                 {t('dashboard.gotIt', 'Entendido')}
                             </button>

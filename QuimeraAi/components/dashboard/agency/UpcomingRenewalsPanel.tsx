@@ -31,17 +31,17 @@ export function UpcomingRenewalsPanel({
     };
 
     const getDaysColor = (days: number): string => {
-        if (days <= 7) return 'text-red-600 dark:text-red-400';
-        if (days <= 14) return 'text-yellow-600 dark:text-yellow-400';
-        return 'text-blue-600 dark:text-blue-400';
+        if (days <= 7) return 'text-q-error dark:text-q-error';
+        if (days <= 14) return 'text-q-accent dark:text-q-accent';
+        return 'text-q-accent dark:text-q-accent';
     };
 
     const getDaysBadgeColor = (days: number): string => {
         if (days <= 7)
-            return 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400';
+            return 'bg-q-error/10 dark:bg-q-error/12 text-q-error dark:text-q-error';
         if (days <= 14)
-            return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400';
-        return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400';
+            return 'bg-q-accent/10 dark:bg-q-accent/12 text-q-accent dark:text-q-accent';
+        return 'bg-q-accent/10 dark:bg-q-accent/12 text-q-accent dark:text-q-accent';
     };
 
     const handleRenewalClick = (renewal: UpcomingRenewal) => {
@@ -58,7 +58,7 @@ export function UpcomingRenewalsPanel({
                     </h3>
                 </div>
                 <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <Calendar className="h-12 w-12 text-q-text-muted mx-auto mb-4" />
                     <p className="text-q-text-muted">
                         No hay renovaciones próximas
                     </p>
@@ -89,7 +89,7 @@ export function UpcomingRenewalsPanel({
                     <button
                         key={renewal.clientId}
                         onClick={() => handleRenewalClick(renewal)}
-                        className="w-full text-left p-4 rounded-lg border border-q-border hover:border-blue-500 dark:hover:border-blue-500 transition-all hover:shadow-md"
+                        className="w-full text-left p-4 rounded-lg border border-q-border hover:border-q-accent/25 dark:hover:border-q-accent/35 transition-all hover:shadow-md"
                     >
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
@@ -99,7 +99,7 @@ export function UpcomingRenewalsPanel({
                                         {renewal.clientName}
                                     </p>
                                     {renewal.status === 'trial' && (
-                                        <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400">
+                                        <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-q-accent/10 dark:bg-q-accent/12 text-q-accent dark:text-q-accent">
                                             <Clock className="h-3 w-3" />
                                             Trial
                                         </span>
@@ -122,7 +122,7 @@ export function UpcomingRenewalsPanel({
 
                                 {/* Warning for soon-expiring trials */}
                                 {renewal.status === 'trial' && renewal.daysUntilRenewal <= 7 && (
-                                    <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400 mt-2 font-medium">
+                                    <div className="flex items-center gap-1 text-xs text-q-error dark:text-q-error mt-2 font-medium">
                                         <AlertCircle className="h-3.5 w-3.5" />
                                         <span>Trial expira pronto - Contactar cliente</span>
                                     </div>
@@ -147,7 +147,7 @@ export function UpcomingRenewalsPanel({
             {hasMore && (
                 <button
                     onClick={() => navigate('/dashboard/agency/renewals')}
-                    className="w-full mt-4 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                    className="w-full mt-4 text-sm text-q-accent dark:text-q-accent hover:text-q-accent dark:hover:text-q-accent font-medium"
                 >
                     Ver todas las renovaciones ({renewals.length})
                 </button>

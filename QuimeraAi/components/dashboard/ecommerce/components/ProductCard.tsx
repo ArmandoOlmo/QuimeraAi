@@ -15,6 +15,7 @@ import {
     Image as ImageIcon,
 } from 'lucide-react';
 import { Product } from '../../../../types/ecommerce';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 interface ProductCardProps {
     product: Product;
@@ -33,115 +34,174 @@ const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const isLowStock = product.trackInventory && product.quantity <= (product.lowStockThreshold || 5);
-    const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
+    const threshold = product.lowStockThreshold ?? 5;
+    const isOutOfStock = product.trackInventory && product.quantity <= 0;
+    const isLowStock = product.trackInventory && !isOutOfStock && product.quantity <= threshold;
+    const hasDiscount = typeof product.compareAtPrice === 'number' && product.compareAtPrice > product.price;
     const discountPercentage = hasDiscount
         ? Math.round(((product.compareAtPrice! - product.price) / product.compareAtPrice!) * 100)
         : 0;
+    const primaryImage = product.images?.[0];
+    const imageCount = product.images?.length || 0;
+    const resolvedCategoryName = categoryName && categoryName !== '-'
+        ? categoryName
+        : t('ecommerce.noCategory', 'Sin categoría');
+    const description = product.shortDescription || product.description;
+
+    const formatPrice = (value: number) => new Intl.NumberFormat('es-MX', {
+        style: 'currency',
+        currency: product.currency || 'USD',
+    }).format(value || 0);
+
+    const statusLabels: Record<Product['status'], string> = {
+        active: t('ecommerce.active', 'Activo'),
+        draft: t('ecommerce.draft', 'Borrador'),
+        archived: t('ecommerce.archived', 'Archivado'),
+    };
+
+    const statusStyles: Record<Product['status'], string> = {
+        active: 'border-q-success/20 bg-q-success/15 text-q-success',
+        draft: 'border-primary/20 bg-primary/10 text-primary',
+        archived: 'border-q-border bg-muted text-q-text-muted',
+    };
+
+    const stockLabel = !product.trackInventory
+        ? t('ecommerce.notTracked', 'Sin control')
+        : isOutOfStock
+            ? t('ecommerce.outOfStock', 'Sin stock')
+            : `${product.quantity} ${t('ecommerce.unitsShort', 'uds')}`;
+
+    const stockClassName = !product.trackInventory
+        ? 'border-q-border bg-muted/40 text-q-text-muted'
+        : isOutOfStock
+            ? 'border-q-error/20 bg-q-error/10 text-q-error'
+            : isLowStock
+                ? 'border-q-warning/20 bg-q-warning/10 text-q-warning'
+                : 'border-q-success/20 bg-q-success/10 text-q-success';
 
     return (
-        <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden hover:border-primary/50 transition-colors group">
+        <MotionCard hoverMotion className="group flex h-full flex-col overflow-hidden rounded-xl border border-q-border bg-q-surface/50 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
             {/* Image */}
-            <div className="relative aspect-square">
-                {product.images && product.images.length > 0 ? (
+            <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                {primaryImage ? (
                     <img
-                        src={product.images[0].url}
+                        src={primaryImage.url}
                         alt={product.name}
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                     />
                 ) : (
-                    <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <div className="flex h-full w-full items-center justify-center bg-muted">
                         <ImageIcon className="text-q-text-muted" size={48} />
                     </div>
                 )}
 
                 {/* Status Badge */}
-                {product.status !== 'active' && (
-                    <div className="absolute top-2 left-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            product.status === 'draft'
-                                ? 'bg-yellow-500/20 text-yellow-400'
-                                : 'bg-muted text-q-text-muted'
-                        }`}>
-                            {product.status === 'draft' ? 'Borrador' : 'Archivado'}
-                        </span>
-                    </div>
-                )}
-
-                {/* Discount Badge */}
-                {hasDiscount && (
-                    <div className="absolute top-2 right-2">
-                        <span className="px-2 py-1 bg-destructive text-destructive-foreground rounded-full text-xs font-bold">
+                <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
+                    <span className={`rounded-full border px-2.5 py-1 text-xs font-medium shadow-sm backdrop-blur ${statusStyles[product.status]}`}>
+                        {statusLabels[product.status]}
+                    </span>
+                    {hasDiscount && (
+                        <span className="rounded-full bg-destructive px-2.5 py-1 text-xs font-bold text-destructive-foreground shadow-sm">
                             -{discountPercentage}%
                         </span>
-                    </div>
-                )}
+                    )}
+                </div>
 
                 {/* Low Stock Warning */}
-                {isLowStock && (
-                    <div className="absolute bottom-2 left-2">
-                        <span className="flex items-center gap-1 px-2 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs">
+                {(isLowStock || isOutOfStock) && (
+                    <div className="absolute bottom-3 left-3">
+                        <span className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium shadow-sm backdrop-blur ${stockClassName}`}>
                             <AlertTriangle size={12} />
-                            {product.quantity} en stock
+                            {stockLabel}
                         </span>
                     </div>
                 )}
 
-                {/* Quick Actions Overlay */}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                {imageCount > 1 && (
+                    <div className="absolute bottom-3 right-3 rounded-full bg-q-text/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+                        +{imageCount - 1}
+                    </div>
+                )}
+            </div>
+
+            {/* Content */}
+            <div className="flex flex-1 flex-col p-4">
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                            <h3 className="truncate font-semibold text-foreground" title={product.name}>
+                                {product.name}
+                            </h3>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                                <span className="max-w-full truncate rounded-full border border-q-border bg-muted/30 px-2.5 py-1 text-xs font-medium text-q-text-muted">
+                                    {resolvedCategoryName}
+                                </span>
+                                {product.sku && (
+                                    <span className="rounded-full border border-q-border bg-q-bg/50 px-2.5 py-1 text-xs font-medium text-q-text-muted">
+                                        SKU: {product.sku}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex-shrink-0 text-right">
+                            <p className="font-bold text-primary">{formatPrice(product.price)}</p>
+                            {hasDiscount && (
+                                <p className="text-xs text-q-text-muted line-through">
+                                    {formatPrice(product.compareAtPrice!)}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    {description && (
+                        <p className="mt-3 truncate text-sm text-q-text-muted" title={description}>
+                            {description}
+                        </p>
+                    )}
+
+                    <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-q-border/60 bg-q-bg/40 px-3 py-2">
+                        <span className="text-xs font-medium text-q-text-muted">
+                            {t('ecommerce.inventory', 'Inventario')}
+                        </span>
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium ${stockClassName}`}>
+                            {(isLowStock || isOutOfStock) && <AlertTriangle size={12} />}
+                            {stockLabel}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="mt-4 grid grid-cols-3 gap-2 border-t border-q-border pt-3">
                     <button
+                        type="button"
                         onClick={onEdit}
-                        className="p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-colors"
+                        title={t('ecommerce.editProduct', 'Editar producto')}
+                        aria-label={t('ecommerce.editProduct', 'Editar producto')}
+                        className="grid h-10 place-items-center rounded-lg text-q-text-muted transition-colors hover:bg-muted hover:text-foreground"
                     >
                         <Edit size={18} />
                     </button>
                     <button
+                        type="button"
                         onClick={onToggleStatus}
-                        className="p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-colors"
+                        title={product.status === 'active' ? t('ecommerce.moveToDraft', 'Mover a borrador') : t('ecommerce.publishProduct', 'Publicar producto')}
+                        aria-label={product.status === 'active' ? t('ecommerce.moveToDraft', 'Mover a borrador') : t('ecommerce.publishProduct', 'Publicar producto')}
+                        className="grid h-10 place-items-center rounded-lg text-q-text-muted transition-colors hover:bg-primary/10 hover:text-primary"
                     >
                         {product.status === 'active' ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                     <button
+                        type="button"
                         onClick={onDelete}
-                        className="p-2 bg-white/20 hover:bg-destructive/50 text-white rounded-full transition-colors"
+                        title={t('ecommerce.deleteProduct', 'Eliminar Producto')}
+                        aria-label={t('ecommerce.deleteProduct', 'Eliminar Producto')}
+                        className="grid h-10 place-items-center rounded-lg text-q-text-muted transition-colors hover:bg-destructive/10 hover:text-destructive"
                     >
                         <Trash2 size={18} />
                     </button>
                 </div>
             </div>
-
-            {/* Content */}
-            <div className="p-4">
-                <h3 className="text-foreground font-medium truncate" title={product.name}>
-                    {product.name}
-                </h3>
-
-                <p className="text-q-text-muted text-sm mb-2">{categoryName}</p>
-
-                <div className="flex items-center justify-between">
-                    <div>
-                        <span className="font-bold text-primary">
-                            ${product.price.toFixed(2)}
-                        </span>
-                        {hasDiscount && (
-                            <span className="text-q-text-muted text-sm line-through ml-2">
-                                ${product.compareAtPrice!.toFixed(2)}
-                            </span>
-                        )}
-                    </div>
-
-                    {product.trackInventory && (
-                        <span className={`text-sm ${isLowStock ? 'text-orange-400' : 'text-q-text-muted'}`}>
-                            {product.quantity} uds
-                        </span>
-                    )}
-                </div>
-
-                {product.sku && (
-                    <p className="text-q-text-muted text-xs mt-2">SKU: {product.sku}</p>
-                )}
-            </div>
-        </div>
+        </MotionCard>
     );
 };
 

@@ -13,6 +13,7 @@ import type { Transaction, Vendor, ProductService } from '../types/finance';
 // ---------------------------------------------------------------------------
 export function useAccountingData() {
     const { activeProjectId } = useProject();
+    const realtimeInstanceId = useMemo(() => Math.random().toString(36).slice(2), []);
 
     // State
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -124,7 +125,7 @@ export function useAccountingData() {
 
         if (!activeProjectId) return;
 
-        const txChannel = supabase.channel(`public:accounting_transactions:project_id=eq.${activeProjectId}`)
+        const txChannel = supabase.channel(`public:accounting_transactions:project_id=eq.${activeProjectId}:instance=${realtimeInstanceId}`)
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'accounting_transactions', filter: `project_id=eq.${activeProjectId}` },
@@ -132,7 +133,7 @@ export function useAccountingData() {
             )
             .subscribe();
 
-        const vChannel = supabase.channel(`public:accounting_vendors:project_id=eq.${activeProjectId}`)
+        const vChannel = supabase.channel(`public:accounting_vendors:project_id=eq.${activeProjectId}:instance=${realtimeInstanceId}`)
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'accounting_vendors', filter: `project_id=eq.${activeProjectId}` },
@@ -140,7 +141,7 @@ export function useAccountingData() {
             )
             .subscribe();
 
-        const psChannel = supabase.channel(`public:accounting_products_services:project_id=eq.${activeProjectId}`)
+        const psChannel = supabase.channel(`public:accounting_products_services:project_id=eq.${activeProjectId}:instance=${realtimeInstanceId}`)
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'accounting_products_services', filter: `project_id=eq.${activeProjectId}` },
@@ -153,7 +154,7 @@ export function useAccountingData() {
             supabase.removeChannel(vChannel);
             supabase.removeChannel(psChannel);
         };
-    }, [activeProjectId, fetchData]);
+    }, [activeProjectId, fetchData, realtimeInstanceId]);
 
     // ---------------------------------------------------------------------------
     // CRUD — Transactions

@@ -46,7 +46,7 @@ const StepIndicator: React.FC<{
         <div className={`
             w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0
             ${completed
-                ? 'bg-green-500 text-white'
+                ? 'bg-q-success text-white'
                 : active
                     ? 'bg-primary text-primary-foreground animate-pulse'
                     : 'bg-secondary text-q-text-muted'
@@ -54,7 +54,7 @@ const StepIndicator: React.FC<{
         `}>
             {completed ? <CheckCircle size={16} /> : step}
         </div>
-        <span className={`text-xs mt-1 ${completed ? 'text-green-500' : active ? 'text-primary' : 'text-q-text-muted'}`}>
+        <span className={`text-xs mt-1 ${completed ? 'text-q-success' : active ? 'text-primary' : 'text-q-text-muted'}`}>
             {label}
         </span>
     </div>
@@ -209,33 +209,33 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             )}
                         </h3>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            {domain.status === 'active' && <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20"><CheckCircle size={12} className="mr-1" /> {t('domainsDashboard.status.connected')}</span>}
-                            {domain.status === 'pending' && <span className="text-xs font-bold text-yellow-500 flex items-center bg-yellow-500/10 px-2 py-0.5 rounded-full border border-yellow-500/20"><Clock size={12} className="mr-1" /> {t('domainsDashboard.status.dnsPending')}</span>}
-                            {domain.status === 'verifying' && <span className="text-xs font-bold text-blue-500 flex items-center bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> {t('domainsDashboard.verifyingDns')}</span>}
-                            {domain.status === 'ssl_pending' && <span className="text-xs font-bold text-purple-500 flex items-center bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> {t('domainsDashboard.generatingSsl')}</span>}
-                            {domain.status === 'deploying' && <span className="text-xs font-bold text-blue-500 flex items-center bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20"><Loader2 size={12} className="mr-1 animate-spin" /> {t('domainsDashboard.status.deploying')}</span>}
-                            {domain.status === 'deployed' && <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20"><CheckCircle size={12} className="mr-1" /> {t('domainsDashboard.status.deployed')}</span>}
+                            {domain.status === 'active' && <span className="text-xs font-bold text-q-success flex items-center bg-q-success/10 px-2 py-0.5 rounded-full border border-q-success/20"><CheckCircle size={12} className="mr-1" /> {t('domainsDashboard.status.connected')}</span>}
+                            {domain.status === 'pending' && <span className="text-xs font-bold text-q-accent flex items-center bg-q-accent/10 px-2 py-0.5 rounded-full border border-q-accent/20"><Clock size={12} className="mr-1" /> {t('domainsDashboard.status.dnsPending')}</span>}
+                            {domain.status === 'verifying' && <span className="text-xs font-bold text-q-accent flex items-center bg-q-accent/10 px-2 py-0.5 rounded-full border border-q-accent/20"><Loader2 size={12} className="mr-1 animate-spin" /> {t('domainsDashboard.verifyingDns')}</span>}
+                            {domain.status === 'ssl_pending' && <span className="text-xs font-bold text-q-accent flex items-center bg-q-accent/10 px-2 py-0.5 rounded-full border border-q-accent/20"><Loader2 size={12} className="mr-1 animate-spin" /> {t('domainsDashboard.generatingSsl')}</span>}
+                            {domain.status === 'deploying' && <span className="text-xs font-bold text-q-accent flex items-center bg-q-accent/10 px-2 py-0.5 rounded-full border border-q-accent/20"><Loader2 size={12} className="mr-1 animate-spin" /> {t('domainsDashboard.status.deploying')}</span>}
+                            {domain.status === 'deployed' && <span className="text-xs font-bold text-q-success flex items-center bg-q-success/10 px-2 py-0.5 rounded-full border border-q-success/20"><CheckCircle size={12} className="mr-1" /> {t('domainsDashboard.status.deployed')}</span>}
                             {domain.status === 'error' && (
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleVerify(); }}
-                                    className="text-xs font-bold text-red-500 flex items-center bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                                    className="text-xs font-bold text-q-error flex items-center bg-q-error/10 px-2 py-0.5 rounded-full border border-q-error/20 hover:bg-q-error/20 transition-colors"
                                 >
                                     <AlertTriangle size={12} className="mr-1" /> {t('domainsDashboard.status.error')} - {t('domainsDashboard.retryVerify', 'Reintentar')}
                                 </button>
                             )}
                             <span className="text-xs text-q-text-muted">• {domain.provider}</span>
                             {isAgencyLandingDomain && (
-                                <span className="text-xs font-bold text-indigo-500 flex items-center bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                                <span className="text-xs font-bold text-q-accent flex items-center bg-q-accent/10 px-2 py-0.5 rounded-full border border-q-accent/20">
                                     <Building2 size={12} className="mr-1" /> Agency Landing
                                 </span>
                             )}
                             {domain.sslStatus === 'active' && (
-                                <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">
+                                <span className="text-xs font-bold text-q-success flex items-center bg-q-success/10 px-2 py-0.5 rounded-full border border-q-success/20">
                                     <Lock size={12} className="mr-1" /> SSL
                                 </span>
                             )}
                             {domain.sslStatus === 'provisioning' && (
-                                <span className="text-xs font-bold text-purple-500 flex items-center bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                                <span className="text-xs font-bold text-q-accent flex items-center bg-q-accent/10 px-2 py-0.5 rounded-full border border-q-accent/20">
                                     <Loader2 size={10} className="mr-1 animate-spin" /> SSL...
                                 </span>
                             )}
@@ -257,7 +257,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         </button>
                         <button
                             onClick={(e) => { e.stopPropagation(); handleDelete(); }}
-                            className="p-2 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                            className="p-2 text-q-text-muted hover:text-q-error hover:bg-q-error/10 rounded-lg transition-colors disabled:opacity-50"
                             disabled={isDeleting}
                             title={t('domainsDashboard.deleteDomain', 'Eliminar dominio')}
                         >
@@ -335,28 +335,28 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
 
                     {/* Status Messages */}
                     {!domain.projectId && (
-                        <p className="text-xs text-yellow-600 bg-yellow-500/10 p-2 rounded flex items-center gap-1.5">
+                        <p className="text-xs text-q-accent bg-q-accent/10 p-2 rounded flex items-center gap-1.5">
                             <AlertTriangle size={14} className="shrink-0" /> {t('domainsDashboard.selectProjectWarning')}
                         </p>
                     )}
                     {domain.projectId && domain.status === 'pending' && !hasCloudflareSetup && (
-                        <p className="text-xs text-blue-600 bg-blue-500/10 p-2 rounded flex items-center gap-1.5">
+                        <p className="text-xs text-q-accent bg-q-accent/10 p-2 rounded flex items-center gap-1.5">
                             <ClipboardList size={14} className="shrink-0" /> {t('domainsDashboard.configureDnsWarning')}
                         </p>
                     )}
                     {domain.status === 'ssl_pending' && (
-                        <p className="text-xs text-purple-600 bg-purple-500/10 p-2 rounded flex items-center gap-1.5">
+                        <p className="text-xs text-q-accent bg-q-accent/10 p-2 rounded flex items-center gap-1.5">
                             <ShieldCheck size={14} className="shrink-0" /> {t('domainsDashboard.sslGenerating')}
                         </p>
                     )}
                     {domain.status === 'active' && (
-                        <p className="text-xs text-green-600 bg-green-500/10 p-2 rounded flex items-center gap-1.5">
+                        <p className="text-xs text-q-success bg-q-success/10 p-2 rounded flex items-center gap-1.5">
                             <CheckCircle size={14} className="shrink-0" /> {t('domainsDashboard.domainActiveMessage')} <a href={`https://${domain.name}`} target="_blank" rel="noreferrer" className="underline font-bold">{domain.name}</a>
                         </p>
                     )}
                     {domain.status === 'error' && (
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                            <p className="text-xs text-red-500 font-bold flex items-center gap-1.5 mb-2">
+                        <div className="bg-q-error/10 border border-q-error/20 rounded-lg p-3">
+                            <p className="text-xs text-q-error font-bold flex items-center gap-1.5 mb-2">
                                 <XCircle size={14} className="shrink-0" />
                                 Falta configurar el DNS del dominio.
                             </p>
@@ -374,7 +374,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                 </div>
                             </div>
                             {(domain as any).error || domain.deployment?.error ? (
-                                <p className="text-[11px] text-red-500/80 mt-2">
+                                <p className="text-[11px] text-q-error/80 mt-2">
                                     Detalle: {(domain as any).error || domain.deployment?.error}
                                 </p>
                             ) : null}
@@ -385,10 +385,10 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
 
                 {/* SSL PROVISIONING NOTIFICATION */}
                 {(domain.sslStatus === 'pending' || domain.sslStatus === 'provisioning') && domain.status !== 'pending' && domain.status !== 'error' && (
-                    <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-5 mb-4">
+                    <div className="bg-gradient-to-r from-q-accent/10 to-q-accent/10 border border-q-accent/30 rounded-xl p-5 mb-4">
                         <div className="flex items-start gap-3 mb-3">
-                            <div className="p-2 bg-purple-500/20 rounded-lg flex-shrink-0 animate-pulse">
-                                <Loader2 size={20} className="text-purple-500 animate-spin" />
+                            <div className="p-2 bg-q-accent/20 rounded-lg flex-shrink-0 animate-pulse">
+                                <Loader2 size={20} className="text-q-accent animate-spin" />
                             </div>
                             <div className="flex-1">
                                 <h4 className="font-bold text-foreground text-base mb-1">
@@ -397,14 +397,14 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                 <p className="text-sm text-q-text-muted mb-2">
                                     {t('domainsDashboard.sslProvisioningDesc')}
                                 </p>
-                                <p className="text-xs text-purple-600 dark:text-purple-400">
+                                <p className="text-xs text-q-accent dark:text-q-accent">
                                     {t('domainsDashboard.sslProvisioningNote')}
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 p-3 bg-purple-500/10 rounded-lg">
-                            <Loader2 size={14} className="text-purple-500 animate-spin" />
-                            <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                        <div className="flex items-center gap-2 p-3 bg-q-accent/10 rounded-lg">
+                            <Loader2 size={14} className="text-q-accent animate-spin" />
+                            <span className="text-sm font-medium text-q-accent dark:text-q-accent">
                                 {t('domainsDashboard.sslProvisioningStatus')}
                             </span>
                         </div>
@@ -415,10 +415,10 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
 
                 {/* DNS INSTRUCTIONS - Show when domain is pending */}
                 {shouldShowDnsInstructions && (
-                    <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/30 rounded-xl p-5 mb-4">
+                    <div className="bg-gradient-to-r from-q-accent/10 to-q-accent/10 border border-q-accent/30 rounded-xl p-5 mb-4">
                         <div className="flex items-start gap-3 mb-4">
-                            <div className="p-2 bg-blue-500/20 rounded-lg flex-shrink-0">
-                                <Globe size={20} className="text-blue-500" />
+                            <div className="p-2 bg-q-accent/20 rounded-lg flex-shrink-0">
+                                <Globe size={20} className="text-q-accent" />
                             </div>
                             <div>
                                 <h4 className="font-bold text-foreground text-base mb-1">
@@ -432,20 +432,20 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
 
                         {/* DNS Records - Step by step guide */}
                         <div className="bg-q-surface/80 rounded-lg p-4 mb-4 border border-q-border">
-                            
+
                             <p className="text-sm text-q-text-muted mb-4" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.dnsProviderInstructions', { section: t('domainsDashboard.dnsRecords') }) }} />
 
                             <div className="space-y-4">
                                 {getDomainDnsRecords(domain).map((record: any, idx: number) => (
                                     <div key={idx} className="bg-secondary/30 rounded-lg p-4">
                                         <div className="flex items-center gap-2 mb-3">
-                                            <span className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center">{idx + 1}</span>
+                                            <span className="w-6 h-6 rounded-full bg-q-accent text-q-text-on-accent text-xs font-bold flex items-center justify-center">{idx + 1}</span>
                                             <span className="text-sm font-bold text-foreground">{record.type} Record</span>
                                         </div>
                                         <div className="grid grid-cols-3 gap-3 bg-q-bg p-3 rounded border border-q-border">
                                             <div>
                                                 <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.typeLabel')}</span>
-                                                <code className={`font-mono font-bold ${record.type === 'A' ? 'text-blue-500' : 'text-green-500'}`}>{record.type}</code>
+                                                <code className={`font-mono font-bold ${record.type === 'A' ? 'text-q-accent' : 'text-q-success'}`}>{record.type}</code>
                                             </div>
                                             <div>
                                                 <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.hostNameLabel')}</span>
@@ -476,7 +476,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                 {/* Step 3: Wait & Verify */}
                                 <div className="bg-secondary/30 rounded-lg p-4">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <span className="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">{getDomainDnsRecords(domain).length + 1}</span>
+                                        <span className="w-6 h-6 rounded-full bg-q-accent text-q-text-on-accent text-xs font-bold flex items-center justify-center">{getDomainDnsRecords(domain).length + 1}</span>
                                         <span className="text-sm font-bold text-foreground">{t('domainsDashboard.saveAndVerify')}</span>
                                     </div>
                                     <p className="text-xs text-q-text-muted ml-8" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.saveAndVerifyText') }} />
@@ -484,8 +484,8 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             </div>
 
                             {/* Provider-specific tips */}
-                            <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                                <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-1">{t('domainsDashboard.providerTipsTitle')}</p>
+                            <div className="mt-4 p-3 bg-q-accent/10 border border-q-accent/20 rounded-lg">
+                                <p className="text-xs font-bold text-q-accent dark:text-q-accent mb-1">{t('domainsDashboard.providerTipsTitle')}</p>
                                 <ul className="text-xs text-q-text-muted space-y-1 list-disc list-inside">
                                     <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.providerTipGoDaddy') }} />
                                     <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.providerTipNamecheap') }} />
@@ -497,10 +497,10 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         {/* Verification message */}
                         {verificationMessage && (
                             <div className={`p-3 rounded-lg text-sm mb-4 flex items-center gap-2 ${verificationMessage.status === 'success'
-                                ? 'bg-green-500/10 border border-green-500/20 text-green-600'
+                                ? 'bg-q-success/10 border border-q-success/20 text-q-success'
                                 : verificationMessage.status === 'error'
-                                    ? 'bg-red-500/10 border border-red-500/20 text-red-500'
-                                    : 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-600'
+                                    ? 'bg-q-error/10 border border-q-error/20 text-q-error'
+                                    : 'bg-q-accent/10 border border-q-accent/20 text-q-accent'
                                 }`}>
                                 {verificationMessage.status === 'success' && <CheckCircle size={16} className="shrink-0" />}
                                 {verificationMessage.status === 'error' && <XCircle size={16} className="shrink-0" />}
@@ -580,7 +580,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                     <div key={idx} className="bg-q-surface rounded-lg p-4 border border-q-border">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <span className={`text-xs font-bold ${record.type === 'A' ? 'bg-blue-500/20 text-blue-500' : 'bg-green-500/20 text-green-500'} px-2 py-0.5 rounded mr-2`}>
+                                                <span className={`text-xs font-bold ${record.type === 'A' ? 'bg-q-accent/20 text-q-accent' : 'bg-q-success/20 text-q-success'} px-2 py-0.5 rounded mr-2`}>
                                                     {record.type}
                                                 </span>
                                                 <span className="text-sm text-q-text-muted">Host: <code className="font-mono font-bold">{record.host || '@'}</code></span>
@@ -606,8 +606,8 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                 ))}
                             </div>
 
-                            <div className="flex items-center gap-2 p-3 mt-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                                <Clock size={14} className="text-blue-500 flex-shrink-0" />
+                            <div className="flex items-center gap-2 p-3 mt-4 bg-q-accent/10 border border-q-accent/20 rounded-lg">
+                                <Clock size={14} className="text-q-accent flex-shrink-0" />
                                 <p className="text-xs text-q-text-muted">
                                     {t('domainsDashboard.dnsPropagationNote')}
                                 </p>
@@ -629,10 +629,10 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                 <div
                                     key={log.id}
                                     className={`text-xs p-3 rounded-lg border ${log.status === 'success'
-                                        ? 'bg-green-500/5 border-green-500/20 text-green-700 dark:text-green-400'
+                                        ? 'bg-q-success/5 border-q-success/20 text-q-success dark:text-q-success'
                                         : log.status === 'failed'
-                                            ? 'bg-red-500/5 border-red-500/20 text-red-700 dark:text-red-400'
-                                            : 'bg-blue-500/5 border-blue-500/20 text-blue-700 dark:text-blue-400'
+                                            ? 'bg-q-error/5 border-q-error/20 text-q-error dark:text-q-error'
+                                            : 'bg-q-accent/5 border-q-accent/20 text-q-accent dark:text-q-accent'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-1">
@@ -876,24 +876,24 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="p-6">
             {/* Order Progress Modal */}
             {orderStatus && (
-                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm">
+                <div className="fixed inset-0 bg-q-text/60 z-50 flex items-center justify-center backdrop-blur-sm">
                     <div className="bg-q-surface border border-q-border rounded-2xl shadow-xl max-w-md w-full mx-4 p-6">
                         <div className="text-center mb-6">
                             {orderStatus.status === 'completed' ? (
                                 <>
-                                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <CheckCircle size={32} className="text-green-500" />
+                                    <div className="w-16 h-16 bg-q-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <CheckCircle size={32} className="text-q-success" />
                                     </div>
                                     <h3 className="text-xl font-bold text-foreground">{t('domainsDashboard.registrationComplete')}</h3>
                                     <p className="text-q-text-muted">{t('domainsDashboard.domainReadyToUse')}</p>
                                 </>
                             ) : orderStatus.status === 'failed' ? (
                                 <>
-                                    <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <X size={32} className="text-red-500" />
+                                    <div className="w-16 h-16 bg-q-error/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <X size={32} className="text-q-error" />
                                     </div>
                                     <h3 className="text-xl font-bold text-foreground">{t('domainsDashboard.stepFailed')}</h3>
-                                    <p className="text-red-500">{error}</p>
+                                    <p className="text-q-error">{error}</p>
                                 </>
                             ) : (
                                 <>
@@ -911,8 +911,8 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-q-text-muted">{t('domainsDashboard.domainStatus')}</span>
-                                <span className={`text-sm font-medium ${orderStatus.status === 'completed' ? 'text-green-500' :
-                                    orderStatus.status === 'failed' ? 'text-red-500' : 'text-primary'
+                                <span className={`text-sm font-medium ${orderStatus.status === 'completed' ? 'text-q-success' :
+                                    orderStatus.status === 'failed' ? 'text-q-error' : 'text-primary'
                                     }`}>
                                     {orderStatus.step}
                                 </span>
@@ -954,8 +954,8 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
                         {/* Nameservers info (if completed) */}
                         {orderStatus.status === 'completed' && orderStatus.nameservers && orderStatus.nameservers.length > 0 && (
-                            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4">
-                                <p className="text-sm font-medium text-blue-500 mb-2">{t('domainsDashboard.nameserversInfo')}</p>
+                            <div className="bg-q-accent/10 border border-q-accent/20 rounded-lg p-3 mb-4">
+                                <p className="text-sm font-medium text-q-accent mb-2">{t('domainsDashboard.nameserversInfo')}</p>
                                 <div className="space-y-1">
                                     {orderStatus.nameservers.map((ns, i) => (
                                         <code key={i} className="block text-xs bg-secondary px-2 py-1 rounded font-mono">{ns}</code>
@@ -1015,7 +1015,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
             {/* Error message */}
             {error && (
-                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm flex items-center gap-1.5">
+                <div className="mb-4 p-3 bg-q-error/10 border border-q-error/20 rounded-lg text-q-error text-sm flex items-center gap-1.5">
                     <XCircle size={16} className="shrink-0" /> {error}
                 </div>
             )}
@@ -1025,25 +1025,25 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 {/* Available Domains Section */}
                 {results.filter(r => r.available).length > 0 && (
                     <div>
-                        <h3 className="text-sm font-bold text-green-500 mb-2 flex items-center">
+                        <h3 className="text-sm font-bold text-q-success mb-2 flex items-center">
                             <CheckCircle size={14} className="mr-1" /> {t('domainsDashboard.available')} ({results.filter(r => r.available).length})
                         </h3>
                         <div className="space-y-2">
                             {results.filter(r => r.available).map((res, idx) => (
                                 <div
                                     key={`available-${idx}`}
-                                    className="flex justify-between items-center p-3 bg-q-surface border border-green-500/20 rounded-lg transition-colors hover:border-green-500/40"
+                                    className="flex justify-between items-center p-3 bg-q-surface border border-q-success/20 rounded-lg transition-colors hover:border-q-success/40"
                                 >
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <p className="font-bold text-foreground">{res.name}</p>
                                             {res.premium && (
-                                                <span className="text-xs bg-yellow-500/20 text-yellow-600 px-2 py-0.5 rounded-full font-medium">
+                                                <span className="text-xs bg-q-accent/20 text-q-accent px-2 py-0.5 rounded-full font-medium">
                                                     Premium
                                                 </span>
                                             )}
                                         </div>
-                                        <span className="text-xs text-green-500 font-medium flex items-center">
+                                        <span className="text-xs text-q-success font-medium flex items-center">
                                             <CheckCircle size={10} className="mr-1" /> {t('domainsDashboard.available')}
                                         </span>
                                     </div>
@@ -1062,7 +1062,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                         <button
                                             onClick={() => res.price && handleBuy(res.name, res.price)}
                                             disabled={isPurchasing !== null}
-                                            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-all disabled:opacity-50 min-w-[90px]"
+                                            className="bg-q-success hover:bg-q-success text-white font-bold py-2 px-4 rounded-lg transition-all disabled:opacity-50 min-w-[90px]"
                                         >
                                             {isPurchasing === res.name ? (
                                                 <Loader2 size={16} className="animate-spin mx-auto" />
@@ -1080,18 +1080,18 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 {/* Unavailable Domains Section */}
                 {results.filter(r => !r.available).length > 0 && (
                     <div>
-                        <h3 className="text-sm font-bold text-red-500 mb-2 flex items-center">
+                        <h3 className="text-sm font-bold text-q-error mb-2 flex items-center">
                             <X size={14} className="mr-1" /> {t('domainsDashboard.taken')} ({results.filter(r => !r.available).length})
                         </h3>
                         <div className="space-y-2">
                             {results.filter(r => !r.available).map((res, idx) => (
                                 <div
                                     key={`unavailable-${idx}`}
-                                    className="flex justify-between items-center p-3 bg-q-surface/50 border border-red-500/20 rounded-lg opacity-70"
+                                    className="flex justify-between items-center p-3 bg-q-surface/50 border border-q-error/20 rounded-lg opacity-70"
                                 >
                                     <div>
                                         <p className="font-medium text-foreground line-through">{res.name}</p>
-                                        <span className="text-xs text-red-500 font-medium flex items-center">
+                                        <span className="text-xs text-q-error font-medium flex items-center">
                                             <X size={10} className="mr-1" /> {t('domainsDashboard.taken')}
                                         </span>
                                     </div>
@@ -1299,14 +1299,14 @@ const DomainsDashboard: React.FC = () => {
                             onClick={() => customDomainsAllowed ? setIsConnectModalOpen(true) : handleDomainUpgrade()}
                             className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-lg text-sm font-medium transition-all sm:bg-secondary/50 sm:border sm:border-q-border/40 text-q-text-muted hover:text-foreground hover:bg-secondary hidden sm:flex"
                         >
-                            {!customDomainsAllowed && <Crown className="w-4 h-4 text-yellow-500" />}
+                            {!customDomainsAllowed && <Crown className="w-4 h-4 text-q-accent" />}
                             <Link2 className="w-4 h-4" /> <span className="hidden sm:inline">{t('domainsDashboard.connect')}</span>
                         </button>
                         <button
                             onClick={handleBuyDomain}
                             className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-lg text-sm font-medium transition-all sm:bg-secondary/50 sm:border sm:border-q-border/40 text-q-text-muted hover:text-foreground hover:bg-secondary"
                         >
-                            {!customDomainsAllowed && <Crown className="w-4 h-4 text-yellow-500" />}
+                            {!customDomainsAllowed && <Crown className="w-4 h-4 text-q-accent" />}
                             <ShoppingCart className="w-4 h-4" /> <span className="hidden sm:inline">{t('domainsDashboard.buyDomain')}</span>
                         </button>
                         <HeaderBackButton onClick={() => navigate(ROUTES.DASHBOARD)} />
@@ -1742,7 +1742,7 @@ const DomainsDashboard: React.FC = () => {
 
                         {/* Error message */}
                         {cloudflareError && (
-                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm flex items-center gap-1.5">
+                            <div className="mb-4 p-3 bg-q-error/10 border border-q-error/20 rounded-lg text-q-error text-sm flex items-center gap-1.5">
                                 <XCircle size={16} className="shrink-0" /> {cloudflareError}
                             </div>
                         )}

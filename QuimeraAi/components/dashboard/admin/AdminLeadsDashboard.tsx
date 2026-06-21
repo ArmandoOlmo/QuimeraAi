@@ -1,7 +1,7 @@
 /**
  * AdminLeadsDashboard.tsx
  * Dashboard de Leads para Super Admin — opera sobre platformLeads (sin proyecto)
- * 
+ *
  * Estrategia: Re-usa LeadsDashboard inyectando datos de plataforma via CRMProvider override.
  * Se modifica el CRMContext para proporcionar leads de plataforma en lugar de proyecto.
  */
@@ -44,7 +44,7 @@ const AdminCRMContext = createContext<AdminCRMContextType | undefined>(undefined
 // Provider that wraps LeadsDashboard with admin data
 const AdminCRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const adminLeads = useAdminLeads();
-    
+
     const value: AdminCRMContextType = {
         leads: adminLeads.leads,
         isLoadingLeads: adminLeads.isLoadingLeads,
@@ -145,7 +145,7 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
     const { setView } = useUI();
     const { navigate } = useRouter();
     const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
-    
+
     // Use Admin CRM instead of project-scoped CRM
     const {
         leads, updateLeadStatus, deleteLead, addLead, updateLead,
@@ -168,23 +168,23 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
     };
 
     const getLeadStages = (t: any): { id: LeadStatus; label: string; color: string }[] => [
-        { id: 'new', label: t('leads.stages.new'), color: 'bg-blue-500' },
-        { id: 'contacted', label: t('leads.stages.contacted'), color: 'bg-yellow-500' },
-        { id: 'qualified', label: t('leads.stages.qualified'), color: 'bg-purple-500' },
-        { id: 'negotiation', label: t('leads.stages.negotiation'), color: 'bg-orange-500' },
-        { id: 'won', label: t('leads.stages.won'), color: 'bg-green-500' },
-        { id: 'lost', label: t('leads.stages.lost'), color: 'bg-red-500' },
+        { id: 'new', label: t('leads.stages.new'), color: 'bg-q-accent' },
+        { id: 'contacted', label: t('leads.stages.contacted'), color: 'bg-q-accent' },
+        { id: 'qualified', label: t('leads.stages.qualified'), color: 'bg-q-accent' },
+        { id: 'negotiation', label: t('leads.stages.negotiation'), color: 'bg-q-warning' },
+        { id: 'won', label: t('leads.stages.won'), color: 'bg-q-success' },
+        { id: 'lost', label: t('leads.stages.lost'), color: 'bg-q-error' },
     ];
 
     const LEAD_STAGES = React.useMemo(() => getLeadStages(t), [t]);
     const CARD_COLORS = [
-        { id: 'default', bg: 'bg-gradient-to-r from-background via-background/60 to-transparent', border: 'border-q-border', indicator: 'bg-slate-500' },
-        { id: 'blue', bg: 'bg-gradient-to-r from-blue-500/40 via-blue-500/20 to-transparent', border: 'border-blue-500/30', indicator: 'bg-blue-500' },
-        { id: 'green', bg: 'bg-gradient-to-r from-emerald-500/40 via-emerald-500/20 to-transparent', border: 'border-emerald-500/30', indicator: 'bg-emerald-500' },
-        { id: 'purple', bg: 'bg-gradient-to-r from-purple-500/40 via-purple-500/20 to-transparent', border: 'border-purple-500/30', indicator: 'bg-purple-500' },
-        { id: 'orange', bg: 'bg-gradient-to-r from-orange-500/40 via-orange-500/20 to-transparent', border: 'border-orange-500/30', indicator: 'bg-orange-500' },
-        { id: 'pink', bg: 'bg-gradient-to-r from-pink-500/40 via-pink-500/20 to-transparent', border: 'border-pink-500/30', indicator: 'bg-pink-500' },
-        { id: 'red', bg: 'bg-gradient-to-r from-red-500/40 via-red-500/20 to-transparent', border: 'border-red-500/30', indicator: 'bg-red-500' },
+        { id: 'default', bg: 'bg-gradient-to-r from-background via-background/60 to-transparent', border: 'border-q-border', indicator: 'bg-q-surface-overlay' },
+        { id: 'blue', bg: 'bg-gradient-to-r from-q-accent/40 via-q-accent/20 to-transparent', border: 'border-q-accent/30', indicator: 'bg-q-accent' },
+        { id: 'green', bg: 'bg-gradient-to-r from-q-success/40 via-q-success/20 to-transparent', border: 'border-q-success/30', indicator: 'bg-q-success' },
+        { id: 'purple', bg: 'bg-gradient-to-r from-q-accent/40 via-q-accent/20 to-transparent', border: 'border-q-accent/30', indicator: 'bg-q-accent' },
+        { id: 'orange', bg: 'bg-gradient-to-r from-q-warning/40 via-q-warning/20 to-transparent', border: 'border-q-warning/30', indicator: 'bg-q-warning' },
+        { id: 'pink', bg: 'bg-gradient-to-r from-q-accent/40 via-q-accent/20 to-transparent', border: 'border-q-accent/30', indicator: 'bg-q-accent' },
+        { id: 'red', bg: 'bg-gradient-to-r from-q-error/40 via-q-error/20 to-transparent', border: 'border-q-error/30', indicator: 'bg-q-error' },
     ];
 
     // State
@@ -348,7 +348,7 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
             >
                 <button
                     onClick={(e) => { e.stopPropagation(); handleDeleteLead(lead.id); }}
-                    className="absolute top-2 right-2 z-10 p-1 rounded-full bg-q-surface/80 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+                    className="absolute top-2 right-2 z-10 p-1 rounded-full bg-q-surface/80 text-q-text-muted hover:text-q-error hover:bg-q-error/10 transition-all opacity-0 group-hover:opacity-100"
                 >
                     <Trash2 size={14} />
                 </button>
@@ -375,7 +375,7 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                     <div className="mt-2 flex items-center gap-1">
                         <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
                             <div
-                                className={`h-full rounded-full ${(lead.aiScore || 0) > 75 ? 'bg-green-500' : (lead.aiScore || 0) > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                className={`h-full rounded-full ${(lead.aiScore || 0) > 75 ? 'bg-q-success' : (lead.aiScore || 0) > 40 ? 'bg-q-accent' : 'bg-q-error'}`}
                                 style={{ width: `${lead.aiScore || lead.leadScore || 0}%` }}
                             />
                         </div>
@@ -383,7 +383,7 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                     </div>
                 )}
                 {lead.value && lead.value > 0 && (
-                    <div className="mt-1 flex items-center gap-1 text-xs text-green-500">
+                    <div className="mt-1 flex items-center gap-1 text-xs text-q-success">
                         <DollarSign size={10} />${lead.value.toLocaleString()}
                     </div>
                 )}
@@ -428,7 +428,7 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                                     setAudienceModalTitle(`Añadir ${selected.length} lead${selected.length > 1 ? 's' : ''} a Audiencia`);
                                     setShowAddToAudience(true);
                                 }}
-                                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 text-purple-500 hover:bg-purple-500/20 transition-all text-sm font-medium"
+                                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-q-accent/10 text-q-accent hover:bg-q-accent/20 transition-all text-sm font-medium"
                             >
                                 <Megaphone size={14} />
                                 Audiencia ({selectedLeadIds.size})
@@ -451,12 +451,12 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                 {/* Stats Bar */}
                 <div className="px-4 sm:px-6 py-3 border-b border-q-border/50 bg-q-surface/80 backdrop-blur-sm flex items-center gap-4 flex-wrap text-xs relative z-[1]">
                     <span className="text-q-text-muted">{t('leads.total')}: <b className="text-foreground">{stats.total}</b></span>
-                    <span className="text-blue-500">{t('leads.stages.new')}: <b>{stats.new}</b></span>
-                    <span className="text-yellow-500">{t('leads.stages.contacted')}: <b>{stats.contacted}</b></span>
-                    <span className="text-purple-500">{t('leads.stages.qualified')}: <b>{stats.qualified}</b></span>
-                    <span className="text-green-500">{t('leads.stages.won')}: <b>{stats.won}</b></span>
+                    <span className="text-q-accent">{t('leads.stages.new')}: <b>{stats.new}</b></span>
+                    <span className="text-q-accent">{t('leads.stages.contacted')}: <b>{stats.contacted}</b></span>
+                    <span className="text-q-accent">{t('leads.stages.qualified')}: <b>{stats.qualified}</b></span>
+                    <span className="text-q-success">{t('leads.stages.won')}: <b>{stats.won}</b></span>
                     {stats.totalValue > 0 && (
-                        <span className="text-emerald-500 ml-auto font-semibold">${stats.totalValue.toLocaleString()}</span>
+                        <span className="text-q-success ml-auto font-semibold">${stats.totalValue.toLocaleString()}</span>
                     )}
                 </div>
 
@@ -621,7 +621,7 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                             {/* Email Marketing Integration */}
                             <div className="border-t border-q-border pt-4">
                                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                                    <Megaphone size={14} className="text-purple-500" />
+                                    <Megaphone size={14} className="text-q-accent" />
                                     Email Marketing
                                 </h3>
                                 <div className="space-y-2">
@@ -632,7 +632,7 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                                                 setAudienceModalTitle(`Añadir ${selectedLead.name || 'lead'} a Audiencia`);
                                                 setShowAddToAudience(true);
                                             }}
-                                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-purple-500/30 bg-purple-500/5 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 transition-all text-sm font-medium"
+                                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-q-accent/30 bg-q-accent/5 text-q-accent dark:text-q-accent hover:bg-q-accent/10 transition-all text-sm font-medium"
                                         >
                                             <Mail size={14} />
                                             Añadir a Audiencia Email
@@ -643,7 +643,7 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                                             onClick={() => {
                                                 navigate(`${ROUTES.ADMIN_EMAIL}?action=new-campaign&email=${encodeURIComponent(selectedLead.email!)}&name=${encodeURIComponent(selectedLead.name || '')}`);
                                             }}
-                                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-blue-500/30 bg-blue-500/5 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 transition-all text-sm font-medium"
+                                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-q-accent/30 bg-q-accent/5 text-q-accent dark:text-q-accent hover:bg-q-accent/10 transition-all text-sm font-medium"
                                         >
                                             <Send size={14} />
                                             Crear Campaña de Email

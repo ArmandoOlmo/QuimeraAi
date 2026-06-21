@@ -92,7 +92,7 @@ const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+        <div className="fixed inset-0 bg-q-text/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-q-surface rounded-2xl border border-q-border w-full max-w-md shadow-2xl animate-scale-in overflow-hidden">
                 {/* Header */}
                 <div className="p-5 border-b border-q-border bg-gradient-to-r from-primary/5 to-transparent">
@@ -123,8 +123,8 @@ const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
                 <div className="p-5 space-y-4">
                     {success ? (
                         <div className="text-center py-8">
-                            <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-                                <CheckCircle size={32} className="text-green-500" />
+                            <div className="w-16 h-16 rounded-full bg-q-success/10 flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle size={32} className="text-q-success" />
                             </div>
                             <p className="text-lg font-medium text-foreground">
                                 {t('email.addedSuccessfully', '¡Añadido exitosamente!')}
@@ -171,7 +171,7 @@ const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
                                                     : 'border-muted-foreground'
                                                 }`}>
                                                 {selectedAudienceId === audience.id && (
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-q-surface" />
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -187,9 +187,9 @@ const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
 
                             {/* Error */}
                             {error && (
-                                <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                                    <AlertTriangle size={16} className="text-red-500 shrink-0" />
-                                    <p className="text-sm text-red-500">{error}</p>
+                                <div className="flex items-center gap-2 p-3 bg-q-error/10 border border-q-error/20 rounded-lg">
+                                    <AlertTriangle size={16} className="text-q-error shrink-0" />
+                                    <p className="text-sm text-q-error">{error}</p>
                                 </div>
                             )}
                         </>

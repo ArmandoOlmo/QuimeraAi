@@ -48,14 +48,14 @@ const CATEGORY_LABELS: Record<AppArticleCategory, string> = {
 };
 
 const CATEGORY_COLORS: Record<AppArticleCategory, { bg: string; text: string; border: string }> = {
-  blog: { bg: 'bg-blue-500/10', text: 'text-blue-500', border: 'border-blue-500/20' },
-  news: { bg: 'bg-purple-500/10', text: 'text-purple-500', border: 'border-purple-500/20' },
-  tutorial: { bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/20' },
-  'case-study': { bg: 'bg-amber-500/10', text: 'text-amber-500', border: 'border-amber-500/20' },
-  announcement: { bg: 'bg-rose-500/10', text: 'text-rose-500', border: 'border-rose-500/20' },
-  guide: { bg: 'bg-cyan-500/10', text: 'text-cyan-500', border: 'border-cyan-500/20' },
-  update: { bg: 'bg-indigo-500/10', text: 'text-indigo-500', border: 'border-indigo-500/20' },
-  help: { bg: 'bg-orange-500/10', text: 'text-orange-500', border: 'border-orange-500/20' },
+  blog: { bg: 'bg-q-accent/10', text: 'text-q-accent', border: 'border-q-accent/20' },
+  news: { bg: 'bg-q-accent/10', text: 'text-q-accent', border: 'border-q-accent/20' },
+  tutorial: { bg: 'bg-q-success/10', text: 'text-q-success', border: 'border-q-success/20' },
+  'case-study': { bg: 'bg-q-accent/10', text: 'text-q-accent', border: 'border-q-accent/20' },
+  announcement: { bg: 'bg-q-error/10', text: 'text-q-error', border: 'border-q-error/20' },
+  guide: { bg: 'bg-q-accent/10', text: 'text-q-accent', border: 'border-q-accent/20' },
+  update: { bg: 'bg-q-accent/10', text: 'text-q-accent', border: 'border-q-accent/20' },
+  help: { bg: 'bg-q-warning/10', text: 'text-q-warning', border: 'border-q-warning/20' },
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

@@ -48,14 +48,14 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
 
     const handleAddService = () => {
         if (!newService.name.trim()) return;
-        
+
         const service: OnboardingService = {
             id: `service-${Date.now()}`,
             name: newService.name.trim(),
             description: newService.description.trim(),
             isAIGenerated: false,
         };
-        
+
         onUpdate([...services, service]);
         setNewService({ name: '', description: '' });
         setIsAdding(false);
@@ -68,13 +68,13 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
 
     const handleSaveEdit = () => {
         if (!editingId || !editForm.name.trim()) return;
-        
-        const updated = services.map(s => 
-            s.id === editingId 
+
+        const updated = services.map(s =>
+            s.id === editingId
                 ? { ...s, name: editForm.name.trim(), description: editForm.description.trim() }
                 : s
         );
-        
+
         onUpdate(updated);
         setEditingId(null);
         setEditForm({ name: '', description: '' });
@@ -93,8 +93,8 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
         <div className="max-w-xl mx-auto space-y-8">
             {/* Header */}
             <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-secondary flex items-center justify-center">
-                    <Briefcase size={32} className="text-secondary-foreground" />
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center text-q-accent">
+                    <Briefcase size={32} />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">
                     {t('onboarding.step3Heading', 'Your Services & Products')}
@@ -110,7 +110,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
                     onClick={handleGenerateServices}
                     isLoading={isGenerating}
                     disabled={services.length >= 10}
-                    label={services.length > 0 
+                    label={services.length > 0
                         ? t('onboarding.regenerateServices', 'Regenerate Services with AI')
                         : t('onboarding.generateServices', 'Generate Services with AI')
                     }
@@ -129,7 +129,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
             {/* Services List */}
             <div className="space-y-3">
                 {services.map((service, index) => (
-                    <div 
+                    <div
                         key={service.id}
                         className={`
                             p-4 bg-q-surface border border-q-border rounded-xl
@@ -164,7 +164,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
                                     <button
                                         onClick={handleSaveEdit}
                                         disabled={!editForm.name.trim()}
-                                        className="p-2 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-colors disabled:opacity-50"
+                                        className="p-2 text-q-success hover:text-q-success hover:bg-q-success/10 rounded-lg transition-colors disabled:opacity-50"
                                     >
                                         <Check size={18} />
                                     </button>
@@ -281,7 +281,6 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
 };
 
 export default Step3Services;
-
 
 
 

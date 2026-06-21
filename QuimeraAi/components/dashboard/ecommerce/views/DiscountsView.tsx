@@ -20,14 +20,21 @@ import {
     XCircle,
     Clock,
     Loader2,
+    Filter,
+    TicketPercent,
+    AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useDiscounts } from '../hooks/useDiscounts';
 import { Discount, DiscountType } from '../../../../types/ecommerce';
-import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
+import { useEcommerceTheme } from '../hooks/useEcommerceTheme';
 import { useEcommerceContext } from '../EcommerceContext';
-import { CatalogFilterBar, FilterChipRow } from '../../filters';
+import { FilterChipRow } from '../../filters';
+import type { FilterChipOption } from '../../filters';
 import AppSelect from '../../../ui/AppSelect';
+import { MotionCard } from '../../../ui/primitives/Card';
+
+type DiscountFilter = 'all' | 'active' | 'expired';
 
 const DiscountsView: React.FC = () => {
     const { t } = useTranslation();
@@ -49,7 +56,7 @@ const DiscountsView: React.FC = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
-    const [filter, setFilter] = useState<'all' | 'active' | 'expired'>('all');
+    const [filter, setFilter] = useState<DiscountFilter>('all');
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
@@ -184,7 +191,7 @@ const DiscountsView: React.FC = () => {
             case 'percentage':
                 return `${discount.value}%`;
             case 'fixed_amount':
-                return `$${discount.value}`;
+                return formatCurrency(discount.value);
             case 'free_shipping':
                 return t('ecommerce.freeShipping', 'Envío Gratis');
         }
@@ -199,6 +206,56 @@ const DiscountsView: React.FC = () => {
         return discount.maxUses !== undefined && discount.usedCount >= discount.maxUses;
     };
 
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: amount >= 1000 ? 0 : 2,
+        }).format(amount || 0);
+    };
+
+    const totalUses = discounts.reduce((sum, discount) => sum + discount.usedCount, 0);
+    const exhaustedDiscounts = discounts.filter(isMaxUsesReached).length;
+    const inactiveDiscounts = discounts.filter((discount) => !discount.isActive && !isExpired(discount)).length;
+    const visibleDiscountsLabel = `${filteredDiscounts.length} de ${discounts.length} descuento${discounts.length !== 1 ? 's' : ''}`;
+
+    const filterOptions = useMemo<FilterChipOption<DiscountFilter>[]>(() => [
+        { id: 'all', label: t('ecommerce.all', 'Todos'), count: discounts.length },
+        { id: 'active', label: t('ecommerce.active', 'Activos'), count: activeDiscounts.length, color: 'green' },
+        { id: 'expired', label: t('ecommerce.expired', 'Expirados'), count: expiredDiscounts.length, color: 'gray' },
+    ], [activeDiscounts.length, discounts.length, expiredDiscounts.length, t]);
+
+    const discountStats = [
+        {
+            label: t('ecommerce.discountsTotalLabel', 'Total'),
+            value: discounts.length,
+            helper: `${filteredDiscounts.length} ${t('ecommerce.visibleLower', 'visibles')}`,
+            icon: TicketPercent,
+            iconClassName: 'quimera-dashboard-header-icon',
+        },
+        {
+            label: t('ecommerce.activeDiscountsShort', 'Activos'),
+            value: activeDiscounts.length,
+            helper: `${inactiveDiscounts} ${t('ecommerce.inactiveLower', 'inactivos')}`,
+            icon: CheckCircle,
+            iconClassName: 'text-q-success',
+        },
+        {
+            label: t('ecommerce.usage', 'Uso'),
+            value: totalUses,
+            helper: `${exhaustedDiscounts} ${t('ecommerce.limitReachedLower', 'en límite')}`,
+            icon: Copy,
+            iconClassName: 'text-primary',
+        },
+        {
+            label: t('ecommerce.expired', 'Expirados'),
+            value: expiredDiscounts.length,
+            helper: t('ecommerce.reviewExpiredDiscounts', 'Revisa campañas vencidas'),
+            icon: AlertTriangle,
+            iconClassName: expiredDiscounts.length > 0 ? 'text-q-warning' : 'text-q-success',
+        },
+    ];
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -208,64 +265,84 @@ const DiscountsView: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-28 md:pb-0">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                    <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-q-border bg-q-surface/50 px-3 py-1 text-xs font-medium text-q-text-muted">
+                        <Tag size={14} />
+                        {t('ecommerce.promotionManager', 'Gestor promocional')}
+                    </div>
                     <h2 className="text-2xl font-bold text-foreground">
                         {t('ecommerce.discounts', 'Descuentos')}
                     </h2>
-                    <p className="text-q-text-muted">
-                        {activeDiscounts.length} {t('ecommerce.activeDiscounts', 'descuentos activos')}
+                    <p className="max-w-2xl text-q-text-muted">
+                        {t('ecommerce.manageDiscountsPro', 'Crea códigos, controla límites de uso y revisa campañas activas o vencidas.')}
                     </p>
                 </div>
 
                 <button
+                    type="button"
                     onClick={() => setShowForm(true)}
-                    className="flex w-full items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90 sm:w-auto"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
                 >
                     <Plus size={20} />
                     {t('ecommerce.addDiscount', 'Crear Descuento')}
                 </button>
             </div>
 
-            <CatalogFilterBar
-                filters={
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                {discountStats.map((stat, index) => {
+                    const Icon = stat.icon;
+
+                    return (
+                        <MotionCard key={stat.label} staggerIndex={index} hoverMotion className="rounded-xl border border-q-border bg-q-surface/50 p-4">
+                            <div className="flex items-center gap-3">
+                                <Icon className={`h-5 w-5 flex-shrink-0 ${stat.iconClassName}`} strokeWidth={2} />
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm text-q-text-muted">{stat.label}</p>
+                                    <p className="truncate text-2xl font-bold text-foreground">{stat.value}</p>
+                                    <p className="truncate text-xs text-q-text-muted">{stat.helper}</p>
+                                </div>
+                            </div>
+                        </MotionCard>
+                    );
+                })}
+            </div>
+
+            <div className="rounded-xl border border-q-border bg-q-surface/50 p-3 sm:p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase text-q-text-secondary">
+                            <Filter className="h-3.5 w-3.5" />
+                            <span>{t('ecommerce.discountStatusFilter', 'Estado')}</span>
+                        </div>
+                        <p className="text-sm text-q-text-muted">{visibleDiscountsLabel}</p>
+                    </div>
                     <FilterChipRow
                         value={filter}
-                        onChange={(value) => setFilter(value as typeof filter)}
-                        options={[
-                            { id: 'all', label: t('ecommerce.all', 'Todos'), count: discounts.length },
-                            {
-                                id: 'active',
-                                label: t('ecommerce.active', 'Activos'),
-                                count: activeDiscounts.length,
-                                color: 'green',
-                            },
-                            {
-                                id: 'expired',
-                                label: t('ecommerce.expired', 'Expirados'),
-                                count: expiredDiscounts.length,
-                                color: 'gray',
-                            },
-                        ]}
+                        onChange={(value) => setFilter(value as DiscountFilter)}
+                        options={filterOptions}
+                        className="min-w-0"
                     />
-                }
-            />
+                </div>
+            </div>
 
             {/* Discounts List */}
             {filteredDiscounts.length === 0 ? (
-                <div className="text-center py-12 bg-q-surface/50 rounded-xl border border-q-border">
-                    <Tag className="mx-auto text-q-text-muted mb-4" size={48} />
-                    <h3 className="text-lg font-medium text-foreground mb-2">
+                <div className="rounded-xl border border-dashed border-q-border bg-q-surface/40 px-6 py-12 text-center">
+                    <Tag className="mx-auto mb-4 text-q-text-muted" size={48} />
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">
                         {t('ecommerce.noDiscounts', 'No hay descuentos')}
                     </h3>
-                    <p className="text-q-text-muted mb-4">
+                    <p className="mx-auto mb-5 max-w-md text-q-text-muted">
                         {t('ecommerce.noDiscountsYet', 'Crea códigos de descuento para tus clientes')}
                     </p>
                     <button
+                        type="button"
                         onClick={() => setShowForm(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90"
+                        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                     >
                         <Plus size={20} />
                         {t('ecommerce.createFirstDiscount', 'Crear primer descuento')}
@@ -276,7 +353,7 @@ const DiscountsView: React.FC = () => {
                     {filteredDiscounts.map((discount) => (
                         <div
                             key={discount.id}
-                            className={`bg-q-surface/50 rounded-xl border p-4 ${isExpired(discount) || isMaxUsesReached(discount) || !discount.isActive
+                            className={`rounded-xl border bg-q-surface/50 p-4 transition-opacity ${isExpired(discount) || isMaxUsesReached(discount) || !discount.isActive
                                     ? 'border-q-border opacity-60'
                                     : 'border-q-border'
                                 }`}
@@ -291,11 +368,14 @@ const DiscountsView: React.FC = () => {
                                                 {discount.code}
                                             </code>
                                             <button
+                                                type="button"
                                                 onClick={() => handleCopyCode(discount.code)}
-                                                className="p-1 text-q-text-muted hover:text-foreground transition-colors"
+                                                title={t('ecommerce.copyDiscountCode', 'Copiar código')}
+                                                aria-label={t('ecommerce.copyDiscountCode', 'Copiar código')}
+                                                className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg text-q-text-muted transition-colors hover:bg-muted hover:text-foreground"
                                             >
                                                 {copiedCode === discount.code ? (
-                                                    <CheckCircle size={16} className="text-green-400" />
+                                                    <CheckCircle size={16} className="text-q-success" />
                                                 ) : (
                                                     <Copy size={16} />
                                                 )}
@@ -307,12 +387,12 @@ const DiscountsView: React.FC = () => {
 
                                 {/* Value */}
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-2xl font-bold text-green-400">
+                                    <p className="text-2xl font-bold text-q-success">
                                         {formatDiscountValue(discount)}
                                     </p>
                                     {discount.minimumPurchase && discount.minimumPurchase > 0 && (
                                         <p className="text-sm text-q-text-muted">
-                                            {t('ecommerce.minPurchase', 'Mínimo')}: ${discount.minimumPurchase}
+                                            {t('ecommerce.minPurchase', 'Mínimo')}: {formatCurrency(discount.minimumPurchase)}
                                         </p>
                                     )}
                                 </div>
@@ -329,22 +409,22 @@ const DiscountsView: React.FC = () => {
                                 {/* Status */}
                                 <div className="flex flex-wrap items-center gap-2">
                                     {isExpired(discount) ? (
-                                        <span className="flex items-center gap-1 px-2 py-1 bg-muted text-q-text-muted rounded-full text-xs">
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs text-q-text-muted">
                                             <Clock size={12} />
                                             {t('ecommerce.expired', 'Expirado')}
                                         </span>
                                     ) : isMaxUsesReached(discount) ? (
-                                        <span className="flex items-center gap-1 px-2 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs">
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-q-warning/20 px-2 py-1 text-xs text-q-warning">
                                             <XCircle size={12} />
                                             {t('ecommerce.limitReached', 'Límite alcanzado')}
                                         </span>
                                     ) : discount.isActive ? (
-                                        <span className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-q-success/20 px-2 py-1 text-xs text-q-success">
                                             <CheckCircle size={12} />
                                             {t('ecommerce.active', 'Activo')}
                                         </span>
                                     ) : (
-                                        <span className="flex items-center gap-1 px-2 py-1 bg-muted text-q-text-muted rounded-full text-xs">
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs text-q-text-muted">
                                             <XCircle size={12} />
                                             {t('ecommerce.inactive', 'Inactivo')}
                                         </span>
@@ -354,23 +434,32 @@ const DiscountsView: React.FC = () => {
                                 {/* Actions */}
                                 <div className="flex items-center gap-2 sm:ml-auto">
                                     <button
+                                        type="button"
                                         onClick={() => toggleDiscountStatus(discount.id)}
-                                        className={`p-2 rounded-lg transition-colors ${discount.isActive
-                                                ? 'text-green-400 hover:bg-green-500/20'
+                                        title={discount.isActive ? t('ecommerce.deactivateDiscount', 'Desactivar descuento') : t('ecommerce.activateDiscount', 'Activar descuento')}
+                                        aria-label={discount.isActive ? t('ecommerce.deactivateDiscount', 'Desactivar descuento') : t('ecommerce.activateDiscount', 'Activar descuento')}
+                                        className={`grid h-9 w-9 place-items-center rounded-lg transition-colors ${discount.isActive
+                                                ? 'text-q-success hover:bg-q-success/20'
                                                 : 'text-q-text-muted hover:bg-muted'
                                             }`}
                                     >
                                         {discount.isActive ? <CheckCircle size={18} /> : <XCircle size={18} />}
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => handleEdit(discount)}
-                                        className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                        title={t('ecommerce.editDiscount', 'Editar Descuento')}
+                                        aria-label={t('ecommerce.editDiscount', 'Editar Descuento')}
+                                        className="grid h-9 w-9 place-items-center rounded-lg text-q-text-muted transition-colors hover:bg-muted hover:text-foreground"
                                     >
                                         <Edit size={18} />
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => handleDelete(discount.id)}
-                                        className="p-2 text-q-text-muted hover:text-destructive hover:bg-muted rounded-lg transition-colors"
+                                        title={t('ecommerce.deleteDiscount', 'Eliminar Descuento')}
+                                        aria-label={t('ecommerce.deleteDiscount', 'Eliminar Descuento')}
+                                        className="grid h-9 w-9 place-items-center rounded-lg text-q-text-muted transition-colors hover:bg-destructive/10 hover:text-destructive"
                                     >
                                         <Trash2 size={18} />
                                     </button>
@@ -383,7 +472,7 @@ const DiscountsView: React.FC = () => {
 
             {/* Discount Form Modal */}
             {showForm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+                <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
                     <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md max-h-[92vh] overflow-y-auto">
                         <div className="p-4 border-b border-q-border sm:p-6">
                             <h3 className="text-lg font-bold text-foreground">

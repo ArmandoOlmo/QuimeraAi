@@ -116,7 +116,7 @@ export const ProjectsViewAllAction: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={() => navigate(ROUTES.WEBSITES)}
-            className="!h-auto gap-0 !p-0 text-sm font-semibold !text-yellow-400 hover:!bg-transparent hover:!text-yellow-300"
+            className="!h-auto gap-0 !p-0 text-sm font-semibold !text-q-accent hover:!bg-transparent hover:!text-q-text"
         >
             {t('dashboard.viewAll')} <Globe className="ml-1 size-3.5" />
         </AppButton>

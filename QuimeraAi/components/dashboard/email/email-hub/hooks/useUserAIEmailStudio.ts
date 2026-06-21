@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../../../contexts/core/AuthContext';
 import {
     db, collection, addDoc, doc, updateDoc,
@@ -70,6 +71,7 @@ export function useUserAIEmailStudio(
     projectId: string,
     projectName: string,
 ): UserAIEmailStudioReturn {
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const { stats, campaigns, setCampaigns, audiences, setAudiences } = data;
 
@@ -109,6 +111,8 @@ export function useUserAIEmailStudio(
     // =========================================================================
 
     const buildEmailStudioSystemPrompt = useCallback(() => {
+        const responseLanguage = i18n.language?.toLowerCase().startsWith('en') ? 'inglés' : 'español';
+
         return `Eres un experto en Email Marketing para la plataforma Quimera.ai.
 Estás ayudando al usuario del proyecto "${projectName}" con su estrategia de email marketing.
 
@@ -152,35 +156,21 @@ Soporta flujos multi-paso con Constructor Visual. Tipos de nodos:
 
 IMPORTANTE: Cuando te pida crear algo, genera la respuesta conversacional. El usuario usará los botones de acción para materializar la creación.
 
-Responde siempre en español. Sé conciso pero informativo. Usa formato markdown.`;
-    }, [stats, projectName]);
+Responde siempre en ${responseLanguage}. Sé conciso pero informativo. Usa formato markdown.`;
+    }, [stats, projectName, i18n.language]);
 
     // =========================================================================
     // INIT / WELCOME
     // =========================================================================
 
     const initAIStudio = useCallback(() => {
-        const welcomeText = `¡Hola! 👋 Soy tu **Asistente AI de Email Marketing** para **${projectName}**.
-
-Puedo ayudarte a:
-
-- 📧 **Planificar** campañas de email completas
-- ✍️ **Generar** subject lines, preview text y contenido visual
-- 🎯 **Recomendar** audiencias y segmentos óptimos
-- ⏰ **Sugerir** horarios de envío óptimos
-- 📊 **Analizar** el rendimiento de tus campañas
-- 🤖 **Crear** flujos de automatización inteligentes
-- 🎤 **Habla conmigo** usando el modo de voz
-
-**Datos actuales de tu proyecto:**
-- ${stats.totalCampaigns} campañas totales
-- ${stats.totalContacts.toLocaleString()} contactos en audiencias
-- ${stats.totalSent.toLocaleString()} emails enviados
-- ${stats.openRate}% tasa de apertura promedio
-
-💡 **Usa los botones de acción** para crear campañas, audiencias y automatizaciones directamente.
-
-¿Qué tipo de campaña o estrategia necesitas crear hoy?`;
+        const welcomeText = t('aiEmailStudio.welcome.user', {
+            projectName,
+            totalCampaigns: stats.totalCampaigns,
+            totalContacts: stats.totalContacts.toLocaleString(i18n.language),
+            totalSent: stats.totalSent.toLocaleString(i18n.language),
+            openRate: stats.openRate,
+        });
 
         const welcomeMsg: DisplayMessage = { role: 'model', text: welcomeText, timestamp: Date.now() };
         setAiMessages([welcomeMsg]);
@@ -191,13 +181,19 @@ Puedo ayudarte a:
             { role: 'user', text: `[CONTEXT] ${systemContext}` },
             { role: 'model', text: welcomeText },
         ];
-    }, [stats, projectName, buildEmailStudioSystemPrompt]);
+    }, [stats, projectName, buildEmailStudioSystemPrompt, t, i18n.language]);
 
     useEffect(() => {
         if (activeTab === 'ai-studio' && aiMessages.length === 0) {
             initAIStudio();
         }
     }, [activeTab, initAIStudio]);
+
+    useEffect(() => {
+        if (activeTab === 'ai-studio' && aiMessages.length === 1 && aiMessages[0]?.role === 'model') {
+            initAIStudio();
+        }
+    }, [activeTab, i18n.language]);
 
     // Auto-scroll
     useEffect(() => {

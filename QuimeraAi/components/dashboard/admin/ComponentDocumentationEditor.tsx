@@ -136,7 +136,7 @@ const ComponentDocumentationEditor: React.FC<ComponentDocumentationEditorProps> 
                                         />
                                         <button
                                             onClick={() => removeUsageExample(index)}
-                                            className="p-2 text-red-500 hover:bg-red-500 hover:text-white rounded-md transition-colors"
+                                            className="p-2 text-q-error hover:bg-q-error hover:text-white rounded-md transition-colors"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -196,7 +196,7 @@ const ComponentDocumentationEditor: React.FC<ComponentDocumentationEditorProps> 
                                             </label>
                                             <button
                                                 onClick={() => removeProperty(index)}
-                                                className="p-1 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors"
+                                                className="p-1 text-q-error hover:bg-q-error hover:text-white rounded transition-colors"
                                             >
                                                 <Trash2 size={14} />
                                             </button>

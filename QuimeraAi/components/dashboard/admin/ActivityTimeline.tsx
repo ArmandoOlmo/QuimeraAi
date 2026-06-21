@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-    Clock, 
-    User, 
-    FileEdit, 
-    Trash2, 
-    Plus, 
+import {
+    Clock,
+    User,
+    FileEdit,
+    Trash2,
+    Plus,
     Settings,
     Shield,
     CheckCircle,
@@ -38,10 +38,10 @@ interface ActivityTimelineProps {
  * Timeline de actividad reciente del sistema
  * Muestra las acciones importantes realizadas por administradores
  */
-const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ 
-    activities, 
+const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
+    activities,
     maxItems = 5,
-    onViewAll 
+    onViewAll
 }) => {
     const displayActivities = activities.slice(0, maxItems);
 
@@ -59,19 +59,19 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
 
     const getSeverityIcon = (severity: ActivitySeverity) => {
         switch (severity) {
-            case 'success': return <CheckCircle className="w-4 h-4 text-green-400" />;
-            case 'warning': return <AlertCircle className="w-4 h-4 text-yellow-400" />;
-            case 'error': return <AlertCircle className="w-4 h-4 text-red-400" />;
-            default: return <Info className="w-4 h-4 text-blue-400" />;
+            case 'success': return <CheckCircle className="w-4 h-4 text-q-success" />;
+            case 'warning': return <AlertCircle className="w-4 h-4 text-q-accent" />;
+            case 'error': return <AlertCircle className="w-4 h-4 text-q-error" />;
+            default: return <Info className="w-4 h-4 text-q-accent" />;
         }
     };
 
     const getSeverityColor = (severity: ActivitySeverity) => {
         switch (severity) {
-            case 'success': return 'bg-green-500/10 border-green-500/20';
-            case 'warning': return 'bg-yellow-500/10 border-yellow-500/20';
-            case 'error': return 'bg-red-500/10 border-red-500/20';
-            default: return 'bg-blue-500/10 border-blue-500/20';
+            case 'success': return 'bg-q-success/10 border-q-success/20';
+            case 'warning': return 'bg-q-accent/10 border-q-accent/20';
+            case 'error': return 'bg-q-error/10 border-q-error/20';
+            default: return 'bg-q-accent/10 border-q-accent/20';
         }
     };
 
@@ -135,11 +135,11 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
                                     {activity.timestamp}
                                 </span>
                             </div>
-                            
+
                             <p className="text-sm text-q-text-secondary ml-8">
                                 {activity.description}
                             </p>
-                            
+
                             {activity.user && (
                                 <div className="flex items-center gap-2 mt-2 ml-8 text-xs text-q-text-secondary">
                                     <User className="w-3 h-3" />

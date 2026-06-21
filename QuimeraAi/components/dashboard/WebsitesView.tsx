@@ -11,6 +11,7 @@ import EmptyState from './EmptyState';
 import {
     WebsiteCatalogToolbar,
 } from './filters';
+import { MotionCard } from '../ui/primitives/Card';
 import {
     Plus,
     Search,
@@ -99,12 +100,14 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
         <>
             {/* Statistics Section */}
             <section className="relative z-[1] grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-                {statCards.map((card) => {
+                {statCards.map((card, index) => {
                     const Icon = card.icon;
 
                     return (
-                        <div
+                        <MotionCard
                             key={card.id}
+                            staggerIndex={index}
+                            hoverMotion
                             className="group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60
                                 bg-q-surface/80 backdrop-blur-xl p-2.5 md:p-4
                                 hover:border-q-border
@@ -127,7 +130,7 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
                                     {t(card.labelKey)}
                                 </div>
                             </div>
-                        </div>
+                        </MotionCard>
                     );
                 })}
             </section>

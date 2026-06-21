@@ -4,7 +4,7 @@
  * Usa clases de Tailwind del tema (bg-primary, text-primary, etc.)
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import ConfirmationModal from '../../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import {
@@ -30,6 +30,8 @@ import {
     FolderOpen,
     Sparkles,
     Link,
+    Package,
+    Layers3,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useCategories } from '../hooks/useCategories';
@@ -39,6 +41,7 @@ import { useEcommerceContext } from '../EcommerceContext';
 import EcommerceImagePicker from '../components/EcommerceImagePicker';
 import MediaGeneratorModal from '../../../media-generator/MediaGeneratorModal';
 import AppSelect from '../../../ui/AppSelect';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 const CategoriesView: React.FC = () => {
     const { t } = useTranslation();
@@ -62,9 +65,58 @@ const CategoriesView: React.FC = () => {
         parentId: '',
     });
 
-    const getProductCount = (categoryId: string) => {
-        return products.filter((p) => p.categoryId === categoryId).length;
-    };
+    const productCountByCategory = useMemo(() => {
+        const countMap = new Map<string, number>();
+        products.forEach((product) => {
+            if (!product.categoryId) return;
+            countMap.set(product.categoryId, (countMap.get(product.categoryId) || 0) + 1);
+        });
+        return countMap;
+    }, [products]);
+
+    const getProductCount = useCallback((categoryId: string) => {
+        return productCountByCategory.get(categoryId) || 0;
+    }, [productCountByCategory]);
+
+    const rootCategories = useMemo(() => categories.filter((c) => !c.parentId), [categories]);
+    const getSubcategories = useCallback((parentId: string) => categories.filter((c) => c.parentId === parentId), [categories]);
+
+    const categoryStats = useMemo(() => {
+        const subcategoryCount = categories.length - rootCategories.length;
+        const assignedProducts = products.filter((product) => Boolean(product.categoryId)).length;
+        const emptyCategories = categories.filter((category) => getProductCount(category.id) === 0).length;
+
+        return [
+            {
+                label: t('ecommerce.categoriesTotalLabel', 'Total'),
+                value: categories.length,
+                helper: `${rootCategories.length} ${t('ecommerce.rootCategoriesLower', 'raíz')}`,
+                icon: FolderTree,
+                iconClassName: 'quimera-dashboard-header-icon',
+            },
+            {
+                label: t('ecommerce.rootCategories', 'Raíz'),
+                value: rootCategories.length,
+                helper: `${subcategoryCount} ${t('ecommerce.subcategoriesLower', 'subcategorías')}`,
+                icon: Layers3,
+                iconClassName: 'text-primary',
+            },
+            {
+                label: t('ecommerce.assignedProducts', 'Productos asignados'),
+                value: assignedProducts,
+                helper: `${Math.max(products.length - assignedProducts, 0)} ${t('ecommerce.uncategorizedLower', 'sin categoría')}`,
+                icon: Package,
+                iconClassName: 'text-q-success',
+            },
+            {
+                label: t('ecommerce.emptyCategories', 'Vacías'),
+                value: emptyCategories,
+                helper: t('ecommerce.emptyCategoriesHint', 'Sin productos asociados'),
+                icon: FolderOpen,
+                iconClassName: emptyCategories > 0 ? 'text-q-warning' : 'text-q-success',
+            },
+        ];
+    }, [categories, getProductCount, products, rootCategories, t]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -198,9 +250,6 @@ const CategoriesView: React.FC = () => {
         setFormData({ name: '', description: '', imageUrl: '', parentId: '' });
     };
 
-    const rootCategories = categories.filter((c) => !c.parentId);
-    const getSubcategories = (parentId: string) => categories.filter((c) => c.parentId === parentId);
-
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -210,47 +259,89 @@ const CategoriesView: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-28 md:pb-0">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                    <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-q-border bg-q-surface/50 px-3 py-1 text-xs font-medium text-q-text-muted">
+                        <FolderTree size={14} />
+                        {t('ecommerce.categoryManager', 'Arquitectura de catálogo')}
+                    </div>
                     <h2 className="text-2xl font-bold text-foreground">
                         {t('ecommerce.categories', 'Categorías')}
                     </h2>
-                    <p className="text-q-text-muted">
-                        {categories.length} {t('ecommerce.categoriesTotal', 'categorías en total')}
+                    <p className="max-w-2xl text-q-text-muted">
+                        {t('ecommerce.manageCategoriesPro', 'Organiza colecciones, subcategorías e imágenes para que la tienda sea fácil de explorar.')}
                     </p>
                 </div>
 
                 <button
+                    type="button"
                     onClick={() => setShowForm(true)}
-                    className="flex w-full items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90 sm:w-auto"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
                 >
                     <Plus size={20} />
                     {t('ecommerce.addCategory', 'Agregar Categoría')}
                 </button>
             </div>
 
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                {categoryStats.map((stat, index) => {
+                    const Icon = stat.icon;
+
+                    return (
+                        <MotionCard key={stat.label} staggerIndex={index} hoverMotion className="rounded-xl border border-q-border bg-q-surface/50 p-4">
+                            <div className="flex items-center gap-3">
+                                <Icon className={`h-5 w-5 flex-shrink-0 ${stat.iconClassName}`} strokeWidth={2} />
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm text-q-text-muted">{stat.label}</p>
+                                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                                    <p className="truncate text-xs text-q-text-muted">{stat.helper}</p>
+                                </div>
+                            </div>
+                        </MotionCard>
+                    );
+                })}
+            </div>
+
             {/* Categories List */}
             {categories.length === 0 ? (
-                <div className="text-center py-12 bg-q-surface/50 rounded-xl border border-q-border">
-                    <FolderTree className="mx-auto text-q-text-muted mb-4" size={48} />
-                    <h3 className="text-lg font-medium text-foreground mb-2">
+                <div className="rounded-xl border border-dashed border-q-border bg-q-surface/40 px-6 py-12 text-center">
+                    <FolderTree className="mx-auto mb-4 text-q-text-muted" size={48} />
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">
                         {t('ecommerce.noCategories', 'No hay categorías')}
                     </h3>
-                    <p className="text-q-text-muted mb-4">
+                    <p className="mx-auto mb-5 max-w-md text-q-text-muted">
                         {t('ecommerce.noCategoriesYet', 'Crea categorías para organizar tus productos')}
                     </p>
                     <button
+                        type="button"
                         onClick={() => setShowForm(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90"
+                        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                     >
                         <Plus size={20} />
                         {t('ecommerce.addFirstCategory', 'Crear primera categoría')}
                     </button>
                 </div>
             ) : (
-                <div className={`bg-q-surface/50 rounded-xl border border-q-border overflow-hidden transition-opacity ${isReordering ? 'opacity-80' : ''}`}>
+                <div className={`overflow-hidden rounded-xl border border-q-border bg-q-surface/50 transition-opacity ${isReordering ? 'opacity-80' : ''}`}>
+                    <div className="flex flex-col gap-2 border-b border-q-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h3 className="text-sm font-semibold text-foreground">
+                                {t('ecommerce.categoryTree', 'Árbol de categorías')}
+                            </h3>
+                            <p className="text-sm text-q-text-muted">
+                                {t('ecommerce.dragCategoriesHint', 'Arrastra categorías dentro de su mismo nivel para reordenarlas.')}
+                            </p>
+                        </div>
+                        {isReordering && (
+                            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                                <Loader2 className="animate-spin" size={14} />
+                                {t('ecommerce.savingOrder', 'Guardando orden')}
+                            </span>
+                        )}
+                    </div>
                     <DndContext
                         collisionDetection={closestCenter}
                         onDragEnd={handleCategoryDragEnd}
@@ -276,7 +367,7 @@ const CategoriesView: React.FC = () => {
 
             {/* Category Form Modal */}
             {showForm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+                <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
                     <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md max-h-[92vh] overflow-y-auto">
                         <div className="p-4 border-b border-q-border sm:p-6">
                             <h3 className="text-lg font-bold text-foreground">
@@ -600,6 +691,7 @@ const CategoryItemRow: React.FC<CategoryItemRowProps> = ({
     const placeholderClassName = isSubcategory
         ? 'w-10 h-10 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center'
         : 'w-12 h-12 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center';
+    const productsLabel = `${productCount} ${t('ecommerce.products', 'productos')}`;
 
     return (
         <div
@@ -607,7 +699,7 @@ const CategoryItemRow: React.FC<CategoryItemRowProps> = ({
                 isSubcategory
                     ? 'ml-3 flex items-start gap-3 border-l-2 border-q-border p-4 pl-4 sm:ml-6 sm:items-center sm:gap-4 sm:pl-12'
                     : 'flex items-start gap-3 p-4 sm:items-center sm:gap-4',
-                isDragging ? 'bg-muted/30' : 'hover:bg-muted/20',
+                isDragging ? 'bg-muted/30 shadow-lg' : 'transition-colors hover:bg-muted/20',
             ].join(' ')}
         >
             <button
@@ -634,31 +726,46 @@ const CategoryItemRow: React.FC<CategoryItemRowProps> = ({
             )}
 
             <div className="min-w-0 flex-1">
-                <h4 className="truncate text-foreground font-medium">{category.name}</h4>
+                <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="truncate font-semibold text-foreground">{category.name}</h4>
+                    <span className="rounded-full border border-q-border bg-muted/30 px-2 py-0.5 text-xs font-medium text-q-text-muted">
+                        {isSubcategory ? t('ecommerce.subcategory', 'Subcategoría') : t('ecommerce.rootCategory', 'Raíz')}
+                    </span>
+                </div>
                 {category.description && !isSubcategory && (
-                    <p className="text-q-text-muted text-sm line-clamp-1">{category.description}</p>
+                    <p className="mt-1 line-clamp-1 text-sm text-q-text-muted">{category.description}</p>
                 )}
-                <p className="text-xs text-q-text-muted sm:hidden">
-                    {productCount} {t('ecommerce.products', 'productos')}
+                <p className="mt-1 text-xs text-q-text-muted sm:hidden">
+                    {productsLabel}
                 </p>
             </div>
 
-            <div className="hidden text-q-text-muted text-sm sm:block">
-                {productCount} {t('ecommerce.products', 'productos')}
+            <div className="hidden sm:block">
+                <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${
+                    productCount > 0
+                        ? 'border-q-success/20 bg-q-success/10 text-q-success'
+                        : 'border-q-border bg-muted/40 text-q-text-muted'
+                }`}>
+                    {productsLabel}
+                </span>
             </div>
 
             <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
                 <button
                     type="button"
                     onClick={() => onEdit(category)}
-                    className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                    title={t('ecommerce.editCategory', 'Editar Categoría')}
+                    aria-label={t('ecommerce.editCategory', 'Editar Categoría')}
+                    className="grid h-9 w-9 place-items-center rounded-lg text-q-text-muted transition-colors hover:bg-muted hover:text-foreground"
                 >
                     <Edit size={18} />
                 </button>
                 <button
                     type="button"
                     onClick={() => onDelete(category.id)}
-                    className="p-2 text-q-text-muted hover:text-destructive hover:bg-muted rounded-lg transition-colors"
+                    title={t('ecommerce.deleteCategory', 'Eliminar Categoría')}
+                    aria-label={t('ecommerce.deleteCategory', 'Eliminar Categoría')}
+                    className="grid h-9 w-9 place-items-center rounded-lg text-q-text-muted transition-colors hover:bg-destructive/10 hover:text-destructive"
                 >
                     <Trash2 size={18} />
                 </button>

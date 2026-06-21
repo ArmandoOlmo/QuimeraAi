@@ -9,36 +9,36 @@ interface LuminaTypographyProps extends React.HTMLAttributes<HTMLElement> {
   customColor?: string;
 }
 
-export const LuminaTypography: React.FC<LuminaTypographyProps> = ({ 
-  variant, 
-  as, 
-  className = '', 
+export const LuminaTypography: React.FC<LuminaTypographyProps> = ({
+  variant,
+  as,
+  className = '',
   children,
   customColor,
-  ...props 
+  ...props
 }) => {
   const isHeading = variant.startsWith('display') || variant.startsWith('heading');
   const Component = as || (isHeading ? 'h2' : 'p');
-  
+
   const baseClass = isHeading ? 'font-header' : 'font-body';
   const defaultColorClass = variant.startsWith('label') ? 'text-[#10B981]' : 'text-white';
-  
+
   const variantClasses = {
     'display-lg': 'text-5xl md:text-7xl font-bold tracking-tight',
     'display-md': 'text-4xl md:text-5xl font-bold tracking-tight',
     'heading-lg': 'text-3xl md:text-4xl font-semibold',
     'heading-md': 'text-2xl md:text-3xl font-semibold',
     'heading-sm': 'text-xl md:text-2xl font-medium',
-    'body-lg': 'text-lg md:text-xl text-gray-200',
-    'body-md': 'text-base text-gray-300',
-    'body-sm': 'text-sm text-gray-400',
+    'body-lg': 'text-lg md:text-xl text-q-text-muted',
+    'body-md': 'text-base text-q-text-muted',
+    'body-sm': 'text-sm text-q-text-muted',
     'label-md': 'text-sm font-semibold uppercase tracking-wider',
     'label-sm': 'text-xs font-semibold uppercase tracking-wider'
   };
 
   const styleOverrides: React.CSSProperties = {
     ...(isHeading && {
-      textTransform: 'var(--headings-transform, none)' as any, 
+      textTransform: 'var(--headings-transform, none)' as any,
       letterSpacing: 'var(--headings-spacing, normal)'
     }),
     ...(customColor && { color: customColor }),
@@ -46,7 +46,7 @@ export const LuminaTypography: React.FC<LuminaTypographyProps> = ({
   };
 
   return (
-    <Component 
+    <Component
       className={`${baseClass} ${!customColor ? defaultColorClass : ''} ${variantClasses[variant]} ${className}`}
       style={styleOverrides}
       {...props}

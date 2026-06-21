@@ -68,13 +68,13 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-stretch justify-stretch bg-q-bg" style={{ animation: 'aws-fadeIn 0.25s ease' }}>
-            {/* Backdrop click — hidden on mobile since it's full-page */}
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[rgba(9,4,17,0.72)] p-0 backdrop-blur-sm lg:p-4" style={{ animation: 'aws-fadeIn 0.25s ease' }}>
+            {/* Backdrop click — hidden on mobile since the studio keeps a full-height workspace there */}
             <div className="absolute inset-0 hidden lg:block" onClick={studio.isGenerating ? undefined : handleClose} />
 
-            {/* Modal Container — fullscreen clean workspace */}
+            {/* Modal Container — popup on desktop, full-height workspace on mobile */}
             <div
-                className="relative z-10 w-full h-full bg-q-bg flex flex-col overflow-hidden"
+                className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-q-bg shadow-none lg:h-[90vh] lg:max-h-[860px] lg:max-w-6xl lg:rounded-2xl lg:border lg:border-q-border lg:shadow-2xl"
                 style={{ animation: 'aws-slideUp 0.3s ease' }}
             >
                 {/* ── Header ── */}
@@ -84,7 +84,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                         <div className="relative flex-shrink-0">
                             <img src="/logos/quimera-icon.svg" alt="Quimera" className="w-7 h-7 lg:w-8 lg:h-8" />
                             {studio.isVoiceActive && (
-                                <span className="absolute -top-1 -right-1 w-2.5 lg:w-3 h-2.5 lg:h-3 bg-green-400 rounded-full border-2 border-q-bg animate-pulse" />
+                                <span className="absolute -top-1 -right-1 w-2.5 lg:w-3 h-2.5 lg:h-3 bg-q-success rounded-full border-2 border-q-bg animate-pulse" />
                             )}
                         </div>
                         <div className="min-w-0">
@@ -195,7 +195,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                                 {studio.isVoiceActive ? (
                                     <button
                                         onClick={studio.stopVoiceSession}
-                                        className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
+                                        className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-error/20 text-q-error hover:bg-q-error/30 transition-all"
                                         title={t('aiTemplateStudio.chat.stopVoice')}
                                     >
                                         <MicOff className="w-4 h-4" />
@@ -231,9 +231,9 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                             </div>
                             {/* Voice active indicator */}
                             {studio.isVoiceActive && (
-                                <div className="mt-2 flex items-center justify-center gap-2 text-xs text-green-400">
+                                <div className="mt-2 flex items-center justify-center gap-2 text-xs text-q-success">
                                     <span className="flex items-center gap-1.5">
-                                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                                        <span className="w-2 h-2 bg-q-success rounded-full animate-pulse" />
                                         {t('aiTemplateStudio.chat.voicePlaceholder')}
                                     </span>
                                 </div>
@@ -250,7 +250,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                     {/* RIGHT: Business Brief Panel (mobile bottom sheet) */}
                     {isMobileBriefOpen && (
                         <div className="lg:hidden fixed inset-0 z-[60] flex flex-col justify-end">
-                            <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobileBriefOpen(false)} style={{ animation: 'aws-fadeIn 0.2s ease' }} />
+                            <div className="absolute inset-0 bg-q-text/50" onClick={() => setIsMobileBriefOpen(false)} style={{ animation: 'aws-fadeIn 0.2s ease' }} />
                             <div
                                 className="relative bg-q-surface border-t border-q-border rounded-t-2xl flex flex-col overflow-hidden"
                                 style={{ maxHeight: '75vh', animation: 'aws-slideUpSheet 0.3s cubic-bezier(0.32, 0.72, 0, 1)' }}
@@ -490,7 +490,7 @@ const BriefPanel: React.FC<{
                 <BriefSection title={`${t('aiTemplateStudio.briefPanel.services')} (${brief.services.length})`} icon={<Zap size={13} />}>
                     {brief.services.map((s, i) => (
                         <div key={i} className="flex items-start gap-1.5 text-q-text-secondary">
-                            <CheckCircle2 size={11} className="text-green-400/60 mt-0.5 flex-shrink-0" />
+                            <CheckCircle2 size={11} className="text-q-success/60 mt-0.5 flex-shrink-0" />
                             <span>{s.name}</span>
                         </div>
                     ))}
@@ -540,10 +540,10 @@ const BriefPanel: React.FC<{
             {/* Components — Toggleable */}
             <BriefSection title={`${t('aiTemplateStudio.briefPanel.components')} (${brief.suggestedComponents.length})`} icon={<LayoutTemplate size={13} />}>
                 <div className="flex flex-wrap gap-[3px]">
-                    <SortableComponentChips 
-                        items={brief.suggestedComponents} 
-                        onChange={onSetComponents} 
-                        onRemove={onToggleComponent} 
+                    <SortableComponentChips
+                        items={brief.suggestedComponents}
+                        onChange={onSetComponents}
+                        onRemove={onToggleComponent}
                     />
                 </div>
                 {/* Add Component */}
@@ -600,7 +600,7 @@ const BriefPanel: React.FC<{
                         {t('aiTemplateStudio.briefPanel.uploadReferenceHint', { defaultValue: 'People, places, products, or style inspiration' })}
                     </span>
                 </div>
-                
+
                 <div className="flex gap-2 w-full mt-2">
                     <button
                         onClick={() => fileInputRef.current?.click()}
@@ -638,7 +638,7 @@ const BriefPanel: React.FC<{
                                 <img src={img} alt={`Ref ${idx + 1}`} className="w-full h-full object-cover" />
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onRemoveReferenceImage(idx); }}
-                                    className="absolute inset-0 bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center"
+                                    className="absolute inset-0 bg-q-text/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center"
                                 >
                                     <X size={12} className="text-white" />
                                 </button>
@@ -665,7 +665,7 @@ const BriefSection: React.FC<{ title: string; icon: React.ReactNode; children: R
 
 const BriefField: React.FC<{ label: string; value?: string }> = ({ label, value }) => (
     <div className="flex items-center gap-1.5">
-        {value ? <CheckCircle2 size={10} className="text-green-400/60 flex-shrink-0" /> : <Circle size={10} className="text-q-text-secondary/30 flex-shrink-0" />}
+        {value ? <CheckCircle2 size={10} className="text-q-success/60 flex-shrink-0" /> : <Circle size={10} className="text-q-text-secondary/30 flex-shrink-0" />}
         <span className="text-q-text-secondary/60">{label}:</span>
         <span className={`truncate ${value ? 'text-q-text' : 'text-q-text-secondary/30 italic'}`}>{value || '...'}</span>
     </div>
@@ -697,7 +697,7 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
     const strokeDashoffset = circumference - (phase.progress / 100) * circumference;
 
     return (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md" style={{ animation: 'aws-fadeIn 0.4s ease' }}>
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-q-text/70 backdrop-blur-md" style={{ animation: 'aws-fadeIn 0.4s ease' }}>
             <div className="w-full h-full lg:max-w-3xl lg:h-[600px] lg:max-h-[calc(100%-2rem)] lg:mx-4 flex flex-col rounded-none lg:rounded-2xl border-0 lg:border lg:border-q-border bg-q-surface shadow-none lg:shadow-2xl overflow-hidden">
 
                 {/* ── Header ── */}
@@ -735,7 +735,7 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
                                         <React.Fragment key={p}>
                                             <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${
                                                 isActive ? 'bg-primary/15 text-q-accent ring-1 ring-primary/30' :
-                                                isCompleted ? 'bg-green-500/10 text-green-400/60' :
+                                                isCompleted ? 'bg-q-success/10 text-q-success/60' :
                                                 'bg-q-surface-overlay/40 text-q-text-secondary/40'
                                             }`}>
                                                 {isCompleted ? <CheckCircle2 size={10} /> : isActive ? <Loader2 size={10} className="animate-spin" /> : <Circle size={10} />}
@@ -761,8 +761,8 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
                         </div>
                         {phase.imagesFailed > 0 && (
                             <div className="flex items-center gap-1.5">
-                                <X size={13} className="text-red-400" />
-                                <span className="text-red-400/60">{t('aiTemplateStudio.generation.stats.failed')} {phase.imagesFailed}</span>
+                                <X size={13} className="text-q-error" />
+                                <span className="text-q-error/60">{t('aiTemplateStudio.generation.stats.failed')} {phase.imagesFailed}</span>
                             </div>
                         )}
                         <div className="ml-auto flex items-center gap-1.5">
@@ -809,7 +809,7 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
                         style={{ backgroundSize: '200% 100%', animation: 'aws-shimmer 2s linear infinite' }} />
                 )}
                 {isDone && (
-                    <div className="h-1 w-full bg-gradient-to-r from-green-500/40 via-emerald-400/60 to-green-500/40" />
+                    <div className="h-1 w-full bg-gradient-to-r from-q-success/40 via-q-success to-q-success/40" />
                 )}
             </div>
         </div>
@@ -819,15 +819,15 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
 // ── Event Row for timeline ──────────────────────────────────────────────
 
 const EVENT_ICONS: Record<GenerationEvent['type'], React.ReactNode> = {
-    start: <Sparkles size={12} className="text-yellow-400" />,
+    start: <Sparkles size={12} className="text-q-accent" />,
     content: <FileText size={12} className="text-q-accent" />,
     image_start: <Image size={12} className="text-q-accent" />,
-    image_done: <CheckCircle2 size={12} className="text-green-400" />,
-    image_fail: <X size={12} className="text-red-400" />,
+    image_done: <CheckCircle2 size={12} className="text-q-success" />,
+    image_fail: <X size={12} className="text-q-error" />,
     assemble: <Package size={12} className="text-q-accent" />,
-    save: <Save size={12} className="text-cyan-400" />,
-    done: <PartyPopper size={12} className="text-emerald-400" />,
-    error: <X size={12} className="text-red-500" />,
+    save: <Save size={12} className="text-q-accent" />,
+    done: <PartyPopper size={12} className="text-q-success" />,
+    error: <X size={12} className="text-q-error" />,
 };
 
 const EventRow: React.FC<{ event: GenerationEvent; isLatest: boolean }> = ({ event, isLatest }) => {
@@ -841,7 +841,7 @@ const EventRow: React.FC<{ event: GenerationEvent; isLatest: boolean }> = ({ eve
         >
             <div className="mt-0.5 flex-shrink-0">{EVENT_ICONS[event.type]}</div>
             <div className="flex-1 min-w-0">
-                <p className={`text-xs leading-relaxed ${event.type === 'error' || event.type === 'image_fail' ? 'text-red-400/80' : 'text-q-text-secondary'}`}>
+                <p className={`text-xs leading-relaxed ${event.type === 'error' || event.type === 'image_fail' ? 'text-q-error/80' : 'text-q-text-secondary'}`}>
                     {event.message}
                 </p>
                 {isImage && (
@@ -889,7 +889,7 @@ const UrlInputModal: React.FC<{ onSubmit: (url: string) => void; onClose: () => 
     };
 
     return (
-        <div className="absolute inset-0 z-[101] flex items-center justify-center bg-black/60 backdrop-blur-sm" style={{ animation: 'aws-fadeIn 0.2s ease' }}>
+        <div className="absolute inset-0 z-[101] flex items-center justify-center bg-q-text/60 backdrop-blur-sm" style={{ animation: 'aws-fadeIn 0.2s ease' }}>
             <div className="w-full max-w-md mx-4 bg-q-surface border border-q-border rounded-2xl shadow-2xl overflow-hidden" style={{ animation: 'aws-slideUp 0.25s ease' }}>
                 {/* Header */}
                 <div className="px-6 pt-6 pb-4 border-b border-q-border bg-primary/5">
@@ -919,7 +919,7 @@ const UrlInputModal: React.FC<{ onSubmit: (url: string) => void; onClose: () => 
                                 className="w-full bg-q-bg border border-q-border rounded-xl pl-10 pr-4 py-3 text-sm text-q-text placeholder:text-q-text-secondary/40 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                             />
                         </div>
-                        {error && <p className="text-xs text-red-400 px-1">{error}</p>}
+                        {error && <p className="text-xs text-q-error px-1">{error}</p>}
                         <p className="text-[10px] text-q-text-secondary/50 px-1">{t('aiTemplateStudio.extraction.urlFormatHint')}</p>
                     </div>
                 </div>

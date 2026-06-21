@@ -46,9 +46,9 @@ const PLAN_COLORS: Record<string, string> = {
 };
 const FALLBACK_COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#3b82f6'];
 const STATUS_COLORS: Record<string, string> = {
-    active: 'bg-emerald-500/20 text-emerald-400', trial: 'bg-amber-500/20 text-amber-400',
-    suspended: 'bg-red-500/20 text-red-400', expired: 'bg-gray-500/20 text-gray-400',
-    cancelled: 'bg-gray-500/20 text-gray-400',
+    active: 'bg-q-success/20 text-q-success', trial: 'bg-q-accent/20 text-q-accent',
+    suspended: 'bg-q-error/20 text-q-error', expired: 'bg-q-surface-overlay/20 text-q-text-muted',
+    cancelled: 'bg-q-surface-overlay/20 text-q-text-muted',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -64,7 +64,7 @@ const StatCard = ({ title, value, icon: Icon, trend, trendLabel, isPositiveTrend
             <div className="flex justify-between items-start mb-1 md:mb-2">
                 <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" size={18} strokeWidth={2} />
                 {trend && (
-                    <span className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${isPositiveTrend ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                    <span className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${isPositiveTrend ? 'bg-q-success/20 text-q-success' : 'bg-q-error/20 text-q-error'
                         }`}>
                         {isPositiveTrend ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                         {trend}
@@ -298,7 +298,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                         <button
                             onClick={syncBilling}
                             disabled={syncing || loading}
-                            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all disabled:opacity-50"
+                            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-q-success/10 text-q-success hover:bg-q-success/20 transition-all disabled:opacity-50"
                             title="Sync Stripe → Supabase"
                         >
                             <CloudDownload size={14} className={syncing ? 'animate-bounce' : ''} />
@@ -327,7 +327,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                         </button>
                     ))}
                     <div className="ml-auto flex items-center gap-1.5 shrink-0">
-                        <div className={`w-2 h-2 rounded-full ${stripeLoaded ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`} />
+                        <div className={`w-2 h-2 rounded-full ${stripeLoaded ? 'bg-q-success' : 'bg-q-accent'} animate-pulse`} />
                         <span className="text-[10px] text-q-text-muted font-medium hidden sm:inline">
                             {stripeLoaded ? 'Stripe' : 'Supabase'}
                         </span>

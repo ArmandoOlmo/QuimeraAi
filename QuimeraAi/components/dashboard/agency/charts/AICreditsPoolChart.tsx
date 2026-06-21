@@ -13,9 +13,9 @@ import {
     Tooltip,
     Legend,
 } from 'recharts';
-import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
 import { Sparkles, AlertTriangle } from 'lucide-react';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 interface ClientCreditsUsage {
     name: string;
@@ -92,17 +92,12 @@ export function AICreditsPoolChart({
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-q-surface border border-q-border rounded-xl p-6"
-        >
+        <MotionCard motionDelay={0.2} hoverMotion className="bg-q-surface border border-q-border rounded-xl p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div>
                     <h3 className="text-lg font-semibold text-q-text flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-purple-400" />
+                        <Sparkles className="w-5 h-5 text-q-accent" />
                         {t('dashboard.agency.charts.aiCredits.title', 'Pool de AI Credits')}
                     </h3>
                     <p className="text-sm text-q-text-secondary">
@@ -111,8 +106,8 @@ export function AICreditsPoolChart({
                 </div>
                 {(isLow || isCritical) && (
                     <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${isCritical
-                            ? 'bg-red-500/20 text-red-400'
-                            : 'bg-yellow-500/20 text-yellow-400'
+                            ? 'bg-q-error/20 text-q-error'
+                            : 'bg-q-accent/20 text-q-accent'
                         }`}>
                         <AlertTriangle className="w-3 h-3" />
                         {isCritical ? t('dashboard.agency.charts.aiCredits.critical', 'Crítico') : t('dashboard.agency.charts.aiCredits.low', 'Bajo')}
@@ -191,7 +186,7 @@ export function AICreditsPoolChart({
             <div className="mt-4 pt-4 border-t border-q-border grid grid-cols-2 gap-4">
                 <div>
                     <p className="text-xs text-q-text-secondary">{t('dashboard.agency.charts.aiCredits.usedLabel', 'Usados')}</p>
-                    <p className="text-lg font-semibold text-purple-400">
+                    <p className="text-lg font-semibold text-q-accent">
                         {poolUsed.toLocaleString()}
                     </p>
                 </div>
@@ -202,7 +197,7 @@ export function AICreditsPoolChart({
                     </p>
                 </div>
             </div>
-        </motion.div>
+        </MotionCard>
     );
 }
 

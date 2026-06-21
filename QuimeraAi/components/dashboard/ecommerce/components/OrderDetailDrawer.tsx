@@ -58,13 +58,13 @@ type AddressField = keyof Address;
 type ProductPickerTarget = 'new' | number | null;
 
 const ORDER_STATUS_CONFIGS: Record<OrderStatus, OrderStatusConfig> = {
-    pending: { color: 'text-yellow-400', bg: 'bg-yellow-500/20', label: 'Pendiente' },
-    paid: { color: 'text-green-400', bg: 'bg-green-500/20', label: 'Pagado' },
-    processing: { color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'Procesando' },
-    shipped: { color: 'text-purple-400', bg: 'bg-purple-500/20', label: 'Enviado' },
-    delivered: { color: 'text-green-400', bg: 'bg-green-500/20', label: 'Entregado' },
-    cancelled: { color: 'text-red-400', bg: 'bg-red-500/20', label: 'Cancelado' },
-    refunded: { color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'Reembolsado' },
+    pending: { color: 'text-q-accent', bg: 'bg-q-accent/20', label: 'Pendiente' },
+    paid: { color: 'text-q-success', bg: 'bg-q-success/20', label: 'Pagado' },
+    processing: { color: 'text-q-accent', bg: 'bg-q-accent/20', label: 'Procesando' },
+    shipped: { color: 'text-q-accent', bg: 'bg-q-accent/20', label: 'Enviado' },
+    delivered: { color: 'text-q-success', bg: 'bg-q-success/20', label: 'Entregado' },
+    cancelled: { color: 'text-q-error', bg: 'bg-q-error/20', label: 'Cancelado' },
+    refunded: { color: 'text-q-warning', bg: 'bg-q-warning/20', label: 'Reembolsado' },
 };
 
 const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
@@ -614,7 +614,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
         });
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-end">
+        <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex justify-end">
             <div className="w-full max-w-2xl bg-q-surface h-full overflow-y-auto">
                 {/* Header */}
                 <div className="sticky top-0 bg-q-surface border-b border-q-border p-4 z-10">
@@ -688,7 +688,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                         {isUpdating && <Loader2 size={18} className="animate-spin text-primary" />}
                     </div>
                     {saveError && (
-                        <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                        <p className="mt-3 rounded-lg border border-q-error/30 bg-q-error/10 px-3 py-2 text-sm text-q-error">
                             {saveError}
                         </p>
                     )}
@@ -1058,7 +1058,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                                     </button>
                                                     <button
                                                         onClick={() => removeDraftItem(index)}
-                                                        className="p-1.5 text-q-text-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                                                        className="p-1.5 text-q-text-muted hover:text-q-error hover:bg-q-error/10 rounded-lg"
                                                     >
                                                         <Trash2 size={15} />
                                                     </button>
@@ -1066,8 +1066,8 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                             </div>
                                             <div className={`rounded-lg border px-3 py-2 text-xs ${
                                                 isCatalogLinked
-                                                    ? 'border-green-500/20 bg-green-500/10 text-green-300'
-                                                    : 'border-yellow-500/20 bg-yellow-500/10 text-yellow-300'
+                                                    ? 'border-q-success/20 bg-q-success/10 text-q-success'
+                                                    : 'border-q-accent/20 bg-q-accent/10 text-q-accent'
                                             }`}>
                                                 {isCatalogLinked
                                                     ? `Vinculado al catálogo: ${referencedProduct?.name}`
@@ -1295,7 +1295,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                     <span>{formatMoney(subtotal)}</span>
                                 </div>
                                 {toFiniteNumber(discountAmount) > 0 && (
-                                    <div className="flex justify-between text-green-400">
+                                    <div className="flex justify-between text-q-success">
                                         <span>
                                             Descuento
                                             {order.discountCode && ` (${order.discountCode})`}
@@ -1390,12 +1390,12 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                     <span
                                         className={`${
                                             order.paymentStatus === 'paid'
-                                                ? 'text-green-400'
+                                                ? 'text-q-success'
                                                 : order.paymentStatus === 'pending'
-                                                ? 'text-yellow-400'
+                                                ? 'text-q-accent'
                                                 : order.paymentStatus === 'refunded' || order.paymentStatus === 'partially_refunded'
-                                                ? 'text-orange-400'
-                                                : 'text-red-400'
+                                                ? 'text-q-warning'
+                                                : 'text-q-error'
                                         }`}
                                     >
                                         {PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus}
@@ -1416,7 +1416,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                     </div>
                                 )}
                                 {refundedAmount > 0 && (
-                                    <div className="flex justify-between text-orange-400">
+                                    <div className="flex justify-between text-q-warning">
                                         <span>Reembolsado</span>
                                         <span>{formatMoney(refundedAmount)}</span>
                                     </div>
@@ -1457,7 +1457,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                                     <option value="fraudulent">Fraudulento</option>
                                                 </AppSelect>
                                                 {refundError && (
-                                                    <p className="text-sm text-red-400">{refundError}</p>
+                                                    <p className="text-sm text-q-error">{refundError}</p>
                                                 )}
                                                 <div className="flex gap-2">
                                                     <button
@@ -1470,7 +1470,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                                     <button
                                                         onClick={handleRefundOrder}
                                                         disabled={isRefunding}
-                                                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50"
+                                                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-q-warning text-white rounded-lg text-sm hover:bg-q-warning disabled:opacity-50"
                                                     >
                                                         {isRefunding && <Loader2 size={14} className="animate-spin" />}
                                                         Reembolsar
@@ -1480,7 +1480,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                         ) : (
                                             <button
                                                 onClick={handleStartRefund}
-                                                className="inline-flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
+                                                className="inline-flex items-center gap-2 text-sm text-q-warning hover:text-q-warning"
                                             >
                                                 <DollarSign size={14} />
                                                 Crear reembolso
@@ -1557,7 +1557,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                 className={`${inputClass} resize-none`}
                             />
                             {notesError && (
-                                <p className="mt-2 text-sm text-red-400">{notesError}</p>
+                                <p className="mt-2 text-sm text-q-error">{notesError}</p>
                             )}
                             <div className="mt-3 flex justify-end">
                                 <button
@@ -1581,7 +1581,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                 multiple={false}
             />
             {productPickerTarget !== null && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm sm:p-4">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-q-text/60 p-3 backdrop-blur-sm sm:p-4">
                     <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-q-border bg-q-surface">
                         <div className="flex items-start justify-between gap-3 border-b border-q-border p-4">
                             <div className="min-w-0">

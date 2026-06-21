@@ -115,7 +115,7 @@ const TabletSlidePanel: React.FC<TabletSlidePanelProps> = ({
         <>
             {/* Backdrop Overlay */}
             <div
-                className="fixed inset-0 bg-black/50 z-50 transition-opacity duration-300"
+                className="fixed inset-0 bg-q-text/50 z-50 transition-opacity duration-300"
                 style={{ opacity: Math.max(0.3, 1 - (Math.abs(dragOffset) / 300)) }}
                 onClick={onClose}
                 aria-hidden="true"

@@ -24,7 +24,7 @@ const PortalDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { portalConfig, theme, hasFeature } = usePortal();
     const { navigate } = useRouter();
-    
+
     // Load data from tenant
     const { projects, isLoading: loadingProjects } = useTenantProjects();
     const { leads, isLoading: loadingLeads } = useTenantLeads();
@@ -116,9 +116,9 @@ const PortalDashboard: React.FC = () => {
                                 >
                                     <Icon size={20} style={{ color: stat.color }} />
                                 </div>
-                                <ArrowUpRight 
-                                    size={16} 
-                                    className="text-q-text-muted opacity-0 group-hover:opacity-100 transition-opacity" 
+                                <ArrowUpRight
+                                    size={16}
+                                    className="text-q-text-muted opacity-0 group-hover:opacity-100 transition-opacity"
                                 />
                             </div>
                             <p className="text-2xl font-bold text-foreground mb-1">
@@ -130,7 +130,7 @@ const PortalDashboard: React.FC = () => {
                             </p>
                             <p className="text-sm text-q-text-muted">{stat.label}</p>
                             {stat.subValue && (
-                                <p className="text-xs text-green-500 mt-1 flex items-center gap-1">
+                                <p className="text-xs text-q-success mt-1 flex items-center gap-1">
                                     <TrendingUp size={12} />
                                     {stat.subValue}
                                 </p>
@@ -252,7 +252,7 @@ const PortalDashboard: React.FC = () => {
                                         onClick={() => navigate(`/portal/leads/${lead.id}`)}
                                         className="w-full flex items-center gap-3 p-4 hover:bg-secondary/50 transition-colors text-left"
                                     >
-                                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 font-medium">
+                                        <div className="w-10 h-10 rounded-full bg-q-success/10 flex items-center justify-center text-q-success font-medium">
                                             {(lead.name || lead.email)?.[0]?.toUpperCase() || '?'}
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -265,10 +265,10 @@ const PortalDashboard: React.FC = () => {
                                         </div>
                                         <span className={`
                                             px-2 py-0.5 text-xs rounded-full
-                                            ${lead.status === 'new' ? 'bg-blue-500/10 text-blue-500' : ''}
-                                            ${lead.status === 'contacted' ? 'bg-yellow-500/10 text-yellow-500' : ''}
-                                            ${lead.status === 'qualified' ? 'bg-green-500/10 text-green-500' : ''}
-                                            ${lead.status === 'converted' ? 'bg-purple-500/10 text-purple-500' : ''}
+                                            ${lead.status === 'new' ? 'bg-q-accent/10 text-q-accent' : ''}
+                                            ${lead.status === 'contacted' ? 'bg-q-accent/10 text-q-accent' : ''}
+                                            ${lead.status === 'qualified' ? 'bg-q-success/10 text-q-success' : ''}
+                                            ${lead.status === 'converted' ? 'bg-q-accent/10 text-q-accent' : ''}
                                         `}>
                                             {lead.status || 'new'}
                                         </span>

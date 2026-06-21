@@ -233,10 +233,10 @@ function AppSelect({
         onClick={() => setIsOpen((open) => !open)}
         onKeyDown={handleKeyDown}
         className={cn(
-          'flex h-10 min-w-0 items-center justify-between gap-2 rounded-xl border border-q-border/60 bg-q-surface/40 px-3 text-left text-sm text-q-text shadow-sm transition-all',
-          'hover:border-q-accent/40 focus:outline-none focus:ring-2 focus:ring-q-accent/30',
+          'flex h-10 min-w-0 items-center justify-between gap-2 rounded-[var(--q-radius-md)] border border-border-subtle bg-q-surface px-3 text-left text-sm text-q-text shadow-[var(--shadow-card)] transition-all',
+          'hover:border-q-border focus:outline-none focus:ring-2 focus:ring-q-accent/25',
           'disabled:cursor-not-allowed disabled:opacity-60',
-          isOpen && 'border-q-accent/60 bg-q-surface ring-2 ring-q-accent/25',
+          isOpen && 'border-q-accent/60 bg-q-surface ring-2 ring-q-accent/20',
           className,
         )}
       >
@@ -257,7 +257,7 @@ function AppSelect({
           id={listboxId}
           ref={listRef}
           role="listbox"
-          className="absolute left-0 right-0 top-full z-[9999] mt-1 max-h-60 overflow-y-auto rounded-xl border border-q-border/70 bg-q-surface py-1 shadow-2xl shadow-black/20 backdrop-blur-xl"
+          className="absolute left-0 right-0 top-full z-[9999] mt-1 max-h-60 overflow-y-auto rounded-[var(--radius-card-compact)] border border-border-subtle bg-q-surface py-1 shadow-[var(--shadow-elevated)]"
         >
           {options.map((option, index) => {
             const isSelected = option.value === selectedValue;
