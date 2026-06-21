@@ -5,6 +5,7 @@ import type {
     ProductCardVariant,
     StorefrontCatalogSize,
     StorefrontTemplateCompatibility,
+    StorefrontThemePresetId,
 } from './storefrontTheme';
 import type {
     WebsiteEcommerceBlockSettings,
@@ -16,6 +17,7 @@ export type {
     ProductCardVariant,
     StorefrontCatalogSize,
     StorefrontTemplateCompatibility,
+    StorefrontThemePresetId,
 } from './storefrontTheme';
 export type {
     WebsiteEcommerceBlockSettings,
@@ -38,12 +40,15 @@ export interface BlueprintReadiness {
 
 export interface BlueprintEditableMetadata {
     generatedBy: BlueprintGeneratedBy;
+    generatedByAI?: boolean;
     userModified: boolean;
     lockedFromRegeneration?: boolean;
     generatedAt?: string;
     lastEditedAt?: string;
     lastEditedBy?: string;
     lastSyncedAt?: string;
+    updatedAt?: string;
+    generationSource?: string;
 }
 
 export type BlueprintSourceMap = Record<string, string | string[]>;
@@ -54,6 +59,7 @@ export interface BlueprintModuleState {
     needsReview: boolean;
     readiness: BlueprintReadiness;
     metadata: BlueprintEditableMetadata;
+    sourceMap?: BlueprintSourceMap;
 }
 
 export interface BlueprintBusinessProfile extends BlueprintModuleState {
@@ -109,8 +115,14 @@ export interface StorefrontBlueprint extends BlueprintModuleState {
     catalogSize?: StorefrontCatalogSize;
     templateCompatibility?: StorefrontTemplateCompatibility;
     themeFallbackChain?: string[];
+    templatePreset?: string;
+    themePreset?: StorefrontThemePresetId;
     sections: StorefrontSectionBlueprint[];
     productCardVariant?: ProductCardVariant;
+    collectionStrategy?: string;
+    cartStyle?: string;
+    checkoutStyle?: string;
+    colorSystem?: Record<string, string>;
     templates: {
         home?: string;
         collection?: string;
@@ -129,16 +141,29 @@ export interface StarterProductBlueprint {
     priceSource: 'user-provided' | 'ai-suggested' | 'unset';
     stockSource: 'user-provided' | 'unset';
     status: 'draft' | 'needs_review';
+    needsReview?: boolean;
+    isPublished?: boolean;
+    publishStatus?: 'not_published';
+    discountStatus?: 'none' | 'draft';
 }
 
 export interface EcommerceBlueprint extends BlueprintModuleState {
+    storeType?: string;
+    catalogStrategy?: string;
     categories: string[];
+    productCategories?: string[];
     collections?: string[];
     starterProducts: StarterProductBlueprint[];
     inventoryMode: 'manual' | 'tracked' | 'not_configured';
     fulfillmentMode: 'shipping' | 'pickup' | 'shipping_pickup' | 'digital' | 'not_configured';
+    paymentMode?: 'not_configured' | 'test' | 'live';
+    taxMode?: 'not_configured' | 'manual' | 'automatic';
+    shippingMode?: 'not_configured' | 'manual' | 'automatic';
     discounts: Array<{ name: string; status: 'draft' | 'needs_review'; reason?: string }>;
     giftCards: { enabled: boolean; status: 'draft' | 'configured' | 'needs_review' };
+    giftCardsEnabled?: boolean;
+    digitalProductsEnabled?: boolean;
+    recommendations?: string[];
 }
 
 export interface ChatbotBlueprint extends BlueprintModuleState {
@@ -208,6 +233,7 @@ export interface BusinessBlueprint {
     blueprintVersion: string;
     schemaVersion: typeof BUSINESS_BLUEPRINT_SCHEMA_VERSION;
     generatedAt: string;
+    updatedAt?: string;
     lastSyncedAt?: string;
     source: BlueprintSource;
     tenantId?: string;
