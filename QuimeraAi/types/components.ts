@@ -4,9 +4,12 @@
  */
 
 import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, AnimationType, FontFamily } from './ui';
+import type { ProductCardVariant } from './productCard';
+import type { WebsiteEcommerceCTARouteType, WebsiteEcommerceResponsiveBehavior } from './websiteEcommerceBlocks';
 
 // Re-export Project from types/project for backward compatibility
 export type { Project } from './project';
+export type { BorderRadiusSize } from './ui';
 
 // Lumina Data Interfaces
 import { HeroLuminaData } from '../components/HeroLumina';
@@ -155,6 +158,7 @@ export interface SectionBackgroundFields {
     backgroundOverlayOpacity?: number;
     backgroundOverlayColor?: string;
     backgroundPosition?: string;
+    glassEffect?: boolean;
 }
 
 // =============================================================================
@@ -1585,7 +1589,7 @@ export interface ProductsProps {
     showPagination?: boolean;
     productsPerPage?: number;
     layout?: 'grid' | 'list';
-    cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardStyle?: ProductCardVariant;
     showAddToCart?: boolean;
     showQuickView?: boolean;
     showWishlist?: boolean;
@@ -1608,7 +1612,7 @@ export interface ProductsData extends SectionBackgroundFields {
     showPagination: boolean;
     productsPerPage: number;
     layout: 'grid' | 'list';
-    cardStyle: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardStyle: ProductCardVariant;
     showAddToCart: boolean;
     showQuickView: boolean;
     showWishlist: boolean;
@@ -1671,14 +1675,23 @@ export interface FeaturedProductsData extends SectionBackgroundFields {
     showAddToCart?: boolean;
     showViewAll?: boolean;
     viewAllUrl?: string;
+    ctaRouteType?: WebsiteEcommerceCTARouteType;
+    viewAllProductId?: string;
+    viewAllCategoryId?: string;
+    viewAllCollectionId?: string;
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     // Card style
-    cardStyle: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardStyle: ProductCardVariant;
+    cardAspectRatio?: AspectRatio;
+    imageObjectFit?: ObjectFit;
     // Styling
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    cardGap?: 'sm' | 'md' | 'lg';
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
@@ -1697,6 +1710,8 @@ export interface FeaturedProductsData extends SectionBackgroundFields {
         priceColor?: string;
         salePriceColor?: string;
         borderColor?: string;
+        overlayStart?: string;
+        overlayEnd?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -1704,7 +1719,7 @@ export interface FeaturedProductsData extends SectionBackgroundFields {
 // =============================================================================
 // ECOMMERCE - CATEGORY GRID
 // =============================================================================
-export type CategoryGridVariant = 'cards' | 'overlay' | 'minimal' | 'banner';
+export type CategoryGridVariant = 'cards' | 'overlay' | 'minimal' | 'banner' | 'editorial' | 'bento-overlay';
 
 export interface CategoryItem {
     id: string;
@@ -1722,6 +1737,8 @@ export interface CategoryGridData extends SectionBackgroundFields {
     categories: CategoryItem[];
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    sourceType?: 'store' | 'manual';
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     columns: 2 | 3 | 4 | 5 | 6;
     showTitle?: boolean;
     layout?: 'grid' | 'carousel' | 'masonry';
@@ -1731,8 +1748,11 @@ export interface CategoryGridData extends SectionBackgroundFields {
     // Styling
     paddingY: PaddingSize;
     paddingX: PaddingSize;
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
@@ -1766,6 +1786,9 @@ export interface ProductHeroData extends SectionBackgroundFields {
     buttonText: string;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    sourceType?: 'featured' | 'product' | 'collection';
+    ctaRouteType?: WebsiteEcommerceCTARouteType;
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     buttonUrl?: string;
     backgroundImageUrl: string;
     // Product/Collection reference
@@ -1791,6 +1814,7 @@ export interface ProductHeroData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     headlineFontSize?: FontSize;
     subheadlineFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
     buttonBorderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
     // Add to Cart
@@ -1830,6 +1854,7 @@ export interface SaleCountdownData extends SectionBackgroundFields {
     buttonText?: string;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     // Countdown settings
     endDate: string; // ISO date string
     showDays?: boolean;
@@ -1849,10 +1874,15 @@ export interface SaleCountdownData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
     // Card style for products
     cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardAspectRatio?: AspectRatio;
+    imageObjectFit?: ObjectFit;
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     // Colors
     colors: {
         background: string;
@@ -1867,6 +1897,8 @@ export interface SaleCountdownData extends SectionBackgroundFields {
         buttonText?: string;
         cardBackground?: string;
         cardText?: string;
+        overlayStart?: string;
+        overlayEnd?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -1874,7 +1906,7 @@ export interface SaleCountdownData extends SectionBackgroundFields {
 // =============================================================================
 // ECOMMERCE - TRUST BADGES
 // =============================================================================
-export type TrustBadgesVariant = 'horizontal' | 'grid' | 'minimal' | 'detailed';
+export type TrustBadgesVariant = 'horizontal' | 'grid' | 'minimal' | 'detailed' | 'premium-strip' | 'icon-cloud';
 export type TrustBadgeIcon = 'truck' | 'shield' | 'credit-card' | 'refresh-cw' | 'clock' | 'award' | 'lock' | 'headphones' | 'package' | 'check-circle' | 'star' | 'heart';
 
 export interface TrustBadgeItem {
@@ -1897,13 +1929,18 @@ export interface TrustBadgesData extends SectionBackgroundFields {
     paddingY: PaddingSize;
     paddingX: PaddingSize;
     titleFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     // Colors
     colors: {
         background: string;
         heading?: string;
         text: string;
         iconColor: string;
+        cardBackground?: string;
+        cardText?: string;
         borderColor?: string;
         accent?: string;
     };
@@ -1932,10 +1969,16 @@ export interface RecentlyViewedData extends SectionBackgroundFields {
     showPrice?: boolean;
     showRating?: boolean;
     cardStyle: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardAspectRatio?: AspectRatio;
+    imageObjectFit?: ObjectFit;
     // Styling
     paddingY: PaddingSize;
     paddingX: PaddingSize;
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
     // Colors
@@ -1949,6 +1992,8 @@ export interface RecentlyViewedData extends SectionBackgroundFields {
         starColor?: string;
         borderColor?: string;
         buttonText?: string;
+        overlayStart?: string;
+        overlayEnd?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -1956,7 +2001,7 @@ export interface RecentlyViewedData extends SectionBackgroundFields {
 // =============================================================================
 // ECOMMERCE - PRODUCT REVIEWS
 // =============================================================================
-export type ProductReviewsVariant = 'list' | 'cards' | 'masonry' | 'featured';
+export type ProductReviewsVariant = 'list' | 'cards' | 'masonry' | 'featured' | 'spotlight';
 
 export interface ProductReviewItem {
     id: string;
@@ -1987,6 +2032,7 @@ export interface ProductReviewsData extends SectionBackgroundFields {
     showProductInfo?: boolean;
     sortBy?: 'newest' | 'highest' | 'lowest' | 'helpful';
     maxReviews?: number;
+    columns?: 2 | 3 | 4 | 5 | 6;
     // Summary
     averageRating?: number;
     totalReviews?: number;
@@ -1995,7 +2041,10 @@ export interface ProductReviewsData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     animationType?: AnimationType;
     // Colors
     colors: {
@@ -2025,6 +2074,8 @@ export interface CollectionBannerData extends SectionBackgroundFields {
     backgroundImageUrl: string;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    ctaRouteType?: WebsiteEcommerceCTARouteType;
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     // Collection reference
     collectionId?: string;
     // Button
@@ -2043,6 +2094,7 @@ export interface CollectionBannerData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     headlineFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
     buttonBorderRadius?: BorderRadiusSize;
     animationType?: AnimationType;
     // Colors
@@ -2061,7 +2113,7 @@ export interface CollectionBannerData extends SectionBackgroundFields {
 // =============================================================================
 // ECOMMERCE - PRODUCT BUNDLE
 // =============================================================================
-export type ProductBundleVariant = 'horizontal' | 'vertical' | 'compact';
+export type ProductBundleVariant = 'horizontal' | 'vertical' | 'compact' | 'editorial' | 'price-stack';
 
 export interface ProductBundleData extends SectionBackgroundFields {
     variant: ProductBundleVariant;
@@ -2070,6 +2122,8 @@ export interface ProductBundleData extends SectionBackgroundFields {
     enabled?: boolean;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    ctaRouteType?: WebsiteEcommerceCTARouteType;
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     // Bundle products (IDs to fetch from store)
     productIds: string[];
     // Pricing - now with automatic discount calculation
@@ -2090,7 +2144,10 @@ export interface ProductBundleData extends SectionBackgroundFields {
     paddingX: PaddingSize;
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     borderRadius?: BorderRadiusSize;
+    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
     animationType?: AnimationType;
     // Colors
     colors: {
@@ -2130,6 +2187,7 @@ export interface AnnouncementBarData extends SectionBackgroundFields {
     messages: AnnouncementMessage[];
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    responsiveBehavior?: WebsiteEcommerceResponsiveBehavior;
     /** Posición: 'above-header' renders before the Header, 'in-content' (default) renders in normal section flow */
     position?: AnnouncementBarPosition;
     // Display
@@ -2144,6 +2202,8 @@ export interface AnnouncementBarData extends SectionBackgroundFields {
     paddingY: PaddingSize;
     paddingX: PaddingSize;
     fontSize?: FontSize;
+    textAlignment?: TextAlignment;
+    contentPosition?: 'left' | 'center' | 'right';
     // Colors
     colors: {
         background: string;
@@ -2152,6 +2212,7 @@ export interface AnnouncementBarData extends SectionBackgroundFields {
         iconColor?: string;
         borderColor?: string;
     };
+    cornerGradient?: CornerGradientConfig;
 }
 
 // =============================================================================

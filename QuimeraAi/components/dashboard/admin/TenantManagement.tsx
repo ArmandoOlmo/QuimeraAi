@@ -19,6 +19,7 @@ import { db, collection, getDocs, query, where, orderBy, limit } from '@/utils/c
 import { doc, getDoc } from '@/utils/compatData';
 import { AiCreditsUsage, AiCreditTransaction, getUsageColor } from '../../../types/subscription';
 import { addCredits } from '../../../services/aiCreditsService';
+import AppSelect from '../../ui/AppSelect';
 
 interface TenantManagementProps {
     onBack: () => void;
@@ -351,7 +352,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                     )}
                                 </div>
 
-                                <select
+                                <AppSelect
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value as TenantStatus | 'all')}
                                     className="px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -361,7 +362,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                     <option value="trial">{t('superadmin.onTrial')}</option>
                                     <option value="suspended">{t('superadmin.suspended')}</option>
                                     <option value="expired">{t('superadmin.expired')}</option>
-                                </select>
+                                </AppSelect>
 
                                 {canPerform('canEditTenants') && (
                                     <button
@@ -459,24 +460,24 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-q-text-secondary mb-1">Tipo</label>
-                                    <select
+                                    <AppSelect
                                         name="type"
                                         className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                     >
                                         <option value="individual">{t('superadmin.individual')}</option>
                                         <option value="agency">{t('superadmin.agency')}</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-q-text-secondary mb-1">Plan</label>
-                                    <select
+                                    <AppSelect
                                         name="plan"
                                         className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                     >
                                         <option value="free">{t('superadmin.free')}</option>
                                         <option value="pro">Pro</option>
                                         <option value="enterprise">{t('superadmin.enterprise')}</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-q-text-secondary mb-1">Empresa (Opcional)</label>
@@ -842,14 +843,14 @@ const TenantDetailsModal: React.FC<{
                                     <div>
                                         <label className={labelClass}>Tipo</label>
                                         {isEditing ? (
-                                            <select
+                                            <AppSelect
                                                 value={editData.type}
                                                 onChange={(e) => setEditData(prev => ({ ...prev, type: e.target.value as TenantType }))}
                                                 className={selectClass}
                                             >
                                                 <option value="individual">Individual</option>
                                                 <option value="agency_client">Cliente de Agencia</option>
-                                            </select>
+                                            </AppSelect>
                                         ) : (
                                             <div className="flex items-center gap-2">
                                                 {tenant.type === 'agency' ? <Building2 size={16} className="text-blue-400" /> : <User size={16} className="text-purple-400" />}
@@ -860,7 +861,7 @@ const TenantDetailsModal: React.FC<{
                                     <div>
                                         <label className={labelClass}>Estado</label>
                                         {isEditing ? (
-                                            <select
+                                            <AppSelect
                                                 value={editData.status}
                                                 onChange={(e) => setEditData(prev => ({ ...prev, status: e.target.value as TenantStatus }))}
                                                 className={selectClass}
@@ -869,7 +870,7 @@ const TenantDetailsModal: React.FC<{
                                                 <option value="trial">Prueba</option>
                                                 <option value="suspended">Suspendido</option>
                                                 <option value="expired">Expirado</option>
-                                            </select>
+                                            </AppSelect>
                                         ) : (
                                             <div className="flex items-center gap-2">
                                                 {getStatusIcon(tenant.status)}
@@ -880,7 +881,7 @@ const TenantDetailsModal: React.FC<{
                                     <div>
                                         <label className={labelClass}>Plan Actual</label>
                                         {isEditing ? (
-                                            <select
+                                            <AppSelect
                                                 value={editData.subscriptionPlan}
                                                 onChange={(e) => setEditData(prev => ({ ...prev, subscriptionPlan: e.target.value as Tenant['subscriptionPlan'] }))}
                                                 className={selectClass}
@@ -896,7 +897,7 @@ const TenantDetailsModal: React.FC<{
                                                 <option value="agency_pro">Agency Pro</option>
                                                 <option value="agency_scale">Agency Scale</option>
                                                 <option value="enterprise">Enterprise</option>
-                                            </select>
+                                            </AppSelect>
                                         ) : (
                                             <span className="px-2.5 py-1 bg-purple-500/10 text-purple-400 rounded-md text-sm border border-purple-500/20 font-semibold capitalize inline-block">
                                                 {tenant.subscriptionPlan}

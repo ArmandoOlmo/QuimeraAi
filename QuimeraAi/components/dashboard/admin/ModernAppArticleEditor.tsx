@@ -58,6 +58,7 @@ import {
 } from '../../../utils/articleTranslation';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { getUsableImageUrl, isLegacyStorageUrl, normalizeImageUrl } from '../../../utils/imageUrl';
+import AppSelect from '../../ui/AppSelect';
 
 interface ModernAppArticleEditorProps {
     article: AppArticle | null;
@@ -1109,7 +1110,7 @@ Text to format:
                                 {/* Category */}
                                 <div>
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.editor.category', 'Categoría')}</label>
-                                    <select
+                                    <AppSelect
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value as AppArticleCategory)}
                                         className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
@@ -1117,7 +1118,7 @@ Text to format:
                                         {CATEGORIES.map(cat => (
                                             <option key={cat.value} value={cat.value}>{cat.label}</option>
                                         ))}
-                                    </select>
+                                    </AppSelect>
                                 </div>
 
                                 {/* Help Center Category — only visible for help/guide/tutorial */}
@@ -1126,7 +1127,7 @@ Text to format:
                                         <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">
                                             Sección del Help Center
                                         </label>
-                                        <select
+                                        <AppSelect
                                             value={helpCenterCategory || ''}
                                             onChange={(e) => setHelpCenterCategory((e.target.value as HelpCenterCategory) || undefined)}
                                             className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
@@ -1135,7 +1136,7 @@ Text to format:
                                             {HELP_CENTER_CATEGORIES.map(hc => (
                                                 <option key={hc.value} value={hc.value}>{hc.label}</option>
                                             ))}
-                                        </select>
+                                        </AppSelect>
                                         <p className="text-[10px] text-q-text-muted mt-1">
                                             Define en qué sección aparece este artículo en /help-center
                                         </p>

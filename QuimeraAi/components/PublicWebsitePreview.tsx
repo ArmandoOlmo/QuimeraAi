@@ -145,7 +145,8 @@ interface StoreViewWrapperProps {
 
 const StoreViewWrapper: React.FC<StoreViewWrapperProps> = ({ projectId, storeView, initialData }) => {
   const serverUrl =
-    storeView.type === 'store' ? '/' :
+    storeView.type === 'products' ? '/products' :
+      storeView.type === 'store' ? '/' :
       storeView.type === 'category' ? `/category/${(storeView as { type: 'category'; slug: string }).slug}` :
         storeView.type === 'product' ? `/product/${(storeView as { type: 'product'; slug: string }).slug}` : '/';
 
@@ -180,6 +181,7 @@ const AnnouncementBar = lazy(() => import('./ecommerce').then(m => ({ default: m
 type StoreViewState =
   | { type: 'none' }
   | { type: 'store' }
+  | { type: 'products' }
   | { type: 'category'; slug: string }
   | { type: 'product'; slug: string };
 
@@ -813,6 +815,15 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return;
       }
 
+      // Store catalog routing: /tienda/productos
+      if (path === '/tienda/productos' || path === '/tienda/productos/' || path === '/tienda/catalogo' || path === '/tienda/catalogo/') {
+        setActivePost(null);
+        setActivePage(null);
+        setStoreView({ type: 'products' });
+        window.scrollTo(0, 0);
+        return;
+      }
+
       // Store routing: /tienda
       if (path === '/tienda' || path === '/tienda/') {
         setActivePost(null);
@@ -893,6 +904,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         setActivePost(null);
         setActivePage(null);
         setStoreView({ type: 'store' });
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      if (decodedHash === '#store/products' || decodedHash.endsWith('#store/products') || decodedHash === '#store/catalog' || decodedHash.endsWith('#store/catalog')) {
+        setActivePost(null);
+        setActivePage(null);
+        setStoreView({ type: 'products' });
         window.scrollTo(0, 0);
         return;
       }
@@ -1145,6 +1164,16 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }
 
     // Store: /tienda
+    if (href === '/tienda/productos' || href === '/tienda/productos/' || href === '/tienda/catalogo' || href === '/tienda/catalogo/') {
+      setActivePost(null);
+      setActivePage(null);
+      setStoreView({ type: 'products' });
+      updateBrowserUrl('/tienda/productos');
+      updatePageSEO({ title: 'Todos los productos', type: 'website', path: '/tienda/productos' });
+      window.scrollTo(0, 0);
+      return;
+    }
+
     if (href === '/tienda' || href === '/tienda/') {
       setActivePost(null);
       setActivePage(null);
@@ -1196,6 +1225,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       setActivePost(null);
       setActivePage(null);
       setStoreView({ type: 'store' });
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    if (href === '#store/products' || href === '#store/catalog') {
+      setActivePost(null);
+      setActivePage(null);
+      setStoreView({ type: 'products' });
       window.scrollTo(0, 0);
       return;
     }

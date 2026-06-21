@@ -18,6 +18,15 @@ interface RetryOptions {
   onError?: (error: Error, attempt: number) => void;
 }
 
+function canAutoReloadForChunkError(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const localHosts = new Set(['localhost', '127.0.0.1', '0.0.0.0']);
+  if (localHosts.has(window.location.hostname)) return false;
+
+  return true;
+}
+
 /**
  * Checks if an error is a chunk / dynamic-import loading failure.
  *
@@ -125,7 +134,7 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(
     }
 
     // All retries failed - check if it's a chunk loading error
-    if (lastError && isChunkLoadError(lastError)) {
+    if (lastError && isChunkLoadError(lastError) && canAutoReloadForChunkError()) {
       console.error('[lazyWithRetry] Chunk loading failed after all retries. Triggering page reload...');
       
       // Clear caches before reload
@@ -196,4 +205,3 @@ export class ChunkLoadError extends Error {
 export const withRetry = lazyWithRetry;
 
 export default lazyWithRetry;
-

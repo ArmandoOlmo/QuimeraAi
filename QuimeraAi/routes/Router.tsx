@@ -11,6 +11,7 @@ import { useRouteSEO } from '../hooks/useRouteSEO';
 import { ROUTES, hasRouteAccess } from './config';
 import { View, AdminView } from '../types/ui';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
+import { useStorefrontCart } from '../components/ecommerce/context';
 
 // LoadingScreen is kept synchronous as it's used as fallback
 import LoadingScreen from './LoadingScreen';
@@ -61,6 +62,7 @@ const PublicRestaurantMenuPage = lazyWithRetry(() => import('../components/dashb
 // Lazy-loaded ecommerce components
 const ProductDetailPageWithCart = lazyWithRetry(() => import('../components/ecommerce/ProductDetailPageWithCart'));
 const CheckoutPageEnhanced = lazyWithRetry(() => import('../components/ecommerce/CheckoutPageEnhanced'));
+const StorefrontApp = lazyWithRetry(() => import('../components/ecommerce/StorefrontApp'));
 
 // Named exports need to be handled differently with lazyWithRetry
 const ProductSearchPage = lazyWithRetry(() =>
@@ -72,6 +74,32 @@ const StorefrontLayout = lazyWithRetry(() =>
 const OrderConfirmation = lazyWithRetry(() =>
   import('../components/ecommerce').then(module => ({ default: module.OrderConfirmation }))
 );
+
+interface StorefrontProductListingProps {
+  storeId: string;
+  onProductClick: (slug: string) => void;
+  onBack?: () => void;
+  initialCategory?: string;
+}
+
+const StorefrontProductListing: React.FC<StorefrontProductListingProps> = ({
+  storeId,
+  onProductClick,
+  onBack,
+  initialCategory,
+}) => {
+  const cart = useStorefrontCart();
+
+  return (
+    <ProductSearchPage
+      storeId={storeId}
+      onProductClick={onProductClick}
+      onBack={onBack}
+      initialCategory={initialCategory}
+      onAddToCart={(product) => cart.addItem(product, 1)}
+    />
+  );
+};
 
 // =============================================================================
 // TYPES
@@ -301,7 +329,7 @@ const Router: React.FC<RouterProps> = ({
             onNavigateHome={() => navigate(`/preview/${storeId}`)}
             onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
           >
-            <ProductSearchPage
+            <StorefrontProductListing
               storeId={storeId}
               onProductClick={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
               onBack={() => navigate(`/store/${storeId}`)}
@@ -316,16 +344,7 @@ const Router: React.FC<RouterProps> = ({
     if (pathParts.length === 3 || (pathParts.length === 4 && pathParts[3] === '')) {
       return (
         <Suspense fallback={<LoadingScreen />}>
-          <StorefrontLayout
-            storeId={storeId}
-            onNavigateHome={() => navigate(`/preview/${storeId}`)}
-            onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
-          >
-            <ProductSearchPage
-              storeId={storeId}
-              onProductClick={(slug) => navigate(`/store/${storeId}/product/${slug}`)}
-            />
-          </StorefrontLayout>
+          <StorefrontApp projectId={storeId} />
         </Suspense>
       );
     }
@@ -686,8 +705,6 @@ const Router: React.FC<RouterProps> = ({
 };
 
 export default Router;
-
-
 
 
 

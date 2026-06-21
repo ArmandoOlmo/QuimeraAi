@@ -464,7 +464,6 @@ const Header: React.FC<HeaderData & {
           return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] max-w-7xl mx-auto rounded-xl border border-gray-200 shadow-sm overflow-hidden segmented-pill-container`;
 
         // --- TRANSPARENTES ---
-        case 'transparent':
         case 'sticky-transparent':
           return 'w-full border-b border-transparent';
         case 'transparent-blur':
@@ -536,7 +535,6 @@ const Header: React.FC<HeaderData & {
           return { backgroundColor: actualColors.background };
 
         // --- TRANSPARENTES ---
-        case 'transparent':
         case 'sticky-transparent':
           return { backgroundColor: isTransparent ? 'transparent' : actualColors.background };
         case 'transparent-blur':
@@ -799,7 +797,7 @@ const Header: React.FC<HeaderData & {
     // When forceSolid is true, always take space (the header is solid and visible)
     const shouldNotTakeSpace = !forceSolid && (
       style.startsWith('floating') || style === 'segmented-pill' ||
-      ((style.startsWith('transparent') || style === 'sticky-transparent' || style === 'transparent') && !isScrolled && style !== 'transparent-blur' && style !== 'transparent-bordered' && style !== 'transparent-gradient' && style !== 'transparent-gradient-dark')
+      ((style.startsWith('transparent') || style === 'sticky-transparent') && !isScrolled && style !== 'transparent-blur' && style !== 'transparent-bordered' && style !== 'transparent-gradient' && style !== 'transparent-gradient-dark')
     );
 
     const activeTopBarOffset = isScrolled ? 0 : resolvedTopBarOffset;
@@ -828,6 +826,7 @@ const Header: React.FC<HeaderData & {
           />
 
           <div
+            data-site-header-surface="true"
             className={`transition-all duration-500 ease-out ${containerClasses} ${glassEffect ? glassClasses : ''
               } ${!style.startsWith('floating') && !style.includes('transparent') && !glassEffect ? shadowClasses : ''}`}
             style={{

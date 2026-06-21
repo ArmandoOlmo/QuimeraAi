@@ -12,6 +12,7 @@ import { Menu } from '../../../types';
 import ProjectSelectorPage from './ProjectSelectorPage';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import AppSelect from '../../ui/AppSelect';
 
 const NavigationDashboard: React.FC = () => {
     const { t } = useTranslation();
@@ -333,7 +334,7 @@ const NavigationDashboard: React.FC = () => {
                             {/* Usage filter - icon only */}
                             <div className="relative flex-shrink-0 cursor-pointer" title={t('navigationDashboard.allMenus', 'Filtrar')}>
                                 <Layers size={15} className={`pointer-events-none transition-colors ${filterUsage !== 'all' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`} />
-                                <select
+                                <AppSelect
                                     value={filterUsage}
                                     onChange={(e) => setFilterUsage(e.target.value as any)}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -342,7 +343,7 @@ const NavigationDashboard: React.FC = () => {
                                     <option value="used">{t('navigationDashboard.inUse')}</option>
                                     <option value="unused">{t('navigationDashboard.notInUse')}</option>
                                     <option value="empty">{t('navigationDashboard.empty')}</option>
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {/* Clear filter */}

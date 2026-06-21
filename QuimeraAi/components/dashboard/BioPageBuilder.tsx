@@ -110,6 +110,7 @@ import ChatCore from '../chat/ChatCore';
 import { hexToRgba } from '../../utils/colorUtils';
 import { useServiceAvailability } from '../../hooks/useServiceAvailability';
 import { db, collection, getDocs, deleteDoc, doc, query, orderBy } from '@/utils/compatData';
+import AppSelect from '../ui/AppSelect';
 
 // =============================================================================
 // TYPES
@@ -1013,7 +1014,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.titleFont', 'Title font')}
                                 </label>
-                                <select
+                                <AppSelect
                                     value={theme.titleFont}
                                     onChange={(e) => contextUpdateTheme({ titleFont: e.target.value })}
                                     className="w-full bg-muted/50 rounded-lg px-3 py-2.5 text-sm text-foreground border border-q-border focus:ring-2 focus:ring-primary/50 outline-none"
@@ -1021,7 +1022,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     {FONT_OPTIONS.map(font => (
                                         <option key={font} value={font}>{font}</option>
                                     ))}
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {/* Title Font Color */}
@@ -1526,7 +1527,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.pageTextFont', 'Page text font')}
                                 </label>
-                                <select
+                                <AppSelect
                                     value={theme.bodyFont}
                                     onChange={(e) => contextUpdateTheme({ bodyFont: e.target.value })}
                                     className="w-full bg-muted/50 rounded-lg px-3 py-2.5 text-sm text-foreground border border-q-border focus:ring-2 focus:ring-primary/50 outline-none"
@@ -1534,7 +1535,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     {FONT_OPTIONS.map(font => (
                                         <option key={font} value={font}>{font}</option>
                                     ))}
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {/* Page Text Color */}
@@ -1549,7 +1550,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('bioPage.titleFont', 'Title font')}
                                 </label>
-                                <select
+                                <AppSelect
                                     value={theme.titleFont}
                                     onChange={(e) => contextUpdateTheme({ titleFont: e.target.value })}
                                     className="w-full bg-muted/50 rounded-lg px-3 py-2.5 text-sm text-foreground border border-q-border focus:ring-2 focus:ring-primary/50 outline-none"
@@ -1557,7 +1558,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     {FONT_OPTIONS.map(font => (
                                         <option key={font} value={font}>{font}</option>
                                     ))}
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {/* Title Font Color */}

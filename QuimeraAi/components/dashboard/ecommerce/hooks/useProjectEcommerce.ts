@@ -23,7 +23,7 @@ interface UseProjectEcommerceReturn {
     isLoading: boolean;
     isInitialized: boolean;
     error: string | null;
-    enableEcommerce: () => Promise<void>;
+    enableEcommerce: () => Promise<boolean>;
     disableEcommerce: () => Promise<void>;
     getStoreId: () => string;
 }
@@ -53,10 +53,12 @@ export const useProjectEcommerce = (
         if (!userId || !projectId) {
             setIsLoading(false);
             setConfig(null);
+            setIsInitialized(false);
             return;
         }
 
         try {
+            setIsLoading(true);
             // Check project details first
             const { data: project, error: projectError } = await supabase
                 .from('projects')
@@ -75,6 +77,8 @@ export const useProjectEcommerce = (
                 .from('store_settings')
                 .select('store_name, created_at, updated_at, is_active')
                 .eq('project_id', projectId)
+                .order('updated_at', { ascending: false })
+                .limit(1)
                 .maybeSingle();
 
             if (settingsError && settingsError.code !== 'PGRST116') {
@@ -107,9 +111,23 @@ export const useProjectEcommerce = (
 
     // Escuchar cambios en la configuración (store_settings changes)
     useEffect(() => {
-        if (!userId || !projectId) return;
+        if (!userId || !projectId) {
+            setIsLoading(false);
+            setConfig(null);
+            setIsInitialized(false);
+            return;
+        }
 
-        fetchConfig();
+        const loadingTimeout = window.setTimeout(() => {
+            setIsLoading((current) => {
+                if (current) {
+                    setError('La inicialización de ecommerce tardó demasiado. Intenta recargar o cambiar de proyecto.');
+                }
+                return false;
+            });
+        }, 12000);
+
+        void fetchConfig().finally(() => window.clearTimeout(loadingTimeout));
 
         const channel = supabase.channel(createRealtimeChannelName('project_ecommerce_changes', projectId))
             .on(
@@ -127,6 +145,7 @@ export const useProjectEcommerce = (
             .subscribe();
 
         return () => {
+            window.clearTimeout(loadingTimeout);
             supabase.removeChannel(channel);
         };
     }, [userId, projectId, fetchConfig]);
@@ -135,56 +154,94 @@ export const useProjectEcommerce = (
     const enableEcommerce = useCallback(async () => {
         if (!userId || !projectId) {
             setError('No user ID or project ID provided');
-            return;
+            return false;
         }
 
         try {
             setIsLoading(true);
+            setError(null);
 
             // Fetch current settings to see if they exist
-            const { data: existing } = await supabase
+            const { data: existing, error: existingError } = await supabase
                 .from('store_settings')
-                .select('id')
+                .select('store_name')
                 .eq('project_id', projectId)
+                .order('updated_at', { ascending: false })
+                .limit(1)
                 .maybeSingle();
+
+            if (existingError && existingError.code !== 'PGRST116') throw existingError;
+
+            let finalProjectName = projectName;
+            if (!finalProjectName) {
+                const { data: pData, error: projectError } = await supabase
+                    .from('projects')
+                    .select('name')
+                    .eq('id', projectId)
+                    .single();
+
+                if (projectError) throw projectError;
+                finalProjectName = pData?.name || 'Mi Proyecto';
+            }
+
+            const storeName = existing?.store_name || `Tienda - ${finalProjectName}`;
+            const activePayload = {
+                store_name: storeName,
+                is_active: true,
+            };
+            let savedSettings: any;
 
             if (existing) {
                 // If exists, just set active
-                await supabase
+                const { data: updatedSettings, error: updateError } = await supabase
                     .from('store_settings')
-                    .update({ is_active: true })
-                    .eq('project_id', projectId);
-            } else {
-                // Determine project name
-                let finalProjectName = projectName;
-                if (!finalProjectName) {
-                    const { data: pData } = await supabase
-                        .from('projects')
-                        .select('name')
-                        .eq('id', projectId)
-                        .single();
-                    finalProjectName = pData?.name || 'Mi Proyecto';
+                    .update(activePayload)
+                    .eq('project_id', projectId)
+                    .select('store_name, created_at, updated_at, is_active');
+
+                if (updateError) throw updateError;
+                const updatedRow = Array.isArray(updatedSettings) ? updatedSettings[0] : null;
+                if (!updatedRow) {
+                    throw new Error('No se pudo activar ecommerce para este proyecto. Verifica permisos de proyecto o RLS.');
                 }
 
-                await supabase
+                savedSettings = updatedRow;
+            } else {
+                const { data: insertedSettings, error: insertError } = await supabase
                     .from('store_settings')
                     .insert({
                         project_id: projectId,
-                        store_name: `Tienda - ${finalProjectName}`,
+                        ...activePayload,
                         store_email: '', // Requires configuration later
-                        is_active: true,
-                    });
+                    })
+                    .select('store_name, created_at, updated_at, is_active')
+                    .single();
+
+                if (insertError) throw insertError;
+                savedSettings = insertedSettings;
             }
 
             console.log('✅ Ecommerce enabled for project:', projectId);
+            setConfig({
+                projectId,
+                projectName: finalProjectName || 'Mi Proyecto',
+                ecommerceEnabled: savedSettings.is_active ?? true,
+                storeId: projectId,
+                storeName: savedSettings.store_name || storeName,
+                createdAt: savedSettings.created_at,
+                updatedAt: savedSettings.updated_at,
+            });
             setIsInitialized(true);
             setError(null);
             
             // Re-fetch to update state immediately
             await fetchConfig();
+            return true;
         } catch (err: any) {
             console.error('Error enabling ecommerce:', err);
             setError(err.message);
+            setIsInitialized(false);
+            throw err;
         } finally {
             setIsLoading(false);
         }
@@ -288,11 +345,6 @@ export const useProjectsWithEcommerce = (userId: string) => {
 };
 
 export default useProjectEcommerce;
-
-
-
-
-
 
 
 

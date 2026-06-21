@@ -274,7 +274,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+                <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] gap-8 lg:gap-12">
                     {/* Image Gallery */}
                     <div className="space-y-4">
                         {/* Main Image */}
@@ -358,7 +358,10 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     </div>
 
                     {/* Product Info */}
-                    <div className="space-y-6">
+                    <div
+                        className="space-y-6 rounded-2xl border p-5 shadow-sm sm:p-6 lg:sticky lg:top-24 lg:self-start"
+                        style={{ backgroundColor: colors?.cardBackground, borderColor: colors?.border }}
+                    >
                         {/* Category */}
                         {category && (
                             <button
@@ -518,11 +521,11 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex gap-4 pt-4">
+                        <div className="flex flex-col gap-3 pt-4 sm:flex-row">
                             <button
                                 onClick={handleAddToCart}
                                 disabled={!inStock}
-                                className="flex-1 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                className="flex-1 py-4 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                 style={!addedToCart 
                                     ? { backgroundColor: colors?.buttonBackground, color: colors?.buttonText } 
                                     : { backgroundColor: colors?.success, color: '#ffffff' }
@@ -563,7 +566,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
                         {/* Trust Badges */}
                         <div 
-                            className="grid grid-cols-3 gap-4 pt-6 border-t"
+                            className="grid grid-cols-1 gap-4 pt-6 border-t sm:grid-cols-3"
                             style={{ borderColor: colors?.border }}
                         >
                             <div className="text-center">
@@ -601,7 +604,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 <div className="mt-16">
                     {/* Tab Headers */}
                     <div 
-                        className="flex gap-1 border-b"
+                        className="flex gap-1 overflow-x-auto border-b"
                         style={{ borderColor: colors?.border }}
                     >
                         {[

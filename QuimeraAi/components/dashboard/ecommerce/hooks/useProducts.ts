@@ -225,10 +225,19 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             }
 
             // Fetch current product to merge images
-            const currentProduct = products.find((p) => p.id === productId);
-            if (!currentProduct) return;
+            let currentProduct = products.find((p) => p.id === productId) ?? null;
+            if (!currentProduct) {
+                const { data: productRow, error: productFetchError } = await supabase
+                    .from('store_products')
+                    .select('*')
+                    .eq('id', productId)
+                    .maybeSingle();
 
-            const existingImages = currentProduct.images || [];
+                if (productFetchError) throw productFetchError;
+                currentProduct = productRow ? mapProductFromDB(productRow) : null;
+            }
+
+            const existingImages = currentProduct?.images || [];
             let position = existingImages.length;
             const newImages: ProductImage[] = [];
 
@@ -240,7 +249,7 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
                         newImages.push({
                             id: `library-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                             url,
-                            altText: cleanUpdates.name || currentProduct.name || '',
+                            altText: cleanUpdates.name || currentProduct?.name || '',
                             position: position++,
                         });
                     }
@@ -267,8 +276,10 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
                 .eq('id', productId);
 
             if (updateError) throw updateError;
+
+            await fetchProducts();
         },
-        [products, uploadImage]
+        [fetchProducts, products, uploadImage]
     );
 
     // Delete product
@@ -353,6 +364,7 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
         products,
         isLoading,
         error,
+        refreshProducts: fetchProducts,
         addProduct,
         updateProduct,
         deleteProduct,

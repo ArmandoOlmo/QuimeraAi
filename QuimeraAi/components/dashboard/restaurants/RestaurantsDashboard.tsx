@@ -42,6 +42,7 @@ import { useRestaurantMenu } from '../../../hooks/restaurants/useRestaurantMenu'
 import { useRestaurantReservations } from '../../../hooks/restaurants/useRestaurantReservations';
 import { generateReservationMessage, generateReviewTemplate, runDishAssistant } from '../../../services/restaurants/restaurantAiService';
 import { DIETARY_TAG_LABELS, DietaryTag, RestaurantMenuItem, RestaurantReservation, RESTAURANT_MENU_CATEGORIES } from '../../../types/restaurants';
+import AppSelect from '../../ui/AppSelect';
 
 type RestaurantView = 'overview' | 'menu' | 'digital-menu' | 'reservations' | 'reviews' | 'settings';
 type MenuViewMode = 'grid' | 'table';
@@ -207,7 +208,7 @@ const RestaurantsDashboard: React.FC = () => {
           
           <div className="ml-auto flex items-center gap-2">
             {restaurantState.restaurants.length > 1 && (
-              <select
+              <AppSelect
                 className="bg-muted/50 border border-q-border rounded-lg px-3 py-2 text-sm"
                 value={restaurantState.activeRestaurantId || ''}
                 onChange={(event) => restaurantState.selectRestaurant(event.target.value)}
@@ -215,7 +216,7 @@ const RestaurantsDashboard: React.FC = () => {
                 {restaurantState.restaurants.map((restaurant) => (
                   <option key={restaurant.id} value={restaurant.id}>{restaurant.name}</option>
                 ))}
-              </select>
+              </AppSelect>
             )}
             <HeaderBackButton onClick={() => setDashboardView('dashboard')} />
           </div>
@@ -347,8 +348,8 @@ const MenuManager = ({ menu, restaurantCurrency, scope, restaurantId }: any) => 
       </div>
       <div className="quimera-dashboard-panel-card p-5 flex flex-col lg:flex-row gap-3">
         <div className="flex items-center gap-2 flex-1 rounded-lg bg-muted/50 px-3 py-2"><Search size={16} className="text-q-text-muted" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('restaurants.searchDishes', 'Search dishes...')} className="bg-transparent outline-none flex-1 text-sm" /></div>
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className="bg-muted/50 border border-q-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-ring"><option value="">{t('ecommerce.allCategories', 'All categories')}</option>{RESTAURANT_MENU_CATEGORIES.concat(menu.categories.filter((c: string) => !RESTAURANT_MENU_CATEGORIES.includes(c))).map((cat) => <option key={cat}>{cat}</option>)}</select>
-        <select value={tag} onChange={(e) => setTag(e.target.value)} className="bg-muted/50 border border-q-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-ring"><option value="">{t('restaurants.allTags', 'All tags')}</option>{Object.entries(DIETARY_TAG_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
+        <AppSelect value={category} onChange={(e) => setCategory(e.target.value)} className="bg-muted/50 border border-q-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-ring"><option value="">{t('ecommerce.allCategories', 'All categories')}</option>{RESTAURANT_MENU_CATEGORIES.concat(menu.categories.filter((c: string) => !RESTAURANT_MENU_CATEGORIES.includes(c))).map((cat) => <option key={cat}>{cat}</option>)}</AppSelect>
+        <AppSelect value={tag} onChange={(e) => setTag(e.target.value)} className="bg-muted/50 border border-q-border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-ring"><option value="">{t('restaurants.allTags', 'All tags')}</option>{Object.entries(DIETARY_TAG_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</AppSelect>
         <div className="flex rounded-lg bg-muted/50 p-1"><button onClick={() => setViewMode('grid')} className={`p-2 rounded ${viewMode === 'grid' ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : ''}`}><Grid size={18} /></button><button onClick={() => setViewMode('table')} className={`p-2 rounded ${viewMode === 'table' ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text' : ''}`}><List size={18} /></button></div>
       </div>
       {filtered.length === 0 ? <EmptyPanel title={t('restaurants.emptyMenu', 'No dishes yet')} action={t('restaurants.createDish', 'Create dish')} onAction={() => setEditing({ ...emptyDish, currency: restaurantCurrency })} /> : viewMode === 'grid' ? (
@@ -686,14 +687,14 @@ const EditorTimePicker = ({ label, value, onChange }: { label: string; value: st
     <div className="block space-y-2">
       <span className="text-xs font-bold text-q-text-muted uppercase tracking-wider block">{label}</span>
       <div className="relative">
-        <select
+        <AppSelect
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="flex w-full appearance-none items-center justify-between rounded-md border border-q-border bg-q-bg/80 px-3 py-2 pr-10 text-sm outline-none transition-colors hover:bg-q-bg focus:ring-2 focus:ring-ring"
         >
           <option value="" disabled className="text-q-text-muted">{t('restaurants.selectTime', 'Select time')}</option>
           {times.map(timeStr => <option key={timeStr} value={timeStr}>{timeStr}</option>)}
-        </select>
+        </AppSelect>
         <Clock size={16} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-q-text-muted" />
       </div>
     </div>
@@ -948,7 +949,7 @@ const RestaurantSettingsView = ({ restaurant, onSave }: { restaurant: any; onSav
           <Input label={t('restaurants.phone', 'Phone')} value={form.phone || ''} onChange={(v) => set('phone', v)} />
           <div>
             <span className="text-sm font-medium block mb-1">{t('restaurants.currency', 'Currency')}</span>
-            <select
+            <AppSelect
               value={form.currency || 'USD'}
               onChange={(e) => set('currency', e.target.value)}
               className="w-full rounded-lg border border-q-border bg-muted/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
@@ -960,7 +961,7 @@ const RestaurantSettingsView = ({ restaurant, onSave }: { restaurant: any; onSav
               <option value="COP">COP — Peso Colombiano</option>
               <option value="ARS">ARS — Peso Argentino</option>
               <option value="CLP">CLP — Peso Chileno</option>
-            </select>
+            </AppSelect>
           </div>
           <TextArea className="md:col-span-2" label={t('restaurants.address', 'Address')} value={form.address || ''} onChange={(v) => set('address', v)} />
         </div>
@@ -1022,6 +1023,6 @@ const RestaurantSettingsView = ({ restaurant, onSave }: { restaurant: any; onSav
 const EmptyPanel = ({ title, action, onAction }: { title: string; action: string; onAction: () => void }) => <div className="rounded-xl border border-dashed border-q-border bg-q-surface/40 p-10 text-center"><Utensils className="mx-auto mb-3 text-q-text-muted w-8 h-8" strokeWidth={2} /><h3 className="font-semibold mb-3">{title}</h3><button onClick={onAction} className="quimera-guide-cta inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium"><Plus size={18} />{action}</button></div>;
 const Input = ({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; type?: string }) => <label className="block space-y-1"><span className="text-sm font-medium">{label}</span><input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-lg border border-q-border bg-muted/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></label>;
 const TextArea = ({ label, value, onChange, className = '' }: { label: string; value: string; onChange: (value: string) => void; className?: string }) => <label className={`block space-y-1 ${className}`}><span className="text-sm font-medium">{label}</span><textarea value={value} onChange={(e) => onChange(e.target.value)} rows={4} className="w-full rounded-lg border border-q-border bg-muted/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></label>;
-const Select = ({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: string[] }) => <label className="block space-y-1"><span className="text-sm font-medium">{label}</span><select value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-lg border border-q-border bg-muted/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring">{options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>;
+const Select = ({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: string[] }) => <label className="block space-y-1"><span className="text-sm font-medium">{label}</span><AppSelect value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-lg border border-q-border bg-muted/40 px-3 py-2 outline-none focus:ring-2 focus:ring-ring">{options.map((option) => <option key={option} value={option}>{option}</option>)}</AppSelect></label>;
 
 export default RestaurantsDashboard;

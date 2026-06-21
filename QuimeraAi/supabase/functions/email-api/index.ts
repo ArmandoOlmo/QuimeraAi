@@ -55,6 +55,7 @@ async function sendViaResend(input: {
   subject: string;
   html: string;
   from?: string;
+  replyTo?: string;
 }) {
   if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY is not configured");
 
@@ -69,6 +70,7 @@ async function sendViaResend(input: {
       to: input.to,
       subject: input.subject,
       html: input.html,
+      reply_to: input.replyTo,
     }),
   });
 
@@ -109,7 +111,7 @@ async function loadCampaign(storeId: string, campaignId: string) {
   const { data, error } = await supabase
     .from("email_campaigns")
     .select("*")
-    .eq("store_id", storeId)
+    .or(`store_id.eq.${storeId},project_id.eq.${storeId}`)
     .eq("id", campaignId)
     .maybeSingle();
 
@@ -153,7 +155,9 @@ async function sendTestEmail(userId: string, payload: Record<string, unknown>) {
   const providerResponse = await sendViaResend({ to: [testEmail], subject, html });
 
   await supabase.from("email_logs").insert({
+    project_id: storeId,
     store_id: storeId,
+    user_id: userId,
     type: "test",
     campaign_id: campaignId !== "test" ? campaignId : null,
     recipient_email: testEmail,
@@ -215,7 +219,9 @@ async function sendCampaign(userId: string, payload: Record<string, unknown>) {
     sent += 1;
 
     await supabase.from("email_logs").insert({
+      project_id: storeId,
       store_id: storeId,
+      user_id: userId,
       type: "campaign",
       campaign_id: campaignId,
       recipient_email: recipient,

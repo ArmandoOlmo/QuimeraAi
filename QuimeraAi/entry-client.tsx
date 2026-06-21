@@ -8,7 +8,30 @@
  * Note: SSR server provides SEO tags and initial state, but React does full rendering.
  */
 
+import { installDevReloadGuard } from './utils/devReloadGuard';
 import './utils/serviceWorkerCleanup';
+
+installDevReloadGuard();
+
+const resetLocalEcommerceStateForDev = () => {
+    const localHosts = new Set(['localhost', '127.0.0.1', '0.0.0.0']);
+    if (!localHosts.has(window.location.hostname)) return;
+    if (window.location.pathname !== '/ecommerce') return;
+
+    try {
+        if (localStorage.getItem('ecommerceActiveView') === 'storefront') {
+            localStorage.setItem('ecommerceActiveView', 'overview');
+        }
+
+        Object.keys(sessionStorage)
+            .filter(key => key.startsWith('quimera:storefront-editor-preview:'))
+            .forEach(key => sessionStorage.removeItem(key));
+    } catch (error) {
+        console.warn('[entry-client] Could not reset ecommerce local state:', error);
+    }
+};
+
+resetLocalEcommerceStateForDev();
 
 // Global error handler to capture errors
 window.onerror = function (message, source, lineno, colno, error) {
@@ -54,6 +77,10 @@ declare global {
 
 const initialState = window.__INITIAL_STATE__;
 const initialData = window.__INITIAL_DATA__;
+const storefrontRouteProjectId = (() => {
+    const match = window.location.pathname.match(/^\/store\/([^/]+)/);
+    return match?.[1] ? decodeURIComponent(match[1]) : null;
+})();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -98,7 +125,20 @@ const loadProjectFonts = (theme: any) => {
     console.log('[entry-client] Loaded project fonts:', uniqueFonts);
 };
 
-if (hasSSRData && initialData) {
+if (storefrontRouteProjectId) {
+    console.log('[entry-client] Rendering StorefrontApp (standalone store route)');
+    Promise.all([loadStorefrontApp(), loadStorefrontCartProvider()]).then(
+        ([StorefrontApp, StorefrontCartProvider]) => {
+            root.render(
+                <React.StrictMode>
+                    <StorefrontCartProvider storeId={storefrontRouteProjectId}>
+                        <StorefrontApp projectId={storefrontRouteProjectId} />
+                    </StorefrontCartProvider>
+                </React.StrictMode>
+            );
+        }
+    );
+} else if (hasSSRData && initialData) {
     // SSR data available - dynamically load PublicWebsitePreview + StorefrontCartProvider
     console.log('[entry-client] Rendering with PublicWebsitePreview (SSR mode)');
     const project = initialData.project as Project;
@@ -144,9 +184,6 @@ if (hasSSRData && initialData) {
         );
     });
 }
-
-
-
 
 
 

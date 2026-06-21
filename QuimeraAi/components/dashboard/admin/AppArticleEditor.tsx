@@ -33,6 +33,7 @@ import {
     Code
 } from 'lucide-react';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import AppSelect from '../../ui/AppSelect';
 
 interface AppArticleEditorProps {
     article: AppArticle | null;
@@ -405,7 +406,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                     <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         Category
                                     </label>
-                                    <select
+                                    <AppSelect
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value as AppArticleCategory)}
                                         className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary"
@@ -413,7 +414,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                         {CATEGORIES.map(cat => (
                                             <option key={cat.value} value={cat.value}>{cat.label}</option>
                                         ))}
-                                    </select>
+                                    </AppSelect>
                                 </div>
 
                                 {/* Author */}

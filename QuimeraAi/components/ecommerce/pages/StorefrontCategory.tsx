@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, query, where, orderBy, doc, getDoc } from '@/utils/compatData';
 import { db } from '@/utils/compatData';
 import { ShoppingBag, ChevronLeft, Filter, Loader2 } from 'lucide-react';
+import AppSelect from '../../ui/AppSelect';
 
 interface StorefrontCategoryProps {
     storeId: string;
@@ -150,7 +151,7 @@ const StorefrontCategory: React.FC<StorefrontCategoryProps> = ({
                         {/* Sort */}
                         <div className="flex items-center gap-2">
                             <Filter size={16} className="text-gray-400" />
-                            <select
+                            <AppSelect
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as any)}
                                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
@@ -158,7 +159,7 @@ const StorefrontCategory: React.FC<StorefrontCategoryProps> = ({
                                 <option value="newest">Más recientes</option>
                                 <option value="price-asc">Precio: Menor a mayor</option>
                                 <option value="price-desc">Precio: Mayor a menor</option>
-                            </select>
+                            </AppSelect>
                         </div>
                     </div>
                 </div>

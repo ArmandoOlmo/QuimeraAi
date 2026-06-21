@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { CalendarDays, Clock, Users, User, Mail, Phone, MessageSquare, CheckCircle2, Loader2, UtensilsCrossed, Armchair } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
 import CornerGradient from './ui/CornerGradient';
+import AppSelect from './ui/AppSelect';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   none: 'py-0',
@@ -353,7 +354,7 @@ const RestaurantReservation: React.FC<RestaurantReservationProps> = ({
                   </label>
                   <div className="relative">
                     <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" style={{ color: sectionColors.inputText }} />
-                    <select
+                    <AppSelect
                       name="partySize"
                       value={formData.partySize} onChange={handleChange}
                       disabled={isSubmitting}
@@ -363,7 +364,7 @@ const RestaurantReservation: React.FC<RestaurantReservationProps> = ({
                       {Array.from({ length: maxPartySize - minPartySize + 1 }, (_, i) => minPartySize + i).map(n => (
                         <option key={n} value={n}>{n} {n === 1 ? t('restaurant.reservation.guest') : t('restaurant.reservation.guests')}</option>
                       ))}
-                    </select>
+                    </AppSelect>
                   </div>
                 </div>
               </div>
@@ -376,7 +377,7 @@ const RestaurantReservation: React.FC<RestaurantReservationProps> = ({
                   </label>
                   <div className="relative">
                     <Armchair className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" style={{ color: sectionColors.inputText }} />
-                    <select
+                    <AppSelect
                       name="tablePreference"
                       value={formData.tablePreference} onChange={handleChange}
                       disabled={isSubmitting}
@@ -388,7 +389,7 @@ const RestaurantReservation: React.FC<RestaurantReservationProps> = ({
                       <option value="outdoor">{t('restaurant.reservation.outdoor')}</option>
                       <option value="bar">{t('restaurant.reservation.bar')}</option>
                       <option value="private">{t('restaurant.reservation.privateRoom')}</option>
-                    </select>
+                    </AppSelect>
                   </div>
                 </div>
               )}

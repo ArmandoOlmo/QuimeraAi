@@ -148,12 +148,9 @@ export function usePlanAccess(): PlanAccessData {
     const hasAccess = useCallback((feature?: keyof PlanFeatures): boolean => {
         if (!feature) return true;
         if (isOwner) {
-            console.log('[usePlanAccess] Owner/SuperAdmin bypass activated for feature:', feature, 'userRole:', userRole);
             return true; // Direct bypass for owner
         }
-        const access = isFeatureEnabled(planData.features[feature]);
-        console.log('[usePlanAccess] Feature access check:', feature, 'hasAccess:', access, 'userRole:', userRole, 'isOwner:', isOwner);
-        return access;
+        return isFeatureEnabled(planData.features[feature]);
     }, [planData.features, isOwner, userRole]);
 
     // Get minimum plan name for a feature
@@ -190,7 +187,6 @@ export function usePlanAccess(): PlanAccessData {
 // =============================================================================
 
 export default usePlanFeatures;
-
 
 
 

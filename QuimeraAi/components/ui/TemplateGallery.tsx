@@ -20,6 +20,7 @@ import {
   ArrowRight,
   Layout
 } from 'lucide-react';
+import AppSelect from './AppSelect';
 
 // ============================================================================
 // TYPES
@@ -550,7 +551,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
         {/* Filtro de categoría */}
         <div className="relative">
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <select
+          <AppSelect
             value={selectedCategory || ''}
             onChange={(e) => setSelectedCategory(e.target.value || null)}
             className="bg-[#130a1d] border border-white/10 rounded-lg pl-9 pr-6 py-2 
@@ -562,7 +563,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
             {categories.map(cat => (
               <option key={cat} value={cat}>{cat}</option>
             ))}
-          </select>
+          </AppSelect>
         </div>
       </div>
 

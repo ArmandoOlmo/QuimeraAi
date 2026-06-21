@@ -12,6 +12,8 @@ import { Input } from '../../ui/Input';
 import { toast } from 'react-hot-toast';
 import { Loader2, Plus, Trash2, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import AppSelect from '../../../../components/ui/AppSelect';
+import ColorControl from '../../../../components/ui/ColorControl';
 
 interface InitialUser {
   name: string;
@@ -244,7 +246,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('dashboard.agency.newClientPage.industry')} *
                 </label>
-                <select
+                <AppSelect
                   value={formData.industry}
                   onChange={(e) => updateFormData({ industry: e.target.value })}
                   className="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
@@ -255,7 +257,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
                       {t(`dashboard.agency.newClientPage.${industry.label}`)}
                     </option>
                   ))}
-                </select>
+                </AppSelect>
               </div>
 
               <div>
@@ -344,11 +346,12 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
                   {t('dashboard.agency.newClientPage.primaryColor')}
                 </label>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="color"
+                  <ColorControl
+                    label={t('dashboard.agency.newClientPage.primaryColor')}
                     value={formData.primaryColor}
-                    onChange={(e) => updateFormData({ primaryColor: e.target.value })}
-                    className="h-10 w-20 rounded border border-gray-300 dark:border-gray-600"
+                    onChange={(value) => updateFormData({ primaryColor: value })}
+                    variant="dashboard"
+                    compact
                   />
                   <Input
                     value={formData.primaryColor}
@@ -364,13 +367,14 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
                   {t('dashboard.agency.newClientPage.secondaryColor')}
                 </label>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="color"
+                  <ColorControl
+                    label={t('dashboard.agency.newClientPage.secondaryColor')}
                     value={formData.secondaryColor}
-                    onChange={(e) =>
-                      updateFormData({ secondaryColor: e.target.value })
+                    onChange={(value) =>
+                      updateFormData({ secondaryColor: value })
                     }
-                    className="h-10 w-20 rounded border border-gray-300 dark:border-gray-600"
+                    variant="dashboard"
+                    compact
                   />
                   <Input
                     value={formData.secondaryColor}
@@ -452,7 +456,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
                       placeholder="email@ejemplo.com"
                       required
                     />
-                    <select
+                    <AppSelect
                       value={user.role}
                       onChange={(e) =>
                         handleUpdateUser(index, { role: e.target.value })
@@ -464,7 +468,7 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
                           {t(`dashboard.agency.newClientPage.${role.label}`)}
                         </option>
                       ))}
-                    </select>
+                    </AppSelect>
                   </div>
                 </div>
               ))}

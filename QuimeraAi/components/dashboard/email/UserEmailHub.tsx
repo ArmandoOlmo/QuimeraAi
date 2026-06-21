@@ -40,6 +40,7 @@ import HeaderBackButton from '../../ui/HeaderBackButton';
 
 // Email editor
 import EmailEditor from './editor/EmailEditor';
+import AppSelect from '../../ui/AppSelect';
 
 interface UserEmailHubProps {
     userId: string;
@@ -243,15 +244,15 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('email.hub.campaigns.newCampaignModal.audience')}</label>
-                                <select value={newCampaignForm.audienceType || 'all'} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceType: e.target.value as any }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                                <AppSelect value={newCampaignForm.audienceType || 'all'} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceType: e.target.value as any }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
                                     <option value="all">{t('email.hub.campaigns.newCampaignModal.allContacts')}</option>
                                     <option value="segment">{t('email.hub.campaigns.newCampaignModal.specificSegment')}</option>
-                                </select>
+                                </AppSelect>
                                 {newCampaignForm.audienceType === 'segment' && audiences.length > 0 && (
-                                    <select value={newCampaignForm.audienceSegmentId || ''} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceSegmentId: e.target.value }))} className="w-full mt-2 bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                                    <AppSelect value={newCampaignForm.audienceSegmentId || ''} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceSegmentId: e.target.value }))} className="w-full mt-2 bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
                                         <option value="">{t('email.hub.campaigns.newCampaignModal.selectSegment')}</option>
                                         {audiences.map(a => (<option key={a.id} value={a.id}>{a.name} ({a.estimatedCount || a.staticMemberCount || 0} {t('email.hub.campaigns.newCampaignModal.contacts')})</option>))}
-                                    </select>
+                                    </AppSelect>
                                 )}
                             </div>
                         </div>
@@ -286,10 +287,10 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                                         {getStatusIcon(detailCampaign.status)} {detailCampaign.status}
                                     </span>
                                     {detailCampaign.status !== 'sent' && detailCampaign.status !== 'sending' && (
-                                        <select value={detailCampaign.status} onChange={e => handleUpdateCampaignStatus(detailCampaign.id, e.target.value as CampaignStatus)} className="px-3 py-1.5 bg-q-surface border border-q-border rounded-lg text-sm text-q-text focus:outline-none">
+                                        <AppSelect value={detailCampaign.status} onChange={e => handleUpdateCampaignStatus(detailCampaign.id, e.target.value as CampaignStatus)} className="px-3 py-1.5 bg-q-surface border border-q-border rounded-lg text-sm text-q-text focus:outline-none">
                                             <option value="draft">{t('email.hub.campaigns.detailPanel.draft')}</option>
                                             <option value="approved">{t('email.hub.campaigns.detailPanel.approved')}</option>
-                                        </select>
+                                        </AppSelect>
                                     )}
                                 </div>
                             </div>
@@ -297,10 +298,10 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 block flex items-center gap-1.5"><Target size={14} /> {t('email.hub.campaigns.detailPanel.audience')}</label>
                                 {detailCampaign.status !== 'sent' && detailCampaign.status !== 'sending' ? (
-                                    <select value={detailCampaign.audienceType || 'all'} onChange={e => handleUpdateCampaignAudience(detailCampaign.id, e.target.value as any)} className="w-full px-3 py-2.5 bg-q-surface border border-q-border rounded-xl text-sm text-q-text focus:outline-none">
+                                    <AppSelect value={detailCampaign.audienceType || 'all'} onChange={e => handleUpdateCampaignAudience(detailCampaign.id, e.target.value as any)} className="w-full px-3 py-2.5 bg-q-surface border border-q-border rounded-xl text-sm text-q-text focus:outline-none">
                                         <option value="all">{t('email.hub.campaigns.detailPanel.allContacts')}</option>
                                         <option value="segment">{t('email.hub.campaigns.detailPanel.segment')}</option>
-                                    </select>
+                                    </AppSelect>
                                 ) : (
                                     <p className="text-sm text-q-text bg-q-surface border border-q-border rounded-lg px-3 py-2">
                                         {detailCampaign.audienceType === 'all' ? t('email.hub.campaigns.detailPanel.allContacts') : `🎯 ${audiences.find(a => a.id === detailCampaign.audienceSegmentId)?.name || t('email.hub.campaigns.detailPanel.segment')}`}

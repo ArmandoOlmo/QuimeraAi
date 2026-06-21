@@ -40,6 +40,7 @@ import ImagePicker from '../../ui/ImagePicker';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { logApiCall } from '../../../services/apiLoggingService';
+import AppSelect from '../../ui/AppSelect';
 
 interface ModernAgencyArticleEditorProps {
     article: AgencyArticle | null;
@@ -604,7 +605,7 @@ Text to format:
                                 {/* Category */}
                                 <div>
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">Categoría</label>
-                                    <select
+                                    <AppSelect
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value as AgencyArticleCategory)}
                                         className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
@@ -612,7 +613,7 @@ Text to format:
                                         {CATEGORIES.map(cat => (
                                             <option key={cat.value} value={cat.value}>{cat.label}</option>
                                         ))}
-                                    </select>
+                                    </AppSelect>
                                 </div>
 
                                 {/* Featured Image */}

@@ -13,6 +13,7 @@ import DragDropZone from '../../ui/DragDropZone';
 import { formatBytes } from '../../../utils/fileHelpers';
 import { DEFAULT_FOLDERS, BRAND_ASSETS, AssetFolder, BrandAsset } from '../../../constants/brandAssets';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import AppSelect from '../../ui/AppSelect';
 
 interface ImageLibraryManagementProps {
     onBack: () => void;
@@ -491,7 +492,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                             {/* Type Filter */}
                                             <div>
                                                 <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase">{t('superadmin.imageLibraryManagement.type', 'Type')}</label>
-                                                <select
+                                                <AppSelect
                                                     value={library.typeFilter}
                                                     onChange={(e) => library.setTypeFilter(e.target.value as any)}
                                                     className="w-full px-3 py-2 text-sm bg-q-bg border border-q-border rounded-lg focus:ring-2 focus:ring-q-accent focus:outline-none"
@@ -500,13 +501,13 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                                     <option value="image">{t('superadmin.imageLibraryManagement.imagesOnly', 'Images Only')}</option>
                                                     <option value="document">{t('superadmin.imageLibraryManagement.documentsOnly', 'Documents Only')}</option>
                                                     <option value="other">{t('superadmin.imageLibraryManagement.other', 'Other')}</option>
-                                                </select>
+                                                </AppSelect>
                                             </div>
 
                                             {/* Sort By */}
                                             <div>
                                                 <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase">{t('superadmin.imageLibraryManagement.sortBy', 'Sort By')}</label>
-                                                <select
+                                                <AppSelect
                                                     value={library.sortBy}
                                                     onChange={(e) => library.setSortBy(e.target.value as any)}
                                                     className="w-full px-3 py-2 text-sm bg-q-bg border border-q-border rounded-lg focus:ring-2 focus:ring-q-accent focus:outline-none"
@@ -515,7 +516,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                                     <option value="name">{t('superadmin.imageLibraryManagement.name', 'Name')}</option>
                                                     <option value="size">{t('superadmin.imageLibraryManagement.size', 'Size')}</option>
                                                     <option value="type">{t('superadmin.imageLibraryManagement.type', 'Type')}</option>
-                                                </select>
+                                                </AppSelect>
                                             </div>
 
                                             {/* Sort Order */}

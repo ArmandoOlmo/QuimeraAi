@@ -27,6 +27,34 @@ function normalizeSections(sections: unknown): PageSection[] | undefined {
     return sections.map(section => (SECTION_ALIASES[String(section)] ?? section) as PageSection);
 }
 
+const GLOBAL_CONTROL_SECTIONS = new Set<PageSection>(['colors', 'typography']);
+const SHELL_SECTIONS = new Set<PageSection>(['header', 'footer']);
+
+const dedupeSections = (sections: PageSection[]): PageSection[] => {
+    const seen = new Set<PageSection>();
+    return sections.filter(section => {
+        if (seen.has(section)) return false;
+        seen.add(section);
+        return true;
+    });
+};
+
+export function normalizeProjectComponentOrder(sections: PageSection[] | undefined | null): PageSection[] | undefined {
+    if (!sections || sections.length === 0) return undefined;
+    const contentSections = dedupeSections(sections).filter(
+        section => !GLOBAL_CONTROL_SECTIONS.has(section) && !SHELL_SECTIONS.has(section)
+    );
+    return ['colors', 'typography', 'header', ...contentSections, 'footer'];
+}
+
+function normalizePageComponentOrder(sections: PageSection[] | undefined): PageSection[] | undefined {
+    if (!sections || sections.length === 0) return sections;
+    const contentSections = dedupeSections(sections).filter(
+        section => !GLOBAL_CONTROL_SECTIONS.has(section) && !SHELL_SECTIONS.has(section)
+    );
+    return ['header', ...contentSections, 'footer'];
+}
+
 function normalizePages(pages: unknown): SitePage[] | undefined {
     if (!Array.isArray(pages)) return undefined;
     return pages.map(page => {
@@ -35,7 +63,7 @@ function normalizePages(pages: unknown): SitePage[] | undefined {
         return {
             ...page,
             title: resolveProjectName(rawPage.title),
-            sections: normalizeSections(rawPage.sections),
+            sections: normalizePageComponentOrder(normalizeSections(rawPage.sections)),
             seo: rawPage.seo
                 ? {
                     ...rawPage.seo,
@@ -213,16 +241,22 @@ export function mapSupabaseRowToProject(row: SupabaseProjectRow): Project {
             : dataPayload;
 
     const rawComponentOrder = normalizeSections(nonEmptyArray(row.component_order) ?? nonEmptyArray(dataPayload.componentOrder));
-    const componentOrder = looksLikeGlobalFallbackOrder(rawComponentOrder, pageData)
+    const componentOrder = normalizeProjectComponentOrder(looksLikeGlobalFallbackOrder(rawComponentOrder, pageData)
         ? inferComponentOrderFromData(pageData)
-        : rawComponentOrder;
-    const sectionVisibility =
+        : rawComponentOrder);
+    const rawSectionVisibility =
         nonEmptyObject<Record<PageSection, boolean>>(row.section_visibility) ??
         nonEmptyObject<Record<PageSection, boolean>>(dataPayload.sectionVisibility) ??
         componentOrder?.reduce((acc, section) => {
             acc[section] = true;
             return acc;
         }, {} as Record<PageSection, boolean>);
+    const sectionVisibility = componentOrder && rawSectionVisibility
+        ? componentOrder.reduce((acc, section) => {
+            acc[section] = rawSectionVisibility[section] ?? true;
+            return acc;
+        }, { ...rawSectionVisibility } as Record<PageSection, boolean>)
+        : rawSectionVisibility;
     const rawPages = normalizePages(nonEmptyArray(row.pages) ?? nonEmptyArray(dataPayload.pages));
     const pages = looksLikeSparseFallbackPages(rawPages, pageData) && componentOrder
         ? generatePagesFromLegacyProject(componentOrder, sectionVisibility || {}, pageData)

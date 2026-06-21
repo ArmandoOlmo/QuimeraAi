@@ -16,6 +16,7 @@ import { getGlobalChatbotPrompts, getDefaultPrompts, applyPromptTemplate } from 
 import type { GlobalChatbotPrompts } from '../../types';
 import { useCanAccessService } from '../../hooks/useServiceAvailability';
 import { Conversation, Role } from '@elevenlabs/client';
+import AppSelect from '../ui/AppSelect';
 
 // =============================================================================
 // INTERFACES
@@ -2210,7 +2211,7 @@ ${suggestAvailableSlots()}
                                     <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
                                         Duración
                                     </label>
-                                    <select
+                                    <AppSelect
                                         value={appointmentForm.duration}
                                         onChange={(e) => setAppointmentForm(prev => ({ ...prev, duration: e.target.value }))}
                                         className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
@@ -2227,13 +2228,13 @@ ${suggestAvailableSlots()}
                                         <option value="60">{t('landingChatbot.appointmentForm.durations.1hour')}</option>
                                         <option value="90">{t('landingChatbot.appointmentForm.durations.1half')}</option>
                                         <option value="120">{t('landingChatbot.appointmentForm.durations.2hours')}</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
                                         Tipo
                                     </label>
-                                    <select
+                                    <AppSelect
                                         value={appointmentForm.appointmentType}
                                         onChange={(e) => setAppointmentForm(prev => ({ ...prev, appointmentType: e.target.value }))}
                                         className="w-full px-3 py-2 rounded-lg text-xs border outline-none focus:ring-2"
@@ -2250,7 +2251,7 @@ ${suggestAvailableSlots()}
                                         <option value="followup">{t('landingChatbot.appointmentForm.types.followup')}</option>
                                         <option value="demo">{t('landingChatbot.appointmentForm.types.demo')}</option>
                                         <option value="other">{t('landingChatbot.appointmentForm.types.other')}</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
                             </div>
 

@@ -4,17 +4,9 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-    collection,
-    query,
-    where,
-    orderBy,
-    getDocs,
-    doc,
-    getDoc,
-} from '@/utils/compatData';
-import { db } from '@/utils/compatData';
-import { Order, OrderStatus } from '../../../types/ecommerce';
+import { supabase } from '../../../supabase';
+import { Order } from '../../../types/ecommerce';
+import { mapOrderFromDB } from '../../../utils/ecommerceMappers';
 
 export interface UseCustomerOrdersReturn {
     orders: Order[];
@@ -23,6 +15,15 @@ export interface UseCustomerOrdersReturn {
     getOrderById: (orderId: string) => Promise<Order | null>;
     refetch: () => Promise<void>;
 }
+
+const isUuidLike = (value: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+const buildStoreScopeFilter = (value: string) => {
+    const filters = [`store_id.eq.${value}`, `public_store_id.eq.${value}`];
+    if (isUuidLike(value)) filters.push(`project_id.eq.${value}`);
+    return filters.join(',');
+};
 
 export const useCustomerOrders = (
     storeId: string,
@@ -42,21 +43,16 @@ export const useCustomerOrders = (
         setError(null);
 
         try {
-            // Query public orders by customer email
-            const ordersRef = collection(db, 'public_stores', storeId, 'customerOrders');
-            const q = query(
-                ordersRef,
-                where('customerEmail', '==', customerEmail.toLowerCase()),
-                orderBy('createdAt', 'desc')
-            );
+            const { data, error: ordersError } = await supabase
+                .from('store_orders')
+                .select('*')
+                .or(buildStoreScopeFilter(storeId))
+                .eq('customer_email', customerEmail.toLowerCase())
+                .order('created_at', { ascending: false });
 
-            const snapshot = await getDocs(q);
-            const ordersData = snapshot.docs.map((doc) => ({
-                ...doc.data(),
-                id: doc.id,
-            })) as Order[];
+            if (ordersError) throw ordersError;
 
-            setOrders(ordersData);
+            setOrders((data || []).map(mapOrderFromDB));
         } catch (err: any) {
             console.error('Error fetching customer orders:', err);
             setError(err.message || 'Error al cargar los pedidos');
@@ -71,22 +67,31 @@ export const useCustomerOrders = (
 
     const getOrderById = useCallback(
         async (orderId: string): Promise<Order | null> => {
-            if (!storeId || !orderId) return null;
+            if (!storeId || !orderId || !customerEmail) return null;
 
             try {
-                const orderRef = doc(db, 'public_stores', storeId, 'customerOrders', orderId);
-                const orderDoc = await getDoc(orderRef);
+                const { data, error: orderError } = await supabase
+                    .from('store_orders')
+                    .select('*')
+                    .eq('id', orderId)
+                    .eq('customer_email', customerEmail.toLowerCase())
+                    .maybeSingle();
 
-                if (orderDoc.exists()) {
-                    return { ...orderDoc.data(), id: orderDoc.id } as Order;
-                }
-                return null;
+                if (orderError) throw orderError;
+                if (!data) return null;
+
+                const order = mapOrderFromDB(data);
+                const belongsToStore = [order.storeId, order.publicStoreId, order.projectId]
+                    .filter(Boolean)
+                    .includes(storeId);
+
+                return belongsToStore ? order : null;
             } catch (err) {
                 console.error('Error fetching order:', err);
                 return null;
             }
         },
-        [storeId]
+        [storeId, customerEmail]
     );
 
     return {
@@ -99,8 +104,6 @@ export const useCustomerOrders = (
 };
 
 export default useCustomerOrders;
-
-
 
 
 

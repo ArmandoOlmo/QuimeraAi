@@ -25,8 +25,9 @@ import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useDiscounts } from '../hooks/useDiscounts';
 import { Discount, DiscountType } from '../../../../types/ecommerce';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 import { CatalogFilterBar, FilterChipRow } from '../../filters';
+import AppSelect from '../../../ui/AppSelect';
 
 const DiscountsView: React.FC = () => {
     const { t } = useTranslation();
@@ -423,7 +424,7 @@ const DiscountsView: React.FC = () => {
                                 <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.discountType', 'Tipo de Descuento')} *
                                 </label>
-                                <select
+                                <AppSelect
                                     value={formData.type}
                                     onChange={(e) =>
                                         setFormData({ ...formData, type: e.target.value as DiscountType })
@@ -433,7 +434,7 @@ const DiscountsView: React.FC = () => {
                                     <option value="percentage">{t('ecommerce.percentage', 'Porcentaje')}</option>
                                     <option value="fixed_amount">{t('ecommerce.fixedAmount', 'Monto Fijo')}</option>
                                     <option value="free_shipping">{t('ecommerce.freeShipping', 'Envío Gratis')}</option>
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {/* Value */}

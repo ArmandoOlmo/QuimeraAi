@@ -70,9 +70,31 @@ export * from './restaurants';
 // AI Website Studio plan contract
 export * from './websitePlan';
 export * from './colorSystem';
-
-
-
-
-
-
+export * from './businessBlueprint';
+export * from './integrationEvents';
+export type {
+    WebsiteEcommerceBlockCTA,
+    WebsiteEcommerceBlockDefinition,
+    WebsiteEcommerceBlockEntity,
+    WebsiteEcommerceBlockLayout,
+    WebsiteEcommerceBlockSeed,
+    WebsiteEcommerceBlockSourceConfig,
+    WebsiteEcommerceBlockValidationInput,
+    WebsiteEcommerceBlockValidationIssue,
+} from './websiteEcommerceBlocks';
+export type {
+    ProductCardBadge,
+    ProductCardDisplayOptions,
+    ProductCardImage,
+    ProductCardImageInput,
+    ProductCardImageQuality,
+    ProductCardReadiness,
+    ProductCardRating,
+    ProductCardValidationCode,
+    ProductCardValidationIssue,
+    ProductCardValidationSeverity,
+    ProductCardViewModel,
+    ProductCardVisualVariant,
+} from './productCard';
+export * from './storefrontTheme';
+export * from './storefrontRenderer';

@@ -16,6 +16,15 @@ function markReloadedForCleanup(): void {
   }
 }
 
+function shouldReloadAfterCleanup(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const localHosts = new Set(['localhost', '127.0.0.1', '0.0.0.0']);
+  if (localHosts.has(window.location.hostname)) return false;
+
+  return true;
+}
+
 export function cleanupLegacyServiceWorkers(): void {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
   if (!('serviceWorker' in navigator)) return;
@@ -34,7 +43,7 @@ export function cleanupLegacyServiceWorkers(): void {
         await Promise.allSettled(cacheNames.map((cacheName) => caches.delete(cacheName)));
       }
 
-      if (wasControlledByServiceWorker && !hasReloadedForCleanup()) {
+      if (wasControlledByServiceWorker && shouldReloadAfterCleanup() && !hasReloadedForCleanup()) {
         markReloadedForCleanup();
         window.location.reload();
       }

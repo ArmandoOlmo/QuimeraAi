@@ -65,6 +65,7 @@ import { useVisualIdentityKit } from '../../../hooks/useVisualIdentityKit';
 import { IMAGE_REFERENCE_CATEGORY_COLORS } from '../../../types/visualIdentity';
 import type { VisualReference } from '../../../types/visualIdentity';
 import { ADMIN_VISUAL_KIT_PROJECT_ID } from '../../../constants/adminVisualKit';
+import AppSelect from '../../ui/AppSelect';
 
 interface AdminAssetLibraryProps {
     onBack?: () => void;
@@ -252,7 +253,7 @@ const AssetPreviewModal: React.FC<{
                     {/* Category Selector */}
                     <div className="mb-3">
                         <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.category', 'Category')}</label>
-                        <select
+                        <AppSelect
                             value={category}
                             onChange={(e) => setCategory(e.target.value as AdminAssetCategory)}
                             className="w-full bg-q-bg text-sm text-foreground p-2 rounded-lg border border-q-border focus:ring-2 focus:ring-primary focus:outline-none"
@@ -260,13 +261,13 @@ const AssetPreviewModal: React.FC<{
                             {Object.entries(CATEGORY_CONFIG).map(([key, { label }]) => (
                                 <option key={key} value={key}>{label}</option>
                             ))}
-                        </select>
+                        </AppSelect>
                     </div>
 
                     {/* Category Selector */}
                     <div className="mb-3">
                         <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">Categoría</label>
-                        <select
+                        <AppSelect
                             value={category}
                             onChange={(e) => setCategory(e.target.value as AdminAssetCategory)}
                             className="w-full bg-q-bg text-sm text-foreground p-2 rounded-lg border border-q-border focus:ring-2 focus:ring-primary focus:outline-none"
@@ -276,7 +277,7 @@ const AssetPreviewModal: React.FC<{
                                     {config.label}
                                 </option>
                             ))}
-                        </select>
+                        </AppSelect>
                     </div>
 
                     {/* Description */}
@@ -975,7 +976,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                                     </div>
                                     <label className="flex shrink-0 items-center gap-2 text-xs font-medium text-q-text-secondary">
                                         <span>{t('adminAssets.generator.category', 'Save to Category')}</span>
-                                        <select
+                                        <AppSelect
                                             value={selectedCategory}
                                             onChange={(e) => setSelectedCategory(e.target.value as AdminAssetCategory)}
                                             className="h-9 rounded-lg border border-q-border bg-q-surface px-3 text-xs font-semibold text-q-text focus:border-q-accent focus:outline-none"
@@ -983,7 +984,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                                             {Object.entries(CATEGORY_CONFIG).map(([key, { label }]) => (
                                                 <option key={key} value={key}>{label}</option>
                                             ))}
-                                        </select>
+                                        </AppSelect>
                                     </label>
                                 </div>
                                 <MediaGeneratorPanel
@@ -1091,7 +1092,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.sortBy', 'Sort By')}</label>
-                                                <select
+                                                <AppSelect
                                                     value={sortBy}
                                                     onChange={(e) => setSortBy(e.target.value as any)}
                                                     className="w-full px-3 py-1.5 text-xs bg-q-bg border border-q-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
@@ -1100,7 +1101,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                                                     <option value="name">{t('adminAssets.name', 'Name')}</option>
                                                     <option value="size">{t('adminAssets.size', 'Size')}</option>
                                                     <option value="category">{t('adminAssets.categoryLabel', 'Category')}</option>
-                                                </select>
+                                                </AppSelect>
                                             </div>
 
                                             <div>
@@ -1116,7 +1117,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
 
                                             <div>
                                                 <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.uploadTo', 'Upload to')}</label>
-                                                <select
+                                                <AppSelect
                                                     value={selectedCategory}
                                                     onChange={(e) => setSelectedCategory(e.target.value as AdminAssetCategory)}
                                                     className="w-full px-3 py-1.5 text-xs bg-q-bg border border-q-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
@@ -1124,7 +1125,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                                                     {Object.entries(CATEGORY_CONFIG).map(([key, { label }]) => (
                                                         <option key={key} value={key}>{label}</option>
                                                     ))}
-                                                </select>
+                                                </AppSelect>
                                             </div>
                                         </div>
                                     </div>

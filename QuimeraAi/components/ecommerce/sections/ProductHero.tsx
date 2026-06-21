@@ -15,6 +15,19 @@ import { ProductHeroData } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import {
+    getStorefrontContentPositionClass,
+    getStorefrontOverlayBackground,
+    getStorefrontPaddingXClass,
+    getStorefrontPaddingYClass,
+    getStorefrontRadiusClass,
+    getStorefrontSectionBackgroundStyle,
+    getStorefrontTextAlignmentClass,
+} from './sectionVisualStyles';
+import {
+    buildStorefrontCatalogUrl,
+    isGenericStorefrontCatalogLink,
+} from '../../../utils/storefrontRouter';
 
 interface ProductHeroProps {
     data: ProductHeroData;
@@ -35,11 +48,13 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
+    const productListUrl = buildStorefrontCatalogUrl(effectiveStoreId);
     
     // Unified colors system
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
     
     const { products, isLoading } = usePublicProducts(effectiveStoreId, {
+        productIds: data.productId ? [data.productId] : undefined,
         limitCount: 1,
     });
 
@@ -52,19 +67,17 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     }, [products, data.productId]);
 
     // Style helpers
-    const getPaddingY = () => {
-        const map: Record<string, string> = { none: 'py-0', sm: 'py-8', md: 'py-12', lg: 'py-16', xl: 'py-20' };
-        return map[data.paddingY] || 'py-12';
+    const getPaddingY = () => getStorefrontPaddingYClass(data.paddingY, 'lg');
+    const getPaddingX = () => getStorefrontPaddingXClass(data.paddingX, 'md');
+    const getButtonRadius = () => getStorefrontRadiusClass(data.buttonBorderRadius, 'xl');
+    const getSectionRadius = () => getStorefrontRadiusClass(data.borderRadius || data.buttonBorderRadius, 'xl');
+    const getHeadlineSize = () => {
+        const map: Record<string, string> = { sm: 'text-2xl', md: 'text-3xl', lg: 'text-4xl', xl: 'text-5xl' };
+        return map[data.headlineFontSize || 'xl'] || 'text-5xl';
     };
-
-    const getPaddingX = () => {
-        const map: Record<string, string> = { none: 'px-0', sm: 'px-4', md: 'px-6', lg: 'px-8', xl: 'px-12' };
-        return map[data.paddingX] || 'px-6';
-    };
-
-    const getBorderRadius = () => {
-        const map: Record<string, string> = { none: 'rounded-none', md: 'rounded-lg', xl: 'rounded-xl', full: 'rounded-3xl' };
-        return map[data.buttonBorderRadius || 'xl'] || 'rounded-xl';
+    const getSubheadlineSize = () => {
+        const map: Record<string, string> = { sm: 'text-sm', md: 'text-base', lg: 'text-lg', xl: 'text-xl' };
+        return map[data.subheadlineFontSize || 'md'] || 'text-base';
     };
 
     const getImageSize = () => {
@@ -86,6 +99,10 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         return map[data.imageSize || 'medium'] || map.medium;
     };
 
+    const getTextAlignment = () => getStorefrontTextAlignmentClass(data.textAlignment, 'left');
+    const getContentPosition = () => getStorefrontContentPositionClass(data.contentPosition, 'left');
+    const getOverlayBackground = () => getStorefrontOverlayBackground(data.overlayStyle, (colors as any)?.overlayColor || colors?.background, data.overlayOpacity);
+
     // Helper to navigate to product - uses callback if available, otherwise direct hash navigation
     const navigateToProduct = (slugOrId: string) => {
         if (onProductClick) {
@@ -99,8 +116,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     const handleButtonClick = () => {
         // Check if buttonUrl is a custom URL (not a generic store link)
         // Generic links like '/tienda', '#products', '' are treated as "navigate to product"
-        const isCustomUrl = data.buttonUrl && 
-            !['#products', '#store', '#tienda', '/tienda', ''].includes(data.buttonUrl.toLowerCase());
+        const isCustomUrl = data.buttonUrl && !isGenericStorefrontCatalogLink(data.buttonUrl);
         
         if (isCustomUrl) {
             window.location.href = data.buttonUrl!;
@@ -112,6 +128,8 @@ const ProductHero: React.FC<ProductHeroProps> = ({
             navigateToProduct(featuredProduct.id);
         } else if (data.collectionId) {
             onCollectionClick?.(data.collectionId);
+        } else {
+            window.location.href = productListUrl;
         }
     };
 
@@ -132,20 +150,23 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
     // Shared product info component
     const renderProductInfo = (showImage = true) => {
-        if (!featuredProduct) return null;
-
         const showPrice = data.showPrice !== false;
         const showDescription = data.showDescription !== false;
+        const headline = data.headline || featuredProduct?.name || 'Producto destacado';
+        const description = data.subheadline || featuredProduct?.description || 'Presenta tu producto principal con una experiencia visual lista para comprar.';
+        const features = Array.isArray((featuredProduct as any)?.features)
+            ? (featuredProduct as any).features
+            : [];
 
         return (
             <div 
-                className={`flex flex-col cursor-pointer ${showImage ? '' : 'items-center text-center'}`}
+                className={`flex flex-col cursor-pointer ${showImage ? '' : getTextAlignment()}`}
                 onClick={handleProductClick}
             >
                 {/* Badge */}
                 {data.showBadge && data.badgeText && (
                     <span
-                        className={`inline-block w-fit px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
+                        className={`inline-block w-fit px-4 py-1 ${getButtonRadius()} text-sm font-semibold mb-4`}
                         style={{
                             backgroundColor: colors?.badgeBackground || '#ef4444',
                             color: colors?.badgeText || '#ffffff',
@@ -157,26 +178,26 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
                 {/* Product Name as Headline */}
                 <h1
-                    className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
+                    className={`${getHeadlineSize()} font-bold mb-4`}
                     style={{ color: colors?.heading }}
                 >
-                    {data.headline || featuredProduct.name}
+                    {headline}
                 </h1>
 
                 {/* Description */}
-                {showDescription && (data.subheadline || featuredProduct.description) && (
+                {showDescription && description && (
                     <p
-                        className="text-base md:text-lg mb-4 max-w-2xl opacity-90"
+                        className={`${getSubheadlineSize()} mb-4 max-w-2xl opacity-90`}
                         style={{ color: colors?.text }}
                     >
-                        {data.subheadline || featuredProduct.description}
+                        {description}
                     </p>
                 )}
 
                 {/* Features */}
-                {data.showFeatures !== false && (featuredProduct as any).features && (featuredProduct as any).features.length > 0 && (
+                {data.showFeatures !== false && features.length > 0 && (
                     <ul className="mb-6 space-y-2">
-                        {(featuredProduct as any).features.slice(0, 4).map((feature: any, idx: number) => (
+                        {features.slice(0, 4).map((feature: any, idx: number) => (
                             <li key={idx} className="flex items-center gap-2" style={{ color: colors?.text }}>
                                 <Check size={16} style={{ color: colors?.accent || colors?.buttonBackground }} />
                                 <span className="text-sm">{feature}</span>
@@ -186,7 +207,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                 )}
 
                 {/* Price */}
-                {showPrice && (
+                {showPrice && featuredProduct && (
                     <div className="flex items-center gap-3 mb-6">
                         <span className="text-3xl font-bold" style={{ color: colors?.heading }}>
                             ${featuredProduct.price.toFixed(2)}
@@ -204,7 +225,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                     {data.buttonText && (
                         <button
                             onClick={(e) => { e.stopPropagation(); handleButtonClick(); }}
-                            className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                            className={`inline-flex items-center gap-2 px-6 py-3 ${getButtonRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                             style={{
                                 backgroundColor: colors?.buttonBackground || '#6366f1',
                                 color: colors?.buttonText || '#ffffff',
@@ -215,10 +236,10 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                         </button>
                     )}
 
-                    {data.showAddToCartButton && (
+                    {data.showAddToCartButton && featuredProduct && (
                         <button
                             onClick={handleAddToCart}
-                            className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90`}
+                            className={`inline-flex items-center gap-2 px-6 py-3 ${getButtonRadius()} font-semibold transition-all hover:opacity-90`}
                             style={{
                                 backgroundColor: (colors as any)?.addToCartBackground || colors?.accent || '#10B981',
                                 color: (colors as any)?.addToCartText || colors?.buttonText || '#ffffff',
@@ -240,7 +261,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
             // Placeholder
             return (
                 <div 
-                    className={`bg-gray-200 rounded-2xl flex items-center justify-center ${className}`}
+                    className={`bg-gray-200 ${getSectionRadius()} flex items-center justify-center ${className}`}
                     style={{ aspectRatio: '1' }}
                 >
                     <span className="text-gray-400 text-sm">1200 × 600</span>
@@ -252,7 +273,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
             <img
                 src={imageUrl}
                 alt={featuredProduct?.name || 'Product'}
-                className={`w-full h-full object-cover rounded-2xl shadow-lg ${className}`}
+                className={`w-full h-full object-cover ${getSectionRadius()} shadow-lg ${className}`}
                 onClick={handleProductClick}
                 style={{ cursor: 'pointer' }}
             />
@@ -266,7 +287,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         return (
             <div
                 className={`${getPaddingY()} ${getPaddingX()}`}
-                style={{ backgroundColor: colors?.background }}
+                style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
             >
                 <div className="max-w-7xl mx-auto">
                     <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center`}>
@@ -294,7 +315,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         return (
             <div
                 className={`${getPaddingY()} ${getPaddingX()}`}
-                style={{ backgroundColor: colors?.background }}
+                style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
             >
                 <div className="max-w-7xl mx-auto">
                     <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center`}>
@@ -321,10 +342,10 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         
         return (
             <div
-                className="relative overflow-hidden"
+                className={`relative overflow-hidden ${getSectionRadius()}`}
                 style={{
-                    minHeight: '400px',
-                    backgroundColor: colors?.background,
+                    ...getStorefrontSectionBackgroundStyle(data, colors?.background),
+                    minHeight: `${data.height || 520}px`,
                 }}
             >
                 {/* Background Image */}
@@ -339,15 +360,16 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                 {/* Overlay */}
                 <div
                     className="absolute inset-0"
-                    style={{
-                        background: `linear-gradient(to right, ${(colors as any)?.overlayColor || colors?.background}dd, ${(colors as any)?.overlayColor || colors?.background}66)`,
-                    }}
+                    style={{ background: getOverlayBackground() }}
                 />
 
                 {/* Content */}
-                <div className={`relative ${getPaddingY()} ${getPaddingX()}`}>
-                    <div className="max-w-7xl mx-auto">
-                        <div className="max-w-2xl">
+                <div
+                    className={`relative flex ${getPaddingY()} ${getPaddingX()} ${getContentPosition()}`}
+                    style={{ minHeight: `${data.height || 520}px` }}
+                >
+                    <div className={`flex w-full max-w-7xl mx-auto ${getContentPosition()}`}>
+                        <div className={`max-w-2xl flex flex-col ${getTextAlignment()}`}>
                             {renderProductInfo(false)}
                         </div>
                     </div>
@@ -361,7 +383,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         return (
             <div
                 className={`${getPaddingY()} ${getPaddingX()}`}
-                style={{ backgroundColor: colors?.background }}
+                style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
             >
                 <div className="max-w-4xl mx-auto">
                     <div className="flex flex-col items-center text-center">
@@ -375,7 +397,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                             {/* Badge */}
                             {data.showBadge && data.badgeText && (
                                 <span
-                                    className={`inline-block px-4 py-1 ${getBorderRadius()} text-sm font-semibold mb-4`}
+                                    className={`inline-block px-4 py-1 ${getButtonRadius()} text-sm font-semibold mb-4`}
                                     style={{
                                         backgroundColor: colors?.badgeBackground || '#ef4444',
                                         color: colors?.badgeText || '#ffffff',
@@ -387,7 +409,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
                             {/* Headline */}
                             <h1
-                                className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
+                                className={`${getHeadlineSize()} font-bold mb-4`}
                                 style={{ color: colors?.heading }}
                             >
                                 {data.headline || featuredProduct?.name || 'Featured Product'}
@@ -396,7 +418,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                             {/* Description */}
                             {data.showDescription !== false && (data.subheadline || featuredProduct?.description) && (
                                 <p
-                                    className="text-base md:text-lg mb-6 max-w-xl opacity-90"
+                                    className={`${getSubheadlineSize()} mb-6 max-w-xl opacity-90`}
                                     style={{ color: colors?.text }}
                                 >
                                     {data.subheadline || featuredProduct?.description}
@@ -422,7 +444,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                                 {data.buttonText && (
                                     <button
                                         onClick={handleButtonClick}
-                                        className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                                    className={`inline-flex items-center gap-2 px-6 py-3 ${getButtonRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                                         style={{
                                             backgroundColor: colors?.buttonBackground || '#6366f1',
                                             color: colors?.buttonText || '#ffffff',
@@ -436,7 +458,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                                 {data.showAddToCartButton && featuredProduct && (
                                     <button
                                         onClick={handleAddToCart}
-                                        className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90`}
+                                        className={`inline-flex items-center gap-2 px-6 py-3 ${getButtonRadius()} font-semibold transition-all hover:opacity-90`}
                                         style={{
                                             backgroundColor: (colors as any)?.addToCartBackground || colors?.accent || '#10B981',
                                             color: (colors as any)?.addToCartText || colors?.buttonText || '#ffffff',
@@ -458,11 +480,11 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         return (
             <div
                 className={`animate-pulse ${getPaddingY()} ${getPaddingX()}`}
-                style={{ backgroundColor: colors?.background }}
+                style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
             >
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                        <div className="aspect-square bg-gray-200 rounded-2xl" />
+                        <div className={`aspect-square bg-gray-200 ${getSectionRadius()}`} />
                         <div className="space-y-4">
                             <div className="h-6 w-24 bg-gray-200 rounded" />
                             <div className="h-12 w-3/4 bg-gray-200 rounded" />
@@ -478,9 +500,6 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
     // Default to 'split' if layout is not defined
     const layout = data.layout || 'split';
-    
-    // Debug log - remove after testing
-    console.log('[ProductHero] Layout value:', layout, '| data.layout:', data.layout);
     
     switch (layout) {
         case 'split':

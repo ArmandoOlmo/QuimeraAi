@@ -48,6 +48,7 @@ import {
     sanitizeComponentOrder,
     validateGeneratedWebsite,
 } from '../../../utils/websitePlanEngine';
+import { attachAiStudioBusinessBlueprint } from '../../../utils/businessBlueprint';
 import { createColorBriefFromWebsitePlan } from '../../../utils/colorSystemEngine';
 
 // ── Models ──────────────────────────────────────────────────────────────────
@@ -1983,7 +1984,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             setGenerationPhase(prev => prev ? { ...prev, phase: 'finalizing', progress: 95, currentStep: 'Preparing final preview...' } : prev);
 
             // Build the complete project object
-            const fullProject = {
+            const fullProject = attachAiStudioBusinessBlueprint({
                 id: finalProjectId,
                 name: brief.businessName || 'My Website',
                 thumbnailUrl: extractHeroImage(finalData, componentOrder) || '',
@@ -1998,7 +1999,10 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                 menus: projectMenus,
                 aiAssistantConfig: stateUpdates.aiAssistantConfig,
                 generatedWith: 'AI Website Studio',
-            } as Project;
+            } as Project, planForGeneration, {
+                tenantId: currentTenantId || undefined,
+                createdBy: user.id,
+            });
 
             setGeneratedProject(fullProject);
             addEvent('done', 'Website preview ready!');

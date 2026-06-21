@@ -43,6 +43,7 @@ import {
     DEFAULT_APP_NAVIGATION,
     AppArticle
 } from '../../../types/appContent';
+import AppSelect from '../../ui/AppSelect';
 
 interface LandingNavigationManagementProps {
     onBack: () => void;
@@ -439,7 +440,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                             className="flex-1 px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
                                                             placeholder={t('landingNavigation.header.urlPlaceholder', 'URL or #section')}
                                                         />
-                                                        <select
+                                                        <AppSelect
                                                             value={item.type}
                                                             onChange={(e) => updateHeaderItem(item.id, { type: e.target.value as any })}
                                                             className="px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
@@ -447,9 +448,9 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                             <option value="link">{t('landingNavigation.header.typePage', 'Page Link')}</option>
                                                             <option value="anchor">{t('landingNavigation.header.typeAnchor', 'Anchor (#)')}</option>
                                                             <option value="article">{t('landingNavigation.header.typeArticle', 'Article')}</option>
-                                                        </select>
+                                                        </AppSelect>
                                                         {item.type === 'article' && (
-                                                            <select
+                                                            <AppSelect
                                                                 value={item.articleSlug || ''}
                                                                 onChange={(e) => updateHeaderItem(item.id, { 
                                                                     articleSlug: e.target.value,
@@ -461,7 +462,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                 {publishedArticles.map(a => (
                                                                     <option key={a.id} value={a.slug}>{a.title}</option>
                                                                 ))}
-                                                            </select>
+                                                            </AppSelect>
                                                         )}
                                                         <button
                                                             onClick={() => deleteHeaderItem(item.id)}
@@ -612,7 +613,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                         <span className="text-q-text-muted">
                                                             {SOCIAL_ICONS[link.platform]}
                                                         </span>
-                                                        <select
+                                                        <AppSelect
                                                             value={link.platform}
                                                             onChange={(e) => updateSocialLink(link.id, { platform: e.target.value as any })}
                                                             className="px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
@@ -623,7 +624,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                             <option value="youtube">YouTube</option>
                                                             <option value="github">GitHub</option>
                                                             <option value="discord">Discord</option>
-                                                        </select>
+                                                        </AppSelect>
                                                         <input
                                                             type="text"
                                                             value={link.url}

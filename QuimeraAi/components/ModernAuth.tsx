@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../supabase';
 import { signInWithGoogle } from '../utils/googleAuth';
+import { useRouter } from '../hooks/useRouter';
+import { clearStoredPostAuthRedirect, getCurrentPostAuthRedirect, storePostAuthRedirect } from '../utils/authRedirect';
 import { Eye, EyeOff, ArrowRight, ArrowLeft, Zap, Layout, Palette, CheckCircle, Image as ImageIcon, MessageSquare, BarChart3 } from 'lucide-react';
 import LanguageSelector from './ui/LanguageSelector';
 
@@ -18,6 +20,7 @@ type AuthMode = 'login' | 'register' | 'forgotPassword';
 
 const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initialMode = 'login', onNavigateToLanding }) => {
     const { t } = useTranslation();
+    const { navigate } = useRouter();
     const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
 
     // Auth Form State
@@ -51,8 +54,14 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
         setError('');
         setIsLoading(true);
         try {
+            const targetPath = getCurrentPostAuthRedirect();
+            storePostAuthRedirect(targetPath);
             const { redirected } = await signInWithGoogle();
-            if (!redirected) setIsLoading(false);
+            if (!redirected) {
+                clearStoredPostAuthRedirect();
+                navigate(targetPath);
+                setIsLoading(false);
+            }
         } catch (err: any) {
             setError(t('auth.errors.googleSignInFailed') + ' (' + err.message + ')');
             setIsLoading(false);
@@ -74,6 +83,8 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
 
                 // For Supabase, if email is not confirmed it usually returns an error or empty session
                 // depending on project configuration. We assume successful login if no error.
+                clearStoredPostAuthRedirect();
+                navigate(getCurrentPostAuthRedirect());
             } catch (err: any) {
                 if (err.message.includes('Invalid login credentials')) {
                     setError(t('auth.errors.incorrectCredentials'));
@@ -113,6 +124,8 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                     onVerificationEmailSent(email);
                 } else {
                     console.log('Bypassing verification for test user in localhost or email confirmation disabled');
+                    clearStoredPostAuthRedirect();
+                    navigate(getCurrentPostAuthRedirect());
                 }
             } catch (err: any) {
                 if (err.message.includes('User already registered')) {

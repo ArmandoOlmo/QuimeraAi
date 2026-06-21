@@ -24,6 +24,7 @@ import { useCRM } from '../../../contexts/crm';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useProject } from '../../../contexts/project';
 import { useEmailAudiences } from '../../../hooks/useEmailSettings';
+import AppSelect from '../../ui/AppSelect';
 
 // =============================================================================
 // TYPES
@@ -367,7 +368,7 @@ const MappingStep: React.FC<{
                                     <ArrowRight size={14} className={`mx-auto ${m.confidence > 60 ? 'text-green-500' : 'text-q-text-muted'}`} />
                                 </td>
                                 <td className="py-2.5 px-3">
-                                    <select
+                                    <AppSelect
                                         value={m.leadField}
                                         onChange={(e) => onMappingChange(idx, e.target.value as LeadField)}
                                         className={`w-full bg-q-bg border rounded-lg px-2.5 py-1.5 text-sm outline-none
@@ -381,7 +382,7 @@ const MappingStep: React.FC<{
                                         {LEAD_FIELDS.map(f => (
                                             <option key={f.id} value={f.id}>{getFieldLabel(f.id)}</option>
                                         ))}
-                                    </select>
+                                    </AppSelect>
                                 </td>
                                 <td className="py-2.5 px-3 hidden sm:table-cell">
                                     <span className="text-xs text-q-text-muted italic truncate block max-w-[200px]" title={sampleRows[0]?.[m.fileColumn] || ''}>

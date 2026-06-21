@@ -26,7 +26,7 @@ import { Customer } from '../../../../types/ecommerce';
 import type { StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 import AddToAudienceModal from '../../email/AddToAudienceModal';
 import { useProject } from '../../../../contexts/project';
 

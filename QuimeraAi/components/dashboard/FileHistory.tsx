@@ -13,6 +13,7 @@ import ConfirmationModal from '../ui/ConfirmationModal';
 import MediaGeneratorPanel from '../media-generator/MediaGeneratorPanel';
 import { formatBytes, formatFileDate } from '../../utils/fileHelpers';
 import { useTranslation } from 'react-i18next';
+import AppSelect from '../ui/AppSelect';
 
 // Constants for controls
 const ASPECT_RATIOS = [
@@ -737,7 +738,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddRefe
                             {/* Project Filter */}
                             <div>
                                 <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">Project</label>
-                                <select
+                                <AppSelect
                                     value={selectedProjectFilter}
                                     onChange={(e) => setSelectedProjectFilter(e.target.value)}
                                     className="w-full px-3 py-1.5 text-xs bg-q-bg border border-q-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
@@ -747,13 +748,13 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddRefe
                                         <option key={project.id} value={project.id}>{project.name}</option>
                                     ))}
                                     <option value="no-project">Unassigned Assets</option>
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {/* Type Filter */}
                             <div>
                                 <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">Type</label>
-                                <select
+                                <AppSelect
                                     value={library.typeFilter}
                                     onChange={(e) => library.setTypeFilter(e.target.value as any)}
                                     className="w-full px-3 py-1.5 text-xs bg-q-bg border border-q-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
@@ -762,13 +763,13 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddRefe
                                     <option value="image">Images Only</option>
                                     <option value="document">Documents Only</option>
                                     <option value="other">Other</option>
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {/* Sort By */}
                             <div>
                                 <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">Sort By</label>
-                                <select
+                                <AppSelect
                                     value={library.sortBy}
                                     onChange={(e) => library.setSortBy(e.target.value as any)}
                                     className="w-full px-3 py-1.5 text-xs bg-q-bg border border-q-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
@@ -777,7 +778,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddRefe
                                     <option value="name">Name</option>
                                     <option value="size">Size</option>
                                     <option value="type">Type</option>
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {/* Sort Order */}

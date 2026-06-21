@@ -10,6 +10,14 @@ import { X, Megaphone, Tag, Gift, Truck, Percent, Sparkles, Bell, Info, ChevronL
 import { AnnouncementBarData, AnnouncementMessage, ServiceIcon } from '../../../types/components';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import {
+    getStorefrontContentPositionClass,
+    getStorefrontSectionBackgroundStyle,
+} from './sectionVisualStyles';
+import {
+    buildStorefrontCatalogUrl,
+    isGenericStorefrontCatalogLink,
+} from '../../../utils/storefrontRouter';
 
 interface AnnouncementBarProps {
     data: AnnouncementBarData;
@@ -33,6 +41,7 @@ const iconMap: Record<string, React.FC<{ size?: number; className?: string }>> =
 const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, globalColors }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
+    const productListUrl = buildStorefrontCatalogUrl(effectiveStoreId);
 
     // Unified colors system
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
@@ -58,18 +67,27 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
 
     // Style helpers
     const getPaddingY = () => {
-        const map = { sm: 'py-2', md: 'py-3', lg: 'py-4' };
+        const map = { none: 'py-0', sm: 'py-2', md: 'py-3', lg: 'py-4', xl: 'py-5' };
         return map[data.paddingY] || 'py-3';
     };
 
     const getPaddingX = () => {
-        const map = { sm: 'px-4', md: 'px-6', lg: 'px-8' };
+        const map = { none: 'px-0', sm: 'px-4', md: 'px-6', lg: 'px-8', xl: 'px-10' };
         return map[data.paddingX] || 'px-6';
     };
 
     const getFontSize = () => {
         const map = { sm: 'text-xs', md: 'text-sm', lg: 'text-base', xl: 'text-lg' };
         return map[data.fontSize || 'sm'] || 'text-sm';
+    };
+    const getContentPosition = () => getStorefrontContentPositionClass(data.contentPosition, 'center');
+    const getTextAlignment = () => {
+        const map: Record<string, string> = {
+            left: 'text-left',
+            center: 'text-center',
+            right: 'text-right',
+        };
+        return map[data.textAlignment || 'center'] || map.center;
     };
 
     const IconComponent = data.icon ? iconMap[data.icon] || Megaphone : Megaphone;
@@ -82,10 +100,20 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
     const linkColor = colors?.link || textColor;
     const iconColor = colors?.iconColor || textColor;
     const borderColor = colors?.borderColor;
+    const barStyle = {
+        ...getStorefrontSectionBackgroundStyle(data, bgColor),
+        color: textColor,
+        borderBottom: borderColor ? `1px solid ${borderColor}` : 'none',
+        height: data.height ? `${data.height}px` : 'auto',
+    };
+    const edgeBackground = data.backgroundImageUrl ? 'rgba(0,0,0,0.24)' : bgColor;
 
     // Build href based on linkType
     const getMessageHref = (message: AnnouncementMessage): string => {
         if (!message.link) return '';
+        if (isGenericStorefrontCatalogLink(message.link)) {
+            return productListUrl;
+        }
         switch (message.linkType) {
             case 'phone': return `tel:${message.link.replace(/\s/g, '')}`;
             case 'email': return `mailto:${message.link}`;
@@ -95,7 +123,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
 
     // Message content renderer
     const renderMessage = (message: AnnouncementMessage, index: number) => (
-        <span key={index} className="inline-flex items-center gap-2">
+        <span key={index} className={`inline-flex items-center gap-2 ${getTextAlignment()}`}>
             <span>{message.text}</span>
             {message.link && message.linkText && (
                 <a
@@ -113,18 +141,13 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
     const renderStatic = () => (
         <div
             className={`${getPaddingY()} ${getPaddingX()} ${getFontSize()}`}
-            style={{
-                backgroundColor: bgColor,
-                color: textColor,
-                borderBottom: borderColor ? `1px solid ${borderColor}` : 'none',
-                height: data.height ? `${data.height}px` : 'auto',
-            }}
+            style={barStyle}
         >
-            <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+            <div className={`mx-auto flex max-w-7xl items-center gap-3 ${getContentPosition()}`}>
                 {data.showIcon && (
                     <IconComponent size={16} style={{ color: iconColor }} />
                 )}
-                <div className="flex items-center gap-4">
+                <div className={`flex flex-wrap items-center gap-4 ${getContentPosition()}`}>
                     {messages.map((msg, i) => (
                         <React.Fragment key={i}>
                             {i > 0 && <span className="opacity-50">|</span>}
@@ -149,18 +172,13 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
     const renderScrolling = () => (
         <div
             className={`${getPaddingY()} ${getFontSize()} overflow-hidden`}
-            style={{
-                backgroundColor: bgColor,
-                color: textColor,
-                borderBottom: borderColor ? `1px solid ${borderColor}` : 'none',
-                height: data.height ? `${data.height}px` : 'auto',
-            }}
+            style={barStyle}
             onMouseEnter={() => data.pauseOnHover && setIsPaused(true)}
             onMouseLeave={() => data.pauseOnHover && setIsPaused(false)}
         >
             <div className="relative flex items-center">
                 {data.showIcon && (
-                    <div className={`flex-shrink-0 ${getPaddingX()} z-10`} style={{ backgroundColor: bgColor }}>
+                    <div className={`flex-shrink-0 ${getPaddingX()} z-10`} style={{ backgroundColor: edgeBackground }}>
                         <IconComponent size={16} style={{ color: iconColor }} />
                     </div>
                 )}
@@ -193,7 +211,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
                     </div>
                 </div>
                 {data.dismissible && (
-                    <div className={`flex-shrink-0 ${getPaddingX()} z-10`} style={{ backgroundColor: bgColor }}>
+                    <div className={`flex-shrink-0 ${getPaddingX()} z-10`} style={{ backgroundColor: edgeBackground }}>
                         <button
                             onClick={() => setIsVisible(false)}
                             className="p-1 rounded hover:bg-white/10 transition-colors"
@@ -220,16 +238,11 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
     const renderRotating = () => (
         <div
             className={`${getPaddingY()} ${getPaddingX()} ${getFontSize()}`}
-            style={{
-                backgroundColor: bgColor,
-                color: textColor,
-                borderBottom: borderColor ? `1px solid ${borderColor}` : 'none',
-                height: data.height ? `${data.height}px` : 'auto',
-            }}
+            style={barStyle}
             onMouseEnter={() => data.pauseOnHover && setIsPaused(true)}
             onMouseLeave={() => data.pauseOnHover && setIsPaused(false)}
         >
-            <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+            <div className={`mx-auto flex max-w-7xl items-center gap-3 ${getContentPosition()}`}>
                 {messages.length > 1 && (
                     <button
                         onClick={() => setCurrentIndex((prev) => (prev - 1 + messages.length) % messages.length)}
@@ -244,7 +257,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
                     <IconComponent size={16} style={{ color: iconColor }} />
                 )}
 
-                <div className="relative overflow-hidden" style={{ minWidth: '200px' }}>
+                <div className={`relative overflow-hidden ${getTextAlignment()}`} style={{ minWidth: '200px' }}>
                     <div
                         className="transition-all duration-500 ease-out"
                         style={{

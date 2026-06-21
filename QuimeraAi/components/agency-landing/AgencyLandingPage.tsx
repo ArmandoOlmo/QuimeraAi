@@ -69,6 +69,7 @@ import { StorefrontCartProvider, useSafeStorefrontCart } from '../ecommerce/cont
 type StoreView =
   | { type: 'none' }
   | { type: 'store' }
+  | { type: 'products' }
   | { type: 'category'; slug: string }
   | { type: 'product'; slug: string }
   | { type: 'checkout' };
@@ -213,6 +214,13 @@ const AgencyLandingPageContent: React.FC = () => {
         return;
       }
 
+      // Store catalog routing: /tienda/productos
+      if (path === '/tienda/productos' || path === '/tienda/productos/' || path === '/tienda/catalogo' || path === '/tienda/catalogo/') {
+        setStoreView({ type: 'products' });
+        window.scrollTo(0, 0);
+        return;
+      }
+
       // Store routing: /tienda
       if (path === '/tienda' || path === '/tienda/') {
         setStoreView({ type: 'store' });
@@ -269,6 +277,12 @@ const AgencyLandingPageContent: React.FC = () => {
       // Store routing: #store (legacy)
       if (decodedHash === '#store') {
         setStoreView({ type: 'store' });
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      if (decodedHash === '#store/products' || decodedHash === '#store/catalog') {
+        setStoreView({ type: 'products' });
         window.scrollTo(0, 0);
         return;
       }
@@ -397,6 +411,13 @@ const AgencyLandingPageContent: React.FC = () => {
       return;
     }
 
+    // Store catalog: /tienda/productos
+    if (href === '/tienda/productos' || href === '/tienda/productos/' || href === '/tienda/catalogo' || href === '/tienda/catalogo/') {
+      setStoreView({ type: 'products' });
+      window.scrollTo(0, 0);
+      return;
+    }
+
     // Store: /tienda
     if (href === '/tienda' || href === '/tienda/') {
       setStoreView({ type: 'store' });
@@ -440,6 +461,12 @@ const AgencyLandingPageContent: React.FC = () => {
 
     if (href === '#store') {
       setStoreView({ type: 'store' });
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    if (href === '#store/products' || href === '#store/catalog') {
+      setStoreView({ type: 'products' });
       window.scrollTo(0, 0);
       return;
     }
@@ -773,7 +800,7 @@ const AgencyLandingPageContent: React.FC = () => {
       <Products
         {...productsWithData}
         primaryColor={productsWithData.colors?.accent || theme.globalColors?.primary || '#4f46e5'}
-        storeUrl="#store"
+        storeUrl="#store/products"
       />
     ),
     chatbot: null, // Deprecated: ChatbotWidget now renders automatically when aiAssistantConfig.isActive
@@ -1077,13 +1104,24 @@ const AgencyLandingPageContent: React.FC = () => {
           </div>
         )}
 
-        {/* 4. Store View - All Products */}
+        {/* 4. Storefront Landing View */}
         {storeView.type === 'store' && activeProjectId && (
           <>
-            {/* Ecommerce Section Components (above products) */}
+            {/* Ecommerce landing sections only. Full catalog lives in /tienda/productos. */}
             {effectiveComponentOrder
               .filter(key => {
-                const ecommerceSections: PageSection[] = ['announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'saleCountdown', 'collectionBanner'];
+                const ecommerceSections: PageSection[] = [
+                  'announcementBar',
+                  'productHero',
+                  'featuredProducts',
+                  'categoryGrid',
+                  'saleCountdown',
+                  'collectionBanner',
+                  'trustBadges',
+                  'recentlyViewed',
+                  'productReviews',
+                  'productBundle',
+                ];
                 return ecommerceSections.includes(key as PageSection) &&
                   componentStatus[key as PageSection] &&
                   effectiveSectionVisibility[key as PageSection] &&
@@ -1103,63 +1141,41 @@ const AgencyLandingPageContent: React.FC = () => {
                 </div>
               ))
             }
-
-            {/* Main Product Search */}
-            <ProductSearchPage
-              storeId={activeProjectId}
-              onProductClick={handleNavigateToProduct}
-              primaryColor={theme.globalColors?.primary || '#6366f1'}
-              embedded={true}
-              title="Tienda"
-              showFilterSidebar={data.storeSettings?.showFilterSidebar !== false}
-              showSearchBar={data.storeSettings?.showSearchBar !== false}
-              showSortOptions={data.storeSettings?.showSortOptions !== false}
-              showViewModeToggle={data.storeSettings?.showViewModeToggle !== false}
-              defaultViewMode={data.storeSettings?.defaultViewMode || 'grid'}
-              productsPerPage={data.storeSettings?.productsPerPage || 12}
-              gridColumns={data.storeSettings?.gridColumns || 4}
-              cardStyle={data.storeSettings?.cardStyle || 'modern'}
-              borderRadius={data.storeSettings?.borderRadius || 'xl'}
-              cardGap={data.storeSettings?.cardGap || 'md'}
-              paddingY={data.storeSettings?.paddingY || 'md'}
-              paddingX={data.storeSettings?.paddingX || 'md'}
-              themeColors={{
-                background: 'transparent',
-                text: data.storeSettings?.colors?.text || theme.globalColors?.text || '#94a3b8',
-                heading: data.storeSettings?.colors?.heading || theme.globalColors?.heading || '#ffffff',
-                cardBackground: data.storeSettings?.colors?.cardBackground || theme.globalColors?.surface || '#1e293b',
-                cardText: data.storeSettings?.colors?.cardText || theme.globalColors?.text || '#94a3b8',
-                border: data.storeSettings?.colors?.borderColor || theme.globalColors?.border || '#334155',
-                priceColor: data.storeSettings?.colors?.priceColor || theme.globalColors?.heading || '#ffffff',
-                salePriceColor: data.storeSettings?.colors?.salePriceColor || '#ef4444',
-                mutedText: data.storeSettings?.colors?.text || theme.globalColors?.text || '#64748b',
-              }}
-            />
-
-            {/* Ecommerce Section Components (below products) */}
-            {effectiveComponentOrder
-              .filter(key => {
-                const ecommerceSectionsBelow: PageSection[] = ['trustBadges', 'recentlyViewed', 'productReviews', 'productBundle'];
-                return ecommerceSectionsBelow.includes(key as PageSection) &&
-                  componentStatus[key as PageSection] &&
-                  effectiveSectionVisibility[key as PageSection] &&
-                  isEcommerceComponentVisibleIn(key as PageSection, 'store');
-              })
-              .map(key => (
-                <div
-                  id={key}
-                  key={key}
-                  className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSectionSelect(key as PageSection);
-                  }}
-                >
-                  {componentsMap[key as PageSection]}
-                </div>
-              ))
-            }
           </>
+        )}
+
+        {/* 4.1. Store Catalog View */}
+        {storeView.type === 'products' && activeProjectId && (
+          <ProductSearchPage
+            storeId={activeProjectId}
+            onProductClick={handleNavigateToProduct}
+            primaryColor={theme.globalColors?.primary || '#6366f1'}
+            embedded={true}
+            title="Todos los productos"
+            showFilterSidebar={data.storeSettings?.showFilterSidebar !== false}
+            showSearchBar={data.storeSettings?.showSearchBar !== false}
+            showSortOptions={data.storeSettings?.showSortOptions !== false}
+            showViewModeToggle={data.storeSettings?.showViewModeToggle !== false}
+            defaultViewMode={data.storeSettings?.defaultViewMode || 'grid'}
+            productsPerPage={data.storeSettings?.productsPerPage || 12}
+            gridColumns={data.storeSettings?.gridColumns || 4}
+            cardStyle={data.storeSettings?.cardStyle || 'modern'}
+            borderRadius={data.storeSettings?.borderRadius || 'xl'}
+            cardGap={data.storeSettings?.cardGap || 'md'}
+            paddingY={data.storeSettings?.paddingY || 'md'}
+            paddingX={data.storeSettings?.paddingX || 'md'}
+            themeColors={{
+              background: 'transparent',
+              text: data.storeSettings?.colors?.text || theme.globalColors?.text || '#94a3b8',
+              heading: data.storeSettings?.colors?.heading || theme.globalColors?.heading || '#ffffff',
+              cardBackground: data.storeSettings?.colors?.cardBackground || theme.globalColors?.surface || '#1e293b',
+              cardText: data.storeSettings?.colors?.cardText || theme.globalColors?.text || '#94a3b8',
+              border: data.storeSettings?.colors?.borderColor || theme.globalColors?.border || '#334155',
+              priceColor: data.storeSettings?.colors?.priceColor || theme.globalColors?.heading || '#ffffff',
+              salePriceColor: data.storeSettings?.colors?.salePriceColor || '#ef4444',
+              mutedText: data.storeSettings?.colors?.text || theme.globalColors?.text || '#64748b',
+            }}
+          />
         )}
 
         {/* 5. Store View - Category */}

@@ -10,6 +10,7 @@ import { NavigationMenu } from './navigation';
 import { AiAssistantConfig } from './ai-assistant';
 import { ResponsiveStyles, ABTestConfig, ComponentStyles } from './features';
 import { SEOConfig } from './seo';
+import type { BusinessBlueprint } from './businessBlueprint';
 
 // =============================================================================
 // MULTI-PAGE ARCHITECTURE
@@ -172,6 +173,7 @@ export interface Project {
     id: string;
     name: string;
     userId?: string;                // Owner user ID
+    tenantId?: string;
     thumbnailUrl?: string;
     faviconUrl?: string;  // Favicon URL for the website
     status?: 'Published' | 'Draft' | 'Template';
@@ -220,6 +222,10 @@ export interface Project {
     // CRM Configuration — industry-flexible lead management
     crmConfig?: CRMConfig;
 
+    // AI Business Infrastructure Blueprint
+    // Stored inside projects.data.businessBlueprint for A1; no dedicated table yet.
+    businessBlueprint?: BusinessBlueprint;
+
     // Template-specific fields
     category?: string;
     tags?: string[];
@@ -242,8 +248,6 @@ export interface Project {
         transferredBy: string;
     };
 }
-
-
 
 
 

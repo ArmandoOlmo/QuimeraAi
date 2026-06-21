@@ -49,6 +49,7 @@ import { formatDate, getStatusColor, getStatusIcon, formatDelay } from './email-
 import OverviewTab from './email-hub/views/OverviewTab';
 import AnalyticsTab from './email-hub/views/AnalyticsTab';
 import AutomationsTab from './email-hub/views/AutomationsTab';
+import AppSelect from '../../ui/AppSelect';
 
 // =============================================================================
 // COMPONENT
@@ -228,7 +229,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                             </button>
                         )}
                     </div>
-                    <select
+                    <AppSelect
                         value={filters.campaignStatusFilter}
                         onChange={e => setCampaignStatusFilter(e.target.value as CampaignStatus | 'all')}
                         className="px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -240,8 +241,8 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                         <option value="sent">{t('adminEmail.campaigns.sent')}</option>
                         <option value="paused">{t('adminEmail.campaigns.paused')}</option>
                         <option value="cancelled">{t('adminEmail.campaigns.cancelled')}</option>
-                    </select>
-                    <select
+                    </AppSelect>
+                    <AppSelect
                         value={filters.campaignTenantFilter}
                         onChange={e => setCampaignTenantFilter(e.target.value)}
                         className="px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -250,7 +251,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                         {tenants.map(t => (
                             <option key={t.id} value={t.id}>{t.name}</option>
                         ))}
-                    </select>
+                    </AppSelect>
                 </div>
             </div>
 
@@ -437,30 +438,30 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.campaigns.newCampaignModal.type')}</label>
-                                <select value={newCampaignForm.type} onChange={e => setNewCampaignForm(prev => ({ ...prev, type: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                                <AppSelect value={newCampaignForm.type} onChange={e => setNewCampaignForm(prev => ({ ...prev, type: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
                                     <option value="newsletter">{t('adminEmail.campaigns.newCampaignModal.newsletter')}</option>
                                     <option value="promotion">{t('adminEmail.campaigns.newCampaignModal.promotion')}</option>
                                     <option value="announcement">{t('adminEmail.campaigns.newCampaignModal.announcement')}</option>
                                     <option value="welcome">{t('adminEmail.campaigns.newCampaignModal.welcomeType')}</option>
                                     <option value="transactional">{t('adminEmail.campaigns.newCampaignModal.transactional')}</option>
-                                </select>
+                                </AppSelect>
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.campaigns.newCampaignModal.audience')}</label>
-                                <select value={newCampaignForm.audienceType} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceType: e.target.value as 'all' | 'segment' | 'custom' }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                                <AppSelect value={newCampaignForm.audienceType} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceType: e.target.value as 'all' | 'segment' | 'custom' }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
                                     <option value="all">{t('adminEmail.campaigns.newCampaignModal.allContacts')}</option>
                                     <option value="segment">{t('adminEmail.campaigns.newCampaignModal.specificSegment')}</option>
                                     <option value="custom">{t('adminEmail.campaigns.newCampaignModal.customEmails')}</option>
-                                </select>
+                                </AppSelect>
                             </div>
                             {newCampaignForm.audienceType === 'segment' && (
                                 <div>
                                     <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.campaigns.newCampaignModal.segmentLabel')}</label>
                                     {audiences.length > 0 ? (
-                                        <select value={newCampaignForm.audienceSegmentId} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceSegmentId: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                                        <AppSelect value={newCampaignForm.audienceSegmentId} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceSegmentId: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
                                             <option value="">{t('adminEmail.campaigns.newCampaignModal.selectSegment')}</option>
                                             {audiences.map(a => (<option key={a.id} value={a.id}>{a.name} — {a.tenantName} ({a.estimatedCount || a.staticMemberCount || 0} contactos)</option>))}
-                                        </select>
+                                        </AppSelect>
                                     ) : (
                                         <p className="text-xs text-q-text-secondary bg-q-surface border border-q-border rounded-xl px-4 py-3">{t('adminEmail.campaigns.newCampaignModal.noSegments')}</p>
                                     )}
@@ -593,10 +594,10 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                                         {detailCampaign.status === 'draft' ? t('adminEmail.campaigns.detailPanel.draftStatus') : detailCampaign.status === 'approved' ? t('adminEmail.campaigns.detailPanel.approvedStatus') : detailCampaign.status === 'sent' ? t('adminEmail.campaigns.detailPanel.sentStatus') : detailCampaign.status === 'sending' ? t('adminEmail.campaigns.detailPanel.sendingStatus') : detailCampaign.status}
                                     </span>
                                     {detailCampaign.status !== 'sent' && detailCampaign.status !== 'sending' && (
-                                        <select value={detailCampaign.status} onChange={(e) => handleUpdateCampaignStatus(detailCampaign.id, e.target.value as CampaignStatus)} className="px-3 py-1.5 bg-q-surface border border-q-border rounded-lg text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent">
+                                        <AppSelect value={detailCampaign.status} onChange={(e) => handleUpdateCampaignStatus(detailCampaign.id, e.target.value as CampaignStatus)} className="px-3 py-1.5 bg-q-surface border border-q-border rounded-lg text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent">
                                             <option value="draft">{t('adminEmail.campaigns.detailPanel.draftStatus')}</option>
                                             <option value="approved">{t('adminEmail.campaigns.detailPanel.approvedStatus')}</option>
-                                        </select>
+                                        </AppSelect>
                                     )}
                                 </div>
                             </div>
@@ -605,16 +606,16 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 block flex items-center gap-1.5"><Target size={14} /> {t('adminEmail.campaigns.detailPanel.audience')}</label>
                                 {detailCampaign.status !== 'sent' && detailCampaign.status !== 'sending' ? (
                                     <div className="space-y-3">
-                                        <select value={detailCampaign.audienceType || 'all'} onChange={(e) => handleUpdateCampaignAudience(detailCampaign.id, e.target.value as 'all'|'segment'|'custom')} className="w-full px-3 py-2.5 bg-q-surface border border-q-border rounded-xl text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent">
+                                        <AppSelect value={detailCampaign.audienceType || 'all'} onChange={(e) => handleUpdateCampaignAudience(detailCampaign.id, e.target.value as 'all'|'segment'|'custom')} className="w-full px-3 py-2.5 bg-q-surface border border-q-border rounded-xl text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent">
                                             <option value="all">{t('adminEmail.campaigns.detailPanel.allContacts')}</option>
                                             <option value="segment">{t('adminEmail.campaigns.detailPanel.specificSegment')}</option>
                                             <option value="custom">{t('adminEmail.campaigns.detailPanel.customEmails')}</option>
-                                        </select>
+                                        </AppSelect>
                                         {detailCampaign.audienceType === 'segment' && audiences.length > 0 && (
-                                            <select value={detailCampaign.audienceSegmentId || ''} onChange={(e) => handleUpdateCampaignAudience(detailCampaign.id, 'segment', e.target.value)} className="w-full px-3 py-2.5 bg-q-surface border border-q-border rounded-xl text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent">
+                                            <AppSelect value={detailCampaign.audienceSegmentId || ''} onChange={(e) => handleUpdateCampaignAudience(detailCampaign.id, 'segment', e.target.value)} className="w-full px-3 py-2.5 bg-q-surface border border-q-border rounded-xl text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent">
                                                 <option value="">{t('adminEmail.campaigns.newCampaignModal.selectSegment')}</option>
                                                 {audiences.map(a => (<option key={a.id} value={a.id}>{a.name} ({a.estimatedCount || a.staticMemberCount || 0} contactos)</option>))}
-                                            </select>
+                                            </AppSelect>
                                         )}
                                     </div>
                                 ) : (

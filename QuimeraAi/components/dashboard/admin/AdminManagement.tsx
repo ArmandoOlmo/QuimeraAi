@@ -13,6 +13,7 @@ import {
 import DashboardSidebar from '../DashboardSidebar';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import AppSelect from '../../ui/AppSelect';
 
 interface AdminManagementProps {
     onBack: () => void;
@@ -244,7 +245,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                             <div className="flex items-center gap-4">
                                                 {/* Selector de rol */}
                                                 {canEdit ? (
-                                                    <select
+                                                    <AppSelect
                                                         value={admin.role || 'user'}
                                                         onChange={(e) => handleRoleChange(admin.id, e.target.value as UserRole)}
                                                         className="px-3 py-2 bg-q-bg border border-q-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -253,7 +254,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                                         <option value="admin">Admin</option>
                                                         <option value="manager">Manager</option>
                                                         <option value="user">Usuario</option>
-                                                    </select>
+                                                    </AppSelect>
                                                 ) : (
                                                     <span className={`px-3 py-1 rounded-md text-sm border ${ROLE_COLORS[admin.role || 'user']}`}>
                                                         {t(`superadmin.roles.${admin.role || 'user'}`, ROLE_LABELS[admin.role || 'user'])}
@@ -332,7 +333,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
 
                                 <div>
                                     <label className="block text-sm font-medium text-q-text-secondary mb-1">{t('superadmin.admins.createModal.role', 'Rol')}</label>
-                                    <select
+                                    <AppSelect
                                         value={newAdminRole}
                                         onChange={(e) => setNewAdminRole(e.target.value as UserRole)}
                                         className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -340,7 +341,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                         {isUserOwner && <option value="superadmin">Super Admin</option>}
                                         <option value="admin">Admin</option>
                                         <option value="manager">Manager</option>
-                                    </select>
+                                    </AppSelect>
                                     <p className="text-xs text-q-text-secondary mt-2">
                                         {t(`superadmin.roleDescriptions.${newAdminRole}`, ROLE_DESCRIPTIONS[newAdminRole])}
                                     </p>

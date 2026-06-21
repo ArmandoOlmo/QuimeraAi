@@ -4,9 +4,9 @@
  */
 
 import React from 'react';
-import { ShoppingCart, Eye, Heart, Star } from 'lucide-react';
+import { ShoppingCart, Eye } from 'lucide-react';
 import { PublicProduct } from './hooks/usePublicProduct';
-import { UnifiedColors } from './hooks/useUnifiedStorefrontColors';
+import { createProductCardViewModel } from '../../utils/productCard';
 
 interface RelatedProductsColors {
     primary?: string;
@@ -120,12 +120,12 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
     currencySymbol,
     colors,
 }) => {
-    const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
-    const discountPercentage = hasDiscount
-        ? Math.round(((product.compareAtPrice! - product.price) / product.compareAtPrice!) * 100)
-        : 0;
-
-    const mainImage = product.images?.[0]?.url;
+    const card = createProductCardViewModel(product, {
+        variant: 'modern',
+        currencySymbol,
+        showFeaturedBadge: false,
+    });
+    const isAvailable = card.inventory.isAvailable;
 
     return (
         <div 
@@ -137,10 +137,10 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                 className="relative aspect-square overflow-hidden cursor-pointer"
                 onClick={onClick}
             >
-                {mainImage ? (
+                {card.image?.url ? (
                     <img
-                        src={mainImage}
-                        alt={product.name}
+                        src={card.image.url}
+                        alt={card.image.altText}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                 ) : (
@@ -153,17 +153,17 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                 )}
 
                 {/* Discount Badge */}
-                {hasDiscount && (
+                {card.hasDiscount && (
                     <div
                         className="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold"
                         style={{ backgroundColor: colors?.badgeBackground, color: colors?.badgeText }}
                     >
-                        -{discountPercentage}%
+                        -{card.discountPercent}%
                     </div>
                 )}
 
                 {/* Out of Stock Overlay */}
-                {!product.inStock && (
+                {!isAvailable && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                         <span 
                             className="px-4 py-2 rounded-full font-medium text-sm"
@@ -175,7 +175,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                 )}
 
                 {/* Low Stock Warning */}
-                {product.inStock && product.lowStock && (
+                {isAvailable && product.lowStock && (
                     <div 
                         className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-bold"
                         style={{ backgroundColor: colors?.warning, color: '#ffffff' }}
@@ -199,7 +199,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                             Vista rápida
                         </button>
                     )}
-                    {onAddToCart && product.inStock && (
+                    {onAddToCart && isAvailable && (
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -221,7 +221,7 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                     onClick={onClick}
                     style={{ color: colors?.heading }}
                 >
-                    {product.name}
+                    {card.name}
                 </h3>
 
                 {/* Price */}
@@ -230,14 +230,14 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                         className="text-lg font-bold"
                         style={{ color: colors?.primary }}
                     >
-                        {currencySymbol}{product.price.toFixed(2)}
+                        {card.displayPrice}
                     </span>
-                    {hasDiscount && (
+                    {card.hasDiscount && card.displayCompareAtPrice && (
                         <span 
                             className="text-sm line-through"
                             style={{ color: colors?.originalPrice }}
                         >
-                            {currencySymbol}{product.compareAtPrice!.toFixed(2)}
+                            {card.displayCompareAtPrice}
                         </span>
                     )}
                 </div>

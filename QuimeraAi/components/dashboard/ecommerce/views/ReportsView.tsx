@@ -25,7 +25,7 @@ import { useProducts } from '../hooks/useProducts';
 import { useCustomers } from '../hooks/useCustomers';
 import { exportOrdersToCSV, exportOrdersSummary, exportSingleOrder } from '../utils/exportOrders';
 import { OrderStatus } from '../../../../types/ecommerce';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 
 type ReportType = 'orders' | 'orders_summary' | 'products' | 'customers' | 'inventory';
 

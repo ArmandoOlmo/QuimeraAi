@@ -13,8 +13,87 @@ import {
   DEFAULT_CHANGELOG_CONFIG
 } from '../types/changelog';
 
-const CHANGELOG_TABLE = 'changelogs';
+const CHANGELOG_TABLE = 'changelog';
 const CONFIG_SETTINGS_ID = 'changelog_config';
+
+type ChangelogDbRow = {
+  id?: string;
+  data?: Partial<ChangelogEntry> & Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+  [key: string]: unknown;
+};
+
+const createId = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `changelog-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+};
+
+const asObject = (value: unknown): Record<string, any> => {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {};
+};
+
+const getEntryData = (row: ChangelogDbRow): Record<string, any> => {
+  const jsonData = asObject(row.data);
+  return Object.keys(jsonData).length > 0 ? jsonData : asObject(row);
+};
+
+const parsePublished = (value: unknown, fallback = true): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') return value.toLowerCase() === 'true';
+  return fallback;
+};
+
+const normalizeEntry = (row: ChangelogDbRow): ChangelogEntry => {
+  const data = getEntryData(row);
+  const createdAt = data.createdAt || data.created_at || row.created_at || new Date().toISOString();
+  const updatedAt = data.updatedAt || data.updated_at || row.updated_at || createdAt;
+
+  return {
+    id: String(row.id || data.id || createId()),
+    date: String(data.date || createdAt),
+    tag: (data.tag || 'new') as ChangelogTag,
+    title: String(data.title || ''),
+    title_en: data.title_en,
+    description: String(data.description || ''),
+    description_en: data.description_en,
+    features: Array.isArray(data.features)
+      ? data.features.map((feature: any, index: number) => ({
+          id: String(feature?.id || index + 1),
+          title: String(feature?.title || ''),
+          title_en: feature?.title_en,
+          description: String(feature?.description || ''),
+          description_en: feature?.description_en,
+        }))
+      : [],
+    imageUrl: data.imageUrl || data.image_url,
+    imageAlt: data.imageAlt || data.image_alt,
+    version: data.version,
+    isPublished: parsePublished(data.isPublished ?? data.is_published, true),
+    createdAt: String(createdAt),
+    updatedAt: String(updatedAt),
+    slug: String(data.slug || row.id || createId()),
+  };
+};
+
+const sortByDateDesc = (entries: ChangelogEntry[]): ChangelogEntry[] => {
+  return [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
+const toStoredEntryData = (entry: Partial<ChangelogEntry>): Record<string, unknown> => {
+  const stored: Record<string, unknown> = {};
+
+  Object.entries(entry).forEach(([key, value]) => {
+    if (value !== undefined && key !== 'id') {
+      stored[key] = value;
+    }
+  });
+
+  return stored;
+};
 
 // Hook público para leer changelog
 export function useChangelog(filters?: ChangelogFilters) {
@@ -32,36 +111,18 @@ export function useChangelog(filters?: ChangelogFilters) {
       try {
         const { data, error } = await supabase
           .from(CHANGELOG_TABLE)
-          .select('*')
-          .eq('isPublished', true)
-          .order('date', { ascending: false });
+          .select('*');
 
         if (!isMounted) return;
 
         if (error) throw error;
 
         if (data) {
-          const changelogEntries: ChangelogEntry[] = data.map((doc: any) => ({
-            id: doc.id,
-            date: doc.date,
-            tag: doc.tag,
-            title: doc.title,
-            title_en: doc.title_en,
-            description: doc.description,
-            description_en: doc.description_en,
-            features: (doc.features || []).map((f: any) => ({
-              ...f,
-              title_en: f.title_en,
-              description_en: f.description_en,
-            })),
-            imageUrl: doc.imageUrl || doc.image_url,
-            imageAlt: doc.imageAlt || doc.image_alt,
-            version: doc.version,
-            isPublished: doc.isPublished || doc.is_published,
-            createdAt: doc.createdAt || doc.created_at,
-            updatedAt: doc.updatedAt || doc.updated_at,
-            slug: doc.slug,
-          }));
+          const changelogEntries = sortByDateDesc(
+            (data as ChangelogDbRow[])
+              .map(normalizeEntry)
+              .filter((entry) => entry.isPublished)
+          );
           setEntries(changelogEntries);
         }
       } catch (err: any) {
@@ -80,7 +141,7 @@ export function useChangelog(filters?: ChangelogFilters) {
       .channel(channelId)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: CHANGELOG_TABLE, filter: 'isPublished=eq.true' },
+        { event: '*', schema: 'public', table: CHANGELOG_TABLE },
         () => {
           if (isMounted) fetchChangelogs();
         }
@@ -102,11 +163,11 @@ export function useChangelog(filters?: ChangelogFilters) {
           .from('settings')
           .select('*')
           .eq('id', CONFIG_SETTINGS_ID)
-          .single();
+          .maybeSingle();
 
         if (!isMounted) return;
         
-        if (error && error.code !== 'PGRST116') throw error;
+        if (error) throw error;
         
         if (data && data.config) {
           setConfig({ ...DEFAULT_CHANGELOG_CONFIG, ...(data.config as ChangelogConfig) });
@@ -236,36 +297,14 @@ export function useChangelogAdmin() {
       try {
         const { data, error } = await supabase
           .from(CHANGELOG_TABLE)
-          .select('*')
-          .order('date', { ascending: false });
+          .select('*');
 
         if (!isMounted) return;
 
         if (error) throw error;
 
         if (data) {
-          const changelogEntries: ChangelogEntry[] = data.map((doc: any) => ({
-            id: doc.id,
-            date: doc.date,
-            tag: doc.tag,
-            title: doc.title,
-            title_en: doc.title_en,
-            description: doc.description,
-            description_en: doc.description_en,
-            features: (doc.features || []).map((f: any) => ({
-              ...f,
-              title_en: f.title_en,
-              description_en: f.description_en,
-            })),
-            imageUrl: doc.imageUrl || doc.image_url,
-            imageAlt: doc.imageAlt || doc.image_alt,
-            version: doc.version,
-            isPublished: doc.isPublished ?? doc.is_published ?? true,
-            createdAt: doc.createdAt || doc.created_at,
-            updatedAt: doc.updatedAt || doc.updated_at,
-            slug: doc.slug,
-          }));
-          setEntries(changelogEntries);
+          setEntries(sortByDateDesc((data as ChangelogDbRow[]).map(normalizeEntry)));
         }
       } catch (err: any) {
         if (!isMounted) return;
@@ -313,23 +352,20 @@ export function useChangelogAdmin() {
     
     try {
       const now = new Date().toISOString();
+      const id = createId();
       const slug = generateSlug(entry.title) + '-' + Date.now();
-      
-      // Remove any undefined values
-      const sanitizedEntry: any = {};
-      Object.keys(entry).forEach(key => {
-        if ((entry as any)[key] !== undefined) {
-          sanitizedEntry[key] = (entry as any)[key];
-        }
+      const dataPayload = toStoredEntryData({
+        ...entry,
+        slug,
+        createdAt: now,
+        updatedAt: now,
       });
       
       const { data, error } = await supabase
         .from(CHANGELOG_TABLE)
         .insert({
-          ...sanitizedEntry,
-          slug,
-          createdAt: now,
-          updatedAt: now,
+          id,
+          data: dataPayload,
         })
         .select()
         .single();
@@ -337,7 +373,7 @@ export function useChangelogAdmin() {
       if (error) throw error;
       
       setIsSaving(false);
-      return { id: data.id, slug };
+      return { id: data?.id || id, slug };
     } catch (err) {
       console.error('Error creating changelog entry:', err);
       setError('Error creating entry');
@@ -357,20 +393,26 @@ export function useChangelogAdmin() {
       if (updates.title && !updates.slug) {
         slug = generateSlug(updates.title) + '-' + Date.now();
       }
-      
-      const sanitizedUpdates: any = {};
-      Object.keys(updates).forEach(key => {
-        if ((updates as any)[key] !== undefined) {
-          sanitizedUpdates[key] = (updates as any)[key];
-        }
-      });
+
+      const { data: existingData, error: fetchError } = await supabase
+        .from(CHANGELOG_TABLE)
+        .select('data')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      const dataPayload = {
+        ...asObject(existingData?.data),
+        ...toStoredEntryData(updates),
+        ...(slug && { slug }),
+        updatedAt: new Date().toISOString(),
+      };
       
       const { error } = await supabase
         .from(CHANGELOG_TABLE)
         .update({
-          ...sanitizedUpdates,
-          ...(slug && { slug }),
-          updatedAt: new Date().toISOString(),
+          data: dataPayload,
         })
         .eq('id', id);
         
@@ -419,7 +461,7 @@ export function useChangelogAdmin() {
         .from('settings')
         .select('config')
         .eq('id', CONFIG_SETTINGS_ID)
-        .single();
+        .maybeSingle();
         
       const mergedConfig = {
         ...DEFAULT_CHANGELOG_CONFIG,
@@ -633,17 +675,15 @@ export async function seedChangelog(): Promise<void> {
     // Seed entries
     const now = new Date().toISOString();
     for (const entry of initialEntries) {
-      const sanitizedEntry: any = {};
-      Object.keys(entry).forEach(key => {
-        if ((entry as any)[key] !== undefined) {
-          sanitizedEntry[key] = (entry as any)[key];
-        }
+      const dataPayload = toStoredEntryData({
+        ...entry,
+        createdAt: now,
+        updatedAt: now,
       });
       
       await supabase.from(CHANGELOG_TABLE).insert({
-        ...sanitizedEntry,
-        createdAt: now,
-        updatedAt: now,
+        id: createId(),
+        data: dataPayload,
       });
     }
 

@@ -14,9 +14,7 @@ import {
     Trash2,
     MessageSquare,
     Filter,
-    ChevronDown,
     Loader2,
-    AlertCircle,
     User,
     Package,
     Clock,
@@ -24,15 +22,15 @@ import {
     Reply,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/core/AuthContext';
-import { useEditor } from '../../../../contexts/EditorContext';
 import { useReviews } from '../hooks/useReviews';
 import { useProducts } from '../hooks/useProducts';
 import { Review, ReviewStatus } from '../../../../types/ecommerce';
 import type { StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 import { FilterChipRow } from '../../filters';
 import type { FilterChipOption } from '../../filters';
+import AppSelect from '../../../ui/AppSelect';
 
 type StatusFilter = ReviewStatus | 'all';
 
@@ -43,9 +41,7 @@ const ReviewsView: React.FC = () => {
     const { products } = useProducts(user?.id || '', storeId);
     const {
         reviews,
-        pendingReviews,
         isLoading,
-        error,
         totalReviews,
         pendingCount,
         approvedCount,
@@ -66,12 +62,14 @@ const ReviewsView: React.FC = () => {
 
     // Filter reviews
     const filteredReviews = useMemo(() => {
+        const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+
         return reviews.filter((review) => {
             const matchesSearch =
-                !searchTerm ||
-                review.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                review.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                review.comment.toLowerCase().includes(searchTerm.toLowerCase());
+                !normalizedSearchTerm ||
+                review.customerName.toLowerCase().includes(normalizedSearchTerm) ||
+                review.title.toLowerCase().includes(normalizedSearchTerm) ||
+                review.comment.toLowerCase().includes(normalizedSearchTerm);
 
             const matchesStatus = statusFilter === 'all' || review.status === statusFilter;
             const matchesProduct = !productFilter || review.productId === productFilter;
@@ -91,6 +89,15 @@ const ReviewsView: React.FC = () => {
     const getProductName = (productId: string) => {
         const product = products.find((p) => p.id === productId);
         return product?.name || 'Producto desconocido';
+    };
+
+    const hasActiveFilters = Boolean(searchTerm.trim()) || statusFilter !== 'all' || Boolean(productFilter);
+    const visibleReviewsLabel = `${filteredReviews.length} de ${reviews.length} reseña${reviews.length !== 1 ? 's' : ''}`;
+
+    const clearFilters = () => {
+        setSearchTerm('');
+        setStatusFilter('all');
+        setProductFilter('');
     };
 
     // Format date
@@ -262,46 +269,87 @@ const ReviewsView: React.FC = () => {
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
-                <div className="flex flex-col lg:flex-row gap-4">
-                    {/* Search */}
-                    <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
-                        <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
-                        <input
-                            type="text"
-                            placeholder={t('ecommerce.searchReviews', 'Buscar reseñas...')}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                        />
-                        {searchTerm && (
-                            <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
-                                <X size={16} />
-                            </button>
-                        )}
+            {/* Search and filters */}
+            <div className="rounded-xl border border-q-border bg-q-surface/50 p-3 sm:p-4">
+                <div className="grid gap-4 xl:grid-cols-[minmax(18rem,1fr)_auto] xl:items-end">
+                    <label className="block min-w-0">
+                        <span className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold uppercase text-q-text-secondary">
+                            <span>{t('ecommerce.searchReviewsLabel', 'Buscar reseñas')}</span>
+                            <span className="shrink-0 normal-case text-q-text-muted">{visibleReviewsLabel}</span>
+                        </span>
+                        <div className="flex h-12 items-center gap-3 rounded-lg border border-q-border/70 bg-q-bg/60 px-3 shadow-sm transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20">
+                            <Search className="h-4 w-4 flex-shrink-0 text-q-text-secondary" />
+                            <input
+                                type="text"
+                                placeholder={t('ecommerce.searchReviews', 'Cliente, título o comentario')}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-q-text-muted"
+                            />
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchTerm('')}
+                                    aria-label={t('common.clearSearch', 'Limpiar búsqueda')}
+                                    title={t('common.clearSearch', 'Limpiar búsqueda')}
+                                    className="grid h-7 w-7 flex-shrink-0 place-items-center rounded-md text-q-text-secondary transition-colors hover:bg-muted hover:text-foreground"
+                                >
+                                    <X size={15} />
+                                </button>
+                            )}
+                        </div>
+                    </label>
+
+                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(14rem,18rem)] xl:min-w-[38rem]">
+                        <div className="min-w-0">
+                            <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase text-q-text-secondary">
+                                <Filter className="h-3.5 w-3.5" />
+                                <span>{t('ecommerce.reviewStatusFilter', 'Estado')}</span>
+                            </div>
+                            <FilterChipRow
+                                options={statusFilterOptions}
+                                value={statusFilter}
+                                onChange={setStatusFilter}
+                                className="min-w-0"
+                            />
+                        </div>
+
+                        <label className="block min-w-0">
+                            <span className="mb-2 block text-xs font-semibold uppercase text-q-text-secondary">
+                                {t('ecommerce.productFilter', 'Producto')}
+                            </span>
+                            <AppSelect
+                                value={productFilter}
+                                onChange={(e) => setProductFilter(e.target.value)}
+                                aria-label={t('ecommerce.productFilter', 'Producto')}
+                                className="h-10 w-full"
+                            >
+                                <option value="">{t('ecommerce.allProducts', 'Todos los productos')}</option>
+                                {products.map((product) => (
+                                    <option key={product.id} value={product.id}>
+                                        {product.name}
+                                    </option>
+                                ))}
+                            </AppSelect>
+                        </label>
                     </div>
-
-                    <FilterChipRow
-                        options={statusFilterOptions}
-                        value={statusFilter}
-                        onChange={setStatusFilter}
-                    />
-
-                    {/* Product Filter */}
-                    <select
-                        value={productFilter}
-                        onChange={(e) => setProductFilter(e.target.value)}
-                        className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring lg:w-auto"
-                    >
-                        <option value="">{t('ecommerce.allProducts', 'Todos los productos')}</option>
-                        {products.map((product) => (
-                            <option key={product.id} value={product.id}>
-                                {product.name}
-                            </option>
-                        ))}
-                    </select>
                 </div>
+
+                {hasActiveFilters && (
+                    <div className="mt-4 flex flex-col gap-3 border-t border-q-border/60 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm text-q-text-muted">
+                            {t('ecommerce.activeReviewFilters', 'Mostrando reseñas filtradas')}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={clearFilters}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-q-border px-3 py-2 text-sm font-medium text-q-text-muted transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary sm:w-auto"
+                        >
+                            <X size={15} />
+                            {t('ecommerce.clearFilters', 'Limpiar filtros')}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Reviews List */}

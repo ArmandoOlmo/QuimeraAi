@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LeadActivity, ActivityType } from '../../../types';
 import { Phone, Mail, Calendar, MessageSquare, TrendingUp, CheckCircle, Plus, Loader2 } from 'lucide-react';
+import AppSelect from '../../ui/AppSelect';
 
 interface LeadsTimelineProps {
     activities: LeadActivity[];
@@ -83,7 +84,7 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="text-xs text-q-text-muted mb-1 block">Type</label>
-                            <select
+                            <AppSelect
                                 value={newActivity.type}
                                 onChange={e => setNewActivity({ ...newActivity, type: e.target.value as ActivityType })}
                                 className="w-full bg-q-surface border border-q-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
@@ -92,7 +93,7 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                                 <option value="email">Email</option>
                                 <option value="meeting">Meeting</option>
                                 <option value="note">Note</option>
-                            </select>
+                            </AppSelect>
                         </div>
                         <div>
                             <label className="text-xs text-q-text-muted mb-1 block">Title</label>

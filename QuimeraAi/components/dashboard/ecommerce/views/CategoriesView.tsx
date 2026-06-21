@@ -4,9 +4,21 @@
  * Usa clases de Tailwind del tema (bg-primary, text-primary, etc.)
  */
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import ConfirmationModal from '../../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
+import {
+    DndContext,
+    closestCenter,
+    type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    SortableContext,
+    arrayMove,
+    useSortable,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
     Plus,
     Edit,
@@ -23,21 +35,26 @@ import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useCategories } from '../hooks/useCategories';
 import { useProducts } from '../hooks/useProducts';
 import { Category } from '../../../../types/ecommerce';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 import EcommerceImagePicker from '../components/EcommerceImagePicker';
 import MediaGeneratorModal from '../../../media-generator/MediaGeneratorModal';
+import AppSelect from '../../../ui/AppSelect';
 
 const CategoriesView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    const { categories, isLoading, addCategory, updateCategory, deleteCategory } = useCategories(user?.id || '', storeId);
+    const { categories, isLoading, addCategory, updateCategory, deleteCategory, reorderCategories } = useCategories(user?.id || '', storeId);
     const { products } = useProducts(user?.id || '', storeId);
 
     const [showForm, setShowForm] = useState(false);
     const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
     const [isImageGeneratorOpen, setIsImageGeneratorOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isReordering, setIsReordering] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -51,27 +68,43 @@ const CategoriesView: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setFormError(null);
+        setIsSubmitting(true);
 
-        if (editingCategory) {
-            await updateCategory(editingCategory.id, {
-                name: formData.name,
+        try {
+            const trimmedName = formData.name.trim();
+            const payload = {
+                name: trimmedName,
                 description: formData.description,
-                imageUrl: formData.imageUrl,
-                parentId: formData.parentId || undefined,
-            });
-        } else {
-            await addCategory({
-                name: formData.name,
-                description: formData.description,
-                imageUrl: formData.imageUrl,
-                parentId: formData.parentId || undefined,
-            });
+                imageUrl: formData.imageUrl.trim(),
+            };
+
+            if (editingCategory) {
+                await updateCategory(editingCategory.id, {
+                    ...payload,
+                    parentId: formData.parentId || null,
+                });
+            } else {
+                await addCategory({
+                    ...payload,
+                    parentId: formData.parentId || undefined,
+                });
+            }
+
+            handleCloseForm();
+        } catch (error) {
+            console.error('Error saving category:', error);
+            const message = error instanceof Error
+                ? error.message
+                : t('ecommerce.categorySaveError', 'No se pudo guardar la categoría.');
+            setFormError(message);
+        } finally {
+            setIsSubmitting(false);
         }
-
-        handleCloseForm();
     };
 
     const handleEdit = (category: Category) => {
+        setFormError(null);
         setEditingCategory(category);
         setFormData({
             name: category.name,
@@ -82,6 +115,49 @@ const CategoriesView: React.FC = () => {
         setShowForm(true);
     };
 
+    const handleCategoryDragEnd = useCallback(async (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (!over || active.id === over.id) return;
+
+        const activeId = String(active.id);
+        const overId = String(over.id);
+        const activeCategory = categories.find((category) => category.id === activeId);
+        const overCategory = categories.find((category) => category.id === overId);
+
+        if (!activeCategory || !overCategory) return;
+
+        const activeParentId = activeCategory.parentId || '';
+        const overParentId = overCategory.parentId || '';
+        if (activeParentId !== overParentId) return;
+
+        const siblings = categories.filter((category) => (category.parentId || '') === activeParentId);
+        const oldIndex = siblings.findIndex((category) => category.id === activeId);
+        const newIndex = siblings.findIndex((category) => category.id === overId);
+
+        if (oldIndex === -1 || newIndex === -1) return;
+
+        const reorderedIds = arrayMove(
+            siblings.map((category) => category.id),
+            oldIndex,
+            newIndex
+        );
+
+        setIsReordering(true);
+        try {
+            await reorderCategories(reorderedIds);
+        } catch (error) {
+            console.error('Error reordering categories:', error);
+            alert(
+                error instanceof Error
+                    ? error.message
+                    : t('ecommerce.categoryReorderError', 'No se pudo actualizar el orden de las categorías.')
+            );
+        } finally {
+            setIsReordering(false);
+        }
+    }, [categories, reorderCategories, t]);
+
     const handleCategoryImageSelect = (url: string) => {
         setFormData((prev) => ({ ...prev, imageUrl: url }));
         setIsImagePickerOpen(false);
@@ -91,8 +167,6 @@ const CategoriesView: React.FC = () => {
     const handleRemoveCategoryImage = () => {
         setFormData((prev) => ({ ...prev, imageUrl: '' }));
     };
-
-    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
     const handleDelete = (categoryId: string) => {
         const productCount = getProductCount(categoryId);
@@ -119,6 +193,7 @@ const CategoriesView: React.FC = () => {
         setShowForm(false);
         setIsImagePickerOpen(false);
         setIsImageGeneratorOpen(false);
+        setFormError(null);
         setEditingCategory(null);
         setFormData({ name: '', description: '', imageUrl: '', parentId: '' });
     };
@@ -175,20 +250,27 @@ const CategoriesView: React.FC = () => {
                     </button>
                 </div>
             ) : (
-                <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden">
-                    <div className="divide-y divide-border">
-                        {rootCategories.map((category) => (
-                            <CategoryRow
-                                key={category.id}
-                                category={category}
-                                subcategories={getSubcategories(category.id)}
-                                productCount={getProductCount(category.id)}
-                                onEdit={handleEdit}
-                                onDelete={handleDelete}
-                                getProductCount={getProductCount}
-                            />
-                        ))}
-                    </div>
+                <div className={`bg-q-surface/50 rounded-xl border border-q-border overflow-hidden transition-opacity ${isReordering ? 'opacity-80' : ''}`}>
+                    <DndContext
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleCategoryDragEnd}
+                    >
+                        <SortableContext items={rootCategories.map((category) => category.id)} strategy={verticalListSortingStrategy}>
+                            <div className="divide-y divide-border">
+                                {rootCategories.map((category) => (
+                                    <SortableCategoryGroup
+                                        key={category.id}
+                                        category={category}
+                                        subcategories={getSubcategories(category.id)}
+                                        productCount={getProductCount(category.id)}
+                                        onEdit={handleEdit}
+                                        onDelete={handleDelete}
+                                        getProductCount={getProductCount}
+                                    />
+                                ))}
+                            </div>
+                        </SortableContext>
+                    </DndContext>
                 </div>
             )}
 
@@ -296,7 +378,7 @@ const CategoriesView: React.FC = () => {
                                 <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.parentCategory', 'Categoría Padre')}
                                 </label>
-                                <select
+                                <AppSelect
                                     value={formData.parentId}
                                     onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
                                     className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -309,21 +391,30 @@ const CategoriesView: React.FC = () => {
                                                 {cat.name}
                                             </option>
                                         ))}
-                                </select>
+                                </AppSelect>
                             </div>
+
+                            {formError && (
+                                <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                                    {formError}
+                                </p>
+                            )}
 
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="button"
                                     onClick={handleCloseForm}
+                                    disabled={isSubmitting}
                                     className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors"
                                 >
                                     {t('common.cancel', 'Cancelar')}
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90"
+                                    disabled={isSubmitting || !formData.name.trim()}
+                                    className="flex flex-1 items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
+                                    {isSubmitting && <Loader2 className="animate-spin" size={16} />}
                                     {editingCategory ? t('common.save', 'Guardar') : t('common.create', 'Crear')}
                                 </button>
                             </div>
@@ -364,8 +455,10 @@ const CategoriesView: React.FC = () => {
     );
 };
 
-// Category Row Component
-interface CategoryRowProps {
+type SortableAttributes = ReturnType<typeof useSortable>['attributes'];
+type SortableListeners = ReturnType<typeof useSortable>['listeners'];
+
+interface SortableCategoryGroupProps {
     category: Category;
     subcategories: Category[];
     productCount: number;
@@ -374,7 +467,7 @@ interface CategoryRowProps {
     getProductCount: (categoryId: string) => number;
 }
 
-const CategoryRow: React.FC<CategoryRowProps> = ({
+const SortableCategoryGroup: React.FC<SortableCategoryGroupProps> = ({
     category,
     subcategories,
     productCount,
@@ -382,104 +475,195 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
     onDelete,
     getProductCount,
 }) => {
-    const { t } = useTranslation();
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: category.id });
+
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 30 : undefined,
+    };
 
     return (
-        <>
-            <div className="flex items-start gap-3 p-4 hover:bg-muted/20 sm:items-center sm:gap-4">
-                <div className="hidden text-q-text-muted cursor-grab sm:block">
-                    <GripVertical size={20} />
-                </div>
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={isDragging ? 'relative bg-q-surface shadow-lg' : undefined}
+        >
+            <CategoryItemRow
+                category={category}
+                productCount={productCount}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                dragAttributes={attributes}
+                dragListeners={listeners}
+                isDragging={isDragging}
+            />
 
-                {category.imageUrl ? (
-                    <img
-                        src={category.imageUrl}
-                        alt={category.name}
-                        className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                    />
-                ) : (
-                    <div className="w-12 h-12 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center">
-                        <FolderTree className="text-q-text-muted" size={24} />
-                    </div>
+            {subcategories.length > 0 && (
+                <SortableContext items={subcategories.map((sub) => sub.id)} strategy={verticalListSortingStrategy}>
+                    {subcategories.map((sub) => (
+                        <SortableSubcategoryRow
+                            key={sub.id}
+                            category={sub}
+                            productCount={getProductCount(sub.id)}
+                            onEdit={onEdit}
+                            onDelete={onDelete}
+                        />
+                    ))}
+                </SortableContext>
+            )}
+        </div>
+    );
+};
+
+interface SortableSubcategoryRowProps {
+    category: Category;
+    productCount: number;
+    onEdit: (category: Category) => void;
+    onDelete: (categoryId: string) => void;
+}
+
+const SortableSubcategoryRow: React.FC<SortableSubcategoryRowProps> = ({
+    category,
+    productCount,
+    onEdit,
+    onDelete,
+}) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: category.id });
+
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 30 : undefined,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={isDragging ? 'relative bg-q-surface shadow-lg' : undefined}
+        >
+            <CategoryItemRow
+                category={category}
+                productCount={productCount}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                dragAttributes={attributes}
+                dragListeners={listeners}
+                isDragging={isDragging}
+                isSubcategory
+            />
+        </div>
+    );
+};
+
+interface CategoryItemRowProps {
+    category: Category;
+    productCount: number;
+    onEdit: (category: Category) => void;
+    onDelete: (categoryId: string) => void;
+    dragAttributes: SortableAttributes;
+    dragListeners: SortableListeners;
+    isDragging: boolean;
+    isSubcategory?: boolean;
+}
+
+const CategoryItemRow: React.FC<CategoryItemRowProps> = ({
+    category,
+    productCount,
+    onEdit,
+    onDelete,
+    dragAttributes,
+    dragListeners,
+    isDragging,
+    isSubcategory = false,
+}) => {
+    const { t } = useTranslation();
+    const reorderLabel = t('ecommerce.reorderCategory', 'Reordenar categoría');
+    const imageClassName = isSubcategory
+        ? 'w-10 h-10 rounded-lg object-cover flex-shrink-0'
+        : 'w-12 h-12 rounded-lg object-cover flex-shrink-0';
+    const placeholderClassName = isSubcategory
+        ? 'w-10 h-10 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center'
+        : 'w-12 h-12 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center';
+
+    return (
+        <div
+            className={[
+                isSubcategory
+                    ? 'ml-3 flex items-start gap-3 border-l-2 border-q-border p-4 pl-4 sm:ml-6 sm:items-center sm:gap-4 sm:pl-12'
+                    : 'flex items-start gap-3 p-4 sm:items-center sm:gap-4',
+                isDragging ? 'bg-muted/30' : 'hover:bg-muted/20',
+            ].join(' ')}
+        >
+            <button
+                type="button"
+                {...dragAttributes}
+                {...(dragListeners ?? {})}
+                aria-label={reorderLabel}
+                title={reorderLabel}
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-q-text-muted transition-colors hover:bg-muted hover:text-foreground cursor-grab active:cursor-grabbing touch-none"
+            >
+                <GripVertical size={20} />
+            </button>
+
+            {category.imageUrl ? (
+                <img
+                    src={category.imageUrl}
+                    alt={category.name}
+                    className={imageClassName}
+                />
+            ) : (
+                <div className={placeholderClassName}>
+                    <FolderTree className="text-q-text-muted" size={isSubcategory ? 20 : 24} />
+                </div>
+            )}
+
+            <div className="min-w-0 flex-1">
+                <h4 className="truncate text-foreground font-medium">{category.name}</h4>
+                {category.description && !isSubcategory && (
+                    <p className="text-q-text-muted text-sm line-clamp-1">{category.description}</p>
                 )}
-
-                <div className="min-w-0 flex-1">
-                    <h4 className="truncate text-foreground font-medium">{category.name}</h4>
-                    {category.description && (
-                        <p className="text-q-text-muted text-sm line-clamp-1">{category.description}</p>
-                    )}
-                    <p className="text-xs text-q-text-muted sm:hidden">
-                        {productCount} {t('ecommerce.products', 'productos')}
-                    </p>
-                </div>
-
-                <div className="hidden text-q-text-muted text-sm sm:block">
+                <p className="text-xs text-q-text-muted sm:hidden">
                     {productCount} {t('ecommerce.products', 'productos')}
-                </div>
-
-                <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
-                    <button
-                        onClick={() => onEdit(category)}
-                        className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                    >
-                        <Edit size={18} />
-                    </button>
-                    <button
-                        onClick={() => onDelete(category.id)}
-                        className="p-2 text-q-text-muted hover:text-destructive hover:bg-muted rounded-lg transition-colors"
-                    >
-                        <Trash2 size={18} />
-                    </button>
-                </div>
+                </p>
             </div>
 
-            {/* Subcategories */}
-            {subcategories.map((sub) => (
-                <div key={sub.id} className="ml-3 flex items-start gap-3 border-l-2 border-q-border p-4 pl-4 hover:bg-muted/20 sm:ml-6 sm:items-center sm:gap-4 sm:pl-12">
-                    <div className="hidden text-q-text-muted cursor-grab sm:block">
-                        <GripVertical size={20} />
-                    </div>
+            <div className="hidden text-q-text-muted text-sm sm:block">
+                {productCount} {t('ecommerce.products', 'productos')}
+            </div>
 
-                    {sub.imageUrl ? (
-                        <img
-                            src={sub.imageUrl}
-                            alt={sub.name}
-                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-                        />
-                    ) : (
-                        <div className="w-10 h-10 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center">
-                            <FolderTree className="text-q-text-muted" size={20} />
-                        </div>
-                    )}
-
-                    <div className="min-w-0 flex-1">
-                        <h4 className="truncate text-foreground font-medium">{sub.name}</h4>
-                        <p className="text-xs text-q-text-muted sm:hidden">
-                            {getProductCount(sub.id)} {t('ecommerce.products', 'productos')}
-                        </p>
-                    </div>
-
-                    <div className="hidden text-q-text-muted text-sm sm:block">
-                        {getProductCount(sub.id)} {t('ecommerce.products', 'productos')}
-                    </div>
-
-                    <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
-                        <button
-                            onClick={() => onEdit(sub)}
-                            className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                        >
-                            <Edit size={18} />
-                        </button>
-                        <button
-                            onClick={() => onDelete(sub.id)}
-                            className="p-2 text-q-text-muted hover:text-destructive hover:bg-muted rounded-lg transition-colors"
-                        >
-                            <Trash2 size={18} />
-                        </button>
-                    </div>
-                </div>
-            ))}
-        </>
+            <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
+                <button
+                    type="button"
+                    onClick={() => onEdit(category)}
+                    className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                >
+                    <Edit size={18} />
+                </button>
+                <button
+                    type="button"
+                    onClick={() => onDelete(category.id)}
+                    className="p-2 text-q-text-muted hover:text-destructive hover:bg-muted rounded-lg transition-colors"
+                >
+                    <Trash2 size={18} />
+                </button>
+            </div>
+        </div>
     );
 };
 

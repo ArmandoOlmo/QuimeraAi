@@ -3,27 +3,21 @@
  * 
  * Renders the Storefront Homepage based on the user's project configuration (`componentOrder`).
  * If components are configured, it renders them in order.
- * If no components are configured, it falls back to a default layout or empty state.
+ * If no components are configured, it falls back to an empty state in editor preview.
  */
 
 import React, { useMemo } from 'react';
-import {
-    FeaturedProducts,
-    CategoryGrid,
-    ProductHero,
-    SaleCountdown,
-    TrustBadges,
-    RecentlyViewed,
-    ProductReviews,
-    CollectionBanner,
-    ProductBundle,
-    AnnouncementBar,
-} from '../sections';
-import ProductSearchPage from '../search/ProductSearchPage';
 import { Project } from '../../../types';
-import { deriveColorsFromPalette } from '../../../utils/colorUtils'; // Adjust path if needed
+import type { StorefrontSectionBlueprint } from '../../../types/businessBlueprint';
+import StorefrontModuleRenderer from '../StorefrontModuleRenderer';
+import {
+    getRenderableStorefrontSectionDecisions,
+    resolveStorefrontEditorState,
+    resolveStorefrontPageData,
+    resolveStorefrontSectionDecisions,
+} from '../../../utils/storefrontRenderer';
 
-interface ThemeColors {
+interface ThemeColors extends Record<string, string | undefined> {
     background?: string;
     text?: string;
     heading?: string;
@@ -41,63 +35,72 @@ interface StorefrontHomeProps {
     onNavigateToProduct: (slug: string) => void;
     onNavigateToCategory: (slug: string) => void;
     themeColors: ThemeColors;
+    previewSessionKey?: string | null;
 }
+
+const isRecord = (value: unknown): value is Record<string, any> =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const getStorefrontEditorSections = (
+    projectData: Project,
+    isEditorPreview: boolean,
+): StorefrontSectionBlueprint[] | undefined => {
+    const editorState = resolveStorefrontEditorState(projectData);
+    const draftSections = isRecord(editorState.draft) && Array.isArray(editorState.draft.sections)
+        ? editorState.draft.sections as StorefrontSectionBlueprint[]
+        : undefined;
+    const publishedSections = isRecord(editorState.published) && Array.isArray(editorState.published.sections)
+        ? editorState.published.sections as StorefrontSectionBlueprint[]
+        : undefined;
+
+    if (isEditorPreview) return draftSections || publishedSections;
+    return publishedSections;
+};
+
+const getBusinessBlueprintSections = (
+    projectData: Project,
+    pageData: Record<string, any>,
+): StorefrontSectionBlueprint[] | undefined => {
+    const rootData = isRecord(projectData?.data) ? projectData.data as Record<string, any> : {};
+    const candidates = [
+        (projectData as any)?.businessBlueprint?.storefrontBlueprint?.sections,
+        rootData.businessBlueprint?.storefrontBlueprint?.sections,
+        pageData.businessBlueprint?.storefrontBlueprint?.sections,
+    ];
+
+    return candidates.find(Array.isArray) as StorefrontSectionBlueprint[] | undefined;
+};
 
 const StorefrontHome: React.FC<StorefrontHomeProps> = ({
     storeId,
     projectData,
     onNavigateToProduct,
     onNavigateToCategory,
-    themeColors
+    themeColors,
+    previewSessionKey,
 }) => {
+    const isEditorPreview = typeof window !== 'undefined' &&
+        new URLSearchParams(window.location.search).get('preview') === 'storefront-editor';
+    const pageData = useMemo(() => resolveStorefrontPageData(projectData), [projectData]);
 
-    // Map of component keys to React Components
-    const COMPONENT_MAP: Record<string, React.FC<any>> = {
-        featuredProducts: FeaturedProducts,
-        categoryGrid: CategoryGrid,
-        productHero: ProductHero,
-        saleCountdown: SaleCountdown,
-        trustBadges: TrustBadges,
-        recentlyViewed: RecentlyViewed,
-        productReviews: ProductReviews,
-        collectionBanner: CollectionBanner,
-        productBundle: ProductBundle,
-        announcementBar: AnnouncementBar,
-    };
-
-    // Filter component order to only include supported ecommerce sections
-    // and check visibility if necessary (though usually 'store' components are visible)
     const sectionsToRender = useMemo(() => {
-        if (!projectData?.componentOrder) return [];
-        return projectData.componentOrder.filter(key => COMPONENT_MAP[key]);
-    }, [projectData]);
-
-    const renderSection = (key: string, index: number) => {
-        const Component = COMPONENT_MAP[key];
-        if (!Component) return null;
-
-        // Get data for this specific component
-        const componentData = projectData.data?.[key] || {};
-
-        // Pass common props
-        const commonProps = {
-            key: `${key}-${index}`,
-            storeId,
-            data: componentData,
-            onProductClick: onNavigateToProduct,
-            onCategoryClick: onNavigateToCategory,
-            themeColors,
-            // Certain components might need specific props, handled here or inside component default props
+        const editorSections = getStorefrontEditorSections(projectData, isEditorPreview);
+        const resolverInput = {
+            pageData,
+            componentOrder: projectData?.componentOrder,
+            sectionVisibility: projectData?.sectionVisibility,
+            blueprintSections: editorSections || getBusinessBlueprintSections(projectData, pageData),
+            includeMissingSections: !editorSections,
         };
 
-        return <Component {...commonProps} />;
-    };
-
-    if (sectionsToRender.length === 0) {
-        // This case should be handled by StorefrontApp switching to ProductSearchPage,
-        // but as a failsafe we can render nothing or a message.
-        return null;
-    }
+        return isEditorPreview
+            ? resolveStorefrontSectionDecisions(resolverInput)
+            : getRenderableStorefrontSectionDecisions(resolverInput);
+    }, [isEditorPreview, pageData, projectData]);
+    const hasRenderableSections = sectionsToRender.some(decision => (
+        decision.status === 'render' ||
+        (isEditorPreview && ['empty', 'invalid', 'unsupported'].includes(decision.status))
+    ));
 
     return (
         <div
@@ -107,29 +110,23 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
                 color: themeColors?.text || '#0f172a'
             }}
         >
-            {sectionsToRender.map((key, index) => renderSection(key, index))}
-
-            {/* Always render the full product search/grid at the bottom for the core ecommerce experience */}
-            <div className="container mx-auto px-4 py-8">
-                <ProductSearchPage
+            {hasRenderableSections ? (
+                <StorefrontModuleRenderer
                     storeId={storeId}
-                    // Pass null userId as we are in public view
-                    userId={null}
-                    embedded={true}
-                    // Ensure it receives style props
-                    themeColors={themeColors}
-                    title="Todos los Productos" // "All Products"
-                    showFilterSidebar={true}
-                    showSearchBar={true}
-                    showSortOptions={true}
-                    showViewModeToggle={true}
-                    defaultViewMode="grid"
-                    gridColumns={4}
-                    // Use project primary color if available
-                    primaryColor={themeColors.priceColor || '#6366f1'}
-                    onProductClick={onNavigateToProduct}
+                    decisions={sectionsToRender}
+                    globalColors={themeColors}
+                    isEditorPreview={isEditorPreview}
+                    previewSessionKey={previewSessionKey}
+                    onNavigateToProduct={onNavigateToProduct}
+                    onNavigateToCategory={onNavigateToCategory}
                 />
-            </div>
+            ) : isEditorPreview ? (
+                <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                        No hay secciones visibles. Activa una sección o aplica un preset.
+                    </div>
+                </div>
+            ) : null}
         </div>
     );
 };

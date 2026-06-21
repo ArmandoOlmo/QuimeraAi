@@ -9,6 +9,7 @@ import { PROMPT_TEMPLATES, getDefaultEnabledTemplates, compileTemplates } from '
 import PromptEditorModal from './PromptEditorModal';
 import { defaultPrompts } from '../../../data/defaultPrompts';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import AppSelect from '../../ui/AppSelect';
 
 interface GlobalAssistantSettingsProps {
     onBack: () => void;
@@ -315,7 +316,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                         {/* Model Selection */}
                                         <div>
                                             <label className="block text-sm font-bold text-q-text mb-2">{t('superadmin.globalAssistant.parameters.model', 'AI Model')}</label>
-                                            <select
+                                            <AppSelect
                                                 value={formData.model || 'gemini-3-flash-preview'}
                                                 onChange={(e) => updateForm('model', e.target.value)}
                                                 className="w-full bg-q-bg border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-q-accent outline-none text-q-text"
@@ -323,7 +324,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                 <option value="gemini-3-flash-preview">Gemini 3 Flash — {t('superadmin.globalAssistant.parameters.recommended', 'Recommended')}</option>
                                                 <option value="gemini-2.5-flash">Gemini 2.5 Flash — {t('superadmin.globalAssistant.parameters.legacy', 'Legacy')}</option>
                                                 <option value="gemini-2.5-pro">Gemini 2.5 Pro — {t('superadmin.globalAssistant.parameters.highCost', 'Higher Cost')}</option>
-                                            </select>
+                                            </AppSelect>
                                             <p className="text-xs text-q-text-secondary mt-1">{t('superadmin.globalAssistant.parameters.modelDescription', 'The model used for chat responses. Flash is fastest and most cost-effective.')}</p>
                                         </div>
 

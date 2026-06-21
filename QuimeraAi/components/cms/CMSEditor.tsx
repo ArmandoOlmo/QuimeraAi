@@ -30,6 +30,7 @@ import ImageGeneratorModal from '../ui/ImageGeneratorModal';
 import ImagePicker from '../ui/ImagePicker';
 import { logApiCall } from '../../services/apiLoggingService';
 import HeaderBackButton from '../ui/HeaderBackButton';
+import ColorControl from '../ui/ColorControl';
 
 interface CMSEditorProps {
     post: CMSPost | null;
@@ -630,17 +631,12 @@ IMPORTANT FORMATTING RULES:
                                             />
                                             <div className="w-4 h-4 rounded border border-gray-200" style={{ backgroundColor: currentColor }}></div>
                                         </div>
-                                        <div className="relative w-full h-8 rounded-md overflow-hidden cursor-pointer border border-gray-300">
-                                            <input
-                                                type="color"
-                                                value={currentColor}
-                                                onChange={(e) => applyColor(e.target.value)}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                            />
-                                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-500 bg-gray-50 hover:bg-gray-100">
-                                                Open Color Wheel
-                                            </div>
-                                        </div>
+                                        <ColorControl
+                                            label="Color"
+                                            value={currentColor}
+                                            onChange={applyColor}
+                                            variant="dashboard"
+                                        />
                                         <div className="h-px bg-gray-200"></div>
                                         <div>
                                             <p className="text-[10px] font-bold text-gray-400 uppercase mb-1.5">Presets</p>

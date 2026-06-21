@@ -12,6 +12,11 @@ import {
     Loader2,
     Package,
     ArrowLeft,
+    Search,
+    ShieldCheck,
+    ShoppingCart,
+    Sparkles,
+    Truck,
 } from 'lucide-react';
 import { useProductSearch, SortOption, ProductFilters } from '../hooks/useProductSearch';
 import { useWishlist } from '../hooks/useWishlist';
@@ -20,6 +25,11 @@ import SearchBar from './SearchBar';
 import FilterSidebar from './FilterSidebar';
 import { WishlistButton } from '../wishlist';
 import { RatingStars } from '../reviews';
+import type { ProductCardVariant, ProductCardVisualVariant } from '../../../types/productCard';
+import { createProductCardViewModel } from '../../../utils/productCard';
+import AppSelect from '../../ui/AppSelect';
+
+export type { ProductCardVariant } from '../../../types/productCard';
 
 interface ThemeColors {
     background?: string;
@@ -32,6 +42,8 @@ interface ThemeColors {
     salePriceColor?: string;
     mutedText?: string;
 }
+
+type FilterPresentation = 'sidebar' | 'drawer';
 
 interface ProductSearchPageProps {
     storeId: string;
@@ -51,6 +63,8 @@ interface ProductSearchPageProps {
     themeColors?: ThemeColors;
     /** Show/hide the filter sidebar. Default: true */
     showFilterSidebar?: boolean;
+    /** How filters are presented. Storefront defaults to a drawer instead of a permanent sidebar. */
+    filterPresentation?: FilterPresentation;
     /** Show/hide the search bar. Default: true */
     showSearchBar?: boolean;
     /** Show/hide the sort dropdown. Default: true */
@@ -64,7 +78,7 @@ interface ProductSearchPageProps {
     /** Grid columns for product cards. Default: 4 */
     gridColumns?: 2 | 3 | 4 | 5;
     /** Card style variant. Default: 'modern' */
-    cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardStyle?: ProductCardVariant;
     /** Border radius for cards. Default: 'xl' */
     borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
     /** Gap between cards. Default: 'md' */
@@ -89,6 +103,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
     title,
     themeColors,
     showFilterSidebar = true,
+    filterPresentation = 'drawer',
     showSearchBar = true,
     showSortOptions = true,
     showViewModeToggle = true,
@@ -191,6 +206,24 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
         applyFilters(newFilters);
     };
 
+    const handleCategoryChip = (category?: { id: string; slug?: string }) => {
+        if (!category) {
+            handleFiltersChange({
+                ...filters,
+                categoryId: undefined,
+                categorySlug: undefined,
+            });
+            return;
+        }
+
+        const isSelected = filters.categoryId === category.id || filters.categorySlug === category.slug;
+        handleFiltersChange({
+            ...filters,
+            categoryId: isSelected ? undefined : category.id,
+            categorySlug: isSelected ? undefined : category.slug,
+        });
+    };
+
     const handleSortChange = (newSort: SortOption) => {
         setSortBy(newSort);
         setSort(newSort);
@@ -215,12 +248,16 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
     }, [searchTerm, products]);
 
     const activeFiltersCount =
-        (filters.categoryId ? 1 : 0) +
+        (filters.categoryId || filters.categorySlug ? 1 : 0) +
         (filters.tags?.length || 0) +
         (filters.priceRange ? 1 : 0) +
         (filters.inStock ? 1 : 0) +
         (filters.onSale ? 1 : 0) +
         (filters.featured ? 1 : 0);
+
+    const heroTitle = title || 'Tienda';
+    const featuredProductsCount = products.filter((product) => product.isFeatured).length;
+    const useDrawerFilters = filterPresentation === 'drawer';
 
     // Use theme colors if provided, otherwise use defaults
     const colors = themeColors ? {
@@ -253,6 +290,64 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                 color: colors.text
             }}
         >
+            {!embedded && (
+                <section
+                    className="border-b"
+                    style={{
+                        backgroundColor: colors.cardBg,
+                        borderColor: colors.border,
+                    }}
+                >
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+                        <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-end">
+                            <div>
+                                <div
+                                    className="mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold"
+                                    style={{ borderColor: colors.border, color: colors.mutedText }}
+                                >
+                                    <Sparkles size={14} style={{ color: primaryColor }} />
+                                    Coleccion actualizada
+                                </div>
+                                <h1 className="text-3xl font-bold md:text-5xl" style={{ color: colors.heading }}>
+                                    {heroTitle}
+                                </h1>
+                                <p className="mt-3 max-w-2xl text-sm leading-6 md:text-base" style={{ color: colors.mutedText }}>
+                                    Explora productos, filtra por categoria y agrega al carrito sin salir de la tienda.
+                                </p>
+                                <div className="mt-6 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
+                                    <span className="inline-flex items-center gap-2">
+                                        <ShieldCheck size={17} style={{ color: primaryColor }} />
+                                        Compra protegida
+                                    </span>
+                                    <span className="inline-flex items-center gap-2">
+                                        <Truck size={17} style={{ color: primaryColor }} />
+                                        Envio disponible
+                                    </span>
+                                    <span className="inline-flex items-center gap-2">
+                                        <Search size={17} style={{ color: primaryColor }} />
+                                        Busqueda rapida
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 overflow-hidden rounded-xl border bg-slate-50" style={{ borderColor: colors.border }}>
+                                <div className="p-4">
+                                    <p className="text-2xl font-bold" style={{ color: colors.heading }}>{totalCount}</p>
+                                    <p className="mt-1 text-xs text-slate-500">productos</p>
+                                </div>
+                                <div className="border-l p-4" style={{ borderColor: colors.border }}>
+                                    <p className="text-2xl font-bold" style={{ color: colors.heading }}>{availableCategories.length}</p>
+                                    <p className="mt-1 text-xs text-slate-500">categorias</p>
+                                </div>
+                                <div className="border-l p-4" style={{ borderColor: colors.border }}>
+                                    <p className="text-2xl font-bold" style={{ color: colors.heading }}>{featuredProductsCount}</p>
+                                    <p className="mt-1 text-xs text-slate-500">destacados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            )}
+
             {/* Title for embedded mode */}
             {embedded && title && (
                 <div className={`max-w-7xl mx-auto ${paddingXClass} mb-6`}>
@@ -268,7 +363,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
             {/* Header - Only show when NOT embedded */}
             {!embedded && (
                 <div
-                    className="border-b sticky top-0 z-30 transition-colors duration-300"
+                    className="border-b transition-colors duration-300"
                     style={{
                         backgroundColor: colors.cardBg,
                         borderColor: colors.border
@@ -276,7 +371,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                 >
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         {/* Top Row */}
-                        <div className="py-4 flex items-center gap-4">
+                        <div className="py-4 flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
                             {onBack && (
                                 <button
                                     onClick={onBack}
@@ -286,7 +381,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                 </button>
                             )}
                             {showSearchBar && (
-                                <div className="flex-1 max-w-xl">
+                                <div className="w-full flex-1 md:max-w-xl">
                                     <SearchBar
                                         value={searchTerm}
                                         onChange={setSearchTerm}
@@ -299,13 +394,13 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                         </div>
 
                         {/* Bottom Row */}
-                        <div className="py-3 flex items-center justify-between gap-4 border-t border-gray-200 dark:border-gray-700">
+                        <div className="py-3 flex flex-col gap-3 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-center gap-4">
                                 {/* Filter Toggle (Mobile) */}
                                 {showFilterSidebar && (
                                     <button
                                         onClick={() => setShowFilters(!showFilters)}
-                                        className="lg:hidden flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg"
+                                        className={`${useDrawerFilters ? 'flex' : 'lg:hidden flex'} items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg`}
                                     >
                                         <SlidersHorizontal size={18} />
                                         Filtros
@@ -326,11 +421,11 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                 </span>
                             </div>
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-3">
                                 {/* Sort */}
                                 {showSortOptions && (
                                     <div className="relative">
-                                        <select
+                                        <AppSelect
                                             value={sortBy}
                                             onChange={(e) => handleSortChange(e.target.value as SortOption)}
                                             className="appearance-none px-3 py-2 pr-8 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-colors"
@@ -346,7 +441,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                                     {option.label}
                                                 </option>
                                             ))}
-                                        </select>
+                                        </AppSelect>
                                         <ChevronDown
                                             className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                                             size={16}
@@ -398,14 +493,14 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
             {embedded && (
                 <div className={`max-w-7xl mx-auto ${paddingXClass} mb-6`}>
                     <div
-                        className="flex items-center justify-between gap-4 pb-4 border-b"
+                        className="flex flex-col gap-3 pb-4 border-b sm:flex-row sm:items-center sm:justify-between"
                         style={{ borderColor: colors?.border || undefined }}
                     >
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-4">
                             {/* Filter Toggle (Mobile) */}
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className="lg:hidden flex items-center gap-2 px-3 py-2 rounded-lg transition-colors"
+                                className={`${useDrawerFilters ? 'flex' : 'lg:hidden flex'} items-center gap-2 px-3 py-2 rounded-lg transition-colors`}
                                 style={{
                                     backgroundColor: colors?.cardBg || undefined,
                                     color: colors?.text || undefined,
@@ -432,11 +527,11 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                             {/* Sort */}
                             {showSortOptions && (
                                 <div className="relative">
-                                    <select
+                                    <AppSelect
                                         value={sortBy}
                                         onChange={(e) => handleSortChange(e.target.value as SortOption)}
                                         className="appearance-none px-3 py-2 pr-8 rounded-lg text-sm focus:outline-none focus:ring-2"
@@ -452,7 +547,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                                 {option.label}
                                             </option>
                                         ))}
-                                    </select>
+                                    </AppSelect>
                                     <ChevronDown
                                         className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
                                         size={16}
@@ -494,6 +589,44 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                 </div>
             )}
 
+            {showFilterSidebar && availableCategories.length > 0 && (
+                <div className={`max-w-7xl mx-auto ${embedded ? paddingXClass : 'px-4 sm:px-6 lg:px-8'} mb-6`}>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                        <button
+                            type="button"
+                            onClick={() => handleCategoryChip()}
+                            className="whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
+                            style={{
+                                borderColor: !filters.categoryId && !filters.categorySlug ? primaryColor : colors.border,
+                                backgroundColor: !filters.categoryId && !filters.categorySlug ? `${primaryColor}14` : colors.cardBg,
+                                color: !filters.categoryId && !filters.categorySlug ? primaryColor : colors.text,
+                            }}
+                        >
+                            Todos
+                        </button>
+                        {availableCategories.slice(0, 10).map((category) => {
+                            const isSelected = filters.categoryId === category.id || filters.categorySlug === category.slug;
+                            return (
+                                <button
+                                    key={category.id}
+                                    type="button"
+                                    onClick={() => handleCategoryChip(category)}
+                                    className="whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
+                                    style={{
+                                        borderColor: isSelected ? primaryColor : colors.border,
+                                        backgroundColor: isSelected ? primaryColor : colors.cardBg,
+                                        color: isSelected ? '#ffffff' : colors.text,
+                                    }}
+                                >
+                                    {category.name}
+                                    <span className="ml-2 text-xs opacity-70">{category.count}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             {/* Content */}
             <div className={`max-w-7xl mx-auto ${embedded ? paddingXClass : 'px-4 sm:px-6 lg:px-8 py-6'}`}>
                 <div className="flex gap-6">
@@ -523,6 +656,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             onSearchChange={setSearchTerm}
                             onSearch={handleSearch}
                             searchSuggestions={suggestions}
+                            presentationMode={filterPresentation}
                         />
                     )}
 
@@ -557,7 +691,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             <>
                                 {/* Grid View */}
                                 {viewMode === 'grid' ? (
-                                    <div className={`grid grid-cols-1 ${gridColsClass} ${cardGapClass}`}>
+                                    <div className={`grid grid-cols-2 ${gridColsClass} ${cardGapClass}`}>
                                         {products.map((product) => (
                                             <ProductCard
                                                 key={product.id}
@@ -658,7 +792,7 @@ interface ProductCardProps {
     currencySymbol: string;
     primaryColor: string;
     borderRadiusClass?: string;
-    cardStyle?: 'minimal' | 'modern' | 'elegant' | 'overlay';
+    cardStyle?: ProductCardVariant;
     colors?: ProductCardColors;
 }
 
@@ -674,10 +808,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
     cardStyle = 'modern',
     colors,
 }) => {
-    const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
-    const discountPercent = hasDiscount
-        ? Math.round(((product.compareAtPrice! - product.price) / product.compareAtPrice!) * 100)
-        : 0;
+    const card = createProductCardViewModel(product, {
+        variant: cardStyle,
+        currencySymbol,
+        showAvailabilityBadge: true,
+        showFeaturedBadge: true,
+    });
+    const isAvailable = card.inventory.isAvailable;
+    const visualCardStyle = card.visualVariant;
 
     // Merge colors with defaults
     const cardColors = {
@@ -691,18 +829,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
     };
 
     // Overlay style - full image with text on top
-    if (cardStyle === 'overlay') {
+    if (visualCardStyle === 'overlay') {
         return (
             <div
-                className={`${borderRadiusClass} overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer`}
+                className={`${borderRadiusClass} overflow-hidden group border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer`}
                 onClick={onClick}
             >
                 {/* Full Image with Overlay Content */}
                 <div className="relative aspect-square overflow-hidden">
-                    {product.images?.[0]?.url ? (
+                    {card.image?.url ? (
                         <img
-                            src={product.images[0].url}
-                            alt={product.name}
+                            src={card.image.url}
+                            alt={card.image.altText}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                     ) : (
@@ -719,12 +857,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex flex-col gap-2">
-                        {hasDiscount && (
+                        {card.hasDiscount && (
                             <span
                                 className="px-2 py-1 text-white text-xs font-bold rounded-full"
                                 style={{ backgroundColor: cardColors.salePriceColor }}
                             >
-                                -{discountPercent}%
+                                -{card.discountPercent}%
                             </span>
                         )}
                         {product.isFeatured && (
@@ -750,15 +888,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     {/* Content Overlay - Text on Image */}
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                         <h3 className="font-semibold text-white truncate">
-                            {product.name}
+                            {card.name}
                         </h3>
 
                         {/* Rating */}
-                        {product.reviewStats && product.reviewStats.totalReviews > 0 && (
+                        {card.rating && (
                             <div className="flex items-center gap-1 mt-1">
-                                <RatingStars rating={product.reviewStats.averageRating} size="sm" />
+                                <RatingStars rating={card.rating.value} size="sm" />
                                 <span className="text-xs text-white/70">
-                                    ({product.reviewStats.totalReviews})
+                                    {card.rating.displayText}
                                 </span>
                             </div>
                         )}
@@ -766,17 +904,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         {/* Price */}
                         <div className="flex items-baseline gap-2 mt-2">
                             <span className="text-lg font-bold text-white">
-                                {currencySymbol}{product.price.toFixed(2)}
+                                {card.displayPrice}
                             </span>
-                            {hasDiscount && (
+                            {card.hasDiscount && card.displayCompareAtPrice && (
                                 <span className="text-sm line-through text-white/60">
-                                    {currencySymbol}{product.compareAtPrice!.toFixed(2)}
+                                    {card.displayCompareAtPrice}
                                 </span>
                             )}
                         </div>
 
                         {/* Add to Cart */}
-                        {onAddToCart && (
+                        {onAddToCart && isAvailable && (
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -794,28 +932,50 @@ const ProductCard: React.FC<ProductCardProps> = ({
         );
     }
 
+    // Card style variations are intentionally centralized so storefront themes can
+    // switch product card variants without rewriting the product grid.
+    const cardStyleClasses: Record<Exclude<ProductCardVisualVariant, 'overlay'>, string> = {
+        minimal: 'bg-transparent border-0 shadow-none',
+        modern: 'bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700',
+        elegant: 'bg-white dark:bg-gray-800 shadow-lg border-0',
+        luxury: 'bg-white shadow-[0_18px_45px_rgba(15,23,42,0.10)] border border-slate-100',
+        marketplace: 'bg-white shadow-sm border border-slate-200',
+        editorial: 'bg-white border-0 shadow-none',
+        compact: 'bg-white shadow-sm border border-slate-200',
+        imageFirst: 'bg-white shadow-sm border border-slate-100',
+        quickBuy: 'bg-white shadow-md border border-slate-200',
+    };
+
+    const imageAspectClass = visualCardStyle === 'compact'
+        ? 'aspect-square'
+        : visualCardStyle === 'editorial' || visualCardStyle === 'imageFirst'
+            ? 'aspect-[3/4]'
+            : 'aspect-[4/5]';
+
+    const contentPaddingClass = visualCardStyle === 'compact' ? 'p-3' : 'p-3 sm:p-4';
+    const showFullQuickBuy = visualCardStyle === 'quickBuy';
+
     // Card style variations - use theme colors if provided (for non-overlay styles)
     const getCardStyle = () => {
         if (cardColors.cardBackground) {
-            const baseStyle = cardStyle === 'minimal'
+            const baseStyle = visualCardStyle === 'minimal'
                 ? 'border-0 shadow-none'
-                : cardStyle === 'elegant'
-                    ? 'shadow-lg border-0'
-                    : 'shadow-sm';
+                : visualCardStyle === 'luxury'
+                    ? 'shadow-[0_18px_45px_rgba(15,23,42,0.10)] border'
+                    : visualCardStyle === 'quickBuy'
+                        ? 'shadow-md border'
+                        : visualCardStyle === 'elegant'
+                            ? 'shadow-lg border-0'
+                            : 'shadow-sm';
             return baseStyle;
         }
-        return {
-            minimal: 'bg-transparent border-0 shadow-none',
-            modern: 'bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700',
-            elegant: 'bg-white dark:bg-gray-800 shadow-lg border-0',
-            overlay: '', // Handled separately above
-        }[cardStyle];
+        return cardStyleClasses[visualCardStyle] || cardStyleClasses.modern;
     };
 
     // Default styles (minimal, modern, elegant)
     return (
-        <div
-            className={`${getCardStyle()} ${borderRadiusClass} overflow-hidden group transition-all duration-300 hover:-translate-y-1`}
+        <article
+            className={`${getCardStyle()} ${borderRadiusClass} flex h-full flex-col overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg`}
             style={{
                 backgroundColor: cardColors.cardBackground,
                 borderColor: cardColors.border,
@@ -825,14 +985,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
         >
             {/* Image */}
             <div
-                className="relative aspect-square cursor-pointer overflow-hidden"
+                className={`relative ${imageAspectClass} cursor-pointer overflow-hidden bg-slate-100`}
                 style={{ backgroundColor: cardColors.mutedText ? `${cardColors.mutedText}20` : undefined }}
                 onClick={onClick}
             >
-                {product.images?.[0]?.url ? (
+                {card.image?.url ? (
                     <img
-                        src={product.images[0].url}
-                        alt={product.name}
+                        src={card.image.url}
+                        alt={card.image.altText}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                 ) : (
@@ -846,22 +1006,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    {hasDiscount && (
+                    {card.badges.map((badge) => (
                         <span
+                            key={badge.kind}
                             className="px-2 py-1 text-white text-xs font-bold rounded-full"
-                            style={{ backgroundColor: cardColors.salePriceColor }}
+                            style={{
+                                backgroundColor:
+                                    badge.kind === 'sale' ? cardColors.salePriceColor :
+                                        badge.kind === 'available' ? 'rgba(255,255,255,0.9)' :
+                                            badge.kind === 'low_stock' ? '#f97316' :
+                                                primaryColor,
+                                color: badge.kind === 'available' ? '#334155' : '#ffffff',
+                            }}
                         >
-                            -{discountPercent}%
+                            {badge.label}
                         </span>
-                    )}
-                    {product.isFeatured && (
-                        <span
-                            className="px-2 py-1 text-white text-xs font-bold rounded-full"
-                            style={{ backgroundColor: primaryColor }}
-                        >
-                            Destacado
-                        </span>
-                    )}
+                    ))}
                 </div>
 
                 {/* Wishlist Button */}
@@ -876,55 +1036,80 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </div>
 
             {/* Content */}
-            <div className="p-4">
+            <div className={`flex flex-1 flex-col ${contentPaddingClass}`}>
+                {product.categoryName && visualCardStyle !== 'compact' && (
+                    <p className="mb-1 truncate text-[11px] font-semibold uppercase text-slate-500">
+                        {product.categoryName}
+                    </p>
+                )}
                 <h3
-                    className="font-medium truncate cursor-pointer hover:underline"
+                    className="min-h-[2.5rem] text-sm font-semibold leading-5 cursor-pointer hover:underline sm:text-base"
                     style={{ color: cardColors.heading }}
                     onClick={onClick}
                 >
-                    {product.name}
+                    {card.name}
                 </h3>
 
                 {/* Rating */}
-                {product.reviewStats && product.reviewStats.totalReviews > 0 && (
+                {card.rating && (
                     <div className="flex items-center gap-1 mt-1">
-                        <RatingStars rating={product.reviewStats.averageRating} size="sm" />
+                        <RatingStars rating={card.rating.value} size="sm" />
                         <span
                             className="text-xs"
                             style={{ color: cardColors.mutedText }}
                         >
-                            ({product.reviewStats.totalReviews})
+                            {card.rating.displayText}
                         </span>
                     </div>
                 )}
 
                 {/* Price */}
-                <div className="flex items-baseline gap-2 mt-2">
-                    <span className="text-lg font-bold" style={{ color: cardColors.priceColor }}>
-                        {currencySymbol}{product.price.toFixed(2)}
-                    </span>
-                    {hasDiscount && (
-                        <span
-                            className="text-sm line-through"
-                            style={{ color: cardColors.mutedText }}
-                        >
-                            {currencySymbol}{product.compareAtPrice!.toFixed(2)}
+                <div className="mt-auto flex flex-col gap-3 pt-3">
+                    <div className="flex flex-wrap items-baseline gap-2">
+                        <span className="text-lg font-bold" style={{ color: cardColors.priceColor }}>
+                            {card.displayPrice}
                         </span>
-                    )}
+                        {card.hasDiscount && card.displayCompareAtPrice && (
+                            <span
+                                className="text-sm line-through"
+                                style={{ color: cardColors.mutedText }}
+                            >
+                                {card.displayCompareAtPrice}
+                            </span>
+                        )}
+                    </div>
+                    <div className={showFullQuickBuy ? 'grid grid-cols-1 gap-2' : 'grid grid-cols-[1fr_auto] gap-2'}>
+                        <button
+                            type="button"
+                            onClick={onClick}
+                            className={`${showFullQuickBuy ? 'hidden' : ''} rounded-lg border px-3 py-2 text-sm font-semibold transition-colors hover:bg-slate-50`}
+                            style={{ borderColor: cardColors.border || '#e2e8f0', color: cardColors.heading || '#0f172a' }}
+                        >
+                            Ver
+                        </button>
+                        {onAddToCart && (
+                            <button
+                                type="button"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onAddToCart();
+                                }}
+                                disabled={!isAvailable}
+                                className="inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                                style={{ backgroundColor: primaryColor }}
+                                aria-label={`Agregar ${product.name} al carrito`}
+                            >
+                                {showFullQuickBuy ? (
+                                    'Agregar al carrito'
+                                ) : (
+                                    <ShoppingCart size={17} />
+                                )}
+                            </button>
+                        )}
+                    </div>
                 </div>
-
-                {/* Add to Cart */}
-                {onAddToCart && (
-                    <button
-                        onClick={onAddToCart}
-                        className="w-full mt-3 py-2 text-white text-sm font-medium rounded-lg transition-colors hover:opacity-90"
-                        style={{ backgroundColor: primaryColor }}
-                    >
-                        Agregar al carrito
-                    </button>
-                )}
             </div>
-        </div>
+        </article>
     );
 };
 
@@ -940,7 +1125,11 @@ const ProductListItem: React.FC<ProductCardProps> = ({
     borderRadiusClass = 'rounded-xl',
     colors,
 }) => {
-    const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
+    const card = createProductCardViewModel(product, {
+        currencySymbol,
+        showBadges: false,
+    });
+    const isAvailable = card.inventory.isAvailable;
 
     // Merge colors with defaults
     const cardColors = {
@@ -955,7 +1144,7 @@ const ProductListItem: React.FC<ProductCardProps> = ({
 
     return (
         <div
-            className={`${borderRadiusClass} overflow-hidden shadow-sm flex`}
+            className={`${borderRadiusClass} overflow-hidden shadow-sm flex border bg-white`}
             style={{
                 backgroundColor: cardColors.cardBackground,
                 borderColor: cardColors.border,
@@ -969,10 +1158,10 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                 style={{ backgroundColor: cardColors.mutedText ? `${cardColors.mutedText}20` : undefined }}
                 onClick={onClick}
             >
-                {product.images?.[0]?.url ? (
+                {card.image?.url ? (
                     <img
-                        src={product.images[0].url}
-                        alt={product.name}
+                        src={card.image.url}
+                        alt={card.image.altText}
                         className="w-full h-full object-cover"
                     />
                 ) : (
@@ -993,7 +1182,7 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                         style={{ color: cardColors.heading }}
                         onClick={onClick}
                     >
-                        {product.name}
+                        {card.name}
                     </h3>
                     {product.shortDescription && (
                         <p
@@ -1003,14 +1192,14 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                             {product.shortDescription}
                         </p>
                     )}
-                    {product.reviewStats && product.reviewStats.totalReviews > 0 && (
+                    {card.rating && (
                         <div className="flex items-center gap-1 mt-2">
-                            <RatingStars rating={product.reviewStats.averageRating} size="sm" />
+                            <RatingStars rating={card.rating.value} size="sm" />
                             <span
                                 className="text-xs"
                                 style={{ color: cardColors.mutedText }}
                             >
-                                ({product.reviewStats.totalReviews})
+                                {card.rating.displayText}
                             </span>
                         </div>
                     )}
@@ -1019,14 +1208,14 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                 <div className="flex items-center justify-between mt-3">
                     <div className="flex items-baseline gap-2">
                         <span className="text-lg font-bold" style={{ color: cardColors.priceColor }}>
-                            {currencySymbol}{product.price.toFixed(2)}
+                            {card.displayPrice}
                         </span>
-                        {hasDiscount && (
+                        {card.hasDiscount && card.displayCompareAtPrice && (
                             <span
                                 className="text-sm line-through"
                                 style={{ color: cardColors.mutedText }}
                             >
-                                {currencySymbol}{product.compareAtPrice!.toFixed(2)}
+                                {card.displayCompareAtPrice}
                             </span>
                         )}
                     </div>
@@ -1040,7 +1229,9 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                         />
                         {onAddToCart && (
                             <button
+                                type="button"
                                 onClick={onAddToCart}
+                                disabled={!isAvailable}
                                 className="px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors hover:opacity-90"
                                 style={{ backgroundColor: primaryColor }}
                             >

@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import Modal from '../../ui/Modal';
 import { LEAD_FIELD_TEMPLATES, type LeadFieldTemplateIcon } from '../../../data/leadFieldTemplates';
+import AppSelect from '../../ui/AppSelect';
 
 interface CustomFieldsManagerProps {
     customFieldsConfig: CustomFieldDefinition[];
@@ -279,7 +280,7 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                                             placeholder={t('leads.customFields.fieldNamePlaceholder')}
                                             className="h-10 w-full rounded-lg border border-q-border bg-secondary/15 px-3 text-sm text-q-text outline-none transition-colors placeholder:text-q-text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
                                         />
-                                        <select
+                                        <AppSelect
                                             value={newFieldType}
                                             onChange={e => setNewFieldType(e.target.value as CustomFieldDefinition['type'])}
                                             className="h-10 w-full rounded-lg border border-q-border bg-secondary/15 px-3 text-sm text-q-text outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
@@ -289,7 +290,7 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                                             <option value="date">{t('leads.customFields.types.date')}</option>
                                             <option value="select">{t('leads.customFields.types.select')}</option>
                                             <option value="checkbox">{t('leads.customFields.types.checkbox')}</option>
-                                        </select>
+                                        </AppSelect>
                                         <button
                                             onClick={handleAddField}
                                             disabled={!newFieldName.trim()}

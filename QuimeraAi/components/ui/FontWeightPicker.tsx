@@ -1,7 +1,7 @@
 /**
  * FontWeightPicker
  * Custom dropdown component for selecting font weights.
- * Replaces the native browser <select> with a styled dropdown that matches the editor UI.
+ * Replaces native browser selects with a styled dropdown that matches the editor UI.
  * Each option renders its label at the corresponding font-weight for a live preview.
  */
 

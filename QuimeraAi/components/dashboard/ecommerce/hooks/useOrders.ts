@@ -17,12 +17,111 @@ interface UseOrdersOptions {
     limitCount?: number;
 }
 
+type OrderColumnUpdates = Record<string, unknown>;
+type OrderDataUpdates = Record<string, unknown>;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const withoutUndefined = (record: Record<string, unknown>): Record<string, unknown> =>
+    Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined));
+
+const mapOrderDetailsToDB = (order: Partial<Order>): OrderColumnUpdates => {
+    const data: OrderColumnUpdates = {};
+
+    if (order.orderNumber !== undefined) data.order_number = order.orderNumber;
+    if (order.customerEmail !== undefined) data.customer_email = order.customerEmail;
+    if (order.customerName !== undefined) data.customer_name = order.customerName;
+    if (order.customerPhone !== undefined) data.customer_phone = order.customerPhone;
+    if (order.items !== undefined) data.items = order.items;
+    if (order.subtotal !== undefined) data.subtotal = order.subtotal;
+    if (order.discount !== undefined) data.discount = order.discount;
+    if (order.discountCode !== undefined) data.discount_code = order.discountCode;
+    if (order.discountAmount !== undefined) data.discount_amount = order.discountAmount;
+    if (order.shippingCost !== undefined) data.shipping_cost = order.shippingCost;
+    if (order.taxAmount !== undefined) data.tax_amount = order.taxAmount;
+    if (order.total !== undefined) data.total = order.total;
+    if (order.currency !== undefined) data.currency = order.currency;
+    if (order.pricing !== undefined) data.pricing = order.pricing;
+    if (order.shippingAddress !== undefined) data.shipping_address = order.shippingAddress;
+    if (order.billingAddress !== undefined) data.billing_address = order.billingAddress;
+    if (order.status !== undefined) data.status = order.status;
+    if (order.paymentStatus !== undefined) data.payment_status = order.paymentStatus;
+    if (order.fulfillmentStatus !== undefined) data.fulfillment_status = order.fulfillmentStatus;
+    if (order.paymentMethod !== undefined) data.payment_method = order.paymentMethod;
+    if (order.paymentIntentId !== undefined) data.payment_intent_id = order.paymentIntentId;
+    if (order.shippingMethod !== undefined) data.shipping_method = order.shippingMethod;
+    if (order.trackingNumber !== undefined) data.tracking_number = order.trackingNumber;
+    if (order.trackingUrl !== undefined) data.tracking_url = order.trackingUrl;
+    if (order.carrier !== undefined) data.carrier = order.carrier;
+    if (order.notes !== undefined) data.notes = order.notes;
+    if (order.customerNotes !== undefined) data.customer_notes = order.customerNotes;
+    if (order.internalNotes !== undefined) data.internal_notes = order.internalNotes;
+
+    return data;
+};
+
 export const useOrders = (userId: string, storeId?: string, options?: UseOrdersOptions) => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const effectiveStoreId = storeId || '';
+
+    const applyOrderUpdate = useCallback(
+        async (
+            orderId: string,
+            columnUpdates: OrderColumnUpdates,
+            dataUpdates: OrderDataUpdates = {}
+        ): Promise<Order> => {
+            const now = new Date().toISOString();
+            const { data: existingOrder, error: readError } = await supabase
+                .from('store_orders')
+                .select('data')
+                .eq('id', orderId)
+                .single();
+
+            if (readError) throw readError;
+
+            const existingData = isRecord(existingOrder?.data) ? existingOrder.data : {};
+            const nextData = withoutUndefined({
+                ...existingData,
+                ...dataUpdates,
+                updatedAt: now,
+            });
+
+            const updatePayload = withoutUndefined({
+                ...columnUpdates,
+                data: nextData,
+                updated_at: now,
+            });
+
+            const { data, error } = await supabase
+                .from('store_orders')
+                .update(updatePayload)
+                .eq('id', orderId)
+                .select('*')
+                .single();
+
+            if (error) throw error;
+            const updatedOrder = mapOrderFromDB(data);
+            setOrders((currentOrders) =>
+                currentOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+            );
+            return updatedOrder;
+        },
+        []
+    );
+
+    const syncOrderFromFunctionPayload = useCallback((payload: any): Order => {
+        const orderRow = payload?.order;
+        if (!orderRow) throw new Error('Order update response did not include an order');
+        const updatedOrder = mapOrderFromDB(orderRow);
+        setOrders((currentOrders) =>
+            currentOrders.map((order) => (order.id === updatedOrder.id ? updatedOrder : order))
+        );
+        return updatedOrder;
+    }, []);
 
     const fetchOrders = useCallback(async () => {
         if (!effectiveStoreId) return;
@@ -163,39 +262,53 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
     // Update order status
     const updateOrderStatus = useCallback(
         async (orderId: string, status: OrderStatus) => {
+            if (status === 'cancelled') {
+                const result = await supabase.functions.invoke('stripe-api', {
+                    body: {
+                        action: 'cancelStoreOrder',
+                        storeId: effectiveStoreId,
+                        orderId,
+                    },
+                });
+                if (result.error) throw result.error;
+                return syncOrderFromFunctionPayload(result.data?.data || result.data);
+            }
+
             const updateData: any = {
+                status,
+            };
+            const dataUpdates: OrderDataUpdates = {
                 status,
             };
 
             const now = new Date().toISOString();
 
             // Set timestamps based on status
-            if (status === 'cancelled') {
-                updateData.cancelled_at = now;
-            } else if (status === 'refunded') {
+            if (status === 'refunded') {
                 updateData.refunded_at = now;
+                updateData.payment_status = 'refunded';
+                dataUpdates.refundedAt = now;
+                dataUpdates.paymentStatus = 'refunded';
+            } else if (status === 'paid') {
+                updateData.paid_at = now;
+                updateData.payment_status = 'paid';
+                dataUpdates.paidAt = now;
+                dataUpdates.paymentStatus = 'paid';
             } else if (status === 'shipped') {
                 updateData.shipped_at = now;
                 updateData.fulfillment_status = 'fulfilled';
+                dataUpdates.shippedAt = now;
+                dataUpdates.fulfillmentStatus = 'fulfilled';
             } else if (status === 'delivered') {
                 updateData.delivered_at = now;
+                updateData.fulfillment_status = 'fulfilled';
+                dataUpdates.deliveredAt = now;
+                dataUpdates.fulfillmentStatus = 'fulfilled';
             }
 
-            const { data, error } = await supabase
-                .from('store_orders')
-                .update(updateData)
-                .eq('id', orderId)
-                .select('*')
-                .single();
-
-            if (error) throw error;
-            const updatedOrder = mapOrderFromDB(data);
-            setOrders((currentOrders) =>
-                currentOrders.map((order) => (order.id === orderId ? updatedOrder : order))
-            );
-            return updatedOrder;
+            return applyOrderUpdate(orderId, updateData, dataUpdates);
         },
-        []
+        [applyOrderUpdate, effectiveStoreId, syncOrderFromFunctionPayload]
     );
 
     // Update payment status
@@ -208,73 +321,105 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
             if (paymentIntentId) {
                 updateData.payment_intent_id = paymentIntentId;
             }
+            const dataUpdates: OrderDataUpdates = {
+                paymentStatus,
+                paymentIntentId,
+            };
 
             if (paymentStatus === 'paid') {
                 updateData.paid_at = new Date().toISOString();
                 updateData.status = 'paid';
+                dataUpdates.paidAt = updateData.paid_at;
+                dataUpdates.status = 'paid';
+            } else if (paymentStatus === 'refunded') {
+                updateData.refunded_at = new Date().toISOString();
+                updateData.status = 'refunded';
+                dataUpdates.refundedAt = updateData.refunded_at;
+                dataUpdates.status = 'refunded';
             }
 
-            const { error } = await supabase
-                .from('store_orders')
-                .update(updateData)
-                .eq('id', orderId);
-
-            if (error) throw error;
+            return applyOrderUpdate(orderId, updateData, dataUpdates);
         },
-        []
+        [applyOrderUpdate]
     );
 
     // Update fulfillment status
     const updateFulfillmentStatus = useCallback(
         async (orderId: string, fulfillmentStatus: FulfillmentStatus) => {
-            const { error } = await supabase
-                .from('store_orders')
-                .update({ fulfillment_status: fulfillmentStatus })
-                .eq('id', orderId);
-
-            if (error) throw error;
+            return applyOrderUpdate(
+                orderId,
+                { fulfillment_status: fulfillmentStatus },
+                { fulfillmentStatus }
+            );
         },
-        []
+        [applyOrderUpdate]
     );
 
     // Add tracking info
     const addTrackingInfo = useCallback(
         async (orderId: string, carrier: string, trackingNumber: string, trackingUrl?: string) => {
-            const { data, error } = await supabase
-                .from('store_orders')
-                .update({
+            const shippedAt = new Date().toISOString();
+            return applyOrderUpdate(
+                orderId,
+                {
                     carrier,
                     tracking_number: trackingNumber,
-                    tracking_url: trackingUrl,
+                    tracking_url: trackingUrl || null,
                     status: 'shipped',
                     fulfillment_status: 'fulfilled',
-                    shipped_at: new Date().toISOString(),
-                })
-                .eq('id', orderId)
-                .select('*')
-                .single();
-
-            if (error) throw error;
-            const updatedOrder = mapOrderFromDB(data);
-            setOrders((currentOrders) =>
-                currentOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+                    shipped_at: shippedAt,
+                },
+                {
+                    carrier,
+                    trackingNumber,
+                    trackingUrl: trackingUrl || null,
+                    status: 'shipped',
+                    fulfillmentStatus: 'fulfilled',
+                    shippedAt,
+                }
             );
-            return updatedOrder;
         },
-        []
+        [applyOrderUpdate]
     );
 
     // Add internal notes
     const addInternalNotes = useCallback(
         async (orderId: string, notes: string) => {
-            const { error } = await supabase
-                .from('store_orders')
-                .update({ internal_notes: notes })
-                .eq('id', orderId);
-
-            if (error) throw error;
+            return applyOrderUpdate(
+                orderId,
+                { internal_notes: notes },
+                { internalNotes: notes }
+            );
         },
-        []
+        [applyOrderUpdate]
+    );
+
+    const updateOrderDetails = useCallback(
+        async (orderId: string, updates: Partial<Order>) => {
+            return applyOrderUpdate(
+                orderId,
+                mapOrderDetailsToDB(updates),
+                withoutUndefined(updates as Record<string, unknown>)
+            );
+        },
+        [applyOrderUpdate]
+    );
+
+    const createRefund = useCallback(
+        async (orderId: string, amount?: number, reason = 'requested_by_customer') => {
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: withoutUndefined({
+                    action: 'createRefund',
+                    storeId: effectiveStoreId,
+                    orderId,
+                    amount,
+                    reason,
+                }),
+            });
+            if (result.error) throw result.error;
+            return syncOrderFromFunctionPayload(result.data?.data || result.data);
+        },
+        [effectiveStoreId, syncOrderFromFunctionPayload]
     );
 
     // Get order by ID
@@ -324,6 +469,8 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
         updateFulfillmentStatus,
         addTrackingInfo,
         addInternalNotes,
+        updateOrderDetails,
+        createRefund,
         getOrderById,
         getOrdersByStatus,
         getPendingOrdersCount,

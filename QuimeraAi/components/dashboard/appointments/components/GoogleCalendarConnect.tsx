@@ -22,6 +22,7 @@ import {
     ExternalLink,
 } from 'lucide-react';
 import { GoogleCalendarConfig, SyncStatus } from '../../../../types';
+import AppSelect from '../../../ui/AppSelect';
 
 // =============================================================================
 // TYPES
@@ -281,13 +282,13 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                                 <label className="block text-sm font-medium text-foreground mb-2">
                                     {t('appointments.google.calendarLabel')}
                                 </label>
-                                <select
+                                <AppSelect
                                     value={config?.calendarId || 'primary'}
                                     onChange={() => { }}
                                     className="w-full h-10 bg-secondary/50 border border-q-border rounded-lg px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                 >
                                     <option value="primary">{t('appointments.google.primaryCalendar')}</option>
-                                </select>
+                                </AppSelect>
                             </div>
 
                             {/* Disconnect button */}

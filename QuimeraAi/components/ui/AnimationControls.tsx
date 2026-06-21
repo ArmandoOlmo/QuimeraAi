@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimationType } from '../../types';
 import { Wand2 } from 'lucide-react';
+import AppSelect from './AppSelect';
 
 interface AnimationControlsProps {
   animationType?: AnimationType;
@@ -52,7 +53,7 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
           <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
             {t('controls.animationType')}
           </label>
-          <select
+          <AppSelect
             value={animationType}
             onChange={(e) => onChangeAnimationType(e.target.value as AnimationType)}
             className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent transition-all"
@@ -65,7 +66,7 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
             <option value="slide-down">{t('controls.animSlideDown')}</option>
             <option value="scale-in">{t('controls.animScaleIn')}</option>
             <option value="bounce-in">{t('controls.animBounceIn')}</option>
-          </select>
+          </AppSelect>
         </div>
       )}
     </div>

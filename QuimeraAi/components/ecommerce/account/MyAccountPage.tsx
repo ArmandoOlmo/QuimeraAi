@@ -4,7 +4,7 @@
  * Incluye: Perfil, Pedidos, Direcciones, Preferencias
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     User,
@@ -20,9 +20,12 @@ import {
     Award,
     ArrowLeft,
     Loader2,
+    Plus,
+    Save,
+    Trash2,
 } from 'lucide-react';
 import { useStoreAuth } from '../context';
-import type { StoredTimestamp } from '../../../types/ecommerce';
+import type { Address, StoredTimestamp } from '../../../types/ecommerce';
 import { timestampToDate } from '../../../utils/timestampUtils';
 import OrderHistoryPage from '../OrderHistoryPage';
 import { DEFAULT_ROLE_CONFIGS } from '../../../types/storeUsers';
@@ -37,6 +40,18 @@ interface MyAccountPageProps {
     currencySymbol?: string;
 }
 
+const emptyAddressForm: Address = {
+    firstName: '',
+    lastName: '',
+    address1: '',
+    address2: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: 'US',
+    phone: '',
+};
+
 const MyAccountPage: React.FC<MyAccountPageProps> = ({
     storeId,
     onBack,
@@ -45,9 +60,39 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({
     currencySymbol = '$',
 }) => {
     const { t } = useTranslation();
-    const { user, logout, isLoading } = useStoreAuth();
+    const { user, logout, updateProfile, deleteAccount, isLoading } = useStoreAuth();
     const [activeTab, setActiveTab] = useState<AccountTab>('profile');
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
+    const [isSavingPreferences, setIsSavingPreferences] = useState(false);
+    const [isAddingAddress, setIsAddingAddress] = useState(false);
+    const [isSavingAddress, setIsSavingAddress] = useState(false);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+    const [profileForm, setProfileForm] = useState({
+        displayName: '',
+        firstName: '',
+        lastName: '',
+        phone: '',
+    });
+    const [addressForm, setAddressForm] = useState<Address>(emptyAddressForm);
+
+    useEffect(() => {
+        if (!user) return;
+        setProfileForm({
+            displayName: user.displayName || '',
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+            phone: user.phone || '',
+        });
+        setAddressForm({
+            ...emptyAddressForm,
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+            phone: user.phone || '',
+        });
+    }, [user]);
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -58,6 +103,124 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({
             console.error('Error logging out:', error);
         } finally {
             setIsLoggingOut(false);
+        }
+    };
+
+    const handleSaveProfile = async () => {
+        if (!user) return;
+        setIsSavingProfile(true);
+        setSaveError(null);
+
+        try {
+            const displayName = profileForm.displayName.trim() ||
+                [profileForm.firstName, profileForm.lastName].filter(Boolean).join(' ') ||
+                user.email;
+
+            await updateProfile({
+                displayName,
+                firstName: profileForm.firstName.trim(),
+                lastName: profileForm.lastName.trim(),
+                phone: profileForm.phone.trim(),
+            });
+            setIsEditingProfile(false);
+        } catch (error: any) {
+            setSaveError(error.message || 'No se pudo guardar el perfil');
+        } finally {
+            setIsSavingProfile(false);
+        }
+    };
+
+    const handleToggleMarketing = async () => {
+        if (!user) return;
+        setIsSavingPreferences(true);
+        setSaveError(null);
+
+        try {
+            await updateProfile({ acceptsMarketing: !user.acceptsMarketing });
+        } catch (error: any) {
+            setSaveError(error.message || 'No se pudo actualizar la preferencia');
+        } finally {
+            setIsSavingPreferences(false);
+        }
+    };
+
+    const handleAddAddress = async () => {
+        if (!user) return;
+        if (!addressForm.address1.trim() || !addressForm.city.trim() || !addressForm.state.trim() || !addressForm.zipCode.trim()) {
+            setSaveError('Completa dirección, ciudad, estado y código postal.');
+            return;
+        }
+
+        setIsSavingAddress(true);
+        setSaveError(null);
+
+        try {
+            const nextAddress: Address = {
+                ...addressForm,
+                firstName: addressForm.firstName.trim() || user.firstName || user.displayName || 'Customer',
+                lastName: addressForm.lastName.trim() || user.lastName || '',
+                address1: addressForm.address1.trim(),
+                address2: addressForm.address2?.trim() || undefined,
+                city: addressForm.city.trim(),
+                state: addressForm.state.trim(),
+                zipCode: addressForm.zipCode.trim(),
+                country: addressForm.country.trim() || 'US',
+                phone: addressForm.phone?.trim() || user.phone,
+            };
+            const nextAddresses = [...(user.addresses || []), nextAddress];
+
+            await updateProfile({
+                addresses: nextAddresses,
+                defaultShippingAddress: user.defaultShippingAddress || nextAddress,
+                defaultBillingAddress: user.defaultBillingAddress || nextAddress,
+            });
+            setAddressForm({
+                ...emptyAddressForm,
+                firstName: user.firstName || '',
+                lastName: user.lastName || '',
+                phone: user.phone || '',
+            });
+            setIsAddingAddress(false);
+        } catch (error: any) {
+            setSaveError(error.message || 'No se pudo guardar la dirección');
+        } finally {
+            setIsSavingAddress(false);
+        }
+    };
+
+    const handleRemoveAddress = async (index: number) => {
+        if (!user) return;
+        setIsSavingAddress(true);
+        setSaveError(null);
+
+        try {
+            const nextAddresses = (user.addresses || []).filter((_, itemIndex) => itemIndex !== index);
+            await updateProfile({
+                addresses: nextAddresses,
+                defaultShippingAddress: nextAddresses[0],
+                defaultBillingAddress: nextAddresses[0],
+            });
+        } catch (error: any) {
+            setSaveError(error.message || 'No se pudo eliminar la dirección');
+        } finally {
+            setIsSavingAddress(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!user) return;
+        const confirmed = window.confirm(t('storeAuth.deleteAccountConfirm', '¿Seguro que quieres eliminar tu cuenta? Esta acción no se puede deshacer.'));
+        if (!confirmed) return;
+
+        setIsDeletingAccount(true);
+        setSaveError(null);
+
+        try {
+            await deleteAccount();
+            if (onBack) onBack();
+        } catch (error: any) {
+            setSaveError(error.message || 'No se pudo eliminar la cuenta');
+            setIsDeletingAccount(false);
         }
     };
 
@@ -195,6 +358,12 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({
 
             {/* Content */}
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                {saveError && (
+                    <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                        {saveError}
+                    </div>
+                )}
+
                 {/* Profile Tab */}
                 {activeTab === 'profile' && (
                     <div className="grid md:grid-cols-2 gap-6">
@@ -204,50 +373,130 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                                     {t('storeAuth.personalInfo', 'Información Personal')}
                                 </h3>
-                                <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                                    <Edit2 size={18} />
-                                </button>
+                                {!isEditingProfile && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditingProfile(true)}
+                                        className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    >
+                                        <Edit2 size={18} />
+                                    </button>
+                                )}
                             </div>
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <User className="text-gray-400" size={20} />
+                            {isEditingProfile ? (
+                                <div className="space-y-4">
                                     <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        <label className="mb-1 block text-sm font-medium text-gray-600 dark:text-gray-300">
                                             {t('storeAuth.name', 'Nombre')}
-                                        </p>
-                                        <p className="text-gray-900 dark:text-white">{user.displayName}</p>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={profileForm.displayName}
+                                            onChange={(event) => setProfileForm(prev => ({ ...prev, displayName: event.target.value }))}
+                                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+                                            style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                                        />
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <Mail className="text-gray-400" size={20} />
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                            {t('storeAuth.email', 'Email')}
-                                        </p>
-                                        <p className="text-gray-900 dark:text-white">{user.email}</p>
-                                    </div>
-                                </div>
-                                {user.phone && (
-                                    <div className="flex items-center gap-3">
-                                        <Phone className="text-gray-400" size={20} />
+                                    <div className="grid gap-3 sm:grid-cols-2">
                                         <div>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                {t('storeAuth.phone', 'Teléfono')}
-                                            </p>
-                                            <p className="text-gray-900 dark:text-white">{user.phone}</p>
+                                            <label className="mb-1 block text-sm font-medium text-gray-600 dark:text-gray-300">
+                                                {t('storeAuth.firstName', 'Nombre')}
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={profileForm.firstName}
+                                                onChange={(event) => setProfileForm(prev => ({ ...prev, firstName: event.target.value }))}
+                                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+                                                style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="mb-1 block text-sm font-medium text-gray-600 dark:text-gray-300">
+                                                {t('storeAuth.lastName', 'Apellido')}
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={profileForm.lastName}
+                                                onChange={(event) => setProfileForm(prev => ({ ...prev, lastName: event.target.value }))}
+                                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+                                                style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                                            />
                                         </div>
                                     </div>
-                                )}
-                                <div className="flex items-center gap-3">
-                                    <Calendar className="text-gray-400" size={20} />
                                     <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                            {t('storeAuth.memberSince', 'Miembro desde')}
-                                        </p>
-                                        <p className="text-gray-900 dark:text-white">{formatDate(user.createdAt)}</p>
+                                        <label className="mb-1 block text-sm font-medium text-gray-600 dark:text-gray-300">
+                                            {t('storeAuth.phone', 'Teléfono')}
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            value={profileForm.phone}
+                                            onChange={(event) => setProfileForm(prev => ({ ...prev, phone: event.target.value }))}
+                                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+                                            style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                                        />
+                                    </div>
+                                    <div className="flex justify-end gap-2 pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsEditingProfile(false)}
+                                            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                                        >
+                                            {t('common.cancel', 'Cancelar')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleSaveProfile}
+                                            disabled={isSavingProfile}
+                                            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                                            style={{ backgroundColor: primaryColor }}
+                                        >
+                                            {isSavingProfile ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                                            {t('common.save', 'Guardar')}
+                                        </button>
                                     </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <User className="text-gray-400" size={20} />
+                                        <div>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                {t('storeAuth.name', 'Nombre')}
+                                            </p>
+                                            <p className="text-gray-900 dark:text-white">{user.displayName}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Mail className="text-gray-400" size={20} />
+                                        <div>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                {t('storeAuth.email', 'Email')}
+                                            </p>
+                                            <p className="text-gray-900 dark:text-white">{user.email}</p>
+                                        </div>
+                                    </div>
+                                    {user.phone && (
+                                        <div className="flex items-center gap-3">
+                                            <Phone className="text-gray-400" size={20} />
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                    {t('storeAuth.phone', 'Teléfono')}
+                                                </p>
+                                                <p className="text-gray-900 dark:text-white">{user.phone}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-3">
+                                        <Calendar className="text-gray-400" size={20} />
+                                        <div>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                {t('storeAuth.memberSince', 'Miembro desde')}
+                                            </p>
+                                            <p className="text-gray-900 dark:text-white">{formatDate(user.createdAt)}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Account Stats */}
@@ -316,19 +565,143 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({
                                 {t('storeAuth.savedAddresses', 'Direcciones Guardadas')}
                             </h3>
                             <button
+                                type="button"
+                                onClick={() => setIsAddingAddress(true)}
                                 className="px-4 py-2 text-sm font-medium rounded-lg text-white"
                                 style={{ backgroundColor: primaryColor }}
                             >
+                                <Plus size={16} className="mr-2 inline" />
                                 {t('storeAuth.addAddress', 'Agregar Dirección')}
                             </button>
                         </div>
-                        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                            <MapPin className="mx-auto mb-4 text-gray-300" size={48} />
-                            <p>{t('storeAuth.noAddresses', 'No tienes direcciones guardadas')}</p>
-                            <p className="text-sm mt-1">
-                                {t('storeAuth.addAddressHint', 'Las direcciones de tus pedidos se guardarán aquí')}
-                            </p>
-                        </div>
+
+                        {isAddingAddress && (
+                            <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <input
+                                        type="text"
+                                        value={addressForm.firstName}
+                                        onChange={(event) => setAddressForm(prev => ({ ...prev, firstName: event.target.value }))}
+                                        placeholder={t('storeAuth.firstName', 'Nombre')}
+                                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={addressForm.lastName}
+                                        onChange={(event) => setAddressForm(prev => ({ ...prev, lastName: event.target.value }))}
+                                        placeholder={t('storeAuth.lastName', 'Apellido')}
+                                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={addressForm.address1}
+                                        onChange={(event) => setAddressForm(prev => ({ ...prev, address1: event.target.value }))}
+                                        placeholder={t('storeAuth.addressLine1', 'Dirección')}
+                                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white sm:col-span-2"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={addressForm.address2 || ''}
+                                        onChange={(event) => setAddressForm(prev => ({ ...prev, address2: event.target.value }))}
+                                        placeholder={t('storeAuth.addressLine2', 'Apartamento, suite, etc.')}
+                                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white sm:col-span-2"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={addressForm.city}
+                                        onChange={(event) => setAddressForm(prev => ({ ...prev, city: event.target.value }))}
+                                        placeholder={t('storeAuth.city', 'Ciudad')}
+                                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={addressForm.state}
+                                        onChange={(event) => setAddressForm(prev => ({ ...prev, state: event.target.value }))}
+                                        placeholder={t('storeAuth.state', 'Estado')}
+                                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={addressForm.zipCode}
+                                        onChange={(event) => setAddressForm(prev => ({ ...prev, zipCode: event.target.value }))}
+                                        placeholder={t('storeAuth.zipCode', 'Código postal')}
+                                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={addressForm.country}
+                                        onChange={(event) => setAddressForm(prev => ({ ...prev, country: event.target.value }))}
+                                        placeholder={t('storeAuth.country', 'País')}
+                                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                    />
+                                </div>
+                                <div className="mt-4 flex justify-end gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAddingAddress(false)}
+                                        className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                                    >
+                                        {t('common.cancel', 'Cancelar')}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleAddAddress}
+                                        disabled={isSavingAddress}
+                                        className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                                        style={{ backgroundColor: primaryColor }}
+                                    >
+                                        {isSavingAddress ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                                        {t('common.save', 'Guardar')}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {(user.addresses || []).length > 0 ? (
+                            <div className="grid gap-4 md:grid-cols-2">
+                                {(user.addresses || []).map((address, index) => (
+                                    <div
+                                        key={`${address.address1}-${address.zipCode}-${index}`}
+                                        className="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+                                    >
+                                        <div className="mb-3 flex items-start justify-between gap-3">
+                                            <div className="flex items-start gap-3">
+                                                <MapPin className="mt-0.5 text-gray-400" size={20} />
+                                                <div>
+                                                    <p className="font-medium text-gray-900 dark:text-white">
+                                                        {[address.firstName, address.lastName].filter(Boolean).join(' ') || user.displayName}
+                                                    </p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-300">{address.address1}</p>
+                                                    {address.address2 && (
+                                                        <p className="text-sm text-gray-600 dark:text-gray-300">{address.address2}</p>
+                                                    )}
+                                                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                        {[address.city, address.state, address.zipCode].filter(Boolean).join(', ')}
+                                                    </p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-300">{address.country}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveAddress(index)}
+                                                disabled={isSavingAddress}
+                                                className="rounded-lg p-2 text-red-500 hover:bg-red-50 disabled:opacity-60 dark:hover:bg-red-900/20"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                                <MapPin className="mx-auto mb-4 text-gray-300" size={48} />
+                                <p>{t('storeAuth.noAddresses', 'No tienes direcciones guardadas')}</p>
+                                <p className="text-sm mt-1">
+                                    {t('storeAuth.addAddressHint', 'Las direcciones de tus pedidos se guardarán aquí')}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -340,7 +713,12 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                                 {t('storeAuth.marketingPreferences', 'Preferencias de Marketing')}
                             </h3>
-                            <label className="flex items-center justify-between cursor-pointer">
+                            <button
+                                type="button"
+                                onClick={handleToggleMarketing}
+                                disabled={isSavingPreferences}
+                                className="flex w-full items-center justify-between gap-4 text-left disabled:opacity-60"
+                            >
                                 <div>
                                     <p className="text-gray-900 dark:text-white">
                                         {t('storeAuth.receiveEmails', 'Recibir emails promocionales')}
@@ -361,7 +739,7 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({
                                         }`}
                                     />
                                 </div>
-                            </label>
+                            </button>
                         </div>
 
                         {/* Danger Zone */}
@@ -372,7 +750,13 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({
                             <p className="text-gray-600 dark:text-gray-300 mb-4">
                                 {t('storeAuth.deleteAccountWarning', 'Esta acción no se puede deshacer. Se eliminarán todos tus datos.')}
                             </p>
-                            <button className="px-4 py-2 text-sm font-medium text-red-600 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20">
+                            <button
+                                type="button"
+                                onClick={handleDeleteAccount}
+                                disabled={isDeletingAccount}
+                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-50 disabled:opacity-60 dark:hover:bg-red-900/20"
+                            >
+                                {isDeletingAccount && <Loader2 className="animate-spin" size={16} />}
                                 {t('storeAuth.deleteAccount', 'Eliminar Cuenta')}
                             </button>
                         </div>
@@ -396,11 +780,6 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({
 };
 
 export default MyAccountPage;
-
-
-
-
-
 
 
 

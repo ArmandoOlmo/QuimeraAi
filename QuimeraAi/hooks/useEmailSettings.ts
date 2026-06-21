@@ -44,6 +44,97 @@ const defaultEmailSettings: Partial<EmailSettings> = {
     marketing: defaultMarketingSettings,
 };
 
+type EmailSettingsRow = Record<string, any>;
+
+const mapEmailSettingsFromRow = (row: EmailSettingsRow | null | undefined): Partial<EmailSettings> => {
+    if (!row) return defaultEmailSettings;
+    return {
+        provider: (row.provider || 'resend') as EmailSettings['provider'],
+        apiKeyConfigured: Boolean(row.api_key_configured),
+        fromEmail: row.from_email || '',
+        fromName: row.from_name || '',
+        replyTo: row.reply_to || '',
+        logoUrl: row.logo_url || '',
+        primaryColor: row.primary_color || '#4f46e5',
+        footerText: row.footer_text || '',
+        socialLinks: row.social_links || undefined,
+        transactional: {
+            ...defaultTransactionalSettings,
+            ...(row.transactional || {}),
+        },
+        marketing: {
+            ...defaultMarketingSettings,
+            ...(row.marketing || {}),
+        },
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+    };
+};
+
+const mapEmailSettingsToRow = (
+    projectId: string,
+    userId: string,
+    updates: Partial<EmailSettings>,
+): EmailSettingsRow => {
+    const row: EmailSettingsRow = {
+        project_id: projectId,
+        store_id: projectId,
+        user_id: userId,
+        updated_at: new Date().toISOString(),
+    };
+
+    if (updates.provider !== undefined) row.provider = updates.provider;
+    if (updates.apiKeyConfigured !== undefined) row.api_key_configured = updates.apiKeyConfigured;
+    if (updates.fromEmail !== undefined) row.from_email = updates.fromEmail;
+    if (updates.fromName !== undefined) row.from_name = updates.fromName;
+    if (updates.replyTo !== undefined) row.reply_to = updates.replyTo;
+    if (updates.logoUrl !== undefined) row.logo_url = updates.logoUrl;
+    if (updates.primaryColor !== undefined) row.primary_color = updates.primaryColor;
+    if (updates.footerText !== undefined) row.footer_text = updates.footerText;
+    if (updates.socialLinks !== undefined) row.social_links = updates.socialLinks;
+    if (updates.transactional !== undefined) row.transactional = updates.transactional;
+    if (updates.marketing !== undefined) row.marketing = updates.marketing;
+
+    return row;
+};
+
+const stripUndefined = <T extends Record<string, any>>(value: T): T =>
+    Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined)) as T;
+
+const mapCampaignInputToRow = (campaignData: Record<string, any>) => stripUndefined({
+    name: campaignData.name,
+    subject: campaignData.subject,
+    type: campaignData.type,
+    preview_text: campaignData.previewText ?? campaignData.preview_text,
+    html_content: campaignData.htmlContent ?? campaignData.html_content ?? campaignData.content,
+    email_document: campaignData.emailDocument ?? campaignData.email_document,
+    audience_type: campaignData.audienceType ?? campaignData.audience_type,
+    audience_segment_id: campaignData.audienceSegmentId ?? campaignData.audience_segment_id,
+    custom_recipient_emails: campaignData.customRecipientEmails ?? campaignData.custom_recipient_emails,
+    status: campaignData.status,
+    tags: campaignData.tags,
+});
+
+const mapAudienceInputToRow = (audienceData: Record<string, any>) => stripUndefined({
+    name: audienceData.name,
+    description: audienceData.description,
+    filters: audienceData.filters,
+    accepts_marketing: audienceData.acceptsMarketing ?? audienceData.accepts_marketing,
+    has_ordered: audienceData.hasOrdered ?? audienceData.has_ordered,
+    min_orders: audienceData.minOrders ?? audienceData.min_orders,
+    max_orders: audienceData.maxOrders ?? audienceData.max_orders,
+    min_total_spent: audienceData.minTotalSpent ?? audienceData.min_total_spent,
+    max_total_spent: audienceData.maxTotalSpent ?? audienceData.max_total_spent,
+    tags: audienceData.tags,
+    exclude_tags: audienceData.excludeTags ?? audienceData.exclude_tags,
+    last_order_days_ago: audienceData.lastOrderDaysAgo ?? audienceData.last_order_days_ago,
+    source: audienceData.source,
+    static_members: audienceData.staticMembers ?? audienceData.static_members,
+    static_member_count: audienceData.staticMemberCount ?? audienceData.static_member_count,
+    estimated_count: audienceData.estimatedCount ?? audienceData.estimated_count,
+    is_default: audienceData.isDefault ?? audienceData.is_default,
+});
+
 interface UseEmailSettingsOptions {
     realtime?: boolean;
 }
@@ -73,10 +164,11 @@ export const useEmailSettings = (
         const fetchSettings = async () => {
             try {
                 const { data, error } = await supabase
-                    .from('project_email_settings')
+                    .from('email_settings')
                     .select('*')
-                    .eq('project_id', projectId)
-                    .single();
+                    .or(`project_id.eq.${projectId},store_id.eq.${projectId}`)
+                    .limit(1)
+                    .maybeSingle();
 
                 if (!isMounted) return;
 
@@ -85,7 +177,7 @@ export const useEmailSettings = (
                 }
 
                 if (data) {
-                    setSettings(data as EmailSettings);
+                    setSettings(mapEmailSettingsFromRow(data));
                 } else {
                     setSettings(defaultEmailSettings);
                 }
@@ -108,11 +200,11 @@ export const useEmailSettings = (
                 .channel(channelId)
                 .on(
                     'postgres_changes',
-                    { event: '*', schema: 'public', table: 'project_email_settings', filter: `project_id=eq.${projectId}` },
+                    { event: '*', schema: 'public', table: 'email_settings', filter: `project_id=eq.${projectId}` },
                     (payload) => {
                         if (!isMounted) return;
                         if (payload.new) {
-                            setSettings(payload.new as EmailSettings);
+                            setSettings(mapEmailSettingsFromRow(payload.new));
                         } else {
                             setSettings(defaultEmailSettings);
                         }
@@ -138,17 +230,15 @@ export const useEmailSettings = (
             setError(null);
 
             try {
-                const updatedPayload = {
+                const mergedSettings = {
                     ...defaultEmailSettings,
                     ...settings,
                     ...updates,
-                    project_id: projectId,
-                    user_id: userId,
-                    updated_at: new Date().toISOString(),
                 };
+                const updatedPayload = mapEmailSettingsToRow(projectId, userId, mergedSettings);
 
                 const { error } = await supabase
-                    .from('project_email_settings')
+                    .from('email_settings')
                     .upsert(updatedPayload, { onConflict: 'project_id' });
 
                 if (error) throw error;
@@ -335,18 +425,12 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
 
         setIsSaving(true);
         try {
-            const sanitizedData: any = {};
-            Object.keys(campaignData).forEach(key => {
-                const val = (campaignData as any)[key];
-                if (val !== undefined) {
-                    sanitizedData[key] = val;
-                }
-            });
-
             const finalCampaign = {
-                ...sanitizedData,
+                ...mapCampaignInputToRow(campaignData),
                 project_id: projectId,
+                store_id: projectId,
                 user_id: userId,
+                created_by: userId,
                 status: 'draft',
                 stats: {
                     totalRecipients: 0,
@@ -384,12 +468,7 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
 
         setIsSaving(true);
         try {
-            const sanitizedUpdates: any = {};
-            Object.keys(updates).forEach(key => {
-                if (updates[key] !== undefined) {
-                    sanitizedUpdates[key] = updates[key];
-                }
-            });
+            const sanitizedUpdates = mapCampaignInputToRow(updates);
 
             const { error } = await supabase
                 .from('email_campaigns')
@@ -603,11 +682,13 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
 
         try {
             const newAudience = {
-                ...audienceData,
-                estimatedCount: 0,
-                isDefault: false,
+                ...mapAudienceInputToRow(audienceData),
+                estimated_count: 0,
+                is_default: false,
                 project_id: projectId,
-                createdBy: userId,
+                store_id: projectId,
+                user_id: userId,
+                created_by: userId,
             };
 
             const { data, error } = await supabase
@@ -658,7 +739,7 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         try {
             const { error } = await supabase
                 .from('email_audiences')
-                .update(updates)
+                .update(mapAudienceInputToRow(updates))
                 .eq('id', audienceId);
 
             if (error) throw error;

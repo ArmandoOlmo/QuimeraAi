@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import AppSelect from '../../ui/AppSelect';
 
 interface DynamicPassthroughControlsProps {
     allowedParameters?: string[];
@@ -60,7 +61,7 @@ const DynamicPassthroughControls: React.FC<DynamicPassthroughControlsProps> = ({
                     <label className="text-[10px] font-bold text-q-text-secondary uppercase">
                         {t('mediaGeneration.personGeneration', { defaultValue: 'Person generation' })}
                     </label>
-                    <select
+                    <AppSelect
                         value={String(values.personGeneration || 'allow_adult')}
                         onChange={(e) => onChange('personGeneration', e.target.value)}
                         className="w-full bg-q-bg border border-q-border rounded-lg py-2 px-3 text-xs"
@@ -68,7 +69,7 @@ const DynamicPassthroughControls: React.FC<DynamicPassthroughControlsProps> = ({
                         {PERSON_GENERATION_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
                         ))}
-                    </select>
+                    </AppSelect>
                 </div>
             )}
 

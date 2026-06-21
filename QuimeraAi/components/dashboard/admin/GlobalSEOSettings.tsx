@@ -6,6 +6,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import { doc, setDoc, getDoc } from '@/utils/compatData';
 import { db } from '@/utils/compatData';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import AppSelect from '../../ui/AppSelect';
 
 interface GlobalSEOSettingsProps {
     onBack: () => void;
@@ -194,7 +195,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                 <label className="block text-sm font-medium text-q-text mb-2">
                                                     {t('superadmin.seo.defaults.language')}
                                                 </label>
-                                                <select
+                                                <AppSelect
                                                     value={defaultLanguage}
                                                     onChange={(e) => setDefaultLanguage(e.target.value)}
                                                     className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -204,14 +205,14 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                     <option value="fr">Français</option>
                                                     <option value="de">Deutsch</option>
                                                     <option value="pt">Português</option>
-                                                </select>
+                                                </AppSelect>
                                             </div>
 
                                             <div>
                                                 <label className="block text-sm font-medium text-q-text mb-2">
                                                     {t('superadmin.seo.defaults.robots')}
                                                 </label>
-                                                <select
+                                                <AppSelect
                                                     value={defaultRobots}
                                                     onChange={(e) => setDefaultRobots(e.target.value)}
                                                     className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -220,14 +221,14 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                     <option value="noindex, follow">{t('superadmin.seo.defaults.robotsOptions.noindexFollow')}</option>
                                                     <option value="index, nofollow">{t('superadmin.seo.defaults.robotsOptions.indexNofollow')}</option>
                                                     <option value="noindex, nofollow">{t('superadmin.seo.defaults.robotsOptions.noindexNofollow')}</option>
-                                                </select>
+                                                </AppSelect>
                                             </div>
 
                                             <div>
                                                 <label className="block text-sm font-medium text-q-text mb-2">
                                                     {t('superadmin.seo.defaults.schemaType')}
                                                 </label>
-                                                <select
+                                                <AppSelect
                                                     value={defaultSchemaType}
                                                     onChange={(e) => setDefaultSchemaType(e.target.value)}
                                                     className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -238,7 +239,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                     <option value="Article">Article</option>
                                                     <option value="Product">Product</option>
                                                     <option value="Service">Service</option>
-                                                </select>
+                                                </AppSelect>
                                             </div>
 
                                             <div className="flex items-center justify-between p-4 bg-q-bg rounded-lg">
@@ -266,7 +267,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                 <label className="block text-sm font-medium text-q-text mb-2">
                                                     {t('superadmin.seo.defaults.ogType')}
                                                 </label>
-                                                <select
+                                                <AppSelect
                                                     value={defaultOgType}
                                                     onChange={(e) => setDefaultOgType(e.target.value)}
                                                     className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -275,14 +276,14 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                     <option value="article">Article</option>
                                                     <option value="product">Product</option>
                                                     <option value="profile">Profile</option>
-                                                </select>
+                                                </AppSelect>
                                             </div>
 
                                             <div>
                                                 <label className="block text-sm font-medium text-q-text mb-2">
                                                     {t('superadmin.seo.defaults.twitterCard')}
                                                 </label>
-                                                <select
+                                                <AppSelect
                                                     value={defaultTwitterCard}
                                                     onChange={(e) => setDefaultTwitterCard(e.target.value)}
                                                     className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
@@ -291,7 +292,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                     <option value="summary_large_image">Summary Large Image</option>
                                                     <option value="app">App</option>
                                                     <option value="player">Player</option>
-                                                </select>
+                                                </AppSelect>
                                             </div>
                                         </div>
                                     </div>

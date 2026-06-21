@@ -9,6 +9,7 @@ import { applyTokensToFullProject } from '../../../utils/designTokenApplier';
 import { defaultAppTokens } from '../../../utils/appTokenApplier';
 import { fontOptions, fontStacks, formatFontName } from '../../../utils/fontLoader';
 import FontFamilyPicker from '../../ui/FontFamilyPicker';
+import ColorControl from '../../ui/ColorControl';
 
 const DesignTokensEditor: React.FC = () => {
   const { designTokens, updateDesignTokens, appTokens, updateAppTokens } = useAdmin();
@@ -275,23 +276,7 @@ const DesignTokensEditor: React.FC = () => {
   };
 
   const ColorInput: React.FC<{ label: string; value: string; onChange: (value: string) => void }> = ({ label, value, onChange }) => (
-    <div className="flex items-center gap-3">
-      <label className="flex-1 text-sm text-q-text-secondary">{label}</label>
-      <div className="flex items-center gap-2">
-        <input
-          type="color"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-12 h-10 rounded cursor-pointer"
-        />
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-24 px-2 py-1 bg-q-surface border border-q-border rounded text-q-text text-sm font-mono"
-        />
-      </div>
-    </div>
+    <ColorControl label={label} value={value} onChange={onChange} variant="dashboard" />
   );
 
   return (

@@ -15,6 +15,19 @@ import { I18nInput, I18nTextArea } from './EditorControlPrimitives';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
 import { useCMS } from '../../contexts/cms/CMSContext';
 import { X, Check, Search, ChevronDown, ChevronUp, ChevronRight, FolderOpen, Package, Image as ImageIcon, Loader2, SlidersHorizontal, ShoppingBag, ShoppingCart, LayoutGrid, Maximize2, Palette, Info, Grid, List, MessageCircle, Trash2, Plus, FileText, Scale } from 'lucide-react';
+import {
+    normalizeWebsiteEcommerceCTARouteType,
+    normalizeWebsiteEcommerceResponsiveBehavior,
+    resolveWebsiteEcommerceCTARoute,
+    WEBSITE_ECOMMERCE_CTA_ROUTE_TYPES,
+    WEBSITE_ECOMMERCE_PRODUCT_CARD_VARIANTS,
+    WEBSITE_ECOMMERCE_RESPONSIVE_BEHAVIORS,
+} from '../../utils/websiteEcommerceBlocks';
+import type {
+    WebsiteEcommerceCTARouteType,
+    WebsiteEcommerceResponsiveBehavior,
+} from '../../types/websiteEcommerceBlocks';
+import AppSelect from './AppSelect';
 
 // Helper Components (same as in Controls.tsx)
 const Input = ({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?: string }) => (
@@ -122,7 +135,7 @@ const BorderRadiusSelector = ({ label, value, onChange, extended }: { label: str
 const SelectControl = ({ label, value, options, onChange }: { label: string, value: string, options: { value: string, label: string }[], onChange: (val: string) => void }) => (
     <div className="mb-3">
         <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-        <select
+        <AppSelect
             value={value}
             onChange={(e) => onChange(e.target.value)}
             className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
@@ -130,7 +143,7 @@ const SelectControl = ({ label, value, options, onChange }: { label: string, val
             {options.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
-        </select>
+        </AppSelect>
     </div>
 );
 
@@ -211,6 +224,220 @@ const NumberInput = ({ label, value, onChange, min, max, step }: { label: string
         />
     </div>
 );
+
+const getProductCardVariantLabel = (variant: string) => {
+    const labels: Record<string, string> = {
+        modern: 'Modern',
+        minimal: 'Minimal',
+        elegant: 'Elegant',
+        overlay: 'Overlay',
+        luxury: 'Luxury',
+        marketplace: 'Marketplace',
+        editorial: 'Editorial',
+        compact: 'Compact',
+        imageFirst: 'Image First',
+        quickBuy: 'Quick Buy',
+    };
+
+    return labels[variant] || variant;
+};
+
+const ProductCardVariantControl = ({
+    value,
+    onChange,
+    label,
+}: {
+    value?: string;
+    onChange: (value: string) => void;
+    label?: string;
+}) => {
+    const { t } = useTranslation();
+
+    return (
+        <SelectControl
+            label={label || t('editor.controls.ecommerce.productCardStyle', 'Product Card Style')}
+            value={value || 'modern'}
+            options={WEBSITE_ECOMMERCE_PRODUCT_CARD_VARIANTS.map(variant => ({
+                value: variant,
+                label: getProductCardVariantLabel(variant),
+            }))}
+            onChange={onChange}
+        />
+    );
+};
+
+const ResponsiveBehaviorControl = ({
+    value,
+    onChange,
+}: {
+    value?: string;
+    onChange: (value: WebsiteEcommerceResponsiveBehavior) => void;
+}) => {
+    const { t } = useTranslation();
+    const labels: Record<WebsiteEcommerceResponsiveBehavior, string> = {
+        stack: t('editor.controls.ecommerce.responsiveStack', 'Stack on mobile'),
+        scroll: t('editor.controls.ecommerce.responsiveScroll', 'Horizontal scroll'),
+        hide: t('editor.controls.ecommerce.responsiveHide', 'Hide on mobile'),
+    };
+
+    return (
+        <SelectControl
+            label={t('editor.controls.ecommerce.responsiveBehavior', 'Responsive Behavior')}
+            value={normalizeWebsiteEcommerceResponsiveBehavior(value)}
+            options={WEBSITE_ECOMMERCE_RESPONSIVE_BEHAVIORS.map(behavior => ({
+                value: behavior,
+                label: labels[behavior],
+            }))}
+            onChange={(next) => onChange(normalizeWebsiteEcommerceResponsiveBehavior(next))}
+        />
+    );
+};
+
+const CTARouteControls = ({
+    routeType,
+    route,
+    productId,
+    categoryId,
+    collectionId,
+    storeId,
+    gridCategories,
+    fallbackRoute = '/store',
+    label,
+    onRouteTypeChange,
+    onRouteChange,
+    onProductChange,
+    onCategoryChange,
+    onCollectionChange,
+}: {
+    routeType?: string;
+    route?: string;
+    productId?: string;
+    categoryId?: string;
+    collectionId?: string;
+    storeId?: string;
+    gridCategories?: CategoryItem[];
+    fallbackRoute?: string;
+    label?: string;
+    onRouteTypeChange: (value: WebsiteEcommerceCTARouteType) => void;
+    onRouteChange: (value: string) => void;
+    onProductChange?: (value: string | undefined) => void;
+    onCategoryChange?: (value: string | undefined) => void;
+    onCollectionChange?: (value: string | undefined) => void;
+}) => {
+    const { t } = useTranslation();
+    const normalizedRouteType = normalizeWebsiteEcommerceCTARouteType(routeType);
+    const routeLabels: Record<WebsiteEcommerceCTARouteType, string> = {
+        storefront: t('editor.controls.ecommerce.routeStorefront', 'Storefront'),
+        product: t('editor.controls.ecommerce.routeProduct', 'Product'),
+        category: t('editor.controls.ecommerce.routeCategory', 'Category'),
+        collection: t('editor.controls.ecommerce.routeCollection', 'Collection'),
+        cart: t('editor.controls.ecommerce.routeCart', 'Cart'),
+        custom: t('editor.controls.ecommerce.routeCustom', 'Custom URL'),
+    };
+
+    const resolveRoute = (updates: Partial<{
+        routeType: WebsiteEcommerceCTARouteType;
+        route: string;
+        productId: string;
+        categoryId: string;
+        collectionId: string;
+    }>) => resolveWebsiteEcommerceCTARoute({
+        routeType: updates.routeType || normalizedRouteType,
+        storefrontRoute: updates.route ?? route,
+        customUrl: updates.route ?? route,
+        productId: updates.productId ?? productId,
+        categoryId: updates.categoryId ?? categoryId,
+        collectionId: updates.collectionId ?? collectionId,
+        fallbackRoute,
+    });
+
+    const updateRouteType = (next: string) => {
+        const nextType = normalizeWebsiteEcommerceCTARouteType(next);
+        onRouteTypeChange(nextType);
+        onRouteChange(resolveRoute({ routeType: nextType }));
+    };
+
+    return (
+        <div className="rounded-lg border border-q-border bg-q-bg p-3">
+            <h5 className="mb-3 text-xs font-bold uppercase tracking-wider text-q-text-secondary">
+                {label || t('editor.controls.ecommerce.ctaRoute', 'CTA Route')}
+            </h5>
+
+            <SelectControl
+                label={t('editor.controls.ecommerce.routeType', 'Route Type')}
+                value={normalizedRouteType}
+                options={WEBSITE_ECOMMERCE_CTA_ROUTE_TYPES.map(type => ({
+                    value: type,
+                    label: routeLabels[type],
+                }))}
+                onChange={updateRouteType}
+            />
+
+            {normalizedRouteType === 'storefront' && (
+                <Input
+                    label={t('editor.controls.ecommerce.storefrontRoute', 'Storefront Route')}
+                    value={route || fallbackRoute}
+                    onChange={(e) => onRouteChange(resolveRoute({ route: e.target.value }))}
+                    placeholder="/store"
+                />
+            )}
+
+            {normalizedRouteType === 'product' && storeId && (
+                <SingleProductSelector
+                    selectedProductId={productId}
+                    onSelect={(nextProductId) => {
+                        onProductChange?.(nextProductId);
+                        onRouteChange(resolveRoute({ productId: nextProductId || '' }));
+                    }}
+                    storeId={storeId}
+                    label={t('editor.controls.ecommerce.routeProduct', 'Product')}
+                />
+            )}
+
+            {normalizedRouteType === 'category' && storeId && (
+                <CategorySelector
+                    selectedCategoryId={categoryId}
+                    onChange={(nextCategoryId) => {
+                        onCategoryChange?.(nextCategoryId);
+                        onRouteChange(resolveRoute({ categoryId: nextCategoryId || '' }));
+                    }}
+                    storeId={storeId}
+                />
+            )}
+
+            {normalizedRouteType === 'collection' && (
+                <SingleCollectionSelector
+                    selectedCollectionId={collectionId}
+                    onSelect={(nextCollectionId) => {
+                        onCollectionChange?.(nextCollectionId);
+                        onRouteChange(resolveRoute({ collectionId: nextCollectionId || '' }));
+                    }}
+                    storeId={storeId}
+                    gridCategories={gridCategories}
+                    label={t('editor.controls.ecommerce.routeCollection', 'Collection')}
+                />
+            )}
+
+            {normalizedRouteType === 'cart' && (
+                <Input
+                    label={t('editor.controls.ecommerce.cartRoute', 'Cart Route')}
+                    value={route || '/cart'}
+                    onChange={(e) => onRouteChange(e.target.value || '/cart')}
+                    placeholder="/cart"
+                />
+            )}
+
+            {normalizedRouteType === 'custom' && (
+                <Input
+                    label={t('editor.controls.ecommerce.customUrl', 'Custom URL')}
+                    value={route || ''}
+                    onChange={(e) => onRouteChange(e.target.value)}
+                    placeholder="https://..."
+                />
+            )}
+        </div>
+    );
+};
 
 // ============================================================================
 // PRODUCT SELECTOR COMPONENT - For manual product selection
@@ -737,7 +964,7 @@ const CategorySelector = ({
             <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
                 {t('editor.controls.ecommerce.categorySelector.label', 'Category')}
             </label>
-            <select
+            <AppSelect
                 value={selectedCategoryId || ''}
                 onChange={(e) => onChange(e.target.value || undefined)}
                 className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
@@ -748,7 +975,7 @@ const CategorySelector = ({
                         {cat.name}
                     </option>
                 ))}
-            </select>
+            </AppSelect>
         </div>
     );
 };
@@ -912,10 +1139,18 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
 
             <NumberInput
                 label={t('editor.controls.ecommerce.productsToShow', 'Products to Show')}
-                value={d.limitCount || 4}
-                onChange={(v) => setNestedData('featuredProducts.limitCount', v)}
+                value={d.productsToShow || d.limitCount || 4}
+                onChange={(v) => {
+                    setNestedData('featuredProducts.productsToShow', v);
+                    setNestedData('featuredProducts.limitCount', v);
+                }}
                 min={1}
                 max={12}
+            />
+
+            <ResponsiveBehaviorControl
+                value={d.responsiveBehavior}
+                onChange={(v) => setNestedData('featuredProducts.responsiveBehavior', v)}
             />
 
             <ToggleControl
@@ -935,11 +1170,40 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 checked={d.showAddToCart !== false}
                 onChange={(v) => setNestedData('featuredProducts.showAddToCart', v)}
             />
+
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showViewAll', 'Show View All CTA')}
+                checked={d.showViewAll !== false}
+                onChange={(v) => setNestedData('featuredProducts.showViewAll', v)}
+            />
+
+            {d.showViewAll !== false && (
+                <CTARouteControls
+                    routeType={d.ctaRouteType}
+                    route={d.viewAllUrl}
+                    productId={d.viewAllProductId}
+                    categoryId={d.viewAllCategoryId}
+                    collectionId={d.viewAllCollectionId}
+                    storeId={storeId}
+                    fallbackRoute="/store"
+                    label={t('editor.controls.ecommerce.viewAllRoute', 'View All Route')}
+                    onRouteTypeChange={(v) => setNestedData('featuredProducts.ctaRouteType', v)}
+                    onRouteChange={(v) => setNestedData('featuredProducts.viewAllUrl', v)}
+                    onProductChange={(v) => setNestedData('featuredProducts.viewAllProductId', v)}
+                    onCategoryChange={(v) => setNestedData('featuredProducts.viewAllCategoryId', v)}
+                    onCollectionChange={(v) => setNestedData('featuredProducts.viewAllCollectionId', v)}
+                />
+            )}
         </div>
     );
 
     const styleTab = (
         <div className="space-y-4">
+            <ProductCardVariantControl
+                value={d.cardStyle}
+                onChange={(v) => setNestedData('featuredProducts.cardStyle', v)}
+            />
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -1082,6 +1346,7 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
 
     const d = getSectionWithDefaults<any>(data, 'categoryGrid');
     const categories: CategoryItem[] = Array.isArray(d.categories) ? d.categories : [];
+    const categorySource = d.sourceType || (categories.length > 0 ? 'manual' : 'store');
     const setCategories = (nextCategories: CategoryItem[]) => setNestedData('categoryGrid.categories', nextCategories);
 
     const contentTab = (
@@ -1092,6 +1357,17 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
             />
             <I18nInput label={t('editor.controls.ecommerce.title', 'Title')} value={d.title} onChange={(v) => setNestedData('categoryGrid.title', v)} />
             <I18nTextArea label={t('editor.controls.ecommerce.description', 'Description')} value={d.description} onChange={(v) => setNestedData('categoryGrid.description', v)} rows={2} />
+
+            <SelectControl
+                label={t('editor.controls.ecommerce.categorySource', 'Category Source')}
+                value={categorySource}
+                options={[
+                    { value: 'store', label: t('editor.controls.ecommerce.storeCategories', 'Store Categories') },
+                    { value: 'manual', label: t('editor.controls.ecommerce.manualCategories', 'Manual Categories') },
+                ]}
+                onChange={(v) => setNestedData('categoryGrid.sourceType', v)}
+            />
+
             <ToggleControl
                 label={t('editor.controls.ecommerce.showTitle', 'Show Title')}
                 checked={d.showTitle !== false}
@@ -1118,70 +1394,83 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                 max={6}
             />
 
+            <ResponsiveBehaviorControl
+                value={d.responsiveBehavior}
+                onChange={(v) => setNestedData('categoryGrid.responsiveBehavior', v)}
+            />
+
             <ToggleControl
                 label={t('editor.controls.ecommerce.showProductCount', 'Show Product Count')}
                 checked={d.showProductCount !== false}
                 onChange={(v) => setNestedData('categoryGrid.showProductCount', v)}
             />
 
-            <ListEditorShell
-                title={t('editor.controls.ecommerce.categories', 'Categories')}
-                addLabel={t('editor.controls.list.add', 'Add')}
-                onAdd={() => setCategories([
-                    ...categories,
-                    {
-                        id: newId('category'),
-                        name: { es: 'Nueva categoria', en: 'New category' } as any,
-                        description: { es: '', en: '' } as any,
-                        imageUrl: '',
-                        productCount: 0,
-                        slug: '',
-                    },
-                ])}
-            >
-                {categories.length === 0 && (
-                    <p className="rounded-md border border-dashed border-q-border p-3 text-xs text-q-text-secondary">
-                        {t('editor.controls.ecommerce.noCategoriesConfigured', 'No manual categories configured. Store categories will be used when available.')}
-                    </p>
-                )}
-                {categories.map((category, index) => (
-                    <div key={category.id || index} className="space-y-3 rounded-md border border-q-border bg-q-bg p-3">
-                        <ItemHeader
-                            label={`${t('editor.controls.ecommerce.category', 'Category')} #${index + 1}`}
-                            onRemove={() => setCategories(categories.filter((_, i) => i !== index))}
-                        />
-                        <I18nInput
-                            label={t('editor.controls.ecommerce.name', 'Name')}
-                            value={category.name as any}
-                            onChange={(v) => setNestedData(`categoryGrid.categories.${index}.name`, v)}
-                        />
-                        <I18nTextArea
-                            label={t('editor.controls.ecommerce.description', 'Description')}
-                            value={category.description as any}
-                            onChange={(v) => setNestedData(`categoryGrid.categories.${index}.description`, v)}
-                            rows={2}
-                        />
-                        <ImagePicker
-                            label={t('editor.controls.ecommerce.image', 'Image')}
-                            value={category.imageUrl || ''}
-                            onChange={(url) => setNestedData(`categoryGrid.categories.${index}.imageUrl`, url)}
-                        />
-                        <div className="grid grid-cols-2 gap-2">
-                            <Input
-                                label={t('editor.controls.ecommerce.slug', 'Slug')}
-                                value={category.slug || ''}
-                                onChange={(e) => setNestedData(`categoryGrid.categories.${index}.slug`, e.target.value)}
+            {categorySource === 'store' && (
+                <p className="rounded-md border border-q-border bg-q-bg p-3 text-xs text-q-text-secondary">
+                    {t('editor.controls.ecommerce.storeCategoriesHint', 'This block reads categories from the Ecommerce Engine. Use Ecommerce Admin to edit category data.')}
+                </p>
+            )}
+
+            {categorySource === 'manual' && (
+                <ListEditorShell
+                    title={t('editor.controls.ecommerce.categories', 'Categories')}
+                    addLabel={t('editor.controls.list.add', 'Add')}
+                    onAdd={() => setCategories([
+                        ...categories,
+                        {
+                            id: newId('category'),
+                            name: { es: 'Nueva categoria', en: 'New category' } as any,
+                            description: { es: '', en: '' } as any,
+                            imageUrl: '',
+                            productCount: 0,
+                            slug: '',
+                        },
+                    ])}
+                >
+                    {categories.length === 0 && (
+                        <p className="rounded-md border border-dashed border-q-border p-3 text-xs text-q-text-secondary">
+                            {t('editor.controls.ecommerce.noCategoriesConfigured', 'No manual categories configured. Store categories will be used when available.')}
+                        </p>
+                    )}
+                    {categories.map((category, index) => (
+                        <div key={category.id || index} className="space-y-3 rounded-md border border-q-border bg-q-bg p-3">
+                            <ItemHeader
+                                label={`${t('editor.controls.ecommerce.category', 'Category')} #${index + 1}`}
+                                onRemove={() => setCategories(categories.filter((_, i) => i !== index))}
                             />
-                            <NumberInput
-                                label={t('editor.controls.ecommerce.productCount', 'Product Count')}
-                                value={category.productCount || 0}
-                                onChange={(v) => setNestedData(`categoryGrid.categories.${index}.productCount`, v)}
-                                min={0}
+                            <I18nInput
+                                label={t('editor.controls.ecommerce.name', 'Name')}
+                                value={category.name as any}
+                                onChange={(v) => setNestedData(`categoryGrid.categories.${index}.name`, v)}
                             />
+                            <I18nTextArea
+                                label={t('editor.controls.ecommerce.description', 'Description')}
+                                value={category.description as any}
+                                onChange={(v) => setNestedData(`categoryGrid.categories.${index}.description`, v)}
+                                rows={2}
+                            />
+                            <ImagePicker
+                                label={t('editor.controls.ecommerce.image', 'Image')}
+                                value={category.imageUrl || ''}
+                                onChange={(url) => setNestedData(`categoryGrid.categories.${index}.imageUrl`, url)}
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                                <Input
+                                    label={t('editor.controls.ecommerce.slug', 'Slug')}
+                                    value={category.slug || ''}
+                                    onChange={(e) => setNestedData(`categoryGrid.categories.${index}.slug`, e.target.value)}
+                                />
+                                <NumberInput
+                                    label={t('editor.controls.ecommerce.productCount', 'Product Count')}
+                                    value={category.productCount || 0}
+                                    onChange={(v) => setNestedData(`categoryGrid.categories.${index}.productCount`, v)}
+                                    min={0}
+                                />
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </ListEditorShell>
+                    ))}
+                </ListEditorShell>
+            )}
         </div>
     );
 
@@ -1297,6 +1586,8 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
     if (!data?.productHero) return null;
 
     const d = data.productHero;
+    const heroSource = d.sourceType || (d.collectionId ? 'collection' : d.productId ? 'product' : 'featured');
+    const gridCategories = data?.categoryGrid?.categories || [];
 
     const contentTab = (
         <div className="space-y-4">
@@ -1304,12 +1595,37 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 value={d.visibleIn}
                 onChange={(v) => setNestedData('productHero.visibleIn', v)}
             />
-            {/* Single Product Selector */}
-            {storeId && (
+
+            <SelectControl
+                label={t('editor.controls.ecommerce.heroSource', 'Hero Source')}
+                value={heroSource}
+                options={[
+                    { value: 'featured', label: t('editor.controls.ecommerce.featuredProduct', 'Featured Product') },
+                    { value: 'product', label: t('editor.controls.ecommerce.manualProduct', 'Manual Product') },
+                    { value: 'collection', label: t('editor.controls.ecommerce.collection', 'Collection') },
+                ]}
+                onChange={(v) => {
+                    setNestedData('productHero.sourceType', v);
+                    if (v !== 'product') setNestedData('productHero.productId', '');
+                    if (v !== 'collection') setNestedData('productHero.collectionId', '');
+                }}
+            />
+
+            {heroSource === 'product' && storeId && (
                 <SingleProductSelector
                     selectedProductId={d.productId}
                     onSelect={(id) => setNestedData('productHero.productId', id)}
                     storeId={storeId}
+                />
+            )}
+
+            {heroSource === 'collection' && (
+                <SingleCollectionSelector
+                    selectedCollectionId={d.collectionId}
+                    onSelect={(id) => setNestedData('productHero.collectionId', id)}
+                    storeId={storeId}
+                    gridCategories={gridCategories}
+                    label={t('editor.controls.ecommerce.collection', 'Collection')}
                 />
             )}
 
@@ -1336,6 +1652,11 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 onChange={(v) => setNestedData('productHero.imageSize', v)}
             />
 
+            <ResponsiveBehaviorControl
+                value={d.responsiveBehavior}
+                onChange={(v) => setNestedData('productHero.responsiveBehavior', v)}
+            />
+
             <ToggleControl
                 label={t('editor.controls.ecommerce.showPrice', 'Show Price')}
                 checked={d.showPrice !== false}
@@ -1352,6 +1673,27 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 label={t('editor.controls.ecommerce.showFeatures', 'Show Features')}
                 checked={d.showFeatures !== false}
                 onChange={(v) => setNestedData('productHero.showFeatures', v)}
+            />
+
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showAddToCart', 'Show Add to Cart')}
+                checked={d.showAddToCartButton === true}
+                onChange={(v) => setNestedData('productHero.showAddToCartButton', v)}
+            />
+
+            <CTARouteControls
+                routeType={d.ctaRouteType}
+                route={d.buttonUrl}
+                productId={d.productId}
+                collectionId={d.collectionId}
+                storeId={storeId}
+                gridCategories={gridCategories}
+                fallbackRoute="/store"
+                label={t('editor.controls.ecommerce.buttonRoute', 'Button Route')}
+                onRouteTypeChange={(v) => setNestedData('productHero.ctaRouteType', v)}
+                onRouteChange={(v) => setNestedData('productHero.buttonUrl', v)}
+                onProductChange={(v) => setNestedData('productHero.productId', v)}
+                onCollectionChange={(v) => setNestedData('productHero.collectionId', v)}
             />
         </div>
     );
@@ -1663,6 +2005,11 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
                 onChange={(v) => setNestedData('saleCountdown.style', v)}
             />
 
+            <ResponsiveBehaviorControl
+                value={d.responsiveBehavior}
+                onChange={(v) => setNestedData('saleCountdown.responsiveBehavior', v)}
+            />
+
             {/* Target Link or Product */}
             <SelectControl
                 label={t('editor.controls.ecommerce.linkTarget', 'Link Target')}
@@ -1926,6 +2273,11 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
 
     const contentTab = (
         <div className="space-y-4">
+            <VisibilityContextSelector
+                value={d.visibleIn}
+                onChange={(v) => setNestedData('announcementBar.visibleIn', v)}
+            />
+
             {/* Position */}
             <SelectControl
                 label={t('editor.controls.ecommerce.position', 'Position')}
@@ -1947,6 +2299,11 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
                     { value: 'rotating', label: t('editor.controls.ecommerce.rotating', 'Rotating') },
                 ]}
                 onChange={(v) => setNestedData('announcementBar.variant', v)}
+            />
+
+            <ResponsiveBehaviorControl
+                value={d.responsiveBehavior}
+                onChange={(v) => setNestedData('announcementBar.responsiveBehavior', v)}
             />
 
 
@@ -2176,6 +2533,28 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
 
     const contentTab = (
         <div className="space-y-4">
+            <VisibilityContextSelector
+                value={d.visibleIn}
+                onChange={(v) => setNestedData('collectionBanner.visibleIn', v)}
+            />
+
+            <SelectControl
+                label={t('editor.controls.ecommerce.variant', 'Variant')}
+                value={d.variant || 'hero'}
+                options={[
+                    { value: 'hero', label: t('editor.controls.ecommerce.hero', 'Hero') },
+                    { value: 'split', label: t('editor.controls.ecommerce.split', 'Split') },
+                    { value: 'minimal', label: t('editor.controls.ecommerce.minimal', 'Minimal') },
+                    { value: 'overlay', label: t('editor.controls.ecommerce.overlay', 'Overlay') },
+                ]}
+                onChange={(v) => setNestedData('collectionBanner.variant', v)}
+            />
+
+            <ResponsiveBehaviorControl
+                value={d.responsiveBehavior}
+                onChange={(v) => setNestedData('collectionBanner.responsiveBehavior', v)}
+            />
+
             {/* Background Image */}
             <ImagePicker
                 label={t('editor.controls.ecommerce.backgroundImage', 'Background Image')}
@@ -2208,32 +2587,18 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 onChange={(e) => setNestedData('collectionBanner.buttonText', e.target.value)}
             />
 
-            {/* Collection Selector */}
-            {storeId && (
-                <SingleCollectionSelector
-                    selectedCollectionId={d.collectionId}
-                    onSelect={(collectionId) => {
-                        setNestedData('collectionBanner.collectionId', collectionId);
-                        // Clear buttonUrl when selecting a collection
-                        if (collectionId) {
-                            setNestedData('collectionBanner.buttonUrl', '');
-                        }
-                    }}
-                    storeId={storeId}
-                    gridCategories={gridCategories}
-                    label={t('editor.controls.ecommerce.linkToCollection', 'Enlazar a Colección')}
-                />
-            )}
-
-            {/* Custom URL - only show if no collection selected */}
-            {!d.collectionId && (
-                <Input
-                    label={t('editor.controls.ecommerce.customUrl', 'URL Personalizada (opcional)')}
-                    value={d.buttonUrl || ''}
-                    onChange={(e) => setNestedData('collectionBanner.buttonUrl', e.target.value)}
-                    placeholder="https://..."
-                />
-            )}
+            <CTARouteControls
+                routeType={d.ctaRouteType || (d.collectionId ? 'collection' : undefined)}
+                route={d.buttonUrl}
+                collectionId={d.collectionId}
+                storeId={storeId}
+                gridCategories={gridCategories}
+                fallbackRoute="/store"
+                label={t('editor.controls.ecommerce.buttonRoute', 'Button Route')}
+                onRouteTypeChange={(v) => setNestedData('collectionBanner.ctaRouteType', v)}
+                onRouteChange={(v) => setNestedData('collectionBanner.buttonUrl', v)}
+                onCollectionChange={(v) => setNestedData('collectionBanner.collectionId', v)}
+            />
         </div>
     );
 
@@ -2707,11 +3072,38 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
 
     const contentTab = (
         <div className="space-y-4">
+            <VisibilityContextSelector
+                value={d.visibleIn}
+                onChange={(v) => setNestedData('productBundle.visibleIn', v)}
+            />
+
             <ToggleControl
                 label={t('editor.controls.ecommerce.enabled', 'Enabled')}
                 checked={d.enabled !== false}
                 onChange={(v) => setNestedData('productBundle.enabled', v)}
             />
+
+            <SelectControl
+                label={t('editor.controls.ecommerce.variant', 'Variant')}
+                value={d.variant || 'editorial'}
+                options={[
+                    { value: 'editorial', label: t('editor.controls.ecommerce.editorialLanding', 'Editorial landing') },
+                    { value: 'price-stack', label: t('editor.controls.ecommerce.priceStack', 'Precio destacado') },
+                    { value: 'horizontal', label: t('editor.controls.ecommerce.horizontal', 'Horizontal') },
+                    { value: 'vertical', label: t('editor.controls.ecommerce.vertical', 'Vertical') },
+                    { value: 'compact', label: t('editor.controls.ecommerce.compact', 'Compact') },
+                ]}
+                onChange={(v) => setNestedData('productBundle.variant', v)}
+            />
+
+            {storeId && (
+                <ProductSelector
+                    selectedIds={d.productIds || []}
+                    onChange={(ids) => setNestedData('productBundle.productIds', ids)}
+                    storeId={storeId}
+                />
+            )}
+
             <Input
                 label={t('editor.controls.ecommerce.title', 'Title')}
                 value={d.title || ''}
@@ -2722,6 +3114,29 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 value={d.description || ''}
                 onChange={(e) => setNestedData('productBundle.description', e.target.value)}
                 rows={2}
+            />
+
+            <ResponsiveBehaviorControl
+                value={d.responsiveBehavior}
+                onChange={(v) => setNestedData('productBundle.responsiveBehavior', v)}
+            />
+
+            <Input
+                label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
+                value={d.buttonText || ''}
+                onChange={(e) => setNestedData('productBundle.buttonText', e.target.value)}
+            />
+
+            <CTARouteControls
+                routeType={d.ctaRouteType}
+                route={d.buttonUrl}
+                productId={d.productIds?.[0]}
+                storeId={storeId}
+                fallbackRoute="/cart"
+                label={t('editor.controls.ecommerce.buttonRoute', 'Button Route')}
+                onRouteTypeChange={(v) => setNestedData('productBundle.ctaRouteType', v)}
+                onRouteChange={(v) => setNestedData('productBundle.buttonUrl', v)}
+                onProductChange={(v) => setNestedData('productBundle.productIds', v ? [v] : [])}
             />
         </div>
     );

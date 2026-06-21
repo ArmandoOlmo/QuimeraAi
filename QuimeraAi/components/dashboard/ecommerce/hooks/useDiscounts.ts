@@ -22,7 +22,11 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
     const effectiveStoreId = storeId || '';
 
     const fetchDiscounts = useCallback(async () => {
-        if (!effectiveStoreId) return;
+        if (!effectiveStoreId) {
+            setDiscounts([]);
+            setIsLoading(false);
+            return;
+        }
 
         setIsLoading(true);
         let query = supabase
@@ -76,14 +80,14 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
     }, [userId, effectiveStoreId, fetchDiscounts]);
 
     // Generate unique code
-    const generateCode = (): string => {
+    const generateCode = useCallback((): string => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let code = '';
         for (let i = 0; i < 8; i++) {
             code += chars.charAt(Math.floor(Math.random() * chars.length));
         }
         return code;
-    };
+    }, []);
 
     // Add discount
     const addDiscount = useCallback(
@@ -96,15 +100,21 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
             startsAt: Date;
             endsAt?: Date;
         }): Promise<string> => {
-            const code = discountData.code?.toUpperCase() || generateCode();
+            if (!effectiveStoreId) {
+                throw new Error('No hay una tienda seleccionada para guardar el descuento');
+            }
+
+            const code = discountData.code?.trim().toUpperCase() || generateCode();
 
             // Check if code already exists
-            const { data: existingData } = await supabase
+            const { data: existingData, error: existingError } = await supabase
                 .from('store_discounts')
                 .select('id')
                 .eq('project_id', effectiveStoreId)
                 .eq('code', code)
                 .limit(1);
+
+            if (existingError) throw existingError;
 
             if (existingData && existingData.length > 0) {
                 throw new Error('El código de descuento ya existe');
@@ -133,9 +143,10 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
                 .single();
 
             if (error) throw error;
+            await fetchDiscounts();
             return insertedDoc.id;
         },
-        [effectiveStoreId]
+        [effectiveStoreId, fetchDiscounts, generateCode]
     );
 
     // Update discount
@@ -163,8 +174,9 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
                 .eq('id', discountId);
 
             if (error) throw error;
+            await fetchDiscounts();
         },
-        []
+        [fetchDiscounts]
     );
 
     // Delete discount
@@ -176,8 +188,9 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
                 .eq('id', discountId);
 
             if (error) throw error;
+            await fetchDiscounts();
         },
-        []
+        [fetchDiscounts]
     );
 
     // Toggle discount active status
@@ -192,8 +205,9 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
                 .eq('id', discountId);
 
             if (error) throw error;
+            await fetchDiscounts();
         },
-        [discounts]
+        [discounts, fetchDiscounts]
     );
 
     // Validate discount code
@@ -263,8 +277,9 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
                 .eq('id', discountId);
 
             if (error) throw error;
+            await fetchDiscounts();
         },
-        [discounts]
+        [discounts, fetchDiscounts]
     );
 
     // Get discount by ID

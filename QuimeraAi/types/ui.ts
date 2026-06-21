@@ -14,7 +14,7 @@ export type JustifyContent = 'start' | 'center' | 'end';
 export type ImagePosition = 'left' | 'right';
 export type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 export type PreviewOrientation = 'portrait' | 'landscape';
-export type AspectRatio = 'auto' | '1:1' | '4:3' | '3:4' | '16:9' | '9:16';
+export type AspectRatio = 'auto' | '1:1' | '4:3' | '3:4' | '4:5' | '16:9' | '9:16';
 export type ObjectFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 
 // Theme Types

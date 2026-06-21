@@ -36,7 +36,7 @@ import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useStoreUsers } from '../hooks/useStoreUsers';
 import { StoreUser, StoreUserRole, StoreUserStatus, DEFAULT_ROLE_CONFIGS } from '../../../../types/storeUsers';
 import { useEcommerceTheme } from '../hooks/useEcommerceTheme';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 import type { StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
 import StoreUserDetailDrawer from '../components/StoreUserDetailDrawer';

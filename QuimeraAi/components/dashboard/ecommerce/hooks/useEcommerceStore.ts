@@ -38,10 +38,12 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
         if (!userId || !effectiveStoreId) {
             setError('No user ID or store ID provided');
             setIsLoading(false);
+            setIsInitialized(false);
             return;
         }
 
         try {
+            setIsLoading(true);
             // Un "store" está vinculado a un "project". Validamos si el proyecto existe
             const { data: projectData, error: projectError } = await supabase
                 .from('projects')
@@ -71,22 +73,6 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
             setIsInitialized(true);
             setError(null);
             console.log('✅ Ecommerce store loaded via Project:', effectiveStoreId);
-            
-            // Validamos que haya un store_settings inicializado, si no, lo inicializamos silenciosamente
-            const { count, error: settingsError } = await supabase
-                .from('store_settings')
-                .select('*', { count: 'exact', head: true })
-                .eq('project_id', effectiveStoreId);
-
-            if (!settingsError && count === 0) {
-                await supabase
-                    .from('store_settings')
-                    .insert({
-                        project_id: effectiveStoreId,
-                        store_name: projectData.name,
-                        store_email: '', // Requires manual configuration
-                    });
-            }
 
         } catch (err: any) {
             console.error('Error initializing store:', err);
@@ -101,11 +87,23 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
     useEffect(() => {
         if (!userId || !effectiveStoreId) {
             setIsLoading(false);
+            setIsInitialized(false);
             return;
         }
 
-        fetchAndInitializeStore();
+        const loadingTimeout = window.setTimeout(() => {
+            setIsLoading((current) => {
+                if (current) {
+                    setError('La tienda tardó demasiado en responder. Intenta recargar o cambiar de proyecto.');
+                    setIsInitialized(false);
+                }
+                return false;
+            });
+        }, 12000);
 
+        void fetchAndInitializeStore().finally(() => window.clearTimeout(loadingTimeout));
+
+        return () => window.clearTimeout(loadingTimeout);
     }, [userId, effectiveStoreId, fetchAndInitializeStore]);
 
     return {
@@ -119,6 +117,4 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
 };
 
 export default useEcommerceStore;
-
-
 

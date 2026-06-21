@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Facebook, Instagram, Twitter, Linkedin, Youtube } from 'lucide-react';
 import { useEmailEditor } from '../EmailEditor';
 import { EmailBlock, EmailSocialContent, EmailBlockStyles, EmailSocialLinks } from '../../../../../types/email';
+import AppSelect from '../../../../ui/AppSelect';
 
 // =============================================================================
 // HELPER COMPONENTS
@@ -38,7 +39,7 @@ const SelectControl: React.FC<{
 }> = ({ label, value, options, onChange }) => (
     <div className="mb-3">
         <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-        <select
+        <AppSelect
             value={value}
             onChange={(e) => onChange(e.target.value)}
             className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
@@ -46,7 +47,7 @@ const SelectControl: React.FC<{
             {options.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
-        </select>
+        </AppSelect>
     </div>
 );
 

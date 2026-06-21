@@ -19,6 +19,7 @@ import { useVisualIdentityKit } from '../../hooks/useVisualIdentityKit';
 import { IMAGE_REFERENCE_CATEGORY_COLORS } from '../../types/visualIdentity';
 import type { ImageReferenceCategory } from '../../types/visualIdentity';
 import AddToVisualKitModal from './AddToVisualKitModal';
+import AppSelect from './AppSelect';
 
 interface ImageGeneratorPanelProps {
     destination: 'user' | 'global' | 'admin';
@@ -1087,7 +1088,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wide">Style</label>
                             </div>
                             <div className="relative">
-                                <select
+                                <AppSelect
                                     value={style}
                                     onChange={(e) => setStyle(e.target.value)}
                                     className="w-full bg-q-bg/80 border border-q-border rounded-xl py-3 px-4 text-sm focus:ring-1 focus:ring-q-accent/50 focus:border-q-accent/50 outline-none appearance-none cursor-pointer text-q-text"
@@ -1095,7 +1096,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                     {STYLES.map(s => (
                                         <option key={s.value} value={s.value}>{s.label}</option>
                                     ))}
-                                </select>
+                                </AppSelect>
                                 <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-q-text-secondary pointer-events-none" />
                             </div>
                         </div>
@@ -1155,7 +1156,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-q-text-secondary uppercase">Lighting</label>
                                         <div className="relative">
-                                            <select
+                                            <AppSelect
                                                 value={lighting}
                                                 onChange={(e) => setLighting(e.target.value)}
                                                 className="w-full bg-q-bg border border-q-border/50 rounded-lg py-2 px-3 text-xs focus:ring-1 focus:ring-q-accent focus:border-q-accent outline-none appearance-none cursor-pointer text-q-text"
@@ -1163,7 +1164,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                                 {LIGHTING_OPTIONS.map(l => (
                                                     <option key={l.value} value={l.value}>{l.label}</option>
                                                 ))}
-                                            </select>
+                                            </AppSelect>
                                             <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-q-text-secondary pointer-events-none" />
                                         </div>
                                     </div>
@@ -1172,7 +1173,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-q-text-secondary uppercase">Camera Angle</label>
                                         <div className="relative">
-                                            <select
+                                            <AppSelect
                                                 value={cameraAngle}
                                                 onChange={(e) => setCameraAngle(e.target.value)}
                                                 className="w-full bg-q-bg border border-q-border/50 rounded-lg py-2 px-3 text-xs focus:ring-1 focus:ring-q-accent focus:border-q-accent outline-none appearance-none cursor-pointer text-q-text"
@@ -1180,7 +1181,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                                 {CAMERA_ANGLES.map(c => (
                                                     <option key={c.value} value={c.value}>{c.label}</option>
                                                 ))}
-                                            </select>
+                                            </AppSelect>
                                             <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-q-text-secondary pointer-events-none" />
                                         </div>
                                     </div>

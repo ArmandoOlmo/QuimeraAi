@@ -46,6 +46,7 @@ import EmailTemplateGallery from '../editor/EmailTemplateGallery';
 import { generateEmailHtml } from '../../../../utils/emailHtmlGenerator';
 import { CatalogFilterBar, FilterChipRow } from '../../filters';
 import type { FilterChipOption } from '../../filters';
+import AppSelect from '../../../ui/AppSelect';
 
 // Helper to convert plain text/markdown draft to HTML
 const parseDraftContent = (content: string, subject?: string): string => {
@@ -1064,7 +1065,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                     <label className="block text-sm font-medium text-foreground">
                                                         {t('email.campaignType', 'Tipo')}
                                                     </label>
-                                                    <select
+                                                    <AppSelect
                                                         value={newCampaign.type}
                                                         onChange={(e) => setNewCampaign({ ...newCampaign, type: e.target.value })}
                                                         className="w-full px-3 py-3 bg-muted/30 border border-q-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
@@ -1072,21 +1073,21 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                         <option value="newsletter">Newsletter</option>
                                                         <option value="promotion">Promoción</option>
                                                         <option value="announcement">Anuncio</option>
-                                                    </select>
+                                                    </AppSelect>
                                                 </div>
 
                                                 <div className="space-y-2">
                                                     <label className="block text-sm font-medium text-foreground">
                                                         {t('email.audience', 'Audiencia')}
                                                     </label>
-                                                    <select
+                                                    <AppSelect
                                                         value={newCampaign.audienceType}
                                                         onChange={(e) => setNewCampaign({ ...newCampaign, audienceType: e.target.value as AudienceType })}
                                                         className="w-full px-3 py-3 bg-muted/30 border border-q-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
                                                     >
                                                         <option value="all">{t('email.allSubscribers', 'Todos')}</option>
                                                         <option value="segment">{t('email.segment', 'Segmento')}</option>
-                                                    </select>
+                                                    </AppSelect>
                                                 </div>
                                             </div>
 
@@ -1097,7 +1098,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                         {t('email.selectSegment', 'Seleccionar segmento')}
                                                     </label>
                                                     {audiences.length > 0 ? (
-                                                        <select
+                                                        <AppSelect
                                                             value={newCampaign.audienceSegmentId}
                                                             onChange={(e) => setNewCampaign({ ...newCampaign, audienceSegmentId: e.target.value })}
                                                             className="w-full px-4 py-3 bg-muted/30 border border-q-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
@@ -1108,7 +1109,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                                     {audience.name} ({audience.estimatedCount || 0})
                                                                 </option>
                                                             ))}
-                                                        </select>
+                                                        </AppSelect>
                                                     ) : (
                                                         <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
                                                             <p className="text-amber-500 text-sm flex items-center gap-2">

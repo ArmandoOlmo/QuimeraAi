@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { CustomComponent, ComponentDocumentation, PropDocumentation } from '../../../types';
 import { BookOpen, Plus, Trash2, Eye } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import AppSelect from '../../ui/AppSelect';
 
 interface ComponentDocumentationEditorProps {
     component: CustomComponent;
@@ -171,7 +172,7 @@ const ComponentDocumentationEditor: React.FC<ComponentDocumentationEditorProps> 
                                                 placeholder="Property name"
                                                 className="flex-1 px-2 py-1 bg-q-bg border border-q-border rounded text-q-text text-sm focus:outline-none focus:ring-1 focus:ring-q-accent"
                                             />
-                                            <select
+                                            <AppSelect
                                                 value={prop.type}
                                                 onChange={(e) => updateProperty(index, 'type', e.target.value)}
                                                 className="px-2 py-1 bg-q-bg border border-q-border rounded text-q-text text-sm focus:outline-none focus:ring-1 focus:ring-q-accent"
@@ -183,7 +184,7 @@ const ComponentDocumentationEditor: React.FC<ComponentDocumentationEditorProps> 
                                                 <option value="array">array</option>
                                                 <option value="function">function</option>
                                                 <option value="any">any</option>
-                                            </select>
+                                            </AppSelect>
                                             <label className="flex items-center gap-1 text-xs text-q-text-secondary">
                                                 <input
                                                     type="checkbox"

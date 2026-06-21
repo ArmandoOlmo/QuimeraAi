@@ -54,6 +54,7 @@ const PUBLIC_ACTIONS = new Set([
   "agencyBilling-getPaymentLinkInfo",
   "agencyBilling-confirmClientPayment",
   "createStoreCheckoutIntent",
+  "validateStoreDiscount",
   "getStoreOrderStatus",
   "trackOrder",
   "storeUsers-create",
@@ -157,11 +158,17 @@ serve(async (req) => {
       case "createRefund":
         result = await createRefund(user.id, payload);
         break;
+      case "cancelStoreOrder":
+        result = await cancelStoreOrder(user.id, payload);
+        break;
       case "getPaymentStatus":
         result = await getPaymentStatus(user.id, payload);
         break;
       case "createStoreCheckoutIntent":
-        result = await createStoreCheckoutIntent(payload);
+        result = await createStoreCheckoutIntent(payload, user?.id || null);
+        break;
+      case "validateStoreDiscount":
+        result = await validateStoreDiscount(payload);
         break;
       case "getStoreOrderStatus":
       case "trackOrder":
@@ -169,6 +176,15 @@ serve(async (req) => {
         break;
       case "storeUsers-create":
         result = await createStoreUser(payload);
+        break;
+      case "storeUsers-getCurrent":
+        result = await getCurrentStoreUser(user.id, payload);
+        break;
+      case "storeUsers-updateProfile":
+        result = await updateCurrentStoreUser(user.id, payload);
+        break;
+      case "storeUsers-deleteAccount":
+        result = await deleteCurrentStoreUser(user.id, payload);
         break;
       case "storeUsers-recordLogin":
         result = await recordStoreUserLogin(payload);
@@ -1228,8 +1244,11 @@ async function getStoreContext(storeId: string) {
     stripeEnabled: settingsRow.stripe_enabled ?? settingsRow.data?.stripeEnabled,
     currency: settingsRow.currency || settingsRow.data?.currency || "USD",
     shippingZones: settingsRow.shipping_zones || settingsRow.data?.shippingZones || [],
+    freeShippingThreshold: Number(settingsRow.free_shipping_threshold ?? settingsRow.data?.freeShippingThreshold ?? 0),
     taxEnabled: settingsRow.tax_enabled ?? settingsRow.data?.taxEnabled,
     taxRate: Number(settingsRow.tax_rate ?? settingsRow.data?.taxRate ?? 0),
+    taxName: settingsRow.tax_name || settingsRow.data?.taxName || "Tax",
+    taxIncluded: settingsRow.tax_included ?? settingsRow.data?.taxIncluded ?? settingsRow.data?.taxIncludedInPrice ?? false,
     storeName: settingsRow.store_name || settingsRow.data?.storeName || "Store",
   };
 
@@ -1318,6 +1337,7 @@ function normalizeProduct(row: any) {
     hasVariants: row.has_variants ?? data.hasVariants ?? false,
     variants: row.variants || data.variants || [],
     images: row.images || data.images || [],
+    categoryId: row.category_id || data.categoryId || data.category_id || data.category || null,
   };
 }
 
@@ -1333,32 +1353,289 @@ async function getStoreProduct(projectId: string, productId: string) {
   return normalizeProduct(data);
 }
 
-async function buildStoreOrder(data: any) {
-  const {
-    storeId,
-    items = [],
-    customerEmail,
-    customerName,
-    customerPhone,
-    shippingAddress,
-    billingAddress,
-    shippingMethodId,
-    idempotencyKey,
-    sessionToken,
-    notes,
-  } = data;
+function roundMoney(amount: unknown) {
+  const number = Number(amount);
+  if (!Number.isFinite(number)) return 0;
+  return Math.round(number * 100) / 100;
+}
 
-  const context = await getStoreContext(storeId);
-  const { projectId, ownerId, settings } = context;
-  const currency = String(settings.currency || "USD").toLowerCase();
-  const connectedAccountId = settings.stripeConnectAccountId;
+function readJsonData(row: any) {
+  return row?.data && typeof row.data === "object" && !Array.isArray(row.data) ? row.data : {};
+}
 
-  if (!settings.stripeEnabled || !connectedAccountId || !settings.stripeConnectChargesEnabled) {
-    throw new Error("Store is not ready to accept payments");
+function readRuntimeField(row: any, snakeKey: string, camelKey = snakeKey) {
+  const data = readJsonData(row);
+  return row?.[snakeKey] ?? data?.[camelKey] ?? data?.[snakeKey];
+}
+
+function readStringArray(row: any, snakeKey: string, camelKey = snakeKey) {
+  const value = readRuntimeField(row, snakeKey, camelKey);
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => String(item)).filter(Boolean);
+}
+
+function normalizeDiscountCode(code: unknown) {
+  return String(code || "").trim().toUpperCase();
+}
+
+function timestampMs(value: unknown): number | null {
+  if (!value) return null;
+  if (typeof value === "number") return value > 9_999_999_999 ? value : value * 1000;
+  if (typeof value === "string") {
+    const parsed = Date.parse(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.seconds === "number") return record.seconds * 1000;
+    if (typeof record._seconds === "number") return record._seconds * 1000;
+  }
+  return null;
+}
+
+async function loadStoreDiscount(projectId: string, code: string) {
+  const normalizedCode = normalizeDiscountCode(code);
+  if (!normalizedCode) return null;
+
+  const { data, error } = await supabase
+    .from("store_discounts")
+    .select("*")
+    .eq("project_id", projectId)
+    .ilike("code", normalizedCode)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+function getDiscountScope(discount: any) {
+  return String(readRuntimeField(discount, "applies_to", "appliesTo") || "all");
+}
+
+function getDiscountEligibleItems(discount: any, canonicalItems: any[]) {
+  const scope = getDiscountScope(discount);
+  const productIds = readStringArray(discount, "product_ids", "productIds");
+  const categoryIds = readStringArray(discount, "category_ids", "categoryIds");
+  const excludedProductIds = readStringArray(discount, "exclude_product_ids", "excludeProductIds");
+
+  return canonicalItems.filter((item) => {
+    if (excludedProductIds.includes(String(item.productId))) return false;
+    if (scope === "specific_products") return productIds.includes(String(item.productId));
+    if (scope === "specific_categories") return item.categoryId && categoryIds.includes(String(item.categoryId));
+    if (scope === "specific_collections") return false;
+    return true;
+  });
+}
+
+async function validateDiscountRules(discount: any, args: {
+  canonicalItems: any[];
+  customerEmail?: string | null;
+  projectId: string;
+  subtotal: number;
+}) {
+  const now = Date.now();
+  const code = normalizeDiscountCode(readRuntimeField(discount, "code", "code"));
+  const startsAt = timestampMs(readRuntimeField(discount, "starts_at", "startsAt"));
+  const endsAt = timestampMs(readRuntimeField(discount, "ends_at", "endsAt"));
+  const isActive = readRuntimeField(discount, "is_active", "isActive") !== false;
+  const maxUses = Number(readRuntimeField(discount, "max_uses", "maxUses") || 0);
+  const usedCount = Number(readRuntimeField(discount, "used_count", "usedCount") || 0);
+  const maxUsesPerCustomer = Number(readRuntimeField(discount, "max_uses_per_customer", "maxUsesPerCustomer") || 0);
+  const minimumPurchase = Number(readRuntimeField(discount, "minimum_purchase", "minimumPurchase") || 0);
+  const minimumQuantity = Number(readRuntimeField(discount, "minimum_quantity", "minimumQuantity") || 0);
+  const customerEligibility = String(readRuntimeField(discount, "customer_eligibility", "customerEligibility") || "everyone");
+  const totalQuantity = args.canonicalItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+
+  if (!isActive) throw new Error("El codigo de descuento no esta activo");
+  if (startsAt && startsAt > now) throw new Error("El codigo de descuento aun no esta disponible");
+  if (endsAt && endsAt < now) throw new Error("El codigo de descuento expiro");
+  if (maxUses > 0 && usedCount >= maxUses) throw new Error("El codigo de descuento ya alcanzo su limite de uso");
+  if (minimumPurchase > 0 && args.subtotal < minimumPurchase) {
+    throw new Error(`El codigo requiere una compra minima de ${minimumPurchase.toFixed(2)}`);
+  }
+  if (minimumQuantity > 0 && totalQuantity < minimumQuantity) {
+    throw new Error(`El codigo requiere al menos ${minimumQuantity} productos`);
   }
 
+  const customerEmail = String(args.customerEmail || "").trim().toLowerCase();
+  if (customerEligibility === "first_purchase") {
+    if (!customerEmail) throw new Error("Ingresa tu email para validar este codigo");
+    const { data, error } = await supabase
+      .from("store_orders")
+      .select("id")
+      .eq("project_id", args.projectId)
+      .eq("customer_email", customerEmail)
+      .eq("payment_status", "paid")
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) throw new Error("Este codigo solo aplica a la primera compra");
+  } else if (!["everyone", "all"].includes(customerEligibility)) {
+    throw new Error("Este codigo no aplica a este cliente");
+  }
+
+  if (maxUsesPerCustomer > 0 && customerEmail && code) {
+    const { count, error } = await supabase
+      .from("store_orders")
+      .select("id", { count: "exact", head: true })
+      .eq("project_id", args.projectId)
+      .eq("customer_email", customerEmail)
+      .eq("discount_code", code)
+      .eq("payment_status", "paid");
+    if (error) throw error;
+    if (Number(count || 0) >= maxUsesPerCustomer) {
+      throw new Error("Ya usaste este codigo el maximo permitido");
+    }
+  }
+}
+
+function calculateLineDiscount(discount: any, eligibleItems: any[]) {
+  const type = String(readRuntimeField(discount, "type", "type") || "percentage");
+  const value = Number(readRuntimeField(discount, "value", "value") || 0);
+  const eligibleSubtotal = eligibleItems.reduce((sum, item) => sum + Number(item.totalPrice || 0), 0);
+
+  if (eligibleSubtotal <= 0) throw new Error("El codigo no aplica a los productos del carrito");
+  if (type === "percentage") return roundMoney(Math.min(eligibleSubtotal, eligibleSubtotal * (value / 100)));
+  if (type === "fixed_amount") return roundMoney(Math.min(eligibleSubtotal, value));
+  if (type === "free_shipping") return 0;
+  throw new Error("Este tipo de descuento todavia no esta disponible en checkout");
+}
+
+async function calculateDiscount(args: {
+  canonicalItems: any[];
+  code?: string | null;
+  customerEmail?: string | null;
+  projectId: string;
+  subtotal: number;
+}) {
+  const code = normalizeDiscountCode(args.code);
+  if (!code) return null;
+
+  const discount = await loadStoreDiscount(args.projectId, code);
+  if (!discount) throw new Error("Codigo de descuento invalido");
+
+  await validateDiscountRules(discount, args);
+  const eligibleItems = getDiscountEligibleItems(discount, args.canonicalItems);
+  const type = String(readRuntimeField(discount, "type", "type") || "percentage");
+  const discountAmount = calculateLineDiscount(discount, eligibleItems);
+
+  return {
+    id: discount.id,
+    code: normalizeDiscountCode(readRuntimeField(discount, "code", "code") || code),
+    type,
+    amount: discountAmount,
+    freeShipping: type === "free_shipping",
+    scope: getDiscountScope(discount),
+  };
+}
+
+function destinationMatchesZone(zone: any, shippingAddress?: any) {
+  const countries = Array.isArray(zone?.countries) ? zone.countries.map((country: unknown) => String(country).toUpperCase()) : [];
+  if (countries.length === 0) return true;
+  const country = String(shippingAddress?.country || shippingAddress?.countryCode || "").trim().toUpperCase();
+  return country ? countries.includes(country) : true;
+}
+
+function getFallbackShippingRates() {
+  return [
+    { id: "standard", name: "Envio Estandar", price: 99, estimatedDays: "5-7 dias habiles" },
+    { id: "express", name: "Envio Express", price: 199, estimatedDays: "2-3 dias habiles" },
+    { id: "overnight", name: "Entrega al Siguiente Dia", price: 349, estimatedDays: "1 dia habil" },
+  ];
+}
+
+function resolveShipping(args: {
+  discount?: any;
+  discountedSubtotal: number;
+  settings: any;
+  shippingAddress?: any;
+  shippingMethodId?: string | null;
+}) {
+  const zones = Array.isArray(args.settings.shippingZones) ? args.settings.shippingZones : [];
+  const matchingZones = zones.filter((zone: any) => destinationMatchesZone(zone, args.shippingAddress));
+  const configuredRates = (matchingZones.length > 0 ? matchingZones : zones).flatMap((zone: any) => zone.rates || []);
+  const rates = configuredRates.length > 0 ? configuredRates : getFallbackShippingRates();
+  const eligibleRates = rates.filter((rate: any) => {
+    const minOrder = Number(rate.minOrderAmount ?? rate.minOrder ?? 0);
+    return !minOrder || args.discountedSubtotal >= minOrder;
+  });
+  if (zones.length > 0 && matchingZones.length === 0) throw new Error("No hay metodos de envio disponibles para este destino");
+  if (rates.length > 0 && eligibleRates.length === 0) throw new Error("El pedido no alcanza el minimo para los metodos de envio disponibles");
+
+  const selectedRate = eligibleRates.find((rate: any) => String(rate.id) === String(args.shippingMethodId || "")) || eligibleRates[0];
+  if (!selectedRate) return { shippingTotal: 0, shippingMethodId: null, shippingMethodName: "Standard" };
+
+  let shippingTotal = roundMoney(selectedRate.price || 0);
+  let shippingMethodName = selectedRate.name || "Standard";
+  const freeShippingThreshold = Number(args.settings.freeShippingThreshold || 0);
+  if (args.discount?.freeShipping || (freeShippingThreshold > 0 && args.discountedSubtotal >= freeShippingThreshold)) {
+    shippingTotal = 0;
+    shippingMethodName = "Free Shipping";
+  }
+
+  return {
+    shippingTotal,
+    shippingMethodId: selectedRate.id || null,
+    shippingMethodName,
+  };
+}
+
+function calculateTax(settings: any, taxableSubtotal: number) {
+  if (!settings.taxEnabled || settings.taxIncluded || settings.taxIncludedInPrice) return 0;
+  return roundMoney(Math.max(0, taxableSubtotal) * (Number(settings.taxRate || 0) / 100));
+}
+
+async function calculateCheckoutPricing(args: {
+  canonicalItems: any[];
+  customerEmail?: string | null;
+  discountCode?: string | null;
+  projectId: string;
+  settings: any;
+  shippingAddress?: any;
+  shippingMethodId?: string | null;
+  subtotal: number;
+}) {
+  const subtotal = roundMoney(args.subtotal);
+  const discount = await calculateDiscount({
+    canonicalItems: args.canonicalItems,
+    code: args.discountCode,
+    customerEmail: args.customerEmail,
+    projectId: args.projectId,
+    subtotal,
+  });
+  const discountAmount = roundMoney(discount?.amount || 0);
+  const discountedSubtotal = roundMoney(Math.max(0, subtotal - discountAmount));
+  const shipping = resolveShipping({
+    discount,
+    discountedSubtotal,
+    settings: args.settings,
+    shippingAddress: args.shippingAddress,
+    shippingMethodId: args.shippingMethodId,
+  });
+  const taxTotal = calculateTax(args.settings, discountedSubtotal);
+  const total = roundMoney(Math.max(0, discountedSubtotal + shipping.shippingTotal + taxTotal));
+
+  return {
+    subtotal,
+    discount,
+    discountCode: discount?.code || null,
+    discountAmount,
+    discountTotal: discountAmount,
+    shippingTotal: shipping.shippingTotal,
+    shippingMethodId: shipping.shippingMethodId,
+    shippingMethodName: shipping.shippingMethodName,
+    taxTotal,
+    taxName: args.settings.taxName || "Tax",
+    taxRate: Number(args.settings.taxRate || 0),
+    taxIncluded: Boolean(args.settings.taxIncluded || args.settings.taxIncludedInPrice),
+    total,
+  };
+}
+
+async function buildStoreCanonicalItems(projectId: string, items: any[]) {
   let subtotal = 0;
   const canonicalItems = [];
+
   for (const item of items) {
     if (Number(item.quantity) <= 0) throw new Error("Invalid quantity");
     const product = await getStoreProduct(projectId, item.productId);
@@ -1379,39 +1656,64 @@ async function buildStoreOrder(data: any) {
       throw new Error(`Insufficient stock for ${product.name}`);
     }
 
-    const totalPrice = price * Number(item.quantity);
+    const totalPrice = roundMoney(price * Number(item.quantity));
     subtotal += totalPrice;
     canonicalItems.push({
       productId: item.productId,
       variantId: item.variantId || null,
+      categoryId: product.categoryId || null,
       name: variantName ? `${product.name} - ${variantName}` : product.name,
       productName: product.name,
       variantName,
       imageUrl: product.images?.[0]?.url || product.images?.[0] || null,
       quantity: Number(item.quantity),
-      unitPrice: price,
+      unitPrice: roundMoney(price),
       totalPrice,
     });
   }
 
-  let shippingTotal = 0;
-  let shippingMethodName = "Standard";
-  const zones = Array.isArray(settings.shippingZones) ? settings.shippingZones : [];
-  const allRates = zones.flatMap((zone: any) => zone.rates || []);
-  const selectedRate = allRates.find((rate: any) => rate.id === shippingMethodId) || allRates[0];
-  if (selectedRate) {
-    shippingTotal = Number(selectedRate.price || 0);
-    shippingMethodName = selectedRate.name || "Standard";
-    if (settings.freeShippingThreshold && subtotal >= Number(settings.freeShippingThreshold)) {
-      shippingTotal = 0;
-      shippingMethodName = "Free Shipping";
-    }
+  return { subtotal: roundMoney(subtotal), canonicalItems };
+}
+
+async function buildStoreOrder(data: any, authUserId?: string | null) {
+  const {
+    storeId,
+    items = [],
+    customerEmail,
+    customerName,
+    customerPhone,
+    shippingAddress,
+    billingAddress,
+    shippingMethodId,
+    discountCode,
+    idempotencyKey,
+    sessionToken,
+    notes,
+  } = data;
+
+  const context = await getStoreContext(storeId);
+  const { projectId, ownerId, settings } = context;
+  const currency = String(settings.currency || "USD").toLowerCase();
+  const connectedAccountId = settings.stripeConnectAccountId;
+
+  if (!settings.stripeEnabled || !connectedAccountId || !settings.stripeConnectChargesEnabled) {
+    throw new Error("Store is not ready to accept payments");
   }
 
-  const taxTotal = settings.taxEnabled ? subtotal * (Number(settings.taxRate || 0) / 100) : 0;
-  const total = Math.max(0, subtotal + shippingTotal + taxTotal);
+  const { subtotal, canonicalItems } = await buildStoreCanonicalItems(projectId, items);
+  const pricing = await calculateCheckoutPricing({
+    canonicalItems,
+    customerEmail,
+    discountCode,
+    projectId,
+    settings,
+    shippingAddress,
+    shippingMethodId,
+    subtotal,
+  });
   const cartHash = await sha256(stableStringify({
     currency,
+    discountCode: pricing.discountCode,
     items: canonicalItems.map((item) => ({
       productId: item.productId,
       variantId: item.variantId,
@@ -1419,11 +1721,11 @@ async function buildStoreOrder(data: any) {
       unitPrice: item.unitPrice,
       totalPrice: item.totalPrice,
     })),
-    shippingMethodId: shippingMethodId || null,
-    shippingTotal,
-    subtotal,
-    taxTotal,
-    total,
+    shippingMethodId: pricing.shippingMethodId,
+    shippingTotal: pricing.shippingTotal,
+    subtotal: pricing.subtotal,
+    taxTotal: pricing.taxTotal,
+    total: pricing.total,
   }));
   const checkoutIdempotencyKey = `eco_${(await sha256(stableStringify({
     cartHash,
@@ -1433,7 +1735,7 @@ async function buildStoreOrder(data: any) {
     projectId,
     sessionToken: String(sessionToken || "").trim() || null,
     storeId: context.storeId,
-    total: cents(total),
+    total: cents(pricing.total),
   }))).slice(0, 64)}`;
   const orderNumber = `ORD-${checkoutIdempotencyKey.replace(/[^a-zA-Z0-9_-]/g, "").substring(0, 32).toUpperCase()}`;
   const accessToken = randomToken("ord_");
@@ -1456,12 +1758,14 @@ async function buildStoreOrder(data: any) {
       customerName,
       customerPhone: customerPhone || null,
       items: canonicalItems,
-      subtotal,
-      discount: 0,
-      discountAmount: 0,
-      shippingCost: shippingTotal,
-      taxAmount: taxTotal,
-      total,
+      subtotal: pricing.subtotal,
+      discount: pricing.discountAmount,
+      discountAmount: pricing.discountAmount,
+      discountCode: pricing.discountCode,
+      discountRule: pricing.discount,
+      shippingCost: pricing.shippingTotal,
+      taxAmount: pricing.taxTotal,
+      total: pricing.total,
       currency,
       shippingAddress,
       billingAddress: billingAddress || shippingAddress,
@@ -1469,8 +1773,11 @@ async function buildStoreOrder(data: any) {
       paymentStatus: "pending",
       fulfillmentStatus: "unfulfilled",
       paymentMethod: "stripe",
-      shippingMethod: shippingMethodName,
+      shippingMethod: pricing.shippingMethodName,
+      shippingMethodId: pricing.shippingMethodId,
+      pricing,
       notes: notes || null,
+      authUserId: authUserId || null,
       checkoutIdempotencyKey,
       orderAccessToken: accessToken,
       orderAccessTokenHash: accessTokenHash,
@@ -1481,8 +1788,169 @@ async function buildStoreOrder(data: any) {
   };
 }
 
-async function createStoreCheckoutIntent(data: any) {
-  const order = await buildStoreOrder(data);
+function splitCustomerName(name: unknown) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] || "",
+    lastName: parts.slice(1).join(" ") || "",
+  };
+}
+
+function normalizeCustomerAddress(address: any, fallbackName?: unknown) {
+  const fallback = splitCustomerName(fallbackName);
+  return {
+    firstName: address?.firstName || fallback.firstName,
+    lastName: address?.lastName || fallback.lastName,
+    company: address?.company || undefined,
+    address1: address?.address1 || "",
+    address2: address?.address2 || undefined,
+    city: address?.city || "",
+    state: address?.state || "",
+    zipCode: address?.zipCode || "",
+    country: address?.country || "",
+    phone: address?.phone || undefined,
+  };
+}
+
+function mergeCustomerAddresses(currentAddresses: any[], nextAddress: any) {
+  const normalizedNext = normalizeCustomerAddress(nextAddress);
+  if (!normalizedNext.address1) return currentAddresses;
+  const exists = currentAddresses.some((address) =>
+    String(address?.address1 || "").trim().toLowerCase() === normalizedNext.address1.trim().toLowerCase() &&
+    String(address?.zipCode || "").trim().toLowerCase() === normalizedNext.zipCode.trim().toLowerCase()
+  );
+  return exists ? currentAddresses : [...currentAddresses, normalizedNext];
+}
+
+async function findOrCreateStoreCustomerForOrder(order: any, authUserId?: string | null) {
+  const orderData = order.data || {};
+  const email = String(orderData.customerEmail || "").trim().toLowerCase();
+  if (!email) return null;
+
+  const nameParts = splitCustomerName(orderData.customerName);
+  const shippingAddress = normalizeCustomerAddress(orderData.shippingAddress, orderData.customerName);
+
+  const { data: existingCustomer, error: customerError } = await supabase
+    .from("store_customers")
+    .select("*")
+    .eq("project_id", order.projectId)
+    .ilike("email", email)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (customerError) throw customerError;
+
+  if (existingCustomer) {
+    const data = existingCustomer.data || {};
+    const addresses = mergeCustomerAddresses(existingCustomer.addresses || data.addresses || [], shippingAddress);
+    const { data: updatedCustomer, error } = await supabase
+      .from("store_customers")
+      .update({
+        user_id: authUserId || existingCustomer.user_id || null,
+        store_id: order.context.storeId,
+        public_store_id: order.context.storeId,
+        first_name: existingCustomer.first_name || nameParts.firstName || shippingAddress.firstName || "Customer",
+        last_name: existingCustomer.last_name || nameParts.lastName || shippingAddress.lastName || "",
+        phone: existingCustomer.phone || orderData.customerPhone || shippingAddress.phone || null,
+        addresses,
+        default_shipping_address: existingCustomer.default_shipping_address || shippingAddress,
+        default_billing_address: existingCustomer.default_billing_address || orderData.billingAddress || shippingAddress,
+        data: {
+          ...data,
+          userId: authUserId || existingCustomer.user_id || data.userId || null,
+          storeId: order.context.storeId,
+          publicStoreId: order.context.storeId,
+          addresses,
+          defaultShippingAddress: existingCustomer.default_shipping_address || data.defaultShippingAddress || shippingAddress,
+          defaultBillingAddress: existingCustomer.default_billing_address || data.defaultBillingAddress || orderData.billingAddress || shippingAddress,
+          updatedAt: nowIso(),
+        },
+        updated_at: nowIso(),
+      })
+      .eq("id", existingCustomer.id)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return updatedCustomer || existingCustomer;
+  }
+
+  const { data: customer, error } = await supabase
+    .from("store_customers")
+    .insert({
+      project_id: order.projectId,
+      store_id: order.context.storeId,
+      public_store_id: order.context.storeId,
+      user_id: authUserId || null,
+      email,
+      first_name: nameParts.firstName || shippingAddress.firstName || "Customer",
+      last_name: nameParts.lastName || shippingAddress.lastName || "",
+      phone: orderData.customerPhone || shippingAddress.phone || null,
+      total_orders: 0,
+      total_spent: 0,
+      addresses: shippingAddress.address1 ? [shippingAddress] : [],
+      default_shipping_address: shippingAddress.address1 ? shippingAddress : null,
+      default_billing_address: orderData.billingAddress || shippingAddress || null,
+      accepts_marketing: Boolean(orderData.acceptsMarketing),
+      data: {
+        userId: authUserId || null,
+        storeId: order.context.storeId,
+        publicStoreId: order.context.storeId,
+        addresses: shippingAddress.address1 ? [shippingAddress] : [],
+        defaultShippingAddress: shippingAddress.address1 ? shippingAddress : null,
+        defaultBillingAddress: orderData.billingAddress || shippingAddress || null,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+      },
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return customer;
+}
+
+async function validateStoreDiscount(data: any) {
+  const {
+    storeId,
+    items = [],
+    discountCode,
+    customerEmail,
+    shippingAddress,
+    shippingMethodId,
+  } = data;
+
+  const context = await getStoreContext(storeId);
+  const { subtotal, canonicalItems } = await buildStoreCanonicalItems(context.projectId, items);
+  const pricing = await calculateCheckoutPricing({
+    canonicalItems,
+    customerEmail,
+    discountCode,
+    projectId: context.projectId,
+    settings: context.settings,
+    shippingAddress,
+    shippingMethodId,
+    subtotal,
+  });
+
+  if (!pricing.discount) throw new Error("Codigo de descuento invalido");
+
+  return {
+    valid: true,
+    discountCode: pricing.discountCode,
+    discountAmount: pricing.discountAmount,
+    discountType: pricing.discount.type,
+    discountScope: pricing.discount.scope,
+    subtotal: pricing.subtotal,
+    shippingTotal: pricing.shippingTotal,
+    shippingMethodId: pricing.shippingMethodId,
+    shippingMethodName: pricing.shippingMethodName,
+    taxTotal: pricing.taxTotal,
+    total: pricing.total,
+    pricing,
+  };
+}
+
+async function createStoreCheckoutIntent(data: any, authUserId?: string | null) {
+  const order = await buildStoreOrder(data, authUserId);
 
   const existing = await getExistingCheckoutOrder(order.checkoutIdempotencyKey);
 
@@ -1500,16 +1968,14 @@ async function createStoreCheckoutIntent(data: any) {
   }
 
   const { paymentIntent, platformFeeAmount } = await createStorePaymentIntent(order);
+  const customer = await findOrCreateStoreCustomerForOrder(order, authUserId || null);
 
   const orderData = {
     ...order.data,
+    customerId: customer?.id || null,
     pricing: {
-      subtotal: order.data.subtotal,
-      discountTotal: 0,
-      shippingTotal: order.data.shippingCost,
-      taxTotal: order.data.taxAmount,
+      ...(order.data.pricing || {}),
       platformFeeTotal: platformFeeAmount / 100,
-      total: order.data.total,
     },
     stripe: {
       paymentIntentId: paymentIntent.id,
@@ -1525,16 +1991,18 @@ async function createStoreCheckoutIntent(data: any) {
     .insert({
       store_id: order.context.storeId,
       public_store_id: order.context.storeId,
-      user_id: null,
+      user_id: authUserId || null,
       project_id: order.projectId,
       order_number: order.orderNumber,
+      customer_id: customer?.id || null,
       customer_email: orderData.customerEmail,
       customer_name: orderData.customerName,
       customer_phone: orderData.customerPhone,
       items: orderData.items,
       subtotal: orderData.subtotal,
-      discount: 0,
-      discount_amount: 0,
+      discount: orderData.discountAmount,
+      discount_amount: orderData.discountAmount,
+      discount_code: orderData.discountCode,
       shipping_cost: orderData.shippingCost,
       shipping_amount: orderData.shippingCost,
       tax_amount: orderData.taxAmount,
@@ -1560,6 +2028,7 @@ async function createStoreCheckoutIntent(data: any) {
         source: "stripe-api",
         checkoutIdempotencyKey: order.checkoutIdempotencyKey,
         cartHash: order.cartHash,
+        discountCode: orderData.discountCode,
       },
       data: orderData,
     })
@@ -1615,6 +2084,7 @@ async function createStorePaymentIntent(order: any, idempotencySuffix = "") {
       orderNumber: order.orderNumber,
       checkoutIdempotencyKey: order.checkoutIdempotencyKey,
       cartHash: order.cartHash,
+      discountCode: order.data.discountCode || "",
     },
   }, { idempotencyKey: stripeIdempotencyKey });
 
@@ -1626,11 +2096,17 @@ async function replaceStoreOrderPaymentIntent(existing: any, order: any) {
   const existingStripe = existingData.stripe || {};
   const nextAttempt = Number(existingStripe.attempt || 1) + 1;
   const { paymentIntent, platformFeeAmount } = await createStorePaymentIntent(order, `_retry_${nextAttempt}`);
+  const customer = await findOrCreateStoreCustomerForOrder(order, order.data.authUserId || existing.user_id || null);
   const nextData = {
-    ...existingData,
+    ...order.data,
+    customerId: customer?.id || existing.customer_id || existingData.customerId || null,
     status: "pending",
     paymentStatus: "pending",
     updatedAt: nowIso(),
+    pricing: {
+      ...(order.data.pricing || {}),
+      platformFeeTotal: platformFeeAmount / 100,
+    },
     stripe: {
       ...existingStripe,
       paymentIntentId: paymentIntent.id,
@@ -1646,13 +2122,26 @@ async function replaceStoreOrderPaymentIntent(existing: any, order: any) {
     .update({
       status: "pending",
       payment_status: "pending",
+      user_id: order.data.authUserId || existing.user_id || null,
+      customer_id: customer?.id || existing.customer_id || null,
       payment_intent_id: paymentIntent.id,
       stripe_payment_intent_id: paymentIntent.id,
+      subtotal: nextData.subtotal,
+      discount: nextData.discountAmount,
+      discount_amount: nextData.discountAmount,
+      discount_code: nextData.discountCode,
+      shipping_cost: nextData.shippingCost,
+      shipping_amount: nextData.shippingCost,
+      tax_amount: nextData.taxAmount,
+      total: nextData.total,
+      total_amount: nextData.total,
+      pricing: nextData.pricing,
       stripe: nextData.stripe,
       metadata: {
         ...(existing.metadata || {}),
         checkoutIdempotencyKey: order.checkoutIdempotencyKey,
         cartHash: order.cartHash,
+        discountCode: nextData.discountCode,
         paymentIntentReplacedAt: nowIso(),
       },
       data: nextData,
@@ -1735,25 +2224,256 @@ async function getStoreOrderStatus(data: any) {
   };
 }
 
-async function createRefund(userId: string, data: any) {
-  const { storeId, paymentIntentId, orderId, amount, reason = "requested_by_customer" } = data;
-  if (storeId) await requireStoreOwner(userId, storeId);
+type StripeRefundReason = "duplicate" | "fraudulent" | "requested_by_customer";
 
-  let resolvedPaymentIntentId = paymentIntentId;
-  if (!resolvedPaymentIntentId && orderId) {
-    const { data: order } = await supabase.from("store_orders").select("*").eq("id", orderId).maybeSingle();
-    resolvedPaymentIntentId = order?.payment_intent_id || order?.data?.stripe?.paymentIntentId;
+function normalizeStripeRefundReason(value: unknown): StripeRefundReason {
+  return value === "duplicate" || value === "fraudulent" ? value : "requested_by_customer";
+}
+
+function resolveOrderStoreIdentifier(order: any, fallbackStoreId?: string | null): string {
+  const data = getOrderData(order);
+  const storeId =
+    fallbackStoreId ||
+    order?.public_store_id ||
+    order?.store_id ||
+    data?.publicStoreId ||
+    data?.public_store_id ||
+    data?.storeId ||
+    data?.store_id ||
+    order?.project_id ||
+    data?.projectId ||
+    data?.project_id;
+  if (!storeId) throw new Error("Order store not found");
+  return storeId;
+}
+
+async function loadStoreOrderForAdminAction(data: any) {
+  const { orderId, paymentIntentId, storeId } = data;
+  if (!orderId && !paymentIntentId) throw new Error("orderId is required");
+
+  let query = supabase.from("store_orders").select("*");
+  if (orderId) query = query.eq("id", orderId);
+  else query = query.or(`payment_intent_id.eq.${paymentIntentId},stripe_payment_intent_id.eq.${paymentIntentId}`);
+
+  if (storeId) {
+    query = query.or(`store_id.eq.${storeId},public_store_id.eq.${storeId},project_id.eq.${storeId}`);
   }
+
+  const { data: order, error } = await query.maybeSingle();
+  if (error) throw error;
+  if (!order) throw new Error("Order not found");
+  return order;
+}
+
+function readStoredRefunds(order: any): any[] {
+  const data = getOrderData(order);
+  return Array.isArray(data?.refunds) ? data.refunds : [];
+}
+
+function sumActiveRefunds(refunds: any[]): number {
+  return roundMoney(refunds.reduce((sum, refund) => {
+    const status = String(refund?.status || "").toLowerCase();
+    if (["failed", "canceled", "cancelled"].includes(status)) return sum;
+    return sum + Number(refund?.amount || 0);
+  }, 0));
+}
+
+function mergeRefundRecord(refunds: any[], nextRefund: any): any[] {
+  const index = refunds.findIndex((refund) => refund?.id === nextRefund.id);
+  if (index === -1) return [...refunds, nextRefund];
+  return refunds.map((refund, refundIndex) => refundIndex === index ? { ...refund, ...nextRefund } : refund);
+}
+
+async function createRefund(userId: string, data: any) {
+  const { storeId, paymentIntentId, amount } = data;
+  const reason = normalizeStripeRefundReason(data.reason);
+  const order = await loadStoreOrderForAdminAction(data);
+  const storeIdentifier = resolveOrderStoreIdentifier(order, storeId);
+  await requireStoreOwner(userId, storeIdentifier);
+
+  const orderData = getOrderData(order);
+  const stripeData = orderData.stripe || {};
+  const resolvedPaymentIntentId = paymentIntentId || getOrderPaymentIntentId(order);
   if (!resolvedPaymentIntentId) throw new Error("paymentIntentId is required");
 
-  const refund = await stripe.refunds.create({
+  const paymentStatus = String(order.payment_status || orderData.paymentStatus || "pending");
+  if (!["paid", "partially_refunded"].includes(paymentStatus)) {
+    throw new Error("Only paid orders can be refunded");
+  }
+
+  const orderTotal = roundMoney(order.total_amount ?? order.total ?? orderData.total ?? 0);
+  const existingRefunds = readStoredRefunds(order);
+  const existingRefundedAmount = sumActiveRefunds(existingRefunds);
+  const remainingAmount = roundMoney(Math.max(0, orderTotal - existingRefundedAmount));
+  const requestedAmount = amount === undefined || amount === null || amount === ""
+    ? remainingAmount
+    : roundMoney(amount);
+
+  if (requestedAmount <= 0) throw new Error("Refund amount must be greater than zero");
+  if (requestedAmount - remainingAmount > 0.005) {
+    throw new Error("Refund amount exceeds remaining refundable total");
+  }
+
+  const refundAmountCents = cents(requestedAmount);
+  const refundParams: Stripe.RefundCreateParams = {
     payment_intent: resolvedPaymentIntentId,
-    amount: amount ? cents(amount) : undefined,
+    amount: refundAmountCents,
     reason,
-    metadata: { userId, orderId: orderId || "" },
+    metadata: {
+      userId,
+      orderId: order.id,
+      projectId: order.project_id || orderData.projectId || "",
+      storeId: order.store_id || order.public_store_id || storeIdentifier,
+    },
+  };
+
+  if (stripeData.connectedAccountId) {
+    (refundParams as Record<string, unknown>).reverse_transfer = true;
+  }
+  if (Number(stripeData.applicationFeeAmount || 0) > 0) {
+    (refundParams as Record<string, unknown>).refund_application_fee = true;
+  }
+
+  const refund = await stripe.refunds.create(refundParams, {
+    idempotencyKey: String(
+      data.idempotencyKey ||
+      `refund_${order.id}_${resolvedPaymentIntentId}_${refundAmountCents}_${reason}_${existingRefunds.length}`,
+    ).slice(0, 255),
   });
 
-  return { refundId: refund.id, amount: refund.amount / 100, status: refund.status };
+  const updatedAt = nowIso();
+  const refundRecord = {
+    id: refund.id,
+    amount: roundMoney(refund.amount / 100),
+    status: refund.status || "pending",
+    reason: refund.reason || reason,
+    source: "admin",
+    createdBy: userId,
+    createdAt: refund.created ? new Date(refund.created * 1000).toISOString() : updatedAt,
+  };
+  const refunds = mergeRefundRecord(existingRefunds, refundRecord);
+  const refundedAmount = roundMoney(Math.min(orderTotal, sumActiveRefunds(refunds)));
+  const isFullyRefunded = orderTotal > 0 && refundedAmount >= orderTotal - 0.005;
+  const nextPaymentStatus = isFullyRefunded ? "refunded" : "partially_refunded";
+  const nextStatus = isFullyRefunded ? "refunded" : (order.status || orderData.status || "processing");
+  const nextStripeData = {
+    ...stripeData,
+    paymentIntentId: resolvedPaymentIntentId,
+    lastRefundId: refund.id,
+  };
+  const nextData = {
+    ...orderData,
+    status: nextStatus,
+    paymentStatus: nextPaymentStatus,
+    refundedAmount,
+    refunds,
+    refundedAt: isFullyRefunded ? updatedAt : orderData.refundedAt,
+    stripe: nextStripeData,
+    updatedAt,
+  };
+  const updatePayload: Record<string, unknown> = {
+    status: nextStatus,
+    payment_status: nextPaymentStatus,
+    stripe: nextStripeData,
+    data: nextData,
+    updated_at: updatedAt,
+  };
+  if (isFullyRefunded) updatePayload.refunded_at = updatedAt;
+
+  const { data: updatedOrder, error } = await supabase
+    .from("store_orders")
+    .update(updatePayload)
+    .eq("id", order.id)
+    .select("*")
+    .single();
+  if (error) throw error;
+
+  return {
+    refundId: refund.id,
+    amount: refundRecord.amount,
+    status: refund.status,
+    paymentStatus: nextPaymentStatus,
+    refundedAmount,
+    order: updatedOrder,
+  };
+}
+
+async function cancelStoreOrder(userId: string, data: any) {
+  const { storeId, reason = "merchant_cancelled" } = data;
+  const order = await loadStoreOrderForAdminAction(data);
+  const storeIdentifier = resolveOrderStoreIdentifier(order, storeId);
+  await requireStoreOwner(userId, storeIdentifier);
+
+  const orderData = getOrderData(order);
+  const stripeData = orderData.stripe || {};
+  const paymentStatus = String(order.payment_status || orderData.paymentStatus || "pending");
+  if (["paid", "partially_refunded", "refunded"].includes(paymentStatus)) {
+    throw new Error("Paid orders must be refunded instead of cancelled directly");
+  }
+
+  const paymentIntentId = getOrderPaymentIntentId(order);
+  let paymentIntentCanceled = false;
+  let paymentIntentWarning: string | null = null;
+  if (paymentIntentId) {
+    try {
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      const cancellableStatuses = new Set(["requires_payment_method", "requires_confirmation", "requires_action", "requires_capture", "processing"]);
+      if (cancellableStatuses.has(paymentIntent.status)) {
+        await stripe.paymentIntents.cancel(paymentIntentId, {
+          cancellation_reason: "requested_by_customer",
+        });
+        paymentIntentCanceled = true;
+      } else if (paymentIntent.status === "succeeded") {
+        throw new Error("PaymentIntent already succeeded; refund the order instead");
+      }
+    } catch (error: any) {
+      if (/refund the order/i.test(error.message || "")) throw error;
+      paymentIntentWarning = error.message || "Could not cancel PaymentIntent";
+    }
+  }
+
+  const cancelledAt = nowIso();
+  const nextStripeData = {
+    ...stripeData,
+    paymentIntentId: paymentIntentId || stripeData.paymentIntentId,
+    paymentIntentCanceled,
+    paymentIntentWarning,
+  };
+  const nextData = {
+    ...orderData,
+    status: "cancelled",
+    paymentStatus: paymentStatus === "pending" ? "failed" : paymentStatus,
+    cancelledAt,
+    cancellation: {
+      reason,
+      cancelledBy: userId,
+      paymentIntentCanceled,
+      paymentIntentWarning,
+    },
+    stripe: nextStripeData,
+    updatedAt: cancelledAt,
+  };
+
+  const { data: updatedOrder, error } = await supabase
+    .from("store_orders")
+    .update({
+      status: "cancelled",
+      payment_status: nextData.paymentStatus,
+      cancelled_at: cancelledAt,
+      stripe: nextStripeData,
+      data: nextData,
+      updated_at: cancelledAt,
+    })
+    .eq("id", order.id)
+    .select("*")
+    .single();
+  if (error) throw error;
+
+  return {
+    order: updatedOrder,
+    paymentIntentCanceled,
+    warning: paymentIntentWarning,
+  };
 }
 
 async function getPaymentStatus(_userId: string, data: any) {
@@ -2199,6 +2919,9 @@ async function createStoreUser(data: any) {
         project_id: projectId,
         account_type: "store_customer",
       },
+      app_metadata: {
+        account_type: "store_customer",
+      },
     });
 
     if (createError && !String(createError.message || "").toLowerCase().includes("already")) {
@@ -2213,28 +2936,332 @@ async function createStoreUser(data: any) {
     }
   }
 
-  const { data: user, error } = await supabase.from("store_users").upsert({
+  const customer = await findOrCreateStoreCustomerForRegistration({
+    storeId,
+    projectId,
+    authUserId,
+    email: normalizedEmail,
+    displayName,
+    firstName,
+    lastName,
+    phone,
+  });
+
+  const existing = await findStoreUserByEmail(projectId, normalizedEmail);
+  const userPayload = {
     project_id: projectId,
+    public_store_id: storeId,
+    auth_user_id: authUserId,
     email: normalizedEmail,
     display_name: displayName || [firstName, lastName].filter(Boolean).join(" ") || normalizedEmail,
-    first_name: firstName || null,
-    last_name: lastName || null,
-    phone: phone || null,
-    metadata: { ...metadata, authUserId },
+    first_name: firstName || customer?.first_name || null,
+    last_name: lastName || customer?.last_name || null,
+    phone: phone || customer?.phone || null,
+    customer_id: customer?.id || existing?.customer_id || null,
+    role: existing?.role || "customer",
+    status: existing?.status || "active",
+    metadata: { ...(existing?.metadata || {}), ...metadata, authUserId, source: metadata.source || data.source || "self_register" },
     last_login_at: nowIso(),
-  }, { onConflict: "project_id,email" }).select("*").single();
+    updated_at: nowIso(),
+  };
+
+  const query = existing
+    ? supabase.from("store_users").update(userPayload).eq("id", existing.id)
+    : supabase.from("store_users").insert(userPayload);
+  const { data: user, error } = await query.select("*").single();
   if (error) throw error;
-  return { success: true, user };
+  return { success: true, user: await serializeStoreUserAccount(user) };
 }
 
 async function recordStoreUserLogin(data: any) {
   const { storeId, email } = data;
   const { projectId } = await getStoreContext(storeId);
   if (!email) return { success: true };
-  const { error } = await supabase.from("store_users").update({ last_login_at: nowIso() })
+  const { error } = await supabase.from("store_users").update({ last_login_at: nowIso(), updated_at: nowIso() })
     .eq("project_id", projectId)
     .eq("email", String(email).toLowerCase());
   if (error) throw error;
+  return { success: true };
+}
+
+async function findStoreUserByEmail(projectId: string, email: string) {
+  const { data, error } = await supabase
+    .from("store_users")
+    .select("*")
+    .eq("project_id", projectId)
+    .ilike("email", email)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function findStoreUserByAuthId(projectId: string, authUserId: string) {
+  const { data, error } = await supabase
+    .from("store_users")
+    .select("*")
+    .eq("project_id", projectId)
+    .eq("auth_user_id", authUserId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function findOrCreateStoreCustomerForRegistration(args: {
+  storeId: string;
+  projectId: string;
+  authUserId: string | null;
+  email: string;
+  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+}) {
+  const name = splitCustomerName(args.displayName);
+  const firstName = args.firstName || name.firstName || "Customer";
+  const lastName = args.lastName || name.lastName || "";
+  const { data: existing, error: readError } = await supabase
+    .from("store_customers")
+    .select("*")
+    .eq("project_id", args.projectId)
+    .ilike("email", args.email)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (readError) throw readError;
+
+  if (existing) {
+    const { data: updated, error } = await supabase
+      .from("store_customers")
+      .update({
+        user_id: args.authUserId || existing.user_id || null,
+        store_id: args.storeId,
+        public_store_id: args.storeId,
+        first_name: existing.first_name || firstName,
+        last_name: existing.last_name || lastName,
+        phone: args.phone || existing.phone || null,
+        data: {
+          ...(existing.data || {}),
+          userId: args.authUserId || existing.user_id || null,
+          storeId: args.storeId,
+          publicStoreId: args.storeId,
+          updatedAt: nowIso(),
+        },
+        updated_at: nowIso(),
+      })
+      .eq("id", existing.id)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return updated || existing;
+  }
+
+  const { data: customer, error } = await supabase
+    .from("store_customers")
+    .insert({
+      project_id: args.projectId,
+      store_id: args.storeId,
+      public_store_id: args.storeId,
+      user_id: args.authUserId || null,
+      email: args.email,
+      first_name: firstName,
+      last_name: lastName,
+      phone: args.phone || null,
+      total_orders: 0,
+      total_spent: 0,
+      addresses: [],
+      accepts_marketing: false,
+      data: {
+        userId: args.authUserId || null,
+        storeId: args.storeId,
+        publicStoreId: args.storeId,
+        addresses: [],
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+      },
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return customer;
+}
+
+async function serializeStoreUserAccount(storeUser: any) {
+  const { data: customer } = storeUser.customer_id
+    ? await supabase.from("store_customers").select("*").eq("id", storeUser.customer_id).maybeSingle()
+    : await supabase
+      .from("store_customers")
+      .select("*")
+      .eq("project_id", storeUser.project_id)
+      .ilike("email", storeUser.email)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+  const customerData = customer?.data || {};
+
+  return {
+    id: storeUser.id,
+    authUserId: storeUser.auth_user_id || storeUser.metadata?.authUserId,
+    email: storeUser.email,
+    displayName: storeUser.display_name,
+    firstName: storeUser.first_name,
+    lastName: storeUser.last_name,
+    photoURL: storeUser.photo_url,
+    phone: storeUser.phone,
+    role: storeUser.role || "customer",
+    status: storeUser.status || "active",
+    segments: storeUser.segments || [],
+    tags: storeUser.tags || [],
+    customerId: storeUser.customer_id || customer?.id,
+    addresses: customer?.addresses || customerData.addresses || [],
+    defaultShippingAddress: customer?.default_shipping_address || customerData.defaultShippingAddress,
+    defaultBillingAddress: customer?.default_billing_address || customerData.defaultBillingAddress,
+    totalOrders: Number(storeUser.total_orders ?? customer?.total_orders ?? 0),
+    totalSpent: Number(storeUser.total_spent ?? customer?.total_spent ?? 0),
+    averageOrderValue: Number(storeUser.average_order_value ?? 0),
+    lastLoginAt: storeUser.last_login_at,
+    lastOrderAt: storeUser.last_order_at || customer?.last_order_at,
+    createdAt: storeUser.created_at,
+    updatedAt: storeUser.updated_at,
+    metadata: storeUser.metadata || {},
+    acceptsMarketing: storeUser.accepts_marketing ?? customer?.accepts_marketing ?? false,
+    preferredLanguage: storeUser.preferred_language,
+    internalNotes: storeUser.internal_notes,
+  };
+}
+
+async function getCurrentStoreUser(userId: string, data: any) {
+  const { storeId } = data;
+  const { projectId } = await getStoreContext(storeId);
+  let storeUser = await findStoreUserByAuthId(projectId, userId);
+
+  if (!storeUser) {
+    const { data: authUser, error } = await supabase.auth.admin.getUserById(userId);
+    if (error) throw error;
+    const email = authUser.user?.email?.toLowerCase();
+    if (email) {
+      storeUser = await findStoreUserByEmail(projectId, email);
+      if (storeUser) {
+        const { data: updated, error: updateError } = await supabase
+          .from("store_users")
+          .update({
+            auth_user_id: userId,
+            metadata: { ...(storeUser.metadata || {}), authUserId: userId },
+            updated_at: nowIso(),
+          })
+          .eq("id", storeUser.id)
+          .select("*")
+          .single();
+        if (updateError) throw updateError;
+        storeUser = updated;
+      }
+    }
+  }
+
+  if (!storeUser) throw new Error("No existe una cuenta con este email en esta tienda");
+  return { success: true, user: await serializeStoreUserAccount(storeUser) };
+}
+
+async function updateCurrentStoreUser(userId: string, data: any) {
+  const { storeId, profile = {}, addresses, defaultShippingAddress, defaultBillingAddress } = data;
+  const current = await getCurrentStoreUser(userId, { storeId });
+  const storeUser = await findStoreUserByAuthId((await getStoreContext(storeId)).projectId, userId);
+  if (!storeUser) throw new Error("Store user not found");
+
+  const displayName = profile.displayName ?? [profile.firstName, profile.lastName].filter(Boolean).join(" ");
+  const storeUserUpdates: Record<string, unknown> = {
+    updated_at: nowIso(),
+  };
+  if (displayName) storeUserUpdates.display_name = displayName;
+  if (profile.firstName !== undefined) storeUserUpdates.first_name = profile.firstName;
+  if (profile.lastName !== undefined) storeUserUpdates.last_name = profile.lastName;
+  if (profile.phone !== undefined) storeUserUpdates.phone = profile.phone || null;
+  if (profile.acceptsMarketing !== undefined) storeUserUpdates.accepts_marketing = Boolean(profile.acceptsMarketing);
+  if (profile.preferredLanguage !== undefined) storeUserUpdates.preferred_language = profile.preferredLanguage || null;
+
+  const { data: updatedStoreUser, error: storeUserError } = await supabase
+    .from("store_users")
+    .update(storeUserUpdates)
+    .eq("id", storeUser.id)
+    .select("*")
+    .single();
+  if (storeUserError) throw storeUserError;
+
+  const account = current.user;
+  if (account.customerId) {
+    const { data: existingCustomer, error: customerReadError } = await supabase
+      .from("store_customers")
+      .select("data")
+      .eq("id", account.customerId)
+      .maybeSingle();
+    if (customerReadError) throw customerReadError;
+
+    const customerUpdates: Record<string, unknown> = {
+      updated_at: nowIso(),
+    };
+    if (profile.firstName !== undefined) customerUpdates.first_name = profile.firstName || "Customer";
+    if (profile.lastName !== undefined) customerUpdates.last_name = profile.lastName || "";
+    if (profile.phone !== undefined) customerUpdates.phone = profile.phone || null;
+    if (profile.acceptsMarketing !== undefined) customerUpdates.accepts_marketing = Boolean(profile.acceptsMarketing);
+    if (addresses !== undefined) customerUpdates.addresses = Array.isArray(addresses) ? addresses.map((address) => normalizeCustomerAddress(address)) : [];
+    if (defaultShippingAddress !== undefined) customerUpdates.default_shipping_address = defaultShippingAddress ? normalizeCustomerAddress(defaultShippingAddress) : null;
+    if (defaultBillingAddress !== undefined) customerUpdates.default_billing_address = defaultBillingAddress ? normalizeCustomerAddress(defaultBillingAddress) : null;
+    customerUpdates.data = {
+      ...(existingCustomer?.data || {}),
+      addresses: customerUpdates.addresses ?? account.addresses ?? [],
+      defaultShippingAddress: customerUpdates.default_shipping_address ?? account.defaultShippingAddress ?? null,
+      defaultBillingAddress: customerUpdates.default_billing_address ?? account.defaultBillingAddress ?? null,
+      updatedAt: nowIso(),
+    };
+
+    const { error: customerError } = await supabase
+      .from("store_customers")
+      .update(customerUpdates)
+      .eq("id", account.customerId);
+    if (customerError) throw customerError;
+  }
+
+  return { success: true, user: await serializeStoreUserAccount(updatedStoreUser) };
+}
+
+async function deleteCurrentStoreUser(userId: string, data: any) {
+  const { storeId } = data;
+  const { projectId } = await getStoreContext(storeId);
+  const storeUser = await findStoreUserByAuthId(projectId, userId);
+  if (!storeUser) return { success: true };
+
+  await supabase
+    .from("store_users")
+    .update({
+      status: "inactive",
+      email: `deleted-${storeUser.id}@deleted.local`,
+      display_name: "Deleted customer",
+      first_name: null,
+      last_name: null,
+      phone: null,
+      auth_user_id: null,
+      metadata: { ...(storeUser.metadata || {}), deletedAt: nowIso(), deletedAuthUserId: userId },
+      updated_at: nowIso(),
+    })
+    .eq("id", storeUser.id);
+
+  if (storeUser.customer_id) {
+    await supabase
+      .from("store_customers")
+      .update({
+        email: `deleted-${storeUser.customer_id}@deleted.local`,
+        first_name: "Deleted",
+        last_name: "Customer",
+        phone: null,
+        user_id: null,
+        data: { deletedAt: nowIso(), deletedAuthUserId: userId },
+        updated_at: nowIso(),
+      })
+      .eq("id", storeUser.customer_id);
+  }
+
+  await supabase.auth.admin.deleteUser(userId);
   return { success: true };
 }
 

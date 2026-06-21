@@ -24,7 +24,7 @@ import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useProducts } from '../hooks/useProducts';
 import { supabase } from '../../../../supabase';
 import { createRealtimeChannelName } from '../hooks/realtimeChannel';
-import { useEcommerceContext } from '../EcommerceDashboard';
+import { useEcommerceContext } from '../EcommerceContext';
 
 interface StockNotificationSubscriber {
     id: string;

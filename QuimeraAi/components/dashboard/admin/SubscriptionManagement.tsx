@@ -84,6 +84,7 @@ import {
     StoredPlan,
     PlanStats,
 } from '../../../services/plansService';
+import AppSelect from '../../ui/AppSelect';
 
 // =============================================================================
 // TYPES
@@ -1109,7 +1110,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                             className="w-full pl-10 pr-4 py-2 bg-q-surface border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                                         />
                                     </div>
-                                    <select
+                                    <AppSelect
                                         value={filterPlan}
                                         onChange={(e) => setFilterPlan(e.target.value as any)}
                                         className="px-4 py-2 bg-q-surface border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
@@ -1118,8 +1119,8 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                         {Object.entries(SUBSCRIPTION_PLANS).map(([id, plan]) => (
                                             <option key={id} value={id}>{plan.name}</option>
                                         ))}
-                                    </select>
-                                    <select
+                                    </AppSelect>
+                                    <AppSelect
                                         value={sortBy}
                                         onChange={(e) => setSortBy(e.target.value as any)}
                                         className="px-4 py-2 bg-q-surface border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
@@ -1127,7 +1128,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                         <option value="usage">Ordenar por uso</option>
                                         <option value="name">Ordenar por nombre</option>
                                         <option value="remaining">Ordenar por restantes</option>
-                                    </select>
+                                    </AppSelect>
                                 </div>
 
                                 {/* Table */}
