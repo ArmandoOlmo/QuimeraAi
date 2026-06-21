@@ -8,6 +8,10 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, X, Loader2, ShoppingBag, FileText, Tag, ArrowRight } from 'lucide-react';
 import { collection, query, where, getDocs, limit, orderBy } from '@/utils/compatData';
 import { db } from '@/utils/compatData';
+import {
+    filterRenderableStorefrontProducts,
+    getSafeProductPrice,
+} from '../../../utils/ecommerce/productDisplayGuards';
 
 interface Product {
     id: string;
@@ -133,7 +137,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                 })) as Product[];
 
                 // Filter by name, description, or category
-                const filtered = allProducts.filter(p => 
+                const filtered = filterRenderableStorefrontProducts(allProducts).filter(p =>
                     p.name?.toLowerCase().includes(searchLower) ||
                     p.description?.toLowerCase().includes(searchLower) ||
                     p.category?.toLowerCase().includes(searchLower)
@@ -339,7 +343,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                                                     {product.name}
                                                 </p>
                                                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                                                    ${product.price?.toFixed(2)}
+                                                    {getSafeProductPrice(product).displayText}
                                                     {product.category && (
                                                         <span className="ml-2 inline-flex items-center gap-1">
                                                             <Tag size={10} />

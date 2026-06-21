@@ -35,6 +35,7 @@ export type ProductCardValidationSeverity = 'warning' | 'error';
 export type ProductCardValidationCode =
     | 'missing_id'
     | 'missing_name'
+    | 'placeholder_name'
     | 'invalid_price'
     | 'zero_price'
     | 'invalid_compare_at_price'
@@ -103,6 +104,10 @@ export interface ProductCardInput {
         averageRating?: number | string | null;
         totalReviews?: number | string | null;
     } | null;
+    allowFreePrice?: boolean | null;
+    isFree?: boolean | null;
+    priceStrategy?: string | null;
+    metadata?: Record<string, unknown> | null;
 }
 
 export interface ProductCardDisplayOptions {

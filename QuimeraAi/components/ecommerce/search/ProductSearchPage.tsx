@@ -27,6 +27,7 @@ import { WishlistButton } from '../wishlist';
 import { RatingStars } from '../reviews';
 import type { ProductCardVariant, ProductCardVisualVariant } from '../../../types/productCard';
 import { createProductCardViewModel } from '../../../utils/productCard';
+import { filterRenderableStorefrontProducts } from '../../../utils/ecommerce/productDisplayGuards';
 import AppSelect from '../../ui/AppSelect';
 
 export type { ProductCardVariant } from '../../../types/productCard';
@@ -185,6 +186,10 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
     } = useProductSearch(storeId, { filters, sortBy, pageSize: productsPerPage });
 
     const wishlist = useWishlist(storeId, userId);
+    const renderableProducts = useMemo(
+        () => filterRenderableStorefrontProducts(products),
+        [products],
+    );
 
     const sortOptions: { value: SortOption; label: string }[] = [
         { value: 'newest', label: 'Más recientes' },
@@ -240,12 +245,12 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
     const suggestions = useMemo(() => {
         if (!searchTerm) return [];
         const term = searchTerm.toLowerCase();
-        const productNames = products
+        const productNames = renderableProducts
             .filter((p) => p.name.toLowerCase().includes(term))
             .map((p) => p.name)
             .slice(0, 5);
         return productNames;
-    }, [searchTerm, products]);
+    }, [searchTerm, renderableProducts]);
 
     const activeFiltersCount =
         (filters.categoryId || filters.categorySlug ? 1 : 0) +
@@ -256,7 +261,8 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
         (filters.featured ? 1 : 0);
 
     const heroTitle = title || 'Tienda';
-    const featuredProductsCount = products.filter((product) => product.isFeatured).length;
+    const featuredProductsCount = renderableProducts.filter((product) => product.isFeatured).length;
+    const renderedProductCount = renderableProducts.length;
     const useDrawerFilters = filterPresentation === 'drawer';
 
     // Use theme colors if provided, otherwise use defaults
@@ -331,7 +337,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             </div>
                             <div className="grid grid-cols-3 overflow-hidden rounded-xl border bg-slate-50" style={{ borderColor: colors.border }}>
                                 <div className="p-4">
-                                    <p className="text-2xl font-bold" style={{ color: colors.heading }}>{totalCount}</p>
+                                    <p className="text-2xl font-bold" style={{ color: colors.heading }}>{renderedProductCount}</p>
                                     <p className="mt-1 text-xs text-slate-500">productos</p>
                                 </div>
                                 <div className="border-l p-4" style={{ borderColor: colors.border }}>
@@ -417,7 +423,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
 
                                 {/* Results Count */}
                                 <span className="text-sm" style={{ color: colors.mutedText }}>
-                                    {totalCount} producto{totalCount !== 1 ? 's' : ''}
+                                    {renderedProductCount} producto{renderedProductCount !== 1 ? 's' : ''}
                                 </span>
                             </div>
 
@@ -523,7 +529,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                 className="text-sm"
                                 style={{ color: colors?.text || undefined }}
                             >
-                                {totalCount} producto{totalCount !== 1 ? 's' : ''}
+                                {renderedProductCount} producto{renderedProductCount !== 1 ? 's' : ''}
                             </span>
                         </div>
 
@@ -670,7 +676,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                     style={{ color: primaryColor }}
                                 />
                             </div>
-                        ) : products.length === 0 ? (
+                        ) : renderableProducts.length === 0 ? (
                             <div className="text-center py-16">
                                 <Package className="mx-auto text-gray-300 dark:text-gray-600 mb-4" size={64} />
                                 <h3 className="text-xl font-bold mb-2" style={{ color: colors.heading }}>
@@ -692,7 +698,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                 {/* Grid View */}
                                 {viewMode === 'grid' ? (
                                     <div className={`grid grid-cols-2 ${gridColsClass} ${cardGapClass}`}>
-                                        {products.map((product) => (
+                                        {renderableProducts.map((product) => (
                                             <ProductCard
                                                 key={product.id}
                                                 product={product}
@@ -719,7 +725,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                 ) : (
                                     /* List View */
                                     <div className="space-y-4">
-                                        {products.map((product) => (
+                                        {renderableProducts.map((product) => (
                                             <ProductListItem
                                                 key={product.id}
                                                 product={product}
@@ -814,6 +820,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
         showAvailabilityBadge: true,
         showFeaturedBadge: true,
     });
+    if (!card.isRenderable) return null;
+
     const isAvailable = card.inventory.isAvailable;
     const visualCardStyle = card.visualVariant;
 
@@ -848,7 +856,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
                             className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700"
                             style={{ color: cardColors.mutedText }}
                         >
-                            <Package size={48} />
+                            <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700">
+                                Imagen pendiente
+                            </span>
                         </div>
                     )}
 
@@ -1000,7 +1010,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         className="w-full h-full flex items-center justify-center"
                         style={{ color: cardColors.mutedText }}
                     >
-                        <Package size={48} />
+                            <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-slate-700">
+                                Imagen pendiente
+                            </span>
                     </div>
                 )}
 
@@ -1129,6 +1141,8 @@ const ProductListItem: React.FC<ProductCardProps> = ({
         currencySymbol,
         showBadges: false,
     });
+    if (!card.isRenderable) return null;
+
     const isAvailable = card.inventory.isAvailable;
 
     // Merge colors with defaults
@@ -1169,7 +1183,9 @@ const ProductListItem: React.FC<ProductCardProps> = ({
                         className="w-full h-full flex items-center justify-center"
                         style={{ color: cardColors.mutedText }}
                     >
-                        <Package size={32} />
+                        <span className="px-2 text-center text-xs font-semibold text-slate-600">
+                            Imagen pendiente
+                        </span>
                     </div>
                 )}
             </div>

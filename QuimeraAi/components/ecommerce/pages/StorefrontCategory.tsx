@@ -4,11 +4,13 @@
  * Displays products filtered by category.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs, query, where, orderBy, doc, getDoc } from '@/utils/compatData';
 import { db } from '@/utils/compatData';
 import { ShoppingBag, ChevronLeft, Filter, Loader2 } from 'lucide-react';
 import AppSelect from '../../ui/AppSelect';
+import { createProductCardViewModel } from '../../../utils/productCard';
+import { filterRenderableStorefrontProducts } from '../../../utils/ecommerce/productDisplayGuards';
 
 interface StorefrontCategoryProps {
     storeId: string;
@@ -87,7 +89,11 @@ const StorefrontCategory: React.FC<StorefrontCategoryProps> = ({
     }, [storeId, categorySlug]);
 
     // Sort products
-    const sortedProducts = [...products].sort((a, b) => {
+    const renderableProducts = useMemo(
+        () => filterRenderableStorefrontProducts(products),
+        [products],
+    );
+    const sortedProducts = [...renderableProducts].sort((a, b) => {
         switch (sortBy) {
             case 'price-asc':
                 return a.price - b.price;
@@ -144,7 +150,7 @@ const StorefrontCategory: React.FC<StorefrontCategoryProps> = ({
                                 <p className="text-gray-500 mt-1">{category.description}</p>
                             )}
                             <p className="text-sm text-gray-400 mt-1">
-                                {products.length} producto{products.length !== 1 ? 's' : ''}
+                                {renderableProducts.length} producto{renderableProducts.length !== 1 ? 's' : ''}
                             </p>
                         </div>
                         
@@ -193,10 +199,12 @@ const ProductCard: React.FC<{
     product: Product;
     onClick: () => void;
 }> = ({ product, onClick }) => {
-    const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
-    const discountPercent = hasDiscount
-        ? Math.round((1 - product.price / product.compareAtPrice!) * 100)
-        : 0;
+    const card = createProductCardViewModel(product, {
+        currencySymbol: '$',
+        showFeaturedBadge: false,
+        showRatings: false,
+    });
+    if (!card.isRenderable) return null;
 
     return (
         <button
@@ -204,35 +212,37 @@ const ProductCard: React.FC<{
             className="group text-left bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all"
         >
             <div className="aspect-square relative overflow-hidden bg-gray-100">
-                {product.images?.[0] ? (
+                {card.image?.url ? (
                     <img
-                        src={product.images[0]}
-                        alt={product.name}
+                        src={card.image.url}
+                        alt={card.image.altText}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                        <ShoppingBag className="w-12 h-12 text-gray-300" />
+                        <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-gray-600">
+                            Imagen pendiente
+                        </span>
                     </div>
                 )}
-                {hasDiscount && (
+                {card.hasDiscount && (
                     <span className="absolute top-2 right-2 px-2 py-1 text-xs font-bold text-white rounded bg-red-500">
-                        -{discountPercent}%
+                        -{card.discountPercent}%
                     </span>
                 )}
             </div>
             <div className="p-4">
                 <h3 className="font-medium text-gray-900 mb-1 line-clamp-2">
-                    {product.name}
+                    {card.name}
                 </h3>
                 <div className="flex items-center gap-2">
                     <span className="font-bold text-indigo-600">
-                        ${product.price.toLocaleString()}
+                        {card.displayPrice}
                     </span>
-                    {hasDiscount && (
+                    {card.hasDiscount && card.displayCompareAtPrice && (
                         <span className="text-sm text-gray-400 line-through">
-                            ${product.compareAtPrice!.toLocaleString()}
+                            {card.displayCompareAtPrice}
                         </span>
                     )}
                 </div>
@@ -242,7 +252,6 @@ const ProductCard: React.FC<{
 };
 
 export default StorefrontCategory;
-
 
 
 

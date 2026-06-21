@@ -199,6 +199,7 @@ const StorefrontModuleRenderer: React.FC<StorefrontModuleRendererProps> = ({
                         storeId={storeId}
                         data={decision.data}
                         globalColors={globalColors}
+                        isEditorPreview={isEditorPreview}
                         onProductClick={onNavigateToProduct}
                         onCategoryClick={onNavigateToCategory}
                         onCollectionClick={onNavigateToCategory}
