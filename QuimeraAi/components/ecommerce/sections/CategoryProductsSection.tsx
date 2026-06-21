@@ -9,8 +9,9 @@
  */
 
 import React from 'react';
-import { Category } from '../../../types';
+import type { Category } from '../../../types/ecommerce';
 import ProductSearchPage from '../search/ProductSearchPage';
+import type { ProductCardVariant } from '../../../types/productCard';
 
 interface CategoryProductsSectionProps {
     /** Store ID for loading products */
@@ -42,10 +43,10 @@ interface CategoryProductsSectionProps {
     showViewModeToggle?: boolean;
     defaultViewMode?: 'grid' | 'list';
     productsPerPage?: number;
-    gridColumns?: number;
-    cardStyle?: 'minimal' | 'modern' | 'classic' | 'bordered';
+    gridColumns?: 2 | 3 | 4 | 5;
+    cardStyle?: ProductCardVariant;
     borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
-    cardGap?: 'sm' | 'md' | 'lg' | 'xl';
+    cardGap?: 'sm' | 'md' | 'lg';
     paddingY?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
     paddingX?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
     /** Navigation callback */
@@ -118,4 +119,3 @@ const CategoryProductsSection: React.FC<CategoryProductsSectionProps> = ({
 };
 
 export default CategoryProductsSection;
-

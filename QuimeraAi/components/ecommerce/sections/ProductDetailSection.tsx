@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { Product } from '../../../types';
+import type { Product } from '../../../types/ecommerce';
 import ProductDetailPage from '../ProductDetailPage';
 import { useSafeStorefrontCart } from '../context';
 import { PublicProduct, PublicProductVariant } from '../hooks/usePublicProduct';
@@ -84,4 +84,3 @@ const ProductDetailSection: React.FC<ProductDetailSectionProps> = ({
 };
 
 export default ProductDetailSection;
-

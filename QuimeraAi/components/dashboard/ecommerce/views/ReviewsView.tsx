@@ -307,12 +307,12 @@ const ReviewsView: React.FC = () => {
                                 <Filter className="h-3.5 w-3.5" />
                                 <span>{t('ecommerce.reviewStatusFilter', 'Estado')}</span>
                             </div>
-                                <FilterChipRow
-                                    options={statusFilterOptions}
-                                    value={statusFilter}
-                                    onChange={(value) => setStatusFilter(value as StatusFilter)}
-                                    className="min-w-0"
-                                />
+                            <FilterChipRow
+                                options={statusFilterOptions}
+                                value={statusFilter}
+                                onChange={(value) => setStatusFilter(value as StatusFilter)}
+                                className="min-w-0"
+                            />
                         </div>
 
                         <label className="block min-w-0">
