@@ -73,22 +73,6 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
             setIsInitialized(true);
             setError(null);
             console.log('✅ Ecommerce store loaded via Project:', effectiveStoreId);
-            
-            // Validamos que haya un store_settings inicializado, si no, lo inicializamos silenciosamente
-            const { count, error: settingsError } = await supabase
-                .from('store_settings')
-                .select('*', { count: 'exact', head: true })
-                .eq('project_id', effectiveStoreId);
-
-            if (!settingsError && count === 0) {
-                await supabase
-                    .from('store_settings')
-                    .insert({
-                        project_id: effectiveStoreId,
-                        store_name: projectData.name,
-                        store_email: '', // Requires manual configuration
-                    });
-            }
 
         } catch (err: any) {
             console.error('Error initializing store:', err);
@@ -133,5 +117,4 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
 };
 
 export default useEcommerceStore;
-
 

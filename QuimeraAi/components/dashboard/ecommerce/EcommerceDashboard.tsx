@@ -204,8 +204,12 @@ const EcommerceDashboard: React.FC = () => {
 
     const handleEnableEcommerce = async () => {
         if (effectiveProjectId) {
-            await enableEcommerce();
-            await initializeStore();
+            try {
+                const enabled = await enableEcommerce();
+                if (enabled) await initializeStore();
+            } catch {
+                // useProjectEcommerce already exposes the activation error in the enable panel.
+            }
         }
     };
 
