@@ -60,10 +60,9 @@ import { supabase } from '../../../../supabase';
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useProject } from '../../../../contexts/project';
 import type { PageSection } from '../../../../types';
-import { DEFAULT_STOREFRONT_THEME, type StorefrontThemeSettings } from '../../../../types/ecommerce';
+import type { StorefrontThemeSettings } from '../../../../types/ecommerce';
 import type { Category, Product } from '../../../../types/ecommerce';
 import type { StorefrontSectionKind } from '../../../../types/storefrontRenderer';
-import type { StorefrontThemePresetId } from '../../../../types/storefrontTheme';
 import ColorControl from '../../../ui/ColorControl';
 import TabbedControls from '../../../ui/TabbedControls';
 import {
@@ -86,10 +85,6 @@ import {
     STOREFRONT_SECTION_KINDS,
     validateStorefrontSectionSettings,
 } from '../../../../utils/storefrontRenderer';
-import {
-    getStorefrontCatalogSize,
-    STOREFRONT_THEME_PRESETS,
-} from '../../../../utils/storefrontTheme';
 import { useEcommerceContext } from '../EcommerceContext';
 import { useCategories } from '../hooks/useCategories';
 import { useProducts } from '../hooks/useProducts';
@@ -98,12 +93,7 @@ import { useStoreSettings } from '../hooks/useStoreSettings';
 type PreviewMode = 'desktop' | 'tablet' | 'mobile';
 type TemplateState = 'draft' | 'published';
 type SectionSettingsMap = Partial<Record<StorefrontSectionKind, Record<string, unknown>>>;
-type StorefrontStructurePanel = 'template' | 'theme';
-type StorefrontThemeWithPresetMetadata = StorefrontThemeSettings & {
-    themePreset?: StorefrontThemePresetId;
-    themePresetId?: StorefrontThemePresetId;
-    presetId?: StorefrontThemePresetId;
-};
+type StorefrontStructurePanel = 'template';
 
 const defaultSections: StorefrontSectionKind[] = [...STOREFRONT_SECTION_KINDS];
 
@@ -124,17 +114,6 @@ const isRecord = (value: unknown): value is Record<string, any> =>
 
 const isStorefrontKind = (value: string): value is StorefrontSectionKind =>
     STOREFRONT_SECTION_KINDS.includes(value as StorefrontSectionKind);
-
-const isThemePresetId = (value: unknown): value is StorefrontThemePresetId =>
-    typeof value === 'string' && Object.prototype.hasOwnProperty.call(STOREFRONT_THEME_PRESETS, value);
-
-const normalizeThemePresetId = (value: unknown): StorefrontThemePresetId | undefined =>
-    isThemePresetId(value) ? value : undefined;
-
-const getThemePresetIdFromTheme = (theme?: Partial<StorefrontThemeWithPresetMetadata> | null): StorefrontThemePresetId | undefined =>
-    normalizeThemePresetId(theme?.themePresetId) ||
-    normalizeThemePresetId(theme?.themePreset) ||
-    normalizeThemePresetId(theme?.presetId);
 
 const toSettingsRecord = (value: unknown): Record<string, unknown> =>
     isRecord(value) ? { ...value } : {};
@@ -245,7 +224,6 @@ const buildStorefrontEditorSnapshot = (
     sections: StorefrontSectionKind[],
     sectionSettings: SectionSettingsMap,
     visibility: Record<string, boolean>,
-    presetId: StorefrontThemePresetId,
     themeSettings: StorefrontThemeSettings,
     now: string,
     state: TemplateState,
@@ -255,8 +233,6 @@ const buildStorefrontEditorSnapshot = (
         acc[section] = visibility[section] !== false;
         return acc;
     }, {} as Record<string, boolean>),
-    themePreset: presetId,
-    themePresetId: presetId,
     themeSettings,
     sectionSettings,
     sections: sections.map((section, index) => ({
@@ -473,8 +449,6 @@ const updateBusinessBlueprintStorefrontSections = (
     sections: StorefrontSectionKind[],
     settings: SectionSettingsMap,
     visibility: Record<string, boolean>,
-    presetId: StorefrontThemePresetId,
-    catalogSize: string,
     templateState: TemplateState,
     now: string,
     userId?: string,
@@ -499,8 +473,6 @@ const updateBusinessBlueprintStorefrontSections = (
             enabled: true,
             status: templateState === 'published' ? 'published' : 'configured',
             needsReview: false,
-            themePreset: presetId,
-            catalogSize,
             sections: nextSections,
             metadata: {
                 ...(isRecord(storefrontBlueprint.metadata) ? storefrontBlueprint.metadata : {}),
@@ -512,18 +484,6 @@ const updateBusinessBlueprintStorefrontSections = (
         },
     };
 };
-
-const mergeTheme = (
-    currentTheme: StorefrontThemeSettings,
-    presetId: StorefrontThemePresetId,
-): StorefrontThemeWithPresetMetadata => ({
-    ...DEFAULT_STOREFRONT_THEME,
-    ...currentTheme,
-    ...STOREFRONT_THEME_PRESETS[presetId].theme,
-    themePreset: presetId,
-    themePresetId: presetId,
-    presetId,
-});
 
 const buildPreviewTheme = (project: any, storefrontTheme: StorefrontThemeSettings): Record<string, any> => ({
     ...toSettingsRecord(project?.theme),
@@ -990,7 +950,6 @@ const StorefrontEditorView: React.FC = () => {
         isLoading: settingsLoading,
         isSaving: settingsSaving,
         getStorefrontTheme,
-        replaceStorefrontTheme,
     } = useStoreSettings(user?.id || '', storeId);
 
     const project = useMemo(() => (
@@ -1043,14 +1002,6 @@ const StorefrontEditorView: React.FC = () => {
     const initialOrderSignature = stableStringify(initialOrder);
     const initialSectionSettingsSignature = stableStringify(initialSectionSettings);
     const projectVisibilitySignature = stableStringify(initialVisibility);
-    const storedThemePresetId = getThemePresetIdFromTheme(settings?.storefrontTheme as Partial<StorefrontThemeWithPresetMetadata> | undefined);
-    const persistedPresetId =
-        normalizeThemePresetId(draftEditorConfig.themePresetId) ||
-        normalizeThemePresetId(editorState.themePresetId) ||
-        normalizeThemePresetId(editorState.themePreset) ||
-        storedThemePresetId ||
-        'minimal';
-    const activePresetProjectKey = project?.id || projectId || storeId || 'storefront-editor';
 
     const [sections, setSections] = useState<StorefrontSectionKind[]>(initialOrder);
     const [visibility, setVisibility] = useState<Record<string, boolean>>({});
@@ -1065,9 +1016,6 @@ const StorefrontEditorView: React.FC = () => {
     const sidebarSectionItemRefs = useRef<Partial<Record<StorefrontSectionKind, HTMLDivElement | null>>>({});
     const pendingPreviewSectionScrollRef = useRef<StorefrontSectionKind | null>(null);
     const previewSectionScrollTimeoutsRef = useRef<number[]>([]);
-    const selectedPresetOverrideRef = useRef<StorefrontThemePresetId | null>(null);
-    const presetProjectKeyRef = useRef(activePresetProjectKey);
-    const [selectedPresetId, setSelectedPresetId] = useState<StorefrontThemePresetId>(persistedPresetId);
     const [isSavingTemplate, setIsSavingTemplate] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -1100,33 +1048,17 @@ const StorefrontEditorView: React.FC = () => {
         setSelectedSection(prev => initialOrder.includes(prev) ? prev : initialOrder[0] || defaultSections[0]);
         setSelectedStructurePanel(prev => (initialOrder.length === 0 && prev === null ? 'template' : prev));
         setTemplateState(editorState.templateState === 'published' ? 'published' : 'draft');
-        if (presetProjectKeyRef.current !== activePresetProjectKey) {
-            presetProjectKeyRef.current = activePresetProjectKey;
-            selectedPresetOverrideRef.current = null;
-        }
-        setSelectedPresetId(selectedPresetOverrideRef.current || persistedPresetId);
     }, [
-        activePresetProjectKey,
-        draftEditorConfig.themePresetId,
-        editorState.themePreset,
         editorState.templateState,
-        editorState.themePresetId,
         initialVisibility,
         initialOrder,
         initialOrderSignature,
         initialSectionSettings,
         initialSectionSettingsSignature,
-        persistedPresetId,
         projectVisibilitySignature,
     ]);
 
-    const currentTheme = getStorefrontTheme();
-    const currentThemeSignature = JSON.stringify(currentTheme);
-    const previewStorefrontTheme = useMemo(
-        () => mergeTheme(currentTheme, selectedPresetId),
-        [currentThemeSignature, selectedPresetId],
-    );
-    const catalogSize = getStorefrontCatalogSize(products.length);
+    const previewStorefrontTheme = getStorefrontTheme();
     const availableSections = STOREFRONT_SECTION_KINDS.filter(kind => !sections.includes(kind));
     const storefrontUrl = `/store/${storeId}`;
     const previewSessionKey = `${STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX}${storeId}`;
@@ -1263,15 +1195,6 @@ const StorefrontEditorView: React.FC = () => {
     const getSectionLabel = (kind: StorefrontSectionKind) =>
         t(`ecommerce.storefrontEditor.sectionLabels.${kind}`, storefrontSectionRegistry[kind].label);
 
-    const getThemePresetLabel = (presetId: StorefrontThemePresetId) =>
-        t(`ecommerce.storefrontEditor.themePresets.${presetId}.label`, STOREFRONT_THEME_PRESETS[presetId].label);
-
-    const getThemePresetDescription = (presetId: StorefrontThemePresetId) =>
-        t(`ecommerce.storefrontEditor.themePresets.${presetId}.description`, STOREFRONT_THEME_PRESETS[presetId].description);
-
-    const getCatalogSizeLabel = (size: string) =>
-        t(`ecommerce.storefrontEditor.catalogSizes.${size}`, size);
-
     const translateValidationMessage = (message: string) => {
         if (message.startsWith('Manual featured products')) {
             return t('ecommerce.storefrontEditor.validation.manualFeaturedProducts', message);
@@ -1307,8 +1230,6 @@ const StorefrontEditorView: React.FC = () => {
             sections,
             normalizedSettings,
             nextSectionVisibility,
-            selectedPresetId,
-            catalogSize,
             templateState,
             String(editorState.updatedAt || projectLastUpdated || 'storefront-preview'),
             user?.id,
@@ -1316,14 +1237,12 @@ const StorefrontEditorView: React.FC = () => {
         const previewStorefrontEditor = {
             ...(isRecord(pageData.storefrontEditor) ? pageData.storefrontEditor : {}),
             templateState,
-            themePresetId: selectedPresetId,
             previewMode,
             sectionSettings: normalizedSettings,
             draft: buildStorefrontEditorSnapshot(
                 sections,
                 normalizedSettings,
                 nextSectionVisibility,
-                selectedPresetId,
                 previewStorefrontTheme,
                 String(editorState.updatedAt || projectLastUpdated || 'storefront-preview'),
                 'draft',
@@ -1352,7 +1271,6 @@ const StorefrontEditorView: React.FC = () => {
             ...(previewBusinessBlueprint ? { businessBlueprint: previewBusinessBlueprint } : {}),
         };
     }, [
-        catalogSize,
         defaultStorefrontName,
         pageData,
         previewMode,
@@ -1362,7 +1280,6 @@ const StorefrontEditorView: React.FC = () => {
         projectName,
         sectionSettings,
         sections,
-        selectedPresetId,
         settings?.storeName,
         templateState,
         user?.id,
@@ -1578,36 +1495,6 @@ const StorefrontEditorView: React.FC = () => {
         showAllStorefrontSections();
     };
 
-    const applyThemePreset = async (presetId: StorefrontThemePresetId) => {
-        setError(null);
-        setStatusMessage(null);
-        selectedPresetOverrideRef.current = presetId;
-        setSelectedPresetId(presetId);
-
-        try {
-            await replaceStorefrontTheme(mergeTheme(currentTheme, presetId));
-            setTemplateState('draft');
-            setStatusMessage(t('ecommerce.storefrontEditor.themePresetApplied', 'Preset aplicado al storefront.'));
-        } catch (err: any) {
-            setError(err.message || t('ecommerce.storefrontEditor.themePresetError', 'No se pudo aplicar el preset.'));
-        }
-    };
-
-    const handleResetStorefrontTheme = async () => {
-        setError(null);
-        setStatusMessage(null);
-        selectedPresetOverrideRef.current = 'minimal';
-        setSelectedPresetId('minimal');
-
-        try {
-            await replaceStorefrontTheme(mergeTheme(DEFAULT_STOREFRONT_THEME, 'minimal'));
-            setTemplateState('draft');
-            setStatusMessage(t('ecommerce.storefrontEditor.themePresetApplied', 'Preset aplicado al storefront.'));
-        } catch (err: any) {
-            setError(err.message || t('ecommerce.storefrontEditor.themePresetError', 'No se pudo aplicar el preset.'));
-        }
-    };
-
     const saveTemplate = async (nextState: TemplateState = templateState) => {
         if (!projectId || !project) return;
 
@@ -1662,8 +1549,6 @@ const StorefrontEditorView: React.FC = () => {
                 sections,
                 normalizedSettings,
                 nextSectionVisibility,
-                selectedPresetId,
-                catalogSize,
                 nextState,
                 now,
                 user?.id,
@@ -1675,7 +1560,6 @@ const StorefrontEditorView: React.FC = () => {
                 sections,
                 normalizedSettings,
                 nextSectionVisibility,
-                selectedPresetId,
                 previewStorefrontTheme,
                 now,
                 'draft',
@@ -1685,7 +1569,6 @@ const StorefrontEditorView: React.FC = () => {
                     sections,
                     normalizedSettings,
                     nextSectionVisibility,
-                    selectedPresetId,
                     previewStorefrontTheme,
                     now,
                     'published',
@@ -1694,8 +1577,6 @@ const StorefrontEditorView: React.FC = () => {
             const nextStorefrontEditor = {
                 ...existingStorefrontEditor,
                 templateState: nextState,
-                themePreset: selectedPresetId,
-                themePresetId: selectedPresetId,
                 previewMode,
                 sectionSettings: normalizedSettings,
                 draft: draftSnapshot,
@@ -1809,14 +1690,10 @@ const StorefrontEditorView: React.FC = () => {
 
     const activeEditorLabel = selectedStructurePanel === 'template'
         ? t('ecommerce.storefrontEditor.templateState', 'Estado')
-        : selectedStructurePanel === 'theme'
-            ? t('ecommerce.storefrontEditor.themePreset', 'Preset de tema')
-            : getSectionLabel(selectedSection);
-    const ActiveEditorIcon = selectedStructurePanel === 'theme'
-        ? Palette
-        : selectedStructurePanel === 'template'
-            ? LayoutTemplate
-            : SlidersHorizontal;
+        : getSectionLabel(selectedSection);
+    const ActiveEditorIcon = selectedStructurePanel === 'template'
+        ? LayoutTemplate
+        : SlidersHorizontal;
     const renderSortableSectionList = (className = 'space-y-1') => (
         <DndContext
             sensors={sectionDragSensors}
@@ -1901,71 +1778,6 @@ const StorefrontEditorView: React.FC = () => {
                     >
                         {t('common.published', 'Publicado')}
                     </button>
-                </div>
-            </div>
-        </div>
-    );
-
-    const renderThemeControls = () => (
-        <div className="space-y-4">
-            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                    <div>
-                        <h3 className="flex items-center gap-2 font-semibold text-foreground">
-                            <Palette size={17} />
-                            {t('ecommerce.storefrontEditor.themePreset', 'Preset de tema')}
-                        </h3>
-                        <p className="text-xs text-q-text-muted">
-                            {t('ecommerce.storefrontEditor.catalogSize', 'Catálogo: {{size}} · {{count}} productos', {
-                                size: getCatalogSizeLabel(catalogSize),
-                                count: products.length,
-                            })}
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={handleResetStorefrontTheme}
-                        disabled={settingsLoading || settingsSaving}
-                        className="rounded-lg bg-muted/60 p-2 text-q-text-muted hover:text-foreground disabled:opacity-50"
-                        aria-label={t('common.reset', 'Restablecer')}
-                    >
-                        <RefreshCw size={15} />
-                    </button>
-                </div>
-
-                <div className="grid gap-2">
-                    {(Object.keys(STOREFRONT_THEME_PRESETS) as StorefrontThemePresetId[]).map(presetId => {
-                        const preset = STOREFRONT_THEME_PRESETS[presetId];
-                        const isSelected = selectedPresetId === presetId;
-
-                        return (
-                            <button
-                                key={presetId}
-                                type="button"
-                                onClick={() => applyThemePreset(presetId)}
-                                disabled={settingsLoading || settingsSaving}
-                                className={`rounded-lg border px-3 py-2 text-left transition-colors disabled:opacity-50 ${
-                                    isSelected
-                                        ? 'border-primary bg-primary/10'
-                                        : 'border-q-border bg-q-bg/40 hover:bg-muted'
-                                }`}
-                            >
-                                <div className="flex items-center justify-between gap-2">
-                                    <span className="text-sm font-semibold text-foreground">{getThemePresetLabel(presetId)}</span>
-                                    <span className="flex gap-1">
-                                        {['primaryColor', 'accentColor', 'backgroundColor'].map(key => (
-                                            <span
-                                                key={key}
-                                                className="h-4 w-4 rounded-full border border-q-border"
-                                                style={{ backgroundColor: String(preset.theme[key as keyof StorefrontThemeSettings] || '#ffffff') }}
-                                            />
-                                        ))}
-                                    </span>
-                                </div>
-                                <p className="mt-1 line-clamp-2 text-xs text-q-text-muted">{getThemePresetDescription(presetId)}</p>
-                            </button>
-                        );
-                    })}
                 </div>
             </div>
         </div>
@@ -2695,7 +2507,6 @@ const StorefrontEditorView: React.FC = () => {
 
     const renderActiveControls = () => {
         if (selectedStructurePanel === 'template') return renderTemplateControls();
-        if (selectedStructurePanel === 'theme') return renderThemeControls();
         return renderSectionControls();
     };
 
@@ -2837,14 +2648,13 @@ const StorefrontEditorView: React.FC = () => {
                                 <ChevronDown size={14} className={`transition-transform ${isStructureExpanded ? '' : '-rotate-90'}`} />
                                 <Settings size={14} />
                                 <span>{t('landingEditor.structure', 'ESTRUCTURA')}</span>
-                                <span className="text-q-text-muted">(2)</span>
+                                <span className="text-q-text-muted">(1)</span>
                             </button>
 
                             {isStructureExpanded && (
                                 <div className="mt-1 space-y-0.5 pl-2">
                                     {([
                                         ['template', LayoutTemplate, t('ecommerce.storefrontEditor.templateState', 'Estado')],
-                                        ['theme', Palette, t('ecommerce.storefrontEditor.themePreset', 'Preset de tema')],
                                     ] as const).map(([panel, Icon, label]) => (
                                         <button
                                             key={panel}

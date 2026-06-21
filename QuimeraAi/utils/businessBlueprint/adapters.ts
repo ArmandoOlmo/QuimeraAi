@@ -25,9 +25,8 @@ import {
 import type { WebsitePlan } from '../../types/websitePlan';
 import type { PageSection } from '../../types/ui';
 import {
-    buildStorefrontThemeFallbackChain,
     getStorefrontCatalogSize,
-    selectStorefrontThemePreset,
+    getStorefrontCatalogSizeRule,
 } from '../storefrontTheme';
 import { createWebsiteEcommerceBlockSeedsFromSections } from '../websiteEcommerceBlocks';
 import { createStarterEcommerceContent } from './starterEcommerceContent';
@@ -137,16 +136,7 @@ function createStorefrontBlueprint(plan: WebsitePlan, now: string): StorefrontBl
     const ecommerceSections = getPlannedSections(plan).filter(section => ECOMMERCE_SECTIONS.has(section));
     const productCount = plan.contentMap.products?.length || 0;
     const catalogSize = getStorefrontCatalogSize(productCount);
-    const enabledModules = [
-        ...(hasEcommerce ? ['ecommerce-engine'] : []),
-        ...(normalizeIndustry(plan.businessProfile.industry) === 'restaurant' ? ['restaurant-engine'] : []),
-        ...(normalizeIndustry(plan.businessProfile.industry) === 'real-estate' ? ['real-estate-engine'] : []),
-    ];
-    const selectedPreset = selectStorefrontThemePreset({
-        industry: plan.businessProfile.industry,
-        catalogSize,
-        enabledModules,
-    });
+    const catalogRule = getStorefrontCatalogSizeRule(catalogSize);
 
     return {
         ...createBlueprintModuleState(now, {
@@ -158,16 +148,14 @@ function createStorefrontBlueprint(plan: WebsitePlan, now: string): StorefrontBl
                 : ready([], ['Ecommerce is not enabled for this business blueprint.']),
         }),
         routeStrategy: 'project-store',
-        themePreset: selectedPreset.id,
         catalogSize,
-        templateCompatibility: selectedPreset.compatibility,
-        themeFallbackChain: buildStorefrontThemeFallbackChain({
-            industry: plan.businessProfile.industry,
-            catalogSize,
-            enabledModules,
-            preferredPresetId: selectedPreset.id,
-        }),
-        productCardVariant: hasEcommerce ? selectedPreset.productCardVariant : undefined,
+        themeFallbackChain: [
+            'DEFAULT_STOREFRONT_THEME',
+            'brandColors',
+            'projectGlobalColors',
+            'storefrontTheme',
+        ],
+        productCardVariant: hasEcommerce ? catalogRule.recommendedProductCardVariant : undefined,
         templates: {
             home: 'default-store-home',
             collection: 'default-collection',

@@ -5,7 +5,6 @@ import type {
     ProductCardVariant,
     StorefrontCatalogSize,
     StorefrontTemplateCompatibility,
-    StorefrontThemePresetId,
 } from './storefrontTheme';
 import type {
     WebsiteEcommerceBlockSettings,
@@ -95,8 +94,6 @@ export interface WebsiteBlueprint extends BlueprintModuleState {
     chatbotPlacement?: 'none' | 'floating' | 'inline' | 'both';
 }
 
-export type StorefrontThemePreset = StorefrontThemePresetId;
-
 export interface StorefrontSectionBlueprint extends BlueprintModuleState {
     id: string;
     type: string;
@@ -109,7 +106,6 @@ export interface StorefrontSectionBlueprint extends BlueprintModuleState {
 
 export interface StorefrontBlueprint extends BlueprintModuleState {
     routeStrategy: 'project-store' | 'subpath-store' | 'custom-domain-store';
-    themePreset?: StorefrontThemePreset;
     catalogSize?: StorefrontCatalogSize;
     templateCompatibility?: StorefrontTemplateCompatibility;
     themeFallbackChain?: string[];
