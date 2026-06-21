@@ -46,6 +46,18 @@ const appendDefaultStorefrontSections = (order: StorefrontSectionKind[]): Storef
     ...STOREFRONT_SECTION_KINDS.filter(section => !order.includes(section)),
 ];
 
+const buildVisibleStorefrontSections = (): Record<string, boolean> =>
+    STOREFRONT_SECTION_KINDS.reduce((acc, section) => {
+        acc[section] = true;
+        return acc;
+    }, {} as Record<string, boolean>);
+
+const buildEnabledStorefrontSectionSettings = (): Record<string, Record<string, unknown>> =>
+    STOREFRONT_SECTION_KINDS.reduce((acc, section) => {
+        acc[section] = { enabled: true };
+        return acc;
+    }, {} as Record<string, Record<string, unknown>>);
+
 export function resolveStorefrontPageData(projectData: any): Record<string, any> {
     const rootData = toRecord(projectData?.data);
     return isRecord(rootData.data) ? rootData.data : rootData;
@@ -92,13 +104,11 @@ export function resolveStorefrontEditorConfig(
         selectedConfig &&
         (Array.isArray(selectedConfig.componentOrder) || Array.isArray(selectedConfig.sections))
     );
-    const legacyVisibility = {
-        ...toRecord(rootData.sectionVisibility),
-        ...toRecord(pageData.sectionVisibility),
-        ...toRecord(projectData?.sectionVisibility),
-    } as Record<string, boolean>;
     const selectedVisibility = toRecord(selectedConfig?.sectionVisibility) as Record<string, boolean>;
-    const selectedSettings = normalizeSettings(selectedConfig?.sectionSettings);
+    const defaultVisibility = buildVisibleStorefrontSections();
+    const selectedSettings = selectedConfig
+        ? normalizeSettings(selectedConfig.sectionSettings)
+        : buildEnabledStorefrontSectionSettings();
 
     const resolvedOrder = hasExplicitEditorOrder
         ? selectedOrder
@@ -107,7 +117,7 @@ export function resolveStorefrontEditorConfig(
     return {
         componentOrder: resolvedOrder,
         sectionVisibility: {
-            ...legacyVisibility,
+            ...defaultVisibility,
             ...selectedVisibility,
         },
         sectionSettings: selectedSettings,

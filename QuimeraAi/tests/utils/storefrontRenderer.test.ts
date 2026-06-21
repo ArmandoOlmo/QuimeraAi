@@ -101,15 +101,59 @@ describe('storefrontRenderer registry', () => {
         }, { mode: 'draft' })).toEqual([]);
     });
 
-    it('completes legacy storefront editor config with every storefront section', () => {
+    it('activates every legacy storefront section on first editor load', () => {
         const config = resolveStorefrontEditorConfig({
             componentOrder: ['announcementBar'],
-            sectionVisibility: { announcementBar: true },
-            data: {},
+            sectionVisibility: {
+                announcementBar: false,
+                productHero: false,
+            },
+            data: {
+                sectionVisibility: {
+                    featuredProducts: false,
+                },
+                productHero: {
+                    enabled: false,
+                },
+            },
         }, { mode: 'draft' });
 
         expect(config.source).toBe('legacy');
         expect(config.componentOrder).toEqual(STOREFRONT_SECTION_KINDS);
+        expect(STOREFRONT_SECTION_KINDS.every(section => config.sectionVisibility[section] === true)).toBe(true);
+        expect(STOREFRONT_SECTION_KINDS.every(section => config.sectionSettings[section]?.enabled === true)).toBe(true);
+    });
+
+    it('preserves explicit editor visibility after the storefront editor has changes', () => {
+        const config = resolveStorefrontEditorConfig({
+            componentOrder: ['announcementBar'],
+            sectionVisibility: {
+                announcementBar: false,
+                featuredProducts: false,
+            },
+            data: {
+                storefrontEditor: {
+                    draft: {
+                        componentOrder: ['productHero', 'featuredProducts'],
+                        sectionVisibility: {
+                            productHero: false,
+                        },
+                        sectionSettings: {
+                            productHero: {
+                                enabled: false,
+                            },
+                        },
+                    },
+                },
+            },
+        }, { mode: 'draft' });
+
+        expect(config.source).toBe('draft');
+        expect(config.componentOrder).toEqual(['productHero', 'featuredProducts']);
+        expect(config.sectionVisibility.productHero).toBe(false);
+        expect(config.sectionVisibility.featuredProducts).toBe(true);
+        expect(config.sectionVisibility.announcementBar).toBe(true);
+        expect(config.sectionSettings.productHero?.enabled).toBe(false);
     });
 
     it('uses blueprint sections before componentOrder when supported blueprint sections exist', () => {
