@@ -298,95 +298,117 @@ const textToMessages = (value: string): Array<{ text: string }> =>
         .filter(Boolean)
         .map(text => ({ text }));
 
-const storefrontSelectOptions = {
+type StorefrontEditorSelectOption = {
+    value: string;
+    labelKey: string;
+    fallback: string;
+};
+
+const storefrontSelectOptions: Record<string, StorefrontEditorSelectOption[]> = {
     padding: [
-        { value: 'none', label: '0' },
-        { value: 'sm', label: 'SM' },
-        { value: 'md', label: 'MD' },
-        { value: 'lg', label: 'LG' },
-        { value: 'xl', label: 'XL' },
+        { value: 'none', labelKey: 'padding.none', fallback: '0' },
+        { value: 'sm', labelKey: 'padding.sm', fallback: 'SM' },
+        { value: 'md', labelKey: 'padding.md', fallback: 'MD' },
+        { value: 'lg', labelKey: 'padding.lg', fallback: 'LG' },
+        { value: 'xl', labelKey: 'padding.xl', fallback: 'XL' },
     ],
     productCardStyle: [
-        { value: 'overlay', label: 'Imagen completa' },
-        { value: 'modern', label: 'Modern' },
-        { value: 'elegant', label: 'Elegant' },
-        { value: 'minimal', label: 'Minimal' },
-        { value: 'luxury', label: 'Luxury' },
-        { value: 'marketplace', label: 'Marketplace' },
-        { value: 'editorial', label: 'Editorial' },
-        { value: 'imageFirst', label: 'Image First' },
-        { value: 'quickBuy', label: 'Quick Buy' },
-        { value: 'compact', label: 'Compact' },
+        { value: 'overlay', labelKey: 'cardStyle.overlay', fallback: 'Imagen completa' },
+        { value: 'modern', labelKey: 'cardStyle.modern', fallback: 'Modern' },
+        { value: 'elegant', labelKey: 'cardStyle.elegant', fallback: 'Elegant' },
+        { value: 'minimal', labelKey: 'cardStyle.minimal', fallback: 'Minimal' },
+        { value: 'luxury', labelKey: 'cardStyle.luxury', fallback: 'Luxury' },
+        { value: 'marketplace', labelKey: 'cardStyle.marketplace', fallback: 'Marketplace' },
+        { value: 'editorial', labelKey: 'cardStyle.editorial', fallback: 'Editorial' },
+        { value: 'imageFirst', labelKey: 'cardStyle.imageFirst', fallback: 'Image First' },
+        { value: 'quickBuy', labelKey: 'cardStyle.quickBuy', fallback: 'Quick Buy' },
+        { value: 'compact', labelKey: 'cardStyle.compact', fallback: 'Compact' },
     ],
     categoryCardStyle: [
-        { value: 'overlay', label: 'Imagen completa' },
-        { value: 'bento-overlay', label: 'Bento overlay' },
-        { value: 'editorial', label: 'Editorial' },
-        { value: 'cards', label: 'Cards' },
-        { value: 'banner', label: 'Banner' },
-        { value: 'minimal', label: 'Minimal' },
+        { value: 'overlay', labelKey: 'categoryCardStyle.overlay', fallback: 'Imagen completa' },
+        { value: 'bento-overlay', labelKey: 'categoryCardStyle.bentoOverlay', fallback: 'Bento overlay' },
+        { value: 'editorial', labelKey: 'categoryCardStyle.editorial', fallback: 'Editorial' },
+        { value: 'cards', labelKey: 'categoryCardStyle.cards', fallback: 'Cards' },
+        { value: 'banner', labelKey: 'categoryCardStyle.banner', fallback: 'Banner' },
+        { value: 'minimal', labelKey: 'categoryCardStyle.minimal', fallback: 'Minimal' },
     ],
     trustBadgeVariant: [
-        { value: 'premium-strip', label: 'Franja premium' },
-        { value: 'icon-cloud', label: 'Nube de iconos' },
-        { value: 'detailed', label: 'Detallado' },
-        { value: 'grid', label: 'Grid' },
-        { value: 'horizontal', label: 'Horizontal' },
-        { value: 'minimal', label: 'Minimal' },
+        { value: 'premium-strip', labelKey: 'variant.premium-strip', fallback: 'Franja premium' },
+        { value: 'icon-cloud', labelKey: 'variant.icon-cloud', fallback: 'Nube de iconos' },
+        { value: 'detailed', labelKey: 'variant.detailed', fallback: 'Detallado' },
+        { value: 'grid', labelKey: 'variant.grid', fallback: 'Grid' },
+        { value: 'horizontal', labelKey: 'variant.horizontal', fallback: 'Horizontal' },
+        { value: 'minimal', labelKey: 'variant.minimal', fallback: 'Minimal' },
     ],
     productReviewsVariant: [
-        { value: 'spotlight', label: 'Spotlight editorial' },
-        { value: 'featured', label: 'Destacada' },
-        { value: 'masonry', label: 'Masonry' },
-        { value: 'cards', label: 'Cards' },
-        { value: 'list', label: 'Lista' },
+        { value: 'spotlight', labelKey: 'variant.spotlight', fallback: 'Spotlight editorial' },
+        { value: 'featured', labelKey: 'variant.featured', fallback: 'Destacada' },
+        { value: 'masonry', labelKey: 'variant.masonry', fallback: 'Masonry' },
+        { value: 'cards', labelKey: 'variant.cards', fallback: 'Cards' },
+        { value: 'list', labelKey: 'variant.list', fallback: 'Lista' },
     ],
     productBundleVariant: [
-        { value: 'editorial', label: 'Editorial landing' },
-        { value: 'price-stack', label: 'Precio destacado' },
-        { value: 'horizontal', label: 'Horizontal' },
-        { value: 'vertical', label: 'Vertical' },
-        { value: 'compact', label: 'Compacto' },
+        { value: 'editorial', labelKey: 'variant.editorial', fallback: 'Editorial landing' },
+        { value: 'price-stack', labelKey: 'variant.price-stack', fallback: 'Precio destacado' },
+        { value: 'horizontal', labelKey: 'variant.horizontal', fallback: 'Horizontal' },
+        { value: 'vertical', labelKey: 'variant.vertical', fallback: 'Vertical' },
+        { value: 'compact', labelKey: 'variant.compact', fallback: 'Compacto' },
     ],
     cardGap: [
-        { value: 'sm', label: 'Compacto' },
-        { value: 'md', label: 'Normal' },
-        { value: 'lg', label: 'Amplio' },
-        { value: 'xl', label: 'Editorial' },
+        { value: 'sm', labelKey: 'spacing.compact', fallback: 'Compacto' },
+        { value: 'md', labelKey: 'spacing.normal', fallback: 'Normal' },
+        { value: 'lg', labelKey: 'spacing.wide', fallback: 'Amplio' },
+        { value: 'xl', labelKey: 'spacing.editorial', fallback: 'Editorial' },
     ],
     aspectRatio: [
-        { value: '1:1', label: '1:1' },
-        { value: '4:3', label: '4:3' },
-        { value: '3:4', label: '3:4' },
-        { value: '4:5', label: '4:5' },
-        { value: '16:9', label: '16:9' },
-        { value: '9:16', label: '9:16' },
+        { value: '1:1', labelKey: 'aspectRatio.1-1', fallback: '1:1' },
+        { value: '4:3', labelKey: 'aspectRatio.4-3', fallback: '4:3' },
+        { value: '3:4', labelKey: 'aspectRatio.3-4', fallback: '3:4' },
+        { value: '4:5', labelKey: 'aspectRatio.4-5', fallback: '4:5' },
+        { value: '16:9', labelKey: 'aspectRatio.16-9', fallback: '16:9' },
+        { value: '9:16', labelKey: 'aspectRatio.9-16', fallback: '9:16' },
     ],
     objectFit: [
-        { value: 'cover', label: 'Cover' },
-        { value: 'contain', label: 'Contain' },
-        { value: 'fill', label: 'Fill' },
+        { value: 'cover', labelKey: 'objectFit.cover', fallback: 'Cover' },
+        { value: 'contain', labelKey: 'objectFit.contain', fallback: 'Contain' },
+        { value: 'fill', labelKey: 'objectFit.fill', fallback: 'Fill' },
     ],
     alignment: [
-        { value: 'left', label: 'Izquierda' },
-        { value: 'center', label: 'Centro' },
-        { value: 'right', label: 'Derecha' },
+        { value: 'left', labelKey: 'alignment.left', fallback: 'Izquierda' },
+        { value: 'center', labelKey: 'alignment.center', fallback: 'Centro' },
+        { value: 'right', labelKey: 'alignment.right', fallback: 'Derecha' },
     ],
     overlayStyle: [
-        { value: 'gradient', label: 'Degradado' },
-        { value: 'solid', label: 'Sólido' },
-        { value: 'none', label: 'Sin overlay' },
+        { value: 'gradient', labelKey: 'overlayStyle.gradient', fallback: 'Degradado' },
+        { value: 'solid', labelKey: 'overlayStyle.solid', fallback: 'Sólido' },
+        { value: 'none', labelKey: 'overlayStyle.none', fallback: 'Sin overlay' },
     ],
     visibleIn: [
-        { value: 'both', label: 'Landing + tienda' },
-        { value: 'store', label: 'Tienda' },
-        { value: 'landing', label: 'Landing' },
+        { value: 'both', labelKey: 'visibleIn.both', fallback: 'Landing + tienda' },
+        { value: 'store', labelKey: 'visibleIn.store', fallback: 'Tienda' },
+        { value: 'landing', labelKey: 'visibleIn.landing', fallback: 'Landing' },
     ],
     sourceType: [
-        { value: 'newest', label: 'Nuevos' },
-        { value: 'on-sale', label: 'En oferta' },
-        { value: 'category', label: 'Categoría' },
-        { value: 'manual', label: 'Manual' },
+        { value: 'newest', labelKey: 'sourceType.newest', fallback: 'Nuevos' },
+        { value: 'on-sale', labelKey: 'sourceType.onSale', fallback: 'En oferta' },
+        { value: 'category', labelKey: 'sourceType.category', fallback: 'Categoría' },
+        { value: 'manual', labelKey: 'sourceType.manual', fallback: 'Manual' },
+    ],
+    heroLayout: [
+        { value: 'split', labelKey: 'heroLayout.split', fallback: 'Split izquierda' },
+        { value: 'split-right', labelKey: 'heroLayout.splitRight', fallback: 'Split derecha' },
+        { value: 'full', labelKey: 'heroLayout.full', fallback: 'Full image' },
+        { value: 'centered', labelKey: 'heroLayout.centered', fallback: 'Centrado' },
+    ],
+    imageSize: [
+        { value: 'small', labelKey: 'imageSize.small', fallback: 'Pequeña' },
+        { value: 'medium', labelKey: 'imageSize.medium', fallback: 'Media' },
+        { value: 'large', labelKey: 'imageSize.large', fallback: 'Grande' },
+    ],
+    iconSize: [
+        { value: 'sm', labelKey: 'iconSize.sm', fallback: 'Pequeño' },
+        { value: 'md', labelKey: 'iconSize.md', fallback: 'Medio' },
+        { value: 'lg', labelKey: 'iconSize.lg', fallback: 'Grande' },
     ],
 };
 
@@ -1115,6 +1137,31 @@ const StorefrontEditorView: React.FC = () => {
     };
     const selectedSectionIsActive = visibility[selectedSection] !== false && selectedSectionSettings.enabled !== false;
     const selectedSectionValidation = validateStorefrontSectionSettings(selectedSection, selectedSectionSettings);
+    const defaultStorefrontName = t('ecommerce.storefrontEditor.defaultStoreName', 'Tienda');
+    const translateStorefrontSelectOptions = useCallback((options: StorefrontEditorSelectOption[]) => (
+        options.map(option => ({
+            value: option.value,
+            label: t(`ecommerce.storefrontEditor.optionLabels.${option.labelKey}`, option.fallback),
+        }))
+    ), [t]);
+    const translatedStorefrontSelectOptions = useMemo(() => ({
+        padding: translateStorefrontSelectOptions(storefrontSelectOptions.padding),
+        productCardStyle: translateStorefrontSelectOptions(storefrontSelectOptions.productCardStyle),
+        categoryCardStyle: translateStorefrontSelectOptions(storefrontSelectOptions.categoryCardStyle),
+        trustBadgeVariant: translateStorefrontSelectOptions(storefrontSelectOptions.trustBadgeVariant),
+        productReviewsVariant: translateStorefrontSelectOptions(storefrontSelectOptions.productReviewsVariant),
+        productBundleVariant: translateStorefrontSelectOptions(storefrontSelectOptions.productBundleVariant),
+        cardGap: translateStorefrontSelectOptions(storefrontSelectOptions.cardGap),
+        aspectRatio: translateStorefrontSelectOptions(storefrontSelectOptions.aspectRatio),
+        objectFit: translateStorefrontSelectOptions(storefrontSelectOptions.objectFit),
+        alignment: translateStorefrontSelectOptions(storefrontSelectOptions.alignment),
+        overlayStyle: translateStorefrontSelectOptions(storefrontSelectOptions.overlayStyle),
+        visibleIn: translateStorefrontSelectOptions(storefrontSelectOptions.visibleIn),
+        sourceType: translateStorefrontSelectOptions(storefrontSelectOptions.sourceType),
+        heroLayout: translateStorefrontSelectOptions(storefrontSelectOptions.heroLayout),
+        imageSize: translateStorefrontSelectOptions(storefrontSelectOptions.imageSize),
+        iconSize: translateStorefrontSelectOptions(storefrontSelectOptions.iconSize),
+    }), [translateStorefrontSelectOptions]);
 
     const setSidebarSectionItemRef = useCallback((section: StorefrontSectionKind, node: HTMLDivElement | null) => {
         if (node) {
@@ -1295,7 +1342,7 @@ const StorefrontEditorView: React.FC = () => {
         return {
             ...project,
             id: projectId,
-            name: projectName || project?.name || settings?.storeName || 'Store',
+            name: projectName || project?.name || settings?.storeName || defaultStorefrontName,
             header: buildPreviewHeader(project, pageData, previewStorefrontTheme),
             theme: buildPreviewTheme(project, previewStorefrontTheme),
             storefrontTheme: previewStorefrontTheme,
@@ -1306,6 +1353,7 @@ const StorefrontEditorView: React.FC = () => {
         };
     }, [
         catalogSize,
+        defaultStorefrontName,
         pageData,
         previewMode,
         previewStorefrontTheme,
@@ -1705,7 +1753,7 @@ const StorefrontEditorView: React.FC = () => {
                     id: storeId,
                     projectId,
                     sourceProjectId: projectId,
-                    name: projectName || project.name || settings?.storeName || 'Store',
+                    name: projectName || project.name || settings?.storeName || defaultStorefrontName,
                     data: nextPageData,
                     header: buildPreviewHeader(project, nextPageData, previewStorefrontTheme),
                     theme: buildPreviewTheme(project, previewStorefrontTheme),
@@ -1752,7 +1800,7 @@ const StorefrontEditorView: React.FC = () => {
     }
 
     const isBusy = isSavingTemplate || settingsSaving;
-    const previewDisplayName = settings?.storeName || projectName || project.name;
+    const previewDisplayName = settings?.storeName || projectName || project.name || defaultStorefrontName;
 
     const selectStructurePanel = (panel: StorefrontStructurePanel) => {
         setSelectedStructurePanel(panel);
@@ -1947,12 +1995,15 @@ const StorefrontEditorView: React.FC = () => {
                 : selectedSectionSettings.description || selectedSectionSettings.subtitle || '',
         );
         const variantOptions = selectedSection === 'trustBadges'
-            ? storefrontSelectOptions.trustBadgeVariant
+            ? translatedStorefrontSelectOptions.trustBadgeVariant
             : selectedSection === 'productReviews'
-                ? storefrontSelectOptions.productReviewsVariant
+                ? translatedStorefrontSelectOptions.productReviewsVariant
                 : selectedSection === 'productBundle'
-                    ? storefrontSelectOptions.productBundleVariant
-                    : validVariants.map(variant => ({ value: variant, label: variant }));
+                    ? translatedStorefrontSelectOptions.productBundleVariant
+                    : validVariants.map(variant => ({
+                        value: variant,
+                        label: t(`ecommerce.storefrontEditor.optionLabels.variant.${variant}`, variant),
+                    }));
         const countSettingKey = selectedSection === 'recentlyViewed'
             ? 'maxProducts'
             : selectedSection === 'productReviews'
@@ -2042,7 +2093,7 @@ const StorefrontEditorView: React.FC = () => {
                         label={t('ecommerce.storefrontEditor.visibleIn', 'Visible en')}
                         value={String(selectedSectionSettings.visibleIn || 'both')}
                         onChange={value => updateSelectedSectionSetting('visibleIn', value)}
-                        options={storefrontSelectOptions.visibleIn}
+                        options={translatedStorefrontSelectOptions.visibleIn}
                         noMargin
                     />
 
@@ -2111,7 +2162,7 @@ const StorefrontEditorView: React.FC = () => {
                                 label={t('ecommerce.storefrontEditor.sourceType', 'Fuente')}
                                 value={String(selectedSectionSettings.sourceType || 'newest')}
                                 onChange={value => updateSelectedSectionSetting('sourceType', value)}
-                                options={storefrontSelectOptions.sourceType}
+                                options={translatedStorefrontSelectOptions.sourceType}
                                 noMargin
                             />
                         </div>
@@ -2332,22 +2383,13 @@ const StorefrontEditorView: React.FC = () => {
                                     label={t('ecommerce.storefrontEditor.layout', 'Layout')}
                                     value={String(selectedSectionSettings.layout || 'split')}
                                     onChange={value => updateSelectedSectionSetting('layout', value)}
-                                    options={[
-                                        { value: 'split', label: 'Split izquierda' },
-                                        { value: 'split-right', label: 'Split derecha' },
-                                        { value: 'full', label: 'Full image' },
-                                        { value: 'centered', label: 'Centrado' },
-                                    ]}
+                                    options={translatedStorefrontSelectOptions.heroLayout}
                                 />
                                 <Select
                                     label={t('ecommerce.storefrontEditor.imageSize', 'Tamaño de imagen')}
                                     value={String(selectedSectionSettings.imageSize || 'medium')}
                                     onChange={value => updateSelectedSectionSetting('imageSize', value)}
-                                    options={[
-                                        { value: 'small', label: 'Pequeña' },
-                                        { value: 'medium', label: 'Media' },
-                                        { value: 'large', label: 'Grande' },
-                                    ]}
+                                    options={translatedStorefrontSelectOptions.imageSize}
                                 />
                             </>
                         )}
@@ -2355,13 +2397,13 @@ const StorefrontEditorView: React.FC = () => {
                             label={t('ecommerce.storefrontEditor.contentPosition', 'Posición de contenido')}
                             value={String(selectedSectionSettings.contentPosition || 'center')}
                             onChange={value => updateSelectedSectionSetting('contentPosition', value)}
-                            options={storefrontSelectOptions.alignment}
+                            options={translatedStorefrontSelectOptions.alignment}
                         />
                         <Select
                             label={t('ecommerce.storefrontEditor.textAlignment', 'Alineación de texto')}
                             value={String(selectedSectionSettings.textAlignment || 'center')}
                             onChange={value => updateSelectedSectionSetting('textAlignment', value)}
-                            options={storefrontSelectOptions.alignment}
+                            options={translatedStorefrontSelectOptions.alignment}
                         />
                     </div>
                 )}
@@ -2378,20 +2420,20 @@ const StorefrontEditorView: React.FC = () => {
                                     label={t('ecommerce.storefrontEditor.cardStyle', 'Diseño de tarjeta')}
                                     value={String(selectedSectionSettings.cardStyle || 'overlay')}
                                     onChange={value => updateSelectedSectionSetting('cardStyle', value)}
-                                    options={storefrontSelectOptions.productCardStyle}
+                                    options={translatedStorefrontSelectOptions.productCardStyle}
                                     noMargin
                                 />
                                 <Select
                                     label={t('ecommerce.storefrontEditor.cardAspectRatio', 'Proporción de tarjeta')}
                                     value={String(selectedSectionSettings.cardAspectRatio || '4:5')}
                                     onChange={value => updateSelectedSectionSetting('cardAspectRatio', value)}
-                                    options={storefrontSelectOptions.aspectRatio}
+                                    options={translatedStorefrontSelectOptions.aspectRatio}
                                 />
                                 <Select
                                     label={t('ecommerce.storefrontEditor.imageFit', 'Ajuste de imagen')}
                                     value={String(selectedSectionSettings.imageObjectFit || 'cover')}
                                     onChange={value => updateSelectedSectionSetting('imageObjectFit', value)}
-                                    options={storefrontSelectOptions.objectFit}
+                                    options={translatedStorefrontSelectOptions.objectFit}
                                 />
                             </>
                         )}
@@ -2400,7 +2442,7 @@ const StorefrontEditorView: React.FC = () => {
                                 label={t('ecommerce.storefrontEditor.cardGap', 'Separación')}
                                 value={String(selectedSectionSettings.cardGap || 'md')}
                                 onChange={value => updateSelectedSectionSetting('cardGap', value)}
-                                options={storefrontSelectOptions.cardGap}
+                                options={translatedStorefrontSelectOptions.cardGap}
                             />
                         )}
                         {selectedSection === 'trustBadges' && (
@@ -2408,11 +2450,7 @@ const StorefrontEditorView: React.FC = () => {
                                 label={t('ecommerce.storefrontEditor.iconSize', 'Tamaño de icono')}
                                 value={String(selectedSectionSettings.iconSize || 'md')}
                                 onChange={value => updateSelectedSectionSetting('iconSize', value)}
-                                options={[
-                                    { value: 'sm', label: 'Pequeño' },
-                                    { value: 'md', label: 'Medio' },
-                                    { value: 'lg', label: 'Grande' },
-                                ]}
+                                options={translatedStorefrontSelectOptions.iconSize}
                             />
                         )}
                         {selectedSection === 'categoryGrid' && (
@@ -2421,19 +2459,19 @@ const StorefrontEditorView: React.FC = () => {
                                     label={t('ecommerce.storefrontEditor.categoryCardStyle', 'Diseño de categoría')}
                                     value={String(selectedSectionSettings.variant || 'overlay')}
                                     onChange={value => updateSelectedSectionSetting('variant', value)}
-                                    options={storefrontSelectOptions.categoryCardStyle}
+                                    options={translatedStorefrontSelectOptions.categoryCardStyle}
                                 />
                                 <Select
                                     label={t('ecommerce.storefrontEditor.imageRatio', 'Proporción de imagen')}
                                     value={String(selectedSectionSettings.imageAspectRatio || '1:1')}
                                     onChange={value => updateSelectedSectionSetting('imageAspectRatio', value)}
-                                    options={storefrontSelectOptions.aspectRatio}
+                                    options={translatedStorefrontSelectOptions.aspectRatio}
                                 />
                                 <Select
                                     label={t('ecommerce.storefrontEditor.imageFit', 'Ajuste de imagen')}
                                     value={String(selectedSectionSettings.imageObjectFit || 'cover')}
                                     onChange={value => updateSelectedSectionSetting('imageObjectFit', value)}
-                                    options={storefrontSelectOptions.objectFit}
+                                    options={translatedStorefrontSelectOptions.objectFit}
                                 />
                             </>
                         )}
@@ -2531,7 +2569,7 @@ const StorefrontEditorView: React.FC = () => {
                             label={t('ecommerce.storefrontEditor.overlayStyle', 'Tipo de overlay')}
                             value={String(selectedSectionSettings.overlayStyle || 'gradient')}
                             onChange={value => updateSelectedSectionSetting('overlayStyle', value)}
-                            options={storefrontSelectOptions.overlayStyle}
+                            options={translatedStorefrontSelectOptions.overlayStyle}
                         />
                         <SliderControl
                             label={t('ecommerce.storefrontEditor.overlayOpacity', 'Opacidad')}
