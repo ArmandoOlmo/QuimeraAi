@@ -245,6 +245,87 @@ const getErrorMessage = (error: unknown): string => {
     return String(error);
 };
 
+const readJsonRecord = (value: unknown): JsonRecord =>
+    value && typeof value === 'object' && !Array.isArray(value) ? value as JsonRecord : {};
+
+const readStringField = (row: JsonRecord, data: JsonRecord, key: string): string | null => {
+    const value = row[key] ?? data[key];
+    return typeof value === 'string' ? value : null;
+};
+
+const mapStarterContentRecordFromDb = (row: JsonRecord): StarterContentRecord => {
+    const data = readJsonRecord(row.data);
+
+    return {
+        id: String(row.id || data.id || ''),
+        name: readStringField(row, data, 'name'),
+        slug: readStringField(row, data, 'slug'),
+        data,
+    };
+};
+
+const isMissingFlatCategoryColumnError = (error: unknown): boolean => {
+    const message = getErrorMessage(error).toLowerCase();
+
+    return message.includes('column') &&
+        (message.includes('does not exist') || message.includes('could not find')) &&
+        (
+            message.includes('store_categories') ||
+            message.includes('name') ||
+            message.includes('slug') ||
+            message.includes('store_id')
+        );
+};
+
+const isMissingFlatProductColumnError = (error: unknown): boolean => {
+    const message = getErrorMessage(error).toLowerCase();
+
+    return message.includes('column') &&
+        (message.includes('does not exist') || message.includes('could not find')) &&
+        (
+            message.includes('store_products') ||
+            message.includes('inventory_quantity')
+        );
+};
+
+const isProductStoreIdForeignKeyError = (error: unknown): boolean => {
+    const message = getErrorMessage(error).toLowerCase();
+
+    return message.includes('foreign key') &&
+        message.includes('store_products') &&
+        (message.includes('store_id') || message.includes('store_products_store_id_fkey'));
+};
+
+const mapCategoryToJsonOnlyRow = (row: StarterCategoryInsertRow): JsonRecord => ({
+    project_id: row.project_id,
+    data: {
+        ...row.data,
+        name: row.name,
+        slug: row.slug,
+        storeId: row.store_id,
+    },
+});
+
+const mapProductToCompatibleRow = (row: StarterProductInsertRow): JsonRecord => {
+    const {
+        inventory_quantity: inventoryQuantity,
+        store_id: storeId,
+        data,
+        ...flatRow
+    } = row;
+
+    return {
+        ...flatRow,
+        data: {
+            ...data,
+            store_id: storeId,
+            storeId,
+            inventory_quantity: inventoryQuantity,
+            inventoryQuantity,
+        },
+    };
+};
+
 const getBlueprintVersion = (businessBlueprint: BusinessBlueprint): string =>
     businessBlueprint.blueprintVersion || 'unknown-version';
 
@@ -370,11 +451,11 @@ const createDefaultRepository = (): StarterContentRepository => ({
     async listCategories(projectId: string) {
         const { data, error } = await supabase
             .from('store_categories')
-            .select('id,name,slug,data')
+            .select('*')
             .eq('project_id', projectId);
 
         if (error) throw error;
-        return (data || []) as StarterContentRecord[];
+        return (data || []).map(row => mapStarterContentRecordFromDb(row as JsonRecord));
     },
     async listProducts(projectId: string) {
         const { data, error } = await supabase
@@ -388,20 +469,44 @@ const createDefaultRepository = (): StarterContentRepository => ({
     async insertCategories(rows: StarterCategoryInsertRow[]) {
         if (rows.length === 0) return [];
 
-        const { data, error } = await supabase
+        const flatResult = await supabase
             .from('store_categories')
             .insert(rows)
-            .select('id,name,slug,data');
+            .select('*');
+
+        if (!flatResult.error) {
+            return (flatResult.data || []).map(row => mapStarterContentRecordFromDb(row as JsonRecord));
+        }
+
+        if (!isMissingFlatCategoryColumnError(flatResult.error)) throw flatResult.error;
+
+        const { data, error } = await supabase
+            .from('store_categories')
+            .insert(rows.map(mapCategoryToJsonOnlyRow))
+            .select('*');
 
         if (error) throw error;
-        return (data || []) as StarterContentRecord[];
+        return (data || []).map(row => mapStarterContentRecordFromDb(row as JsonRecord));
     },
     async insertProducts(rows: StarterProductInsertRow[]) {
         if (rows.length === 0) return [];
 
-        const { data, error } = await supabase
+        const insertResult = await supabase
             .from('store_products')
             .insert(rows)
+            .select('id,name,slug,data');
+
+        if (!insertResult.error) return (insertResult.data || []) as StarterContentRecord[];
+        if (
+            !isMissingFlatProductColumnError(insertResult.error) &&
+            !isProductStoreIdForeignKeyError(insertResult.error)
+        ) {
+            throw insertResult.error;
+        }
+
+        const { data, error } = await supabase
+            .from('store_products')
+            .insert(rows.map(mapProductToCompatibleRow))
             .select('id,name,slug,data');
 
         if (error) throw error;
