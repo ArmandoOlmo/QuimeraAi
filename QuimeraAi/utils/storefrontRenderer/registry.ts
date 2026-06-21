@@ -404,7 +404,19 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         defaultSettings: {
             variant: 'cards',
             enabled: true,
-            reviews: [],
+            reviews: [
+                {
+                    id: 'review-test-reference',
+                    authorName: 'Cliente de prueba',
+                    rating: 5,
+                    title: 'Referencia de prueba',
+                    content: 'Esta reseña de ejemplo sirve para validar el diseño, filtros y visualización del módulo.',
+                    date: '2026-06-20T12:00:00.000Z',
+                    productName: 'Producto demo',
+                    verified: true,
+                    helpful: 3,
+                },
+            ],
             visibleIn: 'both',
             title: 'Reseñas de clientes',
             description: 'Prueba social para aumentar confianza.',

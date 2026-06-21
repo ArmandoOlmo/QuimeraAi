@@ -36,6 +36,9 @@ const toOptionalString = (value: unknown): string | undefined => {
     return resolved ? resolved : undefined;
 };
 
+const firstNonEmpty = (...values: unknown[]): unknown =>
+    values.find((value) => value !== undefined && value !== null && value !== '');
+
 const toBoolean = (value: unknown, fallback = false): boolean =>
     typeof value === 'boolean' ? value : value === undefined || value === null ? fallback : Boolean(value);
 
@@ -136,6 +139,10 @@ export const mapProductFromDB = (row: DbRecord): Product => {
         readField(row, data, 'quantity', 'quantity') ??
         readField(row, data, 'inventory_quantity', 'inventoryQuantity')
     );
+    const costPrice = toOptionalNumber(
+        readField(row, data, 'cost_price', 'costPrice') ??
+        readField(row, data, 'cost', 'cost')
+    );
 
     return {
         id: toStringValue(row.id ?? data.id),
@@ -151,7 +158,8 @@ export const mapProductFromDB = (row: DbRecord): Product => {
         shortDescription: toOptionalString(readField(row, data, 'short_description', 'shortDescription')),
         price: toNumber(readField(row, data, 'price', 'price')),
         compareAtPrice: toOptionalNumber(readField(row, data, 'compare_at_price', 'compareAtPrice')),
-        costPrice: toOptionalNumber(readField(row, data, 'cost_price', 'costPrice')),
+        costPrice,
+        cost: costPrice,
         currency: toOptionalString(readField(row, data, 'currency', 'currency')),
         sku: toOptionalString(readField(row, data, 'sku', 'sku')),
         barcode: toOptionalString(readField(row, data, 'barcode', 'barcode')),
@@ -163,6 +171,8 @@ export const mapProductFromDB = (row: DbRecord): Product => {
         hasVariants: toBoolean(readField(row, data, 'has_variants', 'hasVariants'), false),
         variants: toArray<Product['variants'] extends Array<infer T> ? T : never>(readField(row, data, 'variants', 'variants')),
         options: toArray<Product['options'] extends Array<infer T> ? T : never>(readField(row, data, 'options', 'options')),
+        metaTitle: toOptionalString(firstNonEmpty(data.metaTitle, data.meta_title, data.seoTitle, data.seo_title, row.meta_title, row.seo_title)),
+        metaDescription: toOptionalString(firstNonEmpty(data.metaDescription, data.meta_description, data.seoDescription, data.seo_description, row.meta_description, row.seo_description)),
         status: normalizeProductStatus(readField(row, data, 'status', 'status')),
         isDigital: toBoolean(readField(row, data, 'is_digital', 'isDigital'), false),
         isFeatured: toBoolean(readField(row, data, 'is_featured', 'isFeatured'), false),
@@ -176,6 +186,7 @@ export const mapProductFromDB = (row: DbRecord): Product => {
 
 export const mapProductToDB = (product: Partial<Product>): DbRecord => {
     const data: DbRecord = {};
+    const metadata: DbRecord = {};
     if (product.projectId !== undefined) data.project_id = product.projectId;
     if (product.storeId !== undefined) data.store_id = product.storeId;
     if (product.publicStoreId !== undefined) data.public_store_id = product.publicStoreId;
@@ -185,12 +196,11 @@ export const mapProductToDB = (product: Partial<Product>): DbRecord => {
     if (product.shortDescription !== undefined) data.short_description = product.shortDescription;
     if (product.price !== undefined) data.price = product.price;
     if (product.compareAtPrice !== undefined) data.compare_at_price = product.compareAtPrice;
-    if (product.costPrice !== undefined) data.cost_price = product.costPrice;
+    if (product.costPrice !== undefined || product.cost !== undefined) data.cost_price = product.costPrice ?? product.cost;
     if (product.currency !== undefined) data.currency = product.currency;
     if (product.sku !== undefined) data.sku = product.sku;
     if (product.barcode !== undefined) data.barcode = product.barcode;
     if (product.quantity !== undefined) data.quantity = product.quantity;
-    if (product.quantity !== undefined) data.inventory_quantity = product.quantity;
     if (product.trackInventory !== undefined) data.track_inventory = product.trackInventory;
     if (product.lowStockThreshold !== undefined) data.low_stock_threshold = product.lowStockThreshold;
     if (product.images !== undefined) data.images = product.images;
@@ -203,8 +213,17 @@ export const mapProductToDB = (product: Partial<Product>): DbRecord => {
     if (product.isFeatured !== undefined) data.is_featured = product.isFeatured;
     if (product.weight !== undefined) data.weight = product.weight;
     if (product.weightUnit !== undefined) data.weight_unit = product.weightUnit;
-    if (product.categoryId !== undefined) data.category_id = product.categoryId;
+    if (product.categoryId !== undefined) data.category_id = product.categoryId || null;
+    if (product.metaTitle !== undefined) metadata.metaTitle = product.metaTitle ?? '';
+    if (product.metaDescription !== undefined) metadata.metaDescription = product.metaDescription ?? '';
+    if (Object.keys(metadata).length > 0) data.data = metadata;
     return data;
+};
+
+type CategoryDbInput = Partial<Omit<Category, 'description' | 'imageUrl' | 'parentId'>> & {
+    description?: string | null;
+    imageUrl?: string | null;
+    parentId?: string | null;
 };
 
 export const mapCategoryFromDB = (row: DbRecord): Category => {
@@ -214,24 +233,24 @@ export const mapCategoryFromDB = (row: DbRecord): Category => {
         id: toStringValue(row.id ?? data.id),
         name: toStringValue(readField(row, data, 'name', 'name')),
         slug: toStringValue(readField(row, data, 'slug', 'slug')),
-        description: toOptionalString(readField(row, data, 'description', 'description')),
-        imageUrl: toOptionalString(readField(row, data, 'image_url', 'imageUrl')),
-        parentId: toOptionalString(readField(row, data, 'parent_id', 'parentId')),
-        position: toNumber(readField(row, data, 'position', 'position')),
+        description: toOptionalString(firstNonEmpty(row.description, data.description)),
+        imageUrl: toOptionalString(firstNonEmpty(row.image_url, data.imageUrl, data.image_url)),
+        parentId: toOptionalString(firstNonEmpty(row.parent_id, data.parentId, data.parent_id)),
+        position: toNumber(row.position ?? data.position ?? row.order ?? data.order),
         createdAt: toTimestamp(readField(row, data, 'created_at', 'createdAt')),
         updatedAt: toTimestamp(readField(row, data, 'updated_at', 'updatedAt') ?? readField(row, data, 'created_at', 'createdAt')),
     };
 };
 
-export const mapCategoryToDB = (category: Partial<Category>): DbRecord => {
+export const mapCategoryToDB = (category: CategoryDbInput): DbRecord => {
     const data: DbRecord = {};
     const metadata: DbRecord = {};
 
     if (category.name !== undefined) data.name = category.name;
     if (category.slug !== undefined) data.slug = category.slug;
-    if (category.description !== undefined) metadata.description = category.description;
-    if (category.imageUrl !== undefined) metadata.imageUrl = category.imageUrl;
-    if (category.parentId !== undefined) metadata.parentId = category.parentId;
+    if (category.description !== undefined) metadata.description = category.description ?? '';
+    if (category.imageUrl !== undefined) metadata.imageUrl = category.imageUrl ?? '';
+    if (category.parentId !== undefined) metadata.parentId = category.parentId || null;
     if (category.position !== undefined) metadata.position = category.position;
     if (Object.keys(metadata).length > 0) data.data = metadata;
 

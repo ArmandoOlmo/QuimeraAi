@@ -26,6 +26,41 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const withoutUndefined = (record: Record<string, unknown>): Record<string, unknown> =>
     Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined));
 
+const mapOrderDetailsToDB = (order: Partial<Order>): OrderColumnUpdates => {
+    const data: OrderColumnUpdates = {};
+
+    if (order.orderNumber !== undefined) data.order_number = order.orderNumber;
+    if (order.customerEmail !== undefined) data.customer_email = order.customerEmail;
+    if (order.customerName !== undefined) data.customer_name = order.customerName;
+    if (order.customerPhone !== undefined) data.customer_phone = order.customerPhone;
+    if (order.items !== undefined) data.items = order.items;
+    if (order.subtotal !== undefined) data.subtotal = order.subtotal;
+    if (order.discount !== undefined) data.discount = order.discount;
+    if (order.discountCode !== undefined) data.discount_code = order.discountCode;
+    if (order.discountAmount !== undefined) data.discount_amount = order.discountAmount;
+    if (order.shippingCost !== undefined) data.shipping_cost = order.shippingCost;
+    if (order.taxAmount !== undefined) data.tax_amount = order.taxAmount;
+    if (order.total !== undefined) data.total = order.total;
+    if (order.currency !== undefined) data.currency = order.currency;
+    if (order.pricing !== undefined) data.pricing = order.pricing;
+    if (order.shippingAddress !== undefined) data.shipping_address = order.shippingAddress;
+    if (order.billingAddress !== undefined) data.billing_address = order.billingAddress;
+    if (order.status !== undefined) data.status = order.status;
+    if (order.paymentStatus !== undefined) data.payment_status = order.paymentStatus;
+    if (order.fulfillmentStatus !== undefined) data.fulfillment_status = order.fulfillmentStatus;
+    if (order.paymentMethod !== undefined) data.payment_method = order.paymentMethod;
+    if (order.paymentIntentId !== undefined) data.payment_intent_id = order.paymentIntentId;
+    if (order.shippingMethod !== undefined) data.shipping_method = order.shippingMethod;
+    if (order.trackingNumber !== undefined) data.tracking_number = order.trackingNumber;
+    if (order.trackingUrl !== undefined) data.tracking_url = order.trackingUrl;
+    if (order.carrier !== undefined) data.carrier = order.carrier;
+    if (order.notes !== undefined) data.notes = order.notes;
+    if (order.customerNotes !== undefined) data.customer_notes = order.customerNotes;
+    if (order.internalNotes !== undefined) data.internal_notes = order.internalNotes;
+
+    return data;
+};
+
 export const useOrders = (userId: string, storeId?: string, options?: UseOrdersOptions) => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -359,6 +394,17 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
         [applyOrderUpdate]
     );
 
+    const updateOrderDetails = useCallback(
+        async (orderId: string, updates: Partial<Order>) => {
+            return applyOrderUpdate(
+                orderId,
+                mapOrderDetailsToDB(updates),
+                withoutUndefined(updates as Record<string, unknown>)
+            );
+        },
+        [applyOrderUpdate]
+    );
+
     const createRefund = useCallback(
         async (orderId: string, amount?: number, reason = 'requested_by_customer') => {
             const result = await supabase.functions.invoke('stripe-api', {
@@ -423,6 +469,7 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
         updateFulfillmentStatus,
         addTrackingInfo,
         addInternalNotes,
+        updateOrderDetails,
         createRefund,
         getOrderById,
         getOrdersByStatus,

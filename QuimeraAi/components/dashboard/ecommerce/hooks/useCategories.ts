@@ -3,16 +3,83 @@
  * Hook para gestión de categorías en Supabase
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../../../supabase';
 import { Category } from '../../../../types/ecommerce';
-import { mapCategoryFromDB, mapCategoryToDB } from '../../../../utils/ecommerceMappers';
+import { mapCategoryFromDB } from '../../../../utils/ecommerceMappers';
 import { createRealtimeChannelName } from './realtimeChannel';
+
+type CategoryUpdate = Partial<Omit<Category, 'parentId'>> & {
+    parentId?: string | null;
+};
+
+type CategoryWriteInput = Partial<Omit<Category, 'description' | 'imageUrl' | 'parentId'>> & {
+    description?: string | null;
+    imageUrl?: string | null;
+    parentId?: string | null;
+};
+
+type CategorySchemaMode = 'unknown' | 'flat' | 'json';
+
+const mapCategoryToFlatDB = (category: CategoryWriteInput): Record<string, unknown> => {
+    const data: Record<string, unknown> = {};
+
+    if (category.name !== undefined) data.name = category.name;
+    if (category.slug !== undefined) data.slug = category.slug;
+    if (category.description !== undefined) data.description = category.description ?? '';
+    if (category.imageUrl !== undefined) data.image_url = category.imageUrl ?? '';
+    if (category.parentId !== undefined) data.parent_id = category.parentId || null;
+    if (category.position !== undefined) data.position = category.position;
+
+    return data;
+};
+
+const mapCategoryToJsonOnlyDB = (category: CategoryWriteInput): Record<string, unknown> => {
+    const metadata: Record<string, unknown> = {};
+
+    if (category.name !== undefined) metadata.name = category.name;
+    if (category.slug !== undefined) metadata.slug = category.slug;
+    if (category.description !== undefined) metadata.description = category.description ?? '';
+    if (category.imageUrl !== undefined) metadata.imageUrl = category.imageUrl ?? '';
+    if (category.parentId !== undefined) metadata.parentId = category.parentId || null;
+    if (category.position !== undefined) metadata.position = category.position;
+
+    return { data: metadata };
+};
+
+const getErrorMessage = (error: unknown): string => {
+    if (!error) return '';
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'object' && 'message' in error) {
+        return String((error as { message?: unknown }).message ?? '');
+    }
+    return String(error);
+};
+
+const applyOrderedIds = (source: Category[], orderedIds: string[]): Category[] => {
+    const orderedSet = new Set(orderedIds);
+    const nextPositionById = new Map(orderedIds.map((id, index) => [id, index]));
+    const reorderedItems = orderedIds
+        .map((id) => source.find((category) => category.id === id))
+        .filter((category): category is Category => Boolean(category))
+        .map((category) => ({
+            ...category,
+            position: nextPositionById.get(category.id) ?? category.position,
+        }));
+
+    let cursor = 0;
+
+    return source.map((category) => {
+        if (!orderedSet.has(category.id)) return category;
+        return reorderedItems[cursor++] ?? category;
+    });
+};
 
 export const useCategories = (userId: string, storeId?: string) => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const schemaModeRef = useRef<CategorySchemaMode>('unknown');
 
     const effectiveStoreId = storeId || '';
 
@@ -30,6 +97,13 @@ export const useCategories = (userId: string, storeId?: string) => {
             console.error('Error fetching categories:', fetchError);
             setError(fetchError.message);
         } else {
+            const firstRow = data?.[0] as Record<string, unknown> | undefined;
+            if (firstRow) {
+                schemaModeRef.current = firstRow.name !== undefined || firstRow.position !== undefined
+                    ? 'flat'
+                    : 'json';
+            }
+
             const mappedCategories = (data || [])
                 .map(mapCategoryFromDB)
                 .sort((a, b) => a.position - b.position);
@@ -78,53 +152,120 @@ export const useCategories = (userId: string, storeId?: string) => {
             .replace(/(^-|-$)/g, '');
     };
 
+    const insertCategoryRow = useCallback(
+        async (category: CategoryWriteInput): Promise<string> => {
+            if (schemaModeRef.current === 'json') {
+                const jsonData = mapCategoryToJsonOnlyDB(category);
+                jsonData.project_id = effectiveStoreId;
+
+                const { data: insertedDoc, error } = await supabase
+                    .from('store_categories')
+                    .insert(jsonData)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                return insertedDoc.id;
+            }
+
+            const flatData = mapCategoryToFlatDB(category);
+            flatData.project_id = effectiveStoreId;
+
+            const flatResult = await supabase
+                .from('store_categories')
+                .insert(flatData)
+                .select()
+                .single();
+
+            if (!flatResult.error) return flatResult.data.id;
+
+            schemaModeRef.current = 'json';
+
+            const jsonData = mapCategoryToJsonOnlyDB(category);
+            jsonData.project_id = effectiveStoreId;
+
+            const jsonResult = await supabase
+                .from('store_categories')
+                .insert(jsonData)
+                .select()
+                .single();
+
+            if (jsonResult.error) {
+                console.error('Error inserting category with flat schema:', getErrorMessage(flatResult.error));
+                throw jsonResult.error;
+            }
+
+            return jsonResult.data.id;
+        },
+        [effectiveStoreId]
+    );
+
+    const updateCategoryRow = useCallback(
+        async (categoryId: string, category: CategoryWriteInput) => {
+            if (schemaModeRef.current === 'json') {
+                const { error } = await supabase
+                    .from('store_categories')
+                    .update(mapCategoryToJsonOnlyDB(category))
+                    .eq('id', categoryId);
+
+                if (error) throw error;
+                return;
+            }
+
+            const flatData = mapCategoryToFlatDB(category);
+            const flatResult = await supabase
+                .from('store_categories')
+                .update(flatData)
+                .eq('id', categoryId);
+
+            if (!flatResult.error) return;
+
+            schemaModeRef.current = 'json';
+
+            const jsonResult = await supabase
+                .from('store_categories')
+                .update(mapCategoryToJsonOnlyDB(category))
+                .eq('id', categoryId);
+
+            if (jsonResult.error) {
+                console.error('Error updating category with flat schema:', getErrorMessage(flatResult.error));
+                throw jsonResult.error;
+            }
+        },
+        []
+    );
+
     // Add category
     const addCategory = useCallback(
         async (categoryData: Omit<Category, 'id' | 'createdAt' | 'updatedAt' | 'slug' | 'position'>): Promise<string> => {
             const position = categories.length;
             const slug = generateSlug(categoryData.name);
 
-            const dbData = mapCategoryToDB({
+            return insertCategoryRow({
                 ...categoryData,
                 slug,
                 position,
             });
-
-            dbData.project_id = effectiveStoreId;
-
-            const { data: insertedDoc, error } = await supabase
-                .from('store_categories')
-                .insert(dbData)
-                .select()
-                .single();
-
-            if (error) throw error;
-            return insertedDoc.id;
         },
-        [categories.length, effectiveStoreId]
+        [categories.length, insertCategoryRow]
     );
 
     // Update category
     const updateCategory = useCallback(
-        async (categoryId: string, updates: Partial<Category>) => {
+        async (categoryId: string, updates: CategoryUpdate) => {
             const existingCategory = categories.find((category) => category.id === categoryId);
-            const updateData = mapCategoryToDB({
+            const nextCategory: CategoryWriteInput = {
                 ...existingCategory,
                 ...updates,
-            });
+            };
 
             if (updates.name) {
-                updateData.slug = generateSlug(updates.name);
+                nextCategory.slug = generateSlug(updates.name);
             }
 
-            const { error } = await supabase
-                .from('store_categories')
-                .update(updateData)
-                .eq('id', categoryId);
-
-            if (error) throw error;
+            await updateCategoryRow(categoryId, nextCategory);
         },
-        [categories]
+        [categories, updateCategoryRow]
     );
 
     // Delete category
@@ -143,31 +284,36 @@ export const useCategories = (userId: string, storeId?: string) => {
     // Reorder categories
     const reorderCategories = useCallback(
         async (orderedIds: string[]) => {
-            // Because Supabase doesn't have a direct 'bulk update multiple rows with different values' 
-            // easily via the JS client, we can do multiple updates or use a database function.
-            // Using Promise.all for updates since it's an admin op and categories count is usually small.
-            const promises = orderedIds.map((id, index) => {
-                const category = categories.find((item) => item.id === id);
-                const data = {
-                    ...(category?.description !== undefined ? { description: category.description } : {}),
-                    ...(category?.imageUrl !== undefined ? { imageUrl: category.imageUrl } : {}),
-                    ...(category?.parentId !== undefined ? { parentId: category.parentId } : {}),
-                    position: index,
-                };
+            const previousCategories = categories;
+            setCategories((current) => applyOrderedIds(current, orderedIds));
 
-                return supabase
-                    .from('store_categories')
-                    .update({ data })
-                    .eq('id', id);
-            });
+            try {
+                // Because Supabase doesn't have a direct 'bulk update multiple rows with different values'
+                // easily via the JS client, we can do multiple updates or use a database function.
+                // Using Promise.all for updates since it's an admin op and categories count is usually small.
+                const promises = orderedIds.map((id, index) => {
+                    const category = categories.find((item) => item.id === id);
+                    const nextCategory: CategoryWriteInput = {
+                        ...category,
+                        position: index,
+                    };
 
-            const results = await Promise.all(promises);
-            const errors = results.filter(r => r.error);
-            if (errors.length > 0) {
-                throw errors[0].error;
+                    return updateCategoryRow(id, nextCategory)
+                        .then(() => ({ error: null }))
+                        .catch((error) => ({ error }));
+                });
+
+                const results = await Promise.all(promises);
+                const errors = results.filter(r => r.error);
+                if (errors.length > 0) {
+                    throw errors[0].error;
+                }
+            } catch (error) {
+                setCategories(previousCategories);
+                throw error;
             }
         },
-        [categories]
+        [categories, updateCategoryRow]
     );
 
     // Get category by ID

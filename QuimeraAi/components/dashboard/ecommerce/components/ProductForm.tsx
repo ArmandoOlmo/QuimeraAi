@@ -11,17 +11,11 @@ import {
     Trash2,
     Plus,
     Loader2,
-    Image as ImageIcon,
-    GripVertical,
-    Sparkles,
     FolderOpen,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/core/AuthContext';
-import { useProducts } from '../hooks/useProducts';
-import { useCategories } from '../hooks/useCategories';
 import { useProductAI } from '../hooks/useProductAI';
-import { Product, ProductStatus, ProductImage } from '../../../../types/ecommerce';
-import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
+import { Category, Product, ProductStatus, ProductImage } from '../../../../types/ecommerce';
 import { useEcommerceContext } from '../EcommerceContext';
 import AIAssistButton from '../../../onboarding/components/AIAssistButton';
 import EcommerceImagePicker from './EcommerceImagePicker';
@@ -29,17 +23,33 @@ import AppSelect from '../../../ui/AppSelect';
 
 interface ProductFormProps {
     product?: Product | null;
+    categories: Category[];
+    addProduct: (
+        productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'slug'> & { libraryImageUrls?: string[] },
+        imageFiles?: File[]
+    ) => Promise<string>;
+    updateProduct: (
+        productId: string,
+        updates: Partial<Product> & { libraryImageUrls?: string[] },
+        newImageFiles?: File[]
+    ) => Promise<void>;
+    deleteImage: (productId: string, imageId: string) => Promise<void>;
     onClose: () => void;
-    onSuccess: () => void;
+    onSuccess: () => void | Promise<void>;
 }
 
-const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }) => {
+const ProductForm: React.FC<ProductFormProps> = ({
+    product,
+    categories,
+    addProduct,
+    updateProduct,
+    deleteImage,
+    onClose,
+    onSuccess,
+}) => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    const theme = useEcommerceTheme();
-    const { addProduct, updateProduct, uploadImage, deleteImage, isLoading } = useProducts(user?.id || '', storeId);
-    const { categories } = useCategories(user?.id || '', storeId);
     
     // AI Generation Hook
     const {
@@ -55,6 +65,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
     } = useProductAI(user?.id, storeId);
 
     const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -106,11 +117,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
+        setSaveError(null);
 
         try {
             // Incluir URLs de imágenes de la biblioteca en el formData
             const formDataWithLibraryImages = {
                 ...formData,
+                costPrice: formData.cost,
                 libraryImageUrls: libraryImages, // URLs de imágenes seleccionadas de la biblioteca
             };
             
@@ -119,9 +132,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
             } else {
                 await addProduct(formDataWithLibraryImages, newImages);
             }
-            onSuccess();
+            await onSuccess();
         } catch (error) {
             console.error('Error saving product:', error);
+            const message = error instanceof Error
+                ? error.message
+                : t('ecommerce.productSaveError', 'No se pudo guardar el producto.');
+            setSaveError(message);
         } finally {
             setIsSaving(false);
         }
@@ -760,6 +777,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                         {aiError && (
                             <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
                                 {aiError}
+                            </div>
+                        )}
+
+                        {saveError && (
+                            <div role="alert" className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                                {saveError}
                             </div>
                         )}
                     </div>

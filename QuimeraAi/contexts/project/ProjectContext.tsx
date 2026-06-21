@@ -21,7 +21,7 @@ import { useUndoRedo } from '../../hooks/useUndoRedo';
 import { useSafeUndo } from '../undo/UndoContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 import { extractActiveHeroImage } from '../../utils/thumbnailHelper';
-import { mapSupabaseRowToProject, resolveProjectMenus } from '../../utils/mapSupabaseProject';
+import { mapSupabaseRowToProject, normalizeProjectComponentOrder, resolveProjectMenus } from '../../utils/mapSupabaseProject';
 import { isLegacyStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
 import { downloadProjectAsHtml } from '../../utils/projectExporter';
 
@@ -33,13 +33,25 @@ export interface ProjectUndoState {
     pages: SitePage[];
 }
 
-// Helper to normalize project.name from i18n object {en, es} to plain string
-// This prevents crashes in ALL downstream components that do project.name.toLowerCase(), etc.
+// Normalize legacy project payloads before they enter editor state.
+// This prevents crashes from i18n names and restores fixed editor shell sections.
 const normalizeProject = (project: Project): Project => {
-    if (project.name && typeof project.name === 'object') {
-        return { ...project, name: resolveProjectName(project.name) };
-    }
-    return project;
+    const normalizedOrder = normalizeProjectComponentOrder(project.componentOrder) || project.componentOrder;
+    const normalizedVisibility = normalizedOrder && project.sectionVisibility
+        ? normalizedOrder.reduce((acc, section) => {
+            acc[section] = project.sectionVisibility?.[section] ?? true;
+            return acc;
+        }, { ...project.sectionVisibility } as Record<PageSection, boolean>)
+        : project.sectionVisibility;
+
+    return {
+        ...project,
+        name: project.name && typeof project.name === 'object'
+            ? resolveProjectName(project.name)
+            : project.name,
+        componentOrder: normalizedOrder,
+        sectionVisibility: normalizedVisibility,
+    };
 };
 
 const SUMMARY_PROJECT_FLAG = '__quimeraSummaryProject';
@@ -1499,20 +1511,32 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         const { id: providedId, ...projectData } = project;
         const projectMenus = Array.isArray((projectData as any).menus) ? (projectData as any).menus : [];
-        
-        const deploymentData = (projectData as any).deployment || {};
-        const dataToSave: Record<string, any> = {
+        const normalizedComponentOrder =
+            normalizeProjectComponentOrder(projectData.componentOrder || initialData.componentOrder as PageSection[]) ||
+            (initialData.componentOrder as PageSection[]);
+        const normalizedSectionVisibility = normalizedComponentOrder.reduce((acc, section) => {
+            acc[section] = projectData.sectionVisibility?.[section] ?? true;
+            return acc;
+        }, { ...(projectData.sectionVisibility || {}) } as Record<PageSection, boolean>);
+        const normalizedProjectData = {
             ...projectData,
+            componentOrder: normalizedComponentOrder,
+            sectionVisibility: normalizedSectionVisibility,
+        };
+        
+        const deploymentData = (normalizedProjectData as any).deployment || {};
+        const dataToSave: Record<string, any> = {
+            ...normalizedProjectData,
             deployment: { ...deploymentData },
             createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString(),
         };
 
-        if ((projectData as any).vercelProjectId) {
-            dataToSave.vercelProjectId = (projectData as any).vercelProjectId;
+        if ((normalizedProjectData as any).vercelProjectId) {
+            dataToSave.vercelProjectId = (normalizedProjectData as any).vercelProjectId;
         }
-        if ((projectData as any).vercel_project_id) {
-            dataToSave.vercel_project_id = (projectData as any).vercel_project_id;
+        if ((normalizedProjectData as any).vercel_project_id) {
+            dataToSave.vercel_project_id = (normalizedProjectData as any).vercel_project_id;
         }
         if (deploymentData.vercelProjectId) {
             dataToSave.deployment.vercelProjectId = deploymentData.vercelProjectId;
@@ -1530,8 +1554,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 data: dataToSave,
                 theme: project.theme,
                 brand_identity: project.brandIdentity || initialData.brandIdentity,
-                component_order: project.componentOrder || [],
-                section_visibility: project.sectionVisibility || {},
+                component_order: normalizedComponentOrder,
+                section_visibility: normalizedSectionVisibility,
                 pages: project.pages || null,
                 thumbnail_url: project.thumbnailUrl || null,
                 last_updated: dataToSave.lastUpdated,
@@ -1548,8 +1572,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 data: dataToSave,
                 theme: project.theme,
                 brand_identity: project.brandIdentity || initialData.brandIdentity,
-                component_order: project.componentOrder || [],
-                section_visibility: project.sectionVisibility || {},
+                component_order: normalizedComponentOrder,
+                section_visibility: normalizedSectionVisibility,
                 pages: project.pages || null,
                 thumbnail_url: project.thumbnailUrl || null,
                 last_updated: dataToSave.lastUpdated,
@@ -1559,7 +1583,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             finalId = docRef.id;
         }
 
-        const newProject = { ...project, id: finalId };
+        const newProject = normalizeProject({
+            ...project,
+            componentOrder: normalizedComponentOrder,
+            sectionVisibility: normalizedSectionVisibility,
+            id: finalId,
+        });
         setProjects(prev => {
             if (prev.some(p => p.id === newProject.id)) return prev;
             return [newProject, ...prev];
@@ -1686,13 +1715,20 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         const now = new Date().toISOString();
         const templateMenus = template.menus ? cloneProjectValue(template.menus) : [];
+        const templateComponentOrder =
+            normalizeProjectComponentOrder(template.componentOrder || initialData.componentOrder as PageSection[]) ||
+            (initialData.componentOrder as PageSection[]);
+        const templateSectionVisibility = templateComponentOrder.reduce((acc, section) => {
+            acc[section] = template.sectionVisibility?.[section] ?? true;
+            return acc;
+        }, { ...(template.sectionVisibility || {}) } as Record<PageSection, boolean>);
         const newProject: Omit<Project, 'id'> = {
             name: newName || `${template.name} Copy`,
             data: cloneProjectValue(template.data),
             theme: cloneProjectValue(template.theme),
             brandIdentity: template.brandIdentity ? cloneProjectValue(template.brandIdentity) : initialData.brandIdentity,
-            componentOrder: [...(template.componentOrder || initialData.componentOrder as PageSection[])],
-            sectionVisibility: cloneProjectValue(template.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>),
+            componentOrder: cloneProjectValue(templateComponentOrder),
+            sectionVisibility: cloneProjectValue(templateSectionVisibility),
             pages: template.pages ? cloneProjectValue(template.pages) : undefined,
             menus: templateMenus.length > 0 ? templateMenus : undefined,
             sourceTemplateId: templateId,

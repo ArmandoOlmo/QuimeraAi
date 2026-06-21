@@ -34,7 +34,7 @@ const ProductsView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    const { products, isLoading, deleteProduct, updateProduct } = useProducts(user?.id || '', storeId);
+    const { products, isLoading, refreshProducts, addProduct, deleteProduct, updateProduct, deleteImage } = useProducts(user?.id || '', storeId);
     const { categories } = useCategories(user?.id || '', storeId);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -106,6 +106,11 @@ const ProductsView: React.FC = () => {
     const handleFormClose = () => {
         setShowForm(false);
         setEditingProduct(null);
+    };
+
+    const handleFormSuccess = async () => {
+        await refreshProducts();
+        handleFormClose();
     };
 
     const getCategoryName = (categoryId?: string) => {
@@ -410,8 +415,12 @@ const ProductsView: React.FC = () => {
             {showForm && (
                 <ProductForm
                     product={editingProduct}
+                    categories={categories}
+                    addProduct={addProduct}
+                    updateProduct={updateProduct}
+                    deleteImage={deleteImage}
                     onClose={handleFormClose}
-                    onSuccess={handleFormClose}
+                    onSuccess={handleFormSuccess}
                 />
             )}
             {/* Delete Product Confirmation Modal */}

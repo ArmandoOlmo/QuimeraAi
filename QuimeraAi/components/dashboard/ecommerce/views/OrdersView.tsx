@@ -22,6 +22,7 @@ import {
 import { useEditor } from '../../../../contexts/EditorContext';
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useOrders } from '../hooks/useOrders';
+import { useProducts } from '../hooks/useProducts';
 import { Order, OrderStatus } from '../../../../types/ecommerce';
 import type { StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
@@ -53,7 +54,8 @@ const OrdersView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    const { orders, isLoading, updateOrderStatus, addTrackingInfo, addInternalNotes, createRefund } = useOrders(user?.id || '', storeId);
+    const { orders, isLoading, updateOrderStatus, addTrackingInfo, addInternalNotes, updateOrderDetails, createRefund } = useOrders(user?.id || '', storeId);
+    const { products } = useProducts(user?.id || '', storeId);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStatus, setSelectedStatus] = useState<OrderStatusFilter>('all');
@@ -116,6 +118,13 @@ const OrdersView: React.FC = () => {
 
     const handleUpdateInternalNotes = async (orderId: string, notes: string) => {
         const updatedOrder = await addInternalNotes(orderId, notes);
+        setSelectedOrder((currentOrder) =>
+            currentOrder?.id === orderId ? updatedOrder : currentOrder
+        );
+    };
+
+    const handleUpdateOrderDetails = async (orderId: string, updates: Partial<Order>) => {
+        const updatedOrder = await updateOrderDetails(orderId, updates);
         setSelectedOrder((currentOrder) =>
             currentOrder?.id === orderId ? updatedOrder : currentOrder
         );
@@ -235,8 +244,18 @@ const OrdersView: React.FC = () => {
                             <div key={order.id} className="rounded-xl border border-q-border bg-q-surface/50 p-3">
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
-                                        <p className="font-medium text-foreground">{order.orderNumber}</p>
-                                        <p className="truncate text-sm text-q-text-muted">{order.customerName}</p>
+                                        <button
+                                            onClick={() => handleViewOrder(order)}
+                                            className="block max-w-full truncate text-left font-medium text-foreground hover:text-primary"
+                                        >
+                                            {order.orderNumber}
+                                        </button>
+                                        <button
+                                            onClick={() => handleViewOrder(order)}
+                                            className="block max-w-full truncate text-left text-sm text-q-text-muted hover:text-primary"
+                                        >
+                                            {order.customerName}
+                                        </button>
                                         <p className="truncate text-xs text-q-text-muted">{order.customerEmail}</p>
                                     </div>
                                     <div className="flex-shrink-0 text-right">
@@ -296,11 +315,26 @@ const OrdersView: React.FC = () => {
                                 return (
                                     <tr key={order.id} className="hover:bg-muted/20">
                                         <td className="px-4 py-3">
-                                            <p className="text-foreground font-medium">{order.orderNumber}</p>
-                                            <p className="text-q-text-muted text-sm md:hidden">{order.customerName}</p>
+                                            <button
+                                                onClick={() => handleViewOrder(order)}
+                                                className="block max-w-full truncate text-left text-foreground font-medium hover:text-primary"
+                                            >
+                                                {order.orderNumber}
+                                            </button>
+                                            <button
+                                                onClick={() => handleViewOrder(order)}
+                                                className="block max-w-full truncate text-left text-q-text-muted text-sm hover:text-primary md:hidden"
+                                            >
+                                                {order.customerName}
+                                            </button>
                                         </td>
                                         <td className="px-4 py-3 hidden md:table-cell">
-                                            <p className="text-foreground">{order.customerName}</p>
+                                            <button
+                                                onClick={() => handleViewOrder(order)}
+                                                className="block max-w-full truncate text-left text-foreground hover:text-primary"
+                                            >
+                                                {order.customerName}
+                                            </button>
                                             <p className="text-q-text-muted text-sm">{order.customerEmail}</p>
                                         </td>
                                         <td className="px-4 py-3 text-q-text-muted hidden sm:table-cell">
@@ -343,10 +377,12 @@ const OrdersView: React.FC = () => {
             {showDrawer && selectedOrder && (
                 <OrderDetailDrawer
                     order={selectedOrder}
+                    products={products}
                     onClose={handleCloseDrawer}
                     onUpdateStatus={handleUpdateOrderStatus}
                     onAddTracking={handleAddTrackingInfo}
                     onUpdateInternalNotes={handleUpdateInternalNotes}
+                    onUpdateOrder={handleUpdateOrderDetails}
                     onRefundOrder={handleRefundOrder}
                 />
             )}
