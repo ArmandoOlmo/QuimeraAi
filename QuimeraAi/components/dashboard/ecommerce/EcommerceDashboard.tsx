@@ -4,7 +4,7 @@
  * Cada proyecto tiene su propia tienda de ecommerce
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ShoppingBag,
@@ -21,6 +21,8 @@ import {
     AlertTriangle,
     RefreshCw,
     AlertCircle,
+    Activity,
+    ArrowRight,
     Star,
     Bell,
     FileDown,
@@ -28,8 +30,16 @@ import {
     ChevronDown,
     Plus,
     Check,
+    CheckCircle2,
     Sparkles,
     LayoutTemplate,
+    CreditCard,
+    Truck,
+    ShieldCheck,
+    Percent,
+    Inbox,
+    Clock,
+    PackageCheck,
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import QuimeraLoader from '../../ui/QuimeraLoader';
@@ -37,7 +47,7 @@ import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
-import { EcommerceView } from '../../../types/ecommerce';
+import type { Category, Customer, EcommerceView, Order, Product, Review, StoreSettings } from '../../../types/ecommerce';
 import { EcommerceContext, useEcommerceContext } from './EcommerceContext';
 
 // Import views
@@ -60,11 +70,13 @@ import ProjectSelectorPage from './ProjectSelectorPage';
 // Import hooks for overview stats
 import { useEcommerceStore } from './hooks/useEcommerceStore';
 import { useEcommerceAnalytics } from './hooks/useEcommerceAnalytics';
-import { useOrders } from './hooks/useOrders';
 import { useProjectEcommerce } from './hooks/useProjectEcommerce';
-import { useProducts } from './hooks/useProducts';
+import { useCategories } from './hooks/useCategories';
+import { useReviews } from './hooks/useReviews';
+import { useStoreSettings } from './hooks/useStoreSettings';
 import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
 import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
+import { timestampToDate } from '../../../utils/timestampUtils';
 
 // Import DemoDataSeeder
 import DemoDataSeeder from './components/DemoDataSeeder';
@@ -446,7 +458,7 @@ const EcommerceDashboard: React.FC = () => {
                                                             {project.name}
                                                         </span>
                                                         <span className={`text-xs ${project.status === 'Published' ? 'quimera-status-card-accent-text' : 'text-q-text-muted'}`}>
-                                                            {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
+                                                            {project.status === 'Published' ? t('common.published', 'Publicado') : t('common.draft', 'Borrador')}
                                                         </span>
                                                     </div>
                                                     {project.id === effectiveProjectId && (
@@ -539,26 +551,54 @@ const OverviewDataView: React.FC<OverviewDataViewProps> = ({
     onDemoSeederClose,
 }) => {
     const {
+        orders,
+        products,
+        customers,
         totalRevenue,
         totalOrders,
         totalCustomers,
         averageOrderValue,
         lowStockProducts,
+        revenueByDay,
+        topProducts,
+        conversionMetrics,
         isLoading: analyticsLoading,
     } = useEcommerceAnalytics(userId, storeId);
 
-    const { getPendingOrdersCount } = useOrders(userId, storeId);
-    const { products } = useProducts(userId, storeId);
+    const { categories, isLoading: categoriesLoading } = useCategories(userId, storeId);
+    const {
+        reviews,
+        totalReviews,
+        pendingCount: pendingReviews,
+        approvedCount: approvedReviews,
+        isLoading: reviewsLoading,
+    } = useReviews(userId, storeId);
+    const { settings, isLoading: settingsLoading } = useStoreSettings(userId, storeId);
+    const pendingOrders = orders.filter((order) => order.status === 'pending' || order.status === 'paid').length;
 
     return (
         <OverviewView
+            orders={orders}
+            products={products}
+            customers={customers}
+            categories={categories}
+            reviews={reviews}
+            settings={settings}
             totalRevenue={totalRevenue}
             totalOrders={totalOrders}
             totalCustomers={totalCustomers}
             averageOrderValue={averageOrderValue}
-            pendingOrders={getPendingOrdersCount()}
+            pendingOrders={pendingOrders}
             lowStockCount={lowStockProducts.length}
-            isLoading={analyticsLoading}
+            lowStockProducts={lowStockProducts}
+            revenueByDay={revenueByDay}
+            topProducts={topProducts}
+            conversionRate={conversionMetrics.conversionRate}
+            cancelledOrders={conversionMetrics.cancelledOrders}
+            totalReviews={totalReviews}
+            pendingReviews={pendingReviews}
+            approvedReviews={approvedReviews}
+            isLoading={analyticsLoading || categoriesLoading || reviewsLoading || settingsLoading}
             onNavigate={onNavigate}
             totalProducts={products.length}
             showDemoSeeder={showDemoSeeder}
@@ -568,12 +608,26 @@ const OverviewDataView: React.FC<OverviewDataViewProps> = ({
 };
 
 interface OverviewProps {
+    orders: Order[];
+    products: Product[];
+    customers: Customer[];
+    categories: Category[];
+    reviews: Review[];
+    settings: StoreSettings | null;
     totalRevenue: number;
     totalOrders: number;
     totalCustomers: number;
     averageOrderValue: number;
     pendingOrders: number;
     lowStockCount: number;
+    lowStockProducts: Product[];
+    revenueByDay: Array<{ day: string; revenue: number; orders: number }>;
+    topProducts: Array<{ productId: string; productName: string; totalSold: number; revenue: number }>;
+    conversionRate: number;
+    cancelledOrders: number;
+    totalReviews: number;
+    pendingReviews: number;
+    approvedReviews: number;
     isLoading: boolean;
     onNavigate: (view: EcommerceView) => void;
     totalProducts: number;
@@ -581,56 +635,348 @@ interface OverviewProps {
     onDemoSeederClose: () => void;
 }
 
+type OverviewTone = 'emerald' | 'amber' | 'red' | 'blue' | 'purple' | 'neutral';
+
+interface OverviewActionItem {
+    label: string;
+    description: string;
+    view: EcommerceView;
+    icon: React.ElementType;
+    tone: OverviewTone;
+    value?: string;
+}
+
+interface OverviewReadinessItem {
+    label: string;
+    description: string;
+    complete: boolean;
+    view: EcommerceView;
+    icon: React.ElementType;
+}
+
+const toneClassMap: Record<OverviewTone, { border: string; bg: string; text: string; icon: string; bar: string }> = {
+    emerald: {
+        border: 'border-emerald-500/30',
+        bg: 'bg-emerald-500/10',
+        text: 'text-emerald-300',
+        icon: 'text-emerald-300 bg-emerald-500/15',
+        bar: 'bg-emerald-400',
+    },
+    amber: {
+        border: 'border-amber-500/30',
+        bg: 'bg-amber-500/10',
+        text: 'text-amber-300',
+        icon: 'text-amber-300 bg-amber-500/15',
+        bar: 'bg-amber-400',
+    },
+    red: {
+        border: 'border-red-500/30',
+        bg: 'bg-red-500/10',
+        text: 'text-red-300',
+        icon: 'text-red-300 bg-red-500/15',
+        bar: 'bg-red-400',
+    },
+    blue: {
+        border: 'border-sky-500/30',
+        bg: 'bg-sky-500/10',
+        text: 'text-sky-300',
+        icon: 'text-sky-300 bg-sky-500/15',
+        bar: 'bg-sky-400',
+    },
+    purple: {
+        border: 'border-violet-500/30',
+        bg: 'bg-violet-500/10',
+        text: 'text-violet-300',
+        icon: 'text-violet-300 bg-violet-500/15',
+        bar: 'bg-violet-400',
+    },
+    neutral: {
+        border: 'border-q-border/70',
+        bg: 'bg-q-surface/70',
+        text: 'text-q-text',
+        icon: 'text-q-text bg-muted/60',
+        bar: 'bg-q-accent',
+    },
+};
+
+const clampPercent = (value: number): number => Math.max(0, Math.min(100, Math.round(value)));
+
 const OverviewView: React.FC<OverviewProps> = ({
+    orders,
+    products,
+    customers,
+    categories,
+    reviews,
+    settings,
     totalRevenue,
     totalOrders,
     totalCustomers,
     averageOrderValue,
     pendingOrders,
     lowStockCount,
+    lowStockProducts,
+    revenueByDay,
+    topProducts,
+    conversionRate,
+    cancelledOrders,
+    totalReviews,
+    pendingReviews,
+    approvedReviews,
     isLoading,
     onNavigate,
     totalProducts,
     showDemoSeeder,
     onDemoSeederClose,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { projectName } = useEcommerceContext();
     const [showSeeder, setShowSeeder] = useState(showDemoSeeder);
+    const locale = i18n.language || 'es';
 
     useEffect(() => {
         setShowSeeder(showDemoSeeder);
     }, [showDemoSeeder]);
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('es-MX', {
+        return new Intl.NumberFormat(locale, {
             style: 'currency',
-            currency: 'USD',
+            currency: settings?.currency || products[0]?.currency || orders[0]?.currency || 'USD',
         }).format(amount);
     };
 
-    const stats = [
+    const formatNumber = (value: number) => new Intl.NumberFormat(locale).format(value);
+    const formatDate = (order: Order) => new Intl.DateTimeFormat(locale, {
+        month: 'short',
+        day: 'numeric',
+    }).format(timestampToDate(order.createdAt));
+
+    const activeProducts = products.filter((product) => product.status === 'active').length;
+    const draftProducts = products.filter((product) => product.status === 'draft').length;
+    const productsWithoutImages = products.filter((product) => !product.images || product.images.length === 0).length;
+    const uncategorizedProducts = products.filter((product) => !product.categoryId).length;
+    const outOfStockProducts = products.filter((product) => product.trackInventory && product.quantity <= 0).length;
+    const paidOrders = orders.filter((order) => order.paymentStatus === 'paid');
+    const failedPayments = orders.filter((order) => order.paymentStatus === 'failed').length;
+    const fulfillmentQueue = paidOrders.filter((order) => order.fulfillmentStatus !== 'fulfilled').length;
+    const processingOrders = orders.filter((order) => order.status === 'processing').length;
+    const refundedOrders = orders.filter((order) => order.status === 'refunded' || order.paymentStatus === 'refunded' || order.paymentStatus === 'partially_refunded').length;
+    const averageRating = totalReviews > 0
+        ? reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
+        : 0;
+    const marketingCustomers = customers.filter((customer) => customer.acceptsMarketing).length;
+    const marketingRate = totalCustomers > 0 ? (marketingCustomers / totalCustomers) * 100 : 0;
+
+    const dailySales = useMemo(() => {
+        const revenueByKey = new Map(revenueByDay.map((item) => [item.day, item]));
+        return Array.from({ length: 7 }, (_, index) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (6 - index));
+            const key = date.toISOString().split('T')[0];
+            const item = revenueByKey.get(key);
+            return {
+                key,
+                label: new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(date),
+                revenue: item?.revenue || 0,
+                orders: item?.orders || 0,
+            };
+        });
+    }, [locale, revenueByDay]);
+    const maxDailyRevenue = Math.max(...dailySales.map((day) => day.revenue), 1);
+    const last7Revenue = dailySales.reduce((sum, day) => sum + day.revenue, 0);
+    const last7Orders = dailySales.reduce((sum, day) => sum + day.orders, 0);
+
+    const settingsReady = Boolean(settings?.storeName && settings?.storeEmail);
+    const productsReady = activeProducts > 0;
+    const categoriesReady = categories.length > 0;
+    const paymentReady = Boolean(settings && (settings.stripeEnabled || settings.paypalEnabled || settings.cashOnDeliveryEnabled));
+    const shippingReady = Boolean(settings && (
+        !settings.requireShippingAddress ||
+        (settings.shippingZones || []).some((zone) => zone.rates.length > 0) ||
+        (settings.freeShippingThreshold || 0) > 0
+    ));
+    const storefrontReady = productsReady && categoriesReady && settingsReady;
+
+    const readinessItems: OverviewReadinessItem[] = [
+        {
+            label: t('ecommerce.overviewPro.readiness.storeIdentity', 'Identidad de tienda'),
+            description: t('ecommerce.overviewPro.readiness.storeIdentityDesc', 'Nombre, email y datos básicos configurados.'),
+            complete: settingsReady,
+            view: 'settings',
+            icon: Store,
+        },
+        {
+            label: t('ecommerce.overviewPro.readiness.products', 'Catálogo vendible'),
+            description: t('ecommerce.overviewPro.readiness.productsDesc', 'Al menos un producto activo listo para la tienda.'),
+            complete: productsReady,
+            view: 'products',
+            icon: Package,
+        },
+        {
+            label: t('ecommerce.overviewPro.readiness.categories', 'Categorías'),
+            description: t('ecommerce.overviewPro.readiness.categoriesDesc', 'Estructura clara para navegar el catálogo.'),
+            complete: categoriesReady,
+            view: 'categories',
+            icon: FolderTree,
+        },
+        {
+            label: t('ecommerce.overviewPro.readiness.payments', 'Pagos'),
+            description: t('ecommerce.overviewPro.readiness.paymentsDesc', 'Método de cobro disponible para checkout.'),
+            complete: paymentReady,
+            view: 'settings',
+            icon: CreditCard,
+        },
+        {
+            label: t('ecommerce.overviewPro.readiness.shipping', 'Envíos'),
+            description: t('ecommerce.overviewPro.readiness.shippingDesc', 'Reglas de entrega o checkout sin envío.'),
+            complete: shippingReady,
+            view: 'settings',
+            icon: Truck,
+        },
+        {
+            label: t('ecommerce.overviewPro.readiness.storefront', 'Storefront'),
+            description: t('ecommerce.overviewPro.readiness.storefrontDesc', 'Contenido base suficiente para presentar la tienda.'),
+            complete: storefrontReady,
+            view: 'storefront',
+            icon: LayoutTemplate,
+        },
+    ];
+    const completedReadiness = readinessItems.filter((item) => item.complete).length;
+    const readinessScore = clampPercent((completedReadiness / readinessItems.length) * 100);
+    const readinessTone: OverviewTone = readinessScore >= 85 ? 'emerald' : readinessScore >= 55 ? 'amber' : 'red';
+
+    const priorityActions = useMemo<OverviewActionItem[]>(() => {
+        const actions: OverviewActionItem[] = [];
+
+        if (pendingOrders > 0) {
+            actions.push({
+                label: t('ecommerce.overviewPro.actions.pendingOrders', 'Procesar pedidos pendientes'),
+                description: t('ecommerce.overviewPro.actions.pendingOrdersDesc', 'Hay pedidos esperando revisión o preparación.'),
+                value: formatNumber(pendingOrders),
+                view: 'orders',
+                icon: ShoppingCart,
+                tone: 'amber',
+            });
+        }
+        if (lowStockCount > 0 || outOfStockProducts > 0) {
+            actions.push({
+                label: t('ecommerce.overviewPro.actions.inventoryRisk', 'Revisar inventario crítico'),
+                description: t('ecommerce.overviewPro.actions.inventoryRiskDesc', 'Evita vender productos sin stock o con inventario bajo.'),
+                value: formatNumber(lowStockCount + outOfStockProducts),
+                view: 'stock_alerts',
+                icon: AlertTriangle,
+                tone: outOfStockProducts > 0 ? 'red' : 'amber',
+            });
+        }
+        if (pendingReviews > 0) {
+            actions.push({
+                label: t('ecommerce.overviewPro.actions.moderateReviews', 'Moderar reseñas'),
+                description: t('ecommerce.overviewPro.actions.moderateReviewsDesc', 'Reseñas pendientes pueden aumentar confianza si se aprueban rápido.'),
+                value: formatNumber(pendingReviews),
+                view: 'reviews',
+                icon: Star,
+                tone: 'purple',
+            });
+        }
+        if (!settingsReady) {
+            actions.push({
+                label: t('ecommerce.overviewPro.actions.finishSettings', 'Completar configuración'),
+                description: t('ecommerce.overviewPro.actions.finishSettingsDesc', 'Define identidad, contacto y ajustes básicos de la tienda.'),
+                view: 'settings',
+                icon: Settings,
+                tone: 'blue',
+            });
+        }
+        if (!productsReady) {
+            actions.push({
+                label: t('ecommerce.overviewPro.actions.addProducts', 'Agregar productos activos'),
+                description: t('ecommerce.overviewPro.actions.addProductsDesc', 'Tu tienda necesita productos activos para empezar a vender.'),
+                view: 'products',
+                icon: Package,
+                tone: 'blue',
+            });
+        }
+        if (productsWithoutImages > 0) {
+            actions.push({
+                label: t('ecommerce.overviewPro.actions.addImages', 'Mejorar fotos de producto'),
+                description: t('ecommerce.overviewPro.actions.addImagesDesc', 'Los productos sin imagen reducen confianza y conversión.'),
+                value: formatNumber(productsWithoutImages),
+                view: 'products',
+                icon: PackageCheck,
+                tone: 'neutral',
+            });
+        }
+        if (!paymentReady) {
+            actions.push({
+                label: t('ecommerce.overviewPro.actions.enablePayments', 'Activar pagos'),
+                description: t('ecommerce.overviewPro.actions.enablePaymentsDesc', 'Configura Stripe, PayPal o pago manual antes de publicar checkout.'),
+                view: 'settings',
+                icon: CreditCard,
+                tone: 'red',
+            });
+        }
+        if (!shippingReady) {
+            actions.push({
+                label: t('ecommerce.overviewPro.actions.setupShipping', 'Configurar envíos'),
+                description: t('ecommerce.overviewPro.actions.setupShippingDesc', 'Define zonas, tarifas o reglas para entrega.'),
+                view: 'settings',
+                icon: Truck,
+                tone: 'amber',
+            });
+        }
+
+        return actions.slice(0, 5);
+    }, [
+        formatNumber,
+        lowStockCount,
+        outOfStockProducts,
+        paymentReady,
+        pendingOrders,
+        pendingReviews,
+        productsReady,
+        productsWithoutImages,
+        settingsReady,
+        shippingReady,
+        t,
+    ]);
+
+    const nextAction = priorityActions[0] || {
+        label: t('ecommerce.overviewPro.actions.reviewAnalytics', 'Revisar analíticas'),
+        description: t('ecommerce.overviewPro.actions.reviewAnalyticsDesc', 'La operación base está lista. Mira tendencias para optimizar.'),
+        view: 'analytics',
+        icon: TrendingUp,
+        tone: 'emerald' as OverviewTone,
+    };
+
+    const statusMetrics = [
         {
             label: t('ecommerce.totalRevenue', 'Ingresos Totales'),
             value: formatCurrency(totalRevenue),
+            detail: t('ecommerce.overviewPro.metricDetails.paidRevenue', 'Solo pedidos pagados'),
             icon: DollarSign,
+            tone: 'emerald' as OverviewTone,
         },
         {
             label: t('ecommerce.totalOrders', 'Total Pedidos'),
-            value: totalOrders.toString(),
+            value: formatNumber(totalOrders),
+            detail: t('ecommerce.overviewPro.metricDetails.pending', '{{count}} pendientes', { count: pendingOrders }),
             icon: ShoppingCart,
             onClick: () => onNavigate('orders'),
+            tone: pendingOrders > 0 ? 'amber' as OverviewTone : 'blue' as OverviewTone,
         },
         {
             label: t('ecommerce.totalCustomers', 'Total Clientes'),
-            value: totalCustomers.toString(),
+            value: formatNumber(totalCustomers),
+            detail: t('ecommerce.overviewPro.metricDetails.marketing', '{{rate}}% acepta marketing', { rate: Math.round(marketingRate) }),
             icon: Users,
             onClick: () => onNavigate('customers'),
+            tone: 'purple' as OverviewTone,
         },
         {
             label: t('ecommerce.avgOrderValue', 'Ticket Promedio'),
             value: formatCurrency(averageOrderValue),
+            detail: t('ecommerce.overviewPro.metricDetails.conversion', '{{rate}}% conversión pago', { rate: Math.round(conversionRate) }),
             icon: TrendingUp,
+            tone: 'blue' as OverviewTone,
         },
     ];
 
@@ -642,95 +988,482 @@ const OverviewView: React.FC<OverviewProps> = ({
         );
     }
 
+    const orderStatusLabels: Record<Order['status'], string> = {
+        pending: t('ecommerce.overviewPro.status.pending', 'Pendiente'),
+        paid: t('ecommerce.overviewPro.status.paid', 'Pagado'),
+        processing: t('ecommerce.overviewPro.status.processing', 'Procesando'),
+        shipped: t('ecommerce.overviewPro.status.shipped', 'Enviado'),
+        delivered: t('ecommerce.overviewPro.status.delivered', 'Entregado'),
+        cancelled: t('ecommerce.overviewPro.status.cancelled', 'Cancelado'),
+        refunded: t('ecommerce.overviewPro.status.refunded', 'Reembolsado'),
+    };
+    const paymentStatusLabels: Record<Order['paymentStatus'], string> = {
+        pending: t('ecommerce.overviewPro.payment.pending', 'Pago pendiente'),
+        paid: t('ecommerce.overviewPro.payment.paid', 'Pagado'),
+        failed: t('ecommerce.overviewPro.payment.failed', 'Fallido'),
+        refunded: t('ecommerce.overviewPro.payment.refunded', 'Reembolsado'),
+        partially_refunded: t('ecommerce.overviewPro.payment.partiallyRefunded', 'Parcial'),
+    };
+    const recentOrders = orders.slice(0, 5);
+    const productsToPromote = topProducts.length > 0
+        ? topProducts.slice(0, 5)
+        : products
+            .filter((product) => product.status === 'active')
+            .slice(0, 5)
+            .map((product) => ({
+                productId: product.id,
+                productName: product.name,
+                totalSold: 0,
+                revenue: product.price,
+            }));
+    const bestLowStockProducts = lowStockProducts.slice(0, 3);
+    const readinessRingStyle = {
+        background: `conic-gradient(var(--q-accent, #fbbf24) ${readinessScore * 3.6}deg, rgba(255,255,255,0.08) 0deg)`,
+    };
+    const NextActionIcon = nextAction.icon;
+    const nextActionTone = toneClassMap[nextAction.tone];
+
     return (
-        <div className="space-y-6">
-            {/* Project Banner */}
-            {projectName && (
-                <div className="quimera-guide-panel-accent p-4 sm:p-6">
-                    <div className="flex items-center gap-3">
-                        <Store className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
-                        <div>
-                            <p className="text-sm text-q-text-muted">
-                                {t('ecommerce.storeFor', 'Tienda de')}
+        <div className="space-y-5">
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)] gap-4">
+                <section className="quimera-dashboard-panel-card p-5 sm:p-6">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0 space-y-3">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                                    <Store size={22} />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-q-text-muted">
+                                        {t('ecommerce.overviewPro.commandCenter', 'Centro de mando')}
+                                    </p>
+                                    <h2 className="truncate text-2xl font-extrabold text-foreground">
+                                        {projectName || settings?.storeName || t('ecommerce.dashboardTitle', 'Ventas Dashboard')}
+                                    </h2>
+                                </div>
+                            </div>
+                            <p className="max-w-3xl text-sm leading-6 text-q-text-muted">
+                                {t('ecommerce.overviewPro.heroCopy', 'Una vista ejecutiva para saber si la tienda está lista, qué requiere atención y dónde conviene actuar ahora.')}
                             </p>
-                            <h2 className="text-xl font-bold text-foreground">{projectName}</h2>
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                {[
+                                    { label: t('ecommerce.overviewPro.activeProducts', 'Activos'), value: activeProducts, icon: Package },
+                                    { label: t('ecommerce.categories', 'Categorías'), value: categories.length, icon: FolderTree },
+                                    { label: t('ecommerce.overviewPro.reviews', 'Reseñas'), value: totalReviews, icon: Star },
+                                    { label: t('ecommerce.overviewPro.weekOrders', '7d pedidos'), value: last7Orders, icon: Activity },
+                                ].map((item) => {
+                                    const Icon = item.icon;
+                                    return (
+                                        <button
+                                            key={item.label}
+                                            type="button"
+                                            onClick={() => {
+                                                if (item.icon === Package) onNavigate('products');
+                                                if (item.icon === FolderTree) onNavigate('categories');
+                                                if (item.icon === Star) onNavigate('reviews');
+                                                if (item.icon === Activity) onNavigate('orders');
+                                            }}
+                                            className="rounded-lg border border-q-border/60 bg-q-surface/60 px-3 py-2 text-left transition-colors hover:bg-muted"
+                                        >
+                                            <Icon className="mb-1 h-4 w-4 text-q-text-muted" />
+                                            <div className="text-lg font-extrabold text-foreground">{formatNumber(item.value)}</div>
+                                            <div className="truncate text-[11px] font-semibold uppercase tracking-wider text-q-text-muted">{item.label}</div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="w-full rounded-xl border border-q-border/70 bg-q-bg/50 p-4 lg:w-[300px]">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-q-text-muted">
+                                        {t('ecommerce.overviewPro.readinessScore', 'Readiness')}
+                                    </p>
+                                    <p className={`mt-1 text-sm font-semibold ${toneClassMap[readinessTone].text}`}>
+                                        {readinessScore >= 85
+                                            ? t('ecommerce.overviewPro.readinessLive', 'Lista para empujar ventas')
+                                            : readinessScore >= 55
+                                                ? t('ecommerce.overviewPro.readinessClose', 'Cerca de producción')
+                                                : t('ecommerce.overviewPro.readinessNeedsWork', 'Necesita base operativa')}
+                                    </p>
+                                </div>
+                                <div className="relative flex h-20 w-20 items-center justify-center rounded-full" style={readinessRingStyle}>
+                                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-q-surface text-lg font-extrabold text-foreground">
+                                        {readinessScore}%
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => onNavigate(nextAction.view)}
+                                className={`mt-4 flex w-full items-center gap-3 rounded-lg border ${nextActionTone.border} ${nextActionTone.bg} p-3 text-left transition-colors hover:bg-muted`}
+                            >
+                                <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${nextActionTone.icon}`}>
+                                    <NextActionIcon size={18} />
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                    <span className="block text-sm font-bold text-foreground">{nextAction.label}</span>
+                                    <span className="line-clamp-2 text-xs text-q-text-muted">{nextAction.description}</span>
+                                </span>
+                                <ArrowRight className="h-4 w-4 flex-shrink-0 text-q-text-muted" />
+                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                </section>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((stat, index) => {
+                <section className="quimera-dashboard-panel-card p-5">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                        <div>
+                            <h3 className="text-lg font-bold text-foreground">
+                                {t('ecommerce.overviewPro.launchReadiness', 'Checklist de lanzamiento')}
+                            </h3>
+                            <p className="text-sm text-q-text-muted">
+                                {completedReadiness}/{readinessItems.length} {t('ecommerce.overviewPro.completed', 'completados')}
+                            </p>
+                        </div>
+                        <ShieldCheck className={`h-6 w-6 ${toneClassMap[readinessTone].text}`} />
+                    </div>
+                    <div className="space-y-2">
+                        {readinessItems.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                                <button
+                                    key={item.label}
+                                    type="button"
+                                    onClick={() => onNavigate(item.view)}
+                                    className="flex w-full items-start gap-3 rounded-lg border border-q-border/50 bg-q-bg/40 p-3 text-left transition-colors hover:bg-muted"
+                                >
+                                    <span className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md ${item.complete ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`}>
+                                        {item.complete ? <Check size={15} /> : <Icon size={15} />}
+                                    </span>
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block text-sm font-semibold text-foreground">{item.label}</span>
+                                        <span className="line-clamp-2 text-xs text-q-text-muted">{item.description}</span>
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </section>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                {statusMetrics.map((stat) => {
                     const Icon = stat.icon;
+                    const tone = toneClassMap[stat.tone];
                     return (
-                        <div
-                            key={index}
+                        <button
+                            key={stat.label}
+                            type="button"
                             onClick={stat.onClick}
-                            className={`group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60
-                                bg-q-surface/80 backdrop-blur-xl p-2.5 md:p-4 hover:border-q-border
+                            className={`group relative min-h-[132px] overflow-hidden rounded-xl border ${tone.border}
+                                bg-q-surface/80 p-4 text-left backdrop-blur-xl hover:border-q-border
                                 transition-all duration-300 ease-out ${stat.onClick ? 'cursor-pointer' : ''}`}
                         >
                             <div
-                                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 sm:w-32 sm:h-32 rounded-full blur-2xl
-                                    group-hover:scale-110 transition-all duration-500"
+                                className={`absolute inset-x-0 top-0 h-1 ${tone.bar}`}
                                 aria-hidden="true"
                             />
-                            <div className="relative z-10">
-                                <div className="mb-1 md:mb-2">
-                                    <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                            <div className="relative z-10 flex h-full flex-col justify-between gap-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <Icon className={`h-5 w-5 ${tone.text}`} strokeWidth={2} />
+                                    {stat.onClick && <ArrowRight className="h-4 w-4 text-q-text-muted opacity-0 transition-opacity group-hover:opacity-100" />}
                                 </div>
-                                <div className="text-xl md:text-3xl font-extrabold text-foreground">{stat.value}</div>
-                                <p className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{stat.label}</p>
+                                <div>
+                                    <div className="text-2xl font-extrabold text-foreground">{stat.value}</div>
+                                    <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-q-text-muted">{stat.label}</p>
+                                    <p className="mt-2 text-xs text-q-text-muted">{stat.detail}</p>
+                                </div>
                             </div>
-                        </div>
+                        </button>
                     );
                 })}
             </div>
 
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {pendingOrders > 0 && (
-                    <div
-                        onClick={() => onNavigate('orders')}
-                        className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-6 cursor-pointer hover:bg-orange-500/20 transition-colors"
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-orange-500/20 rounded-lg">
-                                <ShoppingCart className="text-orange-400" size={24} />
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] gap-4">
+                <section className="quimera-dashboard-panel-card p-5">
+                    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h3 className="text-lg font-bold text-foreground">
+                                {t('ecommerce.overviewPro.salesPulse', 'Pulso de ventas')}
+                            </h3>
+                            <p className="text-sm text-q-text-muted">
+                                {t('ecommerce.overviewPro.salesPulseDesc', 'Ingresos y pedidos pagados de los últimos 7 días.')}
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-right">
+                            <div>
+                                <p className="text-xs uppercase tracking-wider text-q-text-muted">{t('ecommerce.overviewPro.last7Revenue', 'Ingresos 7d')}</p>
+                                <p className="text-base font-bold text-foreground">{formatCurrency(last7Revenue)}</p>
                             </div>
                             <div>
-                                <p className="text-orange-400 font-medium">
-                                    {pendingOrders} {t('ecommerce.ordersPending', 'pedidos pendientes')}
-                                </p>
-                                <p className="text-q-text-muted text-sm">
-                                    {t('ecommerce.clickToManage', 'Haz clic para gestionar')}
-                                </p>
+                                <p className="text-xs uppercase tracking-wider text-q-text-muted">{t('ecommerce.overviewPro.orders7d', 'Pedidos 7d')}</p>
+                                <p className="text-base font-bold text-foreground">{formatNumber(last7Orders)}</p>
                             </div>
                         </div>
                     </div>
-                )}
+                    <div className="grid grid-cols-7 items-end gap-2 rounded-xl border border-q-border/60 bg-q-bg/40 p-4">
+                        {dailySales.map((day) => {
+                            const height = Math.max(8, Math.round((day.revenue / maxDailyRevenue) * 96));
+                            return (
+                                <div key={day.key} className="flex min-h-[140px] flex-col items-center justify-end gap-2">
+                                    <div className="flex h-24 w-full items-end justify-center">
+                                        <div
+                                            className="w-full max-w-[34px] rounded-t-md bg-primary/80 transition-all"
+                                            style={{ height }}
+                                            title={`${day.label}: ${formatCurrency(day.revenue)}`}
+                                        />
+                                    </div>
+                                    <span className="text-[11px] font-semibold text-q-text-muted">{day.label}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                        {[
+                            { label: t('ecommerce.overviewPro.pipelinePending', 'Pendientes'), value: pendingOrders, icon: Clock, view: 'orders' as EcommerceView },
+                            { label: t('ecommerce.overviewPro.pipelineProcessing', 'Procesando'), value: processingOrders, icon: PackageCheck, view: 'orders' as EcommerceView },
+                            { label: t('ecommerce.overviewPro.pipelineFulfillment', 'Por cumplir'), value: fulfillmentQueue, icon: Truck, view: 'orders' as EcommerceView },
+                            { label: t('ecommerce.overviewPro.pipelineIssues', 'Incidencias'), value: failedPayments + cancelledOrders + refundedOrders, icon: AlertCircle, view: 'orders' as EcommerceView },
+                        ].map((item) => {
+                            const Icon = item.icon;
+                            return (
+                                <button
+                                    key={item.label}
+                                    type="button"
+                                    onClick={() => onNavigate(item.view)}
+                                    className="rounded-lg border border-q-border/60 bg-q-surface/60 p-3 text-left transition-colors hover:bg-muted"
+                                >
+                                    <Icon className="mb-2 h-4 w-4 text-q-text-muted" />
+                                    <div className="text-xl font-extrabold text-foreground">{formatNumber(item.value)}</div>
+                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-q-text-muted">{item.label}</div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </section>
 
-                {lowStockCount > 0 && (
-                    <div
-                        onClick={() => onNavigate('stock_alerts')}
-                        className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 cursor-pointer hover:bg-red-500/20 transition-colors"
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-red-500/20 rounded-lg">
-                                <AlertTriangle className="text-red-400" size={24} />
-                            </div>
-                            <div>
-                                <p className="text-red-400 font-medium">
-                                    {lowStockCount} {t('ecommerce.productsLowStock', 'productos con bajo stock')}
-                                </p>
-                                <p className="text-q-text-muted text-sm">
-                                    {t('ecommerce.clickToRestock', 'Haz clic para reabastecer')}
-                                </p>
+                <section className="quimera-dashboard-panel-card p-5">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                        <div>
+                            <h3 className="text-lg font-bold text-foreground">
+                                {t('ecommerce.overviewPro.priorityQueue', 'Prioridades')}
+                            </h3>
+                            <p className="text-sm text-q-text-muted">
+                                {t('ecommerce.overviewPro.priorityQueueDesc', 'Acciones ordenadas por impacto operativo.')}
+                            </p>
+                        </div>
+                        <Inbox className="h-5 w-5 text-q-text-muted" />
+                    </div>
+                    {priorityActions.length > 0 ? (
+                        <div className="space-y-2">
+                            {priorityActions.map((action) => {
+                                const Icon = action.icon;
+                                const tone = toneClassMap[action.tone];
+                                return (
+                                    <button
+                                        key={action.label}
+                                        type="button"
+                                        onClick={() => onNavigate(action.view)}
+                                        className={`flex w-full items-start gap-3 rounded-lg border ${tone.border} ${tone.bg} p-3 text-left transition-colors hover:bg-muted`}
+                                    >
+                                        <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${tone.icon}`}>
+                                            <Icon size={16} />
+                                        </span>
+                                        <span className="min-w-0 flex-1">
+                                            <span className="flex items-center justify-between gap-2">
+                                                <span className="text-sm font-bold text-foreground">{action.label}</span>
+                                                {action.value && <span className={`text-xs font-bold ${tone.text}`}>{action.value}</span>}
+                                            </span>
+                                            <span className="line-clamp-2 text-xs text-q-text-muted">{action.description}</span>
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                            <CheckCircle2 className="mb-3 h-6 w-6 text-emerald-300" />
+                            <p className="font-bold text-foreground">{t('ecommerce.overviewPro.noPriorityTitle', 'Operación estable')}</p>
+                            <p className="text-sm text-q-text-muted">{t('ecommerce.overviewPro.noPriorityDesc', 'No hay alertas críticas. Mira analíticas para optimizar crecimiento.')}</p>
+                        </div>
+                    )}
+                    {bestLowStockProducts.length > 0 && (
+                        <div className="mt-4 rounded-xl border border-q-border/60 bg-q-bg/40 p-4">
+                            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-q-text-muted">
+                                {t('ecommerce.overviewPro.inventoryWatch', 'Inventario en observación')}
+                            </p>
+                            <div className="space-y-2">
+                                {bestLowStockProducts.map((product) => (
+                                    <div key={product.id} className="flex items-center justify-between gap-3 text-sm">
+                                        <span className="truncate text-q-text">{product.name}</span>
+                                        <span className="font-bold text-amber-300">{formatNumber(product.quantity)}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
+                    )}
+                </section>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <section className="quimera-dashboard-panel-card p-5">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                        <div>
+                            <h3 className="text-lg font-bold text-foreground">{t('ecommerce.overviewPro.recentOrders', 'Pedidos recientes')}</h3>
+                            <p className="text-sm text-q-text-muted">{t('ecommerce.overviewPro.recentOrdersDesc', 'Lo último que requiere seguimiento comercial.')}</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => onNavigate('orders')}
+                            className="rounded-lg border border-q-border/60 px-3 py-2 text-xs font-bold text-q-text-muted transition-colors hover:bg-muted hover:text-foreground"
+                        >
+                            {t('ecommerce.overviewPro.viewOrders', 'Ver pedidos')}
+                        </button>
                     </div>
-                )}
+                    {recentOrders.length > 0 ? (
+                        <div className="overflow-hidden rounded-xl border border-q-border/60">
+                            {recentOrders.map((order) => (
+                                <button
+                                    key={order.id}
+                                    type="button"
+                                    onClick={() => onNavigate('orders')}
+                                    className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-3 border-b border-q-border/50 bg-q-bg/30 p-3 text-left last:border-b-0 hover:bg-muted"
+                                >
+                                    <span className="min-w-0">
+                                        <span className="flex flex-wrap items-center gap-2">
+                                            <span className="font-bold text-foreground">{order.orderNumber}</span>
+                                            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-q-text-muted">
+                                                {orderStatusLabels[order.status]}
+                                            </span>
+                                        </span>
+                                        <span className="mt-1 block truncate text-xs text-q-text-muted">
+                                            {order.customerName || order.customerEmail} · {formatDate(order)}
+                                        </span>
+                                    </span>
+                                    <span className="text-right">
+                                        <span className="block font-bold text-foreground">{formatCurrency(order.total)}</span>
+                                        <span className="text-[11px] font-semibold text-q-text-muted">{paymentStatusLabels[order.paymentStatus]}</span>
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="rounded-xl border border-q-border/60 bg-q-bg/40 p-6 text-center">
+                            <ShoppingBag className="mx-auto mb-3 h-8 w-8 text-q-text-muted" />
+                            <p className="font-bold text-foreground">{t('ecommerce.overviewPro.noOrdersTitle', 'Aún no hay pedidos')}</p>
+                            <p className="mt-1 text-sm text-q-text-muted">{t('ecommerce.overviewPro.noOrdersDesc', 'Cuando entren pedidos, este panel mostrará el seguimiento inmediato.')}</p>
+                        </div>
+                    )}
+                </section>
+
+                <section className="quimera-dashboard-panel-card p-5">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                        <div>
+                            <h3 className="text-lg font-bold text-foreground">{t('ecommerce.overviewPro.productFocus', 'Productos foco')}</h3>
+                            <p className="text-sm text-q-text-muted">
+                                {topProducts.length > 0
+                                    ? t('ecommerce.overviewPro.productFocusSalesDesc', 'Productos que ya están moviendo ventas.')
+                                    : t('ecommerce.overviewPro.productFocusLaunchDesc', 'Productos activos listos para promover.')}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => onNavigate('products')}
+                            className="rounded-lg border border-q-border/60 px-3 py-2 text-xs font-bold text-q-text-muted transition-colors hover:bg-muted hover:text-foreground"
+                        >
+                            {t('ecommerce.overviewPro.viewProducts', 'Ver productos')}
+                        </button>
+                    </div>
+                    {productsToPromote.length > 0 ? (
+                        <div className="space-y-2">
+                            {productsToPromote.map((product, index) => (
+                                <button
+                                    key={product.productId}
+                                    type="button"
+                                    onClick={() => onNavigate('products')}
+                                    className="flex w-full items-center gap-3 rounded-lg border border-q-border/60 bg-q-bg/40 p-3 text-left transition-colors hover:bg-muted"
+                                >
+                                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/15 text-sm font-extrabold text-primary">
+                                        {index + 1}
+                                    </span>
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block truncate text-sm font-bold text-foreground">{product.productName}</span>
+                                        <span className="text-xs text-q-text-muted">
+                                            {topProducts.length > 0
+                                                ? t('ecommerce.overviewPro.unitsSold', '{{count}} vendidos', { count: product.totalSold })
+                                                : t('ecommerce.overviewPro.readyToPromote', 'Listo para promover')}
+                                        </span>
+                                    </span>
+                                    <span className="text-sm font-bold text-foreground">
+                                        {formatCurrency(product.revenue)}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="rounded-xl border border-q-border/60 bg-q-bg/40 p-6 text-center">
+                            <Package className="mx-auto mb-3 h-8 w-8 text-q-text-muted" />
+                            <p className="font-bold text-foreground">{t('ecommerce.overviewPro.noProductsTitle', 'No hay productos activos')}</p>
+                            <p className="mt-1 text-sm text-q-text-muted">{t('ecommerce.overviewPro.noProductsDesc', 'Agrega productos activos para que la tienda tenga algo que vender.')}</p>
+                        </div>
+                    )}
+                </section>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {[
+                    {
+                        label: t('ecommerce.overviewPro.catalogQuality', 'Calidad del catálogo'),
+                        value: totalProducts > 0 ? `${clampPercent(((totalProducts - productsWithoutImages - uncategorizedProducts) / totalProducts) * 100)}%` : '0%',
+                        description: t('ecommerce.overviewPro.catalogQualityDesc', '{{images}} sin imagen · {{uncategorized}} sin categoría · {{drafts}} borradores', {
+                            images: productsWithoutImages,
+                            uncategorized: uncategorizedProducts,
+                            drafts: draftProducts,
+                        }),
+                        icon: PackageCheck,
+                        view: 'products' as EcommerceView,
+                    },
+                    {
+                        label: t('ecommerce.overviewPro.trustSignal', 'Señal de confianza'),
+                        value: totalReviews > 0 ? `${averageRating.toFixed(1)} ★` : '0 ★',
+                        description: t('ecommerce.overviewPro.trustSignalDesc', '{{approved}} aprobadas · {{pending}} pendientes', {
+                            approved: approvedReviews,
+                            pending: pendingReviews,
+                        }),
+                        icon: Star,
+                        view: 'reviews' as EcommerceView,
+                    },
+                    {
+                        label: t('ecommerce.overviewPro.revenueQuality', 'Calidad de ingresos'),
+                        value: `${Math.round(conversionRate)}%`,
+                        description: t('ecommerce.overviewPro.revenueQualityDesc', '{{failed}} pagos fallidos · {{cancelled}} cancelados', {
+                            failed: failedPayments,
+                            cancelled: cancelledOrders,
+                        }),
+                        icon: Percent,
+                        view: 'analytics' as EcommerceView,
+                    },
+                ].map((item) => {
+                    const Icon = item.icon;
+                    return (
+                        <button
+                            key={item.label}
+                            type="button"
+                            onClick={() => onNavigate(item.view)}
+                            className="quimera-dashboard-panel-card p-4 text-left transition-colors hover:bg-muted/40"
+                        >
+                            <div className="mb-4 flex items-center justify-between">
+                                <Icon className="h-5 w-5 text-q-text-muted" />
+                                <ArrowRight className="h-4 w-4 text-q-text-muted" />
+                            </div>
+                            <div className="text-2xl font-extrabold text-foreground">{item.value}</div>
+                            <p className="mt-1 text-xs font-bold uppercase tracking-wider text-q-text-muted">{item.label}</p>
+                            <p className="mt-2 text-sm text-q-text-muted">{item.description}</p>
+                        </button>
+                    );
+                })}
             </div>
 
             {/* Demo Data Seeder Modal */}
@@ -754,10 +1487,20 @@ const OverviewView: React.FC<OverviewProps> = ({
 
             {/* Quick Start Guide */}
             {totalProducts === 0 && totalOrders === 0 && totalCustomers === 0 && (
-                <div className="quimera-dashboard-panel-card group p-6 sm:p-8">
-                    <h3 className="text-xl font-bold text-foreground mb-4">
-                        {t('ecommerce.getStarted', '¡Comienza con tu tienda!')}
-                    </h3>
+                <div className="quimera-dashboard-panel-card p-6 sm:p-8">
+                    <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-[0.18em] text-q-text-muted">
+                                {t('ecommerce.overviewPro.launchMode', 'Modo lanzamiento')}
+                            </p>
+                            <h3 className="mt-1 text-xl font-bold text-foreground">
+                                {t('ecommerce.getStarted', '¡Comienza con tu tienda!')}
+                            </h3>
+                        </div>
+                        <p className="max-w-xl text-sm text-q-text-muted">
+                            {t('ecommerce.overviewPro.launchModeDesc', 'Puedes cargar datos demo para validar el look and feel, o construir tu tienda real paso por paso.')}
+                        </p>
+                    </div>
 
                     {/* Demo Data Button - Destacado */}
                     <div className="quimera-guide-panel-accent mb-6 p-4">
