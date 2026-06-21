@@ -1,6 +1,6 @@
 /**
  * VoiceSettings - Voice Configuration Component
- * 
+ *
  * Configures the AI assistant's voice:
  * - Toggle live voice (allows users to speak with the assistant)
  * - Select from Gemini prebuilt voices
@@ -46,14 +46,14 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
                             onChange={() => updateForm('enableLiveVoice', !formData.enableLiveVoice)}
                             className="sr-only peer"
                         />
-                        <div className="w-14 h-7 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
+                        <div className="w-14 h-7 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                 </div>
 
                 {/* Model Badge */}
                 {formData.enableLiveVoice && (
                     <div className="mt-4 flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-q-accent/10 to-q-accent/10 text-q-accent dark:text-q-accent border border-q-accent/20">
                             <Zap size={12} />
                             Powered by Quimera AI Voice
                         </span>
@@ -76,8 +76,8 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
                         {/* Affective Dialog */}
                         <div className="flex items-center justify-between p-4 rounded-lg bg-q-bg border border-q-border">
                             <div className="flex items-start gap-3">
-                                <div className="w-9 h-9 rounded-lg bg-pink-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <Heart size={18} className="text-pink-500" />
+                                <div className="w-9 h-9 rounded-lg bg-q-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <Heart size={18} className="text-q-accent" />
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-foreground text-sm">Diálogo Empático</h4>
@@ -93,15 +93,15 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
                                     onChange={() => updateForm('enableAffectiveDialog', !(formData.enableAffectiveDialog !== false))}
                                     className="sr-only peer"
                                 />
-                                <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                         </div>
 
                         {/* Unlimited Sessions */}
                         <div className="flex items-center justify-between p-4 rounded-lg bg-q-bg border border-q-border">
                             <div className="flex items-start gap-3">
-                                <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <Infinity size={18} className="text-emerald-500" />
+                                <div className="w-9 h-9 rounded-lg bg-q-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <Infinity size={18} className="text-q-success" />
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-foreground text-sm">Sesiones Ilimitadas</h4>
@@ -117,15 +117,15 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
                                     onChange={() => updateForm('enableUnlimitedSessions', !(formData.enableUnlimitedSessions !== false))}
                                     className="sr-only peer"
                                 />
-                                <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                         </div>
 
                         {/* Auto-Reconnect */}
                         <div className="flex items-center justify-between p-4 rounded-lg bg-q-bg border border-q-border">
                             <div className="flex items-start gap-3">
-                                <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <RefreshCw size={18} className="text-amber-500" />
+                                <div className="w-9 h-9 rounded-lg bg-q-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <RefreshCw size={18} className="text-q-accent" />
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-foreground text-sm">Reconexión Automática</h4>
@@ -141,7 +141,7 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
                                     onChange={() => updateForm('enableAutoReconnect', !(formData.enableAutoReconnect !== false))}
                                     className="sr-only peer"
                                 />
-                                <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                         </div>
                     </div>

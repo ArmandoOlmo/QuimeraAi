@@ -29,12 +29,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         {/* KPI Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {[
-                { label: t('adminEmail.overview.emailsSent'), value: stats.totalSent.toLocaleString(), icon: <Send size={20} />, color: 'text-blue-400 bg-blue-500/10' },
-                { label: t('adminEmail.overview.openRate'), value: `${stats.openRate}%`, icon: <Eye size={20} />, color: 'text-purple-400 bg-purple-500/10' },
-                { label: t('adminEmail.overview.clickRate'), value: `${stats.clickRate}%`, icon: <MousePointer size={20} />, color: 'text-amber-400 bg-amber-500/10' },
-                { label: t('adminEmail.overview.activeCampaigns'), value: stats.activeCampaigns.toString(), icon: <Target size={20} />, color: 'text-green-400 bg-green-500/10' },
-                { label: t('adminEmail.overview.totalContacts'), value: stats.totalContacts.toLocaleString(), icon: <Users size={20} />, color: 'text-pink-400 bg-pink-500/10' },
-                { label: t('adminEmail.overview.deliveryRate'), value: `${stats.deliveryRate}%`, icon: <CheckCircle size={20} />, color: 'text-emerald-400 bg-emerald-500/10' },
+                { label: t('adminEmail.overview.emailsSent'), value: stats.totalSent.toLocaleString(), icon: <Send size={20} />, color: 'text-q-accent bg-q-accent/10' },
+                { label: t('adminEmail.overview.openRate'), value: `${stats.openRate}%`, icon: <Eye size={20} />, color: 'text-q-accent bg-q-accent/10' },
+                { label: t('adminEmail.overview.clickRate'), value: `${stats.clickRate}%`, icon: <MousePointer size={20} />, color: 'text-q-accent bg-q-accent/10' },
+                { label: t('adminEmail.overview.activeCampaigns'), value: stats.activeCampaigns.toString(), icon: <Target size={20} />, color: 'text-q-success bg-q-success/10' },
+                { label: t('adminEmail.overview.totalContacts'), value: stats.totalContacts.toLocaleString(), icon: <Users size={20} />, color: 'text-q-accent bg-q-accent/10' },
+                { label: t('adminEmail.overview.deliveryRate'), value: `${stats.deliveryRate}%`, icon: <CheckCircle size={20} />, color: 'text-q-success bg-q-success/10' },
             ].map((kpi, i) => (
                 <div key={i} className="bg-q-surface border border-q-border rounded-xl p-4 hover:border-q-accent/30 transition-all">
                     <div className={`p-2 rounded-lg ${kpi.color} w-fit mb-3`}>{kpi.icon}</div>
@@ -103,7 +103,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                         onClick={() => setActiveTab('automations')}
                         className="w-full flex items-center gap-3 p-3 bg-q-bg/50 border border-q-border rounded-lg text-q-text hover:border-q-accent/30 transition-colors text-left"
                     >
-                        <Zap size={20} className="text-amber-400" />
+                        <Zap size={20} className="text-q-accent" />
                         <div>
                             <p className="text-sm font-medium">{t('adminEmail.overview.automations')}</p>
                             <p className="text-xs text-q-text-secondary">{t('adminEmail.overview.configureFlows')}</p>
@@ -113,7 +113,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                         onClick={() => setActiveTab('analytics')}
                         className="w-full flex items-center gap-3 p-3 bg-q-bg/50 border border-q-border rounded-lg text-q-text hover:border-q-accent/30 transition-colors text-left"
                     >
-                        <BarChart3 size={20} className="text-purple-400" />
+                        <BarChart3 size={20} className="text-q-accent" />
                         <div>
                             <p className="text-sm font-medium">{t('adminEmail.overview.viewAnalytics')}</p>
                             <p className="text-xs text-q-text-secondary">{t('adminEmail.overview.crossTenantMetrics')}</p>

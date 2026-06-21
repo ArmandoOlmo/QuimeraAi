@@ -26,6 +26,7 @@ import {
 import { supabase } from '../../../supabase';
 import { getAgencyPoolBreakdown } from '../../../services/aiCreditsService';
 import PurchaseCreditsModal from '../../ui/PurchaseCreditsModal';
+import { MotionCard } from '../../ui/primitives/Card';
 
 type DateRange = '7d' | '30d' | '90d' | '12m';
 
@@ -188,7 +189,7 @@ export function AgencyAnalytics() {
                     body: { action: 'getAgencyBillingSummary', tenantId: currentTenant.id }
                 });
                 if (getBillingResult.error) throw getBillingResult.error;
-                
+
                 const billingData = getBillingResult.data?.data || getBillingResult.data;
                 setBillingSummary(billingData as BillingSummary);
 
@@ -247,7 +248,7 @@ export function AgencyAnalytics() {
             >
                 <div>
                     <h2 className="text-2xl font-bold text-q-text flex items-center gap-2">
-                        <BarChart3 className="w-7 h-7 text-purple-400" />
+                        <BarChart3 className="w-7 h-7 text-q-accent" />
                         {t('dashboard.agency.analyticsPage.title')}
                     </h2>
                     <p className="text-q-text-secondary mt-1">
@@ -263,7 +264,7 @@ export function AgencyAnalytics() {
                                 key={range}
                                 onClick={() => setDateRange(range)}
                                 className={`px-3 h-full flex items-center justify-center text-sm rounded-md transition-colors ${dateRange === range
-                                    ? 'bg-q-accent text-white shadow-sm'
+                                    ? 'bg-q-accent text-q-text-on-accent shadow-sm'
                                     : 'text-q-text-secondary hover:text-q-text'
                                     }`}
                             >
@@ -284,7 +285,7 @@ export function AgencyAnalytics() {
 
                     <button
                         onClick={handleExport}
-                        className="h-10 px-4 flex items-center justify-center gap-2 rounded-lg bg-q-accent text-white hover:opacity-90 transition-colors"
+                        className="h-10 px-4 flex items-center justify-center gap-2 rounded-lg bg-q-accent text-q-text-on-accent hover:opacity-90 transition-colors"
                     >
                         <Download className="w-4 h-4" />
                         {t('dashboard.agency.analyticsPage.export')}
@@ -293,45 +294,40 @@ export function AgencyAnalytics() {
             </motion.div>
 
             {/* Quick Stats */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
-            >
-                <div className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
-                    <p className="text-xl sm:text-2xl font-bold text-emerald-400 leading-none tracking-tight mb-1">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                <MotionCard staggerIndex={0} hoverMotion className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
+                    <p className="text-xl sm:text-2xl font-bold text-q-success leading-none tracking-tight mb-1">
                         ${aggregatedMetrics.mrr.toLocaleString()}
                     </p>
                     <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
                         {t('dashboard.agency.analyticsPage.mrrTotal')}
                     </p>
-                </div>
-                <div className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
-                    <p className="text-xl sm:text-2xl font-bold text-blue-400 leading-none tracking-tight mb-1">
+                </MotionCard>
+                <MotionCard staggerIndex={1} hoverMotion className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
+                    <p className="text-xl sm:text-2xl font-bold text-q-accent leading-none tracking-tight mb-1">
                         {aggregatedMetrics.activeSubClients}
                     </p>
                     <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
                         {t('dashboard.agency.analyticsPage.activeClients')}
                     </p>
-                </div>
-                <div className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
-                    <p className="text-xl sm:text-2xl font-bold text-purple-400 leading-none tracking-tight mb-1">
+                </MotionCard>
+                <MotionCard staggerIndex={2} hoverMotion className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
+                    <p className="text-xl sm:text-2xl font-bold text-q-accent leading-none tracking-tight mb-1">
                         {aggregatedMetrics.totalProjects}
                     </p>
                     <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
                         {t('dashboard.agency.analyticsPage.projects')}
                     </p>
-                </div>
-                <div className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
-                    <p className="text-xl sm:text-2xl font-bold text-orange-400 leading-none tracking-tight mb-1">
+                </MotionCard>
+                <MotionCard staggerIndex={3} hoverMotion className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
+                    <p className="text-xl sm:text-2xl font-bold text-q-warning leading-none tracking-tight mb-1">
                         {aggregatedMetrics.aiCreditsUsed.toLocaleString()}
                     </p>
                     <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
                         {t('dashboard.agency.analyticsPage.aiCreditsUsed')}
                     </p>
-                </div>
-            </motion.div>
+                </MotionCard>
+            </div>
 
             {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -366,7 +362,7 @@ export function AgencyAnalytics() {
                     <div className="mt-3 flex justify-center">
                         <button
                             onClick={() => setShowPurchaseModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-sm font-bold hover:shadow-lg hover:shadow-yellow-500/20 transition-all"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-q-accent to-q-warning text-q-text-on-accent text-sm font-bold hover:shadow-lg hover:shadow-q-accent/20 transition-all"
                         >
                             <ShoppingCart className="w-4 h-4" />
                             {t('dashboard.agency.analyticsPage.buyCredits', 'Comprar Créditos para Pool')}

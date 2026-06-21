@@ -31,6 +31,7 @@ const generateInvoiceNumber = async (projectId: string): Promise<string> => {
 // ---------------------------------------------------------------------------
 export function useInvoices() {
     const { activeProjectId } = useProject();
+    const realtimeInstanceId = useMemo(() => Math.random().toString(36).slice(2), []);
 
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +66,9 @@ export function useInvoices() {
                 issueDate: d.issue_date,
                 dueDate: d.due_date,
                 paidDate: d.paid_date,
+                clientName: d.customer_name,
+                clientEmail: d.customer_email || '',
+                clientAddress: d.customer_address,
                 customerName: d.customer_name,
                 customerEmail: d.customer_email,
                 customerAddress: d.customer_address,
@@ -73,7 +77,13 @@ export function useInvoices() {
                 taxTotal: d.tax_total,
                 discountTotal: d.discount_total,
                 total: d.total,
+                currency: d.currency || 'USD',
+                paymentTerms: d.payment_terms || 'Net 30',
+                reminderNote: d.reminder_note,
                 notes: d.notes,
+                aiOptimized: d.ai_optimized || false,
+                aiOptimizedTerms: d.ai_optimized_terms,
+                aiOptimizedReminder: d.ai_optimized_reminder,
                 createdAt: d.created_at,
                 updatedAt: d.updated_at
             })));
@@ -90,7 +100,7 @@ export function useInvoices() {
 
         if (!activeProjectId) return;
 
-        const channel = supabase.channel(`public:accounting_invoices:project_id=eq.${activeProjectId}`)
+        const channel = supabase.channel(`public:accounting_invoices:project_id=eq.${activeProjectId}:instance=${realtimeInstanceId}`)
             .on(
                 'postgres_changes',
                 {
@@ -108,7 +118,7 @@ export function useInvoices() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [activeProjectId, fetchInvoices]);
+    }, [activeProjectId, fetchInvoices, realtimeInstanceId]);
 
     // ---------------------------------------------------------------------------
     // CRUD operations
@@ -128,9 +138,9 @@ export function useInvoices() {
                     issue_date: data.issueDate,
                     due_date: data.dueDate,
                     paid_date: data.paidDate,
-                    customer_name: data.customerName,
-                    customer_email: data.customerEmail,
-                    customer_address: data.customerAddress,
+                    customer_name: data.clientName,
+                    customer_email: data.clientEmail,
+                    customer_address: data.clientAddress,
                     items: data.items,
                     subtotal: data.subtotal,
                     tax_total: data.taxTotal,
@@ -156,9 +166,9 @@ export function useInvoices() {
             if (data.issueDate !== undefined) updatePayload.issue_date = data.issueDate;
             if (data.dueDate !== undefined) updatePayload.due_date = data.dueDate;
             if (data.paidDate !== undefined) updatePayload.paid_date = data.paidDate;
-            if (data.customerName !== undefined) updatePayload.customer_name = data.customerName;
-            if (data.customerEmail !== undefined) updatePayload.customer_email = data.customerEmail;
-            if (data.customerAddress !== undefined) updatePayload.customer_address = data.customerAddress;
+            if (data.clientName !== undefined) updatePayload.customer_name = data.clientName;
+            if (data.clientEmail !== undefined) updatePayload.customer_email = data.clientEmail;
+            if (data.clientAddress !== undefined) updatePayload.customer_address = data.clientAddress;
             if (data.items !== undefined) updatePayload.items = data.items;
             if (data.subtotal !== undefined) updatePayload.subtotal = data.subtotal;
             if (data.taxTotal !== undefined) updatePayload.tax_total = data.taxTotal;

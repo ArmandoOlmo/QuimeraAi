@@ -286,7 +286,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 sourceFiles = sourceFiles.filter(f => (f as any).category === adminCategory);
             }
         }
-        
+
         let result = sourceFiles.filter(f => f.type?.startsWith('image/'));
         if (effectiveDestination === 'user' && libraryProjectId) {
             result = result.filter(f => f.projectId === libraryProjectId);
@@ -834,14 +834,14 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                                             download={`quimera-${Date.now()}.png`}
                                                             target="_blank"
                                                             rel="noreferrer"
-                                                            className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors backdrop-blur-sm"
+                                                            className="p-2 bg-q-surface/10 hover:bg-q-surface/20 rounded-lg text-white transition-colors backdrop-blur-sm"
                                                             title={t('imageGeneration.download')}
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
                                                             <Download size={20} />
                                                         </a>
                                                         <button
-                                                            className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors backdrop-blur-sm"
+                                                            className="p-2 bg-q-surface/10 hover:bg-q-surface/20 rounded-lg text-white transition-colors backdrop-blur-sm"
                                                             title={t('imageGeneration.expand')}
                                                         >
                                                             <Eye size={20} />
@@ -978,7 +978,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                                     )}
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
-                                                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                                        className="absolute inset-0 bg-q-text/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                                                     >
                                                         <X size={14} className="text-white" />
                                                     </button>
@@ -1197,12 +1197,12 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
 
             {showImageDetail && generatedImage && createPortal(
                 <div
-                    className="fixed inset-0 z-[100000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+                    className="fixed inset-0 z-[100000] bg-q-text/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setShowImageDetail(false)}
                 >
                     <div className="bg-q-bg border border-q-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col lg:flex-row relative" onClick={e => e.stopPropagation()}>
-                        <button onClick={() => setShowImageDetail(false)} className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-black/70"><X size={20} /></button>
-                        <div className="flex-1 bg-black/50 flex items-center justify-center p-6 min-h-[400px]">
+                        <button onClick={() => setShowImageDetail(false)} className="absolute top-4 right-4 z-50 p-2 bg-q-text/50 text-white rounded-full hover:bg-q-text/70"><X size={20} /></button>
+                        <div className="flex-1 bg-q-text/50 flex items-center justify-center p-6 min-h-[400px]">
                             <img src={generatedImage} className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-xl" />
                         </div>
                         <div className="w-full lg:w-[380px] p-6 overflow-y-auto bg-q-surface">
@@ -1210,24 +1210,24 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                             <div className="space-y-6">
                                 <div>
                                     <h4 className="text-xs text-q-text-secondary uppercase font-bold tracking-wide mb-2">Prompt</h4>
-                                    <p className="text-sm bg-black/20 p-3 rounded-lg border border-q-border/50">{generatedPrompt || prompt}</p>
+                                    <p className="text-sm bg-q-text/20 p-3 rounded-lg border border-q-border/50">{generatedPrompt || prompt}</p>
                                 </div>
                                 <div>
                                     <h4 className="text-xs text-q-text-secondary uppercase font-bold tracking-wide mb-2">Settings</h4>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-black/20 p-3 rounded-lg border border-q-border/50">
+                                        <div className="bg-q-text/20 p-3 rounded-lg border border-q-border/50">
                                             <span className="text-[10px] text-q-text-secondary uppercase block">Model</span>
                                             <span className="text-sm font-medium">{generatedOptions?.model ? (IMAGE_MODELS.find(m => m.value === generatedOptions.model)?.label || generatedOptions.model) : IMAGE_MODELS[0].label}</span>
                                         </div>
-                                        <div className="bg-black/20 p-3 rounded-lg border border-q-border/50">
+                                        <div className="bg-q-text/20 p-3 rounded-lg border border-q-border/50">
                                             <span className="text-[10px] text-q-text-secondary uppercase block">Ratio</span>
                                             <span className="text-sm font-medium">{generatedOptions?.aspectRatio || aspectRatio}</span>
                                         </div>
-                                        <div className="bg-black/20 p-3 rounded-lg border border-q-border/50">
+                                        <div className="bg-q-text/20 p-3 rounded-lg border border-q-border/50">
                                             <span className="text-[10px] text-q-text-secondary uppercase block">Resolution</span>
                                             <span className="text-sm font-medium">{generatedOptions?.resolution || resolution}</span>
                                         </div>
-                                        <div className="bg-black/20 p-3 rounded-lg border border-q-border/50">
+                                        <div className="bg-q-text/20 p-3 rounded-lg border border-q-border/50">
                                             <span className="text-[10px] text-q-text-secondary uppercase block">Style</span>
                                             <span className="text-sm font-medium">{generatedOptions?.style || style}</span>
                                         </div>
@@ -1253,7 +1253,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
             {/* Library Browser Modal */}
             {showLibraryBrowser && createPortal(
                 <div
-                    className="fixed inset-0 z-[100020] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+                    className="fixed inset-0 z-[100020] bg-q-text/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setShowLibraryBrowser(false)}
                 >
                     <div
@@ -1323,11 +1323,11 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                                     className="w-full h-full object-cover transition-transform group-hover:scale-110"
                                                 />
                                                 {isLoading ? (
-                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                    <div className="absolute inset-0 bg-q-text/60 flex items-center justify-center">
                                                         <Loader2 size={20} className="animate-spin text-q-accent" />
                                                     </div>
                                                 ) : (
-                                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5">
+                                                    <div className="absolute inset-0 bg-q-text/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5">
                                                         <Plus size={18} className="text-white" />
                                                         <span className="text-white text-[10px] font-bold">{t('editor.addAsReference', { defaultValue: 'Add as Reference' })}</span>
                                                     </div>

@@ -167,7 +167,7 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="p-6 border-b border-q-border flex items-center justify-between flex-shrink-0">

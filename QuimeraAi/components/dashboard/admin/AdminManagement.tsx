@@ -56,10 +56,10 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
 
     const getRoleIcon = (role: string) => {
         switch (role) {
-            case 'owner': return <Crown size={20} className="text-yellow-500" />;
-            case 'superadmin': return <Shield size={20} className="text-purple-400" />;
-            case 'admin': return <UserCog size={20} className="text-blue-400" />;
-            case 'manager': return <Eye size={20} className="text-green-400" />;
+            case 'owner': return <Crown size={20} className="text-q-accent" />;
+            case 'superadmin': return <Shield size={20} className="text-q-accent" />;
+            case 'admin': return <UserCog size={20} className="text-q-accent" />;
+            case 'manager': return <Eye size={20} className="text-q-success" />;
             default: return <Users size={20} />;
         }
     };
@@ -135,16 +135,16 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
 
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto">
                     {/* Alerta de jerarquía */}
-                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-6">
+                    <div className="bg-q-accent/10 border border-q-accent/30 rounded-lg p-4 mb-6">
                         <div className="flex items-start gap-3">
-                            <AlertCircle className="text-blue-400 flex-shrink-0 mt-0.5" size={20} />
+                            <AlertCircle className="text-q-accent flex-shrink-0 mt-0.5" size={20} />
                             <div className="flex-1">
-                                <h3 className="font-semibold text-blue-400 mb-2">{t('superadmin.admins.hierarchy.title', 'Sistema de Jerarquía')}</h3>
+                                <h3 className="font-semibold text-q-accent mb-2">{t('superadmin.admins.hierarchy.title', 'Sistema de Jerarquía')}</h3>
                                 <div className="text-sm text-q-text-secondary space-y-1">
-                                    <p><strong className="text-yellow-400">{t('superadmin.admins.hierarchy.owner', 'Owner')}:</strong> {isUserOwner ? t('superadmin.admins.hierarchy.ownerYou', 'Tú') : t('superadmin.admins.hierarchy.ownerLabel', 'Propietario de la plataforma')} {t('superadmin.admins.hierarchy.ownerDesc', ' - Único que puede crear Super Admins')}</p>
-                                    <p><strong className="text-purple-400">{t('superadmin.admins.hierarchy.superadmin', 'Super Admin')}</strong>{t('superadmin.admins.hierarchy.superadminDesc', ': Acceso total excepto crear otros Super Admins')}</p>
-                                    <p><strong className="text-blue-400">{t('superadmin.admins.hierarchy.admin', 'Admin')}</strong>{t('superadmin.admins.hierarchy.adminDesc', ': Gestión de usuarios y tenants, sin acceso a configuraciones críticas')}</p>
-                                    <p><strong className="text-green-400">{t('superadmin.admins.hierarchy.manager', 'Manager')}</strong>{t('superadmin.admins.hierarchy.managerDesc', ': Solo visualización y gestión básica de contenido')}</p>
+                                    <p><strong className="text-q-accent">{t('superadmin.admins.hierarchy.owner', 'Owner')}:</strong> {isUserOwner ? t('superadmin.admins.hierarchy.ownerYou', 'Tú') : t('superadmin.admins.hierarchy.ownerLabel', 'Propietario de la plataforma')} {t('superadmin.admins.hierarchy.ownerDesc', ' - Único que puede crear Super Admins')}</p>
+                                    <p><strong className="text-q-accent">{t('superadmin.admins.hierarchy.superadmin', 'Super Admin')}</strong>{t('superadmin.admins.hierarchy.superadminDesc', ': Acceso total excepto crear otros Super Admins')}</p>
+                                    <p><strong className="text-q-accent">{t('superadmin.admins.hierarchy.admin', 'Admin')}</strong>{t('superadmin.admins.hierarchy.adminDesc', ': Gestión de usuarios y tenants, sin acceso a configuraciones críticas')}</p>
+                                    <p><strong className="text-q-success">{t('superadmin.admins.hierarchy.manager', 'Manager')}</strong>{t('superadmin.admins.hierarchy.managerDesc', ': Solo visualización y gestión básica de contenido')}</p>
                                 </div>
                             </div>
                         </div>
@@ -162,7 +162,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                         <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-q-text-secondary">Super Admins</span>
-                                <Shield size={20} className="text-purple-400" />
+                                <Shield size={20} className="text-q-accent" />
                             </div>
                             <p className="text-2xl font-bold text-q-text mt-2">
                                 {admins.filter(a => a.role === 'superadmin').length}
@@ -171,7 +171,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                         <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-q-text-secondary">Admins</span>
-                                <UserCog size={20} className="text-blue-400" />
+                                <UserCog size={20} className="text-q-accent" />
                             </div>
                             <p className="text-2xl font-bold text-q-text mt-2">
                                 {admins.filter(a => a.role === 'admin').length}
@@ -180,7 +180,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                         <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-q-text-secondary">Managers</span>
-                                <Eye size={20} className="text-green-400" />
+                                <Eye size={20} className="text-q-success" />
                             </div>
                             <p className="text-2xl font-bold text-q-text mt-2">
                                 {admins.filter(a => a.role === 'manager').length}
@@ -233,7 +233,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2">
                                                         <h3 className="font-semibold text-q-text">{admin.name}</h3>
-                                                        {isAdminOwner && <Crown size={16} className="text-yellow-500" />}
+                                                        {isAdminOwner && <Crown size={16} className="text-q-accent" />}
                                                     </div>
                                                     <p className="text-sm text-q-text-secondary">{admin.email}</p>
                                                     <p className="text-xs text-q-text-secondary mt-1">
@@ -265,7 +265,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                                 {userPermissions.canDeleteUsers && !isAdminOwner && (
                                                     <button
                                                         onClick={() => handleDelete(admin.id)}
-                                                        className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                        className="p-2 text-q-error hover:bg-q-error/10 rounded-lg transition-colors"
                                                         title="Eliminar"
                                                     >
                                                         <Trash2 size={18} />
@@ -298,13 +298,13 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
             {/* Modal crear admin */}
             {
                 showCreateModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50 p-4">
                         <div className="bg-q-surface border border-q-border rounded-lg p-6 max-w-md w-full">
                             <h2 className="text-xl font-bold text-q-text mb-4">{t('superadmin.admins.createModal.title', 'Crear Nuevo Administrador')}</h2>
 
                             {errorMessage && (
-                                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
-                                    <p className="text-sm text-red-400">{errorMessage}</p>
+                                <div className="bg-q-error/10 border border-q-error/30 rounded-lg p-3 mb-4">
+                                    <p className="text-sm text-q-error">{errorMessage}</p>
                                 </div>
                             )}
 

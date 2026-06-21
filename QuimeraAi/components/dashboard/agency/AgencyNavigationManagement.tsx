@@ -414,7 +414,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                     </button>
                                     <button
                                         onClick={() => addHeaderLink('Nuevo artículo', '#article-mi-articulo')}
-                                        className="flex-1 flex items-center justify-center gap-2 p-3 text-sm font-medium border border-dashed border-amber-500/50 text-amber-500 rounded-lg hover:border-amber-500 hover:bg-amber-500/10 transition-colors"
+                                        className="flex-1 flex items-center justify-center gap-2 p-3 text-sm font-medium border border-dashed border-q-accent/50 text-q-accent rounded-lg hover:border-q-accent/25 hover:bg-q-accent/10 transition-colors"
                                     >
                                         <FileText size={16} />
                                         Artículo manual
@@ -444,7 +444,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                                     onClick={() => !isAdded && addHeaderLink(article.title, `#article-${article.slug}`)}
                                                     disabled={isAdded}
                                                     className={`flex items-center gap-2 p-3 text-left text-sm rounded-lg border transition-colors ${isAdded
-                                                        ? 'border-green-500/30 bg-green-500/10 text-green-400 cursor-default'
+                                                        ? 'border-q-success/30 bg-q-success/10 text-q-success cursor-default'
                                                         : 'border-q-border hover:border-primary hover:bg-primary/5'
                                                         }`}
                                                 >
@@ -541,7 +541,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                             </button>
                                             <button
                                                 onClick={() => addFooterLink(colIndex, 'Nuevo artículo', '#article-mi-articulo')}
-                                                className="text-xs text-amber-500 hover:underline flex items-center gap-1"
+                                                className="text-xs text-q-accent hover:underline flex items-center gap-1"
                                             >
                                                 <FileText size={12} /> Artículo manual
                                             </button>
@@ -561,7 +561,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                                             onClick={() => !isAdded && addFooterLink(colIndex, article.title, `#article-${article.slug}`)}
                                                             disabled={isAdded}
                                                             className={`px-2 py-1 text-xs rounded transition-colors ${isAdded
-                                                                ? 'bg-green-500/20 text-green-400'
+                                                                ? 'bg-q-success/20 text-q-success'
                                                                 : 'bg-secondary hover:bg-primary/20 hover:text-primary'
                                                                 }`}
                                                         >

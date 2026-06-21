@@ -2,12 +2,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Activity, ArrowUpRight, Eye, MousePointer2 } from 'lucide-react';
+import { MotionCard } from '../ui/primitives/Card';
 
 const AnalyticsWidget: React.FC = () => {
     const { t } = useTranslation();
     // Static robust visualization to prevent render crashes
     return (
-        <div className="h-full w-full flex flex-col bg-gradient-to-br from-card via-card to-background border border-q-border rounded-[1.5rem] relative overflow-hidden shadow-lg group">
+        <MotionCard hoverMotion className="h-full w-full flex flex-col bg-gradient-to-br from-card via-card to-background border border-q-border rounded-[1.5rem] relative overflow-hidden shadow-lg group">
 
             {/* Header */}
             <div className="p-6 pb-0 relative z-10 flex justify-between items-start">
@@ -20,7 +21,7 @@ const AnalyticsWidget: React.FC = () => {
                     </div>
                     <p className="text-q-text-muted text-[11px] font-medium pl-1">{t('analytics.last24Hours')}</p>
                 </div>
-                <div className="flex items-center gap-1 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-[10px] font-bold text-green-500">
+                <div className="flex items-center gap-1 px-2.5 py-1 bg-q-success/10 border border-q-success/20 rounded-full text-[10px] font-bold text-q-success">
                     <ArrowUpRight size={10} />
                     <span>+12.5%</span>
                 </div>
@@ -72,7 +73,7 @@ const AnalyticsWidget: React.FC = () => {
                     <span className="text-lg font-black text-foreground">8.2k</span>
                 </div>
             </div>
-        </div>
+        </MotionCard>
     );
 };
 

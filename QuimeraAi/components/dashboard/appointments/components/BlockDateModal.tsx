@@ -149,7 +149,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+                className="fixed inset-0 z-50 bg-q-text/60 backdrop-blur-sm flex items-center justify-center p-4"
                 onClick={onClose}
             >
                 {/* Modal */}
@@ -222,7 +222,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                                 `}
                             >
                                 <span
-                                    className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200"
+                                    className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-q-surface shadow-sm transition-transform duration-200"
                                     style={{ transform: allDay ? 'translateX(20px)' : 'translateX(0)' }}
                                 />
                             </button>

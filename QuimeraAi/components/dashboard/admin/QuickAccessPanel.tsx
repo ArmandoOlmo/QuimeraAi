@@ -20,10 +20,10 @@ interface QuickAccessPanelProps {
  * Panel de acceso rápido que muestra las funcionalidades más usadas o favoritas
  * Útil para super admins que acceden frecuentemente a las mismas secciones
  */
-const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({ 
-    items, 
+const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({
+    items,
     onItemClick,
-    maxItems = 6 
+    maxItems = 6
 }) => {
     const displayItems = items.slice(0, maxItems);
 
@@ -50,7 +50,7 @@ const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({
                         onClick={() => onItemClick(item.id)}
                         className="group flex flex-col items-center justify-center p-4 bg-q-bg border border-q-border rounded-lg hover:border-q-accent hover:bg-q-surface transition-all duration-200"
                     >
-                        <div className="w-10 h-10 bg-q-accent/10 rounded-lg flex items-center justify-center text-q-accent group-hover:bg-q-accent group-hover:text-white transition-all mb-2">
+                        <div className="mb-2 flex h-10 w-10 items-center justify-center text-q-accent transition-colors group-hover:text-q-text">
                             {item.icon}
                         </div>
                         <span className="text-sm font-medium text-q-text text-center line-clamp-2">
@@ -63,7 +63,7 @@ const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({
                             </span>
                         )}
                         {item.frequency && item.frequency > 10 && (
-                            <span className="text-xs text-green-400 mt-1 flex items-center gap-1">
+                            <span className="text-xs text-q-success mt-1 flex items-center gap-1">
                                 <TrendingUp className="w-3 h-3" />
                                 Popular
                             </span>
@@ -76,7 +76,6 @@ const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({
 };
 
 export default QuickAccessPanel;
-
 
 
 

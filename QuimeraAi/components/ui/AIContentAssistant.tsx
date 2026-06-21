@@ -162,7 +162,7 @@ const AIContentAssistant: React.FC<AIContentAssistantProps> = ({
                 {/* Header */}
                 <div className="p-5 border-b border-q-border flex justify-between items-center bg-q-surface">
                     <div className="flex items-center gap-3">
-                        <div className="bg-gradient-to-br from-editor-accent to-orange-500 p-2 rounded-lg shadow-lg shadow-q-accent/20">
+                        <div className="bg-gradient-to-br from-editor-accent to-q-warning p-2 rounded-lg shadow-lg shadow-q-accent/20">
                             <Sparkles className="text-white w-5 h-5" />
                         </div>
                         <div>
@@ -277,7 +277,7 @@ const AIContentAssistant: React.FC<AIContentAssistantProps> = ({
                             <button
                                 onClick={handleApply}
                                 disabled={isLoading || !generatedText}
-                                className="bg-white text-q-bg font-bold px-6 py-2.5 rounded-lg shadow-lg hover:bg-gray-100 transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100"
+                                className="bg-q-surface text-q-bg font-bold px-6 py-2.5 rounded-lg shadow-lg hover:bg-q-surface-overlay transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100"
                             >
                                 {t('aiContentAssistant.useContent')}
                             </button>

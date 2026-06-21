@@ -33,7 +33,7 @@ interface ImagePickerProps {
     onSelectAsset?: (asset: ImagePickerSelectedAsset) => void;
     /** Optional store ID to show product images */
     storeId?: string;
-    /** When true, opens the modal immediately without showing the inline preview. 
+    /** When true, opens the modal immediately without showing the inline preview.
      * Must be used with onClose to properly unmount the component. */
     defaultOpen?: boolean;
     /** Callback when the modal is closed. Required when using defaultOpen. */
@@ -316,7 +316,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
                                     <button
                                         type="button"
                                         onClick={() => { setIsLibraryOpen(true); setActiveTab('library'); }}
-                                        className="p-2 rounded-lg bg-white/15 backdrop-blur-md border border-white/20 text-white hover:bg-white/25 transition-all duration-200"
+                                        className="p-2 rounded-lg bg-q-surface/15 backdrop-blur-md border border-q-border/20 text-white hover:bg-q-surface/25 transition-all duration-200"
                                         title={t('dashboard.imagePicker.openLibrary')}
                                     >
                                         <Grid size={14} />
@@ -333,7 +333,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
                                         <button
                                             type="button"
                                             onClick={onRemove || (() => onChange(''))}
-                                            className="p-2 rounded-lg bg-red-500/60 backdrop-blur-md border border-red-500/30 text-white hover:bg-red-500/80 transition-all duration-200"
+                                            className="p-2 rounded-lg bg-q-error/60 backdrop-blur-md border border-q-error/30 text-white hover:bg-q-error/80 transition-all duration-200"
                                             title={t('common.remove')}
                                         >
                                             <Trash2 size={14} />
@@ -388,7 +388,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
             {isLibraryOpen && (() => {
                 const modalContent = (
                     <div
-                        className="fixed inset-0 bg-black/60 z-[100010] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm animate-fade-in-up"
+                        className="fixed inset-0 bg-q-text/60 z-[100010] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm animate-fade-in-up"
                         onClick={handleClose}
                     >
                         <div
@@ -443,12 +443,12 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
                                                 {imageFiles.length} {imageFiles.length === 1 ? t('dashboard.imagePicker.image') : t('dashboard.imagePicker.images')}
                                             </span>
                                             {destination === 'admin' && (
-                                                <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-500 rounded border border-blue-500/20 ml-2">
+                                                <span className="text-[10px] px-1.5 py-0.5 bg-q-accent/10 text-q-accent rounded border border-q-accent/20 ml-2">
                                                     ADMIN
                                                 </span>
                                             )}
                                             {destination === 'global' && (
-                                                <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 rounded border border-emerald-500/20 ml-2">
+                                                <span className="text-[10px] px-1.5 py-0.5 bg-q-success/10 text-q-success rounded border border-q-success/20 ml-2">
                                                     GLOBAL
                                                 </span>
                                             )}
@@ -524,11 +524,11 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
                                                         <div
                                                             key={file.id}
                                                             onClick={() => handleSelectImageUrl(fileUrl, file)}
-                                                            className={`aspect-square rounded-lg overflow-hidden border-2 group relative transition-all ${isLegacyImage ? 'cursor-not-allowed opacity-60 border-red-500/40' : 'cursor-pointer'} ${isSelected ? 'border-q-accent ring-2 ring-q-accent/50' : 'border-transparent hover:border-q-text-secondary'}`}
+                                                            className={`aspect-square rounded-lg overflow-hidden border-2 group relative transition-all ${isLegacyImage ? 'cursor-not-allowed opacity-60 border-q-error/40' : 'cursor-pointer'} ${isSelected ? 'border-q-accent ring-2 ring-q-accent/50' : 'border-transparent hover:border-q-text-secondary'}`}
                                                         >
                                                             <img src={fileUrl} alt={file.name} className={`w-full h-full object-cover transition-transform ${isLegacyImage ? 'grayscale' : 'group-hover:scale-110'}`} />
                                                             {isLegacyImage ? (
-                                                                <div className="absolute inset-0 bg-black/65 flex items-center justify-center p-2">
+                                                                <div className="absolute inset-0 bg-q-text/65 flex items-center justify-center p-2">
                                                                     <span className="text-white text-[10px] font-bold text-center uppercase tracking-wide">Migrar a Supabase</span>
                                                                 </div>
                                                             ) : isSelected ? (
@@ -538,7 +538,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <div className="absolute inset-0 bg-q-text/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                                     <span className="text-white text-xs font-bold">{t('dashboard.imagePicker.select')}</span>
                                                                 </div>
                                                             )}
@@ -631,7 +631,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
+                                                            <div className="absolute inset-0 bg-q-text/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
                                                                 <span className="text-white text-xs font-bold text-center line-clamp-2">{product.name}</span>
                                                             </div>
                                                         )}

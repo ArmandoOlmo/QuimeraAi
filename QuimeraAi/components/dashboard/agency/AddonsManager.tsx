@@ -216,15 +216,15 @@ export function AddonsManager() {
     <div className="space-y-6 p-6">
       {/* Error Alert */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-          <p className="text-red-500 text-sm">{error}</p>
+        <div className="bg-q-error/10 border border-q-error/30 rounded-lg p-4">
+          <p className="text-q-error text-sm">{error}</p>
         </div>
       )}
 
       {/* Success Alert */}
       {success && (
-        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-          <p className="text-green-500 text-sm">{success}</p>
+        <div className="bg-q-success/10 border border-q-success/30 rounded-lg p-4">
+          <p className="text-q-success text-sm">{success}</p>
         </div>
       )}
 
@@ -474,8 +474,8 @@ export function AddonsManager() {
 
       {/* Proration Notice */}
       {hasChanges() && (
-        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-          <p className="text-sm text-blue-400">
+        <div className="bg-q-accent/10 border border-q-accent/30 rounded-lg p-4">
+          <p className="text-sm text-q-accent">
             <strong>{t('dashboard.agency.addonsPage.prorationNotice')}</strong> {t('dashboard.agency.addonsPage.prorationDesc')}
           </p>
         </div>

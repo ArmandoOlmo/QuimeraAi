@@ -1003,12 +1003,7 @@ ${referenceImagesRef.current.length > 0 ? `⚠️ The user has currently uploade
 Remember: You are building a COMPLETE website — every component needs full, rich content. Be thorough in your information gathering.`;
     }, [i18n.language, referenceImages.length, accessibleComponentRegistry]);
 
-    // ═════════════════════════════════════════════════════════════════════════
-    // INIT
-    // ═════════════════════════════════════════════════════════════════════════
-
-    const initStudio = useCallback(() => {
-        const welcomeText = `${t('aiWebsiteStudio.welcome.greeting')}
+    const buildWelcomeText = useCallback(() => `${t('aiWebsiteStudio.welcome.greeting')}
 
 ${t('aiWebsiteStudio.welcome.description')}
 
@@ -1022,7 +1017,14 @@ ${t('aiWebsiteStudio.welcome.voiceHint')}
 
 ${t('aiWebsiteStudio.welcome.existingWebsite')}
 
-${t('aiWebsiteStudio.welcome.startQuestion')}`;
+${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // INIT
+    // ═════════════════════════════════════════════════════════════════════════
+
+    const initStudio = useCallback(() => {
+        const welcomeText = buildWelcomeText();
 
         const welcomeMsg: DisplayMessage = { role: 'model', text: welcomeText, timestamp: Date.now() };
         setMessages([welcomeMsg]);
@@ -1041,7 +1043,20 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             { role: 'user', text: `[SYSTEM] ${systemContext}` },
             { role: 'model', text: welcomeText },
         ];
-    }, [t, buildSystemPrompt]);
+    }, [buildWelcomeText, buildSystemPrompt]);
+
+    useEffect(() => {
+        if (messages.length !== 1 || messages[0]?.role !== 'model') return;
+
+        const welcomeText = buildWelcomeText();
+        setMessages([{ ...messages[0], text: welcomeText, timestamp: Date.now() }]);
+
+        const systemContext = buildSystemPrompt();
+        historyRef.current = [
+            { role: 'user', text: `[SYSTEM] ${systemContext}` },
+            { role: 'model', text: welcomeText },
+        ];
+    }, [buildWelcomeText, buildSystemPrompt]);
 
     // ═════════════════════════════════════════════════════════════════════════
     // WEBSITE EXTRACTION — Deep scrape of existing website

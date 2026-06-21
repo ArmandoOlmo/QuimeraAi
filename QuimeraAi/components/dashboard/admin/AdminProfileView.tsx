@@ -123,11 +123,11 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
 
     const getRoleIcon = (roleKey: string) => {
         switch (roleKey) {
-            case 'owner': return <Crown size={18} className="text-yellow-500" />;
-            case 'superadmin': return <Shield size={18} className="text-purple-400" />;
-            case 'admin': return <UserCog size={18} className="text-blue-400" />;
-            case 'manager': return <Eye size={18} className="text-green-400" />;
-            default: return <Users size={18} className="text-gray-400" />;
+            case 'owner': return <Crown size={18} className="text-q-accent" />;
+            case 'superadmin': return <Shield size={18} className="text-q-accent" />;
+            case 'admin': return <UserCog size={18} className="text-q-accent" />;
+            case 'manager': return <Eye size={18} className="text-q-success" />;
+            default: return <Users size={18} className="text-q-text-muted" />;
         }
     };
 
@@ -159,10 +159,10 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                                         />
                                     )}
                                 </div>
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                                <div className="absolute inset-0 bg-q-text/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
                                     <Camera className="w-8 h-8 text-white" />
                                 </div>
-                                <div className="absolute bottom-0 right-0 bg-q-accent text-white p-2 rounded-full shadow-lg border-2 border-q-surface">
+                                <div className="absolute bottom-0 right-0 bg-q-accent text-q-text-on-accent p-2 rounded-full shadow-lg border-2 border-q-surface">
                                     <Camera size={14} />
                                 </div>
                             </div>
@@ -178,7 +178,7 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                             <div className="flex-1 text-center sm:text-left">
                                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
                                     <h1 className="text-2xl font-bold text-q-text">{user.name}</h1>
-                                    {isTargetOwner && <Crown size={20} className="text-yellow-500" />}
+                                    {isTargetOwner && <Crown size={20} className="text-q-accent" />}
                                 </div>
                                 <p className="text-q-text-secondary flex items-center justify-center sm:justify-start gap-2">
                                     <Mail size={14} /> {user.email}
@@ -234,7 +234,7 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                                     {t('superadmin.profile.rolesPermissions')}
                                 </h3>
                                 {!canEditRole && (
-                                    <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-sm text-yellow-300">
+                                    <div className="mb-4 p-3 bg-q-accent/10 border border-q-accent/20 rounded-lg text-sm text-q-accent">
                                         {isTargetOwner
                                             ? t('superadmin.profile.ownerRoleImmutable')
                                             : t('superadmin.profile.selfRoleImmutable')}
@@ -280,8 +280,8 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
 
                             {/* Danger Zone */}
                             {canDelete && (
-                                <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-6">
-                                    <h3 className="text-lg font-semibold text-red-500 mb-2 flex items-center gap-2">
+                                <div className="bg-q-error/5 border border-q-error/20 rounded-xl p-6">
+                                    <h3 className="text-lg font-semibold text-q-error mb-2 flex items-center gap-2">
                                         <Trash2 className="w-5 h-5" />
                                         {t('superadmin.profile.dangerZone')}
                                     </h3>
@@ -291,7 +291,7 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                                     <button
                                         onClick={handleDelete}
                                         disabled={loading}
-                                        className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-sm font-medium transition-colors border border-red-500/20"
+                                        className="px-4 py-2 bg-q-error/10 hover:bg-q-error/20 text-q-error rounded-lg text-sm font-medium transition-colors border border-q-error/20"
                                     >
                                         {t('superadmin.profile.deleteUser')}
                                     </button>
@@ -339,7 +339,7 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                                 <button
                                     onClick={handleSave}
                                     disabled={loading}
-                                    className="w-full flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium bg-q-accent text-white rounded-xl hover:bg-q-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-q-accent/20"
+                                    className="w-full flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium bg-q-accent text-q-text-on-accent rounded-xl hover:bg-q-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-q-accent/20"
                                 >
                                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                     {t('superadmin.profile.saveChanges')}

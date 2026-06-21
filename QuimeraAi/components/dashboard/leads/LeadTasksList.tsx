@@ -12,9 +12,9 @@ interface LeadTasksListProps {
 }
 
 const PRIORITY_COLORS = {
-    low: 'text-gray-500 bg-gray-500/10',
-    medium: 'text-yellow-500 bg-yellow-500/10',
-    high: 'text-red-500 bg-red-500/10'
+    low: 'text-q-text-muted bg-q-surface-overlay/10',
+    medium: 'text-q-accent bg-q-accent/10',
+    high: 'text-q-error bg-q-error/10'
 };
 
 const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
@@ -62,9 +62,9 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
         const diffMs = date.getTime() - now.getTime();
         const diffDays = Math.ceil(diffMs / 86400000);
 
-        if (diffDays < 0) return { text: `${Math.abs(diffDays)}d overdue`, color: 'text-red-500', urgent: true };
-        if (diffDays === 0) return { text: 'Today', color: 'text-orange-500', urgent: true };
-        if (diffDays === 1) return { text: 'Tomorrow', color: 'text-yellow-500', urgent: false };
+        if (diffDays < 0) return { text: `${Math.abs(diffDays)}d overdue`, color: 'text-q-error', urgent: true };
+        if (diffDays === 0) return { text: 'Today', color: 'text-q-warning', urgent: true };
+        if (diffDays === 1) return { text: 'Tomorrow', color: 'text-q-accent', urgent: false };
         if (diffDays <= 7) return { text: `${diffDays}d`, color: 'text-foreground', urgent: false };
 
         return { text: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'text-q-text-muted', urgent: false };
@@ -179,7 +179,7 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
                                 >
                                     <button
                                         onClick={() => toggleTaskComplete(task)}
-                                        className="shrink-0 mt-0.5 text-q-text-muted hover:text-green-500 transition-colors"
+                                        className="shrink-0 mt-0.5 text-q-text-muted hover:text-q-success transition-colors"
                                     >
                                         <Circle size={18} />
                                     </button>
@@ -194,7 +194,7 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
                                             </div>
                                             <button
                                                 onClick={() => onDeleteTask(task.id)}
-                                                className="opacity-0 group-hover:opacity-100 shrink-0 p-1 text-red-500 hover:bg-red-500/10 rounded transition-all"
+                                                className="opacity-0 group-hover:opacity-100 shrink-0 p-1 text-q-error hover:bg-q-error/10 rounded transition-all"
                                                 title="Delete task"
                                             >
                                                 <Trash2 size={14} />
@@ -232,7 +232,7 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
                                 >
                                     <button
                                         onClick={() => toggleTaskComplete(task)}
-                                        className="shrink-0 mt-0.5 text-green-500 hover:text-q-text-muted transition-colors"
+                                        className="shrink-0 mt-0.5 text-q-success hover:text-q-text-muted transition-colors"
                                     >
                                         <CheckCircle2 size={18} />
                                     </button>
@@ -247,7 +247,7 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
                                             </div>
                                             <button
                                                 onClick={() => onDeleteTask(task.id)}
-                                                className="opacity-0 group-hover:opacity-100 shrink-0 p-1 text-red-500 hover:bg-red-500/10 rounded transition-all"
+                                                className="opacity-0 group-hover:opacity-100 shrink-0 p-1 text-q-error hover:bg-q-error/10 rounded transition-all"
                                                 title="Delete task"
                                             >
                                                 <Trash2 size={14} />

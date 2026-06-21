@@ -54,13 +54,13 @@ const PendingInvites: React.FC<PendingInvitesProps> = ({
     const getRoleIcon = (role: AgencyRole) => {
         switch (role) {
             case 'agency_owner':
-                return <Crown size={14} className="text-yellow-500" />;
+                return <Crown size={14} className="text-q-accent" />;
             case 'agency_admin':
-                return <Shield size={14} className="text-purple-500" />;
+                return <Shield size={14} className="text-q-accent" />;
             case 'agency_member':
-                return <Users size={14} className="text-blue-500" />;
+                return <Users size={14} className="text-q-accent" />;
             case 'client':
-                return <User size={14} className="text-green-500" />;
+                return <User size={14} className="text-q-success" />;
             default:
                 return null;
         }
@@ -148,9 +148,9 @@ const PendingInvites: React.FC<PendingInvitesProps> = ({
             )}
 
             {actionSuccess && (
-                <div className="mx-4 mt-4 flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                    <CheckCircle2 size={16} className="text-green-500 flex-shrink-0" />
-                    <p className="text-sm text-green-500">{actionSuccess}</p>
+                <div className="mx-4 mt-4 flex items-center gap-2 p-3 bg-q-success/10 border border-q-success/30 rounded-lg">
+                    <CheckCircle2 size={16} className="text-q-success flex-shrink-0" />
+                    <p className="text-sm text-q-success">{actionSuccess}</p>
                 </div>
             )}
 
@@ -187,7 +187,7 @@ const PendingInvites: React.FC<PendingInvitesProps> = ({
                                                 {invite.daysUntilExpiration === 1 ? t('common.day', 'día') : t('common.days', 'días')}
                                             </span>
                                         ) : (
-                                            <span className="text-yellow-500">
+                                            <span className="text-q-accent">
                                                 {t('invite.expirestoday', 'Expira hoy')}
                                             </span>
                                         )}

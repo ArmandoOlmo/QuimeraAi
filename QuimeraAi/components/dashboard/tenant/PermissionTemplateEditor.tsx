@@ -145,20 +145,20 @@ export function PermissionTemplateEditor({
     const getRiskBadge = () => {
         const styles = {
             low: {
-                bg: 'bg-green-100 dark:bg-green-900/20',
-                text: 'text-green-800 dark:text-green-400',
+                bg: 'bg-q-success/10 dark:bg-q-success/12',
+                text: 'text-q-success dark:text-q-success',
                 label: 'Riesgo Bajo',
                 icon: CheckCircle,
             },
             medium: {
-                bg: 'bg-yellow-100 dark:bg-yellow-900/20',
-                text: 'text-yellow-800 dark:text-yellow-400',
+                bg: 'bg-q-accent/10 dark:bg-q-accent/12',
+                text: 'text-q-accent dark:text-q-accent',
                 label: 'Riesgo Medio',
                 icon: AlertTriangle,
             },
             high: {
-                bg: 'bg-red-100 dark:bg-red-900/20',
-                text: 'text-red-800 dark:text-red-400',
+                bg: 'bg-q-error/10 dark:bg-q-error/12',
+                text: 'text-q-error dark:text-q-error',
                 label: 'Riesgo Alto',
                 icon: XCircle,
             },
@@ -180,10 +180,10 @@ export function PermissionTemplateEditor({
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    <h1 className="text-3xl font-bold text-q-text dark:text-white">
                         {isCreating ? 'Nueva Plantilla' : 'Editar Plantilla'}
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-q-text-muted dark:text-gray-400 mt-1">
                         {isCreating
                             ? 'Crea una plantilla personalizada de permisos'
                             : 'Modifica los permisos de esta plantilla'}
@@ -192,18 +192,18 @@ export function PermissionTemplateEditor({
                 <div className="flex items-center gap-3">
                     <button
                         onClick={onCancel}
-                        className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                        className="px-4 py-2 text-q-text dark:text-gray-300 hover:bg-q-surface-overlay dark:hover:bg-gray-800 rounded-lg transition-colors"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {saving ? (
                             <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-q-border"></div>
                                 Guardando...
                             </>
                         ) : (
@@ -218,12 +218,12 @@ export function PermissionTemplateEditor({
 
             {/* Error Alert */}
             {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="bg-q-error/10 dark:bg-q-error/12 border border-q-error/25 dark:border-q-error/30 rounded-lg p-4">
                     <div className="flex items-start gap-3">
-                        <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                        <AlertTriangle className="h-5 w-5 text-q-error dark:text-q-error flex-shrink-0 mt-0.5" />
                         <div>
-                            <h3 className="font-semibold text-red-900 dark:text-red-200">Error</h3>
-                            <p className="text-red-700 dark:text-red-300 text-sm mt-1">{error}</p>
+                            <h3 className="font-semibold text-q-error dark:text-q-error">Error</h3>
+                            <p className="text-q-error dark:text-q-error text-sm mt-1">{error}</p>
                         </div>
                     </div>
                 </div>
@@ -233,14 +233,14 @@ export function PermissionTemplateEditor({
                 {/* Form */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Basic Info */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    <div className="bg-q-surface dark:bg-gray-800 rounded-lg border border-q-border dark:border-gray-700 p-6">
+                        <h3 className="text-lg font-semibold text-q-text dark:text-white mb-4">
                             Información Básica
                         </h3>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label className="block text-sm font-medium text-q-text dark:text-gray-300 mb-2">
                                     Nombre de la Plantilla *
                                 </label>
                                 <input
@@ -248,15 +248,15 @@ export function PermissionTemplateEditor({
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Ej: Editor de Contenido"
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-2 border border-q-border dark:border-gray-600 rounded-lg bg-q-surface dark:bg-gray-700 text-q-text dark:text-white focus:ring-2 focus:ring-q-accent/35"
                                 />
-                                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                <p className="text-xs text-q-text-muted dark:text-gray-500 mt-1">
                                     {name.length}/50 caracteres
                                 </p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label className="block text-sm font-medium text-q-text dark:text-gray-300 mb-2">
                                     Descripción *
                                 </label>
                                 <textarea
@@ -264,19 +264,19 @@ export function PermissionTemplateEditor({
                                     onChange={(e) => setDescription(e.target.value)}
                                     placeholder="Describe para qué tipo de usuario es esta plantilla"
                                     rows={3}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-2 border border-q-border dark:border-gray-600 rounded-lg bg-q-surface dark:bg-gray-700 text-q-text dark:text-white focus:ring-2 focus:ring-q-accent/35"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-q-text dark:text-gray-300 mb-2">
                                         Rol
                                     </label>
                                     <AppSelect
                                         value={role}
                                         onChange={(e) => setRole(e.target.value as AgencyRole)}
-                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-4 py-2 border border-q-border dark:border-gray-600 rounded-lg bg-q-surface dark:bg-gray-700 text-q-text dark:text-white focus:ring-2 focus:ring-q-accent/35"
                                     >
                                         <option value="agency_member">Miembro</option>
                                         <option value="agency_admin">Admin</option>
@@ -285,7 +285,7 @@ export function PermissionTemplateEditor({
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-q-text dark:text-gray-300 mb-2">
                                         Categoría
                                     </label>
                                     <AppSelect
@@ -293,7 +293,7 @@ export function PermissionTemplateEditor({
                                         onChange={(e) =>
                                             setCategory(e.target.value as PermissionTemplate['category'])
                                         }
-                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-4 py-2 border border-q-border dark:border-gray-600 rounded-lg bg-q-surface dark:bg-gray-700 text-q-text dark:text-white focus:ring-2 focus:ring-q-accent/35"
                                     >
                                         <option value="content">Contenido</option>
                                         <option value="sales">Ventas</option>
@@ -307,36 +307,36 @@ export function PermissionTemplateEditor({
                     </div>
 
                     {/* Permissions */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    <div className="bg-q-surface dark:bg-gray-800 rounded-lg border border-q-border dark:border-gray-700 p-6">
+                        <h3 className="text-lg font-semibold text-q-text dark:text-white mb-4">
                             Configurar Permisos
                         </h3>
 
                         <div className="space-y-6">
                             {permissionCategories.map((cat) => (
                                 <div key={cat.name}>
-                                    <h4 className="font-medium text-gray-900 dark:text-white mb-3">
+                                    <h4 className="font-medium text-q-text dark:text-white mb-3">
                                         {cat.name}
                                     </h4>
                                     <div className="space-y-2">
                                         {cat.permissions.map((permKey) => (
                                             <label
                                                 key={permKey}
-                                                className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
+                                                className="flex items-start gap-3 p-3 rounded-lg border border-q-border dark:border-gray-700 hover:bg-q-surface-overlay dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
                                             >
                                                 <input
                                                     type="checkbox"
                                                     checked={permissions[permKey]}
                                                     onChange={() => handlePermissionToggle(permKey)}
-                                                    className="mt-0.5 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                                    className="mt-0.5 h-4 w-4 text-q-accent rounded border-q-border focus:ring-q-accent/35"
                                                 />
                                                 <div className="flex-1">
-                                                    <div className="font-medium text-gray-900 dark:text-white text-sm">
+                                                    <div className="font-medium text-q-text dark:text-white text-sm">
                                                         {permissionLabels[permKey]}
                                                     </div>
                                                 </div>
                                                 {permissions[permKey] && (
-                                                    <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                                                    <CheckCircle className="h-5 w-5 text-q-success flex-shrink-0" />
                                                 )}
                                             </label>
                                         ))}
@@ -350,18 +350,18 @@ export function PermissionTemplateEditor({
                 {/* Preview */}
                 <div className="lg:col-span-1 space-y-6">
                     {/* Risk Level */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    <div className="bg-q-surface dark:bg-gray-800 rounded-lg border border-q-border dark:border-gray-700 p-6">
+                        <h3 className="text-lg font-semibold text-q-text dark:text-white mb-4">
                             Análisis de Riesgo
                         </h3>
                         <div className="space-y-4">
                             {getRiskBadge()}
 
                             {riskLevel === 'high' && (
-                                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                                <div className="bg-q-error/10 dark:bg-q-error/12 border border-q-error/25 dark:border-q-error/30 rounded-lg p-3">
                                     <div className="flex items-start gap-2">
-                                        <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                                        <p className="text-sm text-red-900 dark:text-red-200">
+                                        <AlertTriangle className="h-4 w-4 text-q-error dark:text-q-error flex-shrink-0 mt-0.5" />
+                                        <p className="text-sm text-q-error dark:text-q-error">
                                             Esta plantilla incluye permisos de alto riesgo. Úsala solo
                                             para usuarios de confianza.
                                         </p>
@@ -370,10 +370,10 @@ export function PermissionTemplateEditor({
                             )}
 
                             {riskLevel === 'medium' && (
-                                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                                <div className="bg-q-accent/10 dark:bg-q-accent/12 border border-q-accent/25 dark:border-q-accent/30 rounded-lg p-3">
                                     <div className="flex items-start gap-2">
-                                        <Info className="h-4 w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-                                        <p className="text-sm text-yellow-900 dark:text-yellow-200">
+                                        <Info className="h-4 w-4 text-q-accent dark:text-q-accent flex-shrink-0 mt-0.5" />
+                                        <p className="text-sm text-q-accent dark:text-q-accent">
                                             Revisa cuidadosamente los permisos antes de asignar esta
                                             plantilla.
                                         </p>
@@ -384,24 +384,24 @@ export function PermissionTemplateEditor({
                     </div>
 
                     {/* Summary */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    <div className="bg-q-surface dark:bg-gray-800 rounded-lg border border-q-border dark:border-gray-700 p-6">
+                        <h3 className="text-lg font-semibold text-q-text dark:text-white mb-4">
                             Resumen
                         </h3>
                         <dl className="space-y-3 text-sm">
                             <div>
-                                <dt className="text-gray-600 dark:text-gray-400 mb-1">
+                                <dt className="text-q-text-muted dark:text-gray-400 mb-1">
                                     Permisos Activos
                                 </dt>
-                                <dd className="font-semibold text-gray-900 dark:text-white text-2xl">
+                                <dd className="font-semibold text-q-text dark:text-white text-2xl">
                                     {grantedPerms.length}
                                 </dd>
                             </div>
                             <div>
-                                <dt className="text-gray-600 dark:text-gray-400 mb-1">
+                                <dt className="text-q-text-muted dark:text-gray-400 mb-1">
                                     Permisos Restringidos
                                 </dt>
-                                <dd className="font-semibold text-gray-900 dark:text-white text-2xl">
+                                <dd className="font-semibold text-q-text dark:text-white text-2xl">
                                     {restrictedPerms.length}
                                 </dd>
                             </div>
@@ -409,8 +409,8 @@ export function PermissionTemplateEditor({
                     </div>
 
                     {/* Granted Permissions */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    <div className="bg-q-surface dark:bg-gray-800 rounded-lg border border-q-border dark:border-gray-700 p-6">
+                        <h3 className="text-lg font-semibold text-q-text dark:text-white mb-4">
                             Permisos Activos
                         </h3>
                         {grantedPerms.length > 0 ? (
@@ -418,15 +418,15 @@ export function PermissionTemplateEditor({
                                 {grantedPerms.map((perm, i) => (
                                     <li
                                         key={i}
-                                        className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                                        className="flex items-start gap-2 text-sm text-q-text dark:text-gray-300"
                                     >
-                                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                        <CheckCircle className="h-4 w-4 text-q-success flex-shrink-0 mt-0.5" />
                                         {perm}
                                     </li>
                                 ))}
                             </ul>
                         ) : (
-                            <p className="text-sm text-gray-500 dark:text-gray-500">
+                            <p className="text-sm text-q-text-muted dark:text-gray-500">
                                 No hay permisos activos
                             </p>
                         )}

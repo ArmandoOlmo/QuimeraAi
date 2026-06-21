@@ -157,7 +157,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setPodcastAudioUrl('')}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-q-error hover:text-q-error bg-q-error/10 hover:bg-q-error/20 border border-q-error/20 rounded-lg transition-colors"
                             >
                                 <Trash2 size={12} /> {t('common.delete', { defaultValue: 'Delete' })}
                             </button>
@@ -223,7 +223,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setPodcastVideoUrl('')}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-q-error hover:text-q-error bg-q-error/10 hover:bg-q-error/20 border border-q-error/20 rounded-lg transition-colors"
                             >
                                 <Trash2 size={12} /> {t('common.delete', { defaultValue: 'Delete' })}
                             </button>
@@ -304,7 +304,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 onChange={(e) => setShowAuthor(e.target.checked)}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                            <div className="w-11 h-6 bg-q-border peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
                         </label>
                     </div>
 
@@ -321,7 +321,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 onChange={(e) => setShowDate(e.target.checked)}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                            <div className="w-11 h-6 bg-q-border peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
                         </label>
                     </div>
                 </div>
@@ -330,7 +330,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
             <div className="pt-6 border-t border-q-border">
                 <div className="flex justify-between items-center mb-4">
                     <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> {t('cms_editor.seoSettings')}</h4>
-                    <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> {t('cms_editor.autoGen')}</button>
+                    <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-q-accent hover:text-q-accent flex items-center"><Sparkles size={12} className="mr-1" /> {t('cms_editor.autoGen')}</button>
                 </div>
 
                 <div className="space-y-4">
@@ -436,7 +436,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             Link.configure({
                 openOnClick: false,
                 HTMLAttributes: {
-                    class: 'text-blue-500 underline hover:text-blue-600 cursor-pointer',
+                    class: 'text-q-accent underline hover:text-q-accent cursor-pointer',
                 },
             }),
             TextStyle,
@@ -456,12 +456,12 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             TableRow,
             TableHeader.configure({
                 HTMLAttributes: {
-                    class: 'border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 p-2 font-bold'
+                    class: 'border border-q-border dark:border-gray-600 bg-q-surface-overlay dark:bg-gray-800 p-2 font-bold'
                 }
             }),
             TableCell.configure({
                 HTMLAttributes: {
-                    class: 'border border-gray-300 dark:border-gray-600 p-2'
+                    class: 'border border-q-border dark:border-gray-600 p-2'
                 }
             }),
             TextAlign.configure({
@@ -526,7 +526,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_podcast/${user?.id || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
-            
+
             const { error: uploadError } = await supabase.storage
                 .from('platform-assets')
                 .upload(storagePath, file, { upsert: true });
@@ -536,7 +536,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const { data: { publicUrl: url } } = supabase.storage
                 .from('platform-assets')
                 .getPublicUrl(storagePath);
-                
+
             setPodcastAudioUrl(url);
         } catch (error) {
             console.error('Audio upload failed', error);
@@ -561,7 +561,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_podcast/${user?.id || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
-            
+
             const { error: uploadError } = await supabase.storage
                 .from('platform-assets')
                 .upload(storagePath, file, { upsert: true });
@@ -571,7 +571,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const { data: { publicUrl: url } } = supabase.storage
                 .from('platform-assets')
                 .getPublicUrl(storagePath);
-                
+
             setPodcastAudioUrl(url);
         } catch (error) {
             console.error('Audio upload failed', error);
@@ -594,7 +594,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_video/${user?.id || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
             console.log('[Video Upload] Storage path:', storagePath);
-            
+
             setUploadProgress(50); // Fake progress since supabase-js standard upload doesn't support it
 
             const { error: uploadError } = await supabase.storage
@@ -607,9 +607,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const { data: { publicUrl: url } } = supabase.storage
                 .from('platform-assets')
                 .getPublicUrl(storagePath);
-            
+
             console.log('[Video Upload] ✅ Download URL:', url.substring(0, 80) + '...');
-            
+
             setPodcastVideoUrl(url);
         } catch (error: any) {
             console.error('[Video Upload] Failed:', error?.code, error?.message, error);
@@ -637,7 +637,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_video/${user?.id || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
             console.log('[Video Drop] Storage path:', storagePath);
-            
+
             setUploadProgress(50); // Fake progress
 
             const { error: uploadError } = await supabase.storage
@@ -650,9 +650,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const { data: { publicUrl: url } } = supabase.storage
                 .from('platform-assets')
                 .getPublicUrl(storagePath);
-            
+
             console.log('[Video Drop] ✅ Done:', url.substring(0, 80) + '...');
-            
+
             setPodcastVideoUrl(url);
         } catch (error: any) {
             console.error('[Video Drop] Failed:', error?.code, error?.message, error);
@@ -1066,13 +1066,13 @@ IMPORTANT FORMATTING RULES:
                     <div className="flex items-center gap-2 mx-auto">
                         {lastSaved && (
                             <span className="text-xs text-q-text-muted flex items-center gap-1 mr-2">
-                                <Check size={12} className="text-green-500" />
+                                <Check size={12} className="text-q-success" />
                                 {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                         )}
                         <div className="flex items-center gap-1 text-xs font-medium">
                             <button onClick={() => setStatus('draft')} className={`px-2 py-1 rounded-md transition-all ${status === 'draft' ? 'text-foreground' : 'text-q-text-muted hover:text-foreground'}`}>{t('cms_editor.draft')}</button>
-                            <button onClick={() => setStatus('published')} className={`px-2 py-1 rounded-md transition-all ${status === 'published' ? 'text-green-400' : 'text-q-text-muted hover:text-foreground'}`}>{t('cms_editor.published')}</button>
+                            <button onClick={() => setStatus('published')} className={`px-2 py-1 rounded-md transition-all ${status === 'published' ? 'text-q-success' : 'text-q-text-muted hover:text-foreground'}`}>{t('cms_editor.published')}</button>
                         </div>
                     </div>
 
@@ -1116,7 +1116,7 @@ IMPORTANT FORMATTING RULES:
 
                 {/* Save Error Banner */}
                 {saveError && (
-                    <div className="px-4 py-2 bg-red-500/20 border-b border-red-500/30 text-red-400 text-sm text-center font-medium animate-in fade-in">
+                    <div className="px-4 py-2 bg-q-error/20 border-b border-q-error/30 text-q-error text-sm text-center font-medium animate-in fade-in">
                         {saveError}
                     </div>
                 )}
@@ -1147,7 +1147,7 @@ IMPORTANT FORMATTING RULES:
 
                 {/* AI Vision Modal */}
                 {showVisionModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50">
                         <div className="bg-q-surface border border-q-border rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-bold flex items-center gap-2">
@@ -1188,7 +1188,7 @@ IMPORTANT FORMATTING RULES:
                                     )}
                                     <button
                                         onClick={() => { setVisionMedia(null); setVisionMediaPreview(null); }}
-                                        className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-black/80"
+                                        className="absolute top-2 right-2 bg-q-text/60 text-white p-1.5 rounded-full hover:bg-q-text/80"
                                     >
                                         <XIcon size={14} />
                                     </button>
@@ -1231,29 +1231,29 @@ IMPORTANT FORMATTING RULES:
 
                 {/* Link Modal */}
                 {showLinkModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96">
-                            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{t('cms_editor.editLink')}</h3>
+                    <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50">
+                        <div className="bg-q-surface dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96">
+                            <h3 className="text-lg font-bold mb-4 text-q-text dark:text-gray-100">{t('cms_editor.editLink')}</h3>
                             <input
                                 type="url"
                                 value={linkUrl}
                                 onChange={(e) => setLinkUrl(e.target.value)}
                                 placeholder={t('cms_editor.linkPlaceholder')}
-                                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-primary outline-none text-gray-900 dark:text-gray-100"
+                                className="w-full bg-q-surface-overlay dark:bg-gray-900 border border-q-border dark:border-gray-700 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-primary outline-none text-q-text dark:text-gray-100"
                                 autoFocus
                                 onKeyDown={(e) => e.key === 'Enter' && applyLink()}
                             />
                             <div className="flex justify-between">
                                 <button
                                     onClick={removeLink}
-                                    className="text-sm text-red-500 hover:text-red-600 font-medium"
+                                    className="text-sm text-q-error hover:text-q-error font-medium"
                                 >
                                     {t('cms_editor.removeLink')}
                                 </button>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => setShowLinkModal(false)}
-                                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                                        className="px-4 py-2 bg-q-border dark:bg-gray-700 hover:bg-q-border dark:hover:bg-gray-600 rounded-lg text-q-text dark:text-gray-100"
                                     >
                                         {t('common.cancel')}
                                     </button>

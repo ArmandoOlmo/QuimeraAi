@@ -38,10 +38,10 @@ const AIAssistButton: React.FC<AIAssistButtonProps> = ({
 
     const variantClasses = {
         primary: `
-            bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400
-            hover:from-purple-600 hover:via-pink-600 hover:to-orange-500
-            text-white shadow-lg shadow-purple-500/25
-            hover:shadow-purple-500/40 hover:scale-105
+            bg-gradient-to-r from-q-accent via-q-accent/80 to-q-warning
+            hover:from-q-accent hover:via-q-accent/80 hover:to-q-warning
+            text-q-text-on-accent shadow-lg shadow-q-accent/25
+            hover:shadow-q-accent/40 hover:scale-105
         `,
         secondary: `
             bg-muted hover:bg-accent
@@ -60,7 +60,7 @@ const AIAssistButton: React.FC<AIAssistButtonProps> = ({
             disabled={disabled || isLoading}
             className={`
                 inline-flex items-center justify-center font-medium rounded-xl
-                transition-all duration-300 
+                transition-all duration-300
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
                 ${sizeClasses[size]}
                 ${variantClasses[variant]}

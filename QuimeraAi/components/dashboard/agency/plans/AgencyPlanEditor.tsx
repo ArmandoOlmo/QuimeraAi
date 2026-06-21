@@ -238,7 +238,7 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/50 backdrop-blur-sm p-4">
             <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-3xl max-h-[90vh] flex flex-col shadow-xl">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-q-border">
@@ -360,7 +360,7 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                             {/* Pricing with Markup Preview */}
                             <div className="bg-muted/30 rounded-xl p-5 border border-q-border">
                                 <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                                    <DollarSign className="w-5 h-5 text-green-600" />
+                                    <DollarSign className="w-5 h-5 text-q-success" />
                                     Precio y Ganancia
                                 </h3>
 
@@ -393,23 +393,23 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-green-600 mb-1.5">
+                                        <label className="block text-sm font-medium text-q-success mb-1.5">
                                             Tu Ganancia
                                         </label>
-                                        <div className="px-4 py-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                                            <span className="text-green-700 dark:text-green-400 font-bold">
+                                        <div className="px-4 py-2 bg-q-success/10 dark:bg-q-success/12 rounded-lg">
+                                            <span className="text-q-success dark:text-q-success font-bold">
                                                 ${markup.markup}
                                             </span>
-                                            <span className="text-green-600 dark:text-green-500 ml-2 text-sm">
+                                            <span className="text-q-success dark:text-q-success ml-2 text-sm">
                                                 ({Math.round(markup.markupPercentage)}% markup)
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                    <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                <div className="flex items-start gap-2 p-3 bg-q-accent/10 dark:bg-q-accent/12 rounded-lg border border-q-accent/25 dark:border-q-accent/30">
+                                    <Info className="w-4 h-4 text-q-accent dark:text-q-accent flex-shrink-0 mt-0.5" />
+                                    <p className="text-sm text-q-accent dark:text-q-accent">
                                         El costo de ${QUIMERA_PROJECT_COST}/mes es lo que Quimera te cobra por cada proyecto activo.
                                         La diferencia es tu ganancia neta por cliente.
                                     </p>
@@ -619,14 +619,14 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                     {/* Markup Preview in Footer */}
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 text-sm">
-                            <TrendingUp className="w-4 h-4 text-green-600" />
+                            <TrendingUp className="w-4 h-4 text-q-success" />
                             <span className="text-q-text-muted">Ganancia:</span>
-                            <span className="font-bold text-green-600">
+                            <span className="font-bold text-q-success">
                                 ${markup.markup}/mes ({Math.round(markup.markupPercentage)}%)
                             </span>
                         </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                         <button
                             onClick={onClose}

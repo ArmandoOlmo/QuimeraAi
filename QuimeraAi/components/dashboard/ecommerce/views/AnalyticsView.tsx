@@ -38,6 +38,7 @@ import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useEcommerceAnalytics } from '../hooks/useEcommerceAnalytics';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
 import { useEcommerceContext } from '../EcommerceContext';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 type DateRange = '7d' | '30d' | '90d' | '1y';
 
@@ -287,7 +288,7 @@ const AnalyticsView: React.FC = () => {
                                         <p className="text-foreground font-medium truncate">{product.productName}</p>
                                         <p className="text-q-text-muted text-sm">{product.totalSold} vendidos</p>
                                     </div>
-                                    <p className="flex-shrink-0 text-green-400 font-semibold">
+                                    <p className="flex-shrink-0 text-q-success font-semibold">
                                         {formatCurrency(product.revenue)}
                                     </p>
                                 </div>
@@ -309,14 +310,14 @@ const AnalyticsView: React.FC = () => {
                         <div className="space-y-3">
                             {topCustomers.slice(0, 5).map((customer, index) => (
                                 <div key={customer.customerId} className="flex items-center gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-sm shrink-0">
+                                    <div className="w-8 h-8 rounded-full bg-q-accent/20 flex items-center justify-center text-q-accent font-bold text-sm shrink-0">
                                         {index + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-foreground font-medium truncate">{customer.name}</p>
                                         <p className="text-q-text-muted text-sm">{customer.totalOrders} pedidos</p>
                                     </div>
-                                    <p className="flex-shrink-0 text-green-400 font-semibold">
+                                    <p className="flex-shrink-0 text-q-success font-semibold">
                                         {formatCurrency(customer.totalSpent)}
                                     </p>
                                 </div>
@@ -341,21 +342,21 @@ const AnalyticsView: React.FC = () => {
                         <p className="text-sm text-q-text-muted">{t('ecommerce.paidOrders', 'Pedidos Pagados')}</p>
                     </div>
                     <div className="text-center p-4 bg-muted/30 rounded-lg">
-                        <p className="text-3xl font-bold text-yellow-400">{conversionMetrics.pendingOrders}</p>
+                        <p className="text-3xl font-bold text-q-accent">{conversionMetrics.pendingOrders}</p>
                         <p className="text-sm text-q-text-muted">{t('ecommerce.pendingOrders', 'Pendientes')}</p>
                     </div>
                     <div className="text-center p-4 bg-muted/30 rounded-lg">
-                        <p className="text-3xl font-bold text-red-400">{conversionMetrics.cancelledOrders}</p>
+                        <p className="text-3xl font-bold text-q-error">{conversionMetrics.cancelledOrders}</p>
                         <p className="text-sm text-q-text-muted">{t('ecommerce.cancelledOrders', 'Cancelados')}</p>
                     </div>
                     <div className="text-center p-4 bg-muted/30 rounded-lg">
-                        <p className="text-3xl font-bold text-green-400">
+                        <p className="text-3xl font-bold text-q-success">
                             {conversionMetrics.conversionRate.toFixed(1)}%
                         </p>
                         <p className="text-sm text-q-text-muted">{t('ecommerce.conversionRate', 'Tasa de Conversión')}</p>
                     </div>
                     <div className="text-center p-4 bg-muted/30 rounded-lg">
-                        <p className="text-3xl font-bold text-orange-400">
+                        <p className="text-3xl font-bold text-q-warning">
                             {conversionMetrics.cancellationRate.toFixed(1)}%
                         </p>
                         <p className="text-sm text-q-text-muted">{t('ecommerce.cancellationRate', 'Tasa de Cancelación')}</p>
@@ -376,7 +377,7 @@ interface MetricCardProps {
 
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon: Icon }) => {
     return (
-        <div className="group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60
+        <MotionCard hoverMotion className="group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60
             bg-q-surface/80 backdrop-blur-xl p-2.5 md:p-4 hover:border-q-border transition-all duration-300">
             <div
                 className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 sm:w-32 sm:h-32 rounded-full blur-2xl
@@ -391,7 +392,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon: Ico
                 <p className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{title}</p>
                 {change !== undefined && (
                     <div
-                        className={`flex items-center gap-1 mt-2 text-sm ${change >= 0 ? 'text-green-400' : 'text-red-400'
+                        className={`flex items-center gap-1 mt-2 text-sm ${change >= 0 ? 'text-q-success' : 'text-q-error'
                             }`}
                     >
                         {change >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
@@ -399,7 +400,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon: Ico
                     </div>
                 )}
             </div>
-        </div>
+        </MotionCard>
     );
 };
 

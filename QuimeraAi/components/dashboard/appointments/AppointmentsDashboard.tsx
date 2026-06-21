@@ -662,7 +662,7 @@ const AppointmentsDashboard: React.FC = () => {
                                 <p className="text-[10px] text-q-text-muted uppercase font-semibold tracking-wider">
                                     {t('appointments.completedLabel')}
                                 </p>
-                                <p className="text-lg font-bold text-green-500">{analytics.completedAppointments}</p>
+                                <p className="text-lg font-bold text-q-success">{analytics.completedAppointments}</p>
                             </div>
                             <div className="text-right">
                                 <p className="text-[10px] text-q-text-muted uppercase font-semibold tracking-wider">
@@ -678,7 +678,7 @@ const AppointmentsDashboard: React.FC = () => {
                             className={`
                                 hidden md:flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium transition-colors
                                 ${isGoogleConnected
-                                    ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
+                                    ? 'bg-q-success/10 text-q-success hover:bg-q-success/20'
                                     : 'bg-secondary text-q-text-muted hover:text-foreground hover:bg-secondary/80'
                                 }
                             `}

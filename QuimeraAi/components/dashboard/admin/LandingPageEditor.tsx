@@ -146,9 +146,9 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
             ref={setNodeRef}
             style={style}
             onClick={onSelect}
-            className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-colors ${isActive
-                ? 'bg-primary/10 border border-primary/30'
-                : 'hover:bg-secondary/50 border border-transparent'
+            className={`group flex items-center gap-2 p-2.5 rounded-[var(--q-radius-md)] cursor-pointer transition-all border ${isActive
+                ? 'border-q-accent bg-q-accent text-q-text-on-accent shadow-[var(--shadow-card)] dark:bg-q-accent/10 dark:text-q-accent dark:border-q-accent/30 dark:shadow-none black:bg-q-accent/10 black:text-q-accent black:border-q-accent/30 black:shadow-none'
+                : 'border-transparent hover:border-structure-control-border hover:bg-structure-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))]'
                 } ${!section.enabled ? 'opacity-50' : ''} ${isDragging ? 'opacity-50 shadow-lg' : ''}`}
         >
             {/* Drag Handle */}
@@ -158,10 +158,10 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                 className="cursor-grab active:cursor-grabbing touch-none"
                 onClick={(e) => e.stopPropagation()}
             >
-                <GripVertical size={14} className="text-q-text-muted flex-shrink-0" />
+                <GripVertical size={14} className={isActive ? 'text-q-text-on-accent/75 dark:text-q-accent/75 black:text-q-accent/75 flex-shrink-0' : 'text-q-text-muted flex-shrink-0'} />
             </div>
 
-            <Icon size={16} className="text-q-text-muted flex-shrink-0" />
+            <Icon size={16} className={isActive ? 'text-q-text-on-accent dark:text-q-accent black:text-q-accent flex-shrink-0' : 'text-q-text-muted group-hover:text-q-text flex-shrink-0'} />
 
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{getSectionLabel(section.type)}</p>
@@ -171,13 +171,13 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                     onClick={(e) => { e.stopPropagation(); onToggleVisibility(); }}
-                    className="p-1 rounded hover:bg-secondary"
+                    className={isActive ? 'p-1 rounded text-q-text-on-accent/75 hover:bg-q-text-on-accent/12 hover:text-q-text-on-accent dark:text-q-accent/75 dark:hover:bg-q-accent/12 dark:hover:text-q-accent black:text-q-accent/75 black:hover:bg-q-accent/12 black:hover:text-q-accent' : 'p-1 rounded text-q-text-muted hover:bg-structure-control-hover hover:text-q-text'}
                 >
                     {section.enabled ? <Eye size={14} /> : <EyeOff size={14} />}
                 </button>
                 <button
                     onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    className="p-1 rounded hover:bg-destructive/20 text-destructive"
+                    className={isActive ? 'p-1 rounded text-q-text-on-accent/75 hover:bg-q-surface/25 hover:text-q-error dark:text-q-accent/75 dark:hover:bg-q-error/10 dark:hover:text-q-error black:text-q-accent/75 black:hover:bg-q-error/10 black:hover:text-q-error' : 'p-1 rounded hover:bg-destructive/20 text-destructive'}
                 >
                     <Trash2 size={14} />
                 </button>
@@ -1327,7 +1327,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
                         {/* Unsaved changes indicator */}
                         {hasUnsavedChanges && (
-                            <span className="px-2 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-500 rounded-full">
+                            <span className="px-2 py-0.5 text-xs font-medium bg-q-accent/10 text-q-accent rounded-full">
                                 {t('landingEditor.unsavedChanges', 'Cambios sin guardar')}
                             </span>
                         )}
@@ -1434,7 +1434,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                             <div className="mb-4">
                                 <button
                                     onClick={() => setIsStructureExpanded(!isStructureExpanded)}
-                                    className="w-full flex items-center gap-2 px-2 py-2 text-xs font-bold text-primary uppercase tracking-wider hover:bg-secondary/30 rounded transition-colors"
+                                    className="w-full flex items-center gap-2 px-2 py-2 text-xs font-bold text-q-accent uppercase tracking-wider hover:bg-structure-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))] rounded-[var(--q-radius-md)] transition-all"
                                 >
                                     <ChevronDown size={14} className={`transition-transform ${isStructureExpanded ? '' : '-rotate-90'}`} />
                                     <Layers size={14} />
@@ -1448,12 +1448,17 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                             <button
                                                 key={item.id}
                                                 onClick={() => handleStructureSelect(item.id)}
-                                                className={`w-full flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-colors text-left ${selectedStructureItem === item.id
-                                                    ? 'bg-primary/10 border border-primary/30'
-                                                    : 'hover:bg-secondary/50 border border-transparent'
+                                                className={`w-full flex items-center gap-2 p-2.5 rounded-[var(--q-radius-md)] cursor-pointer transition-all text-left border ${selectedStructureItem === item.id
+                                                    ? 'border-q-accent bg-q-accent text-q-text-on-accent shadow-[var(--shadow-card)] dark:bg-q-accent/10 dark:text-q-accent dark:border-q-accent/30 dark:shadow-none black:bg-q-accent/10 black:text-q-accent black:border-q-accent/30 black:shadow-none'
+                                                    : 'border-transparent hover:border-structure-control-border hover:bg-structure-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))]'
                                                     }`}
                                             >
-                                                {React.createElement(item.icon, { size: 16, className: 'text-q-text-muted flex-shrink-0' })}
+                                                {React.createElement(item.icon, {
+                                                    size: 16,
+                                                    className: selectedStructureItem === item.id
+                                                        ? 'text-q-text-on-accent dark:text-q-accent black:text-q-accent flex-shrink-0'
+                                                        : 'text-q-text-muted flex-shrink-0',
+                                                })}
                                                 <span className="text-sm font-medium">{t(`landingEditor.components.${item.id}`, item.id)}</span>
                                             </button>
                                         ))}
@@ -1465,7 +1470,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                             <div>
                                 <button
                                     onClick={() => setIsContentExpanded(!isContentExpanded)}
-                                    className="w-full flex items-center gap-2 px-2 py-2 text-xs font-bold text-primary uppercase tracking-wider hover:bg-secondary/30 rounded transition-colors"
+                                    className="w-full flex items-center gap-2 px-2 py-2 text-xs font-bold text-q-accent uppercase tracking-wider hover:bg-structure-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))] rounded-[var(--q-radius-md)] transition-all"
                                 >
                                     <ChevronDown size={14} className={`transition-transform ${isContentExpanded ? '' : '-rotate-90'}`} />
                                     <FileText size={14} />
@@ -1513,7 +1518,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         {/* Last saved indicator */}
                         {lastSaved && (
                             <div className="p-3 border-t border-q-border flex items-center gap-2 text-xs text-q-text-muted">
-                                <Check size={12} className="text-green-500" />
+                                <Check size={12} className="text-q-success" />
                                 <span>
                                     {t('landingEditor.lastSaved', 'Guardado')}: {lastSaved.toLocaleTimeString()}
                                 </span>
@@ -1530,9 +1535,9 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                 {/* Browser Header */}
                                 <div className="flex-shrink-0 h-12 bg-q-bg border-b border-q-border flex items-center px-4 space-x-2 z-10">
                                     <div className="flex space-x-2">
-                                        <span className="w-3.5 h-3.5 bg-red-500 rounded-full"></span>
-                                        <span className="w-3.5 h-3.5 bg-yellow-500 rounded-full"></span>
-                                        <span className="w-3.5 h-3.5 bg-green-500 rounded-full"></span>
+                                        <span className="w-3.5 h-3.5 bg-q-error rounded-full"></span>
+                                        <span className="w-3.5 h-3.5 bg-q-accent rounded-full"></span>
+                                        <span className="w-3.5 h-3.5 bg-q-success rounded-full"></span>
                                     </div>
                                     <div className="flex-grow flex items-center justify-center">
                                         <div className="bg-secondary/50 text-q-text-muted text-sm rounded-full px-4 py-1.5 w-full max-w-md text-center truncate flex items-center justify-center cursor-default select-none border border-q-border/50">
@@ -1624,32 +1629,32 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
             {/* Add Component Modal */}
             {showAddComponent && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-q-text/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md shadow-xl">
                         <div className="p-4 border-b border-q-border flex items-center justify-between">
                             <h3 className="font-semibold">{t('landingEditor.addComponent', 'Añadir componente')}</h3>
-                            <button
-                                onClick={() => setShowAddComponent(false)}
-                                className="p-1 rounded hover:bg-secondary"
-                            >
+	                            <button
+	                                onClick={() => setShowAddComponent(false)}
+	                                className="p-1 rounded-[var(--q-radius-md)] text-q-text-muted hover:bg-structure-control-hover hover:text-q-text"
+	                            >
                                 <X size={18} />
                             </button>
                         </div>
                         <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
                             {AVAILABLE_COMPONENTS.map(comp => (
-                                <button
-                                    key={comp.type}
-                                    onClick={() => addComponent(comp.type)}
-                                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors text-left"
-                                >
-                                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
+	                                <button
+	                                    key={comp.type}
+	                                    onClick={() => addComponent(comp.type)}
+	                                    className="w-full flex items-center gap-3 p-3 rounded-[var(--q-radius-md)] border border-transparent hover:border-structure-control-border hover:bg-structure-control-hover hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))] transition-all text-left"
+	                                >
+	                                    <div className="p-2 bg-q-accent/14 rounded-[var(--q-radius-md)] text-q-accent">
                                         {React.createElement(comp.icon, { size: 18 })}
                                     </div>
                                     <div className="flex-1">
                                         <p className="font-medium text-sm">{t(`landingEditor.components.${comp.type}`, comp.type)}</p>
                                     </div>
                                     {comp.isNew && (
-                                        <span className="px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-500 rounded-full">
+                                        <span className="px-2 py-0.5 text-xs font-medium bg-q-success/10 text-q-success rounded-full">
                                             {t('landingEditor.components.new', 'Nuevo')}
                                         </span>
                                     )}
@@ -1686,7 +1691,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                 setPreviewKey(prev => prev + 1);
                                 setShowResetConfirm(false);
                             }}
-                            className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white transition-colors"
+                            className="px-4 py-2 rounded-lg bg-q-accent hover:bg-q-accent text-q-text-on-accent transition-colors"
                         >
                             {t('landingEditor.discardChanges', 'Descartar')}
                         </button>
@@ -1714,7 +1719,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         </button>
                         <button
                             onClick={confirmDeleteSection}
-                            className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
+                            className="px-4 py-2 rounded-lg bg-q-error hover:bg-q-error text-white transition-colors"
                         >
                             {t('common.delete', 'Eliminar')}
                         </button>
@@ -1726,4 +1731,3 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 };
 
 export default LandingPageEditor;
-

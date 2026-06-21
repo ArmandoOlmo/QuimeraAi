@@ -164,7 +164,7 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
                         {hasChanges && (
-                            <span className="text-xs text-orange-500 font-medium hidden sm:inline">Cambios sin guardar</span>
+                            <span className="text-xs text-q-warning font-medium hidden sm:inline">Cambios sin guardar</span>
                         )}
                         <button
                             onClick={handleSave}
@@ -293,7 +293,7 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                                                         </button>
                                                         <button
                                                             onClick={() => deleteSection(section.id)}
-                                                            className="p-1.5 text-q-text-muted hover:text-red-500 transition-colors"
+                                                            className="p-1.5 text-q-text-muted hover:text-q-error transition-colors"
                                                         >
                                                             <Trash2 size={14} />
                                                         </button>

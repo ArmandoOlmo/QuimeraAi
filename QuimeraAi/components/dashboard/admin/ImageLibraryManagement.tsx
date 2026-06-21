@@ -163,7 +163,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
             {/* Image Detail Modal */}
             {selectedImageForDetail && (
                 <div
-                    className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+                    className="fixed inset-0 z-[100] bg-q-text/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setSelectedImageForDetail(null)}
                 >
                     <div
@@ -171,7 +171,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Image Preview */}
-                        <div className="flex-1 min-h-[300px] lg:min-h-0 bg-black/50 flex items-center justify-center p-4">
+                        <div className="flex-1 min-h-[300px] lg:min-h-0 bg-q-text/50 flex items-center justify-center p-4">
                             <img
                                 src={selectedImageForDetail.downloadURL}
                                 alt={selectedImageForDetail.name}
@@ -336,7 +336,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                             setSelectedImageForDetail(null);
                                             handleSingleDelete(selectedImageForDetail);
                                         }}
-                                        className="flex items-center justify-center gap-2 w-full py-2.5 bg-red-500/10 border border-red-500/30 text-red-500 rounded-xl text-sm font-medium hover:bg-red-500/20 transition-colors"
+                                        className="flex items-center justify-center gap-2 w-full py-2.5 bg-q-error/10 border border-q-error/30 text-q-error rounded-xl text-sm font-medium hover:bg-q-error/20 transition-colors"
                                     >
                                         <Trash2 size={16} />
                                         {t('common.deleteImage', 'Delete Image')}
@@ -376,7 +376,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                     <span className="truncate">{folder.name}</span>
                                     {folder.isSystemFolder && (
                                         <span className="ml-auto flex-shrink-0">
-                                            <Star size={12} className={selectedFolder === folder.id ? 'text-q-bg' : 'text-yellow-500'} />
+                                            <Star size={12} className={selectedFolder === folder.id ? 'text-q-bg' : 'text-q-accent'} />
                                         </span>
                                     )}
                                 </button>
@@ -478,7 +478,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                         <CheckSquare size={16} />
                                         {t('superadmin.imageLibraryManagement.select', 'Select')}
                                         {library.isSelectionMode && library.selectedIds.size > 0 && (
-                                            <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
+                                            <span className="bg-q-surface/20 px-2 py-0.5 rounded-full text-xs">
                                                 {library.selectedIds.size}
                                             </span>
                                         )}
@@ -549,13 +549,13 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                             </button>
                                             <button
                                                 onClick={handleBulkDownload}
-                                                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-blue-500 text-white hover:bg-blue-600 rounded-lg transition-colors"
+                                                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-q-accent text-q-text-on-accent hover:bg-q-accent rounded-lg transition-colors"
                                             >
                                                 <Download size={16} /> {t('superadmin.imageLibraryManagement.download', 'Download')}
                                             </button>
                                             <button
                                                 onClick={handleBulkDelete}
-                                                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                                                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-q-error text-white hover:bg-q-error rounded-lg transition-colors"
                                             >
                                                 <Trash2 size={16} /> {t('superadmin.imageLibraryManagement.delete', 'Delete')}
                                             </button>
@@ -682,7 +682,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                                                     e.stopPropagation();
                                                                     setSelectedImageForDetail(file);
                                                                 }}
-                                                                className="absolute top-2 left-2 p-1.5 bg-black/60 text-white rounded-md hover:bg-q-accent transition-colors opacity-0 group-hover:opacity-100 z-10"
+                                                                className="absolute top-2 left-2 p-1.5 bg-q-text/60 text-white rounded-md hover:bg-q-accent transition-colors opacity-0 group-hover:opacity-100 z-10"
                                                                 title={t('common.viewDetails', 'View details')}
                                                             >
                                                                 <Eye size={14} />
@@ -695,7 +695,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                                         <div className="absolute top-2 left-2 z-10">
                                                             <button
                                                                 onClick={() => library.toggleSelection(file.id)}
-                                                                className="p-1.5 bg-white dark:bg-gray-800 rounded-md shadow-lg"
+                                                                className="p-1.5 bg-q-surface dark:bg-gray-800 rounded-md shadow-lg"
                                                             >
                                                                 {library.isSelected(file.id) ? (
                                                                     <CheckSquare size={18} className="text-q-accent" />
@@ -714,7 +714,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                                                 download={file.name}
                                                                 target="_blank"
                                                                 rel="noreferrer"
-                                                                className="p-1.5 bg-black/60 text-white rounded-md hover:bg-q-accent transition-colors"
+                                                                className="p-1.5 bg-q-text/60 text-white rounded-md hover:bg-q-accent transition-colors"
                                                                 title="Download/View"
                                                                 onClick={(e) => e.stopPropagation()}
                                                             >
@@ -725,7 +725,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                                                     e.stopPropagation();
                                                                     handleSingleDelete(file);
                                                                 }}
-                                                                className="p-1.5 bg-black/60 text-white rounded-md hover:bg-red-500 transition-colors"
+                                                                className="p-1.5 bg-q-text/60 text-white rounded-md hover:bg-q-error transition-colors"
                                                                 title="Delete"
                                                             >
                                                                 <Trash2 size={14} />

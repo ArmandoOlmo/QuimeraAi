@@ -2,7 +2,7 @@
  * ImportLeadsModal
  * Modal wizard de 3 pasos para importar leads desde archivos CSV/Excel
  * con asignación opcional a audiencias de email marketing.
- * 
+ *
  * Paso 1: Subir archivo (drag & drop o selector)
  * Paso 2: Mapear columnas del archivo a campos de Lead
  * Paso 3: Preview de datos + seleccionar audiencia + confirmar importación
@@ -240,7 +240,7 @@ const UploadStep: React.FC<{
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onClick={() => fileInputRef.current?.click()}
-                className={`w-full border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center 
+                className={`w-full border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center
                     transition-all cursor-pointer group
                     ${isDragging
                         ? 'border-primary bg-primary/5 scale-[1.02]'
@@ -263,9 +263,9 @@ const UploadStep: React.FC<{
                             </p>
                         </div>
                         <div className="flex items-center gap-2 mt-2">
-                            <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500 border border-green-500/20">CSV</span>
-                            <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">XLSX</span>
-                            <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/20">XLS</span>
+                            <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-q-success/10 text-q-success border border-q-success/20">CSV</span>
+                            <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-q-accent/10 text-q-accent border border-q-accent/20">XLSX</span>
+                            <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-q-warning/10 text-q-warning border border-q-warning/20">XLS</span>
                         </div>
                     </div>
                 )}
@@ -283,7 +283,7 @@ const UploadStep: React.FC<{
             </div>
 
             {error && (
-                <div className="flex items-center gap-2 w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20">
+                <div className="flex items-center gap-2 w-full px-4 py-3 rounded-xl bg-q-error/10 text-q-error border border-q-error/20">
                     <AlertTriangle size={16} className="shrink-0" />
                     <p className="text-sm">{error}</p>
                 </div>
@@ -332,7 +332,7 @@ const MappingStep: React.FC<{
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-q-accent/10 text-q-accent border border-q-accent/20">
                 <Zap size={16} className="shrink-0" />
                 <p className="text-sm">{t('leads.import.mappingHint')}</p>
             </div>
@@ -365,7 +365,7 @@ const MappingStep: React.FC<{
                                     </div>
                                 </td>
                                 <td className="text-center py-2.5 px-3">
-                                    <ArrowRight size={14} className={`mx-auto ${m.confidence > 60 ? 'text-green-500' : 'text-q-text-muted'}`} />
+                                    <ArrowRight size={14} className={`mx-auto ${m.confidence > 60 ? 'text-q-success' : 'text-q-text-muted'}`} />
                                 </td>
                                 <td className="py-2.5 px-3">
                                     <AppSelect
@@ -376,7 +376,7 @@ const MappingStep: React.FC<{
                                             ${m.leadField === 'skip'
                                                 ? 'border-q-border text-q-text-muted'
                                                 : m.confidence > 60
-                                                    ? 'border-green-500/30 text-foreground bg-green-500/5'
+                                                    ? 'border-q-success/30 text-foreground bg-q-success/5'
                                                     : 'border-primary/30 text-foreground bg-primary/5'}`}
                                     >
                                         {LEAD_FIELDS.map(f => (
@@ -436,14 +436,14 @@ const PreviewStep: React.FC<{
             <div className="flex flex-col gap-5">
                 {/* Summary Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-center">
-                        <p className="text-2xl font-bold text-green-500">{validLeads.length}</p>
-                        <p className="text-xs text-green-500/80">{t('leads.import.validLeads')}</p>
+                    <div className="bg-q-success/10 border border-q-success/20 rounded-xl p-3 text-center">
+                        <p className="text-2xl font-bold text-q-success">{validLeads.length}</p>
+                        <p className="text-xs text-q-success/80">{t('leads.import.validLeads')}</p>
                     </div>
                     {invalidLeads > 0 && (
-                        <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-3 text-center">
-                            <p className="text-2xl font-bold text-orange-500">{invalidLeads}</p>
-                            <p className="text-xs text-orange-500/80">{t('leads.import.skippedRows')}</p>
+                        <div className="bg-q-warning/10 border border-q-warning/20 rounded-xl p-3 text-center">
+                            <p className="text-2xl font-bold text-q-warning">{invalidLeads}</p>
+                            <p className="text-xs text-q-warning/80">{t('leads.import.skippedRows')}</p>
                         </div>
                     )}
                     <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 text-center">
@@ -838,13 +838,13 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
                             <React.Fragment key={step.id}>
                                 <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
                                     ${isActive ? 'bg-primary text-primary-foreground' :
-                                        isCompleted ? 'bg-green-500/10 text-green-500' : 'text-q-text-muted'}`}
+                                        isCompleted ? 'bg-q-success/10 text-q-success' : 'text-q-text-muted'}`}
                                 >
                                     {isCompleted ? <CheckCircle size={14} /> : <StepIcon size={14} />}
                                     <span className="hidden sm:inline">{t(step.labelKey)}</span>
                                 </div>
                                 {i < STEPS.length - 1 && (
-                                    <div className={`w-6 h-px ${isCompleted ? 'bg-green-500' : 'bg-border'}`} />
+                                    <div className={`w-6 h-px ${isCompleted ? 'bg-q-success' : 'bg-border'}`} />
                                 )}
                             </React.Fragment>
                         );
@@ -858,8 +858,8 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
                         <div className="flex flex-col items-center justify-center py-8 gap-4">
                             {importResult.success > 0 ? (
                                 <>
-                                    <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
-                                        <CheckCircle className="w-8 h-8 text-green-500" />
+                                    <div className="w-16 h-16 rounded-full bg-q-success/10 flex items-center justify-center">
+                                        <CheckCircle className="w-8 h-8 text-q-success" />
                                     </div>
                                     <div className="text-center">
                                         <h3 className="text-lg font-bold text-foreground mb-1">
@@ -888,8 +888,8 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
                                 </>
                             ) : (
                                 <>
-                                    <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
-                                        <AlertTriangle className="w-8 h-8 text-red-500" />
+                                    <div className="w-16 h-16 rounded-full bg-q-error/10 flex items-center justify-center">
+                                        <AlertTriangle className="w-8 h-8 text-q-error" />
                                     </div>
                                     <div className="text-center">
                                         <h3 className="text-lg font-bold text-foreground mb-1">

@@ -67,7 +67,7 @@ const MasonryGallery: React.FC<MasonryGalleryProps> = ({
                         </div>
 
                         {/* Desktop hover: darker overlay */}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 pointer-events-none" />
+                        <div className="absolute inset-0 bg-q-text/0 group-hover:bg-q-text/20 transition-colors duration-300 pointer-events-none" />
                     </div>
                 ))}
             </div>
@@ -82,7 +82,7 @@ const MasonryGallery: React.FC<MasonryGalleryProps> = ({
                     {/* Close button */}
                     <button
                         onClick={() => setSelectedPost(null)}
-                        className="absolute top-5 right-5 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors"
+                        className="absolute top-5 right-5 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-q-surface/10 hover:bg-q-surface/20 text-white backdrop-blur-md transition-colors"
                     >
                         <X size={20} />
                     </button>

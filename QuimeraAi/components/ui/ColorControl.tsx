@@ -243,7 +243,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
     const { t } = useTranslation();
     const styles = variantStyles[variant];
     const project = useSafeProject();
-    
+
     // Construir un array completo de colores de la marca para que el usuario pueda reutilizarlos
     const globalColors = project?.theme?.globalColors;
     const globalColorsArray = globalColors ? [
@@ -257,7 +257,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
         globalColors.textMuted,
         globalColors.border,
     ].filter(Boolean) : [];
-    
+
     // Si no pasan paleta, unificamos los semánticos y los originales (quitando duplicados)
     const paletteColors = propPaletteColors ?? Array.from(new Set([
         ...globalColorsArray,
@@ -479,7 +479,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                 onMouseLeave={() => setIsDragging(false)}
             >
                 <div
-                    className="absolute w-4 h-4 rounded-full border-2 border-white shadow-sm -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                    className="absolute w-4 h-4 rounded-full border-2 border-q-border shadow-sm -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                     style={{
                         left: `${localHsv.s}%`,
                         top: `${100 - localHsv.v}%`,

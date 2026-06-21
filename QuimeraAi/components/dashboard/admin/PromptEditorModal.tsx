@@ -96,7 +96,7 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
 
             <form onSubmit={handleSubmit}>
                 <div className="p-6 md:p-8 overflow-y-auto space-y-4">
-                    {error && <p className="bg-red-500/10 text-red-400 text-sm p-3 rounded-md">{error}</p>}
+                    {error && <p className="bg-q-error/10 text-q-error text-sm p-3 rounded-md">{error}</p>}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -158,7 +158,7 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
                 <div className="p-6 bg-q-surface/50 border-t border-q-border flex justify-end items-center space-x-3">
                     <button type="button" onClick={onClose} className="font-semibold py-2 px-5 rounded-lg hover:bg-q-surface-overlay transition-colors">{t('superadmin.cancel')}</button>
                     <button type="submit" disabled={isLoading} className="bg-q-accent text-q-bg font-bold py-2 px-5 rounded-lg shadow-md hover:bg-q-accent transition-colors disabled:opacity-50 flex items-center">
-                        {isLoading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                        {isLoading && <div className="w-4 h-4 border-2 border-q-border border-t-transparent rounded-full animate-spin mr-2"></div>}
                         {isLoading ? t('superadmin.saving') : t('superadmin.savePrompt')}
                     </button>
                 </div>

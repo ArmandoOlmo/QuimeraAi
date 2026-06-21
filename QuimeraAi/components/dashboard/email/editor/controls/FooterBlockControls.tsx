@@ -43,7 +43,7 @@ const ToggleControl: React.FC<{ label: string; checked: boolean; onChange: (chec
             onClick={() => onChange(!checked)}
             className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors`}
         >
-            <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow transition mt-0.5 ml-0.5`} />
+            <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-q-surface shadow transition mt-0.5 ml-0.5`} />
         </button>
     </div>
 );
@@ -128,22 +128,22 @@ interface FooterBlockControlsProps {
 const FooterBlockControls: React.FC<FooterBlockControlsProps> = ({ block, activeTab }) => {
     const { t } = useTranslation();
     const { updateBlock } = useEmailEditor();
-    
+
     const content = block.content as EmailFooterContent;
     const styles = block.styles;
-    
+
     const updateContent = (updates: Partial<EmailFooterContent>) => {
         updateBlock(block.id, {
             content: { ...content, ...updates },
         });
     };
-    
+
     const updateStyles = (updates: Partial<EmailBlockStyles>) => {
         updateBlock(block.id, {
             styles: { ...styles, ...updates },
         });
     };
-    
+
     if (activeTab === 'content') {
         return (
             <div className="space-y-4">
@@ -153,29 +153,29 @@ const FooterBlockControls: React.FC<FooterBlockControlsProps> = ({ block, active
                     onChange={(e) => updateContent({ companyName: e.target.value })}
                     placeholder={t('email.companyNamePlaceholder', 'Tu Empresa')}
                 />
-                
+
                 <TextArea
                     label={t('email.address', 'Dirección')}
                     value={content.address || ''}
                     onChange={(e) => updateContent({ address: e.target.value })}
                     placeholder={t('email.addressPlaceholder', 'Calle 123, Ciudad, País')}
                 />
-                
+
                 <Input
                     label={t('email.copyrightText', 'Texto de copyright')}
                     value={content.copyrightText || ''}
                     onChange={(e) => updateContent({ copyrightText: e.target.value })}
                     placeholder="© 2024 All rights reserved"
                 />
-                
+
                 <hr className="border-q-border" />
-                
+
                 <ToggleControl
                     label={t('email.showUnsubscribe', 'Mostrar enlace para cancelar suscripción')}
                     checked={content.showUnsubscribe ?? true}
                     onChange={(checked) => updateContent({ showUnsubscribe: checked })}
                 />
-                
+
                 {content.showUnsubscribe && (
                     <Input
                         label={t('email.unsubscribeText', 'Texto del enlace')}
@@ -184,7 +184,7 @@ const FooterBlockControls: React.FC<FooterBlockControlsProps> = ({ block, active
                         placeholder={t('email.unsubscribeTextPlaceholder', 'Cancelar suscripción')}
                     />
                 )}
-                
+
                 <ToggleControl
                     label={t('email.showSocialLinks', 'Mostrar redes sociales')}
                     checked={content.showSocialLinks ?? false}
@@ -193,7 +193,7 @@ const FooterBlockControls: React.FC<FooterBlockControlsProps> = ({ block, active
             </div>
         );
     }
-    
+
     // Style tab
     return (
         <div className="space-y-4">
@@ -202,27 +202,27 @@ const FooterBlockControls: React.FC<FooterBlockControlsProps> = ({ block, active
                 value={styles.backgroundColor || '#f4f4f5'}
                 onChange={(color) => updateStyles({ backgroundColor: color })}
             />
-            
+
             <ColorControl
                 label={t('email.textColor', 'Color del texto')}
                 value={styles.textColor || '#71717a'}
                 onChange={(color) => updateStyles({ textColor: color })}
             />
-            
+
             <hr className="border-q-border" />
-            
+
             <FontSizeSelector
                 label={t('email.fontSize', 'Tamaño de fuente')}
                 value={styles.fontSize || 'sm'}
                 onChange={(val) => updateStyles({ fontSize: val as any })}
             />
-            
+
             <AlignmentSelector
                 label={t('email.alignment', 'Alineación')}
                 value={styles.alignment || 'center'}
                 onChange={(val) => updateStyles({ alignment: val as any })}
             />
-            
+
             <PaddingSelector
                 label={t('email.padding', 'Espaciado')}
                 value={styles.padding || 'lg'}

@@ -39,6 +39,7 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import ImagePicker from '../../ui/ImagePicker';
 import DashboardSelect from '../../ui/DashboardSelect';
+import { MotionCard } from '../../ui/primitives/Card';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useCRM } from '../../../contexts/crm/CRMContext';
@@ -196,13 +197,13 @@ const getPropertyLocation = (property: Partial<RealtyProperty>) =>
     [property.addressLine1 || property.address, property.city, property.state].filter(Boolean).join(', ');
 
 const StatCard = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) => (
-    <div className="min-w-0 rounded-xl border border-q-border bg-q-surface p-5 transition-colors hover:border-q-accent/40 md:p-6">
+    <MotionCard hoverMotion className="min-w-0 rounded-xl border border-q-border bg-q-surface p-5 transition-colors hover:border-q-accent/40 md:p-6">
         <div className="flex items-center justify-between gap-4">
             <p className="text-sm font-medium text-q-text-secondary">{label}</p>
             <Icon size={18} className="text-q-accent" />
         </div>
         <p className="mt-3 text-3xl font-bold text-q-text">{value}</p>
-    </div>
+    </MotionCard>
 );
 
 const RealtyDashboard: React.FC = () => {
@@ -1831,7 +1832,7 @@ const PropertyEditorToggle = ({
     >
         <span className="min-w-0 font-medium">{label}</span>
         <span className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors`}>
-            <span className={`${checked ? 'translate-x-4' : 'translate-x-0'} absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform`} />
+            <span className={`${checked ? 'translate-x-4' : 'translate-x-0'} absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-q-surface shadow transition-transform`} />
         </span>
     </button>
 );
@@ -1887,7 +1888,7 @@ const ToggleRow = ({ label, checked, onChange, disabled = false }: { label: stri
         >
             <span
                 aria-hidden="true"
-                className={`${checked ? 'quimera-editor-switch-knob-on translate-x-5' : 'quimera-editor-switch-knob-off translate-x-0'} quimera-editor-switch-knob pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
+                className={`${checked ? 'quimera-editor-switch-knob-on translate-x-5' : 'quimera-editor-switch-knob-off translate-x-0'} quimera-editor-switch-knob pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-q-surface shadow-sm ring-0 transition duration-200 ease-in-out`}
             />
         </button>
     </div>

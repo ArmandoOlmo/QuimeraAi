@@ -72,8 +72,8 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
         <div className="max-w-xl mx-auto space-y-8">
             {/* Header */}
             <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
-                    <Contact size={32} className="text-white" />
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center text-q-accent">
+                    <Contact size={32} />
                 </div>
                 <h3 className="text-2xl font-bold text-q-text mb-2">
                     {t('onboarding.step5Heading', 'Contact Information')}
@@ -96,7 +96,7 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                         value={contactInfo.email || ''}
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         placeholder="contact@yourbusiness.com"
-                        className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                        className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-q-accent/50 focus:border-q-accent/25 transition-all"
                     />
                 </div>
 
@@ -111,7 +111,7 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                         value={contactInfo.phone || ''}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
                         placeholder="+1 (555) 123-4567"
-                        className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                        className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-q-accent/50 focus:border-q-accent/25 transition-all"
                     />
                 </div>
 
@@ -126,7 +126,7 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                         value={contactInfo.address || ''}
                         onChange={(e) => handleInputChange('address', e.target.value)}
                         placeholder="123 Main Street"
-                        className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                        className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-q-accent/50 focus:border-q-accent/25 transition-all"
                     />
                 </div>
 
@@ -137,21 +137,21 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                         value={contactInfo.city || ''}
                         onChange={(e) => handleInputChange('city', e.target.value)}
                         placeholder={t('onboarding.city', 'City')}
-                        className="px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                        className="px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-q-accent/50 focus:border-q-accent/25 transition-all"
                     />
                     <input
                         type="text"
                         value={contactInfo.state || ''}
                         onChange={(e) => handleInputChange('state', e.target.value)}
                         placeholder={t('onboarding.state', 'State')}
-                        className="px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                        className="px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-q-accent/50 focus:border-q-accent/25 transition-all"
                     />
                     <input
                         type="text"
                         value={contactInfo.zipCode || ''}
                         onChange={(e) => handleInputChange('zipCode', e.target.value)}
                         placeholder={t('onboarding.zip', 'ZIP')}
-                        className="px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                        className="px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-q-accent/50 focus:border-q-accent/25 transition-all"
                     />
                 </div>
             </div>
@@ -190,7 +190,7 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                                     value={(contactInfo as any)[platform.id] || ''}
                                     onChange={(e) => handleSocialChange(platform.id, e.target.value)}
                                     placeholder={platform.placeholder}
-                                    className="flex-1 px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                                    className="flex-1 px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-1 focus:ring-q-accent/50"
                                 />
                             </div>
                         ))}
@@ -231,7 +231,7 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                                             type="checkbox"
                                             checked={dayHours.isOpen}
                                             onChange={(e) => handleHoursChange(day, 'isOpen', e.target.checked)}
-                                            className="w-4 h-4 rounded border-q-border bg-q-surface text-cyan-500 focus:ring-cyan-500/50"
+                                            className="w-4 h-4 rounded border-q-border bg-q-surface text-q-accent focus:ring-q-accent/50"
                                         />
                                         <span className="text-sm text-q-text">
                                             {getTranslatedDay(day)}
@@ -243,14 +243,14 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                                                 type="time"
                                                 value={dayHours.openTime || '09:00'}
                                                 onChange={(e) => handleHoursChange(day, 'openTime', e.target.value)}
-                                                className="px-2 py-1 bg-q-bg border border-q-border rounded-lg text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                                                className="px-2 py-1 bg-q-bg border border-q-border rounded-lg text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent/50"
                                             />
                                             <span className="text-q-text-secondary">-</span>
                                             <input
                                                 type="time"
                                                 value={dayHours.closeTime || '18:00'}
                                                 onChange={(e) => handleHoursChange(day, 'closeTime', e.target.value)}
-                                                className="px-2 py-1 bg-q-bg border border-q-border rounded-lg text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                                                className="px-2 py-1 bg-q-bg border border-q-border rounded-lg text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent/50"
                                             />
                                         </div>
                                     )}
@@ -267,8 +267,8 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
             </div>
 
             {/* Tip */}
-            <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
-                <p className="text-sm text-cyan-300">
+            <div className="p-4 bg-q-accent/10 border border-q-accent/30 rounded-xl">
+                <p className="text-sm text-q-accent">
                     <span className="font-semibold">💡 {t('onboarding.tip', 'Tip')}:</span>{' '}
                     {t('onboarding.step5Tip', "All fields are optional. Add what you'd like to display on your website. You can always update this information later.")}
                 </p>
@@ -278,7 +278,6 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
 };
 
 export default Step5ContactInfo;
-
 
 
 

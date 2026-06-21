@@ -393,7 +393,7 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/60 backdrop-blur-sm p-4 animate-fade-in-up">
             <div className="bg-q-surface border border-q-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="p-6 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-primary/10 to-transparent">
@@ -486,16 +486,16 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                                                 className="w-full max-h-48 object-cover rounded-xl"
                                             />
                                         )}
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-q-text/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); removeMedia(); }}
-                                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                                                className="bg-q-error text-white p-2 rounded-full hover:bg-q-error transition-colors"
                                                 title={t('cms_assistant.removeMedia', { defaultValue: 'Remove' })}
                                             >
                                                 <Trash2 size={16} />
                                             </button>
                                         </div>
-                                        <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                        <div className="absolute top-2 left-2 bg-q-text/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
                                             {mediaType === 'video' ? <Film size={12} /> : <ImageIcon size={12} />}
                                             {mediaType === 'video' ? 'Video' : 'Image'}
                                         </div>
@@ -592,7 +592,7 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                                 </button>
                                 <button
                                     onClick={handleGenerate}
-                                    className="bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:scale-105 transition-all"
+                                    className="bg-gradient-to-r from-primary to-q-accent-tertiary text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:scale-105 transition-all"
                                 >
                                     <Sparkles size={18} /> {t('cms_assistant.generateDraft')}
                                 </button>
@@ -615,11 +615,11 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
 
                     {step === 'preview' && generatedPost && (
                         <div className="space-y-6 animate-fade-in-up h-full flex flex-col">
-                            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-start gap-3">
-                                <CheckCircle className="text-green-500 shrink-0 mt-0.5" size={20} />
+                            <div className="bg-q-success/10 border border-q-success/20 rounded-lg p-4 flex items-start gap-3">
+                                <CheckCircle className="text-q-success shrink-0 mt-0.5" size={20} />
                                 <div>
-                                    <p className="font-bold text-green-600">{t('cms_assistant.success')}</p>
-                                    <p className="text-xs text-green-600/80">{t('cms_assistant.successDesc')}</p>
+                                    <p className="font-bold text-q-success">{t('cms_assistant.success')}</p>
+                                    <p className="text-xs text-q-success/80">{t('cms_assistant.successDesc')}</p>
                                 </div>
                             </div>
 
@@ -671,7 +671,7 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                                 </button>
                                 <button
                                     onClick={handleConfirm}
-                                    className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-green-700 transition-all shadow-lg shadow-green-900/20"
+                                    className="bg-q-success text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-q-success transition-all shadow-lg shadow-q-success/20"
                                 >
                                     {t('cms_assistant.openInEditor')} <ArrowRight size={18} />
                                 </button>

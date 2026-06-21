@@ -238,18 +238,18 @@ export function AgencyPlanManager() {
 
             {/* Instructions Banner */}
             {plans.length === 0 && (
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-sm">
+                <div className="bg-q-accent/10 border border-q-accent/30 rounded-xl p-4 text-sm">
                     <button
                         onClick={() => setInstructionsCollapsed(!instructionsCollapsed)}
                         className="w-full flex items-center justify-between"
                     >
-                        <h4 className="font-semibold text-amber-500 flex items-center gap-2">
+                        <h4 className="font-semibold text-q-accent flex items-center gap-2">
                             💡 ¿Cómo funcionan los Planes de Servicio?
                         </h4>
                         {instructionsCollapsed ? (
-                            <ChevronDown className="w-5 h-5 text-amber-500" />
+                            <ChevronDown className="w-5 h-5 text-q-accent" />
                         ) : (
-                            <ChevronUp className="w-5 h-5 text-amber-500" />
+                            <ChevronUp className="w-5 h-5 text-q-accent" />
                         )}
                     </button>
                     {!instructionsCollapsed && (
@@ -258,7 +258,7 @@ export function AgencyPlanManager() {
                                 <p>
                                     <strong className="text-foreground">Los planes te permiten ofrecer diferentes niveles de servicio a tus clientes.</strong>
                                     {' '}Por cada plan defines un precio (lo que cobra tu agencia) y un costo base (lo que pagas a Quimera).
-                                    La diferencia es tu <span className="text-green-500 font-medium">ganancia mensual</span>.
+                                    La diferencia es tu <span className="text-q-success font-medium">ganancia mensual</span>.
                                 </p>
                                 <ul className="list-disc list-inside space-y-1 pl-2">
                                     <li><strong className="text-foreground">Precio:</strong> Lo que tu cliente paga mensualmente</li>
@@ -267,8 +267,8 @@ export function AgencyPlanManager() {
                                     <li><strong className="text-foreground">Features:</strong> Funcionalidades incluidas (Chat IA, E-commerce, CRM, etc.)</li>
                                 </ul>
                             </div>
-                            <div className="pt-2 border-t border-amber-500/20">
-                                <p className="text-amber-400">
+                            <div className="pt-2 border-t border-q-accent/20">
+                                <p className="text-q-accent">
                                     👉 Haz clic en <strong>"+ Nuevo Plan"</strong> para crear tu primer plan de servicio.
                                 </p>
                             </div>
@@ -296,8 +296,8 @@ export function AgencyPlanManager() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="bg-q-surface border border-q-border rounded-lg p-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                                <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            <div className="p-2 rounded-lg bg-q-accent/10 dark:bg-q-accent/12">
+                                <Package className="w-5 h-5 text-q-accent dark:text-q-accent" />
                             </div>
                             <div>
                                 <p className="text-sm text-q-text-muted">Planes Activos</p>
@@ -307,8 +307,8 @@ export function AgencyPlanManager() {
                     </div>
                     <div className="bg-q-surface border border-q-border rounded-lg p-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                                <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                            <div className="p-2 rounded-lg bg-q-accent/10 dark:bg-q-accent/12">
+                                <Users className="w-5 h-5 text-q-accent dark:text-q-accent" />
                             </div>
                             <div>
                                 <p className="text-sm text-q-text-muted">Clientes Totales</p>
@@ -318,8 +318,8 @@ export function AgencyPlanManager() {
                     </div>
                     <div className="bg-q-surface border border-q-border rounded-lg p-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-                                <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
+                            <div className="p-2 rounded-lg bg-q-success/10 dark:bg-q-success/12">
+                                <DollarSign className="w-5 h-5 text-q-success dark:text-q-success" />
                             </div>
                             <div>
                                 <p className="text-sm text-q-text-muted">MRR Total</p>
@@ -329,12 +329,12 @@ export function AgencyPlanManager() {
                     </div>
                     <div className="bg-q-surface border border-q-border rounded-lg p-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
-                                <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                            <div className="p-2 rounded-lg bg-q-accent/10 dark:bg-q-accent/12">
+                                <TrendingUp className="w-5 h-5 text-q-accent dark:text-q-accent" />
                             </div>
                             <div>
                                 <p className="text-sm text-q-text-muted">Ganancia Mensual</p>
-                                <p className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalMarkup)}</p>
+                                <p className="text-2xl font-bold text-q-success">{formatCurrency(stats.totalMarkup)}</p>
                             </div>
                         </div>
                     </div>
@@ -443,7 +443,7 @@ export function AgencyPlanManager() {
                                             <span className="text-q-text-muted">Costo: </span>
                                             <span className="text-foreground">{formatCurrency(plan.baseCost)}</span>
                                         </div>
-                                        <div className="text-green-600 dark:text-green-400 font-medium">
+                                        <div className="text-q-success dark:text-q-success font-medium">
                                             +{formatCurrency(markup)} ({Math.round(markupPercentage)}%)
                                         </div>
                                     </div>
@@ -499,7 +499,7 @@ export function AgencyPlanManager() {
                                                     <button
                                                         onClick={() => handleRestorePlan(plan)}
                                                         disabled={isProcessing}
-                                                        className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 transition-colors"
+                                                        className="p-2 rounded-lg hover:bg-q-success/10 dark:hover:bg-q-success/12 text-q-success transition-colors"
                                                         title="Restaurar"
                                                     >
                                                         <RotateCcw className="w-4 h-4" />
@@ -517,7 +517,7 @@ export function AgencyPlanManager() {
                                                 <button
                                                     onClick={() => handleArchivePlan(plan)}
                                                     disabled={isProcessing}
-                                                    className="p-2 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-600 transition-colors"
+                                                    className="p-2 rounded-lg hover:bg-q-accent/10 dark:hover:bg-q-accent/12 text-q-accent transition-colors"
                                                     title="Archivar"
                                                 >
                                                     <Archive className="w-4 h-4" />

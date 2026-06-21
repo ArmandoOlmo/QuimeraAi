@@ -37,7 +37,7 @@ export function AgencyDashboard({ className = '' }: AgencyDashboardProps) {
             <div className="flex items-center justify-center h-screen">
                 <div className="text-center">
                     <Loader2 className="h-8 w-8 animate-spin quimera-status-card-accent-text mx-auto mb-4" />
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-q-text-muted dark:text-gray-400">
                         {t('dashboard.agency.loading')}
                     </p>
                 </div>
@@ -49,16 +49,16 @@ export function AgencyDashboard({ className = '' }: AgencyDashboardProps) {
         return (
             <div className="flex items-center justify-center h-screen">
                 <div className="text-center max-w-md">
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-                        <h3 className="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">
+                    <div className="bg-q-error/10 dark:bg-q-error/12 border border-q-error/25 dark:border-q-error/30 rounded-lg p-6">
+                        <h3 className="text-lg font-semibold text-q-error dark:text-q-error mb-2">
                             {t('dashboard.agency.errorLoadingData')}
                         </h3>
-                        <p className="text-red-700 dark:text-red-300 mb-4">
+                        <p className="text-q-error dark:text-q-error mb-4">
                             {error.message}
                         </p>
                         <button
                             onClick={handleRefresh}
-                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            className="px-4 py-2 bg-q-error text-white rounded-lg hover:bg-q-error transition-colors"
                         >
                             {t('dashboard.agency.retry')}
                         </button>
@@ -73,10 +73,10 @@ export function AgencyDashboard({ className = '' }: AgencyDashboardProps) {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    <h1 className="text-3xl font-bold text-q-text dark:text-white">
                         {t('dashboard.agency.dashboardTitle')}
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-q-text-muted dark:text-gray-400 mt-1">
                         {t('dashboard.agency.dashboardSubtitle')}
                     </p>
                 </div>

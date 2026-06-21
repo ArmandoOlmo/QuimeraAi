@@ -465,7 +465,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         <span className="text-sm font-semibold">Store / Ecommerce</span>
                     </div>
                     {!effectiveProjectId && (
-                        <div className="px-4 py-3 text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 border-b border-q-border">
+                        <div className="px-4 py-3 text-xs text-q-accent bg-q-accent/10 dark:bg-q-accent/12 dark:text-q-accent border-b border-q-border">
                             No project selected. Please select a project first.
                         </div>
                     )}
@@ -626,7 +626,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                     </div>
                     <div className="flex gap-1 sm:gap-2">
                         {!isNew && (
-                            <button onClick={handleDeleteMenu} className="px-2 sm:px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                            <button onClick={handleDeleteMenu} className="px-2 sm:px-4 py-2 text-sm font-medium text-q-error hover:bg-q-error/10 rounded-lg transition-colors">
                                 <span className="hidden sm:inline">Delete menu</span>
                                 <Trash2 size={18} className="sm:hidden" />
                             </button>
@@ -782,7 +782,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                         </div>
                                                     </div>
                                                     <div className="mt-4 flex justify-between">
-                                                        <button onClick={() => deleteMenuItem(item.id)} className="text-red-500 text-sm flex items-center hover:underline"><Trash2 size={14} className="mr-1" /> Delete</button>
+                                                        <button onClick={() => deleteMenuItem(item.id)} className="text-q-error text-sm flex items-center hover:underline"><Trash2 size={14} className="mr-1" /> Delete</button>
                                                         <button onClick={() => setEditingItemId(null)} className="bg-secondary/50 border border-q-border px-3 py-1.5 rounded text-sm font-medium hover:bg-secondary">Done</button>
                                                     </div>
                                                 </div>

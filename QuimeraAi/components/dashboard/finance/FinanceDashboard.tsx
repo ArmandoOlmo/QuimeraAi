@@ -47,6 +47,7 @@ import SmartTransactionTable from './SmartTransactionTable';
 import InvoiceManager from './InvoiceManager';
 import ReportGenerator from './ReportGenerator';
 import AppSelect from '../../ui/AppSelect';
+import { MotionCard } from '../../ui/primitives/Card';
 
 const COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'];
 
@@ -63,7 +64,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 // Local Helper Components
 const StatCard = ({ title, value, icon: Icon, trend, trendColor = 'quimera-status-card-accent-text' }: any) => (
-    <div className="group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-2.5 md:p-4 hover:border-q-border transition-all duration-300 ease-out">
+    <MotionCard hoverMotion className="group relative overflow-hidden rounded-xl md:rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-2.5 md:p-4 hover:border-q-border transition-all duration-300 ease-out">
         <div
             className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-24 h-24 sm:w-32 sm:h-32 rounded-full blur-2xl group-hover:scale-110 transition-all duration-500"
             aria-hidden="true"
@@ -80,7 +81,7 @@ const StatCard = ({ title, value, icon: Icon, trend, trendColor = 'quimera-statu
             <div className="text-xl md:text-3xl font-extrabold text-foreground">{value}</div>
             <p className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{title}</p>
         </div>
-    </div>
+    </MotionCard>
 );
 
 // Accounting tab content — self-contained component managing accounting hooks
@@ -130,10 +131,10 @@ const AccountingTabContent: React.FC<{
                 <div className="space-y-6 animate-in fade-in duration-500">
                     {/* KPI Cards */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
-                        <StatCard title={t('accounting.totalIncome', 'Total Income')} value={`$${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={TrendingUp} trendColor="text-green-400" />
-                        <StatCard title={t('accounting.totalExpenses', 'Total Expenses')} value={`$${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={TrendingDown} trendColor="text-red-400" />
-                        <StatCard title={t('accounting.netIncome', 'Net Income')} value={`$${(totalIncome - totalExpenses).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={DollarSign} trendColor={totalIncome - totalExpenses >= 0 ? 'text-green-400' : 'text-red-400'} />
-                        <StatCard title={t('accounting.outstanding', 'Outstanding')} value={`$${totalOutstanding.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={AlertTriangle} trend={overdueInvoices.length > 0 ? `${overdueInvoices.length} ${t('accounting.overdue', 'overdue')}` : undefined} trendColor="text-amber-400" />
+                        <StatCard title={t('accounting.totalIncome', 'Total Income')} value={`$${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={TrendingUp} trendColor="text-q-success" />
+                        <StatCard title={t('accounting.totalExpenses', 'Total Expenses')} value={`$${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={TrendingDown} trendColor="text-q-error" />
+                        <StatCard title={t('accounting.netIncome', 'Net Income')} value={`$${(totalIncome - totalExpenses).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={DollarSign} trendColor={totalIncome - totalExpenses >= 0 ? 'text-q-success' : 'text-q-error'} />
+                        <StatCard title={t('accounting.outstanding', 'Outstanding')} value={`$${totalOutstanding.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={AlertTriangle} trend={overdueInvoices.length > 0 ? `${overdueInvoices.length} ${t('accounting.overdue', 'overdue')}` : undefined} trendColor="text-q-accent" />
                     </div>
 
                     {/* Cash Flow Chart */}
@@ -163,13 +164,13 @@ const AccountingTabContent: React.FC<{
 
                     {/* Overdue invoices widget */}
                     {overdueInvoices.length > 0 && (
-                        <div className="quimera-dashboard-panel-card group p-5 border-red-500/20">
-                            <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><AlertTriangle size={18} className="text-red-400" />{t('accounting.overdueInvoices', 'Overdue Invoices')}</h3>
+                        <div className="quimera-dashboard-panel-card group p-5 border-q-error/20">
+                            <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><AlertTriangle size={18} className="text-q-error" />{t('accounting.overdueInvoices', 'Overdue Invoices')}</h3>
                             <div className="space-y-2">
                                 {overdueInvoices.map(inv => (
-                                    <div key={inv.id} className="flex items-center justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/10">
+                                    <div key={inv.id} className="flex items-center justify-between p-3 rounded-xl bg-q-error/5 border border-q-error/10">
                                         <div><span className="font-semibold text-foreground">{inv.invoiceNumber}</span><span className="text-sm text-q-text-muted ml-2">{inv.clientName}</span></div>
-                                        <span className="font-bold text-red-400">${inv.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                        <span className="font-bold text-q-error">${inv.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 ))}
                             </div>
@@ -275,7 +276,7 @@ const FinanceDashboard: React.FC = () => {
                         meta = { supplier: t.description || 'Desconocido' };
                     }
                 } catch(e) {}
-                
+
                 return {
                     id: t.id,
                     date: t.date,
@@ -470,13 +471,13 @@ const FinanceDashboard: React.FC = () => {
                         date: extractedData.date || new Date().toISOString().split('T')[0],
                         description: descriptionJSON,
                         status: 'pending',
-                        receiptUrl: '' 
+                        receiptUrl: ''
                     });
 
                     // Solo seleccionamos el último si se subieron varios
                     if (files.length === 1 || i === files.length - 1) {
-                        setSelectedExpense({ 
-                            id: newId, 
+                        setSelectedExpense({
+                            id: newId,
                             date: extractedData.date || new Date().toISOString().split('T')[0],
                             supplier: extractedData.supplier || 'Desconocido',
                             category: extractedData.category || 'Otros',
@@ -520,10 +521,10 @@ const FinanceDashboard: React.FC = () => {
     const handleUpdateExpense = useCallback(async (id: string, updates: Partial<ExpenseRecord>) => {
         const tx = transactions.find(t => t.id === id);
         if (!tx) return;
-        
+
         let meta: any = {};
         try { if (tx.description && tx.description.startsWith('{')) meta = JSON.parse(tx.description); } catch(e) {}
-        
+
         if (updates.supplier !== undefined) meta.supplier = updates.supplier;
         if (updates.subtotal !== undefined) meta.subtotal = updates.subtotal;
         if (updates.tax !== undefined) meta.tax = updates.tax;
@@ -807,7 +808,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                     title={t('financeDashboard.anomalies')}
                                     value={anomalies.length}
                                     icon={AlertTriangle}
-                                    trendColor={anomalies.length > 0 ? "text-red-500" : "text-green-500"}
+                                    trendColor={anomalies.length > 0 ? "text-q-error" : "text-q-success"}
                                 />
                             </div>
 
@@ -852,7 +853,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                             )}
                                         </label>
                                         {uploadError && (
-                                            <div className="mt-6 flex items-center gap-2 justify-center text-red-500 text-sm font-medium bg-red-500/5 p-3 rounded-lg border border-red-500/20">
+                                            <div className="mt-6 flex items-center gap-2 justify-center text-q-error text-sm font-medium bg-q-error/5 p-3 rounded-lg border border-q-error/20">
                                                 <AlertTriangle size={16} />
                                                 <span>{uploadError}</span>
                                             </div>
@@ -873,7 +874,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                         <span className="text-xs text-q-text-muted font-medium">{t('financeDashboard.charts.expenses')}</span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-3 h-3 rounded-full bg-orange-500 border border-orange-500 border-dashed" />
+                                                        <div className="w-3 h-3 rounded-full bg-q-warning border border-q-warning/25 border-dashed" />
                                                         <span className="text-xs text-q-text-muted font-medium">{t('financeDashboard.charts.average')}</span>
                                                     </div>
                                                 </div>
@@ -1048,21 +1049,21 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
                                     {/* Anomalies Preview */}
                                     {anomalies.length > 0 && (
-                                        <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-6">
-                                            <div className="flex items-center gap-2 mb-4 text-orange-500">
+                                        <div className="bg-q-warning/5 border border-q-warning/20 rounded-xl p-6">
+                                            <div className="flex items-center gap-2 mb-4 text-q-warning">
                                                 <AlertTriangle size={18} />
                                                 <h3 className="font-bold">{t('financeDashboard.aiAlerts')} ({anomalies.length})</h3>
                                             </div>
                                             <div className="space-y-3">
                                                 {anomalies.slice(0, 2).map(anomaly => (
-                                                    <div key={anomaly.id} className="text-xs p-3 bg-q-surface border border-orange-500/10 rounded-lg">
+                                                    <div key={anomaly.id} className="text-xs p-3 bg-q-surface border border-q-warning/10 rounded-lg">
                                                         <p className="font-bold mb-1">{anomaly.supplier}</p>
                                                         <p className="text-q-text-muted line-clamp-2">{anomaly.reason}</p>
                                                     </div>
                                                 ))}
                                                 <button
                                                     onClick={() => setActiveView('analytics')}
-                                                    className="w-full text-xs font-bold text-orange-500 hover:underline text-center pt-2"
+                                                    className="w-full text-xs font-bold text-q-warning hover:underline text-center pt-2"
                                                 >
                                                     {t('financeDashboard.goToAnalysis')}
                                                 </button>
@@ -1074,11 +1075,11 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
                             {/* Anomalies Alert */}
                             {showAnomalies && anomalies.length > 0 && (
-                                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                                <div className="bg-q-accent/10 border border-q-accent/30 rounded-xl p-4">
                                     <div className="flex items-start gap-2 mb-3">
-                                        <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5" />
+                                        <AlertTriangle className="w-5 h-5 text-q-accent mt-0.5" />
                                         <div>
-                                            <h4 className="font-bold text-yellow-600 dark:text-yellow-400">{t('financeDashboard.anomaliesDetected')}</h4>
+                                            <h4 className="font-bold text-q-accent dark:text-q-accent">{t('financeDashboard.anomaliesDetected')}</h4>
                                             <p className="text-xs text-q-text-muted mt-1">{anomalies.length} {t('financeDashboard.unusualExpenses')}</p>
                                         </div>
                                     </div>
@@ -1087,7 +1088,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                             <div key={anomaly.id} className="bg-q-bg/50 rounded-lg p-3 text-sm">
                                                 <div className="flex justify-between mb-1">
                                                     <span className="font-semibold">{anomaly.supplier}</span>
-                                                    <span className="text-red-500 font-bold">${anomaly.total}</span>
+                                                    <span className="text-q-error font-bold">${anomaly.total}</span>
                                                 </div>
                                                 <p className="text-xs text-q-text-muted">{anomaly.reason}</p>
                                             </div>
@@ -1202,7 +1203,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                         <td className="px-4 py-3 font-medium">{expense.date}</td>
                                                         <td className="px-4 py-3">
                                                             <div className="flex items-center gap-2">
-                                                                <div className="w-6 h-6 rounded bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs">
+                                                                <div className="w-6 h-6 rounded bg-q-warning/10 text-q-warning flex items-center justify-center font-bold text-xs">
                                                                     {expense.supplier.charAt(0).toUpperCase()}
                                                                 </div>
                                                                 {expense.supplier}
@@ -1224,12 +1225,12 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                         </td>
                                                         <td className="px-4 py-3 text-center">
                                                             {expense.status === 'approved' ? (
-                                                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-600 text-xs font-bold border border-green-500/20">
+                                                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-q-success/10 text-q-success text-xs font-bold border border-q-success/20">
                                                                     <CheckCircle2 size={12} />
                                                                     <span>{t('financeDashboard.approved')}</span>
                                                                 </div>
                                                             ) : (
-                                                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-600 text-xs font-bold border border-yellow-500/20">
+                                                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-q-accent/10 text-q-accent text-xs font-bold border border-q-accent/20">
                                                                     <Loader2 size={12} className="animate-spin" />
                                                                     <span>{t('financeDashboard.pending')}</span>
                                                                 </div>
@@ -1238,7 +1239,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                         <td className="px-4 py-3 text-right">
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleDeleteExpense(expense.id); }}
-                                                                className="text-q-text-muted hover:text-red-500 transition-colors"
+                                                                className="text-q-text-muted hover:text-q-error transition-colors"
                                                             >
                                                                 <Trash2 size={16} />
                                                             </button>
@@ -1278,7 +1279,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 <div className="flex items-center justify-center gap-1">
                                                     <span className="text-3xl font-bold tracking-tight">${selectedExpense.total.toLocaleString()}</span>
                                                 </div>
-                                                <div className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${selectedExpense.status === 'approved' ? 'bg-green-500/10 text-green-600' : 'bg-yellow-500/10 text-yellow-600'}`}>
+                                                <div className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${selectedExpense.status === 'approved' ? 'bg-q-success/10 text-q-success' : 'bg-q-accent/10 text-q-accent'}`}>
                                                     {selectedExpense.status === 'approved' ? <CheckCircle2 size={12} /> : <Loader2 size={12} className="animate-spin" />}
                                                     {selectedExpense.status === 'approved' ? t('financeDashboard.details.verifiedApproved') : t('financeDashboard.details.pendingReview')}
                                                 </div>
@@ -1417,9 +1418,9 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-q-border bg-q-bg hover:bg-secondary text-xs font-bold transition-colors disabled:opacity-50"
                                             >
                                                 {isRecategorizing ? (
-                                                    <Loader2 size={14} className="animate-spin text-purple-500" />
+                                                    <Loader2 size={14} className="animate-spin text-q-accent" />
                                                 ) : (
-                                                    <Sparkles size={14} className="text-purple-500" />
+                                                    <Sparkles size={14} className="text-q-accent" />
                                                 )}
                                                 {isRecategorizing ? t('financeDashboard.recategorizing') : t('financeDashboard.recategorizeAI')}
                                             </button>
@@ -1427,7 +1428,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 onClick={() => handleUpdateExpense(selectedExpense.id, { status: 'approved' })}
                                                 disabled={selectedExpense.status === 'approved'}
                                                 className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all ${selectedExpense.status === 'approved'
-                                                    ? 'bg-green-500 text-white opacity-90 cursor-default'
+                                                    ? 'bg-q-success text-white opacity-90 cursor-default'
                                                     : 'quimera-guide-cta'
                                                     }`}
                                             >

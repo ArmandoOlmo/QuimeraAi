@@ -4,6 +4,9 @@ export type { AppButtonProps, AppButtonSize, AppButtonVariant } from './AppButto
 export { AppCard } from './AppCard';
 export type { AppCardProps, AppCardVariant } from './AppCard';
 
+export { AppIcon, IconBadge } from './AppIcon';
+export type { AppIconProps, AppIconSize, AppIconTone, IconBadgeProps } from './AppIcon';
+
 export { PageContainer } from './PageContainer';
 export type { PageContainerProps, PageContainerVariant } from './PageContainer';
 

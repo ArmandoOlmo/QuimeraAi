@@ -114,7 +114,7 @@ export function ProjectTransferModal({
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-q-text/60 backdrop-blur-sm"
                 onClick={handleClose}
             />
 
@@ -146,8 +146,8 @@ export function ProjectTransferModal({
                     {/* Transfer Result */}
                     {transferResult && (
                         <div className={`mb-6 p-4 rounded-xl border ${transferResult.success
-                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                                : 'bg-red-500/10 border-red-500/30 text-red-400'
+                                ? 'bg-q-success/10 border-q-success/30 text-q-success'
+                                : 'bg-q-error/10 border-q-error/30 text-q-error'
                             }`}>
                             <div className="flex items-center gap-2">
                                 {transferResult.success ? (

@@ -1,10 +1,10 @@
 /**
  * CMSContentStudio
- * 
+ *
  * Conversational AI Content Assistant for User CMS (project-level).
  * Uses PROJECT-SPECIFIC context (business info, brand, website content,
  * existing posts, CRM leads) — NOT platform/Quimera knowledge.
- * 
+ *
  * Features:
  * - Multi-turn text chat (gemini-3-flash-preview)
  * - Real-time voice via Gemini Live API (gemini-3.1-flash-live-preview)
@@ -107,6 +107,9 @@ const TONE_OPTIONS = [
 
 const MODEL_TEXT = 'gemini-3-flash-preview';
 const MODEL_VOICE = 'gemini-3.1-flash-live-preview';
+
+const resolveStudioLanguage = (language?: string): 'es' | 'en' =>
+    language?.toLowerCase().startsWith('en') ? 'en' : 'es';
 
 // =============================================================================
 // PROJECT CONTEXT (replaces platform knowledge)
@@ -321,7 +324,7 @@ function buildLeadsSummary(leads: any[]): string {
 // =============================================================================
 
 const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCreated }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const { activeProject } = useProject();
     const { cmsPosts } = useCMS();
@@ -337,7 +340,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
     const [contentType, setContentType] = useState('blog');
     const [audience, setAudience] = useState('');
     const [tone, setTone] = useState('Profesional');
-    const [language, setLanguage] = useState<'es' | 'en'>('es');
+    const [language, setLanguage] = useState<'es' | 'en'>(() => resolveStudioLanguage(i18n.language));
 
     // --------------- Generated Post State ---------------
     const [generatedPost, setGeneratedPost] = useState<Partial<CMSPost> & { tags?: string[]; readTime?: number; seo?: any } | null>(null);
@@ -371,6 +374,16 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
     const currentModelResponseRef = useRef<string>('');
     const currentUserTranscriptRef = useRef<string>('');
 
+    const buildWelcomeText = useCallback((ctx: ProjectContentContext, selectedLanguage: 'es' | 'en' = language) => (
+        selectedLanguage === 'es'
+            ? `¡Hola! 👋 Soy tu **Asistente de Contenido AI**${ctx.businessName ? ` para **${ctx.businessName}**` : ''}.\n\nConozco tu negocio${ctx.industry ? ` en el sector de **${ctx.industry}**` : ''} y puedo ayudarte a:\n\n- 📝 **Planificar** artículos, blogs y contenido para tu marca\n- 🎯 **Definir** audiencia, tono y ángulo perfecto\n- 💡 **Sugerir** temas relevantes para tu industria\n- ✍️ **Generar** contenido completo optimizado para SEO\n${ctx.existingPostTitles.length > 0 ? `\nYa tienes **${ctx.existingPostTitles.length}** publicaciones. Puedo sugerir temas complementarios.\n` : ''}\n¿Qué tipo de contenido necesitas crear hoy?`
+            : `Hello! 👋 I'm your **AI Content Assistant**${ctx.businessName ? ` for **${ctx.businessName}**` : ''}.\n\nI know your business${ctx.industry ? ` in the **${ctx.industry}** sector` : ''} and can help you:\n\n- 📝 **Plan** articles, blogs, and content for your brand\n- 🎯 **Define** the perfect audience, tone, and angle\n- 💡 **Suggest** topics relevant to your industry\n- ✍️ **Generate** complete SEO-optimized content\n${ctx.existingPostTitles.length > 0 ? `\nYou already have **${ctx.existingPostTitles.length}** posts. I can suggest complementary topics.\n` : ''}\nWhat kind of content do you need to create today?`
+    ), [language]);
+
+    useEffect(() => {
+        setLanguage(resolveStudioLanguage(i18n.language));
+    }, [i18n.language]);
+
     // =============================================================================
     // INITIALIZATION
     // =============================================================================
@@ -399,9 +412,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
             }
 
             // Build project-aware welcome message
-            const welcomeText = language === 'es'
-                ? `¡Hola! 👋 Soy tu **Asistente de Contenido AI**${businessName ? ` para **${businessName}**` : ''}.\n\nConozco tu negocio${ctx.industry ? ` en el sector de **${ctx.industry}**` : ''} y puedo ayudarte a:\n\n- 📝 **Planificar** artículos, blogs y contenido para tu marca\n- 🎯 **Definir** audiencia, tono y ángulo perfecto\n- 💡 **Sugerir** temas relevantes para tu industria\n- ✍️ **Generar** contenido completo optimizado para SEO\n${ctx.existingPostTitles.length > 0 ? `\nYa tienes **${ctx.existingPostTitles.length}** publicaciones. Puedo sugerir temas complementarios.\n` : ''}\n¿Qué tipo de contenido necesitas crear hoy?`
-                : `Hello! 👋 I'm your **AI Content Assistant**${businessName ? ` for **${businessName}**` : ''}.\n\nI know your business${ctx.industry ? ` in the **${ctx.industry}** sector` : ''} and can help you:\n\n- 📝 **Plan** articles, blogs, and content for your brand\n- 🎯 **Define** the perfect audience, tone, and angle\n- 💡 **Suggest** topics relevant to your industry\n- ✍️ **Generate** complete SEO-optimized content\n${ctx.existingPostTitles.length > 0 ? `\nYou already have **${ctx.existingPostTitles.length}** posts. I can suggest complementary topics.\n` : ''}\nWhat kind of content do you need to create today?`;
+            const welcomeText = buildWelcomeText(ctx);
 
             const welcomeMsg: DisplayMessage = {
                 role: 'model',
@@ -419,6 +430,19 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
         };
         init();
     }, []);
+
+    useEffect(() => {
+        if (!projectContext || messages.length !== 1 || messages[0]?.role !== 'model') return;
+
+        const welcomeText = buildWelcomeText(projectContext);
+        setMessages([{ ...messages[0], text: welcomeText, timestamp: Date.now() }]);
+
+        const systemContext = buildProjectSystemPrompt(projectContext, language);
+        historyRef.current = [
+            { role: 'user', text: `[CONTEXT] ${systemContext}` },
+            { role: 'model', text: welcomeText },
+        ];
+    }, [language, projectContext, buildWelcomeText]);
 
     // Auto-scroll chat
     useEffect(() => {
@@ -848,24 +872,24 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
 
     return (
         <>
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/60 backdrop-blur-sm p-4 animate-fade-in-up">
             <div className="bg-q-bg border border-q-border w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ maxHeight: '90vh' }}>
 
                 {/* ===== HEADER ===== */}
-                <div className="p-4 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-purple-500/10 via-blue-500/5 to-transparent">
+                <div className="p-4 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-q-accent/10 via-q-accent/5 to-transparent">
                     <div className="flex items-center gap-3">
                         <div className="relative">
-                            <div className="bg-gradient-to-br from-purple-500 to-blue-500 p-2.5 rounded-xl shadow-lg shadow-purple-500/20">
+                            <div className="bg-gradient-to-br from-q-accent to-q-accent-tertiary p-2.5 rounded-xl shadow-lg shadow-q-accent/20">
                                 <Sparkles className="text-white w-5 h-5" />
                             </div>
                             {isVoiceActive && (
-                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-q-bg animate-pulse" />
+                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-q-success rounded-full border-2 border-q-bg animate-pulse" />
                             )}
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-q-text flex items-center gap-2">
                                 {language === 'es' ? 'Estudio de Contenido AI' : 'AI Content Studio'}
-                                <span className="text-[10px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
+                                <span className="text-[10px] font-mono bg-q-accent/20 text-q-accent px-2 py-0.5 rounded-full">
                                     {isVoiceActive ? MODEL_VOICE.split('-').slice(-2).join('-') : MODEL_TEXT.split('-').slice(-2).join('-')}
                                 </span>
                             </h2>
@@ -888,7 +912,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                         </button>
                         <button
                             onClick={() => { stopVoiceSession(); onClose(); }}
-                            className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                            className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-error hover:bg-q-error/10 transition-colors"
                         >
                             <X className="w-4 h-4" />
                         </button>
@@ -906,8 +930,8 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                             {messages.map((msg, i) => (
                                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user'
-                                        ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white rounded-br-md'
-                                        : 'bg-[#1e1b2e] border border-purple-500/15 text-gray-100 rounded-bl-md'
+                                        ? 'bg-gradient-to-br from-q-accent to-q-accent-tertiary text-q-text-on-accent rounded-br-md'
+                                        : 'bg-[#1e1b2e] border border-q-accent/15 text-q-text-muted rounded-bl-md'
                                         }`}>
                                         {msg.isVoice && (
                                             <span className="inline-flex items-center gap-1 text-[10px] opacity-60 mb-1">
@@ -916,11 +940,11 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                         )}
                                         <ReactMarkdown
                                             components={{
-                                                p: ({ children }) => <p className="mb-2 last:mb-0 text-gray-100">{children}</p>,
+                                                p: ({ children }) => <p className="mb-2 last:mb-0 text-q-text-muted">{children}</p>,
                                                 strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-                                                ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-gray-200">{children}</ul>,
-                                                ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-gray-200">{children}</ol>,
-                                                li: ({ children }) => <li className="leading-relaxed text-gray-200">{children}</li>,
+                                                ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-q-text-muted">{children}</ul>,
+                                                ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-q-text-muted">{children}</ol>,
+                                                li: ({ children }) => <li className="leading-relaxed text-q-text-muted">{children}</li>,
                                             }}
                                         >
                                             {msg.text}
@@ -932,7 +956,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                             {isThinking && (
                                 <div className="flex justify-start">
                                     <div className="bg-q-surface border border-q-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-q-text-secondary">
-                                        <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                                        <Loader2 className="w-4 h-4 animate-spin text-q-accent" />
                                         {language === 'es' ? 'Pensando...' : 'Thinking...'}
                                     </div>
                                 </div>
@@ -941,21 +965,21 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                             {/* Live Voice Transcription */}
                             {isVoiceActive && liveUserTranscript && (
                                 <div className="flex justify-end animate-pulse">
-                                    <div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-purple-500/20 border border-purple-500/30 text-purple-200">
-                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-purple-400 mb-1">
+                                    <div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-q-accent/20 border border-q-accent/30 text-q-accent">
+                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1">
                                             <Mic className="w-3 h-3" /> {language === 'es' ? 'Hablando...' : 'Speaking...'}
                                         </span>
-                                        <p className="text-gray-100">{liveUserTranscript}</p>
+                                        <p className="text-q-text-muted">{liveUserTranscript}</p>
                                     </div>
                                 </div>
                             )}
                             {isVoiceActive && liveModelTranscript && (
                                 <div className="flex justify-start">
-                                    <div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-[#1e1b2e] border border-blue-500/20 text-gray-100">
-                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-blue-400 mb-1">
+                                    <div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-[#1e1b2e] border border-q-accent/20 text-q-text-muted">
+                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1">
                                             <Volume2 className="w-3 h-3" /> {language === 'es' ? 'Respondiendo...' : 'Responding...'}
                                         </span>
-                                        <p className="text-gray-100">{liveModelTranscript}</p>
+                                        <p className="text-q-text-muted">{liveModelTranscript}</p>
                                     </div>
                                 </div>
                             )}
@@ -965,8 +989,8 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                 <div className="flex justify-center py-8">
                                     <div className="text-center space-y-4">
                                         <div className="relative mx-auto w-16 h-16">
-                                            <div className="absolute inset-0 bg-purple-500 blur-xl opacity-20 rounded-full animate-pulse" />
-                                            <Loader2 className="w-16 h-16 text-purple-400 animate-spin relative z-10" />
+                                            <div className="absolute inset-0 bg-q-accent blur-xl opacity-20 rounded-full animate-pulse" />
+                                            <Loader2 className="w-16 h-16 text-q-accent animate-spin relative z-10" />
                                         </div>
                                         <div>
                                             <p className="font-bold text-q-text">
@@ -985,13 +1009,13 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                             {/* Preview State */}
                             {phase === 'preview' && generatedPost && (
                                 <div className="space-y-4 animate-fade-in-up">
-                                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex items-start gap-3">
-                                        <CheckCircle className="text-green-400 shrink-0 mt-0.5" size={20} />
+                                    <div className="bg-q-success/10 border border-q-success/20 rounded-xl p-4 flex items-start gap-3">
+                                        <CheckCircle className="text-q-success shrink-0 mt-0.5" size={20} />
                                         <div>
-                                            <p className="font-bold text-green-400">
+                                            <p className="font-bold text-q-success">
                                                 {language === 'es' ? '¡Contenido generado con éxito!' : 'Content generated successfully!'}
                                             </p>
-                                            <p className="text-xs text-green-400/70">
+                                            <p className="text-xs text-q-success/70">
                                                 {language === 'es' ? 'Revisa antes de abrir en el editor.' : 'Review before opening in editor.'}
                                             </p>
                                         </div>
@@ -1008,7 +1032,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                         </div>
 
                                         <div className="flex gap-2 flex-wrap">
-                                            <span className="px-2.5 py-1 text-xs font-medium bg-purple-500/15 text-purple-300 rounded-full">
+                                            <span className="px-2.5 py-1 text-xs font-medium bg-q-accent/15 text-q-accent rounded-full">
                                                 {contentType}
                                             </span>
                                             {generatedPost.readTime && (
@@ -1064,7 +1088,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                         <button
                                             onClick={handleConfirmPost}
                                             disabled={isSavingPost}
-                                            className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-green-500/20 transition-all text-sm disabled:opacity-50 disabled:cursor-wait"
+                                            className="bg-gradient-to-r from-q-success to-q-success text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-q-success/20 transition-all text-sm disabled:opacity-50 disabled:cursor-wait"
                                         >
                                             {isSavingPost ? (
                                                 <><Loader2 size={16} className="animate-spin" /> {language === 'es' ? 'Guardando...' : 'Saving...'}</>
@@ -1085,7 +1109,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                     {isVoiceActive ? (
                                         <button
                                             onClick={stopVoiceSession}
-                                            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
+                                            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-error/20 text-q-error hover:bg-q-error/30 transition-all"
                                             title={language === 'es' ? 'Detener voz' : 'Stop voice'}
                                         >
                                             <PhoneOff className="w-4 h-4" />
@@ -1094,7 +1118,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                         <button
                                             onClick={startVoiceSession}
                                             disabled={isVoiceConnecting}
-                                            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-surface-overlay/40 text-q-text-secondary hover:text-purple-400 hover:bg-purple-500/10 transition-all disabled:opacity-50"
+                                            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-surface-overlay/40 text-q-text-secondary hover:text-q-accent hover:bg-q-accent/10 transition-all disabled:opacity-50"
                                             title={language === 'es' ? 'Iniciar voz (Gemini Live)' : 'Start voice (Gemini Live)'}
                                         >
                                             {isVoiceConnecting ? (
@@ -1114,7 +1138,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                         placeholder={isVoiceActive
                                             ? (language === 'es' ? 'Sesión de voz activa — habla o escribe...' : 'Voice session active — speak or type...')
                                             : (language === 'es' ? 'Escribe tu idea de contenido...' : 'Type your content idea...')}
-                                        className="flex-1 bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none min-h-[40px] max-h-[120px] text-q-text placeholder:text-q-text-secondary/50"
+                                        className="flex-1 bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-q-accent/50 resize-none min-h-[40px] max-h-[120px] text-q-text placeholder:text-q-text-secondary/50"
                                         rows={1}
                                         disabled={phase !== 'conversation'}
                                     />
@@ -1123,7 +1147,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                     <button
                                         onClick={handleSendClick}
                                         disabled={!inputText.trim() || isThinking}
-                                        className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 text-white hover:shadow-lg hover:shadow-purple-500/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
+                                        className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-br from-q-accent to-q-accent-tertiary text-q-text-on-accent hover:shadow-lg hover:shadow-q-accent/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
                                     >
                                         <Send className="w-4 h-4" />
                                     </button>
@@ -1131,9 +1155,9 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
 
                                 {/* Voice Active Indicator */}
                                 {isVoiceActive && (
-                                    <div className="mt-2 flex items-center justify-center gap-2 text-xs text-green-400">
+                                    <div className="mt-2 flex items-center justify-center gap-2 text-xs text-q-success">
                                         <span className="flex items-center gap-1.5">
-                                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                                            <span className="w-2 h-2 bg-q-success rounded-full animate-pulse" />
                                             {language === 'es' ? 'Escuchando...' : 'Listening...'}
                                         </span>
                                         <span className="text-q-text-secondary">•</span>
@@ -1152,7 +1176,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                         {/* Content Parameters */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 mb-1">
-                                <FileText className="w-4 h-4 text-purple-400" />
+                                <FileText className="w-4 h-4 text-q-accent" />
                                 <h3 className="text-sm font-bold text-q-text">
                                     {language === 'es' ? 'Plan de Contenido' : 'Content Plan'}
                                 </h3>
@@ -1169,8 +1193,8 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                             key={ct.value}
                                             onClick={() => setContentType(ct.value)}
                                             className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${contentType === ct.value
-                                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                                : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'
+                                                ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                                : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                                 }`}
                                         >
                                             {ct.label}
@@ -1188,8 +1212,8 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                     <button
                                         onClick={() => setLanguage('es')}
                                         className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'es'
-                                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'
+                                            ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                             }`}
                                     >
                                         🇪🇸 Español
@@ -1197,8 +1221,8 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                     <button
                                         onClick={() => setLanguage('en')}
                                         className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'en'
-                                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'
+                                            ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                             }`}
                                     >
                                         🇺🇸 English
@@ -1216,7 +1240,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                     value={audience}
                                     onChange={(e) => setAudience(e.target.value)}
                                     placeholder={language === 'es' ? 'Emprendedores, Devs...' : 'Entrepreneurs, Devs...'}
-                                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-purple-500/50 text-q-text placeholder:text-q-text-secondary/50"
+                                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-q-accent/50 text-q-text placeholder:text-q-text-secondary/50"
                                 />
                             </div>
 
@@ -1231,8 +1255,8 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                             key={t}
                                             onClick={() => setTone(t)}
                                             className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${tone === t
-                                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                                : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'
+                                                ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                                : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                                 }`}
                                         >
                                             {t}
@@ -1248,7 +1272,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                         {/* Model Info */}
                         <div className="bg-q-bg/50 rounded-xl p-3 space-y-2">
                             <div className="flex items-center gap-2">
-                                <Zap className="w-3.5 h-3.5 text-yellow-400" />
+                                <Zap className="w-3.5 h-3.5 text-q-accent" />
                                 <span className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider">
                                     {language === 'es' ? 'Modelos' : 'Models'}
                                 </span>
@@ -1256,15 +1280,15 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                             <div className="space-y-1.5 text-[11px]">
                                 <div className="flex items-center justify-between">
                                     <span className="text-q-text-secondary">💬 Chat:</span>
-                                    <span className="font-mono text-purple-300">flash-lite</span>
+                                    <span className="font-mono text-q-accent">flash-lite</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-q-text-secondary">🎤 Voz:</span>
-                                    <span className="font-mono text-blue-300">flash-live</span>
+                                    <span className="font-mono text-q-accent">flash-live</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-q-text-secondary">📝 Generar:</span>
-                                    <span className="font-mono text-green-300">lite + high</span>
+                                    <span className="font-mono text-q-success">lite + high</span>
                                 </div>
                             </div>
                         </div>
@@ -1292,7 +1316,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                             <button
                                 onClick={handleGenerate}
                                 disabled={messages.length < 2 || phase !== 'conversation' || isThinking}
-                                className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-purple-500/20 transition-all disabled:opacity-40 disabled:hover:shadow-none text-sm"
+                                className="w-full bg-gradient-to-r from-q-accent to-q-accent-tertiary text-q-text-on-accent px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-q-accent/20 transition-all disabled:opacity-40 disabled:hover:shadow-none text-sm"
                             >
                                 <Sparkles className="w-4 h-4" />
                                 {language === 'es' ? 'Generar Artículo' : 'Generate Article'}

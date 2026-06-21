@@ -184,7 +184,7 @@ const FileItem: React.FC<{
                                 e.stopPropagation();
                                 onToggleSelect?.();
                             }}
-                            className="p-1.5 bg-white dark:bg-gray-800 rounded-md shadow-lg"
+                            className="p-1.5 bg-q-surface dark:bg-gray-800 rounded-md shadow-lg"
                         >
                             {isSelected ? (
                                 <CheckSquare size={20} className="text-primary" />
@@ -216,7 +216,7 @@ const FileItem: React.FC<{
                             e.stopPropagation();
                             onCreateVideo(file.downloadURL);
                         }}
-                        className="absolute top-10 right-2 z-10 p-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-md shadow-lg transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
+                        className="absolute top-10 right-2 z-10 p-1.5 bg-q-accent hover:bg-q-accent text-q-text-on-accent rounded-md shadow-lg transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
                         title={t('mediaGeneration.createVideo', { defaultValue: 'Create video' })}
                     >
                         <Film size={14} />
@@ -227,7 +227,7 @@ const FileItem: React.FC<{
                 {!isSelectionMode && onDelete && (
                     <button
                         onClick={(e) => { e.stopPropagation(); onDelete(file); }}
-                        className="absolute bottom-2 right-2 z-10 p-1.5 bg-red-500/90 hover:bg-red-600 text-white rounded-md shadow-lg transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
+                        className="absolute bottom-2 right-2 z-10 p-1.5 bg-q-error/90 hover:bg-q-error text-white rounded-md shadow-lg transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
                         title={t('common.delete', 'Eliminar')}
                     >
                         <Trash2 size={14} />
@@ -809,13 +809,13 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddRefe
                             </button>
                             <button
                                 onClick={handleBulkDownload}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-blue-500 text-white hover:bg-blue-600 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-q-accent text-q-text-on-accent hover:bg-q-accent rounded-lg transition-colors"
                             >
                                 <Download size={14} /> Download
                             </button>
                             <button
                                 onClick={handleBulkDelete}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-q-error text-white hover:bg-q-error rounded-lg transition-colors"
                             >
                                 <Trash2 size={14} /> Delete
                             </button>

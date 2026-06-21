@@ -45,7 +45,7 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
           {/* Mark as Published */}
           <button
             onClick={() => onChangeStatus('Published')}
-            className="px-3 py-1.5 rounded-lg bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors text-sm font-medium flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg bg-q-success/10 text-q-success hover:bg-q-success/20 transition-colors text-sm font-medium flex items-center gap-1.5"
             title={t('dashboard.published')}
             aria-label={t('dashboard.published')}
           >
@@ -56,7 +56,7 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
           {/* Mark as Draft */}
           <button
             onClick={() => onChangeStatus('Draft')}
-            className="px-3 py-1.5 rounded-lg bg-slate-500/10 text-slate-600 hover:bg-slate-500/20 transition-colors text-sm font-medium"
+            className="px-3 py-1.5 rounded-lg bg-q-surface-overlay/10 text-q-text-muted hover:bg-q-surface-overlay/20 transition-colors text-sm font-medium"
             title={t('dashboard.draft')}
             aria-label={t('dashboard.draft')}
           >
@@ -66,7 +66,7 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
           {/* Delete */}
           <button
             onClick={onDeleteSelected}
-            className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors text-sm font-medium flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg bg-q-error/10 text-q-error hover:bg-q-error/20 transition-colors text-sm font-medium flex items-center gap-1.5"
             title={t('bulk.deleteSelected')}
             aria-label={t('bulk.deleteSelected')}
           >

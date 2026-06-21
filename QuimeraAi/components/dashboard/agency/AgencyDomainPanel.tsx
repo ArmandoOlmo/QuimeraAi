@@ -186,27 +186,27 @@ const AgencyDomainPanel: React.FC = () => {
     const StatusBadge: React.FC<{ domain: Domain }> = ({ domain }) => {
         const statusConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
             active: {
-                color: 'text-green-500 bg-green-500/10 border-green-500/20',
+                color: 'text-q-success bg-q-success/10 border-q-success/20',
                 icon: <CheckCircle size={12} />,
                 label: 'Activo',
             },
             pending: {
-                color: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20',
+                color: 'text-q-accent bg-q-accent/10 border-q-accent/20',
                 icon: <Clock size={12} />,
                 label: 'DNS Pendiente',
             },
             ssl_pending: {
-                color: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
+                color: 'text-q-accent bg-q-accent/10 border-q-accent/20',
                 icon: <Loader2 size={12} className="animate-spin" />,
                 label: 'SSL en proceso',
             },
             verifying: {
-                color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+                color: 'text-q-accent bg-q-accent/10 border-q-accent/20',
                 icon: <Loader2 size={12} className="animate-spin" />,
                 label: 'Verificando...',
             },
             error: {
-                color: 'text-red-500 bg-red-500/10 border-red-500/20',
+                color: 'text-q-error bg-q-error/10 border-q-error/20',
                 icon: <AlertTriangle size={12} />,
                 label: 'Error',
             },
@@ -258,7 +258,7 @@ const AgencyDomainPanel: React.FC = () => {
                                 <h4 className="font-bold text-foreground text-base">{domain.name}</h4>
                                 <StatusBadge domain={domain} />
                                 {domain.sslStatus === 'active' && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border text-green-500 bg-green-500/10 border-green-500/20">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border text-q-success bg-q-success/10 border-q-success/20">
                                         <ShieldCheck size={12} /> SSL
                                     </span>
                                 )}
@@ -286,7 +286,7 @@ const AgencyDomainPanel: React.FC = () => {
                             <button
                                 onClick={() => setDeleteConfirmDomain(domain)}
                                 disabled={isDeletingId === domain.id}
-                                className="p-2 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                                className="p-2 text-q-text-muted hover:text-q-error hover:bg-q-error/10 rounded-lg transition-colors disabled:opacity-50"
                                 title="Eliminar dominio"
                             >
                                 {isDeletingId === domain.id ? (
@@ -302,10 +302,10 @@ const AgencyDomainPanel: React.FC = () => {
                     {verificationMessages[domain.id] && (
                         <div className={`mx-4 mb-3 p-3 rounded-lg text-sm ${
                             verificationMessages[domain.id].startsWith('✅')
-                                ? 'bg-green-500/10 border border-green-500/20 text-green-600'
+                                ? 'bg-q-success/10 border border-q-success/20 text-q-success'
                                 : verificationMessages[domain.id].startsWith('❌')
-                                    ? 'bg-red-500/10 border border-red-500/20 text-red-500'
-                                    : 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-600'
+                                    ? 'bg-q-error/10 border border-q-error/20 text-q-error'
+                                    : 'bg-q-accent/10 border border-q-accent/20 text-q-accent'
                         }`}>
                             {verificationMessages[domain.id]}
                         </div>
@@ -313,9 +313,9 @@ const AgencyDomainPanel: React.FC = () => {
 
                     {/* DNS Instructions — only show when domain is pending */}
                     {(domain.status === 'pending' || domain.status === 'error') && (
-                        <div className="border-t border-q-border p-4 bg-gradient-to-b from-blue-500/5 to-transparent">
+                        <div className="border-t border-q-border p-4 bg-gradient-to-b from-q-accent/5 to-transparent">
                             <div className="flex items-center gap-2 mb-3">
-                                <Zap size={14} className="text-blue-500" />
+                                <Zap size={14} className="text-q-accent" />
                                 <h5 className="text-sm font-bold text-foreground">Configura tu DNS</h5>
                             </div>
                             <p className="text-xs text-q-text-muted mb-4">
@@ -326,7 +326,7 @@ const AgencyDomainPanel: React.FC = () => {
                                 {/* A Record */}
                                 <div className="bg-q-surface rounded-lg p-3 border border-q-border">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-xs font-bold bg-blue-500/20 text-blue-500 px-2 py-0.5 rounded">A</span>
+                                        <span className="text-xs font-bold bg-q-accent/20 text-q-accent px-2 py-0.5 rounded">A</span>
                                         <span className="text-xs text-q-text-muted">Dominio raíz</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 text-sm">
@@ -345,7 +345,7 @@ const AgencyDomainPanel: React.FC = () => {
                                                 >
                                                     <Copy size={12} />
                                                 </button>
-                                                <span id={`copy-feedback-${VERCEL_APEX_IP}`} className="text-green-500 text-xs font-bold" />
+                                                <span id={`copy-feedback-${VERCEL_APEX_IP}`} className="text-q-success text-xs font-bold" />
                                             </div>
                                         </div>
                                     </div>
@@ -354,7 +354,7 @@ const AgencyDomainPanel: React.FC = () => {
                                 {/* CNAME Record */}
                                 <div className="bg-q-surface rounded-lg p-3 border border-q-border">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-xs font-bold bg-green-500/20 text-green-500 px-2 py-0.5 rounded">CNAME</span>
+                                        <span className="text-xs font-bold bg-q-success/20 text-q-success px-2 py-0.5 rounded">CNAME</span>
                                         <span className="text-xs text-q-text-muted">Para www.{domain.name}</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 text-sm">
@@ -373,7 +373,7 @@ const AgencyDomainPanel: React.FC = () => {
                                                 >
                                                     <Copy size={12} />
                                                 </button>
-                                                <span id={`copy-feedback-${domain.name}`} className="text-green-500 text-xs font-bold" />
+                                                <span id={`copy-feedback-${domain.name}`} className="text-q-success text-xs font-bold" />
                                             </div>
                                         </div>
                                     </div>
@@ -402,10 +402,10 @@ const AgencyDomainPanel: React.FC = () => {
 
                     {/* SSL Provisioning notice */}
                     {domain.status === 'ssl_pending' && (
-                        <div className="border-t border-q-border p-4 bg-gradient-to-b from-purple-500/5 to-transparent">
+                        <div className="border-t border-q-border p-4 bg-gradient-to-b from-q-accent/5 to-transparent">
                             <div className="flex items-center gap-2">
-                                <Loader2 size={14} className="text-purple-500 animate-spin" />
-                                <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                                <Loader2 size={14} className="text-q-accent animate-spin" />
+                                <span className="text-sm font-medium text-q-accent dark:text-q-accent">
                                     Generando certificado SSL... Esto puede tomar unos minutos.
                                 </span>
                             </div>
@@ -414,8 +414,8 @@ const AgencyDomainPanel: React.FC = () => {
 
                     {/* Active status message */}
                     {domain.status === 'active' && (
-                        <div className="border-t border-q-border p-4 bg-gradient-to-b from-green-500/5 to-transparent">
-                            <p className="text-sm text-green-600 flex items-center gap-2">
+                        <div className="border-t border-q-border p-4 bg-gradient-to-b from-q-success/5 to-transparent">
+                            <p className="text-sm text-q-success flex items-center gap-2">
                                 <CheckCircle size={14} />
                                 Tu landing page de agencia está disponible en{' '}
                                 <a href={`https://${domain.name}`} target="_blank" rel="noreferrer" className="font-bold underline">
@@ -437,7 +437,7 @@ const AgencyDomainPanel: React.FC = () => {
                         </h4>
 
                         {addError && (
-                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm flex items-center gap-2">
+                            <div className="mb-4 p-3 bg-q-error/10 border border-q-error/20 rounded-lg text-q-error text-sm flex items-center gap-2">
                                 <AlertTriangle size={14} />
                                 {addError}
                             </div>
@@ -471,12 +471,12 @@ const AgencyDomainPanel: React.FC = () => {
                             </h5>
                             <div className="space-y-2 text-xs">
                                 <div className="flex items-center gap-2">
-                                    <span className="font-bold bg-blue-500/20 text-blue-500 px-1.5 py-0.5 rounded text-[10px]">A</span>
+                                    <span className="font-bold bg-q-accent/20 text-q-accent px-1.5 py-0.5 rounded text-[10px]">A</span>
                                     <span className="text-q-text-muted">@ -&gt;</span>
                                     <code className="font-mono font-bold text-primary">{VERCEL_APEX_IP}</code>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className="font-bold bg-green-500/20 text-green-500 px-1.5 py-0.5 rounded text-[10px]">CNAME</span>
+                                    <span className="font-bold bg-q-success/20 text-q-success px-1.5 py-0.5 rounded text-[10px]">CNAME</span>
                                     <span className="text-q-text-muted">www -&gt;</span>
                                     <code className="font-mono font-bold text-primary">{VERCEL_CNAME_TARGET}</code>
                                 </div>
@@ -534,8 +534,8 @@ const AgencyDomainPanel: React.FC = () => {
 
             {/* Tips */}
             {(agencyDomains.length > 0 || showAddForm) && (
-                <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3">
-                    <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-1">💡 Tips:</p>
+                <div className="bg-q-accent/5 border border-q-accent/20 rounded-lg p-3">
+                    <p className="text-xs font-bold text-q-accent dark:text-q-accent mb-1">💡 Tips:</p>
                     <ul className="text-xs text-q-text-muted space-y-0.5 list-disc list-inside">
                         <li><strong>GoDaddy:</strong> DNS - Registros DNS. Si ya existe un registro A con @, edítalo.</li>
                         <li><strong>Namecheap:</strong> Advanced DNS - Host Records. Usa @ como Host.</li>

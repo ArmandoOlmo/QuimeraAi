@@ -83,7 +83,7 @@ const TagSelector: React.FC<{
                   onChange(tag);
                   setIsOpen(false);
                 }}
-                className={`w-full text-left px-3 py-2 hover:bg-white/5 transition-colors ${
+                className={`w-full text-left px-3 py-2 hover:bg-q-surface/5 transition-colors ${
                   tag === value ? CHANGELOG_TAG_COLORS[tag].bg : ''
                 }`}
               >
@@ -164,7 +164,7 @@ const FeatureEditor: React.FC<{
               <button
                 type="button"
                 onClick={() => removeFeature(index)}
-                className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors self-start"
+                className="p-2 text-q-error hover:bg-q-error/10 rounded-lg transition-colors self-start"
               >
                 <Trash2 size={16} />
               </button>
@@ -198,8 +198,8 @@ const EntryEditorModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      
+      <div className="absolute inset-0 bg-q-text/60 backdrop-blur-sm" onClick={onClose} />
+
       <div className="relative w-full max-w-3xl max-h-[90vh] bg-q-surface border border-q-border rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-q-border">
@@ -336,15 +336,15 @@ const EntryEditorModal: React.FC<{
                 onChange={(e) => updateField('isPublished', e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-q-accent"></div>
+              <div className="w-11 h-6 bg-q-surface-overlay peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-q-accent"></div>
             </label>
             <div>
               <p className="font-medium text-q-text">
                 {formData.isPublished ? 'Publicado' : 'Borrador'}
               </p>
               <p className="text-sm text-q-text-secondary">
-                {formData.isPublished 
-                  ? 'Esta entrada es visible para todos los usuarios' 
+                {formData.isPublished
+                  ? 'Esta entrada es visible para todos los usuarios'
                   : 'Esta entrada solo es visible para administradores'
                 }
               </p>
@@ -365,7 +365,7 @@ const EntryEditorModal: React.FC<{
             type="submit"
             onClick={handleSubmit}
             disabled={isSaving || !formData.title || !formData.description}
-            className="flex items-center gap-2 px-6 py-2 bg-q-accent text-white font-semibold rounded-xl hover:bg-q-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="flex items-center gap-2 px-6 py-2 bg-q-accent text-q-text-on-accent font-semibold rounded-xl hover:bg-q-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isSaving ? (
               <>
@@ -461,7 +461,7 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
           </a>
           <button
             onClick={() => setIsCreating(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-q-accent text-white font-semibold rounded-xl hover:bg-q-accent/90 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 bg-q-accent text-q-text-on-accent font-semibold rounded-xl hover:bg-q-accent/90 transition-colors"
           >
             <Plus size={16} />
             <span className="hidden sm:inline">Nueva Entrada</span>
@@ -503,7 +503,7 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
               <div className="flex items-center justify-center gap-4">
                 <button
                   onClick={() => setIsCreating(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-q-accent text-white font-semibold rounded-xl hover:bg-q-accent/90 transition-colors"
+                  className="flex items-center gap-2 px-6 py-3 bg-q-accent text-q-text-on-accent font-semibold rounded-xl hover:bg-q-accent/90 transition-colors"
                 >
                   <Plus size={18} />
                   Crear Primera Entrada
@@ -533,7 +533,7 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
 
           {/* Error */}
           {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 mb-6">
+            <div className="p-4 bg-q-error/10 border border-q-error/30 rounded-xl text-q-error mb-6">
               {error}
             </div>
           )}
@@ -554,7 +554,7 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
                           {CHANGELOG_TAG_LABELS[entry.tag].es}
                         </span>
                         {!entry.isPublished && (
-                          <span className="px-2 py-0.5 text-xs font-medium bg-gray-500/20 text-gray-400 rounded-full">
+                          <span className="px-2 py-0.5 text-xs font-medium bg-q-surface-overlay/20 text-q-text-muted rounded-full">
                             Borrador
                           </span>
                         )}
@@ -601,9 +601,9 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
                       <button
                         onClick={() => togglePublish(entry.id, !entry.isPublished)}
                         className={`p-2 rounded-lg transition-colors ${
-                          entry.isPublished 
-                            ? 'text-green-400 hover:bg-green-400/10' 
-                            : 'text-gray-400 hover:bg-gray-400/10'
+                          entry.isPublished
+                            ? 'text-q-success hover:bg-q-success/10'
+                            : 'text-q-text-muted hover:bg-q-surface-overlay/10'
                         }`}
                         title={entry.isPublished ? 'Despublicar' : 'Publicar'}
                       >
@@ -618,7 +618,7 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
                       </button>
                       <button
                         onClick={() => setConfirmDelete(entry.id)}
-                        className="p-2 text-q-text-secondary hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                        className="p-2 text-q-text-secondary hover:text-q-error hover:bg-q-error/10 rounded-lg transition-colors"
                         title="Eliminar"
                       >
                         <Trash2 size={18} />
@@ -669,7 +669,7 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
       {/* Delete Confirmation */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmDelete(null)} />
+          <div className="absolute inset-0 bg-q-text/60 backdrop-blur-sm" onClick={() => setConfirmDelete(null)} />
           <div className="relative bg-q-surface border border-q-border rounded-2xl p-6 max-w-md w-full shadow-2xl">
             <h3 className="text-lg font-bold text-q-text mb-2">
               ¿Eliminar esta entrada?
@@ -686,7 +686,7 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
               </button>
               <button
                 onClick={() => handleDelete(confirmDelete)}
-                className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-q-error text-white font-semibold rounded-xl hover:bg-q-error transition-colors"
               >
                 <Trash2 size={16} />
                 Eliminar

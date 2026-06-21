@@ -107,11 +107,11 @@ export const CreditOperationBadge: React.FC<CreditOperationBadgeProps> = ({
     };
 
     return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-xs">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-q-surface/10 text-xs">
             {operationIcons[operation]}
             <span>{operationLabels[operation]}</span>
             {showCost && (
-                <span className="text-purple-400 font-medium">{cost}</span>
+                <span className="text-q-accent font-medium">{cost}</span>
             )}
         </span>
     );
@@ -259,7 +259,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
     if (isLoading) {
         return (
             <div className={`flex items-center justify-center p-4 ${className}`}>
-                <RefreshCw className="w-5 h-5 text-purple-400 animate-spin" />
+                <RefreshCw className="w-5 h-5 text-q-accent animate-spin" />
             </div>
         );
     }
@@ -268,7 +268,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
     if (variant === 'minimal') {
         return (
             <div className={`flex items-center gap-1.5 ${className}`}>
-                <Sparkles className="w-4 h-4 text-purple-400" />
+                <Sparkles className="w-4 h-4 text-q-accent" />
                 <span className="text-sm font-medium" style={{ color: usageColor }}>
                     {formatCredits(creditsRemaining)}
                 </span>
@@ -279,10 +279,10 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
     // Variante compact - barra pequeña
     if (variant === 'compact') {
         return (
-            <div className={`bg-[#1a1a2e]/80 rounded-lg p-3 border border-white/10 ${className}`}>
+            <div className={`bg-[#1a1a2e]/80 rounded-lg p-3 border border-q-border/10 ${className}`}>
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-purple-400" />
+                        <Sparkles className="w-4 h-4 text-q-accent" />
                         <span className="text-sm font-medium text-white">{t('credits.aiCredits')}</span>
                     </div>
                     <span className="text-xs text-white/60">
@@ -299,14 +299,14 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
 
                 {/* Warning */}
                 {isNearLimit && !hasExceededLimit && !isOwner && (
-                    <p className="text-xs text-amber-400 mt-2 flex items-center gap-1">
+                    <p className="text-xs text-q-accent mt-2 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
                         {t('credits.fewCreditsLeft')}
                     </p>
                 )}
 
                 {hasExceededLimit && !isOwner && (
-                    <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
+                    <p className="text-xs text-q-error mt-2 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
                         {t('credits.exceededLimit')}
                     </p>
@@ -318,13 +318,13 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
     // Variante full - panel completo
     return (
     <>
-        <div className={`bg-[#1a1a2e]/80 rounded-xl border border-white/10 overflow-hidden ${className}`}>
+        <div className={`bg-[#1a1a2e]/80 rounded-xl border border-q-border/10 overflow-hidden ${className}`}>
             {/* Header */}
-            <div className="p-4 border-b border-white/10">
+            <div className="p-4 border-b border-q-border/10">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                            <Sparkles className="w-5 h-5 text-purple-400" />
+                        <div className="w-10 h-10 rounded-lg bg-q-accent/20 flex items-center justify-center">
+                            <Sparkles className="w-5 h-5 text-q-accent" />
                         </div>
                         <div>
                             <h3 className="font-semibold text-white">{t('credits.aiCredits')}</h3>
@@ -337,7 +337,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                     <button
                         onClick={handleRefresh}
                         disabled={isRefreshing}
-                        className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                        className="p-2 rounded-lg hover:bg-q-surface/10 transition-colors"
                     >
                         <RefreshCw className={`w-4 h-4 text-white/60 ${isRefreshing ? 'animate-spin' : ''}`} />
                     </button>
@@ -345,15 +345,15 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
 
                 {/* Shared Pool Indicator for Agency Sub-clients */}
                 {poolInfo.isSharedPool && poolInfo.agencyName && (
-                    <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                        <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                            <Sparkles className="w-3 h-3 text-indigo-400" />
+                    <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-q-accent/10 border border-q-accent/20">
+                        <div className="w-6 h-6 rounded-full bg-q-accent/20 flex items-center justify-center">
+                            <Sparkles className="w-3 h-3 text-q-accent" />
                         </div>
                         <div className="flex-1">
-                            <p className="text-xs text-indigo-300 font-medium">
+                            <p className="text-xs text-q-accent font-medium">
                                 {t('credits.sharedPool')}
                             </p>
-                            <p className="text-xs text-indigo-400/70">
+                            <p className="text-xs text-q-accent/70">
                                 {t('credits.creditsFrom', { name: poolInfo.agencyName })}
                             </p>
                         </div>
@@ -406,14 +406,14 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
 
                 {/* Warnings */}
                 {isNearLimit && !hasExceededLimit && !isOwner && (
-                    <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <div className="mt-4 p-3 rounded-lg bg-q-accent/10 border border-q-accent/20">
                         <div className="flex items-start gap-2">
-                            <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5" />
+                            <AlertTriangle className="w-4 h-4 text-q-accent mt-0.5" />
                             <div>
-                                <p className="text-sm text-amber-400 font-medium">
+                                <p className="text-sm text-q-accent font-medium">
                                     {t('credits.fewCreditsLeft')}
                                 </p>
-                                <p className="text-xs text-amber-400/80 mt-1">
+                                <p className="text-xs text-q-accent/80 mt-1">
                                     {t('credits.considerUpgrade')}
                                 </p>
                             </div>
@@ -422,14 +422,14 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                 )}
 
                 {hasExceededLimit && !isOwner && (
-                    <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <div className="mt-4 p-3 rounded-lg bg-q-error/10 border border-q-error/20">
                         <div className="flex items-start gap-2">
-                            <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5" />
+                            <AlertTriangle className="w-4 h-4 text-q-error mt-0.5" />
                             <div>
-                                <p className="text-sm text-red-400 font-medium">
+                                <p className="text-sm text-q-error font-medium">
                                     {t('credits.exceededLimitFull')}
                                 </p>
-                                <p className="text-xs text-red-400/80 mt-1">
+                                <p className="text-xs text-q-error/80 mt-1">
                                     {t('credits.upgradeToContine')}
                                 </p>
                             </div>
@@ -468,12 +468,12 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
 
             {/* Action buttons */}
             {showUpgradeButton && (
-                <div className="p-4 border-t border-white/10 bg-white/5">
+                <div className="p-4 border-t border-q-border/10 bg-q-surface/5">
                     <div className="flex gap-2">
                         {/* Buy credits button — always visible now (uses internal modal if no external callback) */}
                         <button
                             onClick={onBuyCreditsClick || (() => setShowPurchaseModal(true))}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors"
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-q-surface/10 hover:bg-q-surface/20 text-white text-sm font-medium transition-colors"
                         >
                             <Package className="w-4 h-4" />
                             {t('credits.buyCredits')}
@@ -483,7 +483,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                         {(onUpgradeClick || (upgradeContext && !isOwner)) && (
                             <button
                                 onClick={handleUpgradeClick}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white text-sm font-medium transition-colors"
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-q-accent to-q-accent hover:from-q-accent hover:to-q-accent text-q-text-on-accent text-sm font-medium transition-colors"
                             >
                                 <Crown className="w-4 h-4" />
                                 {t('credits.upgrade')}
@@ -527,19 +527,19 @@ export const CreditPackages: React.FC<CreditPackagesProps> = ({
                     className={`
                         relative p-4 rounded-xl border transition-all text-left
                         ${pkg.isPopular
-                            ? 'border-purple-500 bg-purple-500/10'
-                            : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
+                            ? 'border-q-accent/25 bg-q-accent/10'
+                            : 'border-q-border/10 bg-q-surface/5 hover:border-q-border/20 hover:bg-q-surface/10'
                         }
                     `}
                 >
                     {pkg.isPopular && (
-                        <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-purple-500 text-xs text-white font-medium">
+                        <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-q-accent text-xs text-white font-medium">
                             {t('credits.popular')}
                         </span>
                     )}
 
                     <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="w-4 h-4 text-purple-400" />
+                        <Sparkles className="w-4 h-4 text-q-accent" />
                         <span className="font-semibold text-white">{pkg.credits.toLocaleString()}</span>
                     </div>
 
@@ -549,7 +549,7 @@ export const CreditPackages: React.FC<CreditPackagesProps> = ({
                     </div>
 
                     {pkg.discount > 0 && (
-                        <span className="text-xs text-green-400 mt-1 block">
+                        <span className="text-xs text-q-success mt-1 block">
                             {pkg.discount}% {t('credits.discount')}
                         </span>
                     )}
@@ -582,7 +582,7 @@ export const InlineCreditIndicator: React.FC<InlineCreditIndicatorProps> = ({
 
     if (isLoading) {
         return (
-            <div className={`animate-pulse bg-white/10 rounded h-4 w-20 ${className}`} />
+            <div className={`animate-pulse bg-q-surface/10 rounded h-4 w-20 ${className}`} />
         );
     }
 
@@ -597,7 +597,7 @@ export const InlineCreditIndicator: React.FC<InlineCreditIndicatorProps> = ({
             </div>
             <span className="text-xs text-white/60 whitespace-nowrap">{label}</span>
             {operation && (
-                <span className="text-xs text-purple-400">
+                <span className="text-xs text-q-accent">
                     -{AI_CREDIT_COSTS[operation]}
                 </span>
             )}

@@ -142,19 +142,19 @@ const AdminCard: React.FC<{
                 <div className={`${isList ? 'flex-1' : isCompact ? 'mt-2' : 'mt-4'}`}>
                     <div className="flex items-center gap-2">
                         <h3 className={`
-                            font-bold text-q-text 
+                            font-bold text-q-text
                             group-hover:text-q-accent transition-colors
                             ${isCompact ? 'text-sm' : 'text-lg'}
                         `}>
                             {feature.title}
                         </h3>
                         {feature.isNew && (
-                            <span className="px-2 py-0.5 text-xs font-semibold bg-green-500/20 text-green-400 rounded-full">
+                            <span className="px-2 py-0.5 text-xs font-semibold bg-q-success/20 text-q-success rounded-full">
                                 {t ? t('superadmin.new') : 'New'}
                             </span>
                         )}
                         {feature.isPremium && (
-                            <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+                            <Star className="w-3.5 h-3.5 text-q-accent fill-yellow-400" />
                         )}
                     </div>
                     {!isCompact && (
@@ -184,20 +184,20 @@ const CategoryChip: React.FC<{
             ? 'bg-q-accent/30 text-q-accent border-q-accent/50 shadow-sm shadow-q-accent/10 backdrop-blur-md'
             : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-q-accent/20 hover:text-q-accent hover:border-q-accent/30',
         emerald: active
-            ? 'bg-emerald-500/30 text-emerald-400 border-emerald-500/50 shadow-sm shadow-emerald-500/10 backdrop-blur-md'
-            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-emerald-500/20 hover:text-emerald-400 hover:border-emerald-500/30',
+            ? 'bg-q-success/30 text-q-success border-q-success/50 shadow-sm shadow-q-success/10 backdrop-blur-md'
+            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-q-success/20 hover:text-q-success hover:border-q-success/30',
         amber: active
-            ? 'bg-amber-500/30 text-amber-400 border-amber-500/50 shadow-sm shadow-amber-500/10 backdrop-blur-md'
-            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-amber-500/20 hover:text-amber-400 hover:border-amber-500/30',
+            ? 'bg-q-accent/30 text-q-accent border-q-accent/50 shadow-sm shadow-q-accent/10 backdrop-blur-md'
+            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-q-accent/20 hover:text-q-accent hover:border-q-accent/30',
         violet: active
-            ? 'bg-violet-500/30 text-violet-400 border-violet-500/50 shadow-sm shadow-violet-500/10 backdrop-blur-md'
-            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-violet-500/20 hover:text-violet-400 hover:border-violet-500/30',
+            ? 'bg-q-accent/30 text-q-accent border-q-accent/50 shadow-sm shadow-q-accent/10 backdrop-blur-md'
+            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-q-accent/20 hover:text-q-accent hover:border-q-accent/30',
         rose: active
-            ? 'bg-rose-500/30 text-rose-400 border-rose-500/50 shadow-sm shadow-rose-500/10 backdrop-blur-md'
-            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/30',
+            ? 'bg-q-error/30 text-q-error border-q-error/50 shadow-sm shadow-q-error/10 backdrop-blur-md'
+            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-q-error/20 hover:text-q-error hover:border-q-error/30',
         sky: active
-            ? 'bg-sky-500/30 text-sky-400 border-sky-500/50 shadow-sm shadow-sky-500/10 backdrop-blur-md'
-            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-sky-500/20 hover:text-sky-400 hover:border-sky-500/30',
+            ? 'bg-q-accent/30 text-q-accent border-q-accent/50 shadow-sm shadow-q-accent/10 backdrop-blur-md'
+            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-q-accent/20 hover:text-q-accent hover:border-q-accent/30',
     };
 
     return (
@@ -214,7 +214,7 @@ const CategoryChip: React.FC<{
                 <span className={`
                     px-1.5 py-0.5 sm:px-2 rounded-full text-[10px] sm:text-xs font-bold min-w-[20px] text-center
                     ${active
-                        ? 'bg-white/20'
+                        ? 'bg-q-surface/20'
                         : 'bg-q-surface-overlay/50'
                     }
                 `}>

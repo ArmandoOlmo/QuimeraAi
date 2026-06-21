@@ -1,6 +1,6 @@
 /**
  * PageSelector Component
- * 
+ *
  * Allows users to select which page to edit in the editor.
  * Shows a dropdown/list of all pages in the project with:
  * - Page title
@@ -304,7 +304,7 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                                     {resolvePageTitle(page.title)}
                                 </span>
                                 {page.isHomePage && (
-                                    <span className="text-xs px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">
+                                    <span className="text-xs px-1.5 py-0.5 bg-q-success/20 text-q-success rounded">
                                         Inicio
                                     </span>
                                 )}
@@ -322,7 +322,7 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                         {/* Navigation indicator */}
                         <div className="flex-shrink-0">
                             {page.showInNavigation ? (
-                                <Eye size={14} className="text-green-400" title="Visible en navegación" />
+                                <Eye size={14} className="text-q-success" title="Visible en navegación" />
                             ) : (
                                 <EyeOff size={14} className="text-[var(--editor-text-secondary)]" title="Oculta en navegación" />
                             )}
@@ -358,7 +358,7 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                                         e.stopPropagation();
                                         setDeletePageId(page.id);
                                     }}
-                                    className="p-1 text-[var(--editor-text-secondary)] hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
+                                    className="p-1 text-[var(--editor-text-secondary)] hover:text-q-error hover:bg-q-error/10 rounded transition-colors"
                                     title="Eliminar"
                                 >
                                     <Trash2 size={14} />

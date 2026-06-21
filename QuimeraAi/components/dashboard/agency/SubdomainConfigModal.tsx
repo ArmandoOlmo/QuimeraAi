@@ -172,16 +172,16 @@ export function SubdomainConfigModal({
                             maxLength={30}
                             className={`w-full px-4 py-3 pr-10 rounded-xl border outline-none transition-all text-foreground bg-secondary/30 ${
                                 error
-                                    ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/30'
+                                    ? 'border-q-error/50 focus:ring-2 focus:ring-q-error/30'
                                     : isValid && subdomain
-                                        ? 'border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/30'
+                                        ? 'border-q-success/50 focus:ring-2 focus:ring-q-success/30'
                                         : 'border-q-border focus:ring-2 focus:ring-primary/50'
                             }`}
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
                             {isChecking && <Loader2 size={16} className="animate-spin text-q-text-muted" />}
-                            {!isChecking && isValid && subdomain && <CheckCircle size={16} className="text-emerald-500" />}
-                            {!isChecking && error && <XCircle size={16} className="text-red-500" />}
+                            {!isChecking && isValid && subdomain && <CheckCircle size={16} className="text-q-success" />}
+                            {!isChecking && error && <XCircle size={16} className="text-q-error" />}
                         </div>
                     </div>
 
@@ -215,7 +215,7 @@ export function SubdomainConfigModal({
                     )}
 
                     {error && (
-                        <p className="mt-1.5 text-xs text-red-500">{error}</p>
+                        <p className="mt-1.5 text-xs text-q-error">{error}</p>
                     )}
                 </div>
 

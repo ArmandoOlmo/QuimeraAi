@@ -80,7 +80,7 @@ export function AgencyOverview() {
                     label={t('dashboard.agency.overviewPage.mrr')}
                     value={formatCurrency(safeMetrics.mrr)}
                     icon={DollarSign}
-                    valueClass="text-emerald-500"
+                    valueClass="text-q-success"
                 />
                 <SettingsStatCard
                     label={t('dashboard.agency.overviewPage.totalClients')}
@@ -117,7 +117,7 @@ export function AgencyOverview() {
                         label={t('dashboard.agency.overviewPage.revenueGenerated')}
                         value={formatCurrency(safeMetrics.totalRevenue)}
                         icon={DollarSign}
-                        valueClass="text-emerald-500"
+                        valueClass="text-q-success"
                     />
                 )}
             </div>

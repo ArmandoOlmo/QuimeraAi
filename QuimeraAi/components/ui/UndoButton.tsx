@@ -1,20 +1,20 @@
 /**
  * UndoButton Component
- * 
+ *
  * Reusable button component for undo/redo functionality.
  * Can be used standalone or with the global UndoContext.
- * 
+ *
  * @example
  * // Standalone usage
  * <UndoButton onUndo={handleUndo} canUndo={true} />
- * 
+ *
  * // With redo
- * <UndoButton 
- *   onUndo={handleUndo} 
- *   canUndo={true} 
- *   showRedo 
- *   onRedo={handleRedo} 
- *   canRedo={true} 
+ * <UndoButton
+ *   onUndo={handleUndo}
+ *   canUndo={true}
+ *   showRedo
+ *   onRedo={handleRedo}
+ *   canRedo={true}
  * />
  */
 
@@ -166,8 +166,8 @@ export const UndoIndicator: React.FC<{
             onClick={onUndo}
             className="
         flex items-center gap-2 px-3 py-1.5 rounded-lg
-        bg-amber-500/10 text-amber-600 dark:text-amber-400
-        hover:bg-amber-500/20 transition-colors text-sm
+        bg-q-accent/10 text-q-accent dark:text-q-accent
+        hover:bg-q-accent/20 transition-colors text-sm
       "
         >
             <Undo2 className="w-3.5 h-3.5" />

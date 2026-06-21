@@ -12,12 +12,12 @@ interface LeadsListViewProps {
 }
 
 const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {
-    new: 'bg-blue-500',
-    contacted: 'bg-yellow-500',
-    qualified: 'bg-purple-500',
-    negotiation: 'bg-orange-500',
-    won: 'bg-green-500',
-    lost: 'bg-red-500',
+    new: 'bg-q-accent',
+    contacted: 'bg-q-accent',
+    qualified: 'bg-q-accent',
+    negotiation: 'bg-q-warning',
+    won: 'bg-q-success',
+    lost: 'bg-q-error',
 };
 
 const LeadsListView: React.FC<LeadsListViewProps> = ({
@@ -87,11 +87,11 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                         {/* Source Icon */}
                                         <div className="shrink-0">
                                             {lead.source === 'chatbot' ? (
-                                                <div className="p-1.5 rounded-full bg-purple-500/10 text-purple-500">
+                                                <div className="p-1.5 rounded-full bg-q-accent/10 text-q-accent">
                                                     <Bot size={14} />
                                                 </div>
                                             ) : (
-                                                <div className="p-1.5 rounded-full bg-blue-500/10 text-blue-500">
+                                                <div className="p-1.5 rounded-full bg-q-accent/10 text-q-accent">
                                                     <LayoutGrid size={14} />
                                                 </div>
                                             )}
@@ -115,7 +115,7 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                             {/* Value + Company Row */}
                                             <div className="flex items-center gap-3 flex-wrap">
                                                 {lead.value && lead.value > 0 && (
-                                                    <span className="text-xs font-bold text-green-500 flex items-center gap-0.5">
+                                                    <span className="text-xs font-bold text-q-success flex items-center gap-0.5">
                                                         <DollarSign size={10} />
                                                         {lead.value.toLocaleString()}
                                                     </span>
@@ -151,11 +151,11 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                     {/* Source Icon */}
                                     <div className="shrink-0">
                                         {lead.source === 'chatbot' ? (
-                                            <div className="p-2 rounded-full bg-purple-500/10 text-purple-500">
+                                            <div className="p-2 rounded-full bg-q-accent/10 text-q-accent">
                                                 <Bot size={16} />
                                             </div>
                                         ) : (
-                                            <div className="p-2 rounded-full bg-blue-500/10 text-blue-500">
+                                            <div className="p-2 rounded-full bg-q-accent/10 text-q-accent">
                                                 <LayoutGrid size={16} />
                                             </div>
                                         )}
@@ -195,7 +195,7 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                         {/* Value */}
                                         {lead.value && lead.value > 0 && (
                                             <div className="text-right">
-                                                <div className="text-xs font-bold text-green-500 flex items-center gap-1">
+                                                <div className="text-xs font-bold text-q-success flex items-center gap-1">
                                                     <DollarSign size={10} />
                                                     {lead.value.toLocaleString()}
                                                 </div>
@@ -206,9 +206,9 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                         {lead.aiScore !== undefined && (
                                             <div className="flex items-center gap-1 bg-secondary px-2 py-1 rounded">
                                                 <Star size={10} className={
-                                                    lead.aiScore > 75 ? 'text-green-500' :
-                                                        lead.aiScore > 40 ? 'text-yellow-500' :
-                                                            'text-red-500'
+                                                    lead.aiScore > 75 ? 'text-q-success' :
+                                                        lead.aiScore > 40 ? 'text-q-accent' :
+                                                            'text-q-error'
                                                 } />
                                                 <span className="text-xs font-bold">{lead.aiScore}</span>
                                             </div>

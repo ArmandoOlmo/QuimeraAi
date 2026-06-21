@@ -64,7 +64,7 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
     const { t } = useTranslation();
     const [linkModalOpen, setLinkModalOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
-    
+
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
@@ -73,7 +73,7 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
             }),
             Link.configure({
                 openOnClick: false,
-                HTMLAttributes: { class: 'text-blue-500 underline' },
+                HTMLAttributes: { class: 'text-q-accent underline' },
             }),
             TextStyle,
             Color,
@@ -243,13 +243,13 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
             </div>
 
             {/* Editor Area */}
-            <div className="bg-q-surface border border-q-border rounded-b-md overflow-hidden [&_.ProseMirror]:min-h-[120px] [&_.ProseMirror]:px-3 [&_.ProseMirror]:py-2 [&_.ProseMirror]:text-sm [&_.ProseMirror]:text-q-text [&_.ProseMirror]:outline-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-q-text-secondary/50 [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0 [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_h2]:text-lg [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:mb-2 [&_.ProseMirror_h3]:text-base [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:mb-1 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-5 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-5 [&_.ProseMirror_a]:text-blue-500 [&_.ProseMirror_a]:underline [&_.ProseMirror_code]:bg-q-surface-overlay/30 [&_.ProseMirror_code]:px-1 [&_.ProseMirror_code]:rounded [&_.ProseMirror_code]:text-xs">
+            <div className="bg-q-surface border border-q-border rounded-b-md overflow-hidden [&_.ProseMirror]:min-h-[120px] [&_.ProseMirror]:px-3 [&_.ProseMirror]:py-2 [&_.ProseMirror]:text-sm [&_.ProseMirror]:text-q-text [&_.ProseMirror]:outline-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-q-text-secondary/50 [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0 [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_h2]:text-lg [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:mb-2 [&_.ProseMirror_h3]:text-base [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:mb-1 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-5 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-5 [&_.ProseMirror_a]:text-q-accent [&_.ProseMirror_a]:underline [&_.ProseMirror_code]:bg-q-surface-overlay/30 [&_.ProseMirror_code]:px-1 [&_.ProseMirror_code]:rounded [&_.ProseMirror_code]:text-xs">
                 <EditorContent editor={editor} />
             </div>
 
             {/* Link Input Modal */}
             {linkModalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 z-[99999]" onClick={() => setLinkModalOpen(false)}>
+                <div className="fixed inset-0 flex items-center justify-center bg-q-text/50 backdrop-blur-sm p-4 z-[99999]" onClick={() => setLinkModalOpen(false)}>
                     <div className="bg-q-surface w-full max-w-sm rounded-xl border border-q-border shadow-2xl p-5" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-lg font-bold text-q-text mb-4">
                             {t('email.linkUrl', 'URL del enlace')}
@@ -303,7 +303,7 @@ const ToggleControl: React.FC<{ label: string; checked: boolean; onChange: (chec
             onClick={() => onChange(!checked)}
             className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors`}
         >
-            <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow transition mt-0.5 ml-0.5`} />
+            <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-q-surface shadow transition mt-0.5 ml-0.5`} />
         </button>
     </div>
 );

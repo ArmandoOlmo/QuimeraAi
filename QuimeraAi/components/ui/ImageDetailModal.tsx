@@ -79,7 +79,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ file, isOpen, onClo
                 </div>
 
                 {/* Image/File Preview */}
-                <div className="flex-1 overflow-auto p-0 bg-black/90 flex items-center justify-center relative min-h-[300px]">
+                <div className="flex-1 overflow-auto p-0 bg-q-text/90 flex items-center justify-center relative min-h-[300px]">
                     {file.type.startsWith('image/') && (
                         <div
                             className="absolute inset-0 opacity-30 blur-3xl scale-110"
@@ -94,7 +94,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ file, isOpen, onClo
                             className="max-w-full max-h-full object-contain shadow-2xl relative z-10"
                         />
                     ) : (
-                        <div className="flex flex-col items-center text-gray-400 relative z-10">
+                        <div className="flex flex-col items-center text-q-text-muted relative z-10">
                             <FileText size={80} className="mb-4 opacity-50" />
                             <p className="text-lg font-medium">{t('dashboard.assets.preview.notAvailable')}</p>
                         </div>
@@ -167,7 +167,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ file, isOpen, onClo
                             )}
                             <button
                                 onClick={handleDelete}
-                                className="flex items-center text-xs font-bold py-2 px-4 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                                className="flex items-center text-xs font-bold py-2 px-4 rounded-lg bg-q-error/10 text-q-error hover:bg-q-error hover:text-white transition-colors"
                             >
                                 <Trash2 size={14} className="mr-1.5" /> {t('dashboard.assets.actions.delete', 'Eliminar')}
                             </button>

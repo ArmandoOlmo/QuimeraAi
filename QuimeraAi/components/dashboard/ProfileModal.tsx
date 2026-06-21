@@ -255,7 +255,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                     {/* Profile Picture Section - Stack vertical on mobile */}
                     <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left">
                         <div className="relative group">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 bg-gradient-to-tr from-primary to-orange-500">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 bg-gradient-to-tr from-primary to-q-warning">
                                 <img
                                     src={photoPreview || `https://ui-avatars.com/api/?name=${name}&background=random`}
                                     alt="Profile"
@@ -311,17 +311,17 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                         maxLength={30}
                                         className={`w-full bg-secondary/30 text-foreground p-3 pr-10 rounded-xl border outline-none transition-all text-base ${
                                             usernameError
-                                                ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/30'
+                                                ? 'border-q-error/50 focus:ring-2 focus:ring-q-error/30'
                                                 : usernameValid && username
-                                                    ? 'border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/30'
+                                                    ? 'border-q-success/50 focus:ring-2 focus:ring-q-success/30'
                                                     : 'border-q-border focus:ring-2 focus:ring-primary/50 focus:border-primary'
                                         }`}
                                     />
                                     {/* Status indicator */}
                                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                         {usernameChecking && <Loader2 size={16} className="animate-spin text-q-text-muted" />}
-                                        {!usernameChecking && usernameValid && username && <CheckCircle size={16} className="text-emerald-500" />}
-                                        {!usernameChecking && usernameError && <XCircle size={16} className="text-red-500" />}
+                                        {!usernameChecking && usernameValid && username && <CheckCircle size={16} className="text-q-success" />}
+                                        {!usernameChecking && usernameError && <XCircle size={16} className="text-q-error" />}
                                     </div>
                                 </div>
                                 {/* Preview URL */}
@@ -333,7 +333,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                     </p>
                                 )}
                                 {usernameError && (
-                                    <p className="mt-1.5 text-xs text-red-500">{usernameError}</p>
+                                    <p className="mt-1.5 text-xs text-q-error">{usernameError}</p>
                                 )}
                             </div>
 
@@ -450,7 +450,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                             className="w-full sm:w-auto bg-primary text-primary-foreground font-bold py-3 px-8 rounded-xl shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_25px_-5px_hsl(var(--primary)/0.7)] sm:hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center touch-manipulation active:scale-[0.98]"
                         >
                             {isLoading ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                <div className="w-5 h-5 border-2 border-q-border/30 border-t-white rounded-full animate-spin mr-2"></div>
                             ) : (
                                 <Save size={18} className="mr-2" />
                             )}

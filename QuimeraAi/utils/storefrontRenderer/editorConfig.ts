@@ -8,7 +8,6 @@ export interface ResolvedStorefrontEditorConfig {
     componentOrder: StorefrontSectionKind[];
     sectionVisibility: Record<string, boolean>;
     sectionSettings: Record<string, Record<string, unknown>>;
-    themePresetId?: string;
     themeSettings?: Record<string, unknown>;
     source: 'draft' | 'published' | 'legacy';
 }
@@ -121,13 +120,6 @@ export function resolveStorefrontEditorConfig(
             ...selectedVisibility,
         },
         sectionSettings: selectedSettings,
-        themePresetId: String(
-            selectedConfig?.themePresetId ||
-            selectedConfig?.themePreset ||
-            editorState.themePresetId ||
-            editorState.themePreset ||
-            '',
-        ) || undefined,
         themeSettings: toRecord(selectedConfig?.themeSettings),
         source: selectedConfig ? (selectedConfig === editorState.published ? 'published' : 'draft') : 'legacy',
     };

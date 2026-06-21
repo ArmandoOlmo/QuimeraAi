@@ -140,7 +140,7 @@ export function GeneratePaymentLink({
         : selectedPlan?.price || 0;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50 p-4">
             <div className="bg-q-surface rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-q-border flex items-center justify-between sticky top-0 bg-q-surface rounded-t-xl z-10">
@@ -166,7 +166,7 @@ export function GeneratePaymentLink({
                 <div className="p-6 space-y-6">
                     {/* Error */}
                     {error && (
-                        <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
+                        <div className="flex items-start gap-2 p-3 bg-q-error/10 dark:bg-q-error/12 border border-q-error/25 dark:border-q-error/30 rounded-lg text-sm text-q-error dark:text-q-error">
                             <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                             <span>{error}</span>
                         </div>
@@ -285,13 +285,13 @@ export function GeneratePaymentLink({
                         /* ======== GENERATED LINK RESULT ======== */
                         <div className="space-y-5">
                             {/* Success Banner */}
-                            <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                            <div className="flex items-center gap-3 p-4 bg-q-success/10 dark:bg-q-success/12 border border-q-success/25 dark:border-q-success/30 rounded-lg">
+                                <CheckCircle className="h-5 w-5 text-q-success dark:text-q-success flex-shrink-0" />
                                 <div>
-                                    <p className="font-semibold text-green-900 dark:text-green-200 text-sm">
+                                    <p className="font-semibold text-q-success dark:text-q-success text-sm">
                                         Link generado exitosamente
                                     </p>
-                                    <p className="text-xs text-green-700 dark:text-green-300 mt-0.5">
+                                    <p className="text-xs text-q-success dark:text-q-success mt-0.5">
                                         Envía este link al cliente para que complete el pago.
                                     </p>
                                 </div>
@@ -316,7 +316,7 @@ export function GeneratePaymentLink({
                                             onClick={handleCopy}
                                             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                                                 copied
-                                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                                    ? 'bg-q-success/10 dark:bg-q-success/12 text-q-success dark:text-q-success'
                                                     : 'bg-primary text-primary-foreground hover:bg-primary/90'
                                             }`}
                                         >

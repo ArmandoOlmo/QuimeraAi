@@ -4,7 +4,7 @@ import { Save, X, Upload, Mail, User } from 'lucide-react';
 
 /**
  * Componente de Ejemplo - Demostración de i18next
- * 
+ *
  * Este componente muestra cómo usar traducciones en diferentes contextos:
  * - Títulos y textos
  * - Botones
@@ -21,7 +21,7 @@ const TranslationExample: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Simular guardado
     if (name && email) {
       setSaveStatus('success');
@@ -87,13 +87,13 @@ const TranslationExample: React.FC = () => {
 
           {/* Mensajes de Estado */}
           {saveStatus === 'success' && (
-            <div className="bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-3 rounded-lg">
+            <div className="bg-q-success/10 border border-q-success/20 text-q-success px-4 py-3 rounded-lg">
               {t('messages.saveSuccess')}
             </div>
           )}
 
           {saveStatus === 'error' && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg">
+            <div className="bg-q-error/10 border border-q-error/20 text-q-error px-4 py-3 rounded-lg">
               {t('messages.saveError')}
             </div>
           )}
@@ -102,7 +102,7 @@ const TranslationExample: React.FC = () => {
           <div className="flex gap-3">
             <button
               type="submit"
-              className="flex items-center gap-2 px-4 py-2 bg-q-accent text-white rounded-lg hover:bg-q-accent transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent transition-colors"
             >
               <Save className="w-4 h-4" />
               {t('common.save')}
@@ -127,7 +127,7 @@ const TranslationExample: React.FC = () => {
         <h3 className="text-lg font-semibold text-q-text mb-3">
           {t('dashboard.overview')}
         </h3>
-        
+
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-q-bg-secondary p-3 rounded-lg">
             <p className="text-sm text-q-text-secondary mb-1">
@@ -137,12 +137,12 @@ const TranslationExample: React.FC = () => {
               {projectCount}
             </p>
           </div>
-          
+
           <div className="bg-q-bg-secondary p-3 rounded-lg">
             <p className="text-sm text-q-text-secondary mb-1">
               {t('cms.published')}
             </p>
-            <p className="text-2xl font-bold text-green-500">
+            <p className="text-2xl font-bold text-q-success">
               3
             </p>
           </div>
@@ -154,7 +154,7 @@ const TranslationExample: React.FC = () => {
         <h3 className="text-lg font-semibold text-q-text mb-3">
           {t('dashboard.quickActions')}
         </h3>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button className="flex items-center gap-2 px-4 py-3 bg-q-bg-secondary border border-q-border rounded-lg hover:bg-q-surface-overlay transition-colors text-left">
             <Upload className="w-5 h-5 text-q-accent" />
@@ -183,9 +183,9 @@ const TranslationExample: React.FC = () => {
       </div>
 
       {/* Info sobre traducciones */}
-      <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-        <p className="text-sm text-blue-400">
-          💡 <strong>Tip:</strong> {i18n.language === 'es' 
+      <div className="mt-4 p-4 bg-q-accent/10 border border-q-accent/20 rounded-lg">
+        <p className="text-sm text-q-accent">
+          💡 <strong>Tip:</strong> {i18n.language === 'es'
             ? 'Cambia el idioma usando el selector en el header para ver las traducciones en acción.'
             : 'Switch the language using the selector in the header to see the translations in action.'}
         </p>

@@ -118,14 +118,13 @@ describe('businessBlueprint adapters', () => {
         expect(blueprint.storefrontBlueprint.enabled).toBe(true);
         expect(blueprint.storefrontBlueprint.needsReview).toBe(true);
         expect(blueprint.storefrontBlueprint.routeStrategy).toBe('project-store');
-        expect(blueprint.storefrontBlueprint.themePreset).toBe('fitness');
+        expect(blueprint.storefrontBlueprint).not.toHaveProperty('themePreset');
         expect(blueprint.storefrontBlueprint.catalogSize).toBe('small');
-        expect(blueprint.storefrontBlueprint.productCardVariant).toBe('fitness');
+        expect(blueprint.storefrontBlueprint.productCardVariant).toBe('imageFirst');
         expect(blueprint.storefrontBlueprint.templates.product).toBe('default-product');
-        expect(blueprint.storefrontBlueprint.templateCompatibility?.compatibleIndustries).toContain('fitness');
+        expect(blueprint.storefrontBlueprint.templateCompatibility).toBeUndefined();
         expect(blueprint.storefrontBlueprint.themeFallbackChain).toEqual([
             'DEFAULT_STOREFRONT_THEME',
-            'preset:fitness',
             'brandColors',
             'projectGlobalColors',
             'storefrontTheme',

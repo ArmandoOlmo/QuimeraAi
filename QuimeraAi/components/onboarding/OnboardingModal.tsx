@@ -153,7 +153,7 @@ const OnboardingModal: React.FC = () => {
     if (!progress) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
-                <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+                <div className="absolute inset-0 bg-q-text/70 backdrop-blur-sm" />
                 <div className="relative bg-q-bg rounded-2xl p-8 flex items-center gap-4 border border-q-border">
                     <QuimeraLoader size="sm" />
                     <span className="text-foreground">{t('common.loading', 'Loading...')}</span>
@@ -276,7 +276,7 @@ const OnboardingModal: React.FC = () => {
         <div className="fixed inset-0 z-[9999] flex items-center justify-center">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                className="absolute inset-0 bg-q-text/70 backdrop-blur-sm"
                 onClick={() => !isGenerating && closeOnboarding()}
             />
 
@@ -314,7 +314,7 @@ const OnboardingModal: React.FC = () => {
                         {isGenerating && generationDuration >= 30 && (
                             <button
                                 onClick={() => setShowCancelConfirm(true)}
-                                className="p-2 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
+                                className="p-2 text-q-accent hover:text-q-accent hover:bg-q-accent/10 rounded-lg transition-colors"
                                 title={t('onboarding.cancelGeneration', 'Cancel Generation')}
                             >
                                 <X size={20} />
@@ -342,8 +342,8 @@ const OnboardingModal: React.FC = () => {
                 </div>
 
                 {/* Content */}
-                <div 
-                    className={`flex-1 min-h-0 p-4 md:p-6 overflow-y-auto overscroll-contain transition-all duration-300 ease-in-out ${progress.step === generationStep ? 'min-h-[500px] md:min-h-[600px] flex flex-col' : ''}`} 
+                <div
+                    className={`flex-1 min-h-0 p-4 md:p-6 overflow-y-auto overscroll-contain transition-all duration-300 ease-in-out ${progress.step === generationStep ? 'min-h-[500px] md:min-h-[600px] flex flex-col' : ''}`}
                     style={{ maxHeight: 'calc(90vh - 180px)' }}
                 >
                     {error && (
@@ -408,13 +408,13 @@ const OnboardingModal: React.FC = () => {
             {showCancelConfirm && (
                 <div className="absolute inset-0 z-[60] flex items-center justify-center">
                     <div
-                        className="absolute inset-0 bg-black/50"
+                        className="absolute inset-0 bg-q-text/50"
                         onClick={() => setShowCancelConfirm(false)}
                     />
                     <div className="relative bg-q-surface border border-q-border rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                                <AlertTriangle size={20} className="text-amber-500" />
+                            <div className="w-10 h-10 rounded-full bg-q-accent/20 flex items-center justify-center">
+                                <AlertTriangle size={20} className="text-q-accent" />
                             </div>
                             <h3 className="text-lg font-semibold text-foreground">
                                 {t('onboarding.cancelGenerationTitle', 'Cancel Generation?')}
@@ -432,7 +432,7 @@ const OnboardingModal: React.FC = () => {
                             </button>
                             <button
                                 onClick={handleEmergencyCancel}
-                                className="flex-1 px-4 py-2.5 bg-amber-500 text-white font-medium rounded-xl hover:bg-amber-600 transition-colors"
+                                className="flex-1 px-4 py-2.5 bg-q-accent text-q-text-on-accent font-medium rounded-xl hover:bg-q-accent transition-colors"
                             >
                                 {t('onboarding.startOver', 'Start Over')}
                             </button>

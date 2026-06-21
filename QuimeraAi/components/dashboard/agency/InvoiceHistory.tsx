@@ -164,38 +164,38 @@ export function InvoiceHistory() {
             { bg: string; text: string; label: string; icon: React.ReactNode }
         > = {
             succeeded: {
-                bg: 'bg-green-100 dark:bg-green-900/20',
-                text: 'text-green-800 dark:text-green-400',
+                bg: 'bg-q-success/10 dark:bg-q-success/12',
+                text: 'text-q-success dark:text-q-success',
                 label: 'Exitoso',
                 icon: <CheckCircle className="h-3.5 w-3.5" />,
             },
             paid: {
-                bg: 'bg-green-100 dark:bg-green-900/20',
-                text: 'text-green-800 dark:text-green-400',
+                bg: 'bg-q-success/10 dark:bg-q-success/12',
+                text: 'text-q-success dark:text-q-success',
                 label: 'Pagado',
                 icon: <CheckCircle className="h-3.5 w-3.5" />,
             },
             failed: {
-                bg: 'bg-red-100 dark:bg-red-900/20',
-                text: 'text-red-800 dark:text-red-400',
+                bg: 'bg-q-error/10 dark:bg-q-error/12',
+                text: 'text-q-error dark:text-q-error',
                 label: 'Fallido',
                 icon: <XCircle className="h-3.5 w-3.5" />,
             },
             refunded: {
-                bg: 'bg-yellow-100 dark:bg-yellow-900/20',
-                text: 'text-yellow-800 dark:text-yellow-400',
+                bg: 'bg-q-accent/10 dark:bg-q-accent/12',
+                text: 'text-q-accent dark:text-q-accent',
                 label: 'Reembolsado',
                 icon: <DollarSign className="h-3.5 w-3.5" />,
             },
             pending: {
-                bg: 'bg-blue-100 dark:bg-blue-900/20',
-                text: 'text-blue-800 dark:text-blue-400',
+                bg: 'bg-q-accent/10 dark:bg-q-accent/12',
+                text: 'text-q-accent dark:text-q-accent',
                 label: 'Pendiente',
                 icon: <Clock className="h-3.5 w-3.5" />,
             },
             draft: {
-                bg: 'bg-gray-100 dark:bg-gray-900/20',
-                text: 'text-gray-800 dark:text-gray-400',
+                bg: 'bg-q-surface-overlay dark:bg-gray-900/20',
+                text: 'text-q-text dark:text-gray-400',
                 label: 'Borrador',
                 icon: <FileText className="h-3.5 w-3.5" />,
             },
@@ -279,9 +279,9 @@ export function InvoiceHistory() {
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-q-surface rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-q-surface rounded-lg border border-q-border dark:border-gray-700 p-6">
                     <div className="flex items-center gap-3 mb-2">
-                        <DollarSign className="h-5 w-5 text-green-600" />
+                        <DollarSign className="h-5 w-5 text-q-success" />
                         <span className="text-sm font-medium text-q-text-muted">
                             Ingresos Totales
                         </span>
@@ -296,9 +296,9 @@ export function InvoiceHistory() {
                     </p>
                 </div>
 
-                <div className="bg-q-surface rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-q-surface rounded-lg border border-q-border dark:border-gray-700 p-6">
                     <div className="flex items-center gap-3 mb-2">
-                        <TrendingUp className="h-5 w-5 text-blue-600" />
+                        <TrendingUp className="h-5 w-5 text-q-accent" />
                         <span className="text-sm font-medium text-q-text-muted">
                             Pago Promedio
                         </span>
@@ -309,9 +309,9 @@ export function InvoiceHistory() {
                     <p className="text-sm text-q-text-muted mt-1">Por transacción</p>
                 </div>
 
-                <div className="bg-q-surface rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-q-surface rounded-lg border border-q-border dark:border-gray-700 p-6">
                     <div className="flex items-center gap-3 mb-2">
-                        <CheckCircle className="h-5 w-5 text-purple-600" />
+                        <CheckCircle className="h-5 w-5 text-q-accent" />
                         <span className="text-sm font-medium text-q-text-muted">
                             Transacciones
                         </span>
@@ -348,11 +348,11 @@ export function InvoiceHistory() {
                 }
                 trailing={
                     <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-gray-500" />
+                        <Calendar className="h-4 w-4 text-q-text-muted" />
                         <AppSelect
                             value={dateRange}
                             onChange={(e) => setDateRange(e.target.value as any)}
-                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-q-surface text-foreground text-sm focus:ring-2 focus:ring-blue-500"
+                            className="px-3 py-2 border border-q-border dark:border-gray-600 rounded-lg bg-q-surface text-foreground text-sm focus:ring-2 focus:ring-q-accent/35"
                         >
                             <option value="7d">Últimos 7 días</option>
                             <option value="30d">Últimos 30 días</option>
@@ -365,7 +365,7 @@ export function InvoiceHistory() {
 
             {/* Content */}
             {activeView === 'payments' ? (
-                <div className="bg-q-surface rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="bg-q-surface rounded-lg border border-q-border dark:border-gray-700 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-muted">
@@ -391,7 +391,7 @@ export function InvoiceHistory() {
                                 {filteredPayments.map((payment) => (
                                     <tr
                                         key={payment.id}
-                                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                        className="hover:bg-q-surface-overlay dark:hover:bg-gray-700/50"
                                     >
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                             {formatDate(payment.createdAt)}
@@ -416,7 +416,7 @@ export function InvoiceHistory() {
 
                     {filteredPayments.length === 0 && (
                         <div className="text-center py-12">
-                            <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <DollarSign className="h-12 w-12 text-q-text-muted mx-auto mb-4" />
                             <p className="text-q-text-muted">
                                 No hay pagos para mostrar
                             </p>
@@ -424,7 +424,7 @@ export function InvoiceHistory() {
                     )}
                 </div>
             ) : (
-                <div className="bg-q-surface rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="bg-q-surface rounded-lg border border-q-border dark:border-gray-700 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-muted">
@@ -456,7 +456,7 @@ export function InvoiceHistory() {
                                 {filteredInvoices.map((invoice) => (
                                     <tr
                                         key={invoice.id}
-                                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                        className="hover:bg-q-surface-overlay dark:hover:bg-gray-700/50"
                                     >
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                             {new Date(invoice.year, invoice.month - 1).toLocaleDateString(
@@ -481,7 +481,7 @@ export function InvoiceHistory() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
                                             <button
-                                                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                                className="inline-flex items-center gap-1 text-sm text-q-accent hover:text-q-accent dark:text-q-accent dark:hover:text-q-accent"
                                                 title="Descargar invoice"
                                             >
                                                 <Download className="h-4 w-4" />
@@ -496,7 +496,7 @@ export function InvoiceHistory() {
 
                     {filteredInvoices.length === 0 && (
                         <div className="text-center py-12">
-                            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <FileText className="h-12 w-12 text-q-text-muted mx-auto mb-4" />
                             <p className="text-q-text-muted">
                                 No hay invoices para mostrar
                             </p>

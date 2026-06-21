@@ -38,6 +38,7 @@ import HeaderBackButton from '../../ui/HeaderBackButton';
 import { logApiCall } from '../../../services/apiLoggingService';
 import { INDUSTRY_STAGES, INDUSTRY_FIELDS, INDUSTRY_META } from '../../../utils/crmIndustryPresets';
 import { db, doc, updateDoc } from '@/utils/compatData';
+import { MotionCard } from '../../ui/primitives/Card';
 
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '../../../hooks/useRouter';
@@ -74,12 +75,12 @@ const cleanJsonResponse = (text: string): string => {
 
 // Default stages fallback (used when no crmConfig exists on the project)
 const getLeadStages = (t: any): { id: LeadStatus; label: string; color: string }[] => [
-    { id: 'new', label: t('leads.stages.new'), color: 'bg-blue-500' },
-    { id: 'contacted', label: t('leads.stages.contacted'), color: 'bg-yellow-500' },
-    { id: 'qualified', label: t('leads.stages.qualified'), color: 'bg-purple-500' },
-    { id: 'negotiation', label: t('leads.stages.negotiation'), color: 'bg-orange-500' },
-    { id: 'won', label: t('leads.stages.won'), color: 'bg-green-500' },
-    { id: 'lost', label: t('leads.stages.lost'), color: 'bg-red-500' },
+    { id: 'new', label: t('leads.stages.new'), color: 'bg-q-accent' },
+    { id: 'contacted', label: t('leads.stages.contacted'), color: 'bg-q-accent' },
+    { id: 'qualified', label: t('leads.stages.qualified'), color: 'bg-q-accent' },
+    { id: 'negotiation', label: t('leads.stages.negotiation'), color: 'bg-q-warning' },
+    { id: 'won', label: t('leads.stages.won'), color: 'bg-q-success' },
+    { id: 'lost', label: t('leads.stages.lost'), color: 'bg-q-error' },
 ];
 
 // Icon map for industry selector
@@ -88,22 +89,22 @@ const INDUSTRY_ICONS: Record<string, React.ElementType> = {
 };
 
 const CARD_COLORS = [
-    { id: 'default', indicator: 'bg-slate-500', accent: 'group-hover:border-slate-500/40' },
-    { id: 'blue', indicator: 'bg-blue-500', accent: 'group-hover:border-blue-500/40' },
-    { id: 'green', indicator: 'bg-emerald-500', accent: 'group-hover:border-emerald-500/40' },
-    { id: 'purple', indicator: 'bg-purple-500', accent: 'group-hover:border-purple-500/40' },
-    { id: 'orange', indicator: 'bg-orange-500', accent: 'group-hover:border-orange-500/40' },
-    { id: 'pink', indicator: 'bg-pink-500', accent: 'group-hover:border-pink-500/40' },
-    { id: 'red', indicator: 'bg-red-500', accent: 'group-hover:border-red-500/40' },
+    { id: 'default', indicator: 'bg-q-surface-overlay', accent: 'group-hover:border-q-border/40' },
+    { id: 'blue', indicator: 'bg-q-accent', accent: 'group-hover:border-q-accent/40' },
+    { id: 'green', indicator: 'bg-q-success', accent: 'group-hover:border-q-success/40' },
+    { id: 'purple', indicator: 'bg-q-accent', accent: 'group-hover:border-q-accent/40' },
+    { id: 'orange', indicator: 'bg-q-warning', accent: 'group-hover:border-q-warning/40' },
+    { id: 'pink', indicator: 'bg-q-accent', accent: 'group-hover:border-q-accent/40' },
+    { id: 'red', indicator: 'bg-q-error', accent: 'group-hover:border-q-error/40' },
 ];
 
 const STAGE_ACCENT_CLASS: Record<LeadStatus, string> = {
-    new: 'bg-blue-500',
-    contacted: 'bg-yellow-500',
-    qualified: 'bg-purple-500',
-    negotiation: 'bg-orange-500',
-    won: 'bg-green-500',
-    lost: 'bg-red-500',
+    new: 'bg-q-accent',
+    contacted: 'bg-q-accent',
+    qualified: 'bg-q-accent',
+    negotiation: 'bg-q-warning',
+    won: 'bg-q-success',
+    lost: 'bg-q-error',
 };
 
 const LEGACY_DEFAULT_LEAD_VALUE_RANGE_MAX = 1_000_000;
@@ -189,7 +190,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                     e.stopPropagation();
                     onDelete(lead.id);
                 }}
-                className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-md border border-transparent text-q-text-muted opacity-100 transition-all hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100"
+                className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-md border border-transparent text-q-text-muted opacity-100 transition-all hover:border-q-error/30 hover:bg-q-error/10 hover:text-q-error sm:opacity-0 sm:group-hover:opacity-100"
                 title="Eliminar lead"
             >
                 <Trash2 size={13} />
@@ -230,7 +231,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                     ))}
                     <button
                         onClick={(evt) => handleEmojiUpdate(evt, undefined)}
-                        className="text-[10px] sm:text-xs text-q-text-muted hover:text-red-500 col-span-6 border-t border-q-border pt-1.5 sm:pt-2 mt-1 font-medium"
+                        className="text-[10px] sm:text-xs text-q-text-muted hover:text-q-error col-span-6 border-t border-q-border pt-1.5 sm:pt-2 mt-1 font-medium"
                         title="Clear"
                     >
                         {t('leads.dashboard.clearMarker')}
@@ -267,7 +268,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                     </div>
 
                     {lead.value && lead.value > 0 && (
-                        <span className="shrink-0 rounded-md bg-green-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-green-500">
+                        <span className="shrink-0 rounded-md bg-q-success/10 px-1.5 py-0.5 text-[11px] font-semibold text-q-success">
                             ${lead.value.toLocaleString()}
                         </span>
                     )}
@@ -285,7 +286,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                     {hasScore && (
                         <span
                             className={`${scoreInfo.color} inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-white`}
-                            title={`${scoreInfo.label}: ${score}/100`}
+                            title={`${scoreInfo.label}: ${score}`}
                         >
                             <span>{scoreInfo.emoji}</span>
                             <span>{score}</span>
@@ -293,7 +294,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                     )}
 
                     {conversationLines.length > 0 && (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-blue-500">
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-q-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-q-accent">
                             <MessageSquare size={10} />
                             {conversationLines.length}
                         </span>
@@ -313,7 +314,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                     </span>
                     <div className="flex shrink-0 gap-0.5 transition-opacity">
                         <button
-                            className="rounded-md p-1.5 text-q-text-muted transition-colors hover:bg-secondary hover:text-yellow-500"
+                            className="rounded-md p-1.5 text-q-text-muted transition-colors hover:bg-secondary hover:text-q-accent"
                             title={t('leads.dashboard.addEmoji')}
                             onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); setShowPalette(false); }}
                         >
@@ -867,7 +868,7 @@ const LeadsDashboard: React.FC = () => {
 
             const prompt = `
                 Analyze this sales lead based on professional criteria. Consider ALL available information.
-                
+
                 Lead Name: ${selectedLead.name}
                 Email: ${selectedLead.email || 'Unknown'}
                 Phone: ${selectedLead.phone || 'Unknown'}
@@ -876,7 +877,7 @@ const LeadsDashboard: React.FC = () => {
                 Notes: ${selectedLead.notes || 'None'}
                 ${chatContext}${previousAnalysis}
                 Based on ALL this information, provide a comprehensive analysis.
-                
+
                 Output ONLY valid JSON format:
                 {
                     "score": number (0-100, based on engagement and interest level),
@@ -946,7 +947,7 @@ const LeadsDashboard: React.FC = () => {
 
             const prompt = `
                 Write a personalized, professional follow-up email to this lead.
-                
+
                 Lead Information:
                 Name: ${selectedLead.name}
                 Email: ${selectedLead.email || 'N/A'}
@@ -955,9 +956,9 @@ const LeadsDashboard: React.FC = () => {
                 ${chatContext}${analysisContext}
                 IMPORTANT: Use specific details from the conversation to make the email feel personal and relevant.
                 Reference topics they discussed, questions they asked, or interests they showed.
-                
+
                 My Goal: Move them to the next stage of the pipeline.
-                
+
                 Write a concise, warm, and action-oriented email (max 150 words).
                 Include a clear call to action.
             `;
@@ -1196,13 +1197,15 @@ const LeadsDashboard: React.FC = () => {
                     <div className="grid shrink-0 grid-cols-3 gap-2 border-b border-q-border/40 bg-q-bg/70 px-3 py-3 sm:gap-3 sm:px-6 sm:py-4">
                         {[
                             { label: t('leads.dashboard.pipelineValue'), value: `$${stats.totalValue.toLocaleString()}`, icon: DollarSign, valueClass: 'text-foreground' },
-                            { label: t('leads.dashboard.conversionRate'), value: `${stats.conversionRate}%`, icon: ArrowUpRight, valueClass: 'text-green-500' },
+                            { label: t('leads.dashboard.conversionRate'), value: `${stats.conversionRate}%`, icon: ArrowUpRight, valueClass: 'text-q-success' },
                             { label: t('leads.dashboard.activeLeads'), value: stats.activeLeads, icon: Users, valueClass: 'text-foreground' },
-                        ].map((item) => {
+                        ].map((item, index) => {
                             const Icon = item.icon;
                             return (
-                                <div
+                                <MotionCard
                                     key={item.label}
+                                    staggerIndex={index}
+                                    hoverMotion
                                     className="group relative min-h-[78px] min-w-0 overflow-hidden rounded-xl border border-q-border/60 bg-q-surface/80 p-2.5 transition-all duration-300 ease-out hover:border-q-border sm:min-h-[88px] md:min-h-[104px] md:rounded-2xl md:p-4"
                                 >
                                     <div
@@ -1216,7 +1219,7 @@ const LeadsDashboard: React.FC = () => {
                                             {item.label}
                                         </div>
                                     </div>
-                                </div>
+                                </MotionCard>
                             );
                         })}
                     </div>
@@ -1275,7 +1278,7 @@ const LeadsDashboard: React.FC = () => {
                                         </button>
                                         <button
                                             onClick={() => setBulkDeleteConfirmOpen(true)}
-                                            className="bg-red-500 hover:bg-red-600 text-white p-1.5 rounded transition-colors"
+                                            className="bg-q-error hover:bg-q-error text-white p-1.5 rounded transition-colors"
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -1329,7 +1332,7 @@ const LeadsDashboard: React.FC = () => {
                                         </AppSelect>
                                         <button
                                             onClick={() => setBulkDeleteConfirmOpen(true)}
-                                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-bold flex items-center gap-2 transition-colors"
+                                            className="bg-q-error hover:bg-q-error text-white px-3 py-1.5 rounded text-sm font-bold flex items-center gap-2 transition-colors"
                                         >
                                             <Trash2 size={14} />
                                             Delete Selected
@@ -1545,7 +1548,7 @@ const LeadsDashboard: React.FC = () => {
                                                     {selectedLead.value && (
                                                         <div>
                                                             <label className="text-xs font-bold text-q-text-muted uppercase">Value</label>
-                                                            <p className="text-sm font-bold text-green-500">${selectedLead.value.toLocaleString()}</p>
+                                                            <p className="text-sm font-bold text-q-success">${selectedLead.value.toLocaleString()}</p>
                                                         </div>
                                                     )}
                                                     <button
@@ -1628,7 +1631,7 @@ const LeadsDashboard: React.FC = () => {
                                                     <Edit size={16} className="sm:hidden" />
                                                     <Edit size={20} className="hidden sm:block" />
                                                 </button>
-                                                <button onClick={handleDelete} className="p-1.5 sm:p-2 hover:bg-red-500/20 rounded-full text-red-500 transition-colors" title="Delete Lead">
+                                                <button onClick={handleDelete} className="p-1.5 sm:p-2 hover:bg-q-error/20 rounded-full text-q-error transition-colors" title="Delete Lead">
                                                     <Trash2 size={16} className="sm:hidden" />
                                                     <Trash2 size={20} className="hidden sm:block" />
                                                 </button>
@@ -1644,9 +1647,9 @@ const LeadsDashboard: React.FC = () => {
 
                             <div className="p-4 sm:p-6 space-y-6 sm:space-y-8 overflow-y-auto max-h-[60vh] sm:max-h-[70vh]">
                                 {/* AI INSIGHTS SECTION - Mobile optimized */}
-                                <div className="bg-purple-500/5 border border-purple-500/20 rounded-lg sm:rounded-xl p-3 sm:p-5">
+                                <div className="bg-q-accent/5 border border-q-accent/20 rounded-lg sm:rounded-xl p-3 sm:p-5">
                                     <div className="flex justify-between items-center mb-3 sm:mb-4">
-                                        <h3 className="text-xs sm:text-sm font-bold text-purple-500 flex items-center uppercase tracking-wider">
+                                        <h3 className="text-xs sm:text-sm font-bold text-q-accent flex items-center uppercase tracking-wider">
                                             <Sparkles size={12} className="sm:hidden mr-1.5" />
                                             <Sparkles size={14} className="hidden sm:block mr-2" />
                                             AI Intelligence
@@ -1654,7 +1657,7 @@ const LeadsDashboard: React.FC = () => {
                                         <button
                                             onClick={handleAnalyzeLead}
                                             disabled={isAnalyzing}
-                                            className="text-[10px] sm:text-xs font-bold bg-purple-500 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg hover:bg-purple-600 transition-colors flex items-center disabled:opacity-50"
+                                            className="text-[10px] sm:text-xs font-bold bg-q-accent text-q-text-on-accent px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg hover:bg-q-accent transition-colors flex items-center disabled:opacity-50"
                                         >
                                             {isAnalyzing ? <Loader2 size={10} className="animate-spin mr-1" /> : <Sparkles size={10} className="mr-1" />}
                                             Analyze
@@ -1671,7 +1674,7 @@ const LeadsDashboard: React.FC = () => {
                                                     </div>
                                                     <div className="h-1.5 sm:h-2 bg-secondary rounded-full overflow-hidden">
                                                         <div
-                                                            className={`h-full transition-all duration-1000 ${selectedLead.aiScore > 75 ? 'bg-green-500' : selectedLead.aiScore > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                            className={`h-full transition-all duration-1000 ${selectedLead.aiScore > 75 ? 'bg-q-success' : selectedLead.aiScore > 40 ? 'bg-q-accent' : 'bg-q-error'}`}
                                                             style={{ width: `${selectedLead.aiScore}%` }}
                                                         />
                                                     </div>
@@ -1682,7 +1685,7 @@ const LeadsDashboard: React.FC = () => {
                                                 </div>
                                             </div>
                                             <p className="text-xs sm:text-sm text-q-text-muted bg-q-surface p-2 sm:p-3 rounded-lg border border-q-border">
-                                                <span className="font-bold text-purple-500 mr-1 sm:mr-2">Insight:</span>
+                                                <span className="font-bold text-q-accent mr-1 sm:mr-2">Insight:</span>
                                                 {selectedLead.aiAnalysis}
                                             </p>
                                         </div>
@@ -1739,16 +1742,16 @@ const LeadsDashboard: React.FC = () => {
                                                 <label className="text-[10px] sm:text-xs font-bold text-q-text-muted uppercase tracking-wider mb-1 block">Deal Value</label>
                                                 {isEditMode ? (
                                                     <div className="flex items-center gap-1">
-                                                        <span className="text-lg sm:text-xl font-bold text-green-500">$</span>
+                                                        <span className="text-lg sm:text-xl font-bold text-q-success">$</span>
                                                         <input
                                                             type="number"
                                                             value={editForm.value || 0}
                                                             onChange={e => setEditForm({ ...editForm, value: Number(e.target.value) })}
-                                                            className="w-24 sm:flex-1 bg-secondary/20 border border-q-border rounded px-2 py-1 text-lg sm:text-xl font-bold text-green-500 outline-none focus:ring-2 focus:ring-primary/50"
+                                                            className="w-24 sm:flex-1 bg-secondary/20 border border-q-border rounded px-2 py-1 text-lg sm:text-xl font-bold text-q-success outline-none focus:ring-2 focus:ring-primary/50"
                                                         />
                                                     </div>
                                                 ) : (
-                                                    <p className="text-lg sm:text-xl font-bold text-green-500">${(selectedLead.value || 0).toLocaleString()}</p>
+                                                    <p className="text-lg sm:text-xl font-bold text-q-success">${(selectedLead.value || 0).toLocaleString()}</p>
                                                 )}
                                             </div>
                                             <div>
@@ -2092,7 +2095,7 @@ const LeadsDashboard: React.FC = () => {
                                                     {/* Header with Save Button */}
                                                     <div className="flex items-center justify-between mb-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-md">
+                                                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-q-accent to-q-accent flex items-center justify-center shadow-md">
                                                                 <Sparkles size={18} className="text-white" />
                                                             </div>
                                                             <div>
@@ -2116,31 +2119,31 @@ const LeadsDashboard: React.FC = () => {
                                                                             console.log('[LeadsDashboard] ✅ AI analysis saved successfully');
 
                                                                             btn.innerHTML = '✅ Guardado';
-                                                                            btn.classList.remove('bg-purple-500', 'hover:bg-purple-600');
-                                                                            btn.classList.add('bg-green-500');
+                                                                            btn.classList.remove('bg-q-accent', 'hover:bg-q-accent');
+                                                                            btn.classList.add('bg-q-success');
 
                                                                             setTimeout(() => {
                                                                                 btn.innerHTML = originalText;
                                                                                 btn.disabled = false;
-                                                                                btn.classList.remove('bg-green-500');
-                                                                                btn.classList.add('bg-purple-500', 'hover:bg-purple-600');
+                                                                                btn.classList.remove('bg-q-success');
+                                                                                btn.classList.add('bg-q-accent', 'hover:bg-q-accent');
                                                                             }, 2000);
                                                                         } catch (error) {
                                                                             console.error('[LeadsDashboard] ❌ Error saving AI analysis:', error);
                                                                             btn.innerHTML = '❌ Error';
-                                                                            btn.classList.remove('bg-purple-500');
-                                                                            btn.classList.add('bg-red-500');
+                                                                            btn.classList.remove('bg-q-accent');
+                                                                            btn.classList.add('bg-q-error');
 
                                                                             setTimeout(() => {
                                                                                 btn.innerHTML = originalText;
                                                                                 btn.disabled = false;
-                                                                                btn.classList.remove('bg-red-500');
-                                                                                btn.classList.add('bg-purple-500', 'hover:bg-purple-600');
+                                                                                btn.classList.remove('bg-q-error');
+                                                                                btn.classList.add('bg-q-accent', 'hover:bg-q-accent');
                                                                             }, 2000);
                                                                         }
                                                                     }
                                                                 }}
-                                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition-colors shadow-sm"
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-q-accent hover:bg-q-accent text-q-text-on-accent text-xs font-medium rounded-lg transition-colors shadow-sm"
                                                             >
                                                                 <Save size={14} />
                                                                 Guardar
@@ -2212,8 +2215,8 @@ const LeadsDashboard: React.FC = () => {
                                                                     className="bg-q-surface hover:bg-q-surface/80 border border-q-border rounded-xl p-4 transition-colors"
                                                                 >
                                                                     <div className="flex items-start gap-3">
-                                                                        <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                                                                            <span className="text-xs font-bold text-purple-600 dark:text-purple-400">{idx + 1}</span>
+                                                                        <div className="w-6 h-6 rounded-full bg-q-accent/10 dark:bg-q-accent/12 flex items-center justify-center shrink-0 mt-0.5">
+                                                                            <span className="text-xs font-bold text-q-accent dark:text-q-accent">{idx + 1}</span>
                                                                         </div>
                                                                         <div className="flex-1 min-w-0">
                                                                             <h5 className="text-sm font-semibold text-foreground mb-1">
@@ -2387,7 +2390,7 @@ const LeadsDashboard: React.FC = () => {
                                             </button>
                                             <button
                                                 onClick={handleSaveEdit}
-                                                className="flex items-center justify-center px-3 sm:px-4 py-2 rounded-lg bg-green-500 text-white text-xs sm:text-sm font-bold hover:bg-green-600 transition-colors shadow-md"
+                                                className="flex items-center justify-center px-3 sm:px-4 py-2 rounded-lg bg-q-success text-white text-xs sm:text-sm font-bold hover:bg-q-success transition-colors shadow-md"
                                             >
                                                 <CheckCircle2 size={14} className="mr-1.5 sm:mr-2" /> Save Changes
                                             </button>
@@ -2409,7 +2412,7 @@ const LeadsDashboard: React.FC = () => {
                                             </div>
                                             <button
                                                 onClick={handleDelete}
-                                                className="flex items-center justify-center sm:justify-start px-3 sm:px-4 py-2 rounded-lg text-red-500 hover:bg-red-500/10 text-xs sm:text-sm font-bold transition-colors"
+                                                className="flex items-center justify-center sm:justify-start px-3 sm:px-4 py-2 rounded-lg text-q-error hover:bg-q-error/10 text-xs sm:text-sm font-bold transition-colors"
                                             >
                                                 <Trash2 size={14} className="mr-1.5 sm:mr-2" /> Delete Lead
                                             </button>

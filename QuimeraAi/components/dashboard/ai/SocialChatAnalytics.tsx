@@ -50,9 +50,9 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
 
     const getChannelColor = (channel: SocialChannel) => {
         switch (channel) {
-            case 'whatsapp': return 'bg-green-500';
-            case 'facebook': return 'bg-blue-600';
-            case 'instagram': return 'bg-pink-500';
+            case 'whatsapp': return 'bg-q-success';
+            case 'facebook': return 'bg-q-accent';
+            case 'instagram': return 'bg-q-accent';
             case 'web': return 'bg-primary';
         }
     };
@@ -74,7 +74,7 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center h-64 text-q-text-muted">
-                <AlertCircle size={32} className="mb-2 text-red-500" />
+                <AlertCircle size={32} className="mb-2 text-q-error" />
                 <p>{error}</p>
                 <button
                     onClick={refresh}
@@ -160,7 +160,7 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
                         <MessageCircle size={18} className="text-primary" />
                     </div>
                     <div className="text-2xl font-bold">{analytics.totalMessages.toLocaleString()}</div>
-                    <div className="text-xs text-green-500 flex items-center gap-1 mt-1">
+                    <div className="text-xs text-q-success flex items-center gap-1 mt-1">
                         <ArrowUp size={12} />
                         <span>+12% vs periodo anterior</span>
                     </div>
@@ -169,7 +169,7 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
                 <div className="bg-q-surface border border-q-border rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-q-text-muted text-sm">Conversaciones</span>
-                        <Users size={18} className="text-blue-500" />
+                        <Users size={18} className="text-q-accent" />
                     </div>
                     <div className="text-2xl font-bold">{analytics.totalConversations}</div>
                     <div className="text-xs text-q-text-muted mt-1">
@@ -180,10 +180,10 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
                 <div className="bg-q-surface border border-q-border rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-q-text-muted text-sm">Tiempo de Respuesta</span>
-                        <Clock size={18} className="text-amber-500" />
+                        <Clock size={18} className="text-q-accent" />
                     </div>
                     <div className="text-2xl font-bold">{formatResponseTime(analytics.avgResponseTime)}</div>
-                    <div className="text-xs text-green-500 flex items-center gap-1 mt-1">
+                    <div className="text-xs text-q-success flex items-center gap-1 mt-1">
                         <ArrowDown size={12} />
                         <span>-8% más rápido</span>
                     </div>
@@ -192,7 +192,7 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
                 <div className="bg-q-surface border border-q-border rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-q-text-muted text-sm">Leads Generados</span>
-                        <TrendingUp size={18} className="text-green-500" />
+                        <TrendingUp size={18} className="text-q-success" />
                     </div>
                     <div className="text-2xl font-bold">{analytics.leadsGenerated}</div>
                     <div className="text-xs text-q-text-muted mt-1">
@@ -280,7 +280,7 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
                     <div className="space-y-3">
                         <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
                             <span className="text-sm">Conversaciones activas</span>
-                            <span className="font-bold text-green-500">{analytics.conversationInsights.activeConversations}</span>
+                            <span className="font-bold text-q-success">{analytics.conversationInsights.activeConversations}</span>
                         </div>
                         <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
                             <span className="text-sm">Promedio mensajes/conversación</span>
@@ -292,7 +292,7 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
                         </div>
                         <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
                             <span className="text-sm">Escaladas a humano</span>
-                            <span className="font-bold text-amber-500">{analytics.conversationInsights.escalatedConversations}</span>
+                            <span className="font-bold text-q-accent">{analytics.conversationInsights.escalatedConversations}</span>
                         </div>
                         <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
                             <span className="text-sm">AI manejado</span>
@@ -310,9 +310,9 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
                                 key={kw.keyword}
                                 className={`px-3 py-1.5 rounded-full text-sm font-medium ${
                                     kw.sentiment === 'positive'
-                                        ? 'bg-green-500/20 text-green-500'
+                                        ? 'bg-q-success/20 text-q-success'
                                         : kw.sentiment === 'negative'
-                                        ? 'bg-red-500/20 text-red-500'
+                                        ? 'bg-q-error/20 text-q-error'
                                         : 'bg-secondary text-foreground'
                                 }`}
                                 style={{ fontSize: `${Math.max(12, 16 - idx * 0.5)}px` }}
@@ -336,25 +336,25 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
                         <div className="text-xs text-q-text-muted mt-1">Promedio</div>
                     </div>
                     <div className="text-center p-4 bg-secondary/30 rounded-lg">
-                        <div className="text-2xl font-bold text-green-500">
+                        <div className="text-2xl font-bold text-q-success">
                             {formatResponseTime(analytics.responseTimeMetrics.minResponseTime)}
                         </div>
                         <div className="text-xs text-q-text-muted mt-1">Mínimo</div>
                     </div>
                     <div className="text-center p-4 bg-secondary/30 rounded-lg">
-                        <div className="text-2xl font-bold text-amber-500">
+                        <div className="text-2xl font-bold text-q-accent">
                             {formatResponseTime(analytics.responseTimeMetrics.medianResponseTime)}
                         </div>
                         <div className="text-xs text-q-text-muted mt-1">Mediana</div>
                     </div>
                     <div className="text-center p-4 bg-secondary/30 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-500">
+                        <div className="text-2xl font-bold text-q-accent">
                             {formatResponseTime(analytics.responseTimeMetrics.percentile95)}
                         </div>
                         <div className="text-xs text-q-text-muted mt-1">P95</div>
                     </div>
                     <div className="text-center p-4 bg-secondary/30 rounded-lg">
-                        <div className="text-2xl font-bold text-red-500">
+                        <div className="text-2xl font-bold text-q-error">
                             {formatResponseTime(analytics.responseTimeMetrics.maxResponseTime)}
                         </div>
                         <div className="text-xs text-q-text-muted mt-1">Máximo</div>

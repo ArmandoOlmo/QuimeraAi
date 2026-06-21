@@ -1,6 +1,6 @@
 /**
  * FirstVisitWelcomeBanner
- * 
+ *
  * Displays a welcome message when the user opens the dashboard for the first time
  * after generating their website. Explains that this is their starting website
  * and that all parameters are fully editable.
@@ -63,10 +63,10 @@ const FirstVisitWelcomeBanner: React.FC<FirstVisitWelcomeBannerProps> = ({ hasPr
     return (
         <div
             className={`
-                relative w-full rounded-2xl overflow-hidden
-                bg-gradient-to-br from-primary/10 via-orange-500/5 to-pink-500/10
-                border border-primary/20
-                backdrop-blur-sm
+                relative w-full rounded-[var(--radius-card)] overflow-hidden
+                bg-q-surface
+                border border-border-subtle
+                shadow-[var(--shadow-card)]
                 transition-all duration-500 ease-out
                 ${isAnimatingOut ? 'opacity-0 translate-y-4 scale-95' : 'opacity-100 translate-y-0 scale-100'}
             `}
@@ -74,12 +74,12 @@ const FirstVisitWelcomeBanner: React.FC<FirstVisitWelcomeBannerProps> = ({ hasPr
             aria-live="polite"
         >
             {/* Decorative gradient bar */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-orange-500 to-pink-500" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-divider" />
 
             {/* Close button */}
             <button
                 onClick={handleDismiss}
-                className="absolute top-4 right-4 p-1.5 rounded-lg bg-q-bg/50 hover:bg-q-bg/80 text-q-text-muted hover:text-foreground transition-colors z-10"
+                className="absolute top-4 right-4 p-1.5 rounded-[var(--q-radius-md)] bg-q-surface-overlay hover:bg-q-surface-overlay/80 text-q-text-muted hover:text-foreground transition-colors z-10"
                 aria-label={isSpanish ? 'Cerrar' : 'Close'}
             >
                 <X size={16} />
@@ -88,8 +88,8 @@ const FirstVisitWelcomeBanner: React.FC<FirstVisitWelcomeBannerProps> = ({ hasPr
             <div className="p-6 md:p-8">
                 {/* Header */}
                 <div className="flex items-start gap-4 mb-5">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center shadow-lg shadow-primary/20">
-                        <Sparkles className="w-6 h-6 text-white" />
+                    <div className="flex-shrink-0 w-10 h-10 rounded-[var(--radius-card-compact)] bg-q-accent/12 border border-q-accent/25 flex items-center justify-center">
+                        <Sparkles className="icon-lg text-q-accent" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1">
@@ -110,10 +110,10 @@ const FirstVisitWelcomeBanner: React.FC<FirstVisitWelcomeBannerProps> = ({ hasPr
                     {tips.map((tip, i) => (
                         <div
                             key={i}
-                            className="flex items-center gap-3 p-3 rounded-xl bg-q-bg/50 border border-q-border/50 hover:border-primary/30 hover:bg-q-bg/80 transition-all duration-200"
+                            className="flex items-center gap-3 p-3 rounded-[var(--radius-card-compact)] bg-q-surface-overlay border border-border-subtle hover:border-q-border hover:bg-q-surface transition-all duration-200"
                             style={{ animationDelay: `${i * 100}ms` }}
                         >
-                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                            <div className="flex-shrink-0 text-q-text-muted [&_svg]:h-[var(--icon-md)] [&_svg]:w-[var(--icon-md)]">
                                 {tip.icon}
                             </div>
                             <p className="text-sm text-foreground/80 leading-snug">{tip.text}</p>
@@ -125,7 +125,7 @@ const FirstVisitWelcomeBanner: React.FC<FirstVisitWelcomeBannerProps> = ({ hasPr
                 <div className="mt-5 flex items-center gap-3">
                     <button
                         onClick={handleDismiss}
-                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-orange-500 text-white font-semibold text-sm hover:shadow-lg hover:shadow-primary/20 transition-all duration-200 hover:scale-105"
+                        className="px-5 py-2.5 rounded-[var(--q-radius-md)] bg-q-accent text-q-text-on-accent font-semibold text-sm hover:opacity-90 transition-all duration-200"
                     >
                         {isSpanish ? '¡Entendido, vamos!' : 'Got it, let\'s go!'}
                     </button>

@@ -368,7 +368,7 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
                                     </button>
                                     <button
                                         onClick={() => setDeleteConfirm(segment.id)}
-                                        className="p-2 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                        className="p-2 text-q-text-muted hover:text-q-error hover:bg-q-error/10 rounded-lg transition-colors"
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -382,9 +382,9 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
             {/* Delete Confirmation Modal */}
             {deleteConfirm && (
                 <>
-                    <div className="fixed inset-0 bg-black/60 z-50" onClick={() => setDeleteConfirm(null)} />
+                    <div className="fixed inset-0 bg-q-text/60 z-50" onClick={() => setDeleteConfirm(null)} />
                     <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-q-bg rounded-xl border border-q-border shadow-2xl z-50 p-6">
-                        <div className="flex items-center gap-3 mb-4 text-red-500">
+                        <div className="flex items-center gap-3 mb-4 text-q-error">
                             <AlertTriangle size={24} />
                             <h3 className="text-lg font-semibold">
                                 {t('storeUsers.deleteSegment', 'Eliminar Segmento')}
@@ -403,7 +403,7 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
                             <button
                                 onClick={() => handleDelete(deleteConfirm)}
                                 disabled={isLoading}
-                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600"
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-q-error rounded-lg hover:bg-q-error"
                             >
                                 {isLoading && <Loader2 className="animate-spin" size={14} />}
                                 {t('common.delete', 'Eliminar')}

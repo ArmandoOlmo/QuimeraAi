@@ -20,37 +20,37 @@ interface ImagePlaceholderProps {
   showGenerateButton?: boolean;
 }
 
-const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({ 
-  aspectRatio = '16:9', 
+const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
+  aspectRatio = '16:9',
   onGenerateClick,
   className = '',
   showGenerateButton = true
 }) => {
   const { t } = useTranslation();
-  
+
   return (
-    <div 
-      className={`relative w-full bg-gray-800/50 border-2 border-dashed border-gray-600 rounded-lg flex flex-col items-center justify-center p-6 transition-colors hover:border-gray-500 hover:bg-gray-800/70 ${className}`}
+    <div
+      className={`relative w-full bg-q-surface-overlay/50 border-2 border-dashed border-q-border rounded-lg flex flex-col items-center justify-center p-6 transition-colors hover:border-q-border hover:bg-q-surface-overlay/70 ${className}`}
       style={{ aspectRatio: aspectRatioToCss(aspectRatio) }}
     >
       {/* Icon */}
-      <div className="w-16 h-16 rounded-full bg-gray-700/50 flex items-center justify-center mb-4">
-        <ImageOff className="w-8 h-8 text-gray-500" />
+      <div className="w-16 h-16 rounded-full bg-q-surface-overlay/50 flex items-center justify-center mb-4">
+        <ImageOff className="w-8 h-8 text-q-text-muted" />
       </div>
-      
+
       {/* Title */}
-      <p className="text-gray-400 text-sm font-medium text-center mb-1">
+      <p className="text-q-text-muted text-sm font-medium text-center mb-1">
         {t('imagePlaceholder.title')}
       </p>
-      
+
       {/* Description */}
-      <p className="text-gray-500 text-xs text-center mb-4 max-w-[200px]">
+      <p className="text-q-text-muted text-xs text-center mb-4 max-w-[200px]">
         {t('imagePlaceholder.description')}
       </p>
-      
+
       {/* Generate Button */}
       {showGenerateButton && onGenerateClick && (
-        <button 
+        <button
           onClick={(e) => {
             e.stopPropagation();
             onGenerateClick();

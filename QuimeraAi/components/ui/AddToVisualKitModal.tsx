@@ -66,7 +66,7 @@ export default function AddToVisualKitModal({ isOpen, onClose, imageUrl, project
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-q-text/50 backdrop-blur-sm" onClick={onClose}>
             <div
                 className="bg-q-surface border border-q-border rounded-2xl shadow-2xl w-full max-w-sm mx-4"
                 onClick={e => e.stopPropagation()}

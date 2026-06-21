@@ -82,7 +82,7 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
         }
     };
 
-    const filteredUsers = allUsers.filter(user => 
+    const filteredUsers = allUsers.filter(user =>
         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.name?.toLowerCase().includes(searchQuery.toLowerCase())
     ).filter(user => !canView.includes(user.id)); // Don't show users who already have permissions
@@ -110,7 +110,7 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
                         className={`${isPublic ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-q-accent focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
                     >
                         <span
-                            className={`${isPublic ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                            className={`${isPublic ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-q-surface shadow ring-0 transition duration-200 ease-in-out`}
                         />
                     </button>
                 </div>
@@ -217,7 +217,7 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
                                             )}
                                             <button
                                                 onClick={() => removeUserPermission(userId, 'view')}
-                                                className="p-1 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors"
+                                                className="p-1 text-q-error hover:bg-q-error hover:text-white rounded transition-colors"
                                             >
                                                 <X size={16} />
                                             </button>

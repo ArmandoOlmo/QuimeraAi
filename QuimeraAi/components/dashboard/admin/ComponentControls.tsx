@@ -33,7 +33,7 @@ const ToggleControl: React.FC<{ label?: string; checked: boolean; onChange: (che
         >
             <span
                 aria-hidden="true"
-                className={`${checked ? 'translate-x-[20px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
+                className={`${checked ? 'translate-x-[20px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-q-surface shadow-sm ring-0 transition duration-200 ease-in-out`}
             />
         </button>
     </div>
@@ -424,7 +424,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 className={`relative w-12 h-6 rounded-full transition-colors ${showHeader ? 'bg-q-accent' : 'bg-q-surface-overlay'
                                     }`}
                             >
-                                <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${showHeader ? 'left-7' : 'left-1'
+                                <span className={`absolute top-1 w-4 h-4 bg-q-surface rounded-full transition-transform ${showHeader ? 'left-7' : 'left-1'
                                     }`} />
                             </button>
                         </div>
@@ -543,7 +543,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         >
                             <span
                                 aria-hidden="true"
-                                className={`${(s as any).enableCardAnimation !== false ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
+                                className={`${(s as any).enableCardAnimation !== false ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-q-surface shadow-sm ring-0 transition duration-200 ease-in-out`}
                             />
                         </button>
                     </div>
@@ -1068,14 +1068,14 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             >
                                 <span
                                     aria-hidden="true"
-                                    className={`${s.hideBranding ? 'translate-x-[20px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
+                                    className={`${s.hideBranding ? 'translate-x-[20px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-q-surface shadow-sm ring-0 transition duration-200 ease-in-out`}
                                 />
                             </button>
                         </div>
 
                         {!canRemoveBranding && (
-                            <div className="bg-blue-500/10 border border-blue-500/20 rounded-md p-3">
-                                <p className="text-xs text-blue-400 flex gap-2">
+                            <div className="bg-q-accent/10 border border-q-accent/20 rounded-md p-3">
+                                <p className="text-xs text-q-accent flex gap-2">
                                     <span className="font-bold">PRO Feature:</span>
                                     Upgrade to PRO or Agency plan to remove Quimera branding.
                                 </p>
@@ -1216,11 +1216,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 <span className="w-10 text-xs font-medium text-q-text-secondary">{short}</span>
                                 <button
                                     onClick={() => handleBusinessHoursChange(key, 'isOpen', !dayHours.isOpen)}
-                                    className={`w-12 h-6 rounded-full transition-colors flex-shrink-0 ${dayHours.isOpen ? 'bg-green-500' : 'bg-q-surface-overlay'
+                                    className={`w-12 h-6 rounded-full transition-colors flex-shrink-0 ${dayHours.isOpen ? 'bg-q-success' : 'bg-q-surface-overlay'
                                         }`}
                                 >
                                     <span
-                                        className={`block w-4 h-4 rounded-full bg-white transform transition-transform mx-1 ${dayHours.isOpen ? 'translate-x-6' : 'translate-x-0'
+                                        className={`block w-4 h-4 rounded-full bg-q-surface transform transition-transform mx-1 ${dayHours.isOpen ? 'translate-x-6' : 'translate-x-0'
                                             }`}
                                     />
                                 </button>

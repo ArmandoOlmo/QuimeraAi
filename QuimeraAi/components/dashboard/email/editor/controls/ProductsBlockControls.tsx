@@ -34,7 +34,7 @@ const ToggleControl: React.FC<{ label: string; checked: boolean; onChange: (chec
             onClick={() => onChange(!checked)}
             className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors`}
         >
-            <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow transition mt-0.5 ml-0.5`} />
+            <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-q-surface shadow transition mt-0.5 ml-0.5`} />
         </button>
     </div>
 );
@@ -95,38 +95,38 @@ interface ProductsBlockControlsProps {
 const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, activeTab }) => {
     const { t } = useTranslation();
     const { updateBlock } = useEmailEditor();
-    
+
     const content = block.content as EmailProductsContent;
     const styles = block.styles;
-    
+
     const updateContent = (updates: Partial<EmailProductsContent>) => {
         updateBlock(block.id, {
             content: { ...content, ...updates },
         });
     };
-    
+
     const updateStyles = (updates: Partial<EmailBlockStyles>) => {
         updateBlock(block.id, {
             styles: { ...styles, ...updates },
         });
     };
-    
+
     const addProductId = () => {
         const newIds = [...(content.productIds || []), ''];
         updateContent({ productIds: newIds });
     };
-    
+
     const updateProductId = (index: number, value: string) => {
         const newIds = [...(content.productIds || [])];
         newIds[index] = value;
         updateContent({ productIds: newIds });
     };
-    
+
     const removeProductId = (index: number) => {
         const newIds = content.productIds?.filter((_, i) => i !== index) || [];
         updateContent({ productIds: newIds });
     };
-    
+
     if (activeTab === 'content') {
         return (
             <div className="space-y-4">
@@ -136,13 +136,13 @@ const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, ac
                         {t('email.productsHint', 'Agrega IDs de productos de tu tienda para mostrarlos en el email')}
                     </p>
                 </div>
-                
+
                 {/* Product IDs */}
                 <div>
                     <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase tracking-wider">
                         {t('email.productIds', 'IDs de Productos')}
                     </label>
-                    
+
                     <div className="space-y-2">
                         {(content.productIds || []).map((productId, index) => (
                             <div key={index} className="flex gap-2">
@@ -155,14 +155,14 @@ const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, ac
                                 />
                                 <button
                                     onClick={() => removeProductId(index)}
-                                    className="p-2 text-q-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
+                                    className="p-2 text-q-text-secondary hover:text-q-error hover:bg-q-error/10 rounded-md transition-colors"
                                 >
                                     <X size={16} />
                                 </button>
                             </div>
                         ))}
                     </div>
-                    
+
                     <button
                         onClick={addProductId}
                         className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-q-border rounded-md text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-colors"
@@ -171,27 +171,27 @@ const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, ac
                         <span className="text-sm">{t('email.addProduct', 'Agregar producto')}</span>
                     </button>
                 </div>
-                
+
                 <hr className="border-q-border" />
-                
+
                 <ColumnSelector
                     label={t('email.productColumns', 'Productos por fila')}
                     value={content.columns || 2}
                     onChange={(val) => updateContent({ columns: val as 1 | 2 | 3 })}
                 />
-                
+
                 <ToggleControl
                     label={t('email.showPrices', 'Mostrar precios')}
                     checked={content.showPrices ?? true}
                     onChange={(checked) => updateContent({ showPrices: checked })}
                 />
-                
+
                 <ToggleControl
                     label={t('email.showButtons', 'Mostrar botones')}
                     checked={content.showButtons ?? true}
                     onChange={(checked) => updateContent({ showButtons: checked })}
                 />
-                
+
                 {content.showButtons && (
                     <Input
                         label={t('email.buttonText', 'Texto del botón')}
@@ -203,7 +203,7 @@ const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, ac
             </div>
         );
     }
-    
+
     // Style tab
     return (
         <div className="space-y-4">
@@ -212,19 +212,19 @@ const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, ac
                 value={styles.backgroundColor || 'transparent'}
                 onChange={(color) => updateStyles({ backgroundColor: color })}
             />
-            
+
             <ColorControl
                 label={t('email.buttonColor', 'Color del botón')}
                 value={styles.buttonColor || '#4f46e5'}
                 onChange={(color) => updateStyles({ buttonColor: color })}
             />
-            
+
             <ColorControl
                 label={t('email.buttonTextColor', 'Color texto del botón')}
                 value={styles.buttonTextColor || '#ffffff'}
                 onChange={(color) => updateStyles({ buttonTextColor: color })}
             />
-            
+
             <PaddingSelector
                 label={t('email.padding', 'Espaciado')}
                 value={styles.padding || 'md'}

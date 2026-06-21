@@ -188,9 +188,9 @@ const AiAssistantDashboard: React.FC = () => {
     // Get channel icon
     const getChannelIcon = (channel: string) => {
         switch (channel) {
-            case 'whatsapp': return <Phone size={12} className="text-green-400" />;
-            case 'facebook': return <Facebook size={12} className="text-blue-500" />;
-            case 'instagram': return <Instagram size={12} className="text-pink-500" />;
+            case 'whatsapp': return <Phone size={12} className="text-q-success" />;
+            case 'facebook': return <Facebook size={12} className="text-q-accent" />;
+            case 'instagram': return <Instagram size={12} className="text-q-accent" />;
             default: return <Globe size={12} className="text-primary" />;
         }
     };
@@ -323,9 +323,9 @@ const AiAssistantDashboard: React.FC = () => {
                                                 />
                                                 {/* Activity Indicator */}
                                                 {hasActivity && (
-                                                    <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/20 backdrop-blur-sm border border-green-500/30">
-                                                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                                                        <span className="text-xs font-semibold text-green-400">
+                                                    <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-q-success/20 backdrop-blur-sm border border-q-success/30">
+                                                        <span className="w-2 h-2 bg-q-success rounded-full animate-pulse" />
+                                                        <span className="text-xs font-semibold text-q-success">
                                                             {projectStats.activeConversations} activo{projectStats.activeConversations !== 1 ? 's' : ''}
                                                         </span>
                                                     </div>
@@ -397,8 +397,8 @@ const AiAssistantDashboard: React.FC = () => {
                                                         {/* Trend Indicator */}
                                                         {projectStats?.trend && projectStats.trend !== 'stable' && (
                                                             <div className={`flex items-center gap-1 text-xs font-medium ${projectStats.trend === 'up'
-                                                                ? 'text-green-500'
-                                                                : 'text-red-500'
+                                                                ? 'text-q-success'
+                                                                : 'text-q-error'
                                                                 }`}>
                                                                 {projectStats.trend === 'up' ? (
                                                                     <TrendingUp size={14} />
@@ -519,7 +519,7 @@ const AiAssistantDashboard: React.FC = () => {
                                     className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.businessProfile ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.businessProfile ? 'bg-q-success/10 text-q-success' : 'bg-q-accent/10 text-q-accent'}`}>
                                             <Building2 size={20} />
                                         </div>
                                         <div>
@@ -527,7 +527,7 @@ const AiAssistantDashboard: React.FC = () => {
                                             <span className="text-xs text-q-text-muted">Información del negocio</span>
                                         </div>
                                     </div>
-                                    <div className={`w-2 h-2 rounded-full ${formData.businessProfile ? 'bg-green-500' : 'bg-amber-500'}`} />
+                                    <div className={`w-2 h-2 rounded-full ${formData.businessProfile ? 'bg-q-success' : 'bg-q-accent'}`} />
                                 </button>
 
                                 {/* Knowledge Base */}
@@ -536,7 +536,7 @@ const AiAssistantDashboard: React.FC = () => {
                                     className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg flex-shrink-0 ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0 || formData.knowledgeLinks?.length > 0 || (formData.cmsArticleIds?.length || 0) > 0) ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                        <div className={`p-2 rounded-lg flex-shrink-0 ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0 || formData.knowledgeLinks?.length > 0 || (formData.cmsArticleIds?.length || 0) > 0) ? 'bg-q-success/10 text-q-success' : 'bg-q-accent/10 text-q-accent'}`}>
                                             <BookOpen size={20} />
                                         </div>
                                         <div>
@@ -544,7 +544,7 @@ const AiAssistantDashboard: React.FC = () => {
                                             <span className="text-xs text-q-text-muted">{formData.faqs?.length || 0} FAQs, {formData.knowledgeDocuments?.length || 0} docs, {formData.knowledgeLinks?.length || 0} links, {formData.cmsArticleIds?.length || 0} artículos CMS</span>
                                         </div>
                                     </div>
-                                    <div className={`w-2 h-2 rounded-full ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0 || formData.knowledgeLinks?.length > 0 || (formData.cmsArticleIds?.length || 0) > 0) ? 'bg-green-500' : 'bg-amber-500'}`} />
+                                    <div className={`w-2 h-2 rounded-full ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0 || formData.knowledgeLinks?.length > 0 || (formData.cmsArticleIds?.length || 0) > 0) ? 'bg-q-success' : 'bg-q-accent'}`} />
                                 </button>
 
                                 {/* Lead Capture */}
@@ -553,7 +553,7 @@ const AiAssistantDashboard: React.FC = () => {
                                     className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.leadCaptureEnabled ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.leadCaptureEnabled ? 'bg-q-success/10 text-q-success' : 'bg-q-error/10 text-q-error'}`}>
                                             <Sparkles size={20} />
                                         </div>
                                         <div>
@@ -561,7 +561,7 @@ const AiAssistantDashboard: React.FC = () => {
                                             <span className="text-xs text-q-text-muted">{formData.leadCaptureEnabled ? 'Activado' : 'Desactivado'}</span>
                                         </div>
                                     </div>
-                                    <div className={`w-2 h-2 rounded-full ${formData.leadCaptureEnabled ? 'bg-green-500' : 'bg-red-500'}`} />
+                                    <div className={`w-2 h-2 rounded-full ${formData.leadCaptureEnabled ? 'bg-q-success' : 'bg-q-error'}`} />
                                 </button>
 
                                 {/* Live Voice */}
@@ -570,7 +570,7 @@ const AiAssistantDashboard: React.FC = () => {
                                     className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.enableLiveVoice ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.enableLiveVoice ? 'bg-q-success/10 text-q-success' : 'bg-q-error/10 text-q-error'}`}>
                                             <Mic size={20} />
                                         </div>
                                         <div>
@@ -578,7 +578,7 @@ const AiAssistantDashboard: React.FC = () => {
                                             <span className="text-xs text-q-text-muted">{formData.enableLiveVoice ? 'Activado' : 'Desactivado'}</span>
                                         </div>
                                     </div>
-                                    <div className={`w-2 h-2 rounded-full ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-red-500'}`} />
+                                    <div className={`w-2 h-2 rounded-full ${formData.enableLiveVoice ? 'bg-q-success' : 'bg-q-error'}`} />
                                 </button>
 
                                 {/* Chat Active */}
@@ -587,7 +587,7 @@ const AiAssistantDashboard: React.FC = () => {
                                     className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.isActive ? 'bg-q-success/10 text-q-success' : 'bg-q-error/10 text-q-error'}`}>
                                             <MessageSquare size={20} />
                                         </div>
                                         <div>
@@ -595,7 +595,7 @@ const AiAssistantDashboard: React.FC = () => {
                                             <span className="text-xs text-q-text-muted">{formData.isActive ? 'Online' : 'Offline'}</span>
                                         </div>
                                     </div>
-                                    <div className={`w-2 h-2 rounded-full ${formData.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
+                                    <div className={`w-2 h-2 rounded-full ${formData.isActive ? 'bg-q-success' : 'bg-q-error'}`} />
                                 </button>
                             </div>
                         </div>
@@ -753,8 +753,8 @@ const AiAssistantDashboard: React.FC = () => {
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-medium text-sm text-foreground truncate">{post.title}</span>
                                                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${post.status === 'published'
-                                                            ? 'bg-green-500/10 text-green-500'
-                                                            : 'bg-amber-500/10 text-amber-500'
+                                                            ? 'bg-q-success/10 text-q-success'
+                                                            : 'bg-q-accent/10 text-q-accent'
                                                             }`}>
                                                             {post.status === 'published' ? 'Publicado' : 'Borrador'}
                                                         </span>
@@ -904,7 +904,7 @@ const AiAssistantDashboard: React.FC = () => {
                                 onClick={() => updateForm('isActive', !formData.isActive)}
                                 className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isActive ? 'bg-[var(--quimera-status-accent-from)]' : 'bg-secondary'}`}
                             >
-                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
                             </button>
                         </div>
                     </div>
@@ -928,7 +928,7 @@ const AiAssistantDashboard: React.FC = () => {
                         <div className="flex items-center gap-1 sm:gap-2 min-w-0">
                             <Bot className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-sm sm:text-lg font-semibold text-foreground">Chatbot</h1>
-                            <span className="text-xs text-q-text-muted flex items-center min-w-0"><span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 flex-shrink-0"></span> <span className="truncate max-w-[100px] sm:max-w-[200px]">{activeProject.name}</span></span>
+                            <span className="text-xs text-q-text-muted flex items-center min-w-0"><span className="w-1.5 h-1.5 bg-q-success rounded-full mr-1 flex-shrink-0"></span> <span className="truncate max-w-[100px] sm:max-w-[200px]">{activeProject.name}</span></span>
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -944,7 +944,7 @@ const AiAssistantDashboard: React.FC = () => {
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-lg text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50 disabled:text-green-500 disabled:hover:bg-transparent"
+                            className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-lg text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50 disabled:text-q-success disabled:hover:bg-transparent"
                         >
                             <Save className="w-4 h-4" />
                             <span className="hidden sm:inline">{isSaving ? t('aiAssistant.dashboard.saving') : t('aiAssistant.dashboard.save')}</span>
@@ -1030,16 +1030,16 @@ const AiAssistantDashboard: React.FC = () => {
                                 {/* iPhone-style Phone Mockup */}
                                 <div className="relative">
                                     {/* Phone Frame */}
-                                    <div className="w-[320px] h-[650px] bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-[50px] p-[10px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),0_30px_60px_-30px_rgba(0,0,0,0.6)] relative">
+                                    <div className="w-[320px] h-[650px] bg-gradient-to-b from-q-surface-overlay to-q-surface-overlay rounded-[50px] p-[10px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),0_30px_60px_-30px_rgba(0,0,0,0.6)] relative">
                                         {/* Inner bezel highlight */}
-                                        <div className="absolute inset-[2px] rounded-[48px] bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 pointer-events-none"></div>
+                                        <div className="absolute inset-[2px] rounded-[48px] bg-gradient-to-b from-q-surface-overlay via-q-surface-overlay to-q-surface-overlay pointer-events-none"></div>
 
                                         {/* Screen */}
                                         <div className="relative w-full h-full bg-q-surface rounded-[40px] overflow-hidden flex flex-col">
                                             {/* Dynamic Island */}
-                                            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[100px] h-[28px] bg-black rounded-full z-30 flex items-center justify-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-zinc-800"></div>
-                                                <div className="w-3 h-3 rounded-full bg-zinc-800 ring-1 ring-zinc-700"></div>
+                                            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[100px] h-[28px] bg-q-text rounded-full z-30 flex items-center justify-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-q-surface-overlay"></div>
+                                                <div className="w-3 h-3 rounded-full bg-q-surface-overlay ring-1 ring-q-accent/25"></div>
                                             </div>
 
                                             {/* Status Bar */}
@@ -1070,7 +1070,7 @@ const AiAssistantDashboard: React.FC = () => {
                                             {/* Browser URL Bar */}
                                             <div className="px-3 pb-2">
                                                 <div className="h-8 bg-muted/60 rounded-full flex items-center justify-center gap-2 px-3">
-                                                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                                    <div className="w-3 h-3 rounded-full bg-q-success"></div>
                                                     <span className="text-[10px] text-q-text-muted truncate">{activeProject.name.toLowerCase().replace(/\s+/g, '')}.com</span>
                                                 </div>
                                             </div>
@@ -1126,10 +1126,10 @@ const AiAssistantDashboard: React.FC = () => {
                                     </div>
 
                                     {/* Side buttons */}
-                                    <div className="absolute left-[-2px] top-28 w-[3px] h-8 bg-zinc-700 rounded-l-sm"></div>
-                                    <div className="absolute left-[-2px] top-44 w-[3px] h-14 bg-zinc-700 rounded-l-sm"></div>
-                                    <div className="absolute left-[-2px] top-60 w-[3px] h-14 bg-zinc-700 rounded-l-sm"></div>
-                                    <div className="absolute right-[-2px] top-36 w-[3px] h-20 bg-zinc-700 rounded-r-sm"></div>
+                                    <div className="absolute left-[-2px] top-28 w-[3px] h-8 bg-q-surface-overlay rounded-l-sm"></div>
+                                    <div className="absolute left-[-2px] top-44 w-[3px] h-14 bg-q-surface-overlay rounded-l-sm"></div>
+                                    <div className="absolute left-[-2px] top-60 w-[3px] h-14 bg-q-surface-overlay rounded-l-sm"></div>
+                                    <div className="absolute right-[-2px] top-36 w-[3px] h-20 bg-q-surface-overlay rounded-r-sm"></div>
                                 </div>
                             </div>
                         </div>

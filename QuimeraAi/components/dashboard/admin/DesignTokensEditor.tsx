@@ -298,7 +298,7 @@ const DesignTokensEditor: React.FC = () => {
               <button
                 onClick={handleApplyToAllComponents}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-q-success text-white rounded-lg hover:bg-q-success disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 title="Apply tokens to all components in current project"
               >
                 <Wand2 size={18} />
@@ -308,7 +308,7 @@ const DesignTokensEditor: React.FC = () => {
             {(hasChanges || hasAppTokenChanges) && (
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-q-surface-overlay text-white rounded-lg hover:bg-q-surface-overlay transition-colors"
               >
                 <RotateCcw size={18} />
                 Reset
@@ -317,11 +317,11 @@ const DesignTokensEditor: React.FC = () => {
             <button
               onClick={handleSave}
               disabled={isSaving || (!hasChanges && !hasAppTokenChanges)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent rounded-lg hover:from-q-accent hover:to-q-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {isSaving ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-q-border/30 border-t-white rounded-full animate-spin" />
                   Saving...
                 </>
               ) : saveSuccess ? (
@@ -341,8 +341,8 @@ const DesignTokensEditor: React.FC = () => {
 
         {/* Changes Warning */}
         {(hasChanges || hasAppTokenChanges) && (
-          <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 bg-q-accent/10 border border-q-accent/30 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-q-accent flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-q-text font-medium">Unsaved Changes</p>
               <p className="text-q-text-secondary text-sm mt-1">
@@ -413,7 +413,7 @@ const DesignTokensEditor: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Success */}
                 <div>
-                  <h4 className="font-semibold text-q-text mb-3 text-green-600">Success</h4>
+                  <h4 className="font-semibold text-q-text mb-3 text-q-success">Success</h4>
                   <div className="space-y-2">
                     <ColorInput
                       label="Main"
@@ -425,7 +425,7 @@ const DesignTokensEditor: React.FC = () => {
 
                 {/* Warning */}
                 <div>
-                  <h4 className="font-semibold text-q-text mb-3 text-amber-600">Warning</h4>
+                  <h4 className="font-semibold text-q-text mb-3 text-q-accent">Warning</h4>
                   <div className="space-y-2">
                     <ColorInput
                       label="Main"
@@ -437,7 +437,7 @@ const DesignTokensEditor: React.FC = () => {
 
                 {/* Error */}
                 <div>
-                  <h4 className="font-semibold text-q-text mb-3 text-red-600">Error</h4>
+                  <h4 className="font-semibold text-q-text mb-3 text-q-error">Error</h4>
                   <div className="space-y-2">
                     <ColorInput
                       label="Main"
@@ -449,7 +449,7 @@ const DesignTokensEditor: React.FC = () => {
 
                 {/* Info */}
                 <div>
-                  <h4 className="font-semibold text-q-text mb-3 text-blue-600">Info</h4>
+                  <h4 className="font-semibold text-q-text mb-3 text-q-accent">Info</h4>
                   <div className="space-y-2">
                     <ColorInput
                       label="Main"
@@ -536,7 +536,7 @@ const DesignTokensEditor: React.FC = () => {
                   <div key={key} className="flex items-center gap-4">
                     <span className="w-16 text-sm text-q-text-secondary font-mono">{key}</span>
                     <div className="flex-1 flex items-center gap-3">
-                      <div className="h-8 bg-purple-600 rounded" style={{ width: value }} />
+                      <div className="h-8 bg-q-accent rounded" style={{ width: value }} />
                       <span className="text-sm text-q-text-secondary font-mono">{value}</span>
                     </div>
                   </div>
@@ -561,10 +561,10 @@ const DesignTokensEditor: React.FC = () => {
                 {Object.entries(localTokens.shadows).map(([key, value]) => (
                   <div key={key} className="text-center">
                     <div
-                      className="w-full h-24 bg-white rounded-lg flex items-center justify-center"
+                      className="w-full h-24 bg-q-surface rounded-lg flex items-center justify-center"
                       style={{ boxShadow: value }}
                     >
-                      <span className="text-sm font-medium text-gray-700">{key}</span>
+                      <span className="text-sm font-medium text-q-text">{key}</span>
                     </div>
                   </div>
                 ))}
@@ -639,7 +639,7 @@ const DesignTokensEditor: React.FC = () => {
                 <button
                   onClick={() => setActiveColorTab('light')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeColorTab === 'light'
-                    ? 'bg-q-accent text-white'
+                    ? 'bg-q-accent text-q-text-on-accent'
                     : 'bg-q-bg text-q-text-secondary hover:text-q-text'
                     }`}
                 >
@@ -649,7 +649,7 @@ const DesignTokensEditor: React.FC = () => {
                 <button
                   onClick={() => setActiveColorTab('dark')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeColorTab === 'dark'
-                    ? 'bg-q-accent text-white'
+                    ? 'bg-q-accent text-q-text-on-accent'
                     : 'bg-q-bg text-q-text-secondary hover:text-q-text'
                     }`}
                 >
@@ -659,7 +659,7 @@ const DesignTokensEditor: React.FC = () => {
                 <button
                   onClick={() => setActiveColorTab('black')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeColorTab === 'black'
-                    ? 'bg-q-accent text-white'
+                    ? 'bg-q-accent text-q-text-on-accent'
                     : 'bg-q-bg text-q-text-secondary hover:text-q-text'
                     }`}
                 >

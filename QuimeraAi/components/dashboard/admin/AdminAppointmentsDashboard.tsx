@@ -261,10 +261,10 @@ const AdminAppointmentsDashboard: React.FC<AdminAppointmentsDashboardProps> = ({
                 {/* Stats Bar */}
                 <div className="px-4 sm:px-6 py-3 border-b border-q-border/50 bg-q-surface/80 backdrop-blur-sm flex items-center gap-4 flex-wrap text-xs relative z-[1]">
                     <span className="text-q-text-muted">{t('appointments.total', 'Total')}: <b className="text-foreground">{analytics.totalAppointments}</b></span>
-                    <span className="text-blue-500 flex items-center gap-1"><Clock size={12} />{t('appointments.upcoming', 'Próximas')}: <b>{analytics.upcomingAppointments}</b></span>
-                    <span className="text-green-500 flex items-center gap-1"><CheckCircle2 size={12} />{t('appointments.completed', 'Completadas')}: <b>{analytics.completedAppointments}</b></span>
-                    <span className="text-red-500 flex items-center gap-1"><XCircle size={12} />{t('appointments.cancelled', 'Canceladas')}: <b>{analytics.cancelledAppointments}</b></span>
-                    <span className="text-purple-500 ml-auto flex items-center gap-1"><TrendingUp size={12} />{t('appointments.completionRate', 'Tasa')}: <b>{analytics.completionRate.toFixed(0)}%</b></span>
+                    <span className="text-q-accent flex items-center gap-1"><Clock size={12} />{t('appointments.upcoming', 'Próximas')}: <b>{analytics.upcomingAppointments}</b></span>
+                    <span className="text-q-success flex items-center gap-1"><CheckCircle2 size={12} />{t('appointments.completed', 'Completadas')}: <b>{analytics.completedAppointments}</b></span>
+                    <span className="text-q-error flex items-center gap-1"><XCircle size={12} />{t('appointments.cancelled', 'Canceladas')}: <b>{analytics.cancelledAppointments}</b></span>
+                    <span className="text-q-accent ml-auto flex items-center gap-1"><TrendingUp size={12} />{t('appointments.completionRate', 'Tasa')}: <b>{analytics.completionRate.toFixed(0)}%</b></span>
                 </div>
 
                 {/* Calendar Navigation */}

@@ -43,7 +43,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
   return (
     <div
       className={joinClasses(
-        'relative flex h-10 w-full items-center rounded-lg border border-q-border bg-q-surface text-q-text shadow-sm transition-colors',
+        'relative flex h-10 w-full items-center rounded-[var(--q-radius-md)] border border-border-subtle bg-q-surface text-q-text shadow-[var(--shadow-card)] transition-colors',
         'focus-within:border-q-accent/70 focus-within:ring-2 focus-within:ring-q-accent/20',
         className,
       )}

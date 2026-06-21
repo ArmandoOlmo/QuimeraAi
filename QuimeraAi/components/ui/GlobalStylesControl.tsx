@@ -1,7 +1,7 @@
 /**
  * GlobalStylesControl - Control global de estilos
  * Puede mostrar solo colores, solo tipografía, o ambos (con tabs)
- * 
+ *
  * Al seleccionar una paleta predefinida, los colores se aplican a TODOS los componentes.
  * Luego el usuario puede personalizar colores individualmente por componente.
  */
@@ -796,7 +796,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
         const resolvedHeader = resolveFontFamily(theme.fontFamilyHeader);
         const resolvedBody = resolveFontFamily(theme.fontFamilyBody);
         const resolvedButton = resolveFontFamily(theme.fontFamilyButton);
-        const needsMigration = 
+        const needsMigration =
             resolvedHeader !== theme.fontFamilyHeader ||
             resolvedBody !== theme.fontFamilyBody ||
             resolvedButton !== theme.fontFamilyButton;
@@ -1135,22 +1135,22 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
             {(mode === 'colors' || (showTabs && activeTab === 'colors')) && (
                 <div className="flex flex-col gap-5">
                     {/* Coolors.co Importer Section */}
-                    <div className="order-1 border border-dashed border-purple-500/30 rounded-lg overflow-hidden">
+                    <div className="order-1 border border-dashed border-q-accent/30 rounded-lg overflow-hidden">
                         <button
                             onClick={() => setShowCoolorsImporter(!showCoolorsImporter)}
-                            className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 transition-all"
+                            className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-q-accent/10 to-q-accent/10 hover:from-q-accent/20 hover:to-q-accent/20 transition-all"
                         >
                             <div className="flex items-center gap-2">
-                                <Upload size={16} className="text-purple-400" />
+                                <Upload size={16} className="text-q-accent" />
                                 <span className="text-sm font-medium text-q-text">
                                     {t('editor.controls.globalStyles.importPalette', 'Importar paleta')}
                                 </span>
                             </div>
-                            <ChevronDown size={14} className={`text-purple-400 transition-transform ${showCoolorsImporter ? 'rotate-180' : ''}`} />
+                            <ChevronDown size={14} className={`text-q-accent transition-transform ${showCoolorsImporter ? 'rotate-180' : ''}`} />
                         </button>
 
                         {showCoolorsImporter && (
-                            <div className="p-4 border-t border-purple-500/20">
+                            <div className="p-4 border-t border-q-accent/20">
                                 <CoolorsImporter onPaletteGenerated={handleCoolorsPaletteGenerated} />
                             </div>
                         )}
@@ -1161,7 +1161,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                         <button
                             onClick={handleReapplyWebsiteColors}
                             disabled={isApplying}
-                            className="w-full py-2.5 px-3 bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 border border-purple-500/30 rounded-lg text-sm font-medium text-purple-300 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                            className="w-full py-2.5 px-3 bg-gradient-to-r from-q-accent to-q-accent hover:from-q-accent hover:to-q-accent border border-q-accent/30 rounded-lg text-sm font-medium text-q-accent flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                         >
                             {isApplying ? (
                                 <Loader2 size={14} className="animate-spin" />
@@ -1212,7 +1212,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                             {candidate.preview.slice(0, 5).map((color, index) => (
                                                 <span
                                                     key={`${candidate.id}-${color}-${index}`}
-                                                    className="h-4 flex-1 rounded border border-white/10"
+                                                    className="h-4 flex-1 rounded border border-q-border/10"
                                                     style={{ backgroundColor: color }}
                                                 />
                                             ))}
@@ -1282,7 +1282,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                         {palette.preview.map((color, idx) => (
                                             <div
                                                 key={idx}
-                                                className="w-5 h-5 rounded-md border border-white/10 shadow-sm"
+                                                className="w-5 h-5 rounded-md border border-q-border/10 shadow-sm"
                                                 style={{ backgroundColor: color }}
                                             />
                                         ))}
@@ -1440,7 +1440,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                     className={`${theme.headingsAllCaps ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
                                 >
                                     <span
-                                        className={`${theme.headingsAllCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
+                                        className={`${theme.headingsAllCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-q-surface shadow-sm ring-0 transition duration-200 ease-in-out`}
                                     />
                                 </button>
                             </div>
@@ -1457,7 +1457,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                     className={`${theme.buttonsAllCaps ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
                                 >
                                     <span
-                                        className={`${theme.buttonsAllCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
+                                        className={`${theme.buttonsAllCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-q-surface shadow-sm ring-0 transition duration-200 ease-in-out`}
                                     />
                                 </button>
                             </div>
@@ -1474,7 +1474,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                     className={`${theme.navLinksAllCaps ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
                                 >
                                     <span
-                                        className={`${theme.navLinksAllCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
+                                        className={`${theme.navLinksAllCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-q-surface shadow-sm ring-0 transition duration-200 ease-in-out`}
                                     />
                                 </button>
                             </div>
@@ -1495,7 +1495,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             }}
                         >
                             {/* Nav Links Preview */}
-                            <div className="flex gap-4 mb-4 pb-3 border-b border-white/10">
+                            <div className="flex gap-4 mb-4 pb-3 border-b border-q-border/10">
                                 {[t('editor.controls.globalStyles.navLinks.home', 'Home'), t('editor.controls.globalStyles.navLinks.services', 'Services'), t('editor.controls.globalStyles.navLinks.contact', 'Contact')].map((link) => (
                                     <span
                                         key={link}

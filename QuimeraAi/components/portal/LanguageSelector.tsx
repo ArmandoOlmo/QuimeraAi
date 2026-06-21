@@ -81,14 +81,14 @@ export function LanguageSelector({
         return (
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-q-surface-overlay transition-colors"
             aria-label="Select language"
           >
             {showFlag && (
               <span className="text-xl">{currentLanguage?.flag}</span>
             )}
             {showLanguageName && (
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-q-text">
                 {currentLanguage?.code.toUpperCase()}
               </span>
             )}
@@ -99,10 +99,10 @@ export function LanguageSelector({
         return (
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg hover:bg-q-surface-overlay transition-colors"
             aria-label="Select language"
           >
-            <Globe className="h-5 w-5 text-gray-600" />
+            <Globe className="h-5 w-5 text-q-text-muted" />
           </button>
         );
 
@@ -110,18 +110,18 @@ export function LanguageSelector({
         return (
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 border border-q-border rounded-lg hover:bg-q-surface-overlay transition-colors"
           >
             {showFlag && (
               <span className="text-xl">{currentLanguage?.flag}</span>
             )}
             {showLanguageName && (
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-q-text">
                 {formatLanguageName(language, 'native')}
               </span>
             )}
             <svg
-              className={`h-4 w-4 text-gray-500 transition-transform ${
+              className={`h-4 w-4 text-q-text-muted transition-transform ${
                 isOpen ? 'rotate-180' : ''
               }`}
               fill="none"
@@ -152,12 +152,12 @@ export function LanguageSelector({
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className={`absolute z-50 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg ${
+          className={`absolute z-50 mt-2 w-56 bg-q-surface border border-q-border rounded-lg shadow-lg ${
             align === 'right' ? 'right-0' : 'left-0'
           }`}
         >
           <div className="p-2">
-            <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
+            <div className="px-3 py-2 text-xs font-semibold text-q-text-muted uppercase">
               {t('settings.language.label')}
             </div>
 
@@ -170,8 +170,8 @@ export function LanguageSelector({
                   onClick={() => handleLanguageChange(lang.code)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
                     isSelected
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'hover:bg-gray-100 text-gray-700'
+                      ? 'bg-q-accent/10 text-q-accent'
+                      : 'hover:bg-q-surface-overlay text-q-text'
                   }`}
                 >
                   {/* Flag */}
@@ -180,12 +180,12 @@ export function LanguageSelector({
                   {/* Language Name */}
                   <div className="flex-1 text-left">
                     <div className="text-sm font-medium">{lang.nativeName}</div>
-                    <div className="text-xs text-gray-500">{lang.name}</div>
+                    <div className="text-xs text-q-text-muted">{lang.name}</div>
                   </div>
 
                   {/* Check Mark */}
                   {isSelected && (
-                    <Check className="h-5 w-5 text-blue-600" />
+                    <Check className="h-5 w-5 text-q-accent" />
                   )}
                 </button>
               );
@@ -227,7 +227,7 @@ export function LanguageBadge({
 
   return (
     <div
-      className={`inline-flex items-center gap-2 bg-blue-50 text-blue-700 rounded-full font-medium ${sizeClasses[size]} ${className}`}
+      className={`inline-flex items-center gap-2 bg-q-accent/10 text-q-accent rounded-full font-medium ${sizeClasses[size]} ${className}`}
     >
       {showFlag && <span>{lang.flag}</span>}
       <span>{lang.nativeName}</span>
@@ -260,7 +260,7 @@ export function LanguageSwitcher({
 
   return (
     <div
-      className={`inline-flex items-center gap-2 p-1 bg-gray-100 rounded-lg ${className}`}
+      className={`inline-flex items-center gap-2 p-1 bg-q-surface-overlay rounded-lg ${className}`}
     >
       {availableLanguages.map((lang) => {
         const isSelected = lang.code === language;
@@ -271,8 +271,8 @@ export function LanguageSwitcher({
             onClick={() => handleChange(lang.code)}
             className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-all ${
               isSelected
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-q-surface text-q-text shadow-sm'
+                : 'text-q-text-muted hover:text-q-text'
             }`}
           >
             <span className="text-lg">{lang.flag}</span>

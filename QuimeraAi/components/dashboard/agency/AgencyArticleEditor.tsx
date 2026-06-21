@@ -113,7 +113,7 @@ const ModernAgencyArticleEditor: React.FC<ModernAgencyArticleEditorProps> = ({ a
             Link.configure({
                 openOnClick: false,
                 HTMLAttributes: {
-                    class: 'text-blue-500 underline hover:text-blue-600 cursor-pointer',
+                    class: 'text-q-accent underline hover:text-q-accent cursor-pointer',
                 },
             }),
             TextStyle,
@@ -133,12 +133,12 @@ const ModernAgencyArticleEditor: React.FC<ModernAgencyArticleEditorProps> = ({ a
             TableRow,
             TableHeader.configure({
                 HTMLAttributes: {
-                    class: 'border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 p-2 font-bold'
+                    class: 'border border-q-border dark:border-gray-600 bg-q-surface-overlay dark:bg-gray-800 p-2 font-bold'
                 }
             }),
             TableCell.configure({
                 HTMLAttributes: {
-                    class: 'border border-gray-300 dark:border-gray-600 p-2'
+                    class: 'border border-q-border dark:border-gray-600 p-2'
                 }
             }),
             TextAlign.configure({
@@ -491,29 +491,29 @@ Text to format:
 
                 {/* Link Modal */}
                 {showLinkModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96">
-                            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">Editar Enlace</h3>
+                    <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50">
+                        <div className="bg-q-surface dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96">
+                            <h3 className="text-lg font-bold mb-4 text-q-text dark:text-gray-100">Editar Enlace</h3>
                             <input
                                 type="url"
                                 value={linkUrl}
                                 onChange={(e) => setLinkUrl(e.target.value)}
                                 placeholder="https://ejemplo.com"
-                                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-primary outline-none text-gray-900 dark:text-gray-100"
+                                className="w-full bg-q-surface-overlay dark:bg-gray-900 border border-q-border dark:border-gray-700 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-primary outline-none text-q-text dark:text-gray-100"
                                 autoFocus
                                 onKeyDown={(e) => e.key === 'Enter' && applyLink()}
                             />
                             <div className="flex justify-between">
                                 <button
                                     onClick={removeLink}
-                                    className="text-sm text-red-500 hover:text-red-600 font-medium"
+                                    className="text-sm text-q-error hover:text-q-error font-medium"
                                 >
                                     Eliminar Enlace
                                 </button>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => setShowLinkModal(false)}
-                                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                                        className="px-4 py-2 bg-q-border dark:bg-gray-700 hover:bg-q-border dark:hover:bg-gray-600 rounded-lg text-q-text dark:text-gray-100"
                                     >
                                         Cancelar
                                     </button>
@@ -542,13 +542,13 @@ Text to format:
                     <div className="flex items-center gap-3">
                         {lastSaved && (
                             <span className="text-xs text-q-text-muted flex items-center gap-1">
-                                <Check size={12} className="text-green-500" />
+                                <Check size={12} className="text-q-success" />
                                 Guardado {lastSaved.toLocaleTimeString()}
                             </span>
                         )}
                         <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
                             <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}>Borrador</button>
-                            <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-q-text-muted hover:text-foreground'}`}>Publicado</button>
+                            <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-q-success/20 text-q-success' : 'text-q-text-muted hover:text-foreground'}`}>Publicado</button>
                         </div>
                         <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-md">
                             {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Guardar
@@ -666,7 +666,7 @@ Text to format:
                                             onChange={(e) => setShowAuthor(e.target.checked)}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                        <div className="w-11 h-6 bg-q-border peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
                                     </label>
                                 </div>
 
@@ -683,7 +683,7 @@ Text to format:
                                             onChange={(e) => setShowDate(e.target.checked)}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                        <div className="w-11 h-6 bg-q-border peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
                                     </label>
                                 </div>
 
@@ -700,7 +700,7 @@ Text to format:
                                                 {tag}
                                                 <button
                                                     onClick={() => handleRemoveTag(tag)}
-                                                    className="hover:text-red-500 transition-colors"
+                                                    className="hover:text-q-error transition-colors"
                                                 >
                                                     <XIcon size={12} />
                                                 </button>
@@ -726,9 +726,9 @@ Text to format:
                                 </div>
 
                                 {/* Featured Toggle */}
-                                <div className="flex items-center justify-between p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-lg">
+                                <div className="flex items-center justify-between p-4 bg-q-accent/5 border border-q-accent/20 rounded-lg">
                                     <div className="flex items-center gap-3">
-                                        <Star className="text-yellow-500" size={18} />
+                                        <Star className="text-q-accent" size={18} />
                                         <div>
                                             <p className="text-sm font-medium">Artículo Destacado</p>
                                             <p className="text-xs text-q-text-muted">Mostrar en homepage</p>
@@ -741,7 +741,7 @@ Text to format:
                                             onChange={(e) => setFeatured(e.target.checked)}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-yellow-500"></div>
+                                        <div className="w-11 h-6 bg-q-border peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-q-accent"></div>
                                     </label>
                                 </div>
 
@@ -749,7 +749,7 @@ Text to format:
                                 <div className="pt-6 border-t border-q-border">
                                     <div className="flex justify-between items-center mb-4">
                                         <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> SEO</h4>
-                                        <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> Auto-Gen</button>
+                                        <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-q-accent hover:text-q-accent flex items-center"><Sparkles size={12} className="mr-1" /> Auto-Gen</button>
                                     </div>
 
                                     <div className="space-y-4">

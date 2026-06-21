@@ -258,7 +258,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-q-text mb-2">
           {t('dashboard.agency.newClientPage.businessName')} *
         </label>
         <input
@@ -267,23 +267,23 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
           onChange={(e) =>
             setFormData({ ...formData, businessName: e.target.value })
           }
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.businessName ? 'border-red-500' : 'border-q-border'
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.businessName ? 'border-q-error/25' : 'border-q-border'
             }`}
           placeholder={t('dashboard.agency.newClientPage.businessNamePlaceholder')}
         />
         {errors.businessName && (
-          <p className="text-sm text-red-600 mt-1">{errors.businessName}</p>
+          <p className="text-sm text-q-error mt-1">{errors.businessName}</p>
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-q-text mb-2">
           {t('dashboard.agency.newClientPage.industry')} *
         </label>
         <AppSelect
           value={formData.industry}
           onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.industry ? 'border-red-500' : 'border-q-border'
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.industry ? 'border-q-error/25' : 'border-q-border'
             }`}
         >
           <option value="">{t('dashboard.agency.newClientPage.selectIndustry')}</option>
@@ -294,13 +294,13 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
           ))}
         </AppSelect>
         {errors.industry && (
-          <p className="text-sm text-red-600 mt-1">{errors.industry}</p>
+          <p className="text-sm text-q-error mt-1">{errors.industry}</p>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+          <label className="block text-sm font-medium text-q-text mb-2 flex items-center gap-2">
             <Mail className="h-4 w-4" />
             {t('dashboard.agency.newClientPage.contactEmail')} *
           </label>
@@ -310,17 +310,17 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             onChange={(e) =>
               setFormData({ ...formData, contactEmail: e.target.value })
             }
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.contactEmail ? 'border-red-500' : 'border-q-border'
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.contactEmail ? 'border-q-error/25' : 'border-q-border'
               }`}
             placeholder={t('dashboard.agency.newClientPage.contactEmailPlaceholder')}
           />
           {errors.contactEmail && (
-            <p className="text-sm text-red-600 mt-1">{errors.contactEmail}</p>
+            <p className="text-sm text-q-error mt-1">{errors.contactEmail}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+          <label className="block text-sm font-medium text-q-text mb-2 flex items-center gap-2">
             <Phone className="h-4 w-4" />
             {t('dashboard.agency.newClientPage.contactPhone')}
           </label>
@@ -377,7 +377,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       </div>
 
       {errors.enabledFeatures && (
-        <div className="flex items-center gap-2 text-sm text-red-600">
+        <div className="flex items-center gap-2 text-sm text-q-error">
           <AlertCircle className="h-4 w-4" />
           {errors.enabledFeatures}
         </div>
@@ -398,7 +398,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-q-text mb-2">
           {t('dashboard.agency.newClientPage.clientLogo')}
         </label>
         <div className="flex items-center gap-4">
@@ -409,7 +409,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             className="block w-full text-sm text-q-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
           />
           {formData.logo && (
-            <span className="text-sm text-green-600 flex items-center gap-1">
+            <span className="text-sm text-q-success flex items-center gap-1">
               <CheckCircle2 className="h-4 w-4" />
               {t('dashboard.agency.newClientPage.uploaded')}
             </span>
@@ -419,7 +419,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-q-text mb-2">
             {t('dashboard.agency.newClientPage.primaryColor')}
           </label>
           <div className="flex items-center gap-3">
@@ -438,7 +438,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               onChange={(e) =>
                 setFormData({ ...formData, primaryColor: e.target.value })
               }
-              className="flex-1 px-4 py-2 border border-q-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-4 py-2 border border-q-border rounded-lg focus:ring-2 focus:ring-q-accent/35 focus:border-q-accent/25"
               placeholder="#3B82F6"
             />
           </div>
@@ -464,7 +464,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               onChange={(e) =>
                 setFormData({ ...formData, secondaryColor: e.target.value })
               }
-              className="flex-1 px-4 py-2 border border-q-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-4 py-2 border border-q-border rounded-lg focus:ring-2 focus:ring-q-accent/35 focus:border-q-accent/25"
               placeholder="#10B981"
             />
           </div>
@@ -505,7 +505,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             <button
               type="button"
               onClick={() => removeUser(index)}
-              className="text-red-600 text-sm hover:text-red-700"
+              className="text-q-error text-sm hover:text-q-error"
             >
               {t('dashboard.agency.newClientPage.removeUser')}
             </button>
@@ -513,7 +513,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-q-text mb-2">
                 {t('dashboard.agency.newClientPage.name')}
               </label>
               <input
@@ -526,7 +526,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-q-text mb-2">
                 {t('dashboard.agency.newClientPage.email')}
               </label>
               <input
@@ -540,7 +540,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-q-text mb-2">
               {t('dashboard.agency.newClientPage.role')}
             </label>
             <AppSelect
@@ -569,7 +569,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       </button>
 
       {errors.initialUsers && (
-        <div className="flex items-center gap-2 text-sm text-red-600">
+        <div className="flex items-center gap-2 text-sm text-q-error">
           <AlertCircle className="h-4 w-4" />
           {errors.initialUsers}
         </div>
@@ -623,7 +623,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
         </div>
 
         {!formData.selectedPlanId && (
-          <label className="flex items-start gap-3 p-4 border border-q-border rounded-lg cursor-pointer hover:bg-gray-50">
+          <label className="flex items-start gap-3 p-4 border border-q-border rounded-lg cursor-pointer hover:bg-q-surface-overlay">
             <input
               type="checkbox"
               checked={formData.setupBilling}
@@ -645,7 +645,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
 
         {(formData.setupBilling || formData.selectedPlanId) && (
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-q-text mb-2">
               {t('dashboard.agency.newClientPage.monthlyPriceUsd')}
               {formData.selectedPlanId && (
                 <span className="text-q-text-muted font-normal ml-2">
@@ -694,17 +694,17 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             >
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold ${step < currentStep
-                  ? 'bg-green-500 text-white'
+                  ? 'bg-q-success text-white'
                   : step === currentStep
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-gray-200 text-q-text-muted'
+                    : 'bg-q-border text-q-text-muted'
                   }`}
               >
                 {step < currentStep ? <CheckCircle2 className="h-5 w-5" /> : step}
               </div>
               {step < totalSteps && (
                 <div
-                  className={`flex-1 h-1 mx-2 ${step < currentStep ? 'bg-green-500' : 'bg-gray-200'
+                  className={`flex-1 h-1 mx-2 ${step < currentStep ? 'bg-q-success' : 'bg-q-border'
                     }`}
                 />
               )}
@@ -753,7 +753,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
 
         {/* Error Message */}
         {errors.submit && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+          <div className="mt-6 p-4 bg-q-error/10 border border-q-error/25 rounded-lg flex items-center gap-2 text-q-error">
             <AlertCircle className="h-5 w-5" />
             <p>{errors.submit}</p>
           </div>
@@ -797,12 +797,12 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             ) : (
               <button
                 type="submit"
-                className="px-8 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                className="px-8 py-2 bg-q-success text-white rounded-lg hover:bg-q-success disabled:opacity-50 flex items-center gap-2"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                    <div className="animate-spin h-4 w-4 border-2 border-q-border border-t-transparent rounded-full" />
                     {t('dashboard.agency.newClientPage.creatingClient')}
                   </>
                 ) : (

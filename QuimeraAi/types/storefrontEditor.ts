@@ -108,7 +108,6 @@ export interface StorefrontEditorColorScheme {
 }
 
 export interface StorefrontEditorTheme {
-    presetId?: string;
     themeSettings?: StorefrontThemeSettings | Record<string, unknown>;
     activeColorScheme?: string;
     colorSchemes: StorefrontEditorColorScheme[];
@@ -137,8 +136,6 @@ export interface StorefrontEditorSnapshot {
     sectionSettings?: Record<string, Record<string, unknown>>;
     sections?: StorefrontEditorSection[];
     theme?: StorefrontEditorTheme;
-    themePreset?: string;
-    themePresetId?: string;
     themeSettings?: StorefrontThemeSettings | Record<string, unknown>;
     state?: 'draft' | 'published';
     updatedAt?: string;

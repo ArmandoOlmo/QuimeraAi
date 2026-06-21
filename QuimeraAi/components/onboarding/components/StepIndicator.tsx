@@ -15,10 +15,10 @@ interface StepIndicatorProps {
     hasEcommerce?: boolean;
 }
 
-const StepIndicator: React.FC<StepIndicatorProps> = ({ 
-    currentStep, 
+const StepIndicator: React.FC<StepIndicatorProps> = ({
+    currentStep,
     totalSteps = 6,
-    hasEcommerce = false 
+    hasEcommerce = false
 }) => {
     const { t } = useTranslation();
 
@@ -69,10 +69,10 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
                                     className={`
                                         w-10 h-10 rounded-full flex items-center justify-center
                                         font-semibold text-sm transition-all duration-300
-                                        ${isCompleted 
-                                            ? 'bg-green-500 text-white' 
-                                            : isCurrent 
-                                                ? 'bg-primary text-primary-foreground ring-4 ring-primary/30' 
+                                        ${isCompleted
+                                            ? 'bg-q-success text-white'
+                                            : isCurrent
+                                                ? 'bg-primary text-primary-foreground ring-4 ring-primary/30'
                                                 : 'bg-muted text-q-text-muted'
                                         }
                                     `}
@@ -85,7 +85,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
                                         step.id
                                     )}
                                 </div>
-                                <span 
+                                <span
                                     className={`
                                         mt-2 text-xs font-medium text-center max-w-[80px]
                                         ${isCurrent ? 'text-foreground' : 'text-q-text-muted'}
@@ -98,11 +98,11 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
                             {/* Connector line */}
                             {index < steps.length - 1 && (
                                 <div className="flex-1 mx-2">
-                                    <div 
+                                    <div
                                         className={`
                                             h-1 rounded-full transition-all duration-300
-                                            ${isCompleted 
-                                                ? 'bg-green-500' 
+                                            ${isCompleted
+                                                ? 'bg-q-success'
                                                 : 'bg-muted'
                                             }
                                         `}
@@ -125,7 +125,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
                     </span>
                 </div>
                 <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div 
+                    <div
                         className="h-full bg-primary rounded-full transition-all duration-500"
                         style={{ width: `${(currentStep / totalSteps) * 100}%` }}
                     />

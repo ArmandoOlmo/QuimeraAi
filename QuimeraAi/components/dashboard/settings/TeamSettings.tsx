@@ -43,8 +43,8 @@ const TeamSettings: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     const getRoleIcon = (role: AgencyRole) => {
-        if (role === 'agency_owner') return <Crown size={14} className="text-yellow-500" />;
-        if (role === 'agency_admin') return <ShieldCheck size={14} className="text-blue-500" />;
+        if (role === 'agency_owner') return <Crown size={14} className="text-q-accent" />;
+        if (role === 'agency_admin') return <ShieldCheck size={14} className="text-q-accent" />;
         return <UserCheck size={14} className="text-q-text-muted" />;
     };
 
@@ -108,19 +108,19 @@ const TeamSettings: React.FC = () => {
                     label={t('team.owners', 'Propietarios')}
                     value={ownerCount}
                     icon={Crown}
-                    valueClass="text-yellow-500"
+                    valueClass="text-q-accent"
                 />
                 <SettingsStatCard
                     label={t('team.admins', 'Admins')}
                     value={adminCount}
                     icon={Shield}
-                    valueClass="text-blue-500"
+                    valueClass="text-q-accent"
                 />
                 <SettingsStatCard
                     label={t('team.pending', 'Pendientes')}
                     value={pendingInvites.length}
                     icon={Clock}
-                    valueClass="text-orange-500"
+                    valueClass="text-q-warning"
                 />
             </div>
 
@@ -263,7 +263,7 @@ const TeamSettings: React.FC = () => {
             <div className={settingsPanelClass}>
                 <div className="p-5 border-b border-q-border flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Mail size={20} className="text-orange-500 flex-shrink-0" strokeWidth={2} />
+                        <Mail size={20} className="text-q-warning flex-shrink-0" strokeWidth={2} />
                         <div>
                             <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                                 {t('team.pendingInvites', 'Invitaciones Pendientes')}
@@ -277,7 +277,7 @@ const TeamSettings: React.FC = () => {
                         </div>
                     </div>
                     {pendingInvites.length > 0 && (
-                        <span className="px-2.5 py-1 text-xs font-bold bg-orange-500/10 text-orange-500 rounded-full">
+                        <span className="px-2.5 py-1 text-xs font-bold bg-q-warning/10 text-q-warning rounded-full">
                             {pendingInvites.length}
                         </span>
                     )}

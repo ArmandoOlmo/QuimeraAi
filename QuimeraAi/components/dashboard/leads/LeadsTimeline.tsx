@@ -10,12 +10,12 @@ interface LeadsTimelineProps {
 }
 
 const ACTIVITY_ICONS: Record<ActivityType, { icon: React.ElementType; color: string; bgColor: string }> = {
-    call: { icon: Phone, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
-    email: { icon: Mail, color: 'text-purple-500', bgColor: 'bg-purple-500/10' },
-    meeting: { icon: Calendar, color: 'text-green-500', bgColor: 'bg-green-500/10' },
-    note: { icon: MessageSquare, color: 'text-yellow-500', bgColor: 'bg-yellow-500/10' },
-    status_change: { icon: TrendingUp, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
-    task_completed: { icon: CheckCircle, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
+    call: { icon: Phone, color: 'text-q-accent', bgColor: 'bg-q-accent/10' },
+    email: { icon: Mail, color: 'text-q-accent', bgColor: 'bg-q-accent/10' },
+    meeting: { icon: Calendar, color: 'text-q-success', bgColor: 'bg-q-success/10' },
+    note: { icon: MessageSquare, color: 'text-q-accent', bgColor: 'bg-q-accent/10' },
+    status_change: { icon: TrendingUp, color: 'text-q-warning', bgColor: 'bg-q-warning/10' },
+    task_completed: { icon: CheckCircle, color: 'text-q-success', bgColor: 'bg-q-success/10' },
 };
 
 const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity }) => {

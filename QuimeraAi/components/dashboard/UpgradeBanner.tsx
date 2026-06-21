@@ -75,7 +75,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
 
     if (variant === 'compact') {
         return (
-            <div className={`bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 rounded-xl border border-primary/20 p-4 ${className}`}>
+            <div className={`bg-gradient-to-r from-primary/10 via-q-accent/10 to-primary/10 rounded-xl border border-primary/20 p-4 ${className}`}>
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <Sparkles className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
@@ -104,7 +104,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
         <div className={`relative overflow-hidden bg-gradient-to-br from-card via-card to-primary/5 rounded-2xl border border-q-border ${className}`}>
             {/* Background decoration */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-primary/20 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-purple-500/10 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-q-accent/10 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
             <div className="relative z-10 p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -169,13 +169,13 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
                                         {usage.remaining} {t('dashboard.creditsRemaining')}
                                     </span>
                                     {usage.isNearLimit && (
-                                        <span className="text-xs text-amber-500 flex items-center gap-1">
+                                        <span className="text-xs text-q-accent flex items-center gap-1">
                                             <AlertTriangle className="w-3 h-3" />
                                             {t('dashboard.nearLimit')}
                                         </span>
                                     )}
                                     {usage.hasExceededLimit && (
-                                        <span className="text-xs text-red-500 flex items-center gap-1">
+                                        <span className="text-xs text-q-error flex items-center gap-1">
                                             <AlertTriangle className="w-3 h-3" />
                                             {t('dashboard.limitExceeded')}
                                         </span>
@@ -187,7 +187,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
 
                     {/* Right - Upgrade CTA */}
                     {nextPlan && (
-                        <div className="lg:w-80 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-xl border border-primary/20 p-5">
+                        <div className="lg:w-80 bg-gradient-to-br from-primary/10 to-q-accent/10 rounded-xl border border-primary/20 p-5">
                             <div className="flex items-center gap-2 mb-3">
                                 <TrendingUp className="w-5 h-5 text-primary" />
                                 <span className="text-sm font-medium text-foreground">
@@ -226,7 +226,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
                                     <span className="text-sm text-q-text-muted">{t('dashboard.perMonth')}</span>
                                 </div>
                                 {nextPlan.price.annually < nextPlan.price.monthly && (
-                                    <span className="px-2 py-1 bg-green-500/20 text-green-500 text-xs font-medium rounded-full">
+                                    <span className="px-2 py-1 bg-q-success/20 text-q-success text-xs font-medium rounded-full">
                                         {t('dashboard.savePerYear', { amount: (nextPlan.price.monthly - nextPlan.price.annually) * 12 })}
                                     </span>
                                 )}
@@ -234,7 +234,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
 
                             <button
                                 onClick={handleUpgradeClick}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-primary to-purple-500 text-white rounded-xl font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02]"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-primary to-q-accent text-white rounded-xl font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02]"
                             >
                                 <Crown className="w-5 h-5" />
                                 {t('dashboard.upgradeNow')}

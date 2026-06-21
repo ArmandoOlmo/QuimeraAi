@@ -86,7 +86,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             onClick={() => changeLanguage(lang.code)}
             className={`flex items-center text-sm font-medium transition-all ${i18n.language === lang.code
                 ? 'text-q-accent opacity-100'
-                : 'text-gray-400 hover:text-white opacity-70 hover:opacity-100'
+                : 'text-q-text-muted hover:text-white opacity-70 hover:opacity-100'
               }`}
             aria-label={`Switch to ${lang.name}`}
           >
@@ -104,7 +104,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className={`
           flex items-center gap-2 h-9 px-3 rounded-xl
-          bg-secondary/50 hover:bg-secondary/80 
+          bg-secondary/50 hover:bg-secondary/80
           border border-q-border/40 hover:border-q-border/60
           text-foreground transition-all duration-200
           ${isOpen ? 'bg-secondary/80 border-primary/40 shadow-md' : ''}
@@ -142,7 +142,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                   key={lang.code}
                   onClick={() => changeLanguage(lang.code)}
                   className={`
-                    w-full flex items-center gap-3 px-4 py-2.5 
+                    w-full flex items-center gap-3 px-4 py-2.5
                     transition-all duration-150
                     ${i18n.language === lang.code
                       ? 'bg-primary/10 text-primary'

@@ -39,7 +39,7 @@ const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
     const loader = (
         <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
             <div className="relative flex items-center justify-center">
-                <div className={`absolute ${s.glow} rounded-full bg-gradient-to-br from-yellow-300/25 via-amber-400/10 to-fuchsia-500/15 blur-2xl animate-pulse`} />
+                <div className={`absolute ${s.glow} rounded-full bg-gradient-to-br from-q-accent via-q-accent/80 to-q-accent/15 blur-2xl animate-pulse`} />
                 <img
                     src={effectiveLogo}
                     alt="Loading..."

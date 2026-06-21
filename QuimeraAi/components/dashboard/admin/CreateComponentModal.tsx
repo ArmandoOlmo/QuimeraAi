@@ -63,24 +63,24 @@ const CreateComponentModal: React.FC<CreateComponentModalProps> = ({ isOpen, onC
                 <h2 className="text-lg font-semibold text-white">Create New Component</h2>
                 <button onClick={handleClose} className="p-1 rounded-full hover:bg-q-surface-overlay"><X/></button>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
                 <div className="p-6 md:p-8 overflow-y-auto space-y-4">
-                    {error && <p className="bg-red-500/10 text-red-400 text-sm p-3 rounded-md">{error}</p>}
-                    
+                    {error && <p className="bg-q-error/10 text-q-error text-sm p-3 rounded-md">{error}</p>}
+
                     <div>
                         <label htmlFor="component-name" className="block text-sm font-medium text-q-text-secondary mb-1">Component Name</label>
-                        <input 
-                            id="component-name" 
-                            type="text" 
-                            value={name} 
-                            onChange={(e) => setName(e.target.value)} 
-                            required 
-                            className="w-full bg-q-bg text-white p-2 rounded-md border border-q-border focus:ring-2 focus:ring-q-accent focus:outline-none" 
+                        <input
+                            id="component-name"
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            className="w-full bg-q-bg text-white p-2 rounded-md border border-q-border focus:ring-2 focus:ring-q-accent focus:outline-none"
                             placeholder="e.g., Product Hero"
                         />
                     </div>
-                    
+
                     <div>
                         <label htmlFor="base-component-type" className="block text-sm font-medium text-q-text-secondary mb-1">Base Component Type</label>
                         <DashboardSelect

@@ -104,22 +104,22 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
 
         const stateConfig = {
             loading: {
-                icon: <Loader2 size={48} className="animate-spin text-blue-400" />,
+                icon: <Loader2 size={48} className="animate-spin text-q-accent" />,
                 title: 'Loading...',
                 description: 'Please wait while content is being loaded'
             },
             error: {
-                icon: <AlertCircle size={48} className="text-red-400" />,
+                icon: <AlertCircle size={48} className="text-q-error" />,
                 title: 'Error',
                 description: 'Something went wrong. Please try again later.'
             },
             empty: {
-                icon: <FileQuestion size={48} className="text-yellow-400" />,
+                icon: <FileQuestion size={48} className="text-q-accent" />,
                 title: 'No Content',
                 description: 'No data available to display'
             },
             success: {
-                icon: <AlertCircle size={48} className="text-green-400" />,
+                icon: <AlertCircle size={48} className="text-q-success" />,
                 title: 'Success!',
                 description: 'Operation completed successfully'
             }
@@ -312,7 +312,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                     <h3 className="text-sm font-semibold uppercase tracking-wider text-q-text-secondary pl-2">Live Preview</h3>
                     <PreviewStatesSelector currentState={previewState} onStateChange={setPreviewState} />
                 </div>
-                <div className="bg-white dark:bg-transparent rounded-md overflow-hidden relative min-h-[300px]">
+                <div className="bg-q-surface dark:bg-transparent rounded-md overflow-hidden relative min-h-[300px]">
                     {/* State overlay */}
                     {renderStateOverlay()}
                     {/* This wrapper mimics the structure of LandingPage.tsx for font variables */}

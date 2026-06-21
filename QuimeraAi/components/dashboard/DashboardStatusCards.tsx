@@ -208,11 +208,11 @@ const DashboardStatusCards: React.FC = () => {
                             <motion.div key={card.id} className="h-full" variants={dashboardCardVariants}>
                                 <button
                                     onClick={() => navigate(card.route)}
-                                    className="group relative h-full w-full overflow-hidden rounded-xl sm:rounded-2xl border border-q-border/60
-                                       bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl
+                                    className="quimera-status-card-surface group relative h-full w-full overflow-hidden rounded-[var(--radius-card)] border border-border-subtle
+                                       bg-q-surface dark:bg-q-surface/40
                                        p-3 sm:p-5 text-left min-h-[100px] sm:min-h-[140px]
-                                       hover:scale-[1.02] hover:border-q-border transition-all duration-300 ease-out
-                                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                                       shadow-[var(--shadow-card)] hover:-translate-y-0.5 hover:border-q-border hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 ease-out
+                                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-q-accent/35"
                                     aria-label={t(card.titleKey)}
                                 >
                                     {/* ── Gradient blob decoration ─────────────────────────────── */}
@@ -241,7 +241,7 @@ const DashboardStatusCards: React.FC = () => {
                                         {/* Header */}
                                         <div className="mb-1 sm:mb-3 min-w-0">
                                             <div className="mb-1 md:mb-2">
-                                                <Icon className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                                                <Icon className="icon-lg quimera-dashboard-header-icon" strokeWidth={2} />
                                             </div>
                                             <span className="text-xs sm:text-sm font-bold text-foreground truncate block">{t(card.titleKey, FB[card.id]?.title ?? card.id)}</span>
                                             <span className="text-[9px] sm:text-[11px] text-q-text-muted truncate block">{t(card.subtitleKey, FB[card.id]?.desc ?? '')}</span>

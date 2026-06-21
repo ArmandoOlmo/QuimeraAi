@@ -11,7 +11,7 @@ import { generateContentViaProxy, extractTextFromResponse } from '../../utils/ge
 import { Link2, Wand2, Loader2, AlertCircle, Check, Palette, Sparkles, Zap } from 'lucide-react';
 
 interface CoolorsImporterProps {
-    /** Callback cuando se genera/aplica una paleta. 
+    /** Callback cuando se genera/aplica una paleta.
      * @param colors - Colores globales mapeados para el diseño
      * @param allColors - Todos los colores originales de la paleta (para acceso rápido en el selector)
      * @param paletteName - Nombre creativo de la paleta (opcional, generado por AI)
@@ -224,8 +224,8 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
 
         // Background y Surface
         const background = isDarkTheme ? darkest : lightest;
-        const surface = isDarkTheme 
-            ? (sortedByLuminance[1] || darkest) 
+        const surface = isDarkTheme
+            ? (sortedByLuminance[1] || darkest)
             : (sortedByLuminance[sortedByLuminance.length - 2] || lightest);
 
         // ============================================
@@ -239,20 +239,20 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
         if (isDarkTheme) {
             // Tema oscuro: usar colores claros de la paleta para texto
             headingColor = lightest; // El más claro para el título
-            textColor = sortedByLuminance.length > 1 
-                ? sortedByLuminance[sortedByLuminance.length - 2] 
+            textColor = sortedByLuminance.length > 1
+                ? sortedByLuminance[sortedByLuminance.length - 2]
                 : lightest;
-            textMutedColor = sortedByLuminance.length > 2 
-                ? sortedByLuminance[sortedByLuminance.length - 3] 
+            textMutedColor = sortedByLuminance.length > 2
+                ? sortedByLuminance[sortedByLuminance.length - 3]
                 : textColor;
         } else {
             // Tema claro: usar colores oscuros de la paleta para texto
             headingColor = darkest; // El más oscuro para el título
-            textColor = sortedByLuminance.length > 1 
-                ? sortedByLuminance[1] 
+            textColor = sortedByLuminance.length > 1
+                ? sortedByLuminance[1]
                 : darkest;
-            textMutedColor = sortedByLuminance.length > 2 
-                ? sortedByLuminance[2] 
+            textMutedColor = sortedByLuminance.length > 2
+                ? sortedByLuminance[2]
                 : textColor;
         }
 
@@ -528,7 +528,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
         <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
+                <div className="p-1.5 bg-gradient-to-br from-q-accent to-q-accent rounded-lg">
                     <Sparkles size={14} className="text-white" />
                 </div>
                 <span className="text-sm font-semibold text-q-text">
@@ -546,7 +546,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                     value={inputUrl}
                     onChange={(e) => handleInputChange(e.target.value)}
                     placeholder={t('coolorsImporter.placeholder', 'Pega URL de coolors.co o los colores...')}
-                    className="w-full bg-q-bg border border-q-border rounded-lg pl-10 pr-4 py-3 text-sm text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+                    className="w-full bg-q-bg border border-q-border rounded-lg pl-10 pr-4 py-3 text-sm text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-q-accent/50 focus:border-q-accent/25 transition-all"
                     disabled={isLoading}
                 />
             </div>
@@ -565,7 +565,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                                 className="group relative"
                             >
                                 <div
-                                    className="w-10 h-10 rounded-lg shadow-md border border-white/20 transition-transform hover:scale-110 cursor-pointer"
+                                    className="w-10 h-10 rounded-lg shadow-md border border-q-border/20 transition-transform hover:scale-110 cursor-pointer"
                                     style={{ backgroundColor: color }}
                                     title={color}
                                 />
@@ -580,17 +580,17 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
 
             {/* Error message */}
             {error && (
-                <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                    <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-red-400">{error}</p>
+                <div className="flex items-start gap-2 p-3 bg-q-error/10 border border-q-error/30 rounded-lg">
+                    <AlertCircle size={16} className="text-q-error flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-q-error">{error}</p>
                 </div>
             )}
 
             {/* Success message */}
             {success && (
-                <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                    <Check size={16} className="text-green-400" />
-                    <p className="text-xs text-green-400">{t('coolorsImporter.success', '¡Paleta aplicada exitosamente!')}</p>
+                <div className="flex items-center gap-2 p-3 bg-q-success/10 border border-q-success/30 rounded-lg">
+                    <Check size={16} className="text-q-success" />
+                    <p className="text-xs text-q-success">{t('coolorsImporter.success', '¡Paleta aplicada exitosamente!')}</p>
                 </div>
             )}
 
@@ -601,7 +601,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                     onClick={handleApplyDirectly}
                     disabled={!parsedColors || parsedColors.length < 3 || isLoading}
                     className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-all ${parsedColors && parsedColors.length >= 3 && !isLoading
-                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-lg hover:shadow-xl'
+                            ? 'bg-gradient-to-r from-q-success to-q-success text-white hover:from-q-success hover:to-q-success shadow-lg hover:shadow-xl'
                             : 'bg-q-surface-overlay text-q-text-secondary cursor-not-allowed'
                         }`}
                 >
@@ -623,7 +623,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                     onClick={handleGeneratePalette}
                     disabled={!parsedColors || parsedColors.length < 3 || isLoading}
                     className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${parsedColors && parsedColors.length >= 3 && !isLoading
-                            ? 'bg-q-bg border border-purple-500/50 text-purple-400 hover:bg-purple-500/10'
+                            ? 'bg-q-bg border border-q-accent/50 text-q-accent hover:bg-q-accent/10'
                             : 'bg-q-bg border border-q-border text-q-text-secondary/50 cursor-not-allowed'
                         }`}
                 >
@@ -635,7 +635,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
             {/* Help text */}
             <div className="text-xs text-q-text-secondary/70 space-y-1">
                 <p className="flex items-center gap-1">
-                    <span className="text-purple-400">💡</span>
+                    <span className="text-q-accent">💡</span>
                     {t('coolorsImporter.helpTitle', 'Ejemplos de formato aceptado:')}
                 </p>
                 <code className="block bg-q-bg px-2 py-1 rounded text-[10px] break-all">

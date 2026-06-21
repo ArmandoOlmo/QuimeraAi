@@ -72,7 +72,7 @@ const AgencyContentCreatorAssistant: React.FC<AgencyContentCreatorAssistantProps
                 promptText = `
                 Act as a professional content writer for Quimera.ai, a platform for creating AI-powered websites and chatbots.
                 Create a blog article structure based on the following inputs:
-                
+
                 - Topic: ${topic}
                 - Target Audience: ${audience || 'General audience interested in AI and web development'}
                 - Tone: ${tone}
@@ -95,7 +95,7 @@ const AgencyContentCreatorAssistant: React.FC<AgencyContentCreatorAssistantProps
                 - Include relevant examples related to AI, web development, or digital marketing
                 - Have a clear structure with introduction, main points, and conclusion
                 - Be optimized for search engines
-                
+
                 Output ONLY valid JSON without any markdown formatting or code blocks.
                 `;
             }
@@ -223,7 +223,7 @@ const AgencyContentCreatorAssistant: React.FC<AgencyContentCreatorAssistantProps
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/60 backdrop-blur-sm p-4 animate-fade-in-up">
             <div className="bg-q-surface border border-q-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="p-6 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-primary/10 to-transparent">
@@ -326,7 +326,7 @@ const AgencyContentCreatorAssistant: React.FC<AgencyContentCreatorAssistantProps
                                 </button>
                                 <button
                                     onClick={handleGenerate}
-                                    className="bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:scale-105 transition-all"
+                                    className="bg-gradient-to-r from-primary to-q-accent text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:scale-105 transition-all"
                                 >
                                     <Sparkles size={18} /> {t('contentManagement.generateDraft', 'Generar Borrador')}
                                 </button>
@@ -351,11 +351,11 @@ const AgencyContentCreatorAssistant: React.FC<AgencyContentCreatorAssistantProps
 
                     {step === 'preview' && generatedArticle && (
                         <div className="space-y-6 animate-fade-in-up h-full flex flex-col">
-                            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-start gap-3">
-                                <CheckCircle className="text-green-500 shrink-0 mt-0.5" size={20} />
+                            <div className="bg-q-success/10 border border-q-success/20 rounded-lg p-4 flex items-start gap-3">
+                                <CheckCircle className="text-q-success shrink-0 mt-0.5" size={20} />
                                 <div>
-                                    <p className="font-bold text-green-600">{t('contentManagement.contentGenerated', '¡Contenido generado con éxito!')}</p>
-                                    <p className="text-xs text-green-600/80">Revisa el resumen antes de llevarlo al editor.</p>
+                                    <p className="font-bold text-q-success">{t('contentManagement.contentGenerated', '¡Contenido generado con éxito!')}</p>
+                                    <p className="text-xs text-q-success/80">Revisa el resumen antes de llevarlo al editor.</p>
                                 </div>
                             </div>
 
@@ -420,7 +420,7 @@ const AgencyContentCreatorAssistant: React.FC<AgencyContentCreatorAssistantProps
                                 </button>
                                 <button
                                     onClick={handleConfirm}
-                                    className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-green-700 transition-all shadow-lg shadow-green-900/20"
+                                    className="bg-q-success text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-q-success transition-all shadow-lg shadow-q-success/20"
                                 >
                                     {t('contentManagement.openInEditor', 'Abrir en Editor')} <ArrowRight size={18} />
                                 </button>

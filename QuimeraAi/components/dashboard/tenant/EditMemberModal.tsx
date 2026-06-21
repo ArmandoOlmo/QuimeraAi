@@ -78,13 +78,13 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
     const getRoleIcon = (role: AgencyRole) => {
         switch (role) {
             case 'agency_owner':
-                return <Crown size={18} className="text-yellow-500" />;
+                return <Crown size={18} className="text-q-accent" />;
             case 'agency_admin':
-                return <Shield size={18} className="text-purple-500" />;
+                return <Shield size={18} className="text-q-accent" />;
             case 'agency_member':
-                return <Users size={18} className="text-blue-500" />;
+                return <Users size={18} className="text-q-accent" />;
             case 'client':
-                return <User size={18} className="text-green-500" />;
+                return <User size={18} className="text-q-success" />;
             default:
                 return null;
         }
@@ -147,7 +147,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
         <div className="fixed inset-0 z-50 overflow-y-auto">
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                className="fixed inset-0 bg-q-text/60 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             />
 
@@ -260,7 +260,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                                             `}
                                         >
                                             {selectedRole === role && (
-                                                <div className="w-2 h-2 rounded-full bg-white" />
+                                                <div className="w-2 h-2 rounded-full bg-q-surface" />
                                             )}
                                         </div>
                                     </button>

@@ -30,9 +30,9 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
     useProjectLibrary = false
 }) => {
     const { t } = useTranslation();
-    const { 
+    const {
         adminAssets, isAdminAssetsLoading, fetchAdminAssets, uploadAdminAsset,
-        files, isFilesLoading, uploadFile 
+        files, isFilesLoading, uploadFile
     } = useFiles();
     const mediaCtx = useSafeMedia();
     const [searchQuery, setSearchQuery] = useState('');
@@ -116,11 +116,11 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             isSystemAsset: true,
         }));
 
-        const sourceList = useProjectLibrary ? files : 
-            (mediaCtx && mediaCtx.mediaAssets.length > 0 
+        const sourceList = useProjectLibrary ? files :
+            (mediaCtx && mediaCtx.mediaAssets.length > 0
                 ? mediaCtx.mediaAssets.map(a => ({ ...a as unknown as FileRecord, downloadURL: a.url, projectId: '' }))
                 : adminAssets);
-        
+
         const userImages = sourceList
             .filter(file => file.type?.startsWith('image/'))
             .map(file => ({
@@ -157,7 +157,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+                className="absolute inset-0 bg-q-text/60 backdrop-blur-sm animate-fade-in"
                 onClick={onClose}
             />
 
@@ -231,7 +231,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                             )}
                         </button>
                         <span className="text-xs text-q-text-muted">
-                            {t('landingEditor.maxFileSize', 'M?x. 5MB ÿÿÿ PNG, JPG, SVG')}
+                            {t('landingEditor.maxFileSize', 'M?x. 5MB ï¿½ï¿½ï¿½ PNG, JPG, SVG')}
                         </span>
                     </div>
 
@@ -286,14 +286,14 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                                             loading="lazy"
                                         />
                                         {isLegacyImage && (
-                                            <div className="absolute inset-0 bg-black/65 flex items-center justify-center p-2">
+                                            <div className="absolute inset-0 bg-q-text/65 flex items-center justify-center p-2">
                                                 <span className="text-white text-[10px] font-bold text-center uppercase tracking-wide">Migrar a Supabase</span>
                                             </div>
                                         )}
                                         {/* System asset badge */}
                                         {img.isSystemAsset && (
                                             <div className="absolute top-1 right-1">
-                                                <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                                                <Star size={12} className="text-q-accent fill-yellow-500" />
                                             </div>
                                         )}
                                         {/* Selected indicator */}

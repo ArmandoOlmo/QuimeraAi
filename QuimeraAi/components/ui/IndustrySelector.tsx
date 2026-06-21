@@ -28,40 +28,40 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
     // Update dropdown position
     const updatePosition = useCallback(() => {
         if (!triggerRef.current || !isDropdownOpen) return;
-        
+
         const rect = triggerRef.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         const viewportWidth = window.innerWidth;
         const dropdownHeight = 400;
-        
+
         // Calculate if should open upward
         const spaceBelow = viewportHeight - rect.bottom - 16;
         const spaceAbove = rect.top - 16;
         const openUpward = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
-        
+
         // Calculate width (match trigger or minimum 320px)
         const width = Math.max(rect.width, 320);
-        
+
         // Calculate left position (ensure it doesn't go off screen)
         let left = rect.left;
         if (left + width > viewportWidth - 16) {
             left = viewportWidth - width - 16;
         }
         if (left < 16) left = 16;
-        
+
         const style: React.CSSProperties = {
             position: 'fixed',
             width: width,
             left: left,
             zIndex: 999999,
         };
-        
+
         if (openUpward) {
             style.bottom = viewportHeight - rect.top + 8;
         } else {
             style.top = rect.bottom + 8;
         }
-        
+
         setDropdownStyle(style);
     }, [isDropdownOpen]);
 
@@ -84,7 +84,7 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
             const target = event.target as Node;
             const isClickOnTrigger = triggerRef.current?.contains(target);
             const isClickOnDropdown = dropdownRef.current?.contains(target);
-            
+
             if (!isClickOnTrigger && !isClickOnDropdown) {
                 setIsDropdownOpen(false);
             }
@@ -118,14 +118,14 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
     // Group filtered industries by category
     const groupedIndustries = useMemo(() => {
         const groups: Record<string, Industry[]> = {};
-        
+
         Object.entries(INDUSTRY_CATEGORIES).forEach(([categoryKey, industryIds]) => {
             const categoryIndustries = filteredIndustries.filter(ind => industryIds.includes(ind.id));
             if (categoryIndustries.length > 0) {
                 groups[categoryKey] = categoryIndustries;
             }
         });
-        
+
         return groups;
     }, [filteredIndustries]);
 
@@ -152,7 +152,7 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
     const selectAllInCategory = (categoryKey: string) => {
         const categoryIds = INDUSTRY_CATEGORIES[categoryKey as keyof typeof INDUSTRY_CATEGORIES] || [];
         const allSelected = categoryIds.every(id => selectedIndustries.includes(id));
-        
+
         if (allSelected) {
             onChange(selectedIndustries.filter(id => !categoryIds.includes(id)));
         } else {
@@ -188,7 +188,7 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
 
     // Dropdown content
     const dropdownContent = isDropdownOpen ? (
-        <div 
+        <div
             ref={dropdownRef}
             className="bg-q-surface border border-q-border rounded-lg shadow-2xl"
             style={dropdownStyle}
@@ -217,7 +217,7 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
                         </button>
                     )}
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                     <button
                         type="button"
@@ -229,7 +229,7 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
                     <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); clearAll(); }}
-                        className="text-xs text-q-text-secondary hover:text-red-400"
+                        className="text-xs text-q-text-secondary hover:text-q-error"
                     >
                         {t('industries.clearAll')}
                     </button>
@@ -237,7 +237,7 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
             </div>
 
             {/* Categories List */}
-            <div 
+            <div
                 className="overflow-y-auto"
                 style={{ maxHeight }}
             >
@@ -262,7 +262,7 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
                                     ({industries.length})
                                 </span>
                             </button>
-                            
+
                             <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); selectAllInCategory(categoryKey); }}

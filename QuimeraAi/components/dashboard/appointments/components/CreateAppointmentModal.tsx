@@ -732,7 +732,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
                                 <button
                                     type="button"
                                     onClick={() => removeParticipant(participant.id)}
-                                    className="p-1.5 text-q-text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                    className="p-1.5 text-q-text-muted hover:text-q-error opacity-0 group-hover:opacity-100 transition-all"
                                 >
                                     <Trash2 size={16} />
                                 </button>
@@ -803,10 +803,10 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
             </div>
 
             {/* AI Preparation */}
-            <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+            <div className="p-4 rounded-xl bg-q-accent/10 border border-q-accent/20">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-500 text-white rounded-lg">
+                        <div className="p-2 bg-q-accent text-q-text-on-accent rounded-lg">
                             <Sparkles size={20} />
                         </div>
                         <div>
@@ -823,9 +823,9 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
                             onChange={(e) => onChange({ aiPrepEnabled: e.target.checked })}
                             className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-purple-500 transition-colors">
+                        <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-q-accent transition-colors">
                             <div className={`
-                                absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow
+                                absolute top-0.5 left-0.5 w-5 h-5 bg-q-surface rounded-full shadow
                                 transition-transform duration-200
                                 ${data.aiPrepEnabled ? 'translate-x-5' : ''}
                             `} />
@@ -865,7 +865,7 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
                                 <button
                                     type="button"
                                     onClick={() => onChange({ tags: data.tags.filter(t => t !== tag) })}
-                                    className="hover:text-red-500"
+                                    className="hover:text-q-error"
                                 >
                                     <X size={12} />
                                 </button>
@@ -1112,9 +1112,9 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
 
                 {/* Errors */}
                 {errors.length > 0 && (
-                    <div className="mx-6 mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <div className="mx-6 mt-4 p-3 bg-q-error/10 border border-q-error/20 rounded-lg">
                         {errors.map((error, i) => (
-                            <p key={i} className="text-sm text-red-500 flex items-center gap-2">
+                            <p key={i} className="text-sm text-q-error flex items-center gap-2">
                                 <AlertCircle size={14} />
                                 {error}
                             </p>

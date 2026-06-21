@@ -1,6 +1,6 @@
 /**
  * AINewsStudio
- * 
+ *
  * Conversational AI News Assistant for Super Admin.
  * Adapted from AIContentStudio for the News module (/admin/news).
  * Features:
@@ -120,12 +120,15 @@ const TONE_OPTIONS = [
 const MODEL_TEXT = 'gemini-3-flash-preview';
 const MODEL_VOICE = 'gemini-3.1-flash-live-preview';
 
+const resolveStudioLanguage = (language?: string): 'es' | 'en' =>
+    language?.toLowerCase().startsWith('en') ? 'en' : 'es';
+
 // =============================================================================
 // COMPONENT
 // =============================================================================
 
 const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const { createNews, newsItems } = useNews();
 
@@ -139,7 +142,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
     const [category, setCategory] = useState<NewsCategory>('update');
     const [audience, setAudience] = useState('');
     const [tone, setTone] = useState('Profesional');
-    const [language, setLanguage] = useState<'es' | 'en'>('es');
+    const [language, setLanguage] = useState<'es' | 'en'>(() => resolveStudioLanguage(i18n.language));
 
     // --------------- Generated News State ---------------
     const [generatedNews, setGeneratedNews] = useState<Partial<NewsItem> | null>(null);
@@ -173,6 +176,10 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
     const currentModelResponseRef = useRef<string>('');
     const currentUserTranscriptRef = useRef<string>('');
 
+    useEffect(() => {
+        setLanguage(resolveStudioLanguage(i18n.language));
+    }, [i18n.language]);
+
     // =============================================================================
     // INITIALIZATION
     // =============================================================================
@@ -201,6 +208,19 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
         };
         init();
     }, []);
+
+    useEffect(() => {
+        if (!platformContext || messages.length !== 1 || messages[0]?.role !== 'model') return;
+
+        const welcomeText = t('superadmin.news.aiStudio.welcomeText', { appName: platformContext.appName });
+        setMessages([{ ...messages[0], text: welcomeText, timestamp: Date.now() }]);
+
+        const platformContextMessage = buildNewsStudioSystemPrompt(platformContext, language);
+        historyRef.current = [
+            { role: 'user', text: `[CONTEXT] ${platformContextMessage}` },
+            { role: 'model', text: welcomeText },
+        ];
+    }, [language, platformContext, t]);
 
     // Auto-scroll chat
     useEffect(() => {
@@ -583,6 +603,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                 status: 'draft',
                 featured: generatedNews.featured || false,
                 priority: typeof generatedNews.priority === 'number' ? generatedNews.priority : 0,
+                language,
                 targeting: { type: 'all' },
                 createdBy: user.id,
             };
@@ -619,24 +640,24 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
 
     return (
         <>
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/60 backdrop-blur-sm p-4 animate-fade-in-up">
             <div className="bg-q-bg border border-q-border w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ maxHeight: '90vh' }}>
 
                 {/* ===== HEADER ===== */}
-                <div className="p-4 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-blue-500/10 via-cyan-500/5 to-transparent">
+                <div className="p-4 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-q-accent/10 via-q-accent/5 to-transparent">
                     <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-2.5 rounded-xl shadow-lg shadow-blue-500/20">
-                                <Newspaper className="text-white w-5 h-5" />
+                        <div className="relative flex h-10 w-10 items-center justify-center text-q-accent">
+                            <div className="flex items-center justify-center">
+                                <Newspaper className="h-5 w-5" />
                             </div>
                             {isVoiceActive && (
-                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-q-bg animate-pulse" />
+                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-q-success rounded-full border-2 border-q-bg animate-pulse" />
                             )}
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-q-text flex items-center gap-2">
                                 AI News Studio
-                                <span className="text-[10px] font-mono bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full">
+                                <span className="text-[10px] font-mono bg-q-accent/20 text-q-accent px-2 py-0.5 rounded-full">
                                     {isVoiceActive ? MODEL_VOICE.split('-').slice(-2).join('-') : MODEL_TEXT.split('-').slice(-2).join('-')}
                                 </span>
                             </h2>
@@ -657,7 +678,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                         </button>
                         <button
                             onClick={() => { stopVoiceSession(); onClose(); }}
-                            className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                            className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-error hover:bg-q-error/10 transition-colors"
                         >
                             <X className="w-4 h-4" />
                         </button>
@@ -675,8 +696,8 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                             {messages.map((msg, i) => (
                                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user'
-                                        ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-br-md'
-                                        : 'bg-[#1b1e2e] border border-blue-500/15 text-gray-100 rounded-bl-md'
+                                        ? 'bg-gradient-to-br from-q-accent to-q-accent text-q-text-on-accent rounded-br-md'
+                                        : 'bg-[#1b1e2e] border border-q-accent/15 text-q-text-muted rounded-bl-md'
                                         }`}>
                                         {msg.isVoice && (
                                             <span className="inline-flex items-center gap-1 text-[10px] opacity-60 mb-1">
@@ -685,11 +706,11 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                         )}
                                         <ReactMarkdown
                                             components={{
-                                                p: ({ children }) => <p className="mb-2 last:mb-0 text-gray-100">{children}</p>,
+                                                p: ({ children }) => <p className="mb-2 last:mb-0 text-q-text-muted">{children}</p>,
                                                 strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-                                                ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-gray-200">{children}</ul>,
-                                                ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-gray-200">{children}</ol>,
-                                                li: ({ children }) => <li className="leading-relaxed text-gray-200">{children}</li>,
+                                                ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-q-text-muted">{children}</ul>,
+                                                ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-q-text-muted">{children}</ol>,
+                                                li: ({ children }) => <li className="leading-relaxed text-q-text-muted">{children}</li>,
                                             }}
                                         >
                                             {msg.text}
@@ -701,7 +722,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                             {isThinking && (
                                 <div className="flex justify-start">
                                     <div className="bg-q-surface border border-q-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-q-text-secondary">
-                                        <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+                                        <Loader2 className="w-4 h-4 animate-spin text-q-accent" />
                                         {t('superadmin.news.aiStudio.analyzing')}
                                     </div>
                                 </div>
@@ -710,21 +731,21 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                             {/* Live Voice Transcription */}
                             {isVoiceActive && liveUserTranscript && (
                                 <div className="flex justify-end animate-pulse">
-                                    <div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-blue-500/20 border border-blue-500/30 text-blue-200">
-                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-blue-400 mb-1">
+                                    <div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-q-accent/20 border border-q-accent/30 text-q-accent">
+                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1">
                                             <Mic className="w-3 h-3" /> {t('chatbot.liveVoice', 'Speaking...')}
                                         </span>
-                                        <p className="text-gray-100">{liveUserTranscript}</p>
+                                        <p className="text-q-text-muted">{liveUserTranscript}</p>
                                     </div>
                                 </div>
                             )}
                             {isVoiceActive && liveModelTranscript && (
                                 <div className="flex justify-start">
-                                    <div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-[#1b1e2e] border border-cyan-500/20 text-gray-100">
-                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-cyan-400 mb-1">
+                                    <div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-[#1b1e2e] border border-q-accent/20 text-q-text-muted">
+                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1">
                                             <Volume2 className="w-3 h-3" /> {t('chatbot.liveVoice', 'Responding...')}
                                         </span>
-                                        <p className="text-gray-100">{liveModelTranscript}</p>
+                                        <p className="text-q-text-muted">{liveModelTranscript}</p>
                                     </div>
                                 </div>
                             )}
@@ -734,8 +755,8 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                 <div className="flex justify-center py-8">
                                     <div className="text-center space-y-4">
                                         <div className="relative mx-auto w-16 h-16">
-                                            <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full animate-pulse" />
-                                            <Loader2 className="w-16 h-16 text-blue-400 animate-spin relative z-10" />
+                                            <div className="absolute inset-0 bg-q-accent blur-xl opacity-20 rounded-full animate-pulse" />
+                                            <Loader2 className="w-16 h-16 text-q-accent animate-spin relative z-10" />
                                         </div>
                                         <div>
                                             <p className="font-bold text-q-text">
@@ -752,13 +773,13 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                             {/* Preview State */}
                             {phase === 'preview' && generatedNews && (
                                 <div className="space-y-4 animate-fade-in-up">
-                                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex items-start gap-3">
-                                        <CheckCircle className="text-green-400 shrink-0 mt-0.5" size={20} />
+                                    <div className="bg-q-success/10 border border-q-success/20 rounded-xl p-4 flex items-start gap-3">
+                                        <CheckCircle className="text-q-success shrink-0 mt-0.5" size={20} />
                                         <div>
-                                            <p className="font-bold text-green-400">
+                                            <p className="font-bold text-q-success">
                                                 {t('superadmin.news.aiSuccess')}
                                             </p>
-                                            <p className="text-xs text-green-400/70">
+                                            <p className="text-xs text-q-success/70">
                                                 {t('superadmin.news.aiCreated')}
                                             </p>
                                         </div>
@@ -775,7 +796,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                         </div>
 
                                         <div className="flex gap-2 flex-wrap">
-                                            <span className="px-2.5 py-1 text-xs font-medium bg-blue-500/15 text-blue-300 rounded-full">
+                                            <span className="px-2.5 py-1 text-xs font-medium bg-q-accent/15 text-q-accent rounded-full">
                                                 {NEWS_CATEGORY_LABELS[generatedNews.category as NewsCategory] || generatedNews.category || category}
                                             </span>
                                         </div>
@@ -826,7 +847,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                         <button
                                             onClick={handleConfirmNews}
                                             disabled={isSavingNews}
-                                            className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-green-500/20 transition-all text-sm disabled:opacity-50 disabled:cursor-wait"
+                                            className="bg-gradient-to-r from-q-success to-q-success text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-q-success/20 transition-all text-sm disabled:opacity-50 disabled:cursor-wait"
                                         >
                                             {isSavingNews ? (
                                                 <><Loader2 size={16} className="animate-spin" /> {t('common.saving', 'Saving...')}</>
@@ -847,7 +868,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                     {isVoiceActive ? (
                                         <button
                                             onClick={stopVoiceSession}
-                                            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
+                                            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-error/20 text-q-error hover:bg-q-error/30 transition-all"
                                             title={t('chatbot.liveVoice')}
                                         >
                                             <PhoneOff className="w-4 h-4" />
@@ -856,7 +877,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                         <button
                                             onClick={startVoiceSession}
                                             disabled={isVoiceConnecting}
-                                            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-surface-overlay/40 text-q-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50"
+                                            className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-surface-overlay/40 text-q-text-secondary hover:text-q-accent hover:bg-q-accent/10 transition-all disabled:opacity-50"
                                             title={t('chatbot.liveVoice')}
                                         >
                                             {isVoiceConnecting ? (
@@ -876,7 +897,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                         placeholder={isVoiceActive
                                             ? t('superadmin.news.aiStudio.voiceActive')
                                             : t('superadmin.news.aiStudio.placeholder')}
-                                        className="flex-1 bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none min-h-[40px] max-h-[120px] text-q-text placeholder:text-q-text-secondary/50"
+                                        className="flex-1 bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-q-accent/50 resize-none min-h-[40px] max-h-[120px] text-q-text placeholder:text-q-text-secondary/50"
                                         rows={1}
                                         disabled={phase !== 'conversation'}
                                     />
@@ -885,7 +906,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                     <button
                                         onClick={handleSendClick}
                                         disabled={!inputText.trim() || isThinking}
-                                        className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
+                                        className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-br from-q-accent to-q-accent text-q-text-on-accent hover:shadow-lg hover:shadow-q-accent/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
                                     >
                                         <Send className="w-4 h-4" />
                                     </button>
@@ -893,9 +914,9 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
 
                                 {/* Voice Active Indicator */}
                                 {isVoiceActive && (
-                                    <div className="mt-2 flex items-center justify-center gap-2 text-xs text-green-400">
+                                    <div className="mt-2 flex items-center justify-center gap-2 text-xs text-q-success">
                                         <span className="flex items-center gap-1.5">
-                                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                                            <span className="w-2 h-2 bg-q-success rounded-full animate-pulse" />
                                             {t('chatbot.liveVoice', 'Listening...')}
                                         </span>
                                         <span className="text-q-text-secondary">•</span>
@@ -914,7 +935,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                         {/* News Parameters */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 mb-1">
-                                <Newspaper className="w-4 h-4 text-blue-400" />
+                                <Newspaper className="w-4 h-4 text-q-accent" />
                                 <h3 className="text-sm font-bold text-q-text">
                                     {t('superadmin.news.aiStudio.configuration')}
                                 </h3>
@@ -931,8 +952,8 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                             key={cat.value}
                                             onClick={() => setCategory(cat.value)}
                                             className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${category === cat.value
-                                                ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                                                : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-blue-500/30'
+                                                ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                                : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                                 }`}
                                         >
                                             {t(`superadmin.news.category.${cat.value}`, cat.label)}
@@ -950,8 +971,8 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                     <button
                                         onClick={() => setLanguage('es')}
                                         className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'es'
-                                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-blue-500/30'
+                                            ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                             }`}
                                     >
                                         🇪🇸 Español
@@ -959,8 +980,8 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                     <button
                                         onClick={() => setLanguage('en')}
                                         className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'en'
-                                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-blue-500/30'
+                                            ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                             }`}
                                     >
                                         🇺🇸 English
@@ -978,7 +999,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                     value={audience}
                                     onChange={(e) => setAudience(e.target.value)}
                                     placeholder={t('superadmin.news.targetAll')}
-                                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/50 text-q-text placeholder:text-q-text-secondary/50"
+                                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-q-accent/50 text-q-text placeholder:text-q-text-secondary/50"
                                 />
                             </div>
 
@@ -993,8 +1014,8 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                             key={t_option}
                                             onClick={() => setTone(t_option)}
                                             className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${tone === t_option
-                                                ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                                                : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-blue-500/30'
+                                                ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                                : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                                 }`}
                                         >
                                             {t(`superadmin.news.aiStudio.tones.${t_option.toLowerCase()}`, t_option)}
@@ -1010,7 +1031,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                         {/* Model Info */}
                         <div className="bg-q-bg/50 rounded-xl p-3 space-y-2">
                             <div className="flex items-center gap-2">
-                                <Zap className="w-3.5 h-3.5 text-yellow-400" />
+                                <Zap className="w-3.5 h-3.5 text-q-accent" />
                                 <span className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider">
                                     {t('superadmin.settings.models', 'Models')}
                                 </span>
@@ -1018,15 +1039,15 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                             <div className="space-y-1.5 text-[11px]">
                                 <div className="flex items-center justify-between">
                                     <span className="text-q-text-secondary">💬 Chat:</span>
-                                    <span className="font-mono text-blue-300">flash</span>
+                                    <span className="font-mono text-q-accent">flash</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-q-text-secondary">🎤 Voz:</span>
-                                    <span className="font-mono text-cyan-300">flash-live</span>
+                                    <span className="font-mono text-q-accent">flash-live</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-q-text-secondary">📝 Generar:</span>
-                                    <span className="font-mono text-green-300">flash + high</span>
+                                    <span className="font-mono text-q-success">flash + high</span>
                                 </div>
                             </div>
                         </div>
@@ -1054,7 +1075,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                             <button
                                 onClick={handleGenerate}
                                 disabled={messages.length < 2 || phase !== 'conversation' || isThinking}
-                                className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-40 disabled:hover:shadow-none text-sm"
+                                className="w-full bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-q-accent/20 transition-all disabled:opacity-40 disabled:hover:shadow-none text-sm"
                             >
                                 <Sparkles className="w-4 h-4" />
                                 {t('superadmin.news.aiStudio.generateContent')}

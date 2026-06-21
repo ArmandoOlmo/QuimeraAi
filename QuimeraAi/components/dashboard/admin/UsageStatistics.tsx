@@ -145,7 +145,7 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
         return (
             <div className="flex h-screen bg-q-bg items-center justify-center">
                 <div className="flex flex-col items-center gap-4 max-w-md text-center">
-                    <AlertCircle className="w-12 h-12 text-red-500" />
+                    <AlertCircle className="w-12 h-12 text-q-error" />
                     <h3 className="text-xl font-semibold text-q-text">{t('superadmin.usage.errorTitle', { defaultValue: 'Error Loading Statistics' })}</h3>
                     <p className="text-q-text-secondary">{error}</p>
                     <button

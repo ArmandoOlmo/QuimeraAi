@@ -1,6 +1,6 @@
 /**
  * GlobalTrackingPixels Component
- * 
+ *
  * Configuración de píxeles de tracking a nivel global de la aplicación.
  * Permite al Super Admin configurar analytics para medir el rendimiento
  * general de Quimera: ventas, conversiones, tráfico, etc.
@@ -11,11 +11,11 @@ import { useTranslation } from 'react-i18next';
 import { useAdmin } from '../../../contexts/admin';
 import { AdPixelConfig } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
-import { 
-    Activity, 
-    ExternalLink, 
-    CheckCircle, 
-    Menu, 
+import {
+    Activity,
+    ExternalLink,
+    CheckCircle,
+    Menu,
     BarChart3,
     TrendingUp,
     ShoppingCart,
@@ -76,7 +76,7 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
     return (
         <div className="flex h-screen bg-q-bg text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-            
+
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
  <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
@@ -109,13 +109,13 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                 {/* Content */}
                 <div className="flex-1 overflow-auto p-6 bg-secondary/5">
                     <div className="max-w-4xl mx-auto space-y-6">
-                        
+
                         {/* Info Banner */}
-                        <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                        <div className="bg-q-accent/10 border border-q-accent/30 rounded-lg p-4">
                             <div className="flex gap-3">
-                                <BarChart3 className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+                                <BarChart3 className="w-5 h-5 text-q-accent flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <h3 className="font-medium text-purple-400 mb-1">
+                                    <h3 className="font-medium text-q-accent mb-1">
                                         {t('superadmin.globalPixelsTitle', 'Analytics de la Plataforma Quimera')}
                                     </h3>
                                     <p className="text-sm text-q-text-muted">
@@ -129,8 +129,8 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div className="bg-q-surface rounded-lg p-4 border border-q-border">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                                        <Activity className="w-5 h-5 text-purple-500" />
+                                    <div className="w-10 h-10 rounded-lg bg-q-accent/10 flex items-center justify-center">
+                                        <Activity className="w-5 h-5 text-q-accent" />
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold text-foreground">{activePixelsCount}</p>
@@ -140,8 +140,8 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                             </div>
                             <div className="bg-q-surface rounded-lg p-4 border border-q-border">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                                        <TrendingUp className="w-5 h-5 text-green-500" />
+                                    <div className="w-10 h-10 rounded-lg bg-q-success/10 flex items-center justify-center">
+                                        <TrendingUp className="w-5 h-5 text-q-success" />
                                     </div>
                                     <div>
                                         <p className="text-xs text-q-text-muted mb-1">{t('superadmin.trackingScope', 'Alcance')}</p>
@@ -151,8 +151,8 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                             </div>
                             <div className="bg-q-surface rounded-lg p-4 border border-q-border">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                                        <Users className="w-5 h-5 text-blue-500" />
+                                    <div className="w-10 h-10 rounded-lg bg-q-accent/10 flex items-center justify-center">
+                                        <Users className="w-5 h-5 text-q-accent" />
                                     </div>
                                     <div>
                                         <p className="text-xs text-q-text-muted mb-1">{t('superadmin.trackEvents', 'Eventos')}</p>
@@ -162,8 +162,8 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                             </div>
                             <div className="bg-q-surface rounded-lg p-4 border border-q-border">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                                        <ShoppingCart className="w-5 h-5 text-orange-500" />
+                                    <div className="w-10 h-10 rounded-lg bg-q-warning/10 flex items-center justify-center">
+                                        <ShoppingCart className="w-5 h-5 text-q-warning" />
                                     </div>
                                     <div>
                                         <p className="text-xs text-q-text-muted mb-1">{t('superadmin.conversions', 'Conversiones')}</p>
@@ -190,15 +190,15 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                 <button
                                     onClick={() => updateField('googleAnalyticsEnabled', !localConfig.googleAnalyticsEnabled)}
                                     className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                        localConfig.googleAnalyticsEnabled ? 'bg-[#F9AB00]' : 'bg-gray-600'
+                                        localConfig.googleAnalyticsEnabled ? 'bg-[#F9AB00]' : 'bg-q-surface-overlay'
                                     }`}
                                 >
-                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition-transform ${
                                         localConfig.googleAnalyticsEnabled ? 'translate-x-6' : 'translate-x-1'
                                     }`} />
                                 </button>
                             </div>
-                            
+
                             {localConfig.googleAnalyticsEnabled && (
                                 <div className="space-y-3">
                                     <div>
@@ -213,9 +213,9 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                             placeholder="G-XXXXXXXXXX"
                                         />
                                     </div>
-                                    <a 
-                                        href="https://analytics.google.com" 
-                                        target="_blank" 
+                                    <a
+                                        href="https://analytics.google.com"
+                                        target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1 text-xs text-[#F9AB00] hover:underline"
                                     >
@@ -243,15 +243,15 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                 <button
                                     onClick={() => updateField('googleTagManagerEnabled', !localConfig.googleTagManagerEnabled)}
                                     className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                        localConfig.googleTagManagerEnabled ? 'bg-[#246FDB]' : 'bg-gray-600'
+                                        localConfig.googleTagManagerEnabled ? 'bg-[#246FDB]' : 'bg-q-surface-overlay'
                                     }`}
                                 >
-                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition-transform ${
                                         localConfig.googleTagManagerEnabled ? 'translate-x-6' : 'translate-x-1'
                                     }`} />
                                 </button>
                             </div>
-                            
+
                             {localConfig.googleTagManagerEnabled && (
                                 <div className="space-y-3">
                                     <div>
@@ -266,9 +266,9 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                             placeholder="GTM-XXXXXXX"
                                         />
                                     </div>
-                                    <a 
-                                        href="https://tagmanager.google.com" 
-                                        target="_blank" 
+                                    <a
+                                        href="https://tagmanager.google.com"
+                                        target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1 text-xs text-[#246FDB] hover:underline"
                                     >
@@ -296,15 +296,15 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                 <button
                                     onClick={() => updateField('facebookPixelEnabled', !localConfig.facebookPixelEnabled)}
                                     className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                        localConfig.facebookPixelEnabled ? 'bg-[#1877F2]' : 'bg-gray-600'
+                                        localConfig.facebookPixelEnabled ? 'bg-[#1877F2]' : 'bg-q-surface-overlay'
                                     }`}
                                 >
-                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition-transform ${
                                         localConfig.facebookPixelEnabled ? 'translate-x-6' : 'translate-x-1'
                                     }`} />
                                 </button>
                             </div>
-                            
+
                             {localConfig.facebookPixelEnabled && (
                                 <div className="space-y-3">
                                     <div>
@@ -319,9 +319,9 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                             placeholder="123456789012345"
                                         />
                                     </div>
-                                    <a 
-                                        href="https://business.facebook.com/events_manager2" 
-                                        target="_blank" 
+                                    <a
+                                        href="https://business.facebook.com/events_manager2"
+                                        target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1 text-xs text-[#1877F2] hover:underline"
                                     >
@@ -347,15 +347,15 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                 <button
                                     onClick={() => updateField('googleAdsEnabled', !localConfig.googleAdsEnabled)}
                                     className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                        localConfig.googleAdsEnabled ? 'bg-[#4285F4]' : 'bg-gray-600'
+                                        localConfig.googleAdsEnabled ? 'bg-[#4285F4]' : 'bg-q-surface-overlay'
                                     }`}
                                 >
-                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition-transform ${
                                         localConfig.googleAdsEnabled ? 'translate-x-6' : 'translate-x-1'
                                     }`} />
                                 </button>
                             </div>
-                            
+
                             {localConfig.googleAdsEnabled && (
                                 <div className="space-y-3">
                                     <div>
@@ -378,7 +378,7 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                         <div className="bg-q-surface rounded-lg p-6 border border-q-border shadow-sm">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+                                    <div className="w-10 h-10 rounded-lg bg-q-text flex items-center justify-center">
                                         <svg viewBox="0 0 24 24" className="w-5 h-5 text-white fill-current">
                                             <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
                                         </svg>
@@ -391,15 +391,15 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                 <button
                                     onClick={() => updateField('tiktokPixelEnabled', !localConfig.tiktokPixelEnabled)}
                                     className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                        localConfig.tiktokPixelEnabled ? 'bg-black' : 'bg-gray-600'
+                                        localConfig.tiktokPixelEnabled ? 'bg-q-text' : 'bg-q-surface-overlay'
                                     }`}
                                 >
-                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition-transform ${
                                         localConfig.tiktokPixelEnabled ? 'translate-x-6' : 'translate-x-1'
                                     }`} />
                                 </button>
                             </div>
-                            
+
                             {localConfig.tiktokPixelEnabled && (
                                 <div className="space-y-3">
                                     <div>
@@ -435,15 +435,15 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                 <button
                                     onClick={() => updateField('linkedinEnabled', !localConfig.linkedinEnabled)}
                                     className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                        localConfig.linkedinEnabled ? 'bg-[#0A66C2]' : 'bg-gray-600'
+                                        localConfig.linkedinEnabled ? 'bg-[#0A66C2]' : 'bg-q-surface-overlay'
                                     }`}
                                 >
-                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition-transform ${
                                         localConfig.linkedinEnabled ? 'translate-x-6' : 'translate-x-1'
                                     }`} />
                                 </button>
                             </div>
-                            
+
                             {localConfig.linkedinEnabled && (
                                 <div className="space-y-3">
                                     <div>
@@ -470,7 +470,7 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                             <p className="text-sm text-q-text-muted mb-4">
                                 {t('superadmin.customScriptsGlobal', 'Scripts adicionales para hotjar, intercom, mixpanel, etc.')}
                             </p>
-                            
+
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-foreground mb-2">
@@ -484,7 +484,7 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                         placeholder="<script>...</script>"
                                     />
                                 </div>
-                                
+
                                 <div>
                                     <label className="block text-sm font-medium text-foreground mb-2">
                                         {t('seo.customBodyScripts', 'Scripts en <body>')}
@@ -502,11 +502,11 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
 
                         {/* Active Pixels Summary */}
                         {activePixelsCount > 0 && (
-                            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                            <div className="bg-q-success/10 border border-q-success/30 rounded-lg p-4">
                                 <div className="flex items-start gap-3">
-                                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                                    <CheckCircle className="w-5 h-5 text-q-success flex-shrink-0 mt-0.5" />
                                     <div>
-                                        <h3 className="font-medium text-green-400 mb-2">
+                                        <h3 className="font-medium text-q-success mb-2">
                                             {t('seo.activePixels', 'Píxeles Activos')} ({activePixelsCount})
                                         </h3>
                                         <div className="flex flex-wrap gap-2">
@@ -523,7 +523,7 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                                 <span className="px-2 py-1 bg-[#4285F4]/20 text-[#4285F4] rounded text-xs">Google Ads</span>
                                             )}
                                             {localConfig.tiktokPixelEnabled && localConfig.tiktokPixelId && (
-                                                <span className="px-2 py-1 bg-white/10 text-foreground rounded text-xs">TikTok</span>
+                                                <span className="px-2 py-1 bg-q-surface/10 text-foreground rounded text-xs">TikTok</span>
                                             )}
                                             {localConfig.linkedinEnabled && localConfig.linkedinPartnerId && (
                                                 <span className="px-2 py-1 bg-[#0A66C2]/20 text-[#0A66C2] rounded text-xs">LinkedIn</span>

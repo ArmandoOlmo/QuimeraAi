@@ -92,10 +92,10 @@ export default function ContentAssetMapper() {
                                                 <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-secondary"><img src={asset.downloadURL} alt={asset.name} className="w-full h-full object-cover" /></div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 mb-2">
-                                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full border ${cfg?.color || 'bg-gray-500/10 text-gray-500 border-gray-500/30'}`}>{cfg?.label || asset.category}</span>
+                                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full border ${cfg?.color || 'bg-q-surface-overlay/10 text-q-text-muted border-q-border/30'}`}>{cfg?.label || asset.category}</span>
                                                         <h4 className="font-medium text-sm truncate">{asset.name}</h4>
                                                     </div>
-                                                    <div className="flex flex-wrap gap-2">{contentRefs.map(ref => { const info = getContentInfo(ref); return (<span key={ref} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20"><FileText size={10} /><span className="max-w-[200px] truncate">{info.name}</span></span>); })}</div>
+                                                    <div className="flex flex-wrap gap-2">{contentRefs.map(ref => { const info = getContentInfo(ref); return (<span key={ref} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs bg-q-accent/10 text-q-accent rounded-full border border-q-accent/20"><FileText size={10} /><span className="max-w-[200px] truncate">{info.name}</span></span>); })}</div>
                                                 </div>
                                                 <span className="text-xs text-q-text-muted">{t('superadmin.contentMapper.usesCount', { count: contentRefs.length })}</span>
                                             </div>

@@ -347,8 +347,8 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                     className="absolute left-0 right-0 z-30 pointer-events-none"
                                     style={{ top: `${currentTimeTop}px` }}
                                 >
-                                    <div className="absolute -left-2 -top-2 w-4 h-4 rounded-full bg-red-500 shadow-lg shadow-red-500/50" />
-                                    <div className="h-0.5 bg-red-500 shadow-lg shadow-red-500/50" />
+                                    <div className="absolute -left-2 -top-2 w-4 h-4 rounded-full bg-q-error shadow-lg shadow-q-error/50" />
+                                    <div className="h-0.5 bg-q-error shadow-lg shadow-q-error/50" />
                                 </div>
                             )}
                         </div>

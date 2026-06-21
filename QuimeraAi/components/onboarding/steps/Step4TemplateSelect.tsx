@@ -162,8 +162,8 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
         <div className="space-y-6">
             {/* Header + Instructions */}
             <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center">
-                    <Layout size={32} className="text-white" />
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center text-q-accent">
+                    <Layout size={32} />
                 </div>
                 <h3 className="text-2xl font-bold text-q-text mb-2">
                     {t('onboarding.step4Heading', 'Choose Your Template')}
@@ -174,9 +174,9 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
             </div>
 
             {/* Info Box — organized by color + full customization */}
-            <div className="flex items-start gap-3 p-4 bg-indigo-500/10 border border-indigo-500/30 rounded-xl">
-                <div className="flex-shrink-0 w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center mt-0.5">
-                    <Palette size={18} className="text-indigo-400" />
+            <div className="flex items-start gap-3 p-4 bg-q-accent/10 border border-q-accent/30 rounded-xl">
+                <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center">
+                    <Palette size={18} className="text-q-accent" />
                 </div>
                 <div className="flex-1">
                     <h4 className="font-medium text-q-text text-sm mb-1">
@@ -205,7 +205,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                 className={`
                                     relative group rounded-xl overflow-hidden border-2 transition-all
                                     ${isSelected
-                                        ? 'border-yellow-500 ring-2 ring-yellow-500/30'
+                                        ? 'border-q-accent/25 ring-2 ring-q-accent/30'
                                         : 'hover:scale-[1.02] hover:shadow-lg'
                                     }
                                 `}
@@ -214,7 +214,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                 }}
                             >
                                 {/* Color accent bar at top */}
-                                <div 
+                                <div
                                     className="absolute top-0 left-0 right-0 h-1 z-10"
                                     style={{
                                         background: `linear-gradient(90deg, ${colors?.primary}, ${colors?.secondary}, ${colors?.accent})`,
@@ -230,7 +230,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                         />
                                     ) : (
-                                        <div 
+                                        <div
                                             className="w-full h-full flex items-center justify-center"
                                             style={{
                                                 background: `linear-gradient(135deg, ${colors?.background} 0%, ${colors?.primary}30 50%, ${colors?.secondary}40 100%)`,
@@ -242,7 +242,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                 </div>
 
                                 {/* Name & Colors */}
-                                <div 
+                                <div
                                     className="p-2"
                                     style={{
                                         background: `linear-gradient(135deg, ${colors?.background}ee 0%, ${colors?.primary}20 100%)`,
@@ -254,13 +254,13 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                     {/* Color swatches */}
                                     <div className="flex items-center gap-1">
                                         {[colors?.primary, colors?.secondary, colors?.accent, colors?.text].map((color, idx) => (
-                                            <div 
+                                            <div
                                                 key={idx}
                                                 className="w-4 h-4 rounded-full shadow-sm"
-                                                style={{ 
+                                                style={{
                                                     backgroundColor: color,
                                                     border: '1.5px solid rgba(255,255,255,0.2)',
-                                                }} 
+                                                }}
                                             />
                                         ))}
                                     </div>
@@ -268,8 +268,8 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
 
                                 {/* Selected indicator */}
                                 {isSelected && (
-                                    <div className="absolute top-3 right-2 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center shadow-lg">
-                                        <Check size={14} className="text-slate-900" />
+                                    <div className="absolute top-3 right-2 w-6 h-6 bg-q-accent rounded-full flex items-center justify-center shadow-lg">
+                                        <Check size={14} className="text-q-text" />
                                     </div>
                                 )}
                             </button>
@@ -325,7 +325,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                             className={`
                                                 flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all
                                                 ${isEnabled
-                                                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                                    ? 'bg-q-success/20 text-q-success border border-q-success/30'
                                                     : 'bg-q-surface-hover text-q-text-secondary border border-transparent'
                                                 }
                                             `}
@@ -337,7 +337,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                             )}
                                             <span className="truncate">{t(`onboarding.componentsList.${component}` as any, component)}</span>
                                             {isRecommended && (
-                                                <Star size={10} className="text-yellow-400 flex-shrink-0" />
+                                                <Star size={10} className="text-q-accent flex-shrink-0" />
                                             )}
                                         </button>
                                     );
@@ -349,8 +349,8 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
             )}
 
             {/* Tip */}
-            <div className="p-4 bg-pink-500/10 border border-pink-500/30 rounded-xl">
-                <p className="text-sm text-pink-300">
+            <div className="p-4 bg-q-accent/10 border border-q-accent/30 rounded-xl">
+                <p className="text-sm text-q-accent">
                     <span className="font-semibold">💡 {t('onboarding.tip', 'Tip')}:</span>{' '}
                     {t('onboarding.step4TipManual', 'Pick the template that catches your eye — you\'ll be able to customize every detail later in the editor. Colors, fonts, images, components... everything is editable!')}
                 </p>

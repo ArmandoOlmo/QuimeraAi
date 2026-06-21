@@ -15,13 +15,13 @@ interface ModalProps {
   fullScreenMobile?: boolean;
 }
 
-const Modal: React.FC<ModalProps> = ({ 
-  children, 
-  onClose, 
-  isOpen, 
-  maxWidth = 'max-w-3xl', 
+const Modal: React.FC<ModalProps> = ({
+  children,
+  onClose,
+  isOpen,
+  maxWidth = 'max-w-3xl',
   className = '',
-  fullScreenMobile = true 
+  fullScreenMobile = true
 }) => {
   const { themeMode } = useUI();
 
@@ -48,7 +48,7 @@ const Modal: React.FC<ModalProps> = ({
 
   return createPortal(
     <div
-      className={`fixed inset-0 bg-black/60 z-[100000] flex items-end sm:items-center justify-center backdrop-blur-sm animate-fade-in ${themeMode}`}
+      className={`fixed inset-0 bg-q-text/60 z-[100000] flex items-end sm:items-center justify-center backdrop-blur-sm animate-fade-in ${themeMode}`}
       style={{ animationDuration: '0.2s' }}
       aria-modal="true"
       role="dialog"
@@ -59,15 +59,15 @@ const Modal: React.FC<ModalProps> = ({
         onClick={onClose}
         aria-hidden="true"
       />
-      
+
       {/* Modal Content */}
-      <div 
+      <div
         className={`
-          relative bg-q-surface border border-q-border shadow-2xl w-full 
+          relative bg-q-surface border border-border-subtle shadow-[var(--shadow-elevated)] w-full
           flex flex-col overflow-hidden animate-slide-up
-          ${fullScreenMobile 
-            ? 'h-[100dvh] sm:h-auto sm:max-h-[90dvh] rounded-none sm:rounded-xl' 
-            : 'max-h-[85dvh] sm:max-h-[90dvh] rounded-t-2xl sm:rounded-xl'
+          ${fullScreenMobile
+            ? 'h-[100dvh] sm:h-auto sm:max-h-[90dvh] rounded-none sm:rounded-[var(--radius-panel)]'
+            : 'max-h-[85dvh] sm:max-h-[90dvh] rounded-t-2xl sm:rounded-[var(--radius-panel)]'
           }
           ${maxWidth}
           ${className}
@@ -76,7 +76,7 @@ const Modal: React.FC<ModalProps> = ({
       >
         {/* Mobile drag indicator */}
         <div className="sm:hidden flex justify-center pt-2 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 bg-q-border rounded-full" />
+          <div className="w-10 h-1 bg-divider rounded-full" />
         </div>
         {children}
       </div>

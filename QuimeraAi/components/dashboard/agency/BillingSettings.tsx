@@ -125,7 +125,7 @@ export function BillingSettings() {
     if (loading && connectStatus.status === 'not_configured') {
         return (
             <div className="flex items-center justify-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-q-accent" />
             </div>
         );
     }
@@ -134,12 +134,12 @@ export function BillingSettings() {
         <div className="space-y-4 sm:space-y-6">
             {/* Error Alert */}
             {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="bg-q-error/10 dark:bg-q-error/12 border border-q-error/25 dark:border-q-error/30 rounded-lg p-4">
                     <div className="flex items-start gap-3">
-                        <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                        <AlertCircle className="h-5 w-5 text-q-error dark:text-q-error flex-shrink-0 mt-0.5" />
                         <div>
-                            <h3 className="font-semibold text-red-900 dark:text-red-200">Error</h3>
-                            <p className="text-red-700 dark:text-red-300 text-sm mt-1">{error}</p>
+                            <h3 className="font-semibold text-q-error dark:text-q-error">Error</h3>
+                            <p className="text-q-error dark:text-q-error text-sm mt-1">{error}</p>
                         </div>
                     </div>
                 </div>
@@ -244,19 +244,19 @@ export function BillingSettings() {
                                         </p>
                                         <ul className="space-y-2 text-sm">
                                             <li className="flex items-center gap-2 text-q-text-muted">
-                                                <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                                                <CheckCircle className="h-4 w-4 text-q-success flex-shrink-0" />
                                                 <span>Nombre legal de tu negocio</span>
                                             </li>
                                             <li className="flex items-center gap-2 text-q-text-muted">
-                                                <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                                                <CheckCircle className="h-4 w-4 text-q-success flex-shrink-0" />
                                                 <span>Dirección comercial</span>
                                             </li>
                                             <li className="flex items-center gap-2 text-q-text-muted">
-                                                <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                                                <CheckCircle className="h-4 w-4 text-q-success flex-shrink-0" />
                                                 <span>Número de identificación fiscal (EIN o equivalente)</span>
                                             </li>
                                             <li className="flex items-center gap-2 text-q-text-muted">
-                                                <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                                                <CheckCircle className="h-4 w-4 text-q-success flex-shrink-0" />
                                                 <span>Tipo de negocio (individual, LLC, corporación, etc.)</span>
                                             </li>
                                         </ul>
@@ -343,12 +343,12 @@ export function BillingSettings() {
 
                                 {/* Step 5 */}
                                 <div className="relative pl-8 ml-4">
-                                    <div className="absolute -left-4 top-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                                    <div className="absolute -left-4 top-0 w-8 h-8 bg-q-success rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
                                         <CheckCircle className="h-5 w-5" />
                                     </div>
-                                    <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/20 ml-4">
+                                    <div className="bg-q-success/10 rounded-xl p-4 border border-q-success/20 ml-4">
                                         <div className="flex items-center gap-3 mb-2">
-                                            <Clock className="h-5 w-5 text-green-600" />
+                                            <Clock className="h-5 w-5 text-q-success" />
                                             <h5 className="font-semibold text-foreground">
                                                 ¡Espera la activación!
                                             </h5>
@@ -423,8 +423,8 @@ export function BillingSettings() {
             {connectStatus.status === 'not_configured' ? (
                 <div className="bg-q-surface rounded-lg border border-q-border p-8">
                     <div className="max-w-2xl mx-auto text-center">
-                        <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-4">
-                            <CreditCard className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                        <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-q-accent/10 dark:bg-q-accent/12 mb-4">
+                            <CreditCard className="h-8 w-8 text-q-accent dark:text-q-accent" />
                         </div>
                         <h2 className="text-2xl font-bold text-foreground mb-2">
                             {t('dashboard.agency.billingPage.stripeConnectTitle')}
@@ -439,19 +439,19 @@ export function BillingSettings() {
                             </h3>
                             <ul className="space-y-2 text-sm text-q-text-muted">
                                 <li className="flex items-start gap-2">
-                                    <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                    <CheckCircle className="h-5 w-5 text-q-success flex-shrink-0 mt-0.5" />
                                     <span>{t('dashboard.agency.billingPage.benefit1')}</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                    <CheckCircle className="h-5 w-5 text-q-success flex-shrink-0 mt-0.5" />
                                     <span>{t('dashboard.agency.billingPage.benefit2')}</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                    <CheckCircle className="h-5 w-5 text-q-success flex-shrink-0 mt-0.5" />
                                     <span>{t('dashboard.agency.billingPage.benefit3')}</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                    <CheckCircle className="h-5 w-5 text-q-success flex-shrink-0 mt-0.5" />
                                     <span>{t('dashboard.agency.billingPage.benefit4')}</span>
                                 </li>
                             </ul>
@@ -460,7 +460,7 @@ export function BillingSettings() {
                         <button
                             onClick={handleSetupStripeConnect}
                             disabled={loading}
-                            className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium inline-flex items-center gap-2"
+                            className="px-8 py-3 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium inline-flex items-center gap-2"
                         >
                             {loading ? (
                                 <>
@@ -488,14 +488,14 @@ export function BillingSettings() {
                             <div className="flex items-start gap-4">
                                 <div
                                     className={`inline-flex items-center justify-center h-12 w-12 rounded-lg ${connectStatus.charges_enabled
-                                        ? 'bg-green-100 dark:bg-green-900/20'
-                                        : 'bg-yellow-100 dark:bg-yellow-900/20'
+                                        ? 'bg-q-success/10 dark:bg-q-success/12'
+                                        : 'bg-q-accent/10 dark:bg-q-accent/12'
                                         }`}
                                 >
                                     {connectStatus.charges_enabled ? (
-                                        <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                                        <CheckCircle className="h-6 w-6 text-q-success dark:text-q-success" />
                                     ) : (
-                                        <AlertCircle className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                                        <AlertCircle className="h-6 w-6 text-q-accent dark:text-q-accent" />
                                     )}
                                 </div>
                                 <div>
@@ -509,13 +509,13 @@ export function BillingSettings() {
                                     </p>
                                     <div className="flex items-center gap-4 mt-3">
                                         <div className="flex items-center gap-2 text-sm">
-                                            <span className="text-gray-600 dark:text-gray-400">
+                                            <span className="text-q-text-muted dark:text-gray-400">
                                                 {t('dashboard.agency.billingPage.charges')}
                                             </span>
                                             <span
                                                 className={`font-medium ${connectStatus.charges_enabled
-                                                    ? 'text-green-600'
-                                                    : 'text-gray-400'
+                                                    ? 'text-q-success'
+                                                    : 'text-q-text-muted'
                                                     }`}
                                             >
                                                 {connectStatus.charges_enabled
@@ -529,8 +529,8 @@ export function BillingSettings() {
                                             </span>
                                             <span
                                                 className={`font-medium ${connectStatus.payouts_enabled
-                                                    ? 'text-green-600'
-                                                    : 'text-gray-400'
+                                                    ? 'text-q-success'
+                                                    : 'text-q-text-muted'
                                                     }`}
                                             >
                                                 {connectStatus.payouts_enabled
@@ -543,7 +543,7 @@ export function BillingSettings() {
                             </div>
                             <button
                                 onClick={openStripeDashboard}
-                                className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 text-sm text-q-accent dark:text-q-accent hover:text-q-accent dark:hover:text-q-accent transition-colors"
                             >
                                 {t('dashboard.agency.billingPage.viewInStripe')}
                                 <ExternalLink className="h-4 w-4" />
@@ -552,11 +552,11 @@ export function BillingSettings() {
 
                         {/* Requirements if any */}
                         {connectStatus.requirements?.currently_due?.length > 0 && (
-                            <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                                <p className="text-sm font-medium text-yellow-900 dark:text-yellow-200 mb-2">
+                            <div className="mt-4 p-4 bg-q-accent/10 dark:bg-q-accent/12 border border-q-accent/25 dark:border-q-accent/30 rounded-lg">
+                                <p className="text-sm font-medium text-q-accent dark:text-q-accent mb-2">
                                     {t('dashboard.agency.billingPage.requiredInfo')}
                                 </p>
-                                <ul className="text-sm text-yellow-800 dark:text-yellow-300 space-y-1">
+                                <ul className="text-sm text-q-accent dark:text-q-accent space-y-1">
                                     {connectStatus.requirements.currently_due.map(
                                         (req: string, i: number) => (
                                             <li key={i}>• {req}</li>
@@ -565,7 +565,7 @@ export function BillingSettings() {
                                 </ul>
                                 <button
                                     onClick={openStripeDashboard}
-                                    className="mt-3 text-sm font-medium text-yellow-900 dark:text-yellow-200 hover:underline"
+                                    className="mt-3 text-sm font-medium text-q-accent dark:text-q-accent hover:underline"
                                 >
                                     {t('dashboard.agency.billingPage.completeInStripe')}
                                 </button>
@@ -579,8 +579,8 @@ export function BillingSettings() {
                             <button
                                 onClick={() => setActiveTab('overview')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'overview'
-                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                    ? 'border-q-accent/25 text-q-accent dark:text-q-accent'
+                                    : 'border-transparent text-q-text-muted hover:text-q-text dark:text-gray-400 dark:hover:text-gray-300'
                                     }`}
                             >
                                 {t('dashboard.agency.billingPage.tabOverview')}
@@ -588,7 +588,7 @@ export function BillingSettings() {
                             <button
                                 onClick={() => setActiveTab('clients')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'clients'
-                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    ? 'border-q-accent/25 text-q-accent dark:text-q-accent'
                                     : 'border-transparent text-q-text-muted hover:text-foreground'
                                     }`}
                             >
@@ -597,7 +597,7 @@ export function BillingSettings() {
                             <button
                                 onClick={() => setActiveTab('history')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'history'
-                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    ? 'border-q-accent/25 text-q-accent dark:text-q-accent'
                                     : 'border-transparent text-q-text-muted hover:text-foreground'
                                     }`}
                             >
@@ -612,15 +612,15 @@ export function BillingSettings() {
                             {/* MRR Card */}
                             <div className="bg-q-surface rounded-lg border border-q-border p-6">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <DollarSign className="h-5 w-5 text-green-600" />
-                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    <DollarSign className="h-5 w-5 text-q-success" />
+                                    <span className="text-sm font-medium text-q-text-muted dark:text-gray-400">
                                         {t('dashboard.agency.billingPage.mrrTotal')}
                                     </span>
                                 </div>
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                <p className="text-3xl font-bold text-q-text dark:text-white">
                                     ${currentTenant?.billing?.mrr?.toLocaleString() || '0'}
                                 </p>
-                                <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                                <p className="text-sm text-q-text-muted dark:text-gray-500 mt-1">
                                     {t('dashboard.agency.billingPage.mrrDescription')}
                                 </p>
                             </div>
@@ -628,7 +628,7 @@ export function BillingSettings() {
                             {/* Active Subscriptions */}
                             <div className="bg-q-surface rounded-lg border border-q-border p-6">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <TrendingUp className="h-5 w-5 text-blue-600" />
+                                    <TrendingUp className="h-5 w-5 text-q-accent" />
                                     <span className="text-sm font-medium text-q-text-muted">
                                         {t('dashboard.agency.billingPage.activeSubscriptions')}
                                     </span>
@@ -644,7 +644,7 @@ export function BillingSettings() {
                             {/* Next Payout */}
                             <div className="bg-q-surface rounded-lg border border-q-border p-6">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <CreditCard className="h-5 w-5 text-purple-600" />
+                                    <CreditCard className="h-5 w-5 text-q-accent" />
                                     <span className="text-sm font-medium text-q-text-muted">
                                         {t('dashboard.agency.billingPage.nextPayout')}
                                     </span>
@@ -666,17 +666,17 @@ export function BillingSettings() {
                     {activeTab === 'history' && <InvoiceHistory />}
 
                     {!connectStatus.charges_enabled && activeTab !== 'overview' && (
-                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 text-center">
-                            <AlertCircle className="h-12 w-12 text-yellow-600 dark:text-yellow-400 mx-auto mb-3" />
-                            <h3 className="font-semibold text-yellow-900 dark:text-yellow-200 mb-2">
+                        <div className="bg-q-accent/10 dark:bg-q-accent/12 border border-q-accent/25 dark:border-q-accent/30 rounded-lg p-6 text-center">
+                            <AlertCircle className="h-12 w-12 text-q-accent dark:text-q-accent mx-auto mb-3" />
+                            <h3 className="font-semibold text-q-accent dark:text-q-accent mb-2">
                                 {t('dashboard.agency.billingPage.completeStripeSetup')}
                             </h3>
-                            <p className="text-yellow-800 dark:text-yellow-300 mb-4">
+                            <p className="text-q-accent dark:text-q-accent mb-4">
                                 {t('dashboard.agency.billingPage.completeStripeSetupDesc')}
                             </p>
                             <button
                                 onClick={openStripeDashboard}
-                                className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                                className="px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent transition-colors"
                             >
                                 {t('dashboard.agency.billingPage.goToStripe')}
                             </button>

@@ -68,7 +68,7 @@ Para errores:
 
 **Solución:** [pasos]
 
-RECUERDA: 
+RECUERDA:
 1. Espaciado entre párrafos = respuestas legibles.
 2. Emojis en los bullets importantes.
 3. Sé amigable y profesional.`,
@@ -285,7 +285,7 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
                             Prompts Globales del Chatbot
                         </h1>
                         {hasChanges && (
-                            <span className="px-2 py-0.5 text-xs font-medium bg-amber-500/20 text-amber-400 rounded">
+                            <span className="px-2 py-0.5 text-xs font-medium bg-q-accent/20 text-q-accent rounded">
                                 Sin guardar
                             </span>
                         )}
@@ -303,9 +303,9 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
                             onClick={handleSave}
                             disabled={isSaving || !hasChanges}
                             className={`flex items-center gap-1.5 h-9 px-4 text-sm font-semibold rounded-lg transition-all ${saveStatus === 'success'
-                                ? 'bg-green-500/20 text-green-400'
+                                ? 'bg-q-success/20 text-q-success'
                                 : saveStatus === 'error'
-                                    ? 'bg-red-500/20 text-red-400'
+                                    ? 'bg-q-error/20 text-q-error'
                                     : hasChanges
                                         ? 'bg-q-accent text-q-bg hover:bg-q-accent'
                                         : 'bg-q-surface-overlay text-q-text-secondary cursor-not-allowed'

@@ -42,12 +42,12 @@ const MobileSearchModal: React.FC<MobileSearchModalProps> = ({
 
     if (!isOpen) return null;
 
-    const overlayClasses = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-start justify-center pt-20';
-    const modalClasses = 'bg-q-surface border border-q-border rounded-2xl shadow-2xl w-[90%] max-w-md p-4 animate-fade-in-up';
+    const overlayClasses = 'fixed inset-0 bg-[rgba(9,4,17,0.72)] backdrop-blur-sm z-[9999] flex items-start justify-center pt-20';
+    const modalClasses = 'bg-q-surface border border-border-subtle rounded-[var(--radius-card)] shadow-[var(--shadow-elevated)] w-[90%] max-w-md p-4 animate-fade-in-up';
     const inputWrapClasses = 'flex items-center gap-2 mb-2';
     const iconClasses = 'text-q-text-muted';
     const inputClasses = 'flex-1 bg-transparent outline-none text-foreground placeholder:text-q-text-muted';
-    const closeButtonClasses = 'p-2 text-q-text-muted hover:text-foreground transition-colors';
+    const closeButtonClasses = 'p-2 rounded-[var(--q-radius-md)] text-q-text-muted hover:text-foreground hover:bg-q-surface-overlay transition-colors';
     const statusClasses = 'text-xs text-q-text-muted';
 
     // Render via portal to escape any parent stacking context

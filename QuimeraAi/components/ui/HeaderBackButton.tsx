@@ -16,8 +16,8 @@ const HeaderBackButton: React.FC<HeaderBackButtonProps> = ({
 }) => {
   const { t } = useTranslation();
   const resolvedLabel = label || t('common.back', 'Volver');
-  const backButtonClasses = 'no-min-touch inline-flex h-9 min-h-9 max-h-9 w-9 min-w-9 max-w-9 items-center justify-center rounded-lg border border-q-border/50 bg-secondary/50 p-0 text-sm font-medium text-q-text-muted transition-colors hover:bg-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/25';
-  const iconClasses = 'h-4 w-4 flex-shrink-0';
+  const backButtonClasses = 'no-min-touch inline-flex h-9 min-h-9 max-h-9 w-9 min-w-9 max-w-9 items-center justify-center rounded-[var(--q-radius-md)] border border-border-subtle bg-q-surface p-0 text-sm font-medium text-q-text-muted transition-colors hover:bg-q-surface-overlay hover:text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/25';
+  const iconClasses = 'icon-sm';
 
   return (
     <button

@@ -978,7 +978,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                 />
                                                 <button
                                                     onClick={() => contextUpdateProfile({ logoUrl: '' })}
-                                                    className="absolute top-1 right-1 p-1 rounded bg-black/50 hover:bg-black/70 text-white"
+                                                    className="absolute top-1 right-1 p-1 rounded bg-q-text/50 hover:bg-q-text/70 text-white"
                                                 >
                                                     <X size={12} />
                                                 </button>
@@ -1222,7 +1222,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                     }`}
                                             >
                                                 <span
-                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${theme.headerOverlay ? 'translate-x-5' : 'translate-x-0'
+                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-q-surface rounded-full shadow-sm transition-transform ${theme.headerOverlay ? 'translate-x-5' : 'translate-x-0'
                                                         }`}
                                                 />
                                             </button>
@@ -1263,7 +1263,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                     }`}
                                             >
                                                 <span
-                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${theme.profileBox ? 'translate-x-5' : 'translate-x-0'
+                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-q-surface rounded-full shadow-sm transition-transform ${theme.profileBox ? 'translate-x-5' : 'translate-x-0'
                                                         }`}
                                                 />
                                             </button>
@@ -1328,7 +1328,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                             />
                                             <button
                                                 onClick={() => contextUpdateTheme({ backgroundImage: '' })}
-                                                className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors"
+                                                className="absolute top-2 right-2 p-1.5 rounded-lg bg-q-text/50 hover:bg-q-text/70 text-white transition-colors"
                                             >
                                                 <X size={14} />
                                             </button>
@@ -1368,7 +1368,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                     }`}
                                             >
                                                 <span
-                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${theme.headerOverlay ? 'translate-x-5' : 'translate-x-0'
+                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-q-surface rounded-full shadow-sm transition-transform ${theme.headerOverlay ? 'translate-x-5' : 'translate-x-0'
                                                         }`}
                                                 />
                                             </button>
@@ -1409,7 +1409,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                     }`}
                                             >
                                                 <span
-                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${theme.profileBox ? 'translate-x-5' : 'translate-x-0'
+                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-q-surface rounded-full shadow-sm transition-transform ${theme.profileBox ? 'translate-x-5' : 'translate-x-0'
                                                         }`}
                                                 />
                                             </button>
@@ -1494,7 +1494,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                                     {/* Video Preview */}
                                     {theme.backgroundVideo && (
-                                        <div className="relative rounded-xl overflow-hidden aspect-video bg-black">
+                                        <div className="relative rounded-xl overflow-hidden aspect-video bg-q-text">
                                             <video
                                                 src={theme.backgroundVideo}
                                                 className="w-full h-full object-cover"
@@ -1505,7 +1505,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                             />
                                             <button
                                                 onClick={() => contextUpdateTheme({ backgroundVideo: '' })}
-                                                className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors"
+                                                className="absolute top-2 right-2 p-1.5 rounded-lg bg-q-text/50 hover:bg-q-text/70 text-white transition-colors"
                                             >
                                                 <X size={14} />
                                             </button>
@@ -1920,7 +1920,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                         }`}
                 >
                     <span
-                        className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${emailSignupEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                        className={`absolute top-0.5 w-5 h-5 bg-q-surface rounded-full shadow transition-transform ${emailSignupEnabled ? 'translate-x-5' : 'translate-x-0.5'
                             }`}
                     />
                 </button>
@@ -1974,7 +1974,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     <button
                                         onClick={() => handleDeleteSubscriber(sub.id)}
                                         disabled={isDeletingSubscriber === sub.id}
-                                        className="p-1.5 rounded-md text-q-text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                                        className="p-1.5 rounded-md text-q-text-muted hover:text-q-error hover:bg-q-error/10 transition-colors opacity-0 group-hover:opacity-100"
                                         title={t('common.delete', 'Delete')}
                                     >
                                         {isDeletingSubscriber === sub.id ? (
@@ -2078,11 +2078,11 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
         return (
             <div
-                className="w-[280px] h-[580px] rounded-[40px] overflow-hidden shadow-2xl border-4 border-neutral-800 relative"
+                className="w-[280px] h-[580px] rounded-[40px] overflow-hidden shadow-2xl border-4 border-q-border relative"
                 style={getPreviewBackgroundStyle()}
             >
                 {/* Phone Notch */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-neutral-800 rounded-b-2xl z-10" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-q-surface-overlay rounded-b-2xl z-10" />
 
                 {/* Content */}
                 <div className="h-full overflow-y-auto p-6 pt-10 relative">
@@ -2275,7 +2275,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 <input
                                     type="email"
                                     placeholder="Email"
-                                    className="flex-1 px-3 py-2 text-xs rounded-lg bg-black/20 border border-white/10 outline-none"
+                                    className="flex-1 px-3 py-2 text-xs rounded-lg bg-q-text/20 border border-q-border/10 outline-none"
                                 />
                                 <button
                                     className="px-3 py-2 text-xs font-medium rounded-lg"
@@ -2301,9 +2301,9 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                 {/* Chatbot Preview - Floating inside phone preview */}
                 {isChatbotPreviewOpen && activeProject && (
-                    <div className="absolute inset-0 bg-black/40 z-50 flex flex-col justify-end p-3 pt-8">
+                    <div className="absolute inset-0 bg-q-text/40 z-50 flex flex-col justify-end p-3 pt-8">
                         <div
-                            className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                            className="bg-q-surface rounded-2xl shadow-2xl overflow-hidden flex flex-col"
                             style={{ height: '90%' }}
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -2434,8 +2434,8 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 </span>
                             ) : hasUnsavedChanges ? (
                                 <>
-                                    <span className="flex items-center gap-1.5 text-yellow-500">
-                                        <span className="w-2 h-2 rounded-full bg-yellow-500" />
+                                    <span className="flex items-center gap-1.5 text-q-accent">
+                                        <span className="w-2 h-2 rounded-full bg-q-accent" />
                                         <span className="hidden sm:inline">{t('common.unsavedChanges', 'Unsaved')}</span>
                                     </span>
                                     <button
@@ -2453,7 +2453,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     </button>
                                 </>
                             ) : bioPage ? (
-                                <span className="flex items-center gap-1.5 text-green-500">
+                                <span className="flex items-center gap-1.5 text-q-success">
                                     <Check size={14} />
                                     <span className="hidden sm:inline">{t('common.saved', 'Saved')}</span>
                                 </span>
@@ -2505,7 +2505,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             }}
                             disabled={!bioPage?.isPublished && !profile.name && !bioPage?.username}
                             className={`h-9 w-9 flex items-center justify-center transition-opacity hover:opacity-80 disabled:opacity-50 ${bioPage?.isPublished
-                                ? 'text-green-500'
+                                ? 'text-q-success'
                                 : 'text-primary'
                                 }`}
                             title={bioPage?.isPublished ? t('bioPage.copyUrl', 'Copy URL') : t('bioPage.publish', 'Publish')}
@@ -2629,7 +2629,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     </nav>
 
                     {/* CENTER: Live Preview */}
-                    <main className="flex-1 min-h-0 overflow-hidden hidden md:flex items-center justify-center bg-neutral-900/50 p-4 sm:p-8 relative">
+                    <main className="flex-1 min-h-0 overflow-hidden hidden md:flex items-center justify-center bg-q-surface-overlay/50 p-4 sm:p-8 relative">
                         {renderMobilePreview()}
                     </main>
 
@@ -2703,7 +2703,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-q-text/60 backdrop-blur-sm"
                         onClick={closeAddLinkModal}
                     />
 
@@ -2822,7 +2822,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-q-text/60 backdrop-blur-sm"
                         onClick={closeFormConfig}
                     />
 
@@ -2963,7 +2963,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-q-text/60 backdrop-blur-sm"
                         onClick={closeProfileModal}
                     />
 
@@ -3056,7 +3056,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     className="w-full px-4 py-3 bg-muted/50 border border-q-border rounded-lg text-foreground outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                                 />
                                 <p className="text-xs text-q-text-muted mt-1">
-                                    {profile.bio.length}/150 {t('bioPage.characters', 'characters')}
+                                    {profile.bio.length}/15 {t('bioPage.characters', 'characters')}
                                 </p>
                             </div>
                         </div>
@@ -3089,10 +3089,10 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
             {/* ===== NOTIFICATION MODAL ===== */}
             {notificationModal.isOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]" onClick={() => setNotificationModal({ ...notificationModal, isOpen: false })}>
+                <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-[9999]" onClick={() => setNotificationModal({ ...notificationModal, isOpen: false })}>
                     <div className="bg-q-surface border border-q-border rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
                         <div className="text-center">
-                            <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notificationModal.type === 'success' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
+                            <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notificationModal.type === 'success' ? 'bg-q-success/20 text-q-success' : 'bg-q-error/20 text-q-error'}`}>
                                 {notificationModal.type === 'success' ? <Check size={24} /> : <X size={24} />}
                             </div>
                             <h3 className="text-lg font-bold text-foreground mb-2">{notificationModal.title}</h3>

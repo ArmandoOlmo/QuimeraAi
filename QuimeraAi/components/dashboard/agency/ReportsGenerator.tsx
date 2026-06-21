@@ -81,7 +81,7 @@ const StepIndicator = ({ currentStep }: { currentStep: Step }) => {
                             ${status === 'current'
                                 ? 'bg-primary/10 text-primary ring-2 ring-primary/20'
                                 : status === 'completed'
-                                    ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                                    ? 'bg-q-success/10 text-q-success dark:text-q-success'
                                     : 'bg-muted text-q-text-muted'
                             }
                         `}>
@@ -91,7 +91,7 @@ const StepIndicator = ({ currentStep }: { currentStep: Step }) => {
                         {index < steps.length - 1 && (
                             <div className={`
                                 w-8 h-0.5 transition-colors duration-300
-                                ${status === 'completed' ? 'bg-green-500' : 'bg-border'}
+                                ${status === 'completed' ? 'bg-q-success' : 'bg-border'}
                             `} />
                         )}
                     </React.Fragment>
@@ -311,7 +311,7 @@ export function ReportsGenerator() {
                             <div>
                                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
                                     {t('dashboard.agency.reports.generatorTitle', 'Generador de Reportes')}
-                                    <Sparkles className="h-6 w-6 text-amber-500" />
+                                    <Sparkles className="h-6 w-6 text-q-accent" />
                                 </h1>
                                 <p className="text-q-text-muted mt-1 text-sm sm:text-base">
                                     {t('dashboard.agency.reports.generatorSubtitle', 'Crea reportes consolidados para tus clientes')}
@@ -336,13 +336,13 @@ export function ReportsGenerator() {
 
             {/* Error Alert */}
             {error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-start gap-3 animate-in slide-in-from-top-2 duration-300">
-                    <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                        <AlertCircle className="h-5 w-5 text-red-500" />
+                <div className="bg-q-error/10 border border-q-error/20 rounded-xl p-4 flex items-start gap-3 animate-in slide-in-from-top-2 duration-300">
+                    <div className="h-10 w-10 rounded-full bg-q-error/10 flex items-center justify-center flex-shrink-0">
+                        <AlertCircle className="h-5 w-5 text-q-error" />
                     </div>
                     <div>
-                        <h3 className="font-semibold text-red-600 dark:text-red-400">Error</h3>
-                        <p className="text-red-600/80 dark:text-red-400/80 text-sm mt-0.5">{error}</p>
+                        <h3 className="font-semibold text-q-error dark:text-q-error">Error</h3>
+                        <p className="text-q-error/80 dark:text-q-error/80 text-sm mt-0.5">{error}</p>
                     </div>
                 </div>
             )}
@@ -355,8 +355,8 @@ export function ReportsGenerator() {
                         <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
                             <div className="p-5 border-b border-q-border/50 bg-muted/30">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                                        <Building2 className="h-5 w-5 text-blue-500" />
+                                    <div className="h-10 w-10 rounded-xl bg-q-accent/10 flex items-center justify-center">
+                                        <Building2 className="h-5 w-5 text-q-accent" />
                                     </div>
                                     <div>
                                         <h4 className="font-semibold text-foreground">
@@ -428,8 +428,8 @@ export function ReportsGenerator() {
                         <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
                             <div className="p-5 border-b border-q-border/50 bg-muted/30">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                                        <Calendar className="h-5 w-5 text-amber-500" />
+                                    <div className="h-10 w-10 rounded-xl bg-q-accent/10 flex items-center justify-center">
+                                        <Calendar className="h-5 w-5 text-q-accent" />
                                     </div>
                                     <div>
                                         <h4 className="font-semibold text-foreground">
@@ -503,8 +503,8 @@ export function ReportsGenerator() {
                         <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
                             <div className="p-5 border-b border-q-border/50 bg-muted/30">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                                        <TrendingUp className="h-5 w-5 text-green-500" />
+                                    <div className="h-10 w-10 rounded-xl bg-q-success/10 flex items-center justify-center">
+                                        <TrendingUp className="h-5 w-5 text-q-success" />
                                     </div>
                                     <div>
                                         <h4 className="font-semibold text-foreground">
@@ -677,7 +677,7 @@ export function ReportsGenerator() {
                         </button>
                         <button
                             onClick={handleExportCSV}
-                            className="flex-1 px-6 py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors font-semibold flex items-center justify-center gap-3"
+                            className="flex-1 px-6 py-4 bg-q-success hover:bg-q-success text-white rounded-xl transition-colors font-semibold flex items-center justify-center gap-3"
                         >
                             <FileSpreadsheet className="h-5 w-5" />
                             {t('dashboard.agency.reports.exportCSV', 'Exportar CSV')}
@@ -730,17 +730,17 @@ export function ReportsGenerator() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
                                                 {client.totalVisits.toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600 dark:text-green-400">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-q-success dark:text-q-success">
                                                 ${client.totalRevenue.toLocaleString()}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`
                                                     inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
                                                     ${client.conversionRate >= 5
-                                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                        ? 'bg-q-success/10 text-q-success dark:bg-q-success/12 dark:text-q-success'
                                                         : client.conversionRate >= 2
-                                                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                                            ? 'bg-q-accent/10 text-q-accent dark:bg-q-accent/12 dark:text-q-accent'
+                                                            : 'bg-q-error/10 text-q-error dark:bg-q-error/12 dark:text-q-error'
                                                     }
                                                 `}>
                                                     {client.conversionRate.toFixed(1)}%
@@ -759,8 +759,8 @@ export function ReportsGenerator() {
             {step === 'completed' && (
                 <div className="bg-q-surface rounded-2xl border border-q-border/50 p-16 animate-in fade-in zoom-in-95 duration-500">
                     <div className="text-center">
-                        <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-green-500/10 mb-6">
-                            <CheckCircle className="h-10 w-10 text-green-500" />
+                        <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-q-success/10 mb-6">
+                            <CheckCircle className="h-10 w-10 text-q-success" />
                         </div>
                         <h3 className="text-2xl font-bold text-foreground mb-2">
                             {t('dashboard.agency.reports.successTitle', '¡Reporte Generado!')}

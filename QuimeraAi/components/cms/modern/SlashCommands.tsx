@@ -202,11 +202,11 @@ const SlashCommands: React.FC<SlashCommandsProps> = ({ editor, onImageUpload, on
     return (
         <div
             ref={menuRef}
-            className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl z-50 w-72 max-h-80 overflow-y-auto"
+            className="fixed bg-q-surface dark:bg-gray-800 border border-q-border dark:border-gray-700 rounded-lg shadow-2xl z-50 w-72 max-h-80 overflow-y-auto"
             style={{ top: position.top, left: position.left }}
         >
             <div className="p-2">
-                <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase px-2 py-1 mb-1">
+                <div className="text-xs font-bold text-q-text-muted dark:text-gray-500 uppercase px-2 py-1 mb-1">
                     {t('cms_editor.commands.title')} {search && `(${filteredCommands.length})`}
                 </div>
                 {filteredCommands.map((cmd, index) => (
@@ -215,17 +215,17 @@ const SlashCommands: React.FC<SlashCommandsProps> = ({ editor, onImageUpload, on
                         onClick={() => executeCommand(cmd)}
                         className={`w-full flex items-start gap-3 px-3 py-2 rounded-md transition-colors text-left ${index === selectedIndex
                                 ? 'bg-primary/10 dark:bg-primary/20'
-                                : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                                : 'hover:bg-q-surface-overlay dark:hover:bg-gray-700'
                             }`}
                     >
-                        <div className={`mt-0.5 ${index === selectedIndex ? 'text-primary' : 'text-gray-500 dark:text-gray-400'}`}>
+                        <div className={`mt-0.5 ${index === selectedIndex ? 'text-primary' : 'text-q-text-muted dark:text-gray-400'}`}>
                             {cmd.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className={`text-sm font-medium ${index === selectedIndex ? 'text-primary' : 'text-gray-900 dark:text-gray-100'}`}>
+                            <div className={`text-sm font-medium ${index === selectedIndex ? 'text-primary' : 'text-q-text dark:text-gray-100'}`}>
                                 {cmd.title}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="text-xs text-q-text-muted dark:text-gray-400">
                                 {cmd.description}
                             </div>
                         </div>

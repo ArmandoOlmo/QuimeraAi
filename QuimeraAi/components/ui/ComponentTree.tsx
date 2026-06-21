@@ -213,8 +213,11 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
             ref={setNodeRef}
             style={style}
             className={`
-                group relative flex items-center gap-2 px-3 py-2 cursor-pointer transition-all rounded-md
-                ${isActive ? 'bg-q-accent/10 text-q-accent' : 'text-q-text hover:text-q-accent hover:bg-q-surface/50'}
+                group relative flex items-center gap-2 px-3 py-2 cursor-pointer transition-all rounded-[var(--q-radius-md)] border
+                ${isActive
+                    ? 'border-q-accent bg-q-accent text-q-text-on-accent shadow-[var(--shadow-card)] dark:bg-q-accent/10 dark:text-q-accent dark:border-q-accent/30 dark:shadow-none black:bg-q-accent/10 black:text-q-accent black:border-q-accent/30 black:shadow-none'
+                    : 'border-transparent text-q-text hover:border-structure-control-border hover:bg-structure-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))]'
+                }
                 ${isDragging ? 'opacity-50 shadow-lg bg-q-surface' : ''}
                 ${!isVisible ? 'opacity-50' : ''}
             `}
@@ -230,11 +233,11 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                 >
                     <GripVertical
                         size={14}
-                        className="text-q-text-secondary hover:text-q-text"
+                        className={isActive ? 'text-q-text-on-accent/75 hover:text-q-text-on-accent dark:text-q-accent/75 dark:hover:text-q-accent black:text-q-accent/75 black:hover:text-q-accent' : 'text-q-text-muted hover:text-q-text'}
                     />
                 </div>
             )}
-            <Icon size={16} className="flex-shrink-0" />
+            <Icon size={16} className={isActive ? 'flex-shrink-0 text-q-text-on-accent dark:text-q-accent black:text-q-accent' : 'flex-shrink-0 text-q-text-muted group-hover:text-q-text'} />
 
             <span className="flex-1 text-sm font-medium truncate">
                 {sectionLabel}
@@ -251,13 +254,13 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                             onRemove();
                             setShowConfirm(false);
                         }}
-                        className="px-2 py-0.5 text-xs font-medium rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                        className="px-2 py-0.5 text-xs font-medium rounded bg-q-error/20 text-q-error hover:bg-q-error/30 transition-colors"
                     >
                         <Check size={12} />
                     </button>
                     <button
                         onClick={() => setShowConfirm(false)}
-                        className="px-2 py-0.5 text-xs font-medium rounded bg-q-surface-overlay/50 text-q-text-secondary hover:bg-q-surface-overlay transition-colors"
+                        className="px-2 py-0.5 text-xs font-medium rounded bg-structure-control text-q-text-muted hover:bg-structure-control-hover hover:text-q-text transition-colors"
                     >
                         <X size={12} />
                     </button>
@@ -272,7 +275,10 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                             e.stopPropagation();
                             onToggleVisibility();
                         }}
-                        className="flex-shrink-0 p-1.5 rounded text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/50 transition-colors"
+                        className={isActive
+                            ? 'flex-shrink-0 p-1.5 rounded text-q-text-on-accent/75 hover:text-q-text-on-accent hover:bg-q-text-on-accent/12 dark:text-q-accent/75 dark:hover:text-q-accent dark:hover:bg-q-accent/12 black:text-q-accent/75 black:hover:text-q-accent black:hover:bg-q-accent/12 transition-colors'
+                            : 'flex-shrink-0 p-1.5 rounded text-q-text-muted hover:text-q-text hover:bg-structure-control-hover transition-colors'
+                        }
                         title={isVisible ? hideLabel : showLabel}
                     >
                         {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -282,7 +288,10 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                             e.stopPropagation();
                             setShowConfirm(true);
                         }}
-                        className="flex-shrink-0 p-1.5 rounded text-q-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                        className={isActive
+                            ? 'flex-shrink-0 p-1.5 rounded text-q-text-on-accent/75 hover:text-q-error hover:bg-q-surface/25 dark:text-q-accent/75 dark:hover:text-q-error dark:hover:bg-q-error/10 black:text-q-accent/75 black:hover:text-q-error black:hover:bg-q-error/10 transition-colors'
+                            : 'flex-shrink-0 p-1.5 rounded text-q-text-muted hover:text-q-error hover:bg-q-error/10 transition-colors'
+                        }
                         title={deleteLabel}
                     >
                         <Trash2 size={14} />
@@ -555,7 +564,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                         e.stopPropagation();
                         setExpandedGroups(prev => ({ ...prev, [groupKey]: !prev[groupKey] }));
                     }}
-                    className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-bold text-q-text-secondary uppercase tracking-wider hover:text-q-text transition-colors"
+                    className="flex items-center gap-2 w-full px-3 py-1.5 rounded-[var(--q-radius-md)] text-xs font-bold text-q-text-muted uppercase tracking-wider hover:bg-structure-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--structure-control-border))] transition-all"
                     type="button"
                 >
                     <span className={`transition-transform duration-200 ${isExpanded ? 'rotate-0' : '-rotate-90'}`}>
@@ -600,8 +609,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                 </div>
 
                 {/* Search Bar - Desktop */}
-                <div className="hidden sm:flex items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
-                    <Search size={14} className="text-q-text-secondary flex-shrink-0" />
+                <div className="hidden sm:flex items-center gap-2 bg-structure-control border border-structure-control-border rounded-[var(--q-radius-md)] px-3 py-2">
+                    <Search size={14} className="text-q-text-muted flex-shrink-0" />
                     <input
                         type="text"
                         placeholder={t('editor.searchSections')}
@@ -612,7 +621,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                     {searchTerm && (
                         <button
                             onClick={() => setSearchTerm('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-q-text-secondary hover:text-q-text"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-q-text-muted hover:text-q-text"
                         >
                             <X size={14} />
                         </button>
@@ -622,7 +631,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                 {/* Mobile Search Button */}
                 <button
                     onClick={() => setIsMobileSearchOpen(true)}
-                    className="sm:hidden flex items-center justify-center p-2 rounded-lg bg-q-surface-overlay/40 text-q-text-secondary hover:text-q-text transition-colors"
+                    className="sm:hidden flex items-center justify-center p-2 rounded-[var(--q-radius-md)] bg-structure-control border border-structure-control-border text-q-text-muted hover:bg-structure-control-hover hover:text-q-text transition-colors"
                 >
                     <Search size={14} />
                 </button>
@@ -638,7 +647,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
             {/* Add Component Menu */}
             {showAddMenu && availableComponents.length > 0 && (
-                <div className="p-3 border-b border-q-border bg-q-surface/50">
+                <div className="p-3 border-b border-q-border bg-q-surface/70">
                     <div className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">
                         {t('editor.addComponent')}
                     </div>
@@ -648,14 +657,14 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                             <div className="mb-1">
                                 <button
                                     onClick={() => setExpandedGroups(prev => ({ ...prev, legacyAdd: !prev.legacyAdd }))}
-                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-q-text-secondary hover:text-q-text hover:bg-q-bg rounded-md transition-colors"
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-q-text-muted hover:text-q-text hover:bg-structure-control-hover rounded-[var(--q-radius-md)] transition-colors"
                                 >
                                     <span className="flex items-center gap-2">
                                         <Layers size={14} /> Legacy Suite
                                     </span>
                                     <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.legacyAdd ? 'rotate-180' : ''}`} />
                                 </button>
-                                
+
                                 {expandedGroups.legacyAdd && (
                                     <div className="pl-4 mt-1 space-y-1">
                                         {availableComponents.filter(s => !ECOMMERCE_SECTION_IDS.includes(s) && !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon') && !s.toLowerCase().includes('quimera')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
@@ -667,7 +676,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                                         onAddComponent(section);
                                                         setShowAddMenu(false);
                                                     }}
-                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-q-bg transition-colors text-left"
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-[var(--q-radius-md)] hover:bg-structure-control-hover transition-colors text-left"
                                                 >
                                                     <Icon size={14} className="text-q-accent" />
                                                     <span className="text-sm text-q-text font-medium">
@@ -686,7 +695,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                             <div className="mt-2 pt-2 border-t border-q-border/50">
                                 <button
                                     onClick={() => setExpandedGroups(prev => ({ ...prev, ecommerceAdd: !prev.ecommerceAdd }))}
-                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-[#38BDF8] hover:bg-q-bg rounded-md transition-colors"
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-q-info hover:bg-structure-control-hover rounded-[var(--q-radius-md)] transition-colors"
                                 >
                                     <span className="flex items-center gap-2">
                                         <ShoppingBag size={14} /> Ecommerce Suite
@@ -705,9 +714,9 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                                         onAddComponent(section);
                                                         setShowAddMenu(false);
                                                     }}
-                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-q-bg transition-colors text-left border-l border-transparent hover:border-[#38BDF8]/50"
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-[var(--q-radius-md)] hover:bg-structure-control-hover transition-colors text-left border-l border-transparent hover:border-q-info/50"
                                                 >
-                                                    <Icon size={14} className="text-[#38BDF8]" />
+                                                    <Icon size={14} className="text-q-info" />
                                                     <span className="text-sm text-q-text font-medium">
                                                         {sectionLabels[section]}
                                                     </span>
@@ -723,14 +732,14 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                             <div className="mt-2 pt-2 border-t border-q-border/50">
                                 <button
                                     onClick={() => setExpandedGroups(prev => ({ ...prev, luminaAdd: !prev.luminaAdd }))}
-                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-[#10B981] hover:bg-q-bg rounded-md transition-colors"
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-q-success hover:bg-structure-control-hover rounded-[var(--q-radius-md)] transition-colors"
                                 >
                                     <span className="flex items-center gap-2">
                                         <Layers size={14} /> Lumina Suite
                                     </span>
                                     <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.luminaAdd ? 'rotate-180' : ''}`} />
                                 </button>
-                                
+
                                 {expandedGroups.luminaAdd && (
                                     <div className="pl-4 mt-1 space-y-1">
                                         {availableComponents.filter(s => s.toLowerCase().includes('lumina')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
@@ -742,9 +751,9 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                                         onAddComponent(section);
                                                         setShowAddMenu(false);
                                                     }}
-                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-q-bg transition-colors text-left border-l border-transparent hover:border-[#10B981]/50"
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-[var(--q-radius-md)] hover:bg-structure-control-hover transition-colors text-left border-l border-transparent hover:border-q-success/50"
                                                 >
-                                                    <Icon size={14} className="text-[#10B981]" />
+                                                    <Icon size={14} className="text-q-success" />
                                                     <span className="text-sm text-q-text font-medium">
                                                         {sectionLabels[section]}
                                                     </span>
@@ -761,14 +770,14 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                             <div className="mt-2 pt-2 border-t border-q-border/50">
                                 <button
                                     onClick={() => setExpandedGroups(prev => ({ ...prev, neonAdd: !prev.neonAdd }))}
-                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-[#FBB92B] hover:bg-q-bg rounded-md transition-colors"
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-q-accent hover:bg-structure-control-hover rounded-[var(--q-radius-md)] transition-colors"
                                 >
                                     <span className="flex items-center gap-2">
                                         <Layers size={14} /> Neon Suite
                                     </span>
                                     <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.neonAdd ? 'rotate-180' : ''}`} />
                                 </button>
-                                
+
                                 {expandedGroups.neonAdd && (
                                     <div className="pl-4 mt-1 space-y-1">
                                         {availableComponents.filter(s => s.toLowerCase().includes('neon')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
@@ -780,9 +789,9 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                                         onAddComponent(section);
                                                         setShowAddMenu(false);
                                                     }}
-                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-q-bg transition-colors text-left border-l border-transparent hover:border-[#FBB92B]/50"
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-[var(--q-radius-md)] hover:bg-structure-control-hover transition-colors text-left border-l border-transparent hover:border-q-accent/50"
                                                 >
-                                                    <Icon size={14} className="text-[#FBB92B]" />
+                                                    <Icon size={14} className="text-q-accent" />
                                                     <span className="text-sm text-q-text font-medium">
                                                         {sectionLabels[section]}
                                                     </span>
@@ -799,14 +808,14 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                             <div className="mt-2 pt-2 border-t border-q-border/50">
                                 <button
                                     onClick={() => setExpandedGroups(prev => ({ ...prev, quimeraAdd: !prev.quimeraAdd }))}
-                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-[#D4AF37] hover:bg-q-bg rounded-md transition-colors"
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-q-accent hover:bg-structure-control-hover rounded-[var(--q-radius-md)] transition-colors"
                                 >
                                     <span className="flex items-center gap-2">
                                         <Layers size={14} /> Quimera Suite
                                     </span>
                                     <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.quimeraAdd ? 'rotate-180' : ''}`} />
                                 </button>
-                                
+
                                 {expandedGroups.quimeraAdd && (
                                     <div className="pl-4 mt-1 space-y-1">
                                         {availableComponents.filter(s => s.toLowerCase().includes('quimera')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
@@ -818,9 +827,9 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                                         onAddComponent(section);
                                                         setShowAddMenu(false);
                                                     }}
-                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-q-bg transition-colors text-left border-l border-transparent hover:border-[#D4AF37]/50"
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-[var(--q-radius-md)] hover:bg-structure-control-hover transition-colors text-left border-l border-transparent hover:border-q-accent/50"
                                                 >
-                                                    <Icon size={14} className="text-[#D4AF37]" />
+                                                    <Icon size={14} className="text-q-accent" />
                                                     <span className="text-sm text-q-text font-medium">
                                                         {sectionLabels[section]}
                                                     </span>
@@ -831,7 +840,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                 )}
                             </div>
                         )}
-                        
+
                     </div>
                 </div>
             )}

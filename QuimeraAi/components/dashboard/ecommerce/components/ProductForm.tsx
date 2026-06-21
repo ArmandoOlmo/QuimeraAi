@@ -50,7 +50,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    
+
     // AI Generation Hook
     const {
         generateDescription,
@@ -126,7 +126,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 costPrice: formData.cost,
                 libraryImageUrls: libraryImages, // URLs de imágenes seleccionadas de la biblioteca
             };
-            
+
             if (product) {
                 await updateProduct(product.id, formDataWithLibraryImages, newImages);
             } else {
@@ -198,7 +198,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
     const handleGenerateDescription = useCallback(async () => {
         if (!formData.name.trim()) return;
-        
+
         try {
             const result = await generateDescription({
                 name: formData.name,
@@ -215,7 +215,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
     const handleGenerateSEO = useCallback(async () => {
         if (!formData.name.trim()) return;
-        
+
         try {
             const result = await generateSEO(formData.name, formData.description);
             setFormData(prev => ({
@@ -230,7 +230,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
     const handleGenerateTags = useCallback(async () => {
         if (!formData.name.trim()) return;
-        
+
         try {
             const result = await generateTags(formData.name, formData.description, getCategoryName());
             setFormData(prev => ({
@@ -244,7 +244,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
     const handleGenerateAll = useCallback(async () => {
         if (!formData.name.trim()) return;
-        
+
         try {
             const result = await generateAll({
                 name: formData.name,
@@ -265,7 +265,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     const isAnyGenerating = isGeneratingDescription || isGeneratingSEO || isGeneratingTags || isGeneratingAll;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center overflow-y-auto p-3 sm:p-4">
+        <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-50 flex items-start justify-center overflow-y-auto p-3 sm:p-4">
             <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-3xl my-3 sm:my-8">
                 {/* Header */}
                 <div className="flex flex-col gap-3 p-4 border-b border-q-border sm:flex-row sm:items-center sm:justify-between sm:p-6">

@@ -539,7 +539,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
     return (
         <div
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 bg-q-text/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
             onClick={onClose}
         >
             <div
@@ -570,7 +570,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                     <button
                         onClick={() => setActiveTab('library')}
                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'library'
-                            ? 'text-blue-500 border-b-2 border-blue-500 bg-blue-500/5'
+                            ? 'text-q-accent border-b-2 border-q-accent/25 bg-q-accent/5'
                             : 'text-q-text-muted hover:text-foreground'
                             }`}
                     >
@@ -637,7 +637,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                 {themeColors.map((item, index) => (
                                     <div
                                         key={index}
-                                        className="w-4 h-4 rounded-[4px] shadow-lg border border-white/30 transition-transform hover:scale-125"
+                                        className="w-4 h-4 rounded-[4px] shadow-lg border border-q-border/30 transition-transform hover:scale-125"
                                         style={{ backgroundColor: item.color }}
                                         title={`${item.name}: ${item.color}`}
                                     />
@@ -647,7 +647,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
                         {/* Upload/Generate Overlay */}
                         {(isUploading || isGeneratingThumbnail) && (
-                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
+                            <div className="absolute inset-0 bg-q-text/60 flex flex-col items-center justify-center">
                                 <Loader2 className="w-8 h-8 text-white animate-spin" />
                                 <p className="text-white text-sm mt-2">
                                     {isGeneratingThumbnail ? t('superadmin.templateEditor.generating', 'Generating...') : t('common.uploading', 'Uploading...')}
@@ -685,7 +685,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                     </button>
                                     <button
                                         onClick={() => setLibrarySource('global')}
-                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${librarySource === 'global' ? 'bg-blue-500 text-white' : 'text-q-text-muted hover:text-foreground'}`}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${librarySource === 'global' ? 'bg-q-accent text-q-text-on-accent' : 'text-q-text-muted hover:text-foreground'}`}
                                     >
                                         <Globe size={12} /> {t('superadmin.templateEditor.globalLibrary', 'Global Library')}
                                     </button>
@@ -744,7 +744,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                                         className="w-full h-full object-cover transition-transform group-hover:scale-110"
                                                     />
                                                     {isSelecting ? (
-                                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                        <div className="absolute inset-0 bg-q-text/60 flex items-center justify-center">
                                                             <Loader2 className="w-6 h-6 text-white animate-spin" />
                                                         </div>
                                                     ) : isSelected ? (
@@ -754,7 +754,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <div className="absolute inset-0 bg-q-text/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                             <span className="text-white text-xs font-bold">{t('common.select', 'Select')}</span>
                                                         </div>
                                                     )}
@@ -928,7 +928,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                                     <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
                                                     <button
                                                         onClick={() => handleRemoveReferenceImage(idx)}
-                                                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                                        className="absolute inset-0 bg-q-text/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                                                     >
                                                         <X size={12} className="text-white" />
                                                     </button>

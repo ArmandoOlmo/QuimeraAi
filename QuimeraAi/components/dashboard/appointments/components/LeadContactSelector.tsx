@@ -145,10 +145,10 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, isSelected, onToggle, isDisab
                         {lead.status && (
                             <span className={`
                                 text-[10px] px-1.5 py-0.5 rounded font-medium
-                                ${lead.status === 'new' ? 'bg-blue-500/10 text-blue-500' :
-                                    lead.status === 'qualified' ? 'bg-purple-500/10 text-purple-500' :
-                                        lead.status === 'won' ? 'bg-green-500/10 text-green-500' :
-                                            lead.status === 'lost' ? 'bg-red-500/10 text-red-500' :
+                                ${lead.status === 'new' ? 'bg-q-accent/10 text-q-accent' :
+                                    lead.status === 'qualified' ? 'bg-q-accent/10 text-q-accent' :
+                                        lead.status === 'won' ? 'bg-q-success/10 text-q-success' :
+                                            lead.status === 'lost' ? 'bg-q-error/10 text-q-error' :
                                                 'bg-muted text-q-text-muted'}
                             `}>
                                 {lead.status}
@@ -431,7 +431,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                                     {lead.name}
                                     <button
                                         onClick={() => toggleLead(id)}
-                                        className="hover:text-red-500 transition-colors"
+                                        className="hover:text-q-error transition-colors"
                                     >
                                         <X size={14} />
                                     </button>

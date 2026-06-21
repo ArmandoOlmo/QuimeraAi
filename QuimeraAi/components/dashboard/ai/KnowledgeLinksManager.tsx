@@ -1,6 +1,6 @@
 /**
  * Knowledge Links Manager
- * 
+ *
  * Component for adding and managing URLs as knowledge sources.
  * Supports both website and YouTube links.
  */
@@ -173,20 +173,20 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
             case 'extracting':
                 return <Loader2 size={16} className="animate-spin text-primary" />;
             case 'ready':
-                return <CheckCircle size={16} className="text-green-500" />;
+                return <CheckCircle size={16} className="text-q-success" />;
             case 'error':
-                return <AlertCircle size={16} className="text-red-500" />;
+                return <AlertCircle size={16} className="text-q-error" />;
             default:
                 return type === 'youtube'
-                    ? <Youtube size={16} className="text-red-500" />
-                    : <Globe size={16} className="text-blue-500" />;
+                    ? <Youtube size={16} className="text-q-error" />
+                    : <Globe size={16} className="text-q-accent" />;
         }
     };
 
     const getTypeIcon = (type: KnowledgeLink['type']) => {
         return type === 'youtube'
-            ? <Youtube size={14} className="text-red-500" />
-            : <Globe size={14} className="text-blue-500" />;
+            ? <Youtube size={14} className="text-q-error" />
+            : <Globe size={14} className="text-q-accent" />;
     };
 
     const formatContentLength = (length?: number) => {
@@ -218,8 +218,8 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
                     {urlInput && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
                             {isYouTubeUrl(urlInput)
-                                ? <Youtube size={14} className="text-red-500" />
-                                : <Globe size={14} className="text-blue-500" />
+                                ? <Youtube size={14} className="text-q-error" />
+                                : <Globe size={14} className="text-q-accent" />
                             }
                         </div>
                     )}
@@ -240,7 +240,7 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
 
             {/* Error Message */}
             {error && (
-                <div className="flex items-center gap-2 text-sm text-red-500 bg-red-500/10 px-3 py-2 rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-q-error bg-q-error/10 px-3 py-2 rounded-lg">
                     <AlertCircle size={14} />
                     {error}
                 </div>
@@ -258,7 +258,7 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
                         <span className="text-xs font-medium text-q-text-muted uppercase tracking-wider">
                             {t('aiAssistant.knowledgeLinks.addedLinks')}
                             {readyCount > 0 && (
-                                <span className="ml-1 text-green-500">
+                                <span className="ml-1 text-q-success">
                                     ({readyCount} {t('aiAssistant.knowledgeLinks.ready')})
                                 </span>
                             )}
@@ -270,9 +270,9 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
                             <div
                                 key={link.id}
                                 className={`group flex items-start gap-3 p-3 rounded-xl border transition-all ${link.status === 'error'
-                                        ? 'bg-red-500/5 border-red-500/20'
+                                        ? 'bg-q-error/5 border-q-error/20'
                                         : link.status === 'ready'
-                                            ? 'bg-green-500/5 border-green-500/20'
+                                            ? 'bg-q-success/5 border-q-success/20'
                                             : 'bg-q-surface border-q-border'
                                     }`}
                             >
@@ -299,7 +299,7 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
                                         <ExternalLink size={10} />
                                     </a>
                                     {link.status === 'ready' && link.contentLength && (
-                                        <span className="text-xs text-green-600 mt-1 inline-block">
+                                        <span className="text-xs text-q-success mt-1 inline-block">
                                             ✓ {formatContentLength(link.contentLength)} {t('aiAssistant.knowledgeLinks.extracted')}
                                         </span>
                                     )}
@@ -310,7 +310,7 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
                                     )}
                                     {link.status === 'error' && (
                                         <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-xs text-red-500">
+                                            <span className="text-xs text-q-error">
                                                 {link.error || t('aiAssistant.knowledgeLinks.extractionFailed')}
                                             </span>
                                             <button
@@ -336,10 +336,10 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
                                 {/* Remove Button */}
                                 <button
                                     onClick={() => handleRemoveLink(link.id)}
-                                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/10 rounded-lg transition-all shrink-0"
+                                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-q-error/10 rounded-lg transition-all shrink-0"
                                     title={t('common.remove')}
                                 >
-                                    <Trash2 size={14} className="text-red-500" />
+                                    <Trash2 size={14} className="text-q-error" />
                                 </button>
                             </div>
                         ))}

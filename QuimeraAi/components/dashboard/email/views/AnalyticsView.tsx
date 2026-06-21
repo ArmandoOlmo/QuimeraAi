@@ -33,7 +33,7 @@ interface MonthlyData {
 const AnalyticsView: React.FC = () => {
     const { t } = useTranslation();
     const { userId, projectId } = useEmailDashboardContext();
-    
+
     // Use real data from Supabase
     const { logs, stats, isLoading: logsLoading } = useEmailLogs(userId, projectId);
     const { campaigns, isLoading: campaignsLoading } = useEmailCampaigns(userId, projectId);
@@ -51,7 +51,7 @@ const AnalyticsView: React.FC = () => {
     const filteredLogs = useMemo(() => {
         const now = new Date();
         let cutoffDate = new Date();
-        
+
         switch (timeRange) {
             case '7d':
                 cutoffDate.setDate(now.getDate() - 7);
@@ -69,8 +69,8 @@ const AnalyticsView: React.FC = () => {
 
         return logs.filter(log => {
             if (!log.sentAt) return false;
-            const logDate = log.sentAt.seconds 
-                ? new Date(log.sentAt.seconds * 1000) 
+            const logDate = log.sentAt.seconds
+                ? new Date(log.sentAt.seconds * 1000)
                 : new Date(log.sentAt);
             return logDate >= cutoffDate;
         });
@@ -79,7 +79,7 @@ const AnalyticsView: React.FC = () => {
     // Calculate real analytics from filtered logs
     const analytics = useMemo(() => {
         const totalSent = filteredLogs.length;
-        const delivered = filteredLogs.filter(log => 
+        const delivered = filteredLogs.filter(log =>
             log.status === 'delivered' || log.status === 'sent' || log.status === 'opened' || log.status === 'clicked'
         ).length;
         const opened = filteredLogs.filter(log => log.status === 'opened' || log.opened).length;
@@ -125,11 +125,11 @@ const AnalyticsView: React.FC = () => {
         // Populate with log data
         filteredLogs.forEach(log => {
             if (!log.sentAt) return;
-            const logDate = log.sentAt.seconds 
-                ? new Date(log.sentAt.seconds * 1000) 
+            const logDate = log.sentAt.seconds
+                ? new Date(log.sentAt.seconds * 1000)
                 : new Date(log.sentAt);
             const key = `${logDate.getFullYear()}-${logDate.getMonth()}`;
-            
+
             const existing = monthMap.get(key);
             if (existing) {
                 existing.sent++;
@@ -156,10 +156,10 @@ const AnalyticsView: React.FC = () => {
             .filter(c => c.status === 'sent' && c.stats?.sent > 0)
             .map(c => ({
                 name: c.name,
-                openRate: c.stats?.sent > 0 
+                openRate: c.stats?.sent > 0
                     ? ((c.stats?.uniqueOpens || 0) / c.stats.sent * 100).toFixed(1)
                     : '0.0',
-                clickRate: c.stats?.uniqueOpens > 0 
+                clickRate: c.stats?.uniqueOpens > 0
                     ? ((c.stats?.uniqueClicks || 0) / c.stats.uniqueOpens * 100).toFixed(1)
                     : '0.0',
             }))
@@ -226,8 +226,8 @@ const AnalyticsView: React.FC = () => {
                         {/* Emails Sent */}
                         <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center justify-between mb-3">
-                                <div className="p-2 bg-blue-500/10 rounded-lg">
-                                    <Send className="text-blue-500" size={20} />
+                                <div className="p-2 bg-q-accent/10 rounded-lg">
+                                    <Send className="text-q-accent" size={20} />
                                 </div>
                             </div>
                             <p className="text-2xl font-bold text-foreground">
@@ -241,8 +241,8 @@ const AnalyticsView: React.FC = () => {
                         {/* Open Rate */}
                         <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center justify-between mb-3">
-                                <div className="p-2 bg-purple-500/10 rounded-lg">
-                                    <Eye className="text-purple-500" size={20} />
+                                <div className="p-2 bg-q-accent/10 rounded-lg">
+                                    <Eye className="text-q-accent" size={20} />
                                 </div>
                             </div>
                             <p className="text-2xl font-bold text-foreground">
@@ -259,8 +259,8 @@ const AnalyticsView: React.FC = () => {
                         {/* Click Rate */}
                         <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center justify-between mb-3">
-                                <div className="p-2 bg-amber-500/10 rounded-lg">
-                                    <MousePointer className="text-amber-500" size={20} />
+                                <div className="p-2 bg-q-accent/10 rounded-lg">
+                                    <MousePointer className="text-q-accent" size={20} />
                                 </div>
                             </div>
                             <p className="text-2xl font-bold text-foreground">
@@ -277,8 +277,8 @@ const AnalyticsView: React.FC = () => {
                         {/* Bounce Rate */}
                         <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center justify-between mb-3">
-                                <div className="p-2 bg-red-500/10 rounded-lg">
-                                    <AlertCircle className="text-red-500" size={20} />
+                                <div className="p-2 bg-q-error/10 rounded-lg">
+                                    <AlertCircle className="text-q-error" size={20} />
                                 </div>
                             </div>
                             <p className="text-2xl font-bold text-foreground">
@@ -300,7 +300,7 @@ const AnalyticsView: React.FC = () => {
                             <h3 className="text-lg font-semibold text-foreground mb-4">
                                 {t('email.performanceOverTime', 'Rendimiento en el Tiempo')}
                             </h3>
-                            
+
                             {monthlyData.some(d => d.sent > 0) ? (
                                 <>
                                     {/* Simple bar chart visualization */}
@@ -317,7 +317,7 @@ const AnalyticsView: React.FC = () => {
                                                             style={{ height: `${Math.max(height * 2, data.sent > 0 ? 4 : 0)}px` }}
                                                         />
                                                         <div
-                                                            className="w-full bg-purple-500/60 rounded transition-all"
+                                                            className="w-full bg-q-accent/60 rounded transition-all"
                                                             style={{ height: `${Math.max(openedHeight * 2, data.opened > 0 ? 2 : 0)}px` }}
                                                         />
                                                     </div>
@@ -327,14 +327,14 @@ const AnalyticsView: React.FC = () => {
                                             );
                                         })}
                                     </div>
-                                    
+
                                     <div className="flex items-center justify-center gap-6 mt-4">
                                         <div className="flex items-center gap-2">
                                             <div className="w-3 h-3 bg-primary/80 rounded" />
                                             <span className="text-sm text-q-text-muted">{t('email.sent', 'Enviados')}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 bg-purple-500/60 rounded" />
+                                            <div className="w-3 h-3 bg-q-accent/60 rounded" />
                                             <span className="text-sm text-q-text-muted">{t('email.opened', 'Abiertos')}</span>
                                         </div>
                                     </div>
@@ -354,7 +354,7 @@ const AnalyticsView: React.FC = () => {
                             <h3 className="text-lg font-semibold text-foreground mb-4">
                                 {t('email.topCampaigns', 'Mejores Campañas')}
                             </h3>
-                            
+
                             {topCampaigns.length > 0 ? (
                                 <div className="space-y-4">
                                     {topCampaigns.map((campaign, index) => (
@@ -388,7 +388,7 @@ const AnalyticsView: React.FC = () => {
                     <div className="grid md:grid-cols-3 gap-4">
                         <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center gap-3 mb-2">
-                                <TrendingUp className="text-green-500" size={20} />
+                                <TrendingUp className="text-q-success" size={20} />
                                 <span className="text-q-text-muted text-sm">
                                     {t('email.deliveryRate', 'Tasa de Entrega')}
                                 </span>
@@ -401,7 +401,7 @@ const AnalyticsView: React.FC = () => {
 
                         <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center gap-3 mb-2">
-                                <AlertCircle className="text-amber-500" size={20} />
+                                <AlertCircle className="text-q-accent" size={20} />
                                 <span className="text-q-text-muted text-sm">
                                     {t('email.bounces', 'Rebotes')}
                                 </span>
@@ -414,7 +414,7 @@ const AnalyticsView: React.FC = () => {
 
                         <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center gap-3 mb-2">
-                                <TrendingDown className="text-red-500" size={20} />
+                                <TrendingDown className="text-q-error" size={20} />
                                 <span className="text-q-text-muted text-sm">
                                     {t('email.complaints', 'Quejas')}
                                 </span>

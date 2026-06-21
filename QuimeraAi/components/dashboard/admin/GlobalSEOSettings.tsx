@@ -253,11 +253,11 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                 </div>
                                                 <button
                                                     onClick={() => setAiCrawlingEnabled(!aiCrawlingEnabled)}
-                                                    className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${aiCrawlingEnabled ? 'bg-q-accent' : 'bg-gray-600'
+                                                    className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${aiCrawlingEnabled ? 'bg-q-accent' : 'bg-q-surface-overlay'
                                                         }`}
                                                 >
                                                     <span
-                                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${aiCrawlingEnabled ? 'translate-x-6' : 'translate-x-1'
+                                                        className={`inline-block h-4 w-4 transform rounded-full bg-q-surface transition-transform ${aiCrawlingEnabled ? 'translate-x-6' : 'translate-x-1'
                                                             }`}
                                                     />
                                                 </button>
@@ -341,7 +341,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                         <button className="p-2 text-q-text-secondary hover:text-q-accent transition-colors" title="Edit">
                                                             <Edit2 className="w-4 h-4" />
                                                         </button>
-                                                        <button className="p-2 text-q-text-secondary hover:text-red-500 transition-colors" title="Delete">
+                                                        <button className="p-2 text-q-text-secondary hover:text-q-error transition-colors" title="Delete">
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
                                                     </div>
@@ -396,18 +396,18 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                 </p>
                                             </div>
 
-                                            <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                                                <h3 className="font-medium text-blue-400 mb-2 flex items-center gap-2">
+                                            <div className="p-4 bg-q-accent/10 border border-q-accent/30 rounded-lg">
+                                                <h3 className="font-medium text-q-accent mb-2 flex items-center gap-2">
                                                     <Shield className="w-4 h-4" />
                                                     {t('superadmin.seo.verifications.howTo.title')}
                                                 </h3>
                                                 <ul className="text-sm text-q-text-secondary space-y-2">
                                                     <li className="flex items-start gap-2">
-                                                        <span className="text-blue-400 mt-0.5">•</span>
+                                                        <span className="text-q-accent mt-0.5">•</span>
                                                         <div>
                                                             <strong className="text-q-text">{t('superadmin.seo.verifications.howTo.google')}:</strong>
                                                             <br />
-                                                            <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                                            <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" className="text-q-accent hover:underline">
                                                                 https://search.google.com/search-console
                                                             </a>
                                                             <br />
@@ -415,11 +415,11 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                         </div>
                                                     </li>
                                                     <li className="flex items-start gap-2">
-                                                        <span className="text-blue-400 mt-0.5">•</span>
+                                                        <span className="text-q-accent mt-0.5">•</span>
                                                         <div>
                                                             <strong className="text-q-text">{t('superadmin.seo.verifications.howTo.bing')}:</strong>
                                                             <br />
-                                                            <a href="https://www.bing.com/webmasters" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                                            <a href="https://www.bing.com/webmasters" target="_blank" rel="noopener noreferrer" className="text-q-accent hover:underline">
                                                                 https://www.bing.com/webmasters
                                                             </a>
                                                             <br />
@@ -429,8 +429,8 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                 </ul>
                                             </div>
 
-                                            <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-                                                <h3 className="font-medium text-green-400 mb-2">✨ {t('superadmin.seo.verifications.benefits.title')}</h3>
+                                            <div className="p-4 bg-q-success/10 border border-q-success/30 rounded-lg">
+                                                <h3 className="font-medium text-q-success mb-2">✨ {t('superadmin.seo.verifications.benefits.title')}</h3>
                                                 <ul className="text-sm text-q-text-secondary space-y-1">
                                                     {(() => { const list = t('superadmin.seo.verifications.benefits.list', { returnObjects: true }); return Array.isArray(list) ? list : []; })().map((benefit: string, i: number) => (
                                                         <li key={i}>• {benefit}</li>
@@ -445,11 +445,11 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                             {/* AI Bot Config Tab */}
                             {activeTab === 'ai' && (
                                 <div className="space-y-6">
-                                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-6">
+                                    <div className="bg-q-accent/10 border border-q-accent/30 rounded-lg p-4 mb-6">
                                         <div className="flex gap-3">
-                                            <Bot className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                                            <Bot className="w-5 h-5 text-q-accent flex-shrink-0 mt-0.5" />
                                             <div>
-                                                <h3 className="font-medium text-blue-400 mb-1">{t('superadmin.seo.ai.bannerTitle')}</h3>
+                                                <h3 className="font-medium text-q-accent mb-1">{t('superadmin.seo.ai.bannerTitle')}</h3>
                                                 <p className="text-sm text-q-text-secondary">
                                                     {t('superadmin.seo.ai.bannerDesc')}
                                                 </p>
@@ -513,15 +513,15 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                         { name: 'You.com', status: 'active' }
                                                     ].map(engine => (
                                                         <div key={engine.name} className="flex items-center gap-2 text-q-text-secondary">
-                                                            <div className={`w-2 h-2 rounded-full ${engine.status === 'active' ? 'bg-green-500' : 'bg-gray-500'}`} />
+                                                            <div className={`w-2 h-2 rounded-full ${engine.status === 'active' ? 'bg-q-success' : 'bg-q-surface-overlay'}`} />
                                                             <span className="text-sm">{engine.name}</span>
                                                         </div>
                                                     ))}
                                                 </div>
                                             </div>
 
-                                            <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-                                                <h3 className="font-medium text-purple-400 mb-2">🚀 {t('superadmin.seo.ai.special.title')}</h3>
+                                            <div className="p-4 bg-q-accent/10 border border-q-accent/30 rounded-lg">
+                                                <h3 className="font-medium text-q-accent mb-2">🚀 {t('superadmin.seo.ai.special.title')}</h3>
                                                 <ul className="text-sm text-q-text-secondary space-y-2">
                                                     {(() => { const list = t('superadmin.seo.ai.special.list', { returnObjects: true }); return Array.isArray(list) ? list : []; })().map((box: string, i: number) => (
                                                         <li key={i}>• <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(box) }} /></li>

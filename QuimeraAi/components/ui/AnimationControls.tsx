@@ -43,7 +43,7 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
         >
           <span
             aria-hidden="true"
-            className={`${enableCardAnimation ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
+            className={`${enableCardAnimation ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-q-surface shadow-sm ring-0 transition duration-200 ease-in-out`}
           />
         </button>
       </div>

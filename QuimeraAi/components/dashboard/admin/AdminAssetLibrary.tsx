@@ -117,18 +117,18 @@ const DEPTH_OF_FIELD = [
 ];
 
 const CATEGORY_CONFIG: Record<AdminAssetCategory, { label: string; icon: React.ReactNode; color: string }> = {
-    'article': { label: 'Artículos', icon: <FileText size={16} />, color: 'bg-blue-500/10 text-blue-500 border-blue-500/30' },
-    'component': { label: 'Componentes', icon: <Layout size={16} />, color: 'bg-purple-500/10 text-purple-500 border-purple-500/30' },
-    'template': { label: 'Templates', icon: <Grid size={16} />, color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' },
-    'hero': { label: 'Hero/Banner', icon: <ImageIcon size={16} />, color: 'bg-orange-500/10 text-orange-500 border-orange-500/30' },
-    'icon': { label: 'Iconos', icon: <Sparkles size={16} />, color: 'bg-pink-500/10 text-pink-500 border-pink-500/30' },
-    'background': { label: 'Fondos', icon: <Palette size={16} />, color: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30' },
-    'logo': { label: 'Logos', icon: <Star size={16} />, color: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30' },
-    'testimonial': { label: 'Testimonios', icon: <User size={16} />, color: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/30' },
-    'team': { label: 'Equipo', icon: <User size={16} />, color: 'bg-teal-500/10 text-teal-500 border-teal-500/30' },
-    'product': { label: 'Productos', icon: <ShoppingBag size={16} />, color: 'bg-rose-500/10 text-rose-500 border-rose-500/30' },
-    'ai_generated': { label: 'Generadas con IA', icon: <Wand2 size={16} />, color: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30' },
-    'other': { label: 'Otros', icon: <FolderOpen size={16} />, color: 'bg-gray-500/10 text-gray-500 border-gray-500/30' },
+    'article': { label: 'Artículos', icon: <FileText size={16} />, color: 'bg-q-accent/10 text-q-accent border-q-accent/30' },
+    'component': { label: 'Componentes', icon: <Layout size={16} />, color: 'bg-q-accent/10 text-q-accent border-q-accent/30' },
+    'template': { label: 'Templates', icon: <Grid size={16} />, color: 'bg-q-success/10 text-q-success border-q-success/30' },
+    'hero': { label: 'Hero/Banner', icon: <ImageIcon size={16} />, color: 'bg-q-warning/10 text-q-warning border-q-warning/30' },
+    'icon': { label: 'Iconos', icon: <Sparkles size={16} />, color: 'bg-q-accent/10 text-q-accent border-q-accent/30' },
+    'background': { label: 'Fondos', icon: <Palette size={16} />, color: 'bg-q-accent/10 text-q-accent border-q-accent/30' },
+    'logo': { label: 'Logos', icon: <Star size={16} />, color: 'bg-q-accent/10 text-q-accent border-q-accent/30' },
+    'testimonial': { label: 'Testimonios', icon: <User size={16} />, color: 'bg-q-accent/10 text-q-accent border-q-accent/30' },
+    'team': { label: 'Equipo', icon: <User size={16} />, color: 'bg-q-success/10 text-q-success border-q-success/30' },
+    'product': { label: 'Productos', icon: <ShoppingBag size={16} />, color: 'bg-q-error/10 text-q-error border-q-error/30' },
+    'ai_generated': { label: 'Generadas con IA', icon: <Wand2 size={16} />, color: 'bg-q-accent/10 text-q-accent border-q-accent/30' },
+    'other': { label: 'Otros', icon: <FolderOpen size={16} />, color: 'bg-q-surface-overlay/10 text-q-text-muted border-q-border/30' },
 };
 
 // Preview Modal Component
@@ -204,7 +204,7 @@ const AssetPreviewModal: React.FC<{
                     </span>
                     <h3 className="font-bold text-lg text-foreground truncate max-w-[50%]">{asset.name}</h3>
                     {asset.isAiGenerated && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-q-accent/20 text-q-accent border border-q-accent/30">
                             <Sparkles size={10} /> AI
                         </span>
                     )}
@@ -218,7 +218,7 @@ const AssetPreviewModal: React.FC<{
             </div>
 
             {/* Image Preview */}
-            <div className="flex-1 overflow-auto p-0 bg-black/90 flex items-center justify-center relative">
+            <div className="flex-1 overflow-auto p-0 bg-q-text/90 flex items-center justify-center relative">
                 <div
                     className="absolute inset-0 opacity-30 blur-3xl scale-110"
                     style={{ backgroundImage: `url(${asset.downloadURL})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
@@ -313,7 +313,7 @@ const AssetPreviewModal: React.FC<{
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {asset.usedIn.map(articleId => (
-                                    <span key={articleId} className="px-2 py-1 text-xs bg-blue-500/10 text-blue-400 rounded-full">
+                                    <span key={articleId} className="px-2 py-1 text-xs bg-q-accent/10 text-q-accent rounded-full">
                                         {getArticleName(articleId)}
                                     </span>
                                 ))}
@@ -323,10 +323,10 @@ const AssetPreviewModal: React.FC<{
 
                     {/* AI Prompt */}
                     {asset.aiPrompt && (
-                        <div className="mt-3 bg-purple-500/10 p-3 rounded-lg border border-purple-500/30">
+                        <div className="mt-3 bg-q-accent/10 p-3 rounded-lg border border-q-accent/30">
                             <div className="flex items-center mb-2">
-                                <Sparkles size={14} className="text-purple-400 mr-2" />
-                                <span className="text-xs font-bold text-purple-400 uppercase">{t('adminAssets.aiPrompt', 'AI Prompt Used')}</span>
+                                <Sparkles size={14} className="text-q-accent mr-2" />
+                                <span className="text-xs font-bold text-q-accent uppercase">{t('adminAssets.aiPrompt', 'AI Prompt Used')}</span>
                             </div>
                             <p className="text-sm text-foreground leading-relaxed">{asset.aiPrompt}</p>
                         </div>
@@ -344,7 +344,7 @@ const AssetPreviewModal: React.FC<{
                         </button>
                         <button
                             onClick={handleDelete}
-                            className="flex items-center text-xs font-bold py-2 px-4 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                            className="flex items-center text-xs font-bold py-2 px-4 rounded-lg bg-q-error/10 text-q-error hover:bg-q-error hover:text-white transition-colors"
                         >
                             <Trash2 size={14} className="mr-1.5" /> {t('common.delete', 'Delete')}
                         </button>
@@ -426,7 +426,7 @@ const AssetItem: React.FC<{
                         {categoryConfig.icon}
                     </span>
                     {asset.isAiGenerated && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-purple-500/80 text-white backdrop-blur-sm">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-q-accent/80 text-q-text-on-accent backdrop-blur-sm">
                             <Sparkles size={10} />
                         </span>
                     )}
@@ -440,7 +440,7 @@ const AssetItem: React.FC<{
                                 e.stopPropagation();
                                 onToggleSelect?.();
                             }}
-                            className="p-1.5 bg-white dark:bg-gray-800 rounded-md shadow-lg"
+                            className="p-1.5 bg-q-surface dark:bg-gray-800 rounded-md shadow-lg"
                         >
                             {isSelected ? (
                                 <CheckSquare size={20} className="text-primary" />
@@ -460,7 +460,7 @@ const AssetItem: React.FC<{
                                     e.stopPropagation();
                                     onUseAsReference(asset.downloadURL);
                                 }}
-                                className="p-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-md shadow-lg transition-transform hover:scale-110"
+                                className="p-1.5 bg-q-accent hover:bg-q-accent text-q-text-on-accent rounded-md shadow-lg transition-transform hover:scale-110"
                                 title={t('adminAssets.useAsReference', 'Use as Reference')}
                             >
                                 <Zap size={14} />
@@ -715,7 +715,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
             showError(t('adminAssets.maxReferences', 'Maximum 14 reference images'));
             return;
         }
-        
+
         try {
             // Convert URL to base64 if needed since proxy expects base64 data URLs
             let finalUrl = url;
@@ -734,11 +734,11 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                 showError(t('adminAssets.alreadyReference', 'Image is already in references'));
                 return;
             }
-            
+
             setReferenceImages(prev => [...prev, finalUrl]);
             window.dispatchEvent(new CustomEvent('assets:add-reference-image', { detail: finalUrl }));
             success(t('adminAssets.addedReference', 'Added to reference images'));
-            
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (error) {
             console.error('Error preparing reference image:', error);
@@ -1144,7 +1144,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                                             </button>
                                             <button
                                                 onClick={handleBulkDelete}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-q-error text-white hover:bg-q-error rounded-lg transition-colors"
                                             >
                                                 <Trash2 size={14} /> {t('common.delete', 'Delete')}
                                             </button>

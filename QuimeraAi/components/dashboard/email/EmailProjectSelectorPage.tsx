@@ -162,10 +162,10 @@ const EmailProjectSelectorPage: React.FC<EmailProjectSelectorPageProps> = ({
                                         </div>
                                     </div>
                                 </div>
-                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-green-500/30 transition-colors">
+                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-q-success/30 transition-colors">
                                     <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/20">
-                                            <Globe className="text-green-500" size={18} />
+                                        <div className="p-1.5 sm:p-2 rounded-lg bg-q-success/20">
+                                            <Globe className="text-q-success" size={18} />
                                         </div>
                                         <div>
                                             <p className="text-xl sm:text-2xl font-bold text-foreground">{publishedCount}</p>
@@ -173,10 +173,10 @@ const EmailProjectSelectorPage: React.FC<EmailProjectSelectorPageProps> = ({
                                         </div>
                                     </div>
                                 </div>
-                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-slate-500/30 transition-colors">
+                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-q-border/30 transition-colors">
                                     <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="p-1.5 sm:p-2 rounded-lg bg-slate-500/20">
-                                            <FileEdit className="text-slate-400" size={18} />
+                                        <div className="p-1.5 sm:p-2 rounded-lg bg-q-surface-overlay/20">
+                                            <FileEdit className="text-q-text-muted" size={18} />
                                         </div>
                                         <div>
                                             <p className="text-xl sm:text-2xl font-bold text-foreground">{draftCount}</p>
@@ -300,8 +300,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                 {/* Status Badge */}
                 <div className="absolute top-3 right-3">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Published'
-                        ? 'bg-green-500/90 text-white'
-                        : 'bg-slate-500/90 text-white'
+                        ? 'bg-q-success/90 text-white'
+                        : 'bg-q-surface-overlay/90 text-white'
                         }`}>
                         {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
                     </span>
@@ -365,7 +365,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
                     {project.name}
                 </h3>
                 <div className="flex items-center gap-3 sm:gap-4 text-xs text-q-text-muted mt-1">
-                    <span className={`flex items-center gap-1 ${project.status === 'Published' ? 'text-green-500' : ''
+                    <span className={`flex items-center gap-1 ${project.status === 'Published' ? 'text-q-success' : ''
                         }`}>
                         {project.status === 'Published' ? <Globe size={12} /> : <FileEdit size={12} />}
                         <span className="hidden sm:inline">

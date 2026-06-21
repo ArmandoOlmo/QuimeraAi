@@ -186,7 +186,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
     );
 
     return (
-        <div className="absolute inset-0 z-[90] bg-black/70 backdrop-blur-md flex items-center justify-center p-0 lg:p-4">
+        <div className="absolute inset-0 z-[90] bg-q-text/70 backdrop-blur-md flex items-center justify-center p-0 lg:p-4">
             <div className="w-full h-full lg:max-w-6xl lg:h-[calc(100vh-2rem)] bg-q-bg border-0 lg:border lg:border-q-border rounded-none lg:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between px-4 lg:px-6 py-3 border-b border-q-border bg-q-surface/60">
                     <div className="min-w-0">
@@ -252,7 +252,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                                     className="inline-flex items-center gap-1 rounded-md border border-q-border bg-q-bg px-1.5 py-1 text-[10px] text-q-text-secondary"
                                                     title={`${signal.label || signal.source}: ${signal.color}`}
                                                 >
-                                                    <span className="h-3.5 w-3.5 rounded border border-white/10" style={{ backgroundColor: signal.color }} />
+                                                    <span className="h-3.5 w-3.5 rounded border border-q-border/10" style={{ backgroundColor: signal.color }} />
                                                     <span>{signal.roleGuess || signal.source}</span>
                                                 </span>
                                             ))}
@@ -428,7 +428,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                                 title={image.recommendedUse || image.alt || 'Detected image'}
                                             >
                                                 <img src={image.url} alt={image.alt || ''} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
-                                                <span className="absolute inset-x-1 bottom-1 rounded bg-black/70 px-1 py-0.5 text-[9px] text-white truncate">
+                                                <span className="absolute inset-x-1 bottom-1 rounded bg-q-text/70 px-1 py-0.5 text-[9px] text-white truncate">
                                                     {image.recommendedUse || 'reuse'}
                                                 </span>
                                             </button>
@@ -545,15 +545,15 @@ const ColorCandidateButton: React.FC<{
             <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                     <p className="text-xs font-semibold text-q-text truncate">{candidate.labelEs || candidate.label}</p>
-                    <p className="mt-0.5 text-[10px] text-q-text-secondary">{candidate.system.score}/100 · {candidate.system.mode}</p>
+                    <p className="mt-0.5 text-[10px] text-q-text-secondary">{candidate.system.score} · {candidate.system.mode}</p>
                 </div>
                 <div className="flex gap-1">
                     {candidate.preview.slice(0, 5).map((color, index) => (
-                        <span key={`${candidate.id}-${color}-${index}`} className="h-4 w-4 rounded border border-white/10" style={{ backgroundColor: color }} />
+                        <span key={`${candidate.id}-${color}-${index}`} className="h-4 w-4 rounded border border-q-border/10" style={{ backgroundColor: color }} />
                     ))}
                 </div>
             </div>
-            <div className="mt-3 overflow-hidden rounded-lg border border-white/10" style={{ backgroundColor: colors.background }}>
+            <div className="mt-3 overflow-hidden rounded-lg border border-q-border/10" style={{ backgroundColor: colors.background }}>
                 <div className="p-2">
                     <div className="h-2.5 w-2/3 rounded" style={{ backgroundColor: colors.heading }} />
                     <div className="mt-1.5 h-2 w-1/2 rounded opacity-80" style={{ backgroundColor: colors.text }} />

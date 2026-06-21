@@ -401,7 +401,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                                             <span className="text-xs px-2 py-1 rounded-full bg-secondary/50 text-foreground font-medium">{tx.category || '—'}</span>
                                         </td>
                                         <td className="p-4 text-sm text-q-text-muted">{tx.account || '—'}</td>
-                                        <td className={`p-4 text-sm font-bold text-right whitespace-nowrap ${tx.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                                        <td className={`p-4 text-sm font-bold text-right whitespace-nowrap ${tx.type === 'income' ? 'text-q-success' : 'text-q-error'}`}>
                                             {tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                         </td>
                                         <td className="p-4 text-center">
@@ -410,7 +410,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                                                     <Sparkles size={10} /> AI
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-medium">
+                                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-q-accent/20 text-q-accent font-medium">
                                                     <Clock size={10} /> {t('accounting.pending', 'Pending')}
                                                 </span>
                                             )}
@@ -437,11 +437,11 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                         <span>{t('accounting.showingCount', '{{count}} transactions', { count: filtered.length })}</span>
                         <div className="flex items-center gap-4">
                             <span className="flex items-center gap-1.5">
-                                <TrendingUp size={12} className="text-green-400" />
+                                <TrendingUp size={12} className="text-q-success" />
                                 +${filtered.filter((tx) => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </span>
                             <span className="flex items-center gap-1.5">
-                                <TrendingDown size={12} className="text-red-400" />
+                                <TrendingDown size={12} className="text-q-error" />
                                 -${filtered.filter((tx) => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </span>
                         </div>

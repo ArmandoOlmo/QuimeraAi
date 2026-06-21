@@ -135,7 +135,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                         className={`
                             flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
                             ${saveState === 'saved'
-                                ? 'bg-green-500/20 text-green-500'
+                                ? 'bg-q-success/20 text-q-success'
                                 : 'bg-primary text-primary-foreground hover:opacity-90'
                             }
                         `}

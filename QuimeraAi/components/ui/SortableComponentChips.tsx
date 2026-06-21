@@ -47,9 +47,9 @@ function SortableChip({ id, onRemove }: SortableChipProps) {
       style={style}
       className={`group/chip inline-flex items-center gap-0.5 h-[24px] pl-0.5 pr-1.5 rounded bg-q-accent/10 text-q-accent text-[10px] font-medium border ${isDragging ? 'border-q-accent shadow-lg scale-105' : 'border-q-accent/15'} hover:bg-q-accent/15 transition-all`}
     >
-      <div 
-        {...attributes} 
-        {...listeners} 
+      <div
+        {...attributes}
+        {...listeners}
         className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-q-accent/20 rounded opacity-60 hover:opacity-100 transition-opacity"
       >
         <GripVertical size={10} />
@@ -57,7 +57,7 @@ function SortableChip({ id, onRemove }: SortableChipProps) {
       <span className="px-1 select-none">{id}</span>
       <button
         onClick={() => onRemove(id)}
-        className="p-0.5 hover:bg-red-500/20 hover:text-red-400 rounded transition-colors"
+        className="p-0.5 hover:bg-q-error/20 hover:text-q-error rounded transition-colors"
         title={`Remove ${id}`}
       >
         <X size={10} />

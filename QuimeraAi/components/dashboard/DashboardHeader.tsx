@@ -51,11 +51,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
     const headerClasses = 'quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 sticky top-0';
     const leftSectionClasses = 'flex items-center gap-1 sm:gap-4 flex-shrink-0';
-    const mobileMenuButtonClasses = 'lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay/80 active:bg-q-surface-overlay rounded-lg transition-colors touch-manipulation';
+    const mobileMenuButtonClasses = 'lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay active:bg-q-surface-overlay rounded-[var(--q-radius-md)] transition-colors touch-manipulation';
     const titleWrapClasses = 'flex items-center gap-1 sm:gap-2';
     const titleClasses = 'text-sm sm:text-xl font-semibold sm:font-bold text-q-text';
     const rightSectionClasses = 'flex items-center gap-2 sm:gap-3 flex-shrink-0 mr-2.5';
-    const searchButtonClasses = 'h-9 w-9 flex items-center justify-center rounded-lg text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay/80 transition-colors';
+    const searchButtonClasses = 'h-9 w-9 flex items-center justify-center rounded-[var(--q-radius-md)] text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay transition-colors';
 
     return (
         <>
@@ -71,10 +71,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         aria-label="Open navigation menu"
                         aria-expanded={isMobileMenuOpen}
                     >
-                        <Menu className="w-5 h-5" />
+                        <Menu className="icon-lg" />
                     </button>
                     <div className={titleWrapClasses}>
-                        <HeaderIcon className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} aria-hidden="true" />
+                        <HeaderIcon className="icon-lg quimera-dashboard-header-icon" strokeWidth={2} aria-hidden="true" />
                         <h1 className={titleClasses}>
                             {headerTitle}
                         </h1>
@@ -93,7 +93,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                             className={searchButtonClasses}
                             aria-label="Open search"
                         >
-                            <Search size={20} />
+                            <Search className="icon-lg" />
                         </button>
                     )}
 

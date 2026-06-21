@@ -115,11 +115,11 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
     const getSyncStatusInfo = () => {
         switch (syncStatus) {
             case 'synced':
-                return { color: 'text-green-500', bg: 'bg-green-500/10', label: t('appointments.google.synced'), icon: CheckCircle2 };
+                return { color: 'text-q-success', bg: 'bg-q-success/10', label: t('appointments.google.synced'), icon: CheckCircle2 };
             case 'pending':
-                return { color: 'text-yellow-500', bg: 'bg-yellow-500/10', label: t('appointments.google.pending'), icon: Clock };
+                return { color: 'text-q-accent', bg: 'bg-q-accent/10', label: t('appointments.google.pending'), icon: Clock };
             case 'error':
-                return { color: 'text-red-500', bg: 'bg-red-500/10', label: t('appointments.google.error'), icon: AlertCircle };
+                return { color: 'text-q-error', bg: 'bg-q-error/10', label: t('appointments.google.error'), icon: AlertCircle };
             default:
                 return { color: 'text-q-text-muted', bg: 'bg-muted', label: t('appointments.google.notSynced'), icon: Calendar };
         }
@@ -132,9 +132,9 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
     if (!isConnected) {
         return (
             <div className={`rounded-2xl border border-q-border overflow-hidden ${className}`}>
-                <div className="p-6 bg-gradient-to-br from-blue-500/5 via-red-500/5 to-yellow-500/5">
+                <div className="p-6 bg-gradient-to-br from-q-accent/5 via-q-error/5 to-q-accent/5">
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="w-14 h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center">
+                        <div className="w-14 h-14 rounded-2xl bg-q-surface shadow-lg flex items-center justify-center">
                             <GoogleCalendarIcon className="w-8 h-8" />
                         </div>
                         <div>
@@ -147,22 +147,22 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
 
                     <div className="space-y-3 mb-6">
                         <div className="flex items-center gap-2 text-sm text-q-text-muted">
-                            <Check size={16} className="text-green-500" />
+                            <Check size={16} className="text-q-success" />
                             {t('appointments.google.bidirectionalSync')}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-q-text-muted">
-                            <Check size={16} className="text-green-500" />
+                            <Check size={16} className="text-q-success" />
                             {t('appointments.google.autoNotifications')}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-q-text-muted">
-                            <Check size={16} className="text-green-500" />
+                            <Check size={16} className="text-q-success" />
                             {t('appointments.google.autoGoogleMeet')}
                         </div>
                     </div>
 
                     {error && (
-                        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                            <p className="text-sm text-red-500 flex items-center gap-2">
+                        <div className="mb-4 p-3 bg-q-error/10 border border-q-error/20 rounded-lg">
+                            <p className="text-sm text-q-error flex items-center gap-2">
                                 <AlertCircle size={14} />
                                 {error}
                             </p>
@@ -172,14 +172,14 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                     <button
                         onClick={handleConnect}
                         disabled={isLoading}
-                        className="w-full py-3 px-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-900 flex items-center justify-center gap-3 transition-colors shadow-sm disabled:opacity-50"
+                        className="w-full py-3 px-4 bg-q-surface hover:bg-q-surface-overlay border border-q-border rounded-xl font-medium text-q-text flex items-center justify-center gap-3 transition-colors shadow-sm disabled:opacity-50"
                     >
                         {isLoading ? (
-                            <Loader2 size={20} className="animate-spin text-gray-700" />
+                            <Loader2 size={20} className="animate-spin text-q-text" />
                         ) : (
                             <GoogleCalendarIcon className="w-5 h-5" />
                         )}
-                        <span className="text-gray-800">
+                        <span className="text-q-text">
                             {isLoading ? t('appointments.google.connecting') : t('appointments.google.connectWithGoogle')}
                         </span>
                     </button>
@@ -199,7 +199,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                 {/* Header */}
                 <div className="p-4 bg-secondary/30 border-b border-q-border flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-q-surface shadow-sm flex items-center justify-center">
                             <GoogleCalendarIcon className="w-6 h-6" />
                         </div>
                         <div>
@@ -269,7 +269,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                                     />
                                     <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-primary transition-colors">
                                         <div className={`
-                                        absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow
+                                        absolute top-0.5 left-0.5 w-5 h-5 bg-q-surface rounded-full shadow
                                         transition-transform duration-200
                                         ${config?.syncEnabled !== false ? 'translate-x-5' : ''}
                                     `} />
@@ -295,7 +295,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                             <button
                                 onClick={() => setShowDisconnectConfirm(true)}
                                 disabled={isLoading}
-                                className="w-full py-2 px-4 text-red-500 hover:bg-red-500/10 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                                className="w-full py-2 px-4 text-q-error hover:bg-q-error/10 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                             >
                                 {isLoading ? (
                                     <Loader2 size={16} className="animate-spin" />
@@ -311,8 +311,8 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                 {/* Status info */}
                 <div className="p-4">
                     {error && (
-                        <div className="mb-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                            <p className="text-sm text-red-500 flex items-center gap-2">
+                        <div className="mb-3 p-3 bg-q-error/10 border border-q-error/20 rounded-lg">
+                            <p className="text-sm text-q-error flex items-center gap-2">
                                 <AlertCircle size={14} />
                                 {error}
                             </p>

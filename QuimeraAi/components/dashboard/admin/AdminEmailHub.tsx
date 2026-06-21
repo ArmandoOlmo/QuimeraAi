@@ -192,7 +192,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                 </div>
                 <button
                     onClick={() => setShowNewCampaignModal(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-purple-500/20 transition-all"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-q-accent/20 transition-all"
                 >
                     <Plus size={16} />
                     {t('adminEmail.campaigns.newCampaign')}
@@ -200,13 +200,13 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
             </div>
             {/* Send feedback banners */}
             {sendCampaignSuccess && (
-                <div className="flex items-center gap-2 px-4 py-3 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 text-sm font-medium animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 px-4 py-3 bg-q-success/10 border border-q-success/30 rounded-xl text-q-success text-sm font-medium animate-in fade-in duration-200">
                     <CheckCircle size={16} />
                     {sendCampaignSuccess}
                 </div>
             )}
             {sendCampaignError && (
-                <div className="flex items-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm font-medium animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 px-4 py-3 bg-q-error/10 border border-q-error/30 rounded-xl text-q-error text-sm font-medium animate-in fade-in duration-200">
                     <AlertCircle size={16} />
                     {sendCampaignError}
                 </div>
@@ -319,28 +319,28 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                                                 {campaign.status === 'draft' && (
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleUpdateCampaignStatus(campaign.id, 'approved' as CampaignStatus); }}
-                                                        className="p-2 hover:bg-emerald-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                        className="p-2 hover:bg-q-success/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                                         title={t('adminEmail.campaigns.approve')}
                                                     >
-                                                        <CheckCircle size={15} className="text-emerald-400" />
+                                                        <CheckCircle size={15} className="text-q-success" />
                                                     </button>
                                                 )}
                                                 {campaign.status === 'approved' && (
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleUpdateCampaignStatus(campaign.id, 'draft' as CampaignStatus); }}
-                                                        className="p-2 hover:bg-gray-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                        className="p-2 hover:bg-q-surface-overlay/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                                         title={t('adminEmail.campaigns.backToDraft')}
                                                     >
-                                                        <Edit2 size={15} className="text-gray-400" />
+                                                        <Edit2 size={15} className="text-q-text-muted" />
                                                     </button>
                                                 )}
                                                 {(campaign.status === 'draft' || campaign.status === 'approved') && (
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleOpenSendConfirm(campaign.id); }}
-                                                        className="p-2 hover:bg-green-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                        className="p-2 hover:bg-q-success/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                                         title={t('adminEmail.campaigns.sendCampaign')}
                                                     >
-                                                        <Play size={15} className="text-green-400" />
+                                                        <Play size={15} className="text-q-success" />
                                                     </button>
                                                 )}
                                                 {(campaign.status === 'draft' || campaign.status === 'approved') && (
@@ -351,18 +351,18 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                                                             setTestEmail('');
                                                             setShowTestEmailModal(true);
                                                         }}
-                                                        className="p-2 hover:bg-blue-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                        className="p-2 hover:bg-q-accent/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                                         title={t('adminEmail.campaigns.sendTest')}
                                                     >
-                                                        <TestTube size={15} className="text-blue-400" />
+                                                        <TestTube size={15} className="text-q-accent" />
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleEditCampaignVisual(campaign)}
-                                                    className="p-2 hover:bg-purple-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                    className="p-2 hover:bg-q-accent/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                                     title={t('adminEmail.campaigns.editVisual')}
                                                 >
-                                                    <Edit2 size={15} className="text-purple-400" />
+                                                    <Edit2 size={15} className="text-q-accent" />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleDuplicateCampaign(campaign); }}
@@ -373,10 +373,10 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(campaign); }}
-                                                    className="p-2 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                    className="p-2 hover:bg-q-error/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                                     title={t('adminEmail.campaigns.deleteAction')}
                                                 >
-                                                    <Trash2 size={15} className="text-red-400" />
+                                                    <Trash2 size={15} className="text-q-error" />
                                                 </button>
                                             </div>
                                         </td>
@@ -397,7 +397,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                     </p>
                     <button
                         onClick={() => setShowNewCampaignModal(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-purple-500/20 transition-all"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-q-accent/20 transition-all"
                     >
                         <Plus size={16} />
                         {t('adminEmail.campaigns.newCampaign')}
@@ -407,11 +407,11 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
 
             {/* ===== NEW CAMPAIGN MODAL ===== */}
             {showNewCampaignModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowNewCampaignModal(false)}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/60 backdrop-blur-sm p-4" onClick={() => setShowNewCampaignModal(false)}>
                     <div className="bg-q-bg border border-q-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-                        <div className="p-5 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-purple-500/10 via-blue-500/5 to-transparent">
+                        <div className="p-5 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-q-accent/10 via-q-accent/5 to-transparent">
                             <div className="flex items-center gap-3">
-                                <div className="bg-gradient-to-br from-purple-500 to-blue-500 p-2.5 rounded-xl shadow-lg shadow-purple-500/20">
+                                <div className="bg-gradient-to-br from-q-accent to-q-accent p-2.5 rounded-xl shadow-lg shadow-q-accent/20">
                                     <Mail className="text-white w-5 h-5" />
                                 </div>
                                 <div>
@@ -426,19 +426,19 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                         <div className="p-5 space-y-4">
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.campaigns.newCampaignModal.name')}</label>
-                                <input type="text" value={newCampaignForm.name} onChange={e => setNewCampaignForm(prev => ({ ...prev, name: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder={t('adminEmail.campaigns.newCampaignModal.namePlaceholder')} />
+                                <input type="text" value={newCampaignForm.name} onChange={e => setNewCampaignForm(prev => ({ ...prev, name: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50" placeholder={t('adminEmail.campaigns.newCampaignModal.namePlaceholder')} />
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.campaigns.newCampaignModal.subject')}</label>
-                                <input type="text" value={newCampaignForm.subject} onChange={e => setNewCampaignForm(prev => ({ ...prev, subject: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder={t('adminEmail.campaigns.newCampaignModal.subjectPlaceholder')} />
+                                <input type="text" value={newCampaignForm.subject} onChange={e => setNewCampaignForm(prev => ({ ...prev, subject: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50" placeholder={t('adminEmail.campaigns.newCampaignModal.subjectPlaceholder')} />
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.campaigns.newCampaignModal.previewText')}</label>
-                                <input type="text" value={newCampaignForm.previewText} onChange={e => setNewCampaignForm(prev => ({ ...prev, previewText: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder={t('adminEmail.campaigns.newCampaignModal.previewTextPlaceholder')} />
+                                <input type="text" value={newCampaignForm.previewText} onChange={e => setNewCampaignForm(prev => ({ ...prev, previewText: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50" placeholder={t('adminEmail.campaigns.newCampaignModal.previewTextPlaceholder')} />
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.campaigns.newCampaignModal.type')}</label>
-                                <AppSelect value={newCampaignForm.type} onChange={e => setNewCampaignForm(prev => ({ ...prev, type: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                                <AppSelect value={newCampaignForm.type} onChange={e => setNewCampaignForm(prev => ({ ...prev, type: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50">
                                     <option value="newsletter">{t('adminEmail.campaigns.newCampaignModal.newsletter')}</option>
                                     <option value="promotion">{t('adminEmail.campaigns.newCampaignModal.promotion')}</option>
                                     <option value="announcement">{t('adminEmail.campaigns.newCampaignModal.announcement')}</option>
@@ -448,7 +448,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.campaigns.newCampaignModal.audience')}</label>
-                                <AppSelect value={newCampaignForm.audienceType} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceType: e.target.value as 'all' | 'segment' | 'custom' }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                                <AppSelect value={newCampaignForm.audienceType} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceType: e.target.value as 'all' | 'segment' | 'custom' }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50">
                                     <option value="all">{t('adminEmail.campaigns.newCampaignModal.allContacts')}</option>
                                     <option value="segment">{t('adminEmail.campaigns.newCampaignModal.specificSegment')}</option>
                                     <option value="custom">{t('adminEmail.campaigns.newCampaignModal.customEmails')}</option>
@@ -458,7 +458,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                                 <div>
                                     <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.campaigns.newCampaignModal.segmentLabel')}</label>
                                     {audiences.length > 0 ? (
-                                        <AppSelect value={newCampaignForm.audienceSegmentId} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceSegmentId: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                                        <AppSelect value={newCampaignForm.audienceSegmentId} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceSegmentId: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50">
                                             <option value="">{t('adminEmail.campaigns.newCampaignModal.selectSegment')}</option>
                                             {audiences.map(a => (<option key={a.id} value={a.id}>{a.name} — {a.tenantName} ({a.estimatedCount || a.staticMemberCount || 0} contactos)</option>))}
                                         </AppSelect>
@@ -470,7 +470,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                             {newCampaignForm.audienceType === 'custom' && (
                                 <div>
                                     <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.campaigns.newCampaignModal.emailsSeparated')}</label>
-                                    <textarea value={newCampaignForm.customEmails} onChange={e => setNewCampaignForm(prev => ({ ...prev, customEmails: e.target.value }))} rows={3} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none" placeholder={t('adminEmail.campaigns.newCampaignModal.emailsPlaceholder')} />
+                                    <textarea value={newCampaignForm.customEmails} onChange={e => setNewCampaignForm(prev => ({ ...prev, customEmails: e.target.value }))} rows={3} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50 resize-none" placeholder={t('adminEmail.campaigns.newCampaignModal.emailsPlaceholder')} />
                                     {newCampaignForm.customEmails && (<p className="text-[10px] text-q-text-secondary mt-1">{t('adminEmail.campaigns.newCampaignModal.recipientCount', { count: newCampaignForm.customEmails.split(',').filter(e => e.trim()).length })}</p>)}
                                 </div>
                             )}
@@ -478,13 +478,13 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                         <div className="p-5 border-t border-q-border bg-q-surface/50">
                             <p className="text-xs text-q-text-secondary mb-3 text-center">{t('adminEmail.campaigns.newCampaignModal.designQuestion')}</p>
                             <div className="grid grid-cols-2 gap-3">
-                                <button onClick={handleOpenTemplateGallery} className="flex flex-col items-center gap-2 p-4 bg-q-bg border border-q-border rounded-xl hover:border-purple-500/50 hover:bg-purple-500/5 transition-all group">
-                                    <Sparkles size={24} className="text-purple-400 group-hover:text-purple-300" />
+                                <button onClick={handleOpenTemplateGallery} className="flex flex-col items-center gap-2 p-4 bg-q-bg border border-q-border rounded-xl hover:border-q-accent/50 hover:bg-q-accent/5 transition-all group">
+                                    <Sparkles size={24} className="text-q-accent group-hover:text-q-accent" />
                                     <span className="text-sm font-medium text-q-text">{t('adminEmail.campaigns.newCampaignModal.useTemplate')}</span>
                                     <span className="text-[10px] text-q-text-secondary">{t('adminEmail.campaigns.newCampaignModal.preDesignedTemplates')}</span>
                                 </button>
-                                <button onClick={handleStartBlank} className="flex flex-col items-center gap-2 p-4 bg-q-bg border border-q-border rounded-xl hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group">
-                                    <FileText size={24} className="text-blue-400 group-hover:text-blue-300" />
+                                <button onClick={handleStartBlank} className="flex flex-col items-center gap-2 p-4 bg-q-bg border border-q-border rounded-xl hover:border-q-accent/50 hover:bg-q-accent/5 transition-all group">
+                                    <FileText size={24} className="text-q-accent group-hover:text-q-accent" />
                                     <span className="text-sm font-medium text-q-text">{t('adminEmail.campaigns.newCampaignModal.startBlank')}</span>
                                     <span className="text-[10px] text-q-text-secondary">{t('adminEmail.campaigns.newCampaignModal.designFromScratch')}</span>
                                 </button>
@@ -515,10 +515,10 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
 
             {/* Test Email Modal */}
             {showTestEmailModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
                     <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md shadow-2xl">
                         <div className="p-6 border-b border-q-border flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-foreground flex items-center gap-2"><TestTube size={20} className="text-blue-500" /> {t('adminEmail.campaigns.testEmailModal.title')}</h3>
+                            <h3 className="text-lg font-bold text-foreground flex items-center gap-2"><TestTube size={20} className="text-q-accent" /> {t('adminEmail.campaigns.testEmailModal.title')}</h3>
                             <button onClick={() => { setShowTestEmailModal(false); }} className="p-2 hover:bg-muted rounded-lg transition-colors"><X size={20} className="text-q-text-muted" /></button>
                         </div>
                         <div className="p-6 space-y-4">
@@ -527,12 +527,12 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                                 <label className="block text-sm font-medium text-foreground mb-1">{t('adminEmail.campaigns.testEmailModal.testEmailLabel')}</label>
                                 <input type="email" value={testEmail} onChange={(e) => setTestEmail(e.target.value)} placeholder={t('adminEmail.campaigns.testEmailModal.placeholder')} className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring" onKeyDown={(e) => { if (e.key === 'Enter' && testEmail) handleSendTestEmail(); }} />
                             </div>
-                            {testSendError && (<p className="text-red-500 text-sm flex items-center gap-1.5"><AlertCircle size={14} />{testSendError}</p>)}
-                            {testSendSuccess && (<p className="text-green-500 text-sm flex items-center gap-1.5"><CheckCircle size={14} />{testSendSuccess}</p>)}
+                            {testSendError && (<p className="text-q-error text-sm flex items-center gap-1.5"><AlertCircle size={14} />{testSendError}</p>)}
+                            {testSendSuccess && (<p className="text-q-success text-sm flex items-center gap-1.5"><CheckCircle size={14} />{testSendSuccess}</p>)}
                         </div>
                         <div className="p-6 border-t border-q-border flex justify-end gap-3">
                             <button onClick={() => { setShowTestEmailModal(false); }} className="px-4 py-2 border border-q-border rounded-lg text-foreground hover:bg-muted transition-colors">{t('adminEmail.campaigns.testEmailModal.cancel')}</button>
-                            <button onClick={handleSendTestEmail} disabled={!testEmail || sendingTest} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button onClick={handleSendTestEmail} disabled={!testEmail || sendingTest} className="flex items-center gap-2 px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 {sendingTest ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                                 {t('adminEmail.campaigns.testEmailModal.sendTest')}
                             </button>
@@ -546,10 +546,10 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                 const campaign = campaigns.find(c => c.id === sendingCampaignId);
                 if (!campaign) return null;
                 return (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-q-text/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
                         <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md shadow-2xl">
                             <div className="p-6 border-b border-q-border">
-                                <h3 className="text-lg font-bold text-foreground flex items-center gap-2"><Send size={20} className="text-green-500" /> {t('adminEmail.campaigns.sendConfirmModal.title')}</h3>
+                                <h3 className="text-lg font-bold text-foreground flex items-center gap-2"><Send size={20} className="text-q-success" /> {t('adminEmail.campaigns.sendConfirmModal.title')}</h3>
                             </div>
                             <div className="p-6 space-y-4">
                                 <p className="text-foreground">{t('adminEmail.campaigns.sendConfirmModal.confirmMessage')}</p>
@@ -559,13 +559,13 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                                     <p className="text-sm"><strong>{t('adminEmail.campaigns.sendConfirmModal.tenantLabel')}</strong> {campaign.tenantName || 'Admin'}</p>
                                     <p className="text-sm"><strong>{t('adminEmail.campaigns.sendConfirmModal.audienceLabel')}</strong> {campaign.audienceType === 'all' ? t('adminEmail.campaigns.sendConfirmModal.allSubscribers') : t('adminEmail.campaigns.sendConfirmModal.selectedSegment')}</p>
                                 </div>
-                                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-                                    <p className="text-amber-500 text-sm flex items-center gap-2"><AlertTriangle size={16} /> {t('adminEmail.campaigns.sendConfirmModal.warning')}</p>
+                                <div className="bg-q-accent/10 border border-q-accent/20 rounded-lg p-3">
+                                    <p className="text-q-accent text-sm flex items-center gap-2"><AlertTriangle size={16} /> {t('adminEmail.campaigns.sendConfirmModal.warning')}</p>
                                 </div>
                             </div>
                             <div className="p-6 border-t border-q-border flex justify-end gap-3">
                                 <button onClick={() => { actions.setShowEmailEditor(false); /* close send confirm — reset in hook */ }} className="px-4 py-2 border border-q-border rounded-lg text-foreground hover:bg-muted transition-colors">{t('adminEmail.campaigns.sendConfirmModal.cancel')}</button>
-                                <button onClick={handleSendCampaign} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"><Send size={16} /> {t('adminEmail.campaigns.sendConfirmModal.sendNow')}</button>
+                                <button onClick={handleSendCampaign} className="flex items-center gap-2 px-4 py-2 bg-q-success text-white rounded-lg hover:bg-q-success transition-colors"><Send size={16} /> {t('adminEmail.campaigns.sendConfirmModal.sendNow')}</button>
                             </div>
                         </div>
                     </div>
@@ -575,7 +575,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
             {/* Campaign Detail Side Panel */}
             {showDetailPanel && detailCampaign && (
                 <div className="fixed inset-0 z-[180] flex" onClick={() => { setShowDetailPanel(false); setDetailCampaign(null); }}>
-                    <div className="flex-1 bg-black/40 backdrop-blur-sm" />
+                    <div className="flex-1 bg-q-text/40 backdrop-blur-sm" />
                     <div className="w-full max-w-lg bg-q-bg border-l border-q-border shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300" onClick={e => e.stopPropagation()}>
                         <div className="sticky top-0 z-10 bg-q-bg border-b border-q-border p-5">
                             <div className="flex items-center justify-between mb-3">
@@ -645,7 +645,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                             {detailCampaign.htmlContent && (
                                 <div>
                                     <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 block flex items-center gap-1.5"><Eye size={14} /> {t('adminEmail.campaigns.detailPanel.emailPreview')}</label>
-                                    <div className="border border-q-border rounded-xl overflow-hidden bg-white">
+                                    <div className="border border-q-border rounded-xl overflow-hidden bg-q-surface">
                                         <iframe srcDoc={detailCampaign.htmlContent} title={t('adminEmail.campaigns.detailPanel.emailPreview')} className="w-full border-0" style={{ height: '500px', pointerEvents: 'none' }} sandbox="allow-same-origin" />
                                     </div>
                                 </div>
@@ -654,26 +654,26 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 block">{t('adminEmail.campaigns.detailPanel.actions')}</label>
                                 {(detailCampaign.status === 'draft' || detailCampaign.status === 'approved') && (
-                                    <button onClick={() => { setShowDetailPanel(false); handleEditCampaignVisual(detailCampaign); }} className="w-full flex items-center gap-3 px-4 py-3 bg-q-surface border border-q-border rounded-xl hover:border-purple-500/50 hover:bg-purple-500/5 transition-all text-left">
-                                        <Edit2 size={18} className="text-purple-400" />
+                                    <button onClick={() => { setShowDetailPanel(false); handleEditCampaignVisual(detailCampaign); }} className="w-full flex items-center gap-3 px-4 py-3 bg-q-surface border border-q-border rounded-xl hover:border-q-accent/50 hover:bg-q-accent/5 transition-all text-left">
+                                        <Edit2 size={18} className="text-q-accent" />
                                         <div><p className="text-sm font-medium text-q-text">{t('adminEmail.campaigns.detailPanel.editVisual')}</p><p className="text-xs text-q-text-secondary">{t('adminEmail.campaigns.detailPanel.editVisualDesc')}</p></div>
                                     </button>
                                 )}
                                 {(detailCampaign.status === 'draft' || detailCampaign.status === 'approved') && (
-                                    <button onClick={() => { setEditingCampaignId(detailCampaign.id); setTestEmail(''); setShowTestEmailModal(true); }} className="w-full flex items-center gap-3 px-4 py-3 bg-q-surface border border-q-border rounded-xl hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-left">
-                                        <TestTube size={18} className="text-blue-400" />
+                                    <button onClick={() => { setEditingCampaignId(detailCampaign.id); setTestEmail(''); setShowTestEmailModal(true); }} className="w-full flex items-center gap-3 px-4 py-3 bg-q-surface border border-q-border rounded-xl hover:border-q-accent/50 hover:bg-q-accent/5 transition-all text-left">
+                                        <TestTube size={18} className="text-q-accent" />
                                         <div><p className="text-sm font-medium text-q-text">{t('adminEmail.campaigns.detailPanel.sendTestAction')}</p><p className="text-xs text-q-text-secondary">{t('adminEmail.campaigns.detailPanel.sendTestDesc')}</p></div>
                                     </button>
                                 )}
                                 {(detailCampaign.status === 'draft' || detailCampaign.status === 'approved') && (
-                                    <button onClick={() => { setShowDetailPanel(false); handleOpenSendConfirm(detailCampaign.id); }} className="w-full flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-green-600/10 to-emerald-600/10 border border-green-500/30 rounded-xl hover:from-green-600/20 hover:to-emerald-600/20 transition-all text-left">
-                                        <Send size={18} className="text-green-400" />
+                                    <button onClick={() => { setShowDetailPanel(false); handleOpenSendConfirm(detailCampaign.id); }} className="w-full flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-q-success to-q-success border border-q-success/30 rounded-xl hover:from-q-success hover:to-q-success transition-all text-left">
+                                        <Send size={18} className="text-q-success" />
                                         <div><p className="text-sm font-medium text-q-text">{t('adminEmail.campaigns.detailPanel.sendCampaignAction')}</p><p className="text-xs text-q-text-secondary">{t('adminEmail.campaigns.detailPanel.sendCampaignDesc')}</p></div>
                                     </button>
                                 )}
                                 <div className="flex gap-2 pt-2">
                                     <button onClick={() => { handleDuplicateCampaign(detailCampaign); setShowDetailPanel(false); }} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-q-surface border border-q-border rounded-xl text-sm text-q-text-secondary hover:text-q-text hover:border-q-accent/30 transition-all"><Copy size={14} /> {t('adminEmail.campaigns.detailPanel.duplicate')}</button>
-                                    <button onClick={() => { handleDeleteCampaign(detailCampaign); setShowDetailPanel(false); }} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-red-500/5 border border-red-500/20 rounded-xl text-sm text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all"><Trash2 size={14} /> {t('adminEmail.campaigns.detailPanel.delete')}</button>
+                                    <button onClick={() => { handleDeleteCampaign(detailCampaign); setShowDetailPanel(false); }} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-q-error/5 border border-q-error/20 rounded-xl text-sm text-q-error hover:bg-q-error/10 hover:border-q-error/30 transition-all"><Trash2 size={14} /> {t('adminEmail.campaigns.detailPanel.delete')}</button>
                                 </div>
                             </div>
                         </div>
@@ -694,7 +694,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                     <h2 className="text-lg font-bold text-q-text">{t('adminEmail.audiences.title')}</h2>
                     <p className="text-sm text-q-text-secondary">{t('adminEmail.audiences.adminAudiences', { count: adminAudiences.length })}</p>
                 </div>
-                <button onClick={() => setShowCreateAudience(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-purple-500/20 transition-all">
+                <button onClick={() => setShowCreateAudience(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-q-accent/20 transition-all">
                     <Plus size={16} /> {t('adminEmail.audiences.newAudience')}
                 </button>
             </div>
@@ -715,7 +715,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                                     <h3 className="text-sm font-semibold text-q-text truncate">{aud.name}</h3>
                                     {aud.description && (<p className="text-xs text-q-text-secondary mt-0.5 line-clamp-2">{aud.description}</p>)}
                                 </div>
-                                <button onClick={(e) => { e.stopPropagation(); handleDeleteAudience(aud.id, setConfirmModal); }} className="p-1.5 hover:bg-red-500/10 rounded-lg transition-colors" title={t('adminEmail.confirmModal.delete')}><Trash2 size={14} className="text-red-400" /></button>
+                                <button onClick={(e) => { e.stopPropagation(); handleDeleteAudience(aud.id, setConfirmModal); }} className="p-1.5 hover:bg-q-error/10 rounded-lg transition-colors" title={t('adminEmail.confirmModal.delete')}><Trash2 size={14} className="text-q-error" /></button>
                             </div>
                             <div className="flex items-center gap-4 text-xs text-q-text-secondary mb-3">
                                 <span className="flex items-center gap-1"><Users size={12} /> {aud.estimatedCount || aud.staticMemberCount || 0} {t('adminEmail.audiences.contacts')}</span>
@@ -744,7 +744,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                                             {(audienceMembers[aud.id] || (aud as any)?.members || []).map((m: any, i: number) => (
                                                 <div key={i} className="flex items-center justify-between px-2 py-1 bg-q-bg/50 rounded text-xs">
                                                     <span className="text-q-text truncate">{m.email}</span>
-                                                    <button onClick={() => handleRemoveMember(aud.id, m.email)} className="text-red-400 hover:text-red-300 p-0.5"><X size={12} /></button>
+                                                    <button onClick={() => handleRemoveMember(aud.id, m.email)} className="text-q-error hover:text-q-error p-0.5"><X size={12} /></button>
                                                 </div>
                                             ))}
                                         </div>
@@ -788,7 +788,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                     <Users size={48} className="mx-auto text-q-text-secondary mb-4 opacity-50" />
                     <h3 className="text-lg font-medium text-q-text mb-2">{t('adminEmail.audiences.noAudiences')}</h3>
                     <p className="text-q-text-secondary text-sm mb-4">{t('adminEmail.audiences.createFirst')}</p>
-                    <button onClick={() => setShowCreateAudience(true)} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl">
+                    <button onClick={() => setShowCreateAudience(true)} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent text-sm font-bold rounded-xl">
                         <Plus size={16} /> {t('adminEmail.audiences.newAudience')}
                     </button>
                 </div>
@@ -796,19 +796,19 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
 
             {/* Create Audience Modal */}
             {showCreateAudience && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowCreateAudience(false)}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/60 backdrop-blur-sm p-4" onClick={() => setShowCreateAudience(false)}>
                     <div className="bg-q-bg border border-q-border w-full max-w-md rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="p-5 border-b border-q-border flex items-center justify-between">
                             <h2 className="text-lg font-bold text-q-text">{t('adminEmail.audiences.newAudienceModal.title')}</h2>
                             <button onClick={() => setShowCreateAudience(false)} className="p-2 hover:bg-q-surface-overlay/40 rounded-lg"><X size={18} className="text-q-text-secondary" /></button>
                         </div>
                         <div className="p-5 space-y-4">
-                            <div><label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.audiences.newAudienceModal.name')}</label><input type="text" value={newAudienceForm.name} onChange={e => setNewAudienceForm(prev => ({ ...prev, name: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder={t('adminEmail.audiences.newAudienceModal.namePlaceholder')} /></div>
-                            <div><label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.audiences.newAudienceModal.description')}</label><textarea value={newAudienceForm.description} onChange={e => setNewAudienceForm(prev => ({ ...prev, description: e.target.value }))} rows={3} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none" placeholder={t('adminEmail.audiences.newAudienceModal.descriptionPlaceholder')} /></div>
+                            <div><label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.audiences.newAudienceModal.name')}</label><input type="text" value={newAudienceForm.name} onChange={e => setNewAudienceForm(prev => ({ ...prev, name: e.target.value }))} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50" placeholder={t('adminEmail.audiences.newAudienceModal.namePlaceholder')} /></div>
+                            <div><label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.audiences.newAudienceModal.description')}</label><textarea value={newAudienceForm.description} onChange={e => setNewAudienceForm(prev => ({ ...prev, description: e.target.value }))} rows={3} className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50 resize-none" placeholder={t('adminEmail.audiences.newAudienceModal.descriptionPlaceholder')} /></div>
                         </div>
                         <div className="p-5 border-t border-q-border flex justify-end gap-3">
                             <button onClick={() => setShowCreateAudience(false)} className="px-4 py-2 text-sm text-q-text-secondary hover:text-q-text transition-colors">{t('adminEmail.audiences.newAudienceModal.cancel')}</button>
-                            <button onClick={handleCreateAudience} disabled={!newAudienceForm.name.trim()} className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl disabled:opacity-50">{t('adminEmail.audiences.newAudienceModal.create')}</button>
+                            <button onClick={handleCreateAudience} disabled={!newAudienceForm.name.trim()} className="px-4 py-2 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent text-sm font-bold rounded-xl disabled:opacity-50">{t('adminEmail.audiences.newAudienceModal.create')}</button>
                         </div>
                     </div>
                 </div>
@@ -823,16 +823,16 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
     const renderAIStudio = () => (
         <div className="bg-q-surface border border-q-border rounded-2xl shadow-xl flex flex-col" style={{ height: 'calc(100vh - 170px)' }}>
             {/* Header */}
-            <div className="p-4 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-purple-500/10 via-blue-500/5 to-transparent rounded-t-2xl">
+            <div className="p-4 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-q-accent/10 via-q-accent/5 to-transparent rounded-t-2xl">
                 <div className="flex items-center gap-3">
                     <div className="relative">
-                        <div className="bg-gradient-to-br from-purple-500 to-blue-500 p-2.5 rounded-xl shadow-lg shadow-purple-500/20"><Sparkles className="text-white w-5 h-5" /></div>
-                        {isVoiceActive && (<span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-q-bg animate-pulse" />)}
+                        <div className="bg-gradient-to-br from-q-accent to-q-accent p-2.5 rounded-xl shadow-lg shadow-q-accent/20"><Sparkles className="text-white w-5 h-5" /></div>
+                        {isVoiceActive && (<span className="absolute -top-1 -right-1 w-3 h-3 bg-q-success rounded-full border-2 border-q-bg animate-pulse" />)}
                     </div>
                     <div>
                         <h2 className="text-lg font-bold text-q-text flex items-center gap-2">
                             {t('aiEmailStudio.title')}
-                            <span className="text-[10px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">{isVoiceActive ? MODEL_VOICE.split('-').slice(-2).join('-') : MODEL_TEXT.split('-').slice(-2).join('-')}</span>
+                            <span className="text-[10px] font-mono bg-q-accent/20 text-q-accent px-2 py-0.5 rounded-full">{isVoiceActive ? MODEL_VOICE.split('-').slice(-2).join('-') : MODEL_TEXT.split('-').slice(-2).join('-')}</span>
                         </h2>
                         <p className="text-xs text-q-text-secondary">{isVoiceActive ? t('adminEmail.aiStudio.voiceActive') : t('adminEmail.aiStudio.planAndCreate')}</p>
                     </div>
@@ -847,20 +847,20 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                     <div ref={aiChatRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                         {aiMessages.map((msg, i) => (
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user' ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white rounded-br-md' : 'bg-[#1e1b2e] border border-purple-500/15 text-gray-100 rounded-bl-md'}`}>
+                                <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user' ? 'bg-gradient-to-br from-q-accent to-q-accent text-q-text-on-accent rounded-br-md' : 'bg-[#1e1b2e] border border-q-accent/15 text-q-text-muted rounded-bl-md'}`}>
                                     {msg.isVoice && (<span className="inline-flex items-center gap-1 text-[10px] opacity-60 mb-1"><Volume2 className="w-3 h-3" /> {t('adminEmail.aiStudio.voice')}</span>)}
-                                    <ReactMarkdown components={{ p: ({ children }) => <p className="mb-2 last:mb-0 text-gray-100">{children}</p>, strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>, ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-gray-200">{children}</ul>, ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-gray-200">{children}</ol>, li: ({ children }) => <li className="leading-relaxed text-gray-200">{children}</li> }}>{msg.text}</ReactMarkdown>
+                                    <ReactMarkdown components={{ p: ({ children }) => <p className="mb-2 last:mb-0 text-q-text-muted">{children}</p>, strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>, ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-q-text-muted">{children}</ul>, ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-q-text-muted">{children}</ol>, li: ({ children }) => <li className="leading-relaxed text-q-text-muted">{children}</li> }}>{msg.text}</ReactMarkdown>
                                 </div>
                             </div>
                         ))}
-                        {aiThinking && (<div className="flex justify-start"><div className="bg-q-surface border border-q-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-q-text-secondary"><Loader2 className="w-4 h-4 animate-spin text-purple-400" /> {t('adminEmail.aiStudio.thinking')}</div></div>)}
-                        {aiCreating && (<div className="flex justify-start"><div className="bg-q-surface border border-green-500/30 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-green-400"><Loader2 className="w-4 h-4 animate-spin" /> {t('adminEmail.aiStudio.creating', { type: aiCreating === 'campaign' ? t('adminEmail.aiStudio.creatingCampaign') : aiCreating === 'audience' ? t('adminEmail.aiStudio.creatingAudience') : t('adminEmail.aiStudio.creatingAutomation') })}</div></div>)}
-                        {isVoiceActive && liveUserTranscript && (<div className="flex justify-end animate-pulse"><div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-purple-500/20 border border-purple-500/30 text-purple-200"><span className="inline-flex items-center gap-1.5 text-[10px] text-purple-400 mb-1"><Mic className="w-3 h-3" /> {t('adminEmail.aiStudio.speaking')}</span><p className="text-gray-100">{liveUserTranscript}</p></div></div>)}
-                        {isVoiceActive && liveModelTranscript && (<div className="flex justify-start"><div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-[#1e1b2e] border border-blue-500/20 text-gray-100"><span className="inline-flex items-center gap-1.5 text-[10px] text-blue-400 mb-1"><Volume2 className="w-3 h-3" /> {t('adminEmail.aiStudio.responding')}</span><p className="text-gray-100">{liveModelTranscript}</p></div></div>)}
+                        {aiThinking && (<div className="flex justify-start"><div className="bg-q-surface border border-q-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-q-text-secondary"><Loader2 className="w-4 h-4 animate-spin text-q-accent" /> {t('adminEmail.aiStudio.thinking')}</div></div>)}
+                        {aiCreating && (<div className="flex justify-start"><div className="bg-q-surface border border-q-success/30 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-q-success"><Loader2 className="w-4 h-4 animate-spin" /> {t('adminEmail.aiStudio.creating', { type: aiCreating === 'campaign' ? t('adminEmail.aiStudio.creatingCampaign') : aiCreating === 'audience' ? t('adminEmail.aiStudio.creatingAudience') : t('adminEmail.aiStudio.creatingAutomation') })}</div></div>)}
+                        {isVoiceActive && liveUserTranscript && (<div className="flex justify-end animate-pulse"><div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-q-accent/20 border border-q-accent/30 text-q-accent"><span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1"><Mic className="w-3 h-3" /> {t('adminEmail.aiStudio.speaking')}</span><p className="text-q-text-muted">{liveUserTranscript}</p></div></div>)}
+                        {isVoiceActive && liveModelTranscript && (<div className="flex justify-start"><div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-[#1e1b2e] border border-q-accent/20 text-q-text-muted"><span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1"><Volume2 className="w-3 h-3" /> {t('adminEmail.aiStudio.responding')}</span><p className="text-q-text-muted">{liveModelTranscript}</p></div></div>)}
                         {aiCreatedItems.length > 0 && (
                             <div className="border-t border-q-border pt-4 mt-4">
                                 <p className="text-xs text-q-text-secondary font-medium mb-2">{t('adminEmail.aiStudio.resourcesCreated')}</p>
-                                <div className="space-y-1.5">{aiCreatedItems.map((item, i) => (<div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-green-500/5 border border-green-500/20 rounded-lg"><CheckCircle size={12} className="text-green-400 flex-shrink-0" /><span className="text-xs text-q-text">{item.type === 'campaign' ? '📧' : item.type === 'audience' ? '👥' : '⚡'} {item.name}</span><span className="text-[10px] text-q-text-secondary ml-auto">{item.type}</span></div>))}</div>
+                                <div className="space-y-1.5">{aiCreatedItems.map((item, i) => (<div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-q-success/5 border border-q-success/20 rounded-lg"><CheckCircle size={12} className="text-q-success flex-shrink-0" /><span className="text-xs text-q-text">{item.type === 'campaign' ? '📧' : item.type === 'audience' ? '👥' : '⚡'} {item.name}</span><span className="text-[10px] text-q-text-secondary ml-auto">{item.type}</span></div>))}</div>
                             </div>
                         )}
                     </div>
@@ -868,16 +868,16 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                     <div className="p-3 border-t border-q-border bg-q-surface/50">
                         <div className="flex items-end gap-2">
                             {isVoiceActive ? (
-                                <button onClick={stopVoiceSession} className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all" title={t('adminEmail.aiStudio.stopVoice')}><PhoneOff className="w-4 h-4" /></button>
+                                <button onClick={stopVoiceSession} className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-error/20 text-q-error hover:bg-q-error/30 transition-all" title={t('adminEmail.aiStudio.stopVoice')}><PhoneOff className="w-4 h-4" /></button>
                             ) : (
-                                <button onClick={startVoiceSession} disabled={isVoiceConnecting} className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-surface-overlay/40 text-q-text-secondary hover:text-purple-400 hover:bg-purple-500/10 transition-all disabled:opacity-50" title={t('adminEmail.aiStudio.startVoice')}>
+                                <button onClick={startVoiceSession} disabled={isVoiceConnecting} className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-surface-overlay/40 text-q-text-secondary hover:text-q-accent hover:bg-q-accent/10 transition-all disabled:opacity-50" title={t('adminEmail.aiStudio.startVoice')}>
                                     {isVoiceConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
                                 </button>
                             )}
-                            <textarea value={aiInput} onChange={e => setAiInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAIMessage(aiInput); } }} placeholder={isVoiceActive ? t('adminEmail.aiStudio.voicePlaceholder') : t('adminEmail.aiStudio.textPlaceholder')} className="flex-1 bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none min-h-[40px] max-h-[120px] text-q-text placeholder:text-q-text-secondary/50" rows={1} disabled={!!aiCreating} />
-                            <button onClick={() => sendAIMessage(aiInput)} disabled={!aiInput.trim() || aiThinking || !!aiCreating} className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 text-white hover:shadow-lg hover:shadow-purple-500/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"><Send className="w-4 h-4" /></button>
+                            <textarea value={aiInput} onChange={e => setAiInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAIMessage(aiInput); } }} placeholder={isVoiceActive ? t('adminEmail.aiStudio.voicePlaceholder') : t('adminEmail.aiStudio.textPlaceholder')} className="flex-1 bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-q-accent/50 resize-none min-h-[40px] max-h-[120px] text-q-text placeholder:text-q-text-secondary/50" rows={1} disabled={!!aiCreating} />
+                            <button onClick={() => sendAIMessage(aiInput)} disabled={!aiInput.trim() || aiThinking || !!aiCreating} className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-br from-q-accent to-q-accent text-q-text-on-accent hover:shadow-lg hover:shadow-q-accent/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"><Send className="w-4 h-4" /></button>
                         </div>
-                        {isVoiceActive && (<div className="mt-2 flex items-center justify-center gap-2 text-xs text-green-400"><span className="flex items-center gap-1.5"><span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" /> {t('adminEmail.aiStudio.listening')}</span><span className="text-q-text-secondary">•</span><span className="text-q-text-secondary font-mono">{MODEL_VOICE.split('-').slice(1).join('-')}</span></div>)}
+                        {isVoiceActive && (<div className="mt-2 flex items-center justify-center gap-2 text-xs text-q-success"><span className="flex items-center gap-1.5"><span className="w-2 h-2 bg-q-success rounded-full animate-pulse" /> {t('adminEmail.aiStudio.listening')}</span><span className="text-q-text-secondary">•</span><span className="text-q-text-secondary font-mono">{MODEL_VOICE.split('-').slice(1).join('-')}</span></div>)}
                     </div>
                 </div>
 
@@ -886,17 +886,17 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                     <div>
                         <h4 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3">{t('adminEmail.aiStudio.quickActions')}</h4>
                         <div className="space-y-2">
-                            <button onClick={aiCreateCampaign} disabled={!!aiCreating || aiMessages.length < 3} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-xl hover:bg-blue-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                            <button onClick={aiCreateCampaign} disabled={!!aiCreating || aiMessages.length < 3} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm bg-q-accent/10 text-q-accent border border-q-accent/20 rounded-xl hover:bg-q-accent/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                                 {aiCreating === 'campaign' ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                                <div className="text-left"><div className="font-medium">{t('adminEmail.aiStudio.createCampaign')}</div><div className="text-[10px] text-blue-400/60">{t('adminEmail.aiStudio.generateFromConversation')}</div></div>
+                                <div className="text-left"><div className="font-medium">{t('adminEmail.aiStudio.createCampaign')}</div><div className="text-[10px] text-q-accent/60">{t('adminEmail.aiStudio.generateFromConversation')}</div></div>
                             </button>
-                            <button onClick={aiCreateAudience} disabled={!!aiCreating || aiMessages.length < 3} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-xl hover:bg-purple-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                            <button onClick={aiCreateAudience} disabled={!!aiCreating || aiMessages.length < 3} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm bg-q-accent/10 text-q-accent border border-q-accent/20 rounded-xl hover:bg-q-accent/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                                 {aiCreating === 'audience' ? <Loader2 size={16} className="animate-spin" /> : <Users size={16} />}
-                                <div className="text-left"><div className="font-medium">{t('adminEmail.aiStudio.createAudience')}</div><div className="text-[10px] text-purple-400/60">{t('adminEmail.aiStudio.contactSegment')}</div></div>
+                                <div className="text-left"><div className="font-medium">{t('adminEmail.aiStudio.createAudience')}</div><div className="text-[10px] text-q-accent/60">{t('adminEmail.aiStudio.contactSegment')}</div></div>
                             </button>
-                            <button onClick={aiCreateAutomation} disabled={!!aiCreating || aiMessages.length < 3} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-xl hover:bg-amber-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                            <button onClick={aiCreateAutomation} disabled={!!aiCreating || aiMessages.length < 3} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm bg-q-accent/10 text-q-accent border border-q-accent/20 rounded-xl hover:bg-q-accent/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                                 {aiCreating === 'automation' ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
-                                <div className="text-left"><div className="font-medium">{t('adminEmail.aiStudio.createAutomation')}</div><div className="text-[10px] text-amber-400/60">{t('adminEmail.aiStudio.automaticEmailFlow')}</div></div>
+                                <div className="text-left"><div className="font-medium">{t('adminEmail.aiStudio.createAutomation')}</div><div className="text-[10px] text-q-accent/60">{t('adminEmail.aiStudio.automaticEmailFlow')}</div></div>
                             </button>
                         </div>
                         {aiMessages.length < 3 && (<p className="text-[10px] text-q-text-secondary mt-2 text-center">{t('adminEmail.aiStudio.chatFirst')}</p>)}
@@ -904,8 +904,8 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                     {aiCreatedItems.length > 0 && (
                         <div>
                             <h4 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('adminEmail.aiStudio.session')}</h4>
-                            <div className="bg-green-500/5 border border-green-500/15 rounded-xl p-3">
-                                <div className="flex items-center gap-2 text-green-400 text-sm font-medium mb-1"><CheckCircle size={14} /> {aiCreatedItems.length > 1 ? t('adminEmail.aiStudio.resourcesCreatedPlural', { count: aiCreatedItems.length }) : t('adminEmail.aiStudio.resourceCreated', { count: aiCreatedItems.length })}</div>
+                            <div className="bg-q-success/5 border border-q-success/15 rounded-xl p-3">
+                                <div className="flex items-center gap-2 text-q-success text-sm font-medium mb-1"><CheckCircle size={14} /> {aiCreatedItems.length > 1 ? t('adminEmail.aiStudio.resourcesCreatedPlural', { count: aiCreatedItems.length }) : t('adminEmail.aiStudio.resourceCreated', { count: aiCreatedItems.length })}</div>
                                 <div className="space-y-1 mt-2">{aiCreatedItems.map((item, i) => (<div key={i} className="text-[10px] text-q-text-secondary flex items-center gap-1.5"><span>{item.type === 'campaign' ? '📧' : item.type === 'audience' ? '👥' : '⚡'}</span><span className="truncate">{item.name}</span></div>))}</div>
                             </div>
                         </div>
@@ -937,7 +937,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                     <div className="flex items-center gap-3">
                         <Mail className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                         <h1 className="text-lg font-semibold text-q-text">{t('adminEmail.hubTitle')}</h1>
-                        <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-semibold bg-green-500/20 text-green-400 rounded-full">{tenants.length} tenants</span>
+                        <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-semibold bg-q-success/20 text-q-success rounded-full">{tenants.length} tenants</span>
                     </div>
                     <HeaderBackButton onClick={onBack} label={t('adminEmail.back')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                 </header>
@@ -1017,14 +1017,14 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
 
             {/* Global Confirmation Modal */}
             {confirmModal.show && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))}>
+                <div className="fixed inset-0 bg-q-text/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))}>
                     <div className="bg-q-bg border border-q-border rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-center mb-4"><div className="p-3 bg-red-500/10 rounded-full"><AlertTriangle size={28} className="text-red-400" /></div></div>
+                        <div className="flex items-center justify-center mb-4"><div className="p-3 bg-q-error/10 rounded-full"><AlertTriangle size={28} className="text-q-error" /></div></div>
                         <h3 className="text-lg font-bold text-q-text text-center mb-2">{confirmModal.title}</h3>
                         <p className="text-sm text-q-text-secondary text-center mb-6 leading-relaxed">{confirmModal.message}</p>
                         <div className="flex gap-3">
                             <button onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))} className="flex-1 px-4 py-2.5 text-sm font-medium text-q-text-secondary bg-q-surface border border-q-border rounded-xl hover:bg-q-surface-overlay hover:text-q-text transition-colors">{t('adminEmail.confirmModal.cancel')}</button>
-                            <button onClick={confirmModal.onConfirm} className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-500/20"><span className="flex items-center justify-center gap-2"><Trash2 size={14} /> {t('adminEmail.confirmModal.delete')}</span></button>
+                            <button onClick={confirmModal.onConfirm} className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-q-error rounded-xl hover:bg-q-error transition-colors shadow-lg shadow-q-error/20"><span className="flex items-center justify-center gap-2"><Trash2 size={14} /> {t('adminEmail.confirmModal.delete')}</span></button>
                         </div>
                     </div>
                 </div>

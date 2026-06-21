@@ -149,14 +149,14 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                                         <button
                                             onClick={() => handleEdit(faq)}
-                                            className="p-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-colors"
+                                            className="p-1.5 rounded hover:bg-q-accent/10 dark:hover:bg-q-accent/12 text-q-accent dark:text-q-accent transition-colors"
                                             title={t('aiAssistant.faq.edit')}
                                         >
                                             <Edit2 size={14} />
                                         </button>
                                         <button
                                             onClick={() => handleDelete(faq.id)}
-                                            className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
+                                            className="p-1.5 rounded hover:bg-q-error/10 dark:hover:bg-q-error/12 text-q-error dark:text-q-error transition-colors"
                                             title={t('aiAssistant.faq.delete')}
                                         >
                                             <Trash2 size={14} />

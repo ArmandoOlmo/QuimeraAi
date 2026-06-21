@@ -339,7 +339,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                     {t('superadmin.appInformation')}
                                 </h1>
                                 {hasUnsavedChanges && (
-                                    <span className="text-xs font-semibold text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-full">
+                                    <span className="text-xs font-semibold text-q-accent bg-q-accent/10 px-2 py-0.5 rounded-full">
                                         {t('superadmin.appInfo.unsavedChanges')}
                                     </span>
                                 )}
@@ -443,7 +443,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
 
                                     <div className="bg-q-surface rounded-xl border border-q-border p-6">
                                         <div className="flex items-center gap-2 mb-4">
-                                            <Info className="text-blue-400 w-5 h-5" />
+                                            <Info className="text-q-accent w-5 h-5" />
                                             <div>
                                                 <h2 className="text-xl font-semibold">{t('superadmin.appInfo.siteDescription')}</h2>
                                                 <p className="text-sm text-q-text-secondary">
@@ -479,7 +479,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
 
                                     <div className="bg-q-surface rounded-xl border border-q-border p-6">
                                         <div className="flex items-center gap-2 mb-4">
-                                            <Globe className="text-green-400 w-5 h-5" />
+                                            <Globe className="text-q-success w-5 h-5" />
                                             <div>
                                                 <h2 className="text-xl font-semibold">{t('superadmin.appInfo.metadataDefaults')}</h2>
                                                 <p className="text-sm text-q-text-secondary">
@@ -525,7 +525,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
 
                                     <div className="bg-q-surface rounded-xl border border-q-border p-6">
                                         <div className="flex items-center gap-2 mb-4">
-                                            <ImageIcon className="text-purple-400 w-5 h-5" />
+                                            <ImageIcon className="text-q-accent w-5 h-5" />
                                             <div>
                                                 <h2 className="text-xl font-semibold">{t('superadmin.appInfo.brandAssets')}</h2>
                                                 <p className="text-sm text-q-text-secondary">
@@ -642,8 +642,8 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                         </ul>
                                     </div>
 
-                                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-5 space-y-3 text-sm text-q-text-secondary">
-                                        <h3 className="text-blue-400 font-semibold flex items-center gap-2">
+                                    <div className="bg-q-accent/10 border border-q-accent/30 rounded-xl p-5 space-y-3 text-sm text-q-text-secondary">
+                                        <h3 className="text-q-accent font-semibold flex items-center gap-2">
                                             <Info className="w-4 h-4" />
                                             {t('superadmin.appInfo.recommendations')}
                                         </h3>
@@ -682,7 +682,7 @@ const AssetUploader: React.FC<AssetUploaderProps> = ({ title, description, image
                 {imageUrl && (
                     <button
                         onClick={onRemove}
-                        className="text-xs text-red-500 hover:text-red-400 transition-colors"
+                        className="text-xs text-q-error hover:text-q-error transition-colors"
                     >
                         {t('superadmin.appInfo.remove')}
                     </button>
@@ -712,7 +712,7 @@ const AssetUploader: React.FC<AssetUploaderProps> = ({ title, description, image
 const ChecklistItem: React.FC<{ checked: boolean; label: string }> = ({ checked, label }) => (
     <li className="flex items-center gap-2">
         <span
-            className={`w-4 h-4 rounded-full border flex items-center justify-center ${checked ? 'border-green-400 bg-green-400/20 text-green-400' : 'border-q-border text-q-text-secondary'}`}
+            className={`w-4 h-4 rounded-full border flex items-center justify-center ${checked ? 'border-q-success/25 bg-q-success/20 text-q-success' : 'border-q-border text-q-text-secondary'}`}
         >
             {checked ? '✓' : ''}
         </span>

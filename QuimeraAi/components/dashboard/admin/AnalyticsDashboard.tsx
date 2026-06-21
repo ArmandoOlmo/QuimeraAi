@@ -62,10 +62,10 @@ const AnalyticsDashboard: React.FC = () => {
   const analytics = useMemo(() => {
     const standardComponentsAnalytics: ComponentAnalytics[] = Object.keys(componentStatus).map((key) => {
       const pageSection = key as PageSection;
-      const projectsUsing = projects.filter(p => 
-        p.componentOrder && 
-        p.componentOrder.includes(pageSection) && 
-        p.sectionVisibility && 
+      const projectsUsing = projects.filter(p =>
+        p.componentOrder &&
+        p.componentOrder.includes(pageSection) &&
+        p.sectionVisibility &&
         p.sectionVisibility[pageSection]
       );
 
@@ -76,7 +76,7 @@ const AnalyticsDashboard: React.FC = () => {
         usageCount: projectsUsing.length,
         projectCount: projectsUsing.length,
         trend: 'stable' as const, // Simplified for now
-        lastUsed: projectsUsing.length > 0 
+        lastUsed: projectsUsing.length > 0
           ? new Date(Math.max(...projectsUsing.map(p => new Date(p.lastUpdated).getTime())))
           : undefined,
       };
@@ -92,7 +92,7 @@ const AnalyticsDashboard: React.FC = () => {
         type: 'custom' as const,
         usageCount: usageCount,
         projectCount: projectsUsing.length,
-        trend: usageCount > projectsUsing.length * 2 ? 'up' : 
+        trend: usageCount > projectsUsing.length * 2 ? 'up' :
                usageCount < projectsUsing.length ? 'down' : 'stable',
         lastUsed: component.lastModified ? new Date(component.lastModified.seconds * 1000) : undefined,
       };
@@ -143,9 +143,9 @@ const AnalyticsDashboard: React.FC = () => {
   };
 
   const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
-    if (trend === 'up') return <ArrowUp className="w-4 h-4 text-green-500" />;
-    if (trend === 'down') return <ArrowDown className="w-4 h-4 text-red-500" />;
-    return <Minus className="w-4 h-4 text-gray-500" />;
+    if (trend === 'up') return <ArrowUp className="w-4 h-4 text-q-success" />;
+    if (trend === 'down') return <ArrowDown className="w-4 h-4 text-q-error" />;
+    return <Minus className="w-4 h-4 text-q-text-muted" />;
   };
 
   return (
@@ -164,7 +164,7 @@ const AnalyticsDashboard: React.FC = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl p-6 text-white">
+          <div className="bg-gradient-to-br from-q-accent to-q-accent rounded-xl p-6 text-q-text-on-accent">
             <div className="flex items-center justify-between mb-2">
               <Package className="w-8 h-8 opacity-80" />
               <span className="text-2xl font-bold">{stats.totalComponents}</span>
@@ -175,7 +175,7 @@ const AnalyticsDashboard: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl p-6 text-white">
+          <div className="bg-gradient-to-br from-q-accent to-q-accent rounded-xl p-6 text-q-text-on-accent">
             <div className="flex items-center justify-between mb-2">
               <Users className="w-8 h-8 opacity-80" />
               <span className="text-2xl font-bold">{stats.totalProjects}</span>
@@ -184,7 +184,7 @@ const AnalyticsDashboard: React.FC = () => {
             <p className="text-xs opacity-70 mt-1">Using components</p>
           </div>
 
-          <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl p-6 text-white">
+          <div className="bg-gradient-to-br from-q-success to-q-success rounded-xl p-6 text-white">
             <div className="flex items-center justify-between mb-2">
               <TrendingUp className="w-8 h-8 opacity-80" />
               <span className="text-2xl font-bold">{stats.totalUsage}</span>
@@ -193,7 +193,7 @@ const AnalyticsDashboard: React.FC = () => {
             <p className="text-xs opacity-70 mt-1">Across all components</p>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-600 to-amber-600 rounded-xl p-6 text-white">
+          <div className="bg-gradient-to-br from-q-warning to-q-accent rounded-xl p-6 text-white">
             <div className="flex items-center justify-between mb-2">
               <BarChart3 className="w-8 h-8 opacity-80" />
               <span className="text-2xl font-bold">{stats.avgUsage}</span>
@@ -286,16 +286,16 @@ const AnalyticsDashboard: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          item.type === 'custom' 
-                            ? 'bg-purple-600/20 text-purple-400'
-                            : 'bg-blue-600/20 text-blue-400'
+                          item.type === 'custom'
+                            ? 'bg-q-accent/20 text-q-accent'
+                            : 'bg-q-accent/20 text-q-accent'
                         }`}>
                           <Package className="w-4 h-4" />
                         </div>
                         <div>
                           <p className="font-medium text-q-text">{item.name}</p>
                           {index < 3 && item.usageCount > 0 && (
-                            <span className="text-xs text-amber-500">⭐ Top performer</span>
+                            <span className="text-xs text-q-accent">⭐ Top performer</span>
                           )}
                         </div>
                       </div>
@@ -303,8 +303,8 @@ const AnalyticsDashboard: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                         item.type === 'custom'
-                          ? 'bg-purple-600/20 text-purple-400'
-                          : 'bg-blue-600/20 text-blue-400'
+                          ? 'bg-q-accent/20 text-q-accent'
+                          : 'bg-q-accent/20 text-q-accent'
                       }`}>
                         {item.type === 'custom' ? 'Custom' : 'Standard'}
                       </span>
@@ -336,9 +336,9 @@ const AnalyticsDashboard: React.FC = () => {
 
         {analytics.length === 0 && (
           <div className="text-center py-12">
-            <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">No analytics data available yet</p>
-            <p className="text-gray-400 text-sm mt-2">
+            <BarChart3 className="w-16 h-16 text-q-text-muted mx-auto mb-4" />
+            <p className="text-q-text-muted text-lg">No analytics data available yet</p>
+            <p className="text-q-text-muted text-sm mt-2">
               Create projects and use components to see analytics
             </p>
           </div>

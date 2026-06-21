@@ -15,9 +15,9 @@ import {
     ResponsiveContainer,
     Legend,
 } from 'recharts';
-import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
 import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { MotionCard } from '../../../ui/primitives/Card';
 
 interface MRRDataPoint {
     month: string;
@@ -55,11 +55,11 @@ export function MRRChart({ data, currentMRR, previousMRR = 0, isLoading }: MRRCh
             return (
                 <div className="bg-q-surface border border-q-border rounded-lg p-3 shadow-lg">
                     <p className="text-sm font-medium text-q-text mb-1">{label}</p>
-                    <p className="text-sm text-emerald-400">
+                    <p className="text-sm text-q-success">
                         MRR: {formatCurrency(payload[0].value)}
                     </p>
                     {payload[1] && (
-                        <p className="text-sm text-blue-400">
+                        <p className="text-sm text-q-accent">
                             {t('dashboard.agency.charts.mrr.clients', 'Clientes')}: {payload[1].value}
                         </p>
                     )}
@@ -81,12 +81,7 @@ export function MRRChart({ data, currentMRR, previousMRR = 0, isLoading }: MRRCh
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-q-surface border border-q-border rounded-xl p-6"
-        >
+        <MotionCard hoverMotion className="bg-q-surface border border-q-border rounded-xl p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
@@ -97,7 +92,7 @@ export function MRRChart({ data, currentMRR, previousMRR = 0, isLoading }: MRRCh
                 </div>
                 <div className="text-right">
                     <div className="flex items-center gap-2">
-                        <DollarSign className="w-5 h-5 text-emerald-400" />
+                        <DollarSign className="w-5 h-5 text-q-success" />
                         <span className="text-2xl font-bold text-q-text">
                             <CountUp
                                 start={0}
@@ -109,7 +104,7 @@ export function MRRChart({ data, currentMRR, previousMRR = 0, isLoading }: MRRCh
                         </span>
                     </div>
                     {previousMRR > 0 && (
-                        <div className={`flex items-center gap-1 text-sm ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <div className={`flex items-center gap-1 text-sm ${isPositive ? 'text-q-success' : 'text-q-error'}`}>
                             {isPositive ? (
                                 <TrendingUp className="w-4 h-4" />
                             ) : (
@@ -159,7 +154,7 @@ export function MRRChart({ data, currentMRR, previousMRR = 0, isLoading }: MRRCh
                     </AreaChart>
                 </ResponsiveContainer>
             </div>
-        </motion.div>
+        </MotionCard>
     );
 }
 

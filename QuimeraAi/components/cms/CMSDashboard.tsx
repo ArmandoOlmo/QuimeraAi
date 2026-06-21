@@ -445,31 +445,18 @@ const CMSDashboard: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Center Section - Search */}
-                    <div className="hidden md:flex flex-1 justify-center mx-4">
-                        <div className="flex items-center gap-2 w-full max-w-md bg-muted/50 rounded-lg px-3 py-2">
-                            <Search className="w-4 h-4 text-q-text-muted flex-shrink-0" />
-                            <input
-                                type="text"
-                                placeholder={t('common.search', 'Buscar...')}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-q-text-muted"
-                            />
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} className="text-q-text-muted hover:text-foreground flex-shrink-0">
-                                    <XIcon size={16} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
                     {/* Right Section */}
                     <div className="flex items-center gap-1 sm:gap-2 ml-auto">
-                        {/* Mobile Search Button */}
+                        {/* Search Button */}
                         <button
                             onClick={() => setIsMobileSearchOpen(true)}
-                            className="md:hidden h-8 w-8 flex items-center justify-center rounded-md text-q-text-muted hover:text-foreground transition-colors"
+                            className={`h-8 w-8 flex items-center justify-center rounded-md transition-colors ${
+                                searchQuery
+                                    ? 'text-q-accent bg-primary/10'
+                                    : 'text-q-text-muted hover:text-foreground hover:bg-muted'
+                            }`}
+                            title={t('cms.searchPosts', 'Buscar posts...')}
+                            aria-label={t('cms.searchPosts', 'Buscar posts...')}
                         >
                             <Search className="w-4 h-4" />
                         </button>
@@ -528,13 +515,13 @@ const CMSDashboard: React.FC = () => {
                                 label={t('cms.published', 'Publicados')}
                                 value={metrics.published}
                                 icon={Globe}
-                                valueClass="text-emerald-500"
+                                valueClass="text-q-success"
                             />
                             <SettingsStatCard
                                 label={t('cms.drafts', 'Borradores')}
                                 value={metrics.drafts}
                                 icon={Edit3}
-                                valueClass="text-amber-500"
+                                valueClass="text-q-accent"
                             />
                         </div>
 
@@ -724,8 +711,8 @@ const CMSDashboard: React.FC = () => {
                                                     </td>
                                                     <td className="p-4">
                                                         <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${post.status === 'published'
-                                                            ? 'bg-green-500/10 text-green-500'
-                                                            : 'bg-yellow-500/10 text-yellow-500'
+                                                            ? 'bg-q-success/10 text-q-success'
+                                                            : 'bg-q-accent/10 text-q-accent'
                                                             }`}>
                                                             {post.status}
                                                         </span>
@@ -737,7 +724,7 @@ const CMSDashboard: React.FC = () => {
                                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <button
                                                                 onClick={() => handleQuickPreview(post)}
-                                                                className="p-2 text-q-text-muted hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-all"
+                                                                className="p-2 text-q-text-muted hover:text-q-accent hover:bg-q-accent/10 rounded-md transition-all"
                                                                 title="Quick Preview"
                                                             >
                                                                 <Eye size={14} />
@@ -751,14 +738,14 @@ const CMSDashboard: React.FC = () => {
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDuplicate(post)}
-                                                                className="p-2 text-q-text-muted hover:text-green-500 hover:bg-green-500/10 rounded-md transition-all"
+                                                                className="p-2 text-q-text-muted hover:text-q-success hover:bg-q-success/10 rounded-md transition-all"
                                                                 title="Duplicate"
                                                             >
                                                                 <Copy size={14} />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDelete(post.id)}
-                                                                className="p-2 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
+                                                                className="p-2 text-q-text-muted hover:text-q-error hover:bg-q-error/10 rounded-md transition-all"
                                                                 title="Delete"
                                                             >
                                                                 <Trash2 size={14} />
@@ -807,8 +794,8 @@ const CMSDashboard: React.FC = () => {
                                                     <div className="flex items-start justify-between gap-2 mb-1">
                                                         <h4 className="font-semibold text-sm text-foreground line-clamp-1">{post.title}</h4>
                                                         <span className={`flex-shrink-0 px-2 py-0.5 text-[10px] font-medium rounded-full ${post.status === 'published'
-                                                            ? 'bg-green-500/10 text-green-500'
-                                                            : 'bg-yellow-500/10 text-yellow-500'
+                                                            ? 'bg-q-success/10 text-q-success'
+                                                            : 'bg-q-accent/10 text-q-accent'
                                                             }`}>
                                                             {post.status}
                                                         </span>
@@ -824,19 +811,19 @@ const CMSDashboard: React.FC = () => {
                                                         <div className="flex items-center gap-0.5">
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleQuickPreview(post); }}
-                                                                className="p-1.5 text-q-text-muted hover:text-blue-500 rounded transition-colors"
+                                                                className="p-1.5 text-q-text-muted hover:text-q-accent rounded transition-colors"
                                                             >
                                                                 <Eye size={14} />
                                                             </button>
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleDuplicate(post); }}
-                                                                className="p-1.5 text-q-text-muted hover:text-green-500 rounded transition-colors"
+                                                                className="p-1.5 text-q-text-muted hover:text-q-success rounded transition-colors"
                                                             >
                                                                 <Copy size={14} />
                                                             </button>
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleDelete(post.id); }}
-                                                                className="p-1.5 text-q-text-muted hover:text-red-500 rounded transition-colors"
+                                                                className="p-1.5 text-q-text-muted hover:text-q-error rounded transition-colors"
                                                             >
                                                                 <Trash2 size={14} />
                                                             </button>
@@ -881,7 +868,7 @@ const CMSDashboard: React.FC = () => {
                                                 <label
                                                     className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 cursor-pointer transition-all backdrop-blur-md shadow-lg ${selectedPosts.includes(post.id)
                                                         ? 'bg-primary border-primary text-primary-foreground'
-                                                        : 'bg-black/30 border-white/50 text-transparent hover:border-white hover:bg-black/50 sm:opacity-0 sm:group-hover:opacity-100'
+                                                        : 'bg-q-text/30 border-q-border/50 text-transparent hover:border-q-border hover:bg-q-text/50 sm:opacity-0 sm:group-hover:opacity-100'
                                                         }`}
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
@@ -899,7 +886,7 @@ const CMSDashboard: React.FC = () => {
 
                                             {/* Top Section: Status Badge */}
                                             <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20">
-                                                <span className={`px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md sm:rounded-lg border backdrop-blur-md shadow-lg ${post.status === 'published' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'}`}>
+                                                <span className={`px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md sm:rounded-lg border backdrop-blur-md shadow-lg ${post.status === 'published' ? 'bg-q-success/20 text-q-success border-q-success/30' : 'bg-q-accent/20 text-q-accent border-q-accent/30'}`}>
                                                     {post.status}
                                                 </span>
                                             </div>
@@ -908,44 +895,44 @@ const CMSDashboard: React.FC = () => {
                                             <div className="sm:hidden absolute top-12 right-3 z-20 flex flex-col gap-1">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleQuickPreview(post); }}
-                                                    className="bg-white/90 text-blue-500 p-2 rounded-full shadow-lg active:scale-95 transition-transform"
+                                                    className="bg-q-surface/90 text-q-accent p-2 rounded-full shadow-lg active:scale-95 transition-transform"
                                                 >
                                                     <Eye size={14} />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleDelete(post.id); }}
-                                                    className="bg-white/90 text-red-500 p-2 rounded-full shadow-lg active:scale-95 transition-transform"
+                                                    className="bg-q-surface/90 text-q-error p-2 rounded-full shadow-lg active:scale-95 transition-transform"
                                                 >
                                                     <Trash2 size={14} />
                                                 </button>
                                             </div>
 
                                             {/* Desktop: Hover Actions Overlay */}
-                                            <div className="hidden sm:flex absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center justify-center backdrop-blur-[2px] gap-3 z-10">
+                                            <div className="hidden sm:flex absolute inset-0 bg-q-text/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center justify-center backdrop-blur-[2px] gap-3 z-10">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleQuickPreview(post); }}
-                                                    className="bg-white text-blue-500 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
+                                                    className="bg-q-surface text-q-accent p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                     title="Quick Preview"
                                                 >
                                                     <Eye size={20} />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleEdit(post); }}
-                                                    className="bg-white text-black p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
+                                                    className="bg-q-surface text-black p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                     title="Edit"
                                                 >
                                                     <Edit3 size={20} />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleDuplicate(post); }}
-                                                    className="bg-white text-green-600 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
+                                                    className="bg-q-surface text-q-success p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                     title="Duplicate"
                                                 >
                                                     <Copy size={20} />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleDelete(post.id); }}
-                                                    className="bg-white text-red-500 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
+                                                    className="bg-q-surface text-q-error p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                     title="Delete"
                                                 >
                                                     <Trash2 size={20} />
@@ -972,8 +959,8 @@ const CMSDashboard: React.FC = () => {
                                                     </div>
                                                     {post.status === 'published' && (
                                                         <div title="Published">
-                                                            <Globe size={14} className="sm:hidden text-green-400" />
-                                                            <Globe size={16} className="hidden sm:block text-green-400" />
+                                                            <Globe size={14} className="sm:hidden text-q-success" />
+                                                            <Globe size={16} className="hidden sm:block text-q-success" />
                                                         </div>
                                                     )}
                                                 </div>
@@ -986,7 +973,7 @@ const CMSDashboard: React.FC = () => {
 
                         {/* Quick Preview Modal - Mobile optimized */}
                         {previewPost && (
-                            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setPreviewPost(null)}>
+                            <div className="fixed inset-0 bg-q-text/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setPreviewPost(null)}>
                                 <div
                                     className="bg-q-surface w-full sm:max-w-3xl sm:rounded-2xl rounded-t-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col animate-slide-up sm:animate-fade-in"
                                     onClick={(e) => e.stopPropagation()}
@@ -1059,7 +1046,7 @@ const CMSDashboard: React.FC = () => {
                         <div className="w-px h-6 bg-border" />
                         <button
                             onClick={handleBulkDelete}
-                            className="px-4 py-2 text-sm font-bold bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all flex items-center gap-2 shadow-lg shadow-red-500/20 hover:shadow-red-500/40"
+                            className="px-4 py-2 text-sm font-bold bg-q-error text-white rounded-xl hover:bg-q-error transition-all flex items-center gap-2 shadow-lg shadow-q-error/20 hover:shadow-q-error/40"
                         >
                             <Trash2 size={14} /> {t('common.delete', 'Eliminar')}
                         </button>
@@ -1103,7 +1090,7 @@ const CMSDashboard: React.FC = () => {
                     .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
 
                 return (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setShowProfileOrderModal(false)}>
+                    <div className="fixed inset-0 bg-q-text/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setShowProfileOrderModal(false)}>
                         <div
                             className="bg-q-surface w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[85vh] overflow-hidden flex flex-col animate-slide-up sm:animate-fade-in"
                             onClick={(e) => e.stopPropagation()}
@@ -1142,7 +1129,7 @@ const CMSDashboard: React.FC = () => {
 
             {/* Category Manager Modal */}
             {showCategoryManager && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setShowCategoryManager(false)}>
+                <div className="fixed inset-0 bg-q-text/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setShowCategoryManager(false)}>
                     <div
                         className="bg-q-surface w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-hidden flex flex-col animate-slide-up sm:animate-fade-in"
                         onClick={(e) => e.stopPropagation()}
@@ -1281,7 +1268,7 @@ const CMSDashboard: React.FC = () => {
                                                     </button>
                                                     <button
                                                         onClick={() => setDeleteCategoryConfirmId(cat.id)}
-                                                        className="p-1.5 hover:bg-red-500/10 rounded-lg transition-colors text-q-text-muted hover:text-red-500"
+                                                        className="p-1.5 hover:bg-q-error/10 rounded-lg transition-colors text-q-text-muted hover:text-q-error"
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>

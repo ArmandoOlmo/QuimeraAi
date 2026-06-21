@@ -215,7 +215,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
 
         setIsEnhancingPrompt(true);
         let modelToUse = 'gemini-2.5-flash'; // Declared outside try for error logging
-        
+
         try {
             const { colors, colorInfo } = extractTemplateColors(template);
             const colorAnalysis = analyzeColorPalette(colors);
@@ -908,7 +908,7 @@ Name:`;
             <form onSubmit={handleSubmit}>
                 <div className="quimera-clean-controls p-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
                     {error && (
-                        <p className="bg-red-500/10 text-red-400 text-sm p-2.5 rounded-lg mb-4">
+                        <p className="bg-q-error/10 text-q-error text-sm p-2.5 rounded-lg mb-4">
                             {error}
                         </p>
                     )}
@@ -931,13 +931,13 @@ Name:`;
                                                 value={formData.name}
                                                 onChange={handleChange}
                                                 placeholder={t('superadmin.templateEditor.namePlaceholder', 'Template name')}
-                                                className="flex-1 bg-q-bg text-white text-sm p-2 rounded-lg border border-q-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                                                className="flex-1 bg-q-bg text-white text-sm p-2 rounded-lg border border-q-border focus:ring-1 focus:ring-q-accent/35 focus:border-q-accent/25 outline-none"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={handleGenerateNameWithAI}
                                                 disabled={isGeneratingName || displayColors.length === 0}
-                                                className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-40"
+                                                className="p-2 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent rounded-lg hover:from-q-accent hover:to-q-accent transition-all disabled:opacity-40"
                                                 title={t('superadmin.templateEditor.generateNameTitle', 'Generate name with AI')}
                                             >
                                                 {isGeneratingName ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
@@ -954,7 +954,7 @@ Name:`;
                                             value={formData.category}
                                             onChange={handleChange}
                                             placeholder={t('superadmin.templateEditor.categoryPlaceholder', 'e.g., Hospitality & Dining')}
-                                            className="w-full bg-q-bg text-white text-sm p-2 rounded-lg border border-q-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                                            className="w-full bg-q-bg text-white text-sm p-2 rounded-lg border border-q-border focus:ring-1 focus:ring-q-accent/35 focus:border-q-accent/25 outline-none"
                                         />
                                     </div>
                                 </div>
@@ -964,13 +964,13 @@ Name:`;
                             <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border/50">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
-                                        <Palette className="w-4 h-4 text-purple-400" />
+                                        <Palette className="w-4 h-4 text-q-accent" />
                                         <span className="text-xs font-medium text-q-text-secondary">{t('superadmin.templateEditor.colorsLabel', 'Colors')}</span>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setShowCoolorsImporter(!showCoolorsImporter)}
-                                        className="text-[10px] px-2 py-1 bg-purple-600/20 text-purple-300 rounded-md hover:bg-purple-600/30 transition-colors flex items-center gap-1"
+                                        className="text-[10px] px-2 py-1 bg-q-accent/20 text-q-accent rounded-md hover:bg-q-accent/30 transition-colors flex items-center gap-1"
                                     >
                                         <Sparkles size={10} />
                                         {showCoolorsImporter ? t('superadmin.templateEditor.close', 'Close') : t('superadmin.templateEditor.importCoolors', 'Import Coolors')}
@@ -982,7 +982,7 @@ Name:`;
                                     {displayColors.slice(0, 10).map((color, idx) => (
                                         <div
                                             key={idx}
-                                            className="w-7 h-7 rounded-lg border border-white/10 shadow-sm cursor-pointer hover:scale-110 transition-transform"
+                                            className="w-7 h-7 rounded-lg border border-q-border/10 shadow-sm cursor-pointer hover:scale-110 transition-transform"
                                             style={{ backgroundColor: color }}
                                             title={color}
                                         />
@@ -994,9 +994,9 @@ Name:`;
 
                                 {/* Info about color application */}
                                 {formData.globalColors && (
-                                    <div className="flex items-start gap-2 p-2 bg-green-900/20 rounded-lg border border-green-500/30">
-                                        <Info size={12} className="text-green-400 mt-0.5 shrink-0" />
-                                        <p className="text-[10px] text-green-300 leading-relaxed">
+                                    <div className="flex items-start gap-2 p-2 bg-q-success/20 rounded-lg border border-q-success/30">
+                                        <Info size={12} className="text-q-success mt-0.5 shrink-0" />
+                                        <p className="text-[10px] text-q-success leading-relaxed">
                                             {t('superadmin.templateEditor.colorsWillApply', 'Colors will be applied to all components when you save. New components you add will also receive these colors?.')}
                                         </p>
                                     </div>
@@ -1025,7 +1025,7 @@ Name:`;
                                         type="button"
                                         onClick={suggestIndustriesWithAI}
                                         disabled={isAiSuggesting}
-                                        className="text-[10px] px-2 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 flex items-center gap-1"
+                                        className="text-[10px] px-2 py-1 bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent rounded-md hover:from-q-accent hover:to-q-accent disabled:opacity-50 flex items-center gap-1"
                                     >
                                         {isAiSuggesting ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
                                         {isAiSuggesting ? t('superadmin.templateEditor.analyzing', 'Analyzing...') : t('superadmin.templateEditor.suggestAI', 'Suggest AI')}
@@ -1034,14 +1034,14 @@ Name:`;
 
                                 {/* AI Suggestions - Compact */}
                                 {aiSuggestions.length > 0 && (
-                                    <div className="mb-2 p-2 bg-purple-900/20 rounded-lg border border-purple-500/20">
+                                    <div className="mb-2 p-2 bg-q-accent/20 rounded-lg border border-q-accent/20">
                                         <div className="flex flex-wrap gap-1">
                                             {aiSuggestions.map(id => (
                                                 <button
                                                     key={id}
                                                     type="button"
                                                     onClick={() => applySingleSuggestion(id)}
-                                                    className="text-[10px] px-2 py-0.5 bg-purple-600/50 text-purple-200 rounded-full hover:bg-purple-600 transition-colors"
+                                                    className="text-[10px] px-2 py-0.5 bg-q-accent/50 text-q-accent rounded-full hover:bg-q-accent transition-colors"
                                                 >
                                                     + {getIndustryLabel(id)}
                                                 </button>
@@ -1103,7 +1103,7 @@ Name:`;
                                         </div>
                                     )}
                                 </div>
-                                
+
                                 {/* AI Generator - Compact */}
                                 {showThumbnailGenerator && (
                                     <div className="mt-3 quimera-ai-launcher">
@@ -1175,7 +1175,7 @@ Name:`;
                                                         type="button"
                                                         onClick={handleGenerateThumbnail}
                                                         disabled={isGeneratingThumbnail}
-                                                        className="absolute top-1 right-1 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
+                                                        className="absolute top-1 right-1 p-1 bg-q-text/50 rounded-full text-white hover:bg-q-text/70"
                                                     >
                                                         <RefreshCw size={12} className={isGeneratingThumbnail ? 'animate-spin' : ''} />
                                                     </button>
@@ -1208,7 +1208,7 @@ Name:`;
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="flex items-center gap-1.5 px-4 py-1.5 bg-q-accent text-white text-sm font-medium rounded-lg hover:bg-q-accent/90 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-4 py-1.5 bg-q-accent text-q-text-on-accent text-sm font-medium rounded-lg hover:bg-q-accent/90 transition-colors disabled:opacity-50"
                     >
                         <Save className="w-3.5 h-3.5" />
                         {isLoading ? t('superadmin.templateEditor.saving', 'Saving...') : t('superadmin.templateEditor.save', 'Save')}

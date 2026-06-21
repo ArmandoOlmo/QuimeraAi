@@ -334,7 +334,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                         <div className="w-px h-6 bg-border" />
                         <button
                             onClick={handleBulkDelete}
-                            className="px-4 py-2 text-sm font-bold bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all flex items-center gap-2 shadow-lg shadow-red-500/20 hover:shadow-red-500/40"
+                            className="px-4 py-2 text-sm font-bold bg-q-error text-white rounded-xl hover:bg-q-error transition-all flex items-center gap-2 shadow-lg shadow-q-error/20 hover:shadow-q-error/40"
                         >
                             <Trash2 size={14} /> {t('common.delete', 'Eliminar')}
                         </button>
@@ -393,8 +393,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                 {/* Status Badge */}
                 <div className="absolute top-3 right-3">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Published'
-                        ? 'bg-green-500/90 text-white'
-                        : 'bg-slate-500/90 text-white'
+                        ? 'bg-q-success/90 text-white'
+                        : 'bg-q-surface-overlay/90 text-white'
                         }`}>
                         {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
                     </span>
@@ -458,7 +458,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
                     {project.name}
                 </h3>
                 <div className="flex items-center gap-3 sm:gap-4 text-xs text-q-text-muted mt-1">
-                    <span className={`flex items-center gap-1 ${project.status === 'Published' ? 'text-green-500' : ''
+                    <span className={`flex items-center gap-1 ${project.status === 'Published' ? 'text-q-success' : ''
                         }`}>
                         {project.status === 'Published' ? <Globe size={12} /> : <FileEdit size={12} />}
                         <span className="hidden sm:inline">

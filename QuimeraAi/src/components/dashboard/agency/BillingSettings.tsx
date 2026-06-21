@@ -127,7 +127,7 @@ export function BillingSettings() {
             </p>
           </div>
           {stripeStatus.isConnected ? (
-            <Badge variant="success" className="bg-green-100 text-green-800">Conectado</Badge>
+            <Badge variant="success" className="bg-q-success/10 text-q-success">Conectado</Badge>
           ) : (
             <Button onClick={handleConnectStripe} disabled={loading}>
               Conectar con Stripe

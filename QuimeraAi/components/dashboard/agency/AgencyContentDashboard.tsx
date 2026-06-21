@@ -334,7 +334,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                         </div>
 
                         {/* Badge */}
-                        <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-500 rounded-full">
+                        <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-medium bg-q-accent/10 text-q-accent rounded-full">
                             Landing Pública
                         </span>
                     </div>
@@ -459,9 +459,9 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                         {activeTab === 'legal' && (
                             <div className="space-y-6">
                                 {/* Legal Pages Info */}
-                                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                                <div className="p-4 bg-q-accent/10 border border-q-accent/20 rounded-lg">
                                     <div className="flex items-start gap-3">
-                                        <Shield className="text-amber-500 flex-shrink-0 mt-0.5" size={20} />
+                                        <Shield className="text-q-accent flex-shrink-0 mt-0.5" size={20} />
                                         <div>
                                             <h4 className="text-sm font-semibold text-foreground mb-1">
                                                 Páginas Legales para Meta OAuth
@@ -487,10 +487,10 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                             >
                                                 <div className="flex items-start justify-between mb-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`p-2 rounded-lg ${isPublished ? 'bg-green-500/10' : 'bg-secondary'}`}>
-                                                            {pageType === 'privacy-policy' ? <Lock size={20} className={isPublished ? 'text-green-500' : 'text-q-text-muted'} /> :
-                                                                pageType === 'data-deletion' ? <Trash2 size={20} className={isPublished ? 'text-green-500' : 'text-q-text-muted'} /> :
-                                                                    <FileText size={20} className={isPublished ? 'text-green-500' : 'text-q-text-muted'} />}
+                                                        <div className={`p-2 rounded-lg ${isPublished ? 'bg-q-success/10' : 'bg-secondary'}`}>
+                                                            {pageType === 'privacy-policy' ? <Lock size={20} className={isPublished ? 'text-q-success' : 'text-q-text-muted'} /> :
+                                                                pageType === 'data-deletion' ? <Trash2 size={20} className={isPublished ? 'text-q-success' : 'text-q-text-muted'} /> :
+                                                                    <FileText size={20} className={isPublished ? 'text-q-success' : 'text-q-text-muted'} />}
                                                         </div>
                                                         <div>
                                                             <h3 className="font-semibold">{AGENCY_LEGAL_PAGE_LABELS[pageType]}</h3>
@@ -498,8 +498,8 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                         </div>
                                                     </div>
                                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${isPublished
-                                                        ? 'bg-green-500/10 text-green-600'
-                                                        : 'bg-orange-500/10 text-orange-600'
+                                                        ? 'bg-q-success/10 text-q-success'
+                                                        : 'bg-q-warning/10 text-q-warning'
                                                         }`}>
                                                         {isPublished ? 'Publicado' : 'Borrador'}
                                                     </span>
@@ -582,24 +582,24 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                         </div>
 
                                         {/* Published */}
-                                        <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-500/5 via-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5">
-                                            <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
+                                        <div className="group relative overflow-hidden bg-gradient-to-br from-q-success/5 via-q-success/10 to-q-success/5 border border-q-success/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-q-success/40 hover:shadow-lg hover:shadow-q-success/5">
+                                            <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-q-success/10 rounded-full blur-2xl group-hover:bg-q-success/20 transition-colors" />
                                             <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                                <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 mx-auto sm:mx-0 flex-shrink-0" size={16} strokeWidth={2} />
+                                                <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-q-success mx-auto sm:mx-0 flex-shrink-0" size={16} strokeWidth={2} />
                                                 <div className="text-center sm:text-left">
-                                                    <p className="text-xl sm:text-2xl font-bold text-emerald-500 tracking-tight">{metrics.published}</p>
+                                                    <p className="text-xl sm:text-2xl font-bold text-q-success tracking-tight">{metrics.published}</p>
                                                     <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('contentManagement.published', 'Publicados')}</p>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Drafts */}
-                                        <div className="group relative overflow-hidden bg-gradient-to-br from-amber-500/5 via-amber-500/10 to-amber-500/5 border border-amber-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5">
-                                            <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-colors" />
+                                        <div className="group relative overflow-hidden bg-gradient-to-br from-q-accent/5 via-q-accent/10 to-q-accent/5 border border-q-accent/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-q-accent/40 hover:shadow-lg hover:shadow-q-accent/5">
+                                            <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-q-accent/10 rounded-full blur-2xl group-hover:bg-q-accent/20 transition-colors" />
                                             <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                                <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 mx-auto sm:mx-0 flex-shrink-0" size={16} strokeWidth={2} />
+                                                <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 text-q-accent mx-auto sm:mx-0 flex-shrink-0" size={16} strokeWidth={2} />
                                                 <div className="text-center sm:text-left">
-                                                    <p className="text-xl sm:text-2xl font-bold text-amber-500 tracking-tight">{metrics.drafts}</p>
+                                                    <p className="text-xl sm:text-2xl font-bold text-q-accent tracking-tight">{metrics.drafts}</p>
                                                     <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('contentManagement.drafts', 'Borradores')}</p>
                                                 </div>
                                             </div>
@@ -759,7 +759,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                                         <div className="flex items-center gap-2">
                                                                             <p className="font-semibold text-sm text-foreground line-clamp-1">{article.title}</p>
                                                                             {article.featured && (
-                                                                                <Star size={12} className="text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                                                                                <Star size={12} className="text-q-accent fill-yellow-500 flex-shrink-0" />
                                                                             )}
                                                                         </div>
                                                                         <p className="text-xs text-q-text-muted line-clamp-1">{article.excerpt || t('contentManagement.noExcerpt', 'Sin extracto')}</p>
@@ -774,8 +774,8 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                             </td>
                                                             <td className="p-4">
                                                                 <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${article.status === 'published'
-                                                                    ? 'bg-green-500/10 text-green-500'
-                                                                    : 'bg-yellow-500/10 text-yellow-500'
+                                                                    ? 'bg-q-success/10 text-q-success'
+                                                                    : 'bg-q-accent/10 text-q-accent'
                                                                     }`}>
                                                                     {article.status === 'published' ? 'Publicado' : 'Borrador'}
                                                                 </span>
@@ -793,7 +793,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                     <button
                                                                         onClick={() => handleQuickPreview(article)}
-                                                                        className="p-2 text-q-text-muted hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-all"
+                                                                        className="p-2 text-q-text-muted hover:text-q-accent hover:bg-q-accent/10 rounded-md transition-all"
                                                                         title="Vista rápida"
                                                                     >
                                                                         <Eye size={14} />
@@ -807,14 +807,14 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDuplicate(article)}
-                                                                        className="p-2 text-q-text-muted hover:text-green-500 hover:bg-green-500/10 rounded-md transition-all"
+                                                                        className="p-2 text-q-text-muted hover:text-q-success hover:bg-q-success/10 rounded-md transition-all"
                                                                         title="Duplicar"
                                                                     >
                                                                         <Copy size={14} />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDelete(article.id)}
-                                                                        className="p-2 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
+                                                                        className="p-2 text-q-text-muted hover:text-q-error hover:bg-q-error/10 rounded-md transition-all"
                                                                         title="Eliminar"
                                                                     >
                                                                         <Trash2 size={14} />
@@ -852,8 +852,8 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                             <div className="flex items-start justify-between gap-2 mb-1">
                                                                 <h4 className="font-semibold text-sm text-foreground line-clamp-1">{article.title}</h4>
                                                                 <span className={`flex-shrink-0 px-2 py-0.5 text-[10px] font-medium rounded-full ${article.status === 'published'
-                                                                    ? 'bg-green-500/10 text-green-500'
-                                                                    : 'bg-yellow-500/10 text-yellow-500'
+                                                                    ? 'bg-q-success/10 text-q-success'
+                                                                    : 'bg-q-accent/10 text-q-accent'
                                                                     }`}>
                                                                     {article.status === 'published' ? 'Publicado' : 'Borrador'}
                                                                 </span>
@@ -869,19 +869,19 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                                 <div className="flex items-center gap-0.5">
                                                                     <button
                                                                         onClick={(e) => { e.stopPropagation(); handleQuickPreview(article); }}
-                                                                        className="p-1.5 text-q-text-muted hover:text-blue-500 rounded transition-colors"
+                                                                        className="p-1.5 text-q-text-muted hover:text-q-accent rounded transition-colors"
                                                                     >
                                                                         <Eye size={14} />
                                                                     </button>
                                                                     <button
                                                                         onClick={(e) => { e.stopPropagation(); handleDuplicate(article); }}
-                                                                        className="p-1.5 text-q-text-muted hover:text-green-500 rounded transition-colors"
+                                                                        className="p-1.5 text-q-text-muted hover:text-q-success rounded transition-colors"
                                                                     >
                                                                         <Copy size={14} />
                                                                     </button>
                                                                     <button
                                                                         onClick={(e) => { e.stopPropagation(); handleDelete(article.id); }}
-                                                                        className="p-1.5 text-q-text-muted hover:text-red-500 rounded transition-colors"
+                                                                        className="p-1.5 text-q-text-muted hover:text-q-error rounded transition-colors"
                                                                     >
                                                                         <Trash2 size={14} />
                                                                     </button>
@@ -922,11 +922,11 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
 
                                                     {/* Top Section: Status Badge & Category */}
                                                     <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 flex items-center gap-2">
-                                                        <span className={`px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md sm:rounded-lg border backdrop-blur-md shadow-lg ${article.status === 'published' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'}`}>
+                                                        <span className={`px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md sm:rounded-lg border backdrop-blur-md shadow-lg ${article.status === 'published' ? 'bg-q-success/20 text-q-success border-q-success/30' : 'bg-q-accent/20 text-q-accent border-q-accent/30'}`}>
                                                             {article.status === 'published' ? 'Publicado' : 'Borrador'}
                                                         </span>
                                                         {article.featured && (
-                                                            <span className="px-2 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-md sm:rounded-lg backdrop-blur-md">
+                                                            <span className="px-2 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-bold bg-q-accent/20 text-q-accent border border-q-accent/30 rounded-md sm:rounded-lg backdrop-blur-md">
                                                                 <Star size={10} className="inline mr-0.5" />
                                                             </span>
                                                         )}
@@ -936,44 +936,44 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                     <div className="sm:hidden absolute top-3 right-3 z-20 flex gap-1">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleQuickPreview(article); }}
-                                                            className="bg-white/90 text-blue-500 p-2 rounded-full shadow-lg active:scale-95 transition-transform"
+                                                            className="bg-q-surface/90 text-q-accent p-2 rounded-full shadow-lg active:scale-95 transition-transform"
                                                         >
                                                             <Eye size={14} />
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(article.id); }}
-                                                            className="bg-white/90 text-red-500 p-2 rounded-full shadow-lg active:scale-95 transition-transform"
+                                                            className="bg-q-surface/90 text-q-error p-2 rounded-full shadow-lg active:scale-95 transition-transform"
                                                         >
                                                             <Trash2 size={14} />
                                                         </button>
                                                     </div>
 
                                                     {/* Desktop: Hover Actions Overlay */}
-                                                    <div className="hidden sm:flex absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center justify-center backdrop-blur-[2px] gap-3 z-10">
+                                                    <div className="hidden sm:flex absolute inset-0 bg-q-text/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center justify-center backdrop-blur-[2px] gap-3 z-10">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleQuickPreview(article); }}
-                                                            className="bg-white text-blue-500 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
+                                                            className="bg-q-surface text-q-accent p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                             title="Vista rápida"
                                                         >
                                                             <Eye size={20} />
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleEdit(article); }}
-                                                            className="bg-white text-black p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
+                                                            className="bg-q-surface text-black p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                             title="Editar"
                                                         >
                                                             <Edit3 size={20} />
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleDuplicate(article); }}
-                                                            className="bg-white text-green-600 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
+                                                            className="bg-q-surface text-q-success p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                             title="Duplicar"
                                                         >
                                                             <Copy size={20} />
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(article.id); }}
-                                                            className="bg-white text-red-500 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
+                                                            className="bg-q-surface text-q-error p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                             title="Eliminar"
                                                         >
                                                             <Trash2 size={20} />
@@ -982,7 +982,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
 
                                                     {/* Bottom Section: Title, Category and Date */}
                                                     <div className="absolute bottom-0 left-0 right-0 z-10 p-4 sm:p-6">
-                                                        <span className="inline-block px-2 py-0.5 text-[10px] sm:text-xs font-medium bg-white/20 text-white rounded mb-2 sm:mb-3">
+                                                        <span className="inline-block px-2 py-0.5 text-[10px] sm:text-xs font-medium bg-q-surface/20 text-white rounded mb-2 sm:mb-3">
                                                             {CATEGORY_LABELS[article.category]}
                                                         </span>
                                                         <h3 className="font-bold text-lg sm:text-2xl text-white line-clamp-2 mb-2 sm:mb-3 group-hover:text-primary/90 transition-colors" title={article.title}>
@@ -998,8 +998,8 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                             </div>
                                                             {article.status === 'published' && (
                                                                 <div title="Publicado">
-                                                                    <Globe size={14} className="sm:hidden text-green-400" />
-                                                                    <Globe size={16} className="hidden sm:block text-green-400" />
+                                                                    <Globe size={14} className="sm:hidden text-q-success" />
+                                                                    <Globe size={16} className="hidden sm:block text-q-success" />
                                                                 </div>
                                                             )}
                                                         </div>
@@ -1012,7 +1012,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
 
                                 {/* Quick Preview Modal - Mobile optimized */}
                                 {previewArticle && (
-                                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setPreviewArticle(null)}>
+                                    <div className="fixed inset-0 bg-q-text/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setPreviewArticle(null)}>
                                         <div
                                             className="bg-q-surface w-full sm:max-w-3xl sm:rounded-2xl rounded-t-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col animate-slide-up sm:animate-fade-in"
                                             onClick={(e) => e.stopPropagation()}
@@ -1089,7 +1089,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={handleBulkDelete}
-                                                className="px-2.5 sm:px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1"
+                                                className="px-2.5 sm:px-3 py-1.5 text-xs bg-q-error text-white rounded-lg hover:bg-q-error transition-colors flex items-center gap-1"
                                             >
                                                 <Trash2 size={12} /> <span className="hidden sm:inline">{t('common.delete', 'Eliminar')}</span>
                                             </button>
@@ -1110,10 +1110,10 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
 
             {/* Delete Confirmation Modal */}
             {deleteConfirmId && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in" style={{ zIndex: 9999 }}>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-q-text/50 backdrop-blur-sm p-4 animate-fade-in" style={{ zIndex: 9999 }}>
                     <div className="bg-q-surface w-full max-w-md rounded-xl border border-q-border shadow-2xl overflow-hidden animate-scale-in">
                         <div className="p-6">
-                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 text-red-500 mx-auto">
+                            <div className="w-12 h-12 rounded-full bg-q-error/10 flex items-center justify-center mb-4 text-q-error mx-auto">
                                 <Trash2 size={24} />
                             </div>
                             <h3 className="text-xl font-bold text-center text-foreground mb-2">
@@ -1133,7 +1133,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                 <button
                                     onClick={confirmDelete}
                                     disabled={isDeleting}
-                                    className="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors font-medium text-sm flex items-center gap-2"
+                                    className="px-5 py-2.5 rounded-lg bg-q-error hover:bg-q-error text-white transition-colors font-medium text-sm flex items-center gap-2"
                                 >
                                     {isDeleting ? (
                                         <>
@@ -1154,10 +1154,10 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
 
             {/* Bulk Delete Confirmation Modal */}
             {bulkDeleteConfirm && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in" style={{ zIndex: 9999 }}>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-q-text/50 backdrop-blur-sm p-4 animate-fade-in" style={{ zIndex: 9999 }}>
                     <div className="bg-q-surface w-full max-w-md rounded-xl border border-q-border shadow-2xl overflow-hidden animate-scale-in">
                         <div className="p-6">
-                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 text-red-500 mx-auto">
+                            <div className="w-12 h-12 rounded-full bg-q-error/10 flex items-center justify-center mb-4 text-q-error mx-auto">
                                 <Trash2 size={24} />
                             </div>
                             <h3 className="text-xl font-bold text-center text-foreground mb-2">
@@ -1177,7 +1177,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                 <button
                                     onClick={confirmBulkDelete}
                                     disabled={isDeleting}
-                                    className="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors font-medium text-sm flex items-center gap-2"
+                                    className="px-5 py-2.5 rounded-lg bg-q-error hover:bg-q-error text-white transition-colors font-medium text-sm flex items-center gap-2"
                                 >
                                     {isDeleting ? (
                                         <>
