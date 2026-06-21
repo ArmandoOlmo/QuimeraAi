@@ -280,7 +280,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                   e.stopPropagation();
                   toggleMenu(e);
                 }}
-                className="w-9 h-9 min-w-[36px] min-h-[36px] flex-shrink-0 flex items-center justify-center rounded-full bg-q-text/30 backdrop-blur-md text-white hover:bg-q-text/50 transition-colors shadow-lg pointer-events-auto"
+                className="w-9 h-9 min-w-[36px] min-h-[36px] flex-shrink-0 flex items-center justify-center rounded-full border border-white/10 bg-black/35 backdrop-blur-md text-white hover:bg-black/55 transition-colors shadow-lg pointer-events-auto"
                 aria-label={t('project.aria.optionsMenu')}
                 aria-expanded={showMenu}
                 aria-haspopup="true"
@@ -345,7 +345,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
         {/* Hover Actions Overlay */}
         <div className="absolute inset-0 bg-q-text/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px] pointer-events-none">
-          <span className="bg-q-surface text-black font-bold py-3 px-6 rounded-full shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex items-center gap-2">
+          <span className="bg-q-accent text-q-text-on-accent font-bold py-3 px-6 rounded-full shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex items-center gap-2">
             {isTemplate ? <Copy size={16} /> : <ExternalLink size={16} />}
             {isTemplate ? t('project.actions.useTemplate') : t('project.actions.open')}
           </span>

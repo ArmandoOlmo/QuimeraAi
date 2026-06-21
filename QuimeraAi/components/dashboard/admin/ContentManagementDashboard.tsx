@@ -1015,7 +1015,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleEdit(article); }}
-                                                            className="bg-q-surface text-black p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
+                                                            className="bg-q-accent text-q-text-on-accent p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
                                                             title={t('common.edit', 'Editar')}
                                                         >
                                                             <Edit3 size={20} />
