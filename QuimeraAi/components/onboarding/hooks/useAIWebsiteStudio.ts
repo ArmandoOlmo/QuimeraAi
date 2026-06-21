@@ -2019,6 +2019,17 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
                 createdBy: user.id,
             });
 
+            if (isDev) {
+                console.log('[AIWebsiteStudio] Commerce blueprints generated:', {
+                    ecommerceEnabled: fullProject.businessBlueprint.ecommerceBlueprint.enabled,
+                    storefrontEnabled: fullProject.businessBlueprint.storefrontBlueprint.enabled,
+                    starterProducts: fullProject.businessBlueprint.ecommerceBlueprint.starterProducts.length,
+                    categories: fullProject.businessBlueprint.ecommerceBlueprint.productCategories || fullProject.businessBlueprint.ecommerceBlueprint.categories,
+                    themePreset: fullProject.businessBlueprint.storefrontBlueprint.themePreset,
+                    productCardVariant: fullProject.businessBlueprint.storefrontBlueprint.productCardVariant,
+                });
+            }
+
             setGeneratedProject(fullProject);
             addEvent('done', 'Website preview ready!');
             setGenerationPhase(prev => prev ? { ...prev, phase: 'done', progress: 100, currentStep: 'Website preview ready!' } : prev);

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Check, Copy, Loader2, RotateCcw, Save, Sparkles } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Loader2, RotateCcw, Save, ShoppingBag, Sparkles } from 'lucide-react';
 import type { PageSection, Project, SitePage } from '../../types';
 import PageRenderer from '../PageRenderer';
 import { AppButton, AppCard } from '../ui/system';
@@ -93,6 +93,23 @@ function getProjectSummary(project: Project): string {
     ].filter(Boolean).join('\n');
 }
 
+function getEcommerceSummary(project: Project) {
+    const blueprint = project.businessBlueprint;
+    if (!blueprint) return null;
+
+    const ecommerce = blueprint.ecommerceBlueprint;
+    const storefront = blueprint.storefrontBlueprint;
+
+    return {
+        enabled: ecommerce.enabled,
+        categories: ecommerce.productCategories || ecommerce.categories || [],
+        starterProductCount: ecommerce.starterProducts?.length || 0,
+        themePreset: storefront.themePreset || storefront.templatePreset || 'draft',
+        productCardVariant: storefront.productCardVariant || 'draft',
+        needsReview: ecommerce.needsReview || storefront.needsReview,
+    };
+}
+
 export function GeneratedWebsitePreview({
     project,
     isSaving,
@@ -105,6 +122,7 @@ export function GeneratedWebsitePreview({
     const homePage = useMemo(() => getHomePage(project), [project]);
     const hero = useMemo(() => getHeroData(project), [project]);
     const summary = useMemo(() => getProjectSummary(project), [project]);
+    const ecommerceSummary = useMemo(() => getEcommerceSummary(project), [project]);
     const sectionLabels = useMemo(() => (
         project.componentOrder
             .filter(section => !NON_CONTENT_SECTIONS.has(section))
@@ -208,6 +226,52 @@ export function GeneratedWebsitePreview({
                                 </div>
                             )}
                         </AppCard>
+
+                        {ecommerceSummary && (
+                            <AppCard variant="elevated" className="rounded-xl p-4">
+                                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-q-text">
+                                    <ShoppingBag className="h-4 w-4 text-q-accent" />
+                                    Ecommerce sugerido
+                                </div>
+                                <div className="space-y-2 text-xs text-q-text-secondary">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>Enabled</span>
+                                        <span className="font-semibold text-q-text">{ecommerceSummary.enabled ? 'Yes' : 'No'}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>Starter drafts</span>
+                                        <span className="font-semibold text-q-text">{ecommerceSummary.starterProductCount}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>Storefront preset</span>
+                                        <span className="font-semibold text-q-text">{ecommerceSummary.themePreset}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>Product card</span>
+                                        <span className="font-semibold text-q-text">{ecommerceSummary.productCardVariant}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>Needs review</span>
+                                        <span className="font-semibold text-q-text">{ecommerceSummary.needsReview ? 'Yes' : 'No'}</span>
+                                    </div>
+                                </div>
+                                {ecommerceSummary.categories.length > 0 && (
+                                    <div className="mt-3 flex flex-wrap gap-1.5">
+                                        {ecommerceSummary.categories.slice(0, 6).map((category, index) => (
+                                            <span key={`${category}-${index}`} className="rounded-full border border-q-border bg-q-surface px-2.5 py-1 text-xs text-q-text-secondary">
+                                                {category}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                                <a
+                                    href="/ecommerce"
+                                    className="mt-4 inline-flex items-center text-xs font-semibold text-q-accent hover:text-q-accent/80"
+                                >
+                                    Revisar en Ecommerce Suite
+                                </a>
+                            </AppCard>
+                        )}
                     </div>
 
                     <div className="min-w-0 rounded-2xl border border-q-border bg-q-surface shadow-2xl shadow-black/10">
