@@ -424,6 +424,123 @@ html.black {
   --site-body-color: #A1A1AA;
 }
 
+/* Stable modal/drawer scrims.
+   Several overlays used bg-q-text/* as a backdrop color; in dark/black themes
+   q-text is white, which turns blurred backdrops into the pale wash seen on mobile. */
+:root,
+html.light {
+  --q-scrim-rgb: 33 29 25;
+}
+
+html.dark {
+  --q-scrim-rgb: 9 4 17;
+}
+
+html.black {
+  --q-scrim-rgb: 0 0 0;
+}
+
+.fixed.inset-0.bg-q-text\/20,
+.absolute.inset-0.bg-q-text\/20 {
+  background-color: rgb(var(--q-scrim-rgb) / 0.24) !important;
+}
+
+.fixed.inset-0.bg-q-text\/30,
+.absolute.inset-0.bg-q-text\/30 {
+  background-color: rgb(var(--q-scrim-rgb) / 0.34) !important;
+}
+
+.fixed.inset-0.bg-q-text\/40,
+.absolute.inset-0.bg-q-text\/40,
+.flex-1.bg-q-text\/40.backdrop-blur-sm {
+  background-color: rgb(var(--q-scrim-rgb) / 0.44) !important;
+}
+
+.fixed.inset-0.bg-q-text\/50,
+.absolute.inset-0.bg-q-text\/50 {
+  background-color: rgb(var(--q-scrim-rgb) / 0.52) !important;
+}
+
+.fixed.inset-0.bg-q-text\/55,
+.absolute.inset-0.bg-q-text\/55 {
+  background-color: rgb(var(--q-scrim-rgb) / 0.58) !important;
+}
+
+.fixed.inset-0.bg-q-text\/60,
+.absolute.inset-0.bg-q-text\/60 {
+  background-color: rgb(var(--q-scrim-rgb) / 0.62) !important;
+}
+
+.fixed.inset-0.bg-q-text\/65,
+.absolute.inset-0.bg-q-text\/65 {
+  background-color: rgb(var(--q-scrim-rgb) / 0.68) !important;
+}
+
+.fixed.inset-0.bg-q-text\/70,
+.absolute.inset-0.bg-q-text\/70 {
+  background-color: rgb(var(--q-scrim-rgb) / 0.72) !important;
+}
+
+.fixed.inset-0.bg-q-text\/80,
+.absolute.inset-0.bg-q-text\/80 {
+  background-color: rgb(var(--q-scrim-rgb) / 0.82) !important;
+}
+
+.fixed.inset-0.bg-q-text\/90,
+.absolute.inset-0.bg-q-text\/90 {
+  background-color: rgb(var(--q-scrim-rgb) / 0.9) !important;
+}
+
+.bg-q-text\/30.backdrop-blur-sm,
+.bg-q-text\/30.backdrop-blur-md {
+  background-color: rgb(var(--q-scrim-rgb) / 0.34) !important;
+}
+
+.bg-q-text\/40.backdrop-blur-sm,
+.bg-q-text\/40.backdrop-blur-md {
+  background-color: rgb(var(--q-scrim-rgb) / 0.44) !important;
+}
+
+.bg-q-text\/50.backdrop-blur-sm,
+.bg-q-text\/50.backdrop-blur-md {
+  background-color: rgb(var(--q-scrim-rgb) / 0.52) !important;
+}
+
+.bg-q-text\/60.backdrop-blur,
+.bg-q-text\/60.backdrop-blur-sm,
+.bg-q-text\/60.backdrop-blur-md {
+  background-color: rgb(var(--q-scrim-rgb) / 0.62) !important;
+}
+
+.bg-q-text\/70.backdrop-blur-sm,
+.bg-q-text\/70.backdrop-blur-md {
+  background-color: rgb(var(--q-scrim-rgb) / 0.72) !important;
+}
+
+.hover\:bg-q-text\/50:hover {
+  background-color: rgb(var(--q-scrim-rgb) / 0.52) !important;
+}
+
+.hover\:bg-q-text\/60:hover {
+  background-color: rgb(var(--q-scrim-rgb) / 0.62) !important;
+}
+
+.hover\:bg-q-text\/70:hover {
+  background-color: rgb(var(--q-scrim-rgb) / 0.72) !important;
+}
+
+.hover\:bg-q-text\/80:hover {
+  background-color: rgb(var(--q-scrim-rgb) / 0.82) !important;
+}
+
+.group:hover .group-hover\:bg-q-text\/20 {
+  background-color: rgb(var(--q-scrim-rgb) / 0.24) !important;
+}
+
+.group:hover .group-hover\:bg-q-text\/40 {
+  background-color: rgb(var(--q-scrim-rgb) / 0.44) !important;
+}
+
 /* Dashboard home background — inspired by Lovable's immersive canvas, tuned to Quimera themes. */
 .quimera-dashboard-home-bg {
   position: relative;

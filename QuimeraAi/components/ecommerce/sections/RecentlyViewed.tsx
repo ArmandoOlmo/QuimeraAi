@@ -11,6 +11,7 @@ import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { createProductCardViewModel } from '../../../utils/productCard';
+import { filterRenderableStorefrontProducts } from '../../../utils/ecommerce/productDisplayGuards';
 import {
     getStorefrontAspectRatioClass,
     getStorefrontColorWithOpacity,
@@ -65,6 +66,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
         return recentIds
             .map(id => allProducts.find(p => p.id === id))
             .filter((p): p is StorefrontProductItem => p !== undefined)
+            .filter(product => filterRenderableStorefrontProducts([product]).length === 1)
             .slice(0, data.maxProducts || 10);
     }, [allProducts, recentIds, data.maxProducts]);
 
@@ -149,6 +151,8 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
             showFeaturedBadge: false,
             showRatings: data.showRating,
         });
+        if (!card.isRenderable) return null;
+
         const visualCardStyle = card.visualVariant;
         const cardStyles: Record<ProductCardVisualVariant, string> = {
             minimal: 'bg-transparent',
@@ -407,42 +411,52 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
     // Compact variant
     const renderCompact = () => (
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {recentProducts.map((product) => (
-                <div
-                    key={product.id}
-                    className={`flex-shrink-0 w-32 cursor-pointer group`}
-                    onClick={() => product.slug && onProductClick?.(product.slug)}
-                >
-                    <div className={`${getCardAspectRatio()} overflow-hidden ${getBorderRadius()} mb-2`}>
-                        {product.image ? (
-                            <img
-                                src={product.image}
-                                alt={product.name}
-                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                style={{ objectFit: getImageObjectFit() as any }}
-                            />
-                        ) : (
-                            <div
-                                className="w-full h-full flex items-center justify-center text-xs"
-                                style={{ backgroundColor: colors?.cardBackground }}
-                            >
-                                Sin imagen
-                            </div>
+            {recentProducts.map((product) => {
+                const card = createProductCardViewModel(product, {
+                    variant: data.cardStyle,
+                    currencySymbol: '$',
+                    showBadges: false,
+                    showRatings: false,
+                });
+                if (!card.isRenderable) return null;
+
+                return (
+                    <div
+                        key={product.id}
+                        className={`flex-shrink-0 w-32 cursor-pointer group`}
+                        onClick={() => card.slug && onProductClick?.(card.slug)}
+                    >
+                        <div className={`${getCardAspectRatio()} overflow-hidden ${getBorderRadius()} mb-2`}>
+                            {card.image?.url ? (
+                                <img
+                                    src={card.image.url}
+                                    alt={card.image.altText}
+                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    style={{ objectFit: getImageObjectFit() as any }}
+                                />
+                            ) : (
+                                <div
+                                    className="w-full h-full flex items-center justify-center text-xs"
+                                    style={{ backgroundColor: colors?.cardBackground }}
+                                >
+                                    Imagen pendiente
+                                </div>
+                            )}
+                        </div>
+                        <h4
+                            className="text-xs font-medium line-clamp-2"
+                            style={{ color: colors?.text }}
+                        >
+                            {card.name}
+                        </h4>
+                        {data.showPrice && card.displayPrice && (
+                            <p className="text-sm font-semibold" style={{ color: colors?.accent }}>
+                                {card.displayPrice}
+                            </p>
                         )}
                     </div>
-                    <h4
-                        className="text-xs font-medium line-clamp-2"
-                        style={{ color: colors?.text }}
-                    >
-                        {product.name}
-                    </h4>
-                    {data.showPrice && (
-                        <p className="text-sm font-semibold" style={{ color: colors?.accent }}>
-                            ${product.price.toFixed(2)}
-                        </p>
-                    )}
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 

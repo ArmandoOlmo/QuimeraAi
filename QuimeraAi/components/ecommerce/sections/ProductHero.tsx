@@ -15,6 +15,8 @@ import { ProductHeroData } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
+import { createProductCardViewModel } from '../../../utils/productCard';
+import { filterRenderableStorefrontProducts } from '../../../utils/ecommerce/productDisplayGuards';
 import {
     getStorefrontContentPositionClass,
     getStorefrontOverlayBackground,
@@ -60,11 +62,21 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
     // Get featured product if productId is set
     const featuredProduct = React.useMemo(() => {
+        const renderableProducts = filterRenderableStorefrontProducts(products);
+
         if (data.productId) {
-            return products.find(p => p.id === data.productId);
+            return renderableProducts.find(p => p.id === data.productId);
         }
-        return products[0];
+        return renderableProducts[0];
     }, [products, data.productId]);
+    const featuredProductCard = React.useMemo(() => (
+        featuredProduct
+            ? createProductCardViewModel(featuredProduct, {
+                currencySymbol: '$',
+                showFeaturedBadge: false,
+            })
+            : undefined
+    ), [featuredProduct]);
 
     // Style helpers
     const getPaddingY = () => getStorefrontPaddingYClass(data.paddingY, 'lg');
@@ -135,7 +147,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
     const handleAddToCart = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (featuredProduct?.id) {
+        if (featuredProduct?.id && featuredProductCard?.isRenderable) {
             onAddToCart?.(featuredProduct.id);
         }
     };
@@ -207,14 +219,14 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                 )}
 
                 {/* Price */}
-                {showPrice && featuredProduct && (
+                {showPrice && featuredProductCard?.displayPrice && (
                     <div className="flex items-center gap-3 mb-6">
                         <span className="text-3xl font-bold" style={{ color: colors?.heading }}>
-                            ${featuredProduct.price.toFixed(2)}
+                            {featuredProductCard.displayPrice}
                         </span>
-                        {featuredProduct.compareAtPrice && featuredProduct.compareAtPrice > featuredProduct.price && (
+                        {featuredProductCard.hasDiscount && featuredProductCard.displayCompareAtPrice && (
                             <span className="text-xl line-through opacity-60" style={{ color: colors?.text }}>
-                                ${featuredProduct.compareAtPrice.toFixed(2)}
+                                {featuredProductCard.displayCompareAtPrice}
                             </span>
                         )}
                     </div>
@@ -236,7 +248,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                         </button>
                     )}
 
-                    {data.showAddToCartButton && featuredProduct && (
+                    {data.showAddToCartButton && featuredProductCard?.isRenderable && (
                         <button
                             onClick={handleAddToCart}
                             className={`inline-flex items-center gap-2 px-6 py-3 ${getButtonRadius()} font-semibold transition-all hover:opacity-90`}
@@ -426,14 +438,14 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                             )}
 
                             {/* Price */}
-                            {data.showPrice !== false && featuredProduct && (
+                            {data.showPrice !== false && featuredProductCard?.displayPrice && (
                                 <div className="flex items-center gap-3 mb-6">
                                     <span className="text-3xl font-bold" style={{ color: colors?.heading }}>
-                                        ${featuredProduct.price.toFixed(2)}
+                                        {featuredProductCard.displayPrice}
                                     </span>
-                                    {featuredProduct.compareAtPrice && featuredProduct.compareAtPrice > featuredProduct.price && (
+                                    {featuredProductCard.hasDiscount && featuredProductCard.displayCompareAtPrice && (
                                         <span className="text-xl line-through opacity-60" style={{ color: colors?.text }}>
-                                            ${featuredProduct.compareAtPrice.toFixed(2)}
+                                            {featuredProductCard.displayCompareAtPrice}
                                         </span>
                                     )}
                                 </div>
@@ -455,7 +467,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                                     </button>
                                 )}
 
-                                {data.showAddToCartButton && featuredProduct && (
+                                {data.showAddToCartButton && featuredProductCard?.isRenderable && (
                                     <button
                                         onClick={handleAddToCart}
                                         className={`inline-flex items-center gap-2 px-6 py-3 ${getButtonRadius()} font-semibold transition-all hover:opacity-90`}

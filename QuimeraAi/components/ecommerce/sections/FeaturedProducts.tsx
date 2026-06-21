@@ -18,6 +18,10 @@ import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/use
 import { resolveI18nField } from '../../../utils/i18nContent';
 import { createProductCardViewModel } from '../../../utils/productCard';
 import {
+    filterRenderableStorefrontProducts,
+    getSafeDiscountBadge,
+} from '../../../utils/ecommerce/productDisplayGuards';
+import {
     getStorefrontAspectRatioClass,
     getStorefrontCardGapClass,
     getStorefrontCardGapPx,
@@ -38,6 +42,7 @@ interface FeaturedProductsProps {
     data: FeaturedProductsData;
     storeId?: string;
     globalColors?: StorefrontGlobalColors;
+    isEditorPreview?: boolean;
     onProductClick?: (productSlug: string) => void;
     onAddToCart?: (productId: string) => void;
 }
@@ -46,6 +51,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     data,
     storeId,
     globalColors,
+    isEditorPreview = false,
     onProductClick,
     onAddToCart,
 }) => {
@@ -72,16 +78,17 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
 
     // Filter products based on sourceType
     const products = React.useMemo(() => {
+        let nextProducts = allProducts;
+
         if (data.sourceType === 'manual' && data.productIds?.length) {
-            return allProducts.filter(p => data.productIds?.includes(p.id));
+            nextProducts = allProducts.filter(p => data.productIds?.includes(p.id));
+        } else if (data.sourceType === 'category' && data.categoryId) {
+            nextProducts = allProducts.filter(p => p.category === data.categoryId);
+        } else if (data.sourceType === 'on-sale') {
+            nextProducts = allProducts.filter(p => getSafeDiscountBadge(p));
         }
-        if (data.sourceType === 'category' && data.categoryId) {
-            return allProducts.filter(p => p.category === data.categoryId);
-        }
-        if (data.sourceType === 'on-sale') {
-            return allProducts.filter(p => p.compareAtPrice && p.compareAtPrice > p.price);
-        }
-        return allProducts;
+
+        return filterRenderableStorefrontProducts(nextProducts);
     }, [allProducts, data.sourceType, data.productIds, data.categoryId]);
 
     // Carousel state
@@ -177,6 +184,8 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
             showFeaturedBadge: false,
             showRatings: data.showRating,
         });
+        if (!card.isRenderable) return null;
+
         const visualCardStyle = card.visualVariant;
 
         const cardStyles: Record<ProductCardVisualVariant, string> = {
@@ -234,7 +243,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    onAddToCart(product.id);
+                                    if (card.isRenderable) onAddToCart(product.id);
                                 }}
                                 className="p-2 rounded-full shadow-md hover:scale-110 transition-transform"
                                 style={{ backgroundColor: colors?.cardBackground, color: colors?.accent }}
@@ -284,7 +293,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                                     <span className="ml-1 text-xs text-white/80">{card.rating.displayText}</span>
                                 </div>
                             )}
-                            {data.showPrice && (
+                            {data.showPrice && card.displayPrice && (
                                 <div className="mt-3 flex items-end justify-between gap-3">
                                     <span className="text-lg font-bold drop-shadow-sm" style={{ color: colors?.buttonText || '#ffffff' }}>{card.displayPrice}</span>
                                     {card.hasDiscount && card.displayCompareAtPrice && (
@@ -326,7 +335,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         )}
 
                         {/* Price */}
-                        {data.showPrice && (
+                        {data.showPrice && card.displayPrice && (
                             <div className="flex items-center gap-2">
                                 <span className="font-bold" style={{ color: colors?.salePrice }}>
                                     {card.displayPrice}
@@ -467,8 +476,8 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                             </span>
                         )}
                             <h3 className="text-2xl font-bold mb-2" style={{ color: colors?.buttonText }}>{mainCard?.name || mainProduct.name}</h3>
-                            {data.showPrice && (
-                                <p className="text-xl font-bold" style={{ color: colors?.buttonText }}>{mainCard?.displayPrice || `$${mainProduct.price.toFixed(2)}`}</p>
+                            {data.showPrice && mainCard?.displayPrice && (
+                                <p className="text-xl font-bold" style={{ color: colors?.buttonText }}>{mainCard.displayPrice}</p>
                             )}
                         </div>
                     </div>
@@ -519,6 +528,10 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
         );
     }
 
+    if (products.length === 0 && !isEditorPreview) {
+        return null;
+    }
+
     return (
         <section
             className={`${getPaddingY()} ${getPaddingX()}`}
@@ -550,7 +563,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                 {/* Products */}
                 {products.length === 0 ? (
                     <div className="text-center py-12" style={{ color: colors?.text }}>
-                        No hay productos disponibles
+                        No hay productos validos para esta seccion.
                     </div>
                 ) : (
                     <>

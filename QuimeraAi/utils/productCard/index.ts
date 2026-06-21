@@ -11,6 +11,12 @@ import type {
     ProductCardViewModel,
     ProductCardVisualVariant,
 } from '../../types/productCard';
+import {
+    getSafeDiscountBadge,
+    getSafeProductPrice,
+    getSafeProductTitle,
+    isRenderableStorefrontProduct,
+} from '../ecommerce/productDisplayGuards';
 
 export const PRODUCT_CARD_VARIANTS: ProductCardVariant[] = [
     'minimal',
@@ -231,6 +237,7 @@ export const validateProductCardInput = (
     const issues: ProductCardValidationIssue[] = [];
     const id = trimString(product.id);
     const name = trimString(product.name);
+    const safeName = getSafeProductTitle(product);
     const price = toNumber(product.price);
     const compareAtPrice = toNumber(product.compareAtPrice);
     const image = selectProductCardImage(product, options);
@@ -256,6 +263,13 @@ export const validateProductCardInput = (
             field: 'name',
             message: 'Product card requires a product name.',
         });
+    } else if (!safeName) {
+        addIssue(issues, {
+            code: 'placeholder_name',
+            severity: 'error',
+            field: 'name',
+            message: 'Product card name appears to be a placeholder.',
+        });
     }
 
     if (price === undefined || price < 0) {
@@ -275,7 +289,7 @@ export const validateProductCardInput = (
     }
 
     if (compareAtPrice !== undefined) {
-        if (compareAtPrice < 0 || price === undefined || compareAtPrice <= price) {
+        if (compareAtPrice < 0 || price === undefined || price <= 0 || compareAtPrice <= price) {
             addIssue(issues, {
                 code: 'invalid_compare_at_price',
                 severity: 'warning',
@@ -461,14 +475,17 @@ export const createProductCardViewModel = (
     const variant = normalizeProductCardVariant(options.variant);
     const visualVariant = getProductCardVisualVariant(variant);
     const currencySymbol = options.currencySymbol || '$';
+    const safePrice = getSafeProductPrice(product, {
+        currencySymbol,
+        allowPriceInquiry: true,
+    });
+    const safeDiscount = getSafeDiscountBadge(product);
     const rawPrice = toNumber(product.price);
     const price = rawPrice !== undefined && rawPrice >= 0 ? rawPrice : 0;
     const rawCompareAtPrice = toNumber(product.compareAtPrice);
-    const compareAtPrice = rawCompareAtPrice !== undefined && rawCompareAtPrice > price ? rawCompareAtPrice : undefined;
-    const hasDiscount = compareAtPrice !== undefined && compareAtPrice > price;
-    const discountPercent = hasDiscount
-        ? Math.max(1, Math.round(((compareAtPrice - price) / compareAtPrice) * 100))
-        : 0;
+    const compareAtPrice = safeDiscount && rawCompareAtPrice !== undefined ? rawCompareAtPrice : undefined;
+    const hasDiscount = Boolean(safeDiscount);
+    const discountPercent = safeDiscount?.percent || 0;
     const inventory = getProductCardInventory(product);
     const issues = validateProductCardInput(product, options);
     const readiness = getProductCardReadiness(issues);
@@ -476,13 +493,13 @@ export const createProductCardViewModel = (
 
     return {
         id: trimString(product.id) || '',
-        name: trimString(product.name) || 'Producto sin nombre',
+        name: getSafeProductTitle(product) || '',
         slug: trimString(product.slug),
         variant,
         visualVariant,
         price,
         compareAtPrice,
-        displayPrice: formatProductCardPrice(price, currencySymbol),
+        displayPrice: safePrice.displayText || '',
         displayCompareAtPrice: compareAtPrice !== undefined ? formatProductCardPrice(compareAtPrice, currencySymbol) : undefined,
         hasDiscount,
         discountPercent,
@@ -493,6 +510,6 @@ export const createProductCardViewModel = (
         inventory,
         issues,
         readiness,
-        isRenderable: !issues.some(issue => issue.code === 'missing_id' || issue.code === 'missing_name' || issue.code === 'archived_product'),
+        isRenderable: isRenderableStorefrontProduct(product, { currencySymbol }),
     };
 };

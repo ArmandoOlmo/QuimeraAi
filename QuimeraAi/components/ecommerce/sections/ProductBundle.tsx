@@ -11,6 +11,10 @@ import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { createProductCardViewModel } from '../../../utils/productCard';
 import {
+    filterRenderableStorefrontProducts,
+    getSafeProductPrice,
+} from '../../../utils/ecommerce/productDisplayGuards';
+import {
     getStorefrontCardGapClass,
     getStorefrontColorWithOpacity,
     getStorefrontContentPositionClass,
@@ -25,6 +29,7 @@ interface ProductBundleProps {
     data: ProductBundleData;
     storeId?: string;
     globalColors?: StorefrontGlobalColors;
+    isEditorPreview?: boolean;
     onAddToCart?: (productIds: string[]) => void;
     onProductClick?: (productSlug: string) => void;
 }
@@ -33,6 +38,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     data,
     storeId,
     globalColors,
+    isEditorPreview = false,
     onAddToCart,
     onProductClick,
 }) => {
@@ -51,14 +57,25 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
             .map(id => allProducts.find(p => p.id === id))
             .filter((p): p is StorefrontProductItem => p !== undefined);
     }, [allProducts, data.productIds]);
+    const renderableBundleProducts = React.useMemo(
+        () => filterRenderableStorefrontProducts(bundleProducts),
+        [bundleProducts],
+    );
 
     // Calculate prices automatically from products
     const discountPercent = data.discountPercent || 15;
-    const calculatedOriginalPrice = bundleProducts.reduce((sum, p) => sum + p.price, 0);
+    const calculatedOriginalPrice = renderableBundleProducts.reduce((sum, product) => {
+        const safePrice = getSafeProductPrice(product);
+        return sum + (safePrice.value && safePrice.value > 0 ? safePrice.value : 0);
+    }, 0);
     const originalPrice = calculatedOriginalPrice > 0 ? calculatedOriginalPrice : (data.originalPrice || 0);
     const bundlePrice = originalPrice * (1 - discountPercent / 100);
     const savings = originalPrice - bundlePrice;
     const savingsPercent = originalPrice > 0 ? Math.round((savings / originalPrice) * 100) : discountPercent;
+    const hasPricedBundle = originalPrice > 0;
+    const displayOriginalPrice = hasPricedBundle ? `$${originalPrice.toFixed(2)}` : 'Consultar precio';
+    const displayBundlePrice = hasPricedBundle ? `$${bundlePrice.toFixed(2)}` : 'Consultar precio';
+    const displaySavings = hasPricedBundle ? `$${savings.toFixed(2)}` : '';
     const activeVariant = data.variant || 'editorial';
     const buttonLabel = data.buttonText || 'Comprar bundle';
     const savingsLabel = data.savingsText || 'Ahorra';
@@ -120,8 +137,8 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     );
 
     const handleAddBundle = () => {
-        if (onAddToCart && data.productIds) {
-            onAddToCart(data.productIds);
+        if (onAddToCart && renderableBundleProducts.length > 0) {
+            onAddToCart(renderableBundleProducts.map(product => product.id));
         } else if (data.buttonUrl) {
             window.location.href = data.buttonUrl;
         }
@@ -135,6 +152,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
             showBadges: false,
             showRatings: false,
         });
+        if (!card.isRenderable) return null;
 
         return (
             <div
@@ -158,7 +176,9 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                             className="w-full h-full flex items-center justify-center"
                             style={getImageFallbackStyle()}
                         >
-                            <Package size={22} style={{ color: colors?.cardText }} />
+                            <span className="px-2 text-center text-xs font-semibold" style={{ color: colors?.cardText }}>
+                                Imagen pendiente
+                            </span>
                         </div>
                     )}
                 </button>
@@ -197,6 +217,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
             showBadges: false,
             showRatings: false,
         });
+        if (!card.isRenderable) return null;
 
         return (
             <button
@@ -220,7 +241,9 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                         className="absolute inset-0 flex items-center justify-center"
                         style={getImageFallbackStyle()}
                     >
-                        <Package size={34} style={{ color: colors?.cardText }} />
+                        <span className="px-3 text-center text-sm font-semibold" style={{ color: colors?.cardText }}>
+                            Imagen pendiente
+                        </span>
                     </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/28 to-transparent" />
@@ -256,11 +279,11 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
             <div className={`grid grid-cols-1 lg:grid-cols-3 ${getCardGap()} p-6`}>
                 {/* Products */}
                 <div className={`lg:col-span-2 ${getProductStackSpacing()}`}>
-                    {bundleProducts.map((product, index) => (
+                    {renderableBundleProducts.map((product, index) => (
                         <BundleProductCard
                             key={product.id}
                             product={product}
-                            isLast={index === bundleProducts.length - 1}
+                            isLast={index === renderableBundleProducts.length - 1}
                         />
                     ))}
                 </div>
@@ -300,13 +323,13 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                         {data.showIndividualPrices && (
                             <div className="flex justify-between text-sm" style={{ color: colors?.text }}>
                                 <span>Precio individual:</span>
-                                <span className="line-through">${originalPrice.toFixed(2)}</span>
+                                <span className="line-through">{displayOriginalPrice}</span>
                             </div>
                         )}
                         <div className="flex justify-between">
                             <span style={{ color: colors?.text }}>Precio bundle:</span>
                             <span className="text-2xl font-bold" style={{ color: colors?.priceColor }}>
-                                ${bundlePrice.toFixed(2)}
+                                {displayBundlePrice}
                             </span>
                         </div>
                         {data.showSavings && savings > 0 && (
@@ -315,7 +338,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                                 style={{ color: colors?.savingsColor }}
                             >
                                 <span>{savingsLabel}:</span>
-                                <span>${savings.toFixed(2)} ({savingsPercent}%)</span>
+                                <span>{displaySavings} ({savingsPercent}%)</span>
                             </div>
                         )}
                     </div>
@@ -372,11 +395,11 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
 
                 {/* Products */}
                 <div className={`${getProductStackSpacing()} mb-6`}>
-                    {bundleProducts.map((product, index) => (
+                    {renderableBundleProducts.map((product, index) => (
                         <BundleProductCard
                             key={product.id}
                             product={product}
-                            isLast={index === bundleProducts.length - 1}
+                            isLast={index === renderableBundleProducts.length - 1}
                         />
                     ))}
                 </div>
@@ -389,13 +412,13 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                     {data.showIndividualPrices && (
                         <div className="flex justify-between text-sm mb-1" style={{ color: colors?.text }}>
                             <span>Precio individual:</span>
-                            <span className="line-through">${originalPrice.toFixed(2)}</span>
+                            <span className="line-through">{displayOriginalPrice}</span>
                         </div>
                     )}
                     <div className="flex justify-between items-center">
                         <span style={{ color: colors?.text }}>Precio bundle:</span>
                         <span className="text-2xl font-bold" style={{ color: colors?.priceColor }}>
-                            ${bundlePrice.toFixed(2)}
+                            {displayBundlePrice}
                         </span>
                     </div>
                     {data.showSavings && savings > 0 && (
@@ -403,7 +426,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                             className="text-center mt-2 font-semibold"
                             style={{ color: colors?.savingsColor }}
                         >
-                            {savingsLabel} ${savings.toFixed(2)} ({savingsPercent}%)
+                            {savingsLabel} {displaySavings} ({savingsPercent}%)
                         </div>
                     )}
                 </div>
@@ -432,7 +455,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
         >
             {/* Product thumbnails */}
             <div className="flex -space-x-3">
-                {bundleProducts.slice(0, 3).map((product) => (
+                {renderableBundleProducts.slice(0, 3).map((product) => (
                     <div
                         key={product.id}
                         className="w-14 h-14 rounded-full overflow-hidden border-2 border-white"
@@ -451,7 +474,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                         )}
                     </div>
                 ))}
-                {bundleProducts.length > 3 && (
+                {renderableBundleProducts.length > 3 && (
                     <div
                         className="w-14 h-14 rounded-full flex items-center justify-center text-sm font-semibold border-2 border-white"
                         style={{
@@ -459,7 +482,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                             color: colors?.buttonText || '#ffffff',
                         }}
                     >
-                        +{bundleProducts.length - 3}
+                        +{renderableBundleProducts.length - 3}
                     </div>
                 )}
             </div>
@@ -471,7 +494,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                 </h4>
                 <div className="flex items-center gap-2">
                     <span className="font-bold" style={{ color: colors?.priceColor }}>
-                        ${bundlePrice.toFixed(2)}
+                        {displayBundlePrice}
                     </span>
                     {data.showSavings && savings > 0 && (
                         <span
@@ -538,7 +561,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                                         Precio bundle
                                     </p>
                                     <p className="text-3xl font-bold" style={{ color: colors?.priceColor || colors?.heading }}>
-                                        ${bundlePrice.toFixed(2)}
+                                        {displayBundlePrice}
                                     </p>
                                 </div>
                                 {data.showSavings && savings > 0 && (
@@ -556,7 +579,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                             {data.showIndividualPrices && originalPrice > 0 && (
                                 <div className="mt-3 flex justify-between text-sm" style={{ color: colors?.text }}>
                                     <span>Precio individual</span>
-                                    <span className="line-through">${originalPrice.toFixed(2)}</span>
+                                    <span className="line-through">{displayOriginalPrice}</span>
                                 </div>
                             )}
                             <button
@@ -576,7 +599,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                 </div>
 
                 <div className={`grid grid-cols-1 sm:grid-cols-2 ${getCardGap()}`}>
-                    {bundleProducts.slice(0, 6).map((product, index) => (
+                    {renderableBundleProducts.slice(0, 6).map((product, index) => (
                         <BundleProductTile key={product.id} product={product} index={index} />
                     ))}
                 </div>
@@ -610,11 +633,11 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                     </div>
 
                     <div className={getProductStackSpacing()}>
-                        {bundleProducts.map((product, index) => (
+                        {renderableBundleProducts.map((product, index) => (
                             <BundleProductCard
                                 key={product.id}
                                 product={product}
-                                isLast={index === bundleProducts.length - 1}
+                                isLast={index === renderableBundleProducts.length - 1}
                             />
                         ))}
                     </div>
@@ -630,7 +653,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                                 Bundle
                             </p>
                             <p className="text-4xl font-bold" style={{ color: colors?.priceColor || colors?.heading }}>
-                                ${bundlePrice.toFixed(2)}
+                                {displayBundlePrice}
                             </p>
                         </div>
                         <div
@@ -648,13 +671,13 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                         {data.showIndividualPrices && originalPrice > 0 && (
                             <div className="flex justify-between" style={{ color: colors?.text }}>
                                 <span>Individual</span>
-                                <span className="line-through">${originalPrice.toFixed(2)}</span>
+                                <span className="line-through">{displayOriginalPrice}</span>
                             </div>
                         )}
                         {data.showSavings && savings > 0 && (
                             <div className="flex justify-between font-semibold" style={{ color: colors?.savingsColor }}>
                                 <span>{savingsLabel}</span>
-                                <span>${savings.toFixed(2)}</span>
+                                <span>{displaySavings}</span>
                             </div>
                         )}
                         <div
@@ -665,7 +688,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
                             }}
                         >
                             <span>Total</span>
-                            <span>${bundlePrice.toFixed(2)}</span>
+                            <span>{displayBundlePrice}</span>
                         </div>
                     </div>
 
@@ -717,7 +740,11 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
         );
     }
 
-    if (bundleProducts.length === 0) {
+    if (renderableBundleProducts.length === 0 && !isEditorPreview) {
+        return null;
+    }
+
+    if (renderableBundleProducts.length === 0) {
         return (
             <section className={`${getPaddingY()} ${getPaddingX()}`} style={getStorefrontSectionBackgroundStyle(data, colors?.background)}>
                 <div className={`flex max-w-4xl mx-auto ${getContentPosition()}`}>

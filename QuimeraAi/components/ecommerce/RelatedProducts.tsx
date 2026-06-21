@@ -7,6 +7,7 @@ import React from 'react';
 import { ShoppingCart, Eye } from 'lucide-react';
 import { PublicProduct } from './hooks/usePublicProduct';
 import { createProductCardViewModel } from '../../utils/productCard';
+import { filterRenderableStorefrontProducts } from '../../utils/ecommerce/productDisplayGuards';
 
 interface RelatedProductsColors {
     primary?: string;
@@ -68,8 +69,12 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
         primary: propColors?.primary || primaryColor || defaultColors.primary,
         buttonBackground: propColors?.buttonBackground || primaryColor || defaultColors.buttonBackground,
     };
+    const renderableProducts = React.useMemo(
+        () => filterRenderableStorefrontProducts(products),
+        [products],
+    );
 
-    if (products.length === 0) {
+    if (renderableProducts.length === 0) {
         return null;
     }
 
@@ -86,7 +91,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {products.map((product) => (
+                {renderableProducts.map((product) => (
                     <RelatedProductCard
                         key={product.id}
                         product={product}
@@ -125,6 +130,8 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
         currencySymbol,
         showFeaturedBadge: false,
     });
+    if (!card.isRenderable) return null;
+
     const isAvailable = card.inventory.isAvailable;
 
     return (
@@ -148,7 +155,9 @@ const RelatedProductCard: React.FC<RelatedProductCardProps> = ({
                         className="w-full h-full flex items-center justify-center"
                         style={{ backgroundColor: colors?.border }}
                     >
-                        <span style={{ color: colors?.mutedText }}>Sin imagen</span>
+                        <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-semibold" style={{ color: colors?.mutedText }}>
+                            Imagen pendiente
+                        </span>
                     </div>
                 )}
 

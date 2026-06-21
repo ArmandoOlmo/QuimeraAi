@@ -692,7 +692,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     e.stopPropagation();
                                                     loadProject(template.id, true);
                                                 }}
-                                                className="flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-4 py-2.5 sm:py-2 bg-q-surface text-black rounded-full text-sm font-semibold active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
+                                                className="flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-4 py-2.5 sm:py-2 bg-q-accent text-q-text-on-accent rounded-full text-sm font-semibold active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
                                                 title={t('common.edit')}
                                             >
                                                 <Edit size={16} />

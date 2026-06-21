@@ -333,7 +333,7 @@ const UserTemplates: React.FC = () => {
 
                                             {/* Hover overlay */}
                                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-q-text/40 backdrop-blur-sm">
-                                                <button className="flex items-center gap-2 px-4 py-2 bg-q-surface text-black rounded-full font-semibold shadow-lg hover:scale-105 transition-transform">
+                                                <button className="flex items-center gap-2 px-4 py-2 bg-q-accent text-q-text-on-accent rounded-full font-semibold shadow-lg hover:scale-105 transition-transform">
                                                     <Eye size={18} />
                                                     {t('userTemplates.preview', 'Vista previa')}
                                                 </button>

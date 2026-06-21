@@ -12,6 +12,10 @@ import { useSafeProject } from '../../../contexts/project';
 import { StorefrontGlobalColors, useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 import { createProductCardViewModel } from '../../../utils/productCard';
 import {
+    filterRenderableStorefrontProducts,
+    getSafeDiscountBadge,
+} from '../../../utils/ecommerce/productDisplayGuards';
+import {
     getStorefrontAspectRatioClass,
     getStorefrontCardGapClass,
     getStorefrontContentPositionClass,
@@ -56,11 +60,15 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
 
     // Filter sale products
     const saleProducts = React.useMemo(() => {
+        let nextProducts: StorefrontProductItem[];
+
         if (data.productIds?.length) {
-            return allProducts.filter(p => data.productIds?.includes(p.id));
+            nextProducts = allProducts.filter(p => data.productIds?.includes(p.id));
+        } else {
+            nextProducts = allProducts.filter(p => getSafeDiscountBadge(p));
         }
-        // Get products on sale
-        return allProducts.filter(p => p.compareAtPrice && p.compareAtPrice > p.price);
+
+        return filterRenderableStorefrontProducts(nextProducts);
     }, [allProducts, data.productIds]);
 
     // Countdown timer logic
@@ -146,6 +154,8 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
             showFeaturedBadge: false,
             showRatings: false,
         });
+        if (!card.isRenderable) return null;
+
         const visualCardStyle = card.visualVariant;
         
         // Card style classes

@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { PublicProduct } from './hooks/usePublicProduct';
 import { RatingStars } from './reviews';
+import { createProductCardViewModel } from '../../utils/productCard';
+import { filterRenderableStorefrontProducts } from '../../utils/ecommerce/productDisplayGuards';
 
 interface ProductComparePageProps {
     products: PublicProduct[];
@@ -42,23 +44,27 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
     currencySymbol = '$',
     primaryColor = '#6366f1',
 }) => {
-    const canAddMore = products.length < maxProducts;
+    const renderableProducts = React.useMemo(
+        () => filterRenderableStorefrontProducts(products),
+        [products],
+    );
+    const canAddMore = renderableProducts.length < maxProducts;
 
     // Get all unique tags/specs from products
     const allSpecs = React.useMemo(() => {
         const specsSet = new Set<string>();
-        products.forEach((product) => {
+        renderableProducts.forEach((product) => {
             product.tags?.forEach((tag) => specsSet.add(tag));
         });
         return Array.from(specsSet).sort();
-    }, [products]);
+    }, [renderableProducts]);
 
     // Helper to check if product has a spec/tag
     const hasSpec = (product: PublicProduct, spec: string) => {
         return product.tags?.includes(spec) || false;
     };
 
-    if (products.length === 0) {
+    if (renderableProducts.length === 0) {
         return (
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
                 <div className="text-center max-w-md mx-auto px-4">
@@ -103,7 +109,7 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
                                     Comparar productos
                                 </h1>
                                 <p className="text-gray-500 dark:text-gray-400">
-                                    {products.length} de {maxProducts} productos
+                                    {renderableProducts.length} de {maxProducts} productos
                                 </p>
                             </div>
                         </div>
@@ -126,7 +132,14 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
                         {/* Empty column for labels */}
                         <div className="w-40 flex-shrink-0" />
 
-                        {products.map((product) => (
+                        {renderableProducts.map((product) => {
+                            const card = createProductCardViewModel(product, {
+                                currencySymbol,
+                                showFeaturedBadge: false,
+                            });
+                            if (!card.isRenderable) return null;
+
+                            return (
                             <div
                                 key={product.id}
                                 className="flex-1 min-w-[200px] bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700"
@@ -139,12 +152,14 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
                                     {product.images?.[0]?.url ? (
                                         <img
                                             src={product.images[0].url}
-                                            alt={product.name}
+                                            alt={card.name}
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                            <Package size={48} />
+                                            <span className="px-2 text-center text-xs font-semibold">
+                                                Imagen pendiente
+                                            </span>
                                         </div>
                                     )}
 
@@ -166,7 +181,7 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
                                         className="font-medium text-gray-900 dark:text-white line-clamp-2 cursor-pointer hover:underline"
                                         onClick={() => onViewProduct?.(product.slug)}
                                     >
-                                        {product.name}
+                                        {card.name}
                                     </h3>
 
                                     {/* Rating */}
@@ -182,17 +197,17 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
                                     {/* Price */}
                                     <div className="flex items-baseline gap-2 mt-2">
                                         <span className="text-xl font-bold" style={{ color: primaryColor }}>
-                                            {currencySymbol}{product.price.toFixed(2)}
+                                            {card.displayPrice}
                                         </span>
-                                        {product.compareAtPrice && product.compareAtPrice > product.price && (
+                                        {card.hasDiscount && card.displayCompareAtPrice && (
                                             <span className="text-sm text-gray-400 line-through">
-                                                {currencySymbol}{product.compareAtPrice.toFixed(2)}
+                                                {card.displayCompareAtPrice}
                                             </span>
                                         )}
                                     </div>
 
                                     {/* Add to Cart */}
-                                    {onAddToCart && (
+                                    {onAddToCart && card.isRenderable && (
                                         <button
                                             onClick={() => onAddToCart(product)}
                                             className="w-full mt-4 py-2 text-white text-sm font-medium rounded-lg transition-colors hover:opacity-90"
@@ -204,7 +219,8 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
                                     )}
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
 
                         {/* Add Product Card */}
                         {canAddMore && (
@@ -232,7 +248,7 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
                             <div className="w-40 flex-shrink-0 p-4 bg-gray-50 dark:bg-gray-700 font-medium text-gray-700 dark:text-gray-300">
                                 Descripción
                             </div>
-                            {products.map((product) => (
+                            {renderableProducts.map((product) => (
                                 <div
                                     key={product.id}
                                     className="flex-1 min-w-[200px] p-4 border-l border-gray-200 dark:border-gray-700"
@@ -250,7 +266,7 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
                             <div className="w-40 flex-shrink-0 p-4 bg-gray-50 dark:bg-gray-700 font-medium text-gray-700 dark:text-gray-300">
                                 Categoría
                             </div>
-                            {products.map((product) => (
+                            {renderableProducts.map((product) => (
                                 <div
                                     key={product.id}
                                     className="flex-1 min-w-[200px] p-4 border-l border-gray-200 dark:border-gray-700"
@@ -268,7 +284,7 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
                             <div className="w-40 flex-shrink-0 p-4 bg-gray-50 dark:bg-gray-700 font-medium text-gray-700 dark:text-gray-300">
                                 Disponibilidad
                             </div>
-                            {products.map((product) => (
+                            {renderableProducts.map((product) => (
                                 <div
                                     key={product.id}
                                     className="flex-1 min-w-[200px] p-4 border-l border-gray-200 dark:border-gray-700"
@@ -292,7 +308,7 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
                                 <div className="w-40 flex-shrink-0 p-4 bg-gray-50 dark:bg-gray-700 font-medium text-gray-700 dark:text-gray-300 text-sm">
                                     {spec}
                                 </div>
-                                {products.map((product) => (
+                                {renderableProducts.map((product) => (
                                     <div
                                         key={product.id}
                                         className="flex-1 min-w-[200px] p-4 border-l border-gray-200 dark:border-gray-700 flex items-center justify-center"
@@ -315,9 +331,6 @@ const ProductComparePage: React.FC<ProductComparePageProps> = ({
 };
 
 export default ProductComparePage;
-
-
-
 
 
 
