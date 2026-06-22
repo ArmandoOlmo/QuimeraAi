@@ -52,13 +52,18 @@ import { useProject } from '../../../contexts/project';
 import { supabase } from '../../../supabase';
 import type { Category, Customer, EcommerceView, Order, Product, Review, StoreSettings } from '../../../types/ecommerce';
 import type { Project } from '../../../types/project';
-import type { BusinessBlueprint, EcommerceStarterContentStatus } from '../../../types/businessBlueprint';
+import type { BusinessBlueprint, CrossModuleSyncStatus, EcommerceStarterContentStatus } from '../../../types/businessBlueprint';
 import { EcommerceContext, useEcommerceContext } from './EcommerceContext';
 import {
     buildStarterContentBusinessBlueprintUpdate,
     createStarterContentFromBlueprint,
     type StarterContentResult,
 } from '../../../utils/ecommerce/createStarterContentFromBlueprint';
+import {
+    applyCrossModuleSync,
+    previewCrossModuleSync,
+    type CrossModuleSyncResult,
+} from '../../../utils/businessBlueprint/crossModuleSync';
 
 // Import views
 import ProductsView from './views/ProductsView';
@@ -608,6 +613,15 @@ const OverviewDataView: React.FC<OverviewDataViewProps> = ({
             onNavigate={onNavigate}
         />
     ) : null;
+    const crossModuleSyncPrompt = project?.businessBlueprint ? (
+        <AiCrossModuleSyncPrompt
+            userId={userId}
+            storeId={storeId}
+            project={project}
+            businessBlueprint={project.businessBlueprint}
+            onBusinessBlueprintRefresh={onBusinessBlueprintRefresh}
+        />
+    ) : null;
 
     return (
         <OverviewView
@@ -635,6 +649,7 @@ const OverviewDataView: React.FC<OverviewDataViewProps> = ({
             onNavigate={onNavigate}
             totalProducts={products.length}
             starterContentPrompt={starterContentPrompt}
+            crossModuleSyncPrompt={crossModuleSyncPrompt}
             showDemoSeeder={showDemoSeeder}
             onDemoSeederClose={onDemoSeederClose}
         />
@@ -907,6 +922,264 @@ const AiStarterContentPrompt: React.FC<AiStarterContentPromptProps> = ({
     );
 };
 
+interface AiCrossModuleSyncPromptProps {
+    userId: string;
+    storeId: string;
+    project: Project;
+    businessBlueprint: BusinessBlueprint;
+    onBusinessBlueprintRefresh: () => Promise<void>;
+}
+
+const formatCrossModuleError = (result: CrossModuleSyncResult): string | null =>
+    result.errors.length > 0 ? result.errors.join(' ') : null;
+
+const createDismissedCrossModuleBlueprint = (businessBlueprint: BusinessBlueprint, now: string): BusinessBlueprint => ({
+    ...businessBlueprint,
+    updatedAt: now,
+    crossModuleSync: {
+        ...(businessBlueprint.crossModuleSync || {
+            warnings: [],
+            readiness: {
+                chatbotReady: false,
+                leadTagsReady: false,
+                emailFlowsReady: false,
+                analyticsReady: false,
+                needsMerchantReview: true,
+            },
+        }),
+        status: 'dismissed',
+    },
+});
+
+const AiCrossModuleSyncPrompt: React.FC<AiCrossModuleSyncPromptProps> = ({
+    userId,
+    storeId,
+    project,
+    businessBlueprint,
+    onBusinessBlueprintRefresh,
+}) => {
+    const { t } = useTranslation();
+    const [result, setResult] = useState<CrossModuleSyncResult | null>(null);
+    const [localStatus, setLocalStatus] = useState<CrossModuleSyncStatus | null>(null);
+    const [action, setAction] = useState<'preview' | 'create' | 'dismiss' | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const ecommerceBlueprint = businessBlueprint.ecommerceBlueprint;
+    const storefrontBlueprint = businessBlueprint.storefrontBlueprint;
+    const starterStatus = ecommerceBlueprint.starterContentStatus || 'not_started';
+    const syncStatus = localStatus || businessBlueprint.crossModuleSync?.status || 'not_started';
+    const isVisible = ecommerceBlueprint.enabled &&
+        starterStatus === 'created_draft' &&
+        syncStatus !== 'synced_draft' &&
+        syncStatus !== 'dismissed';
+    const shouldShowTransientSummary = Boolean(result) && syncStatus === 'synced_draft';
+
+    if (!isVisible && !shouldShowTransientSummary) return null;
+
+    const isBusy = Boolean(action);
+    const isSynced = syncStatus === 'synced_draft';
+    const summary = result?.summary;
+
+    const persistBlueprint = async (nextBlueprint: BusinessBlueprint) => {
+        const now = new Date().toISOString();
+        const nextData = {
+            ...(project.data || {}),
+            businessBlueprint: nextBlueprint,
+            lastUpdated: now,
+        };
+
+        const { error: updateError } = await supabase
+            .from('projects')
+            .update({
+                data: nextData,
+                last_updated: now,
+            })
+            .eq('id', project.id);
+
+        if (updateError) throw updateError;
+
+        await onBusinessBlueprintRefresh();
+    };
+
+    const runPreview = () => {
+        setAction('preview');
+        setError(null);
+        try {
+            const previewResult = previewCrossModuleSync({
+                projectId: project.id,
+                userId,
+                storeId,
+                businessBlueprint,
+                ecommerceBlueprint,
+                storefrontBlueprint,
+                createdContentRefs: ecommerceBlueprint.createdContentRefs,
+                options: { dryRun: true, overwriteExisting: false },
+            });
+            setResult(previewResult);
+
+            const previewError = formatCrossModuleError(previewResult);
+            if (previewError) {
+                setError(previewError);
+                return;
+            }
+
+            setLocalStatus('previewed');
+        } catch (caughtError) {
+            setError(caughtError instanceof Error ? caughtError.message : String(caughtError));
+        } finally {
+            setAction(null);
+        }
+    };
+
+    const createIntegrationDrafts = async () => {
+        setAction('create');
+        setError(null);
+        try {
+            const applyResult = applyCrossModuleSync({
+                projectId: project.id,
+                userId,
+                storeId,
+                businessBlueprint,
+                ecommerceBlueprint,
+                storefrontBlueprint,
+                createdContentRefs: ecommerceBlueprint.createdContentRefs,
+                options: { dryRun: false, overwriteExisting: false },
+            });
+            setResult(applyResult);
+
+            const applyError = formatCrossModuleError(applyResult);
+            if (applyError) {
+                setError(applyError);
+                return;
+            }
+
+            await persistBlueprint(applyResult.businessBlueprint);
+            setLocalStatus('synced_draft');
+        } catch (caughtError) {
+            setError(caughtError instanceof Error ? caughtError.message : String(caughtError));
+        } finally {
+            setAction(null);
+        }
+    };
+
+    const dismissPrompt = async () => {
+        setAction('dismiss');
+        setError(null);
+        try {
+            const now = new Date().toISOString();
+            await persistBlueprint(createDismissedCrossModuleBlueprint(businessBlueprint, now));
+            setLocalStatus('dismissed');
+        } catch (caughtError) {
+            setError(caughtError instanceof Error ? caughtError.message : String(caughtError));
+        } finally {
+            setAction(null);
+        }
+    };
+
+    return (
+        <section className="quimera-dashboard-panel-card border-q-border/70 bg-q-surface/80 p-4 sm:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0">
+                    <div className="mb-3 flex items-center gap-3">
+                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-q-success/15 text-q-success">
+                            <ShieldCheck size={20} />
+                        </span>
+                        <div className="min-w-0">
+                            <h3 className="text-base font-bold text-foreground">
+                                {t('ecommerce.crossModuleSync.title', 'Conectar ecommerce con Quimera Suite')}
+                            </h3>
+                            <p className="text-sm text-q-text-muted">
+                                {t('ecommerce.crossModuleSync.subtitle', 'Crea drafts revisables para Chatbot, CRM, Email Marketing y Analytics sin activar automatizaciones.')}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="grid gap-2 text-xs font-semibold text-q-text-muted sm:grid-cols-2 xl:grid-cols-4">
+                        <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1">
+                            {t('ecommerce.crossModuleSync.chatbot', 'Chatbot knowledge drafts')}
+                        </span>
+                        <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1">
+                            {t('ecommerce.crossModuleSync.crm', 'CRM/Lead tags')}
+                        </span>
+                        <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1">
+                            {t('ecommerce.crossModuleSync.email', 'Email marketing drafts')}
+                        </span>
+                        <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1">
+                            {t('ecommerce.crossModuleSync.analytics', 'Analytics event definitions')}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-2 sm:flex-row lg:flex-shrink-0">
+                    <button
+                        type="button"
+                        onClick={runPreview}
+                        disabled={isBusy || isSynced}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-q-border bg-q-surface px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-60"
+                    >
+                        {action === 'preview' ? <RefreshCw size={16} className="animate-spin" /> : <Eye size={16} />}
+                        {t('ecommerce.crossModuleSync.preview', 'Ver preview')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={createIntegrationDrafts}
+                        disabled={isBusy || isSynced}
+                        className="quimera-guide-cta inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                    >
+                        {action === 'create' ? <RefreshCw size={16} className="animate-spin" /> : <PackageCheck size={16} />}
+                        {t('ecommerce.crossModuleSync.createDrafts', 'Crear drafts de integración')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={dismissPrompt}
+                        disabled={isBusy || isSynced}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-q-border bg-q-surface text-q-text-muted transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60"
+                        aria-label={t('ecommerce.crossModuleSync.dismiss', 'Omitir')}
+                    >
+                        {action === 'dismiss' ? <RefreshCw size={16} className="animate-spin" /> : <X size={16} />}
+                    </button>
+                </div>
+            </div>
+
+            {error && (
+                <div className="mt-4 flex items-start gap-2 rounded-lg border border-q-error/30 bg-q-error/10 p-3 text-sm text-q-error">
+                    <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                    <span>{error}</span>
+                </div>
+            )}
+
+            {summary && (
+                <div className="mt-4 rounded-lg border border-q-border/70 bg-q-bg/50 p-3">
+                    <div className="grid gap-3 text-sm text-q-text-muted sm:grid-cols-4">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.chatbotShort', 'Chatbot')}</p>
+                            <p className="mt-1 font-semibold text-foreground">{summary.chatbotDrafts}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.crmShort', 'CRM')}</p>
+                            <p className="mt-1 font-semibold text-foreground">{summary.leadDrafts}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.emailShort', 'Email')}</p>
+                            <p className="mt-1 font-semibold text-foreground">{summary.emailDrafts}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.analyticsShort', 'Analytics')}</p>
+                            <p className="mt-1 font-semibold text-foreground">{summary.analyticsDrafts}</p>
+                        </div>
+                    </div>
+                    <p className="mt-3 text-xs leading-5 text-q-text-muted">
+                        {summary.dryRun
+                            ? t('ecommerce.crossModuleSync.previewNote', 'Preview local: no escribe en base de datos.')
+                            : t('ecommerce.crossModuleSync.applyNote', '{{created}} drafts guardados en el blueprint; {{skipped}} omitidos por idempotencia.', {
+                                created: summary.created,
+                                skipped: summary.skipped,
+                            })}
+                    </p>
+                </div>
+            )}
+        </section>
+    );
+};
+
 interface OverviewProps {
     orders: Order[];
     products: Product[];
@@ -932,6 +1205,7 @@ interface OverviewProps {
     onNavigate: (view: EcommerceView) => void;
     totalProducts: number;
     starterContentPrompt?: React.ReactNode;
+    crossModuleSyncPrompt?: React.ReactNode;
     showDemoSeeder: boolean;
     onDemoSeederClose: () => void;
 }
@@ -1027,6 +1301,7 @@ const OverviewView: React.FC<OverviewProps> = ({
     onNavigate,
     totalProducts,
     starterContentPrompt,
+    crossModuleSyncPrompt,
     showDemoSeeder,
     onDemoSeederClose,
 }) => {
@@ -1328,6 +1603,7 @@ const OverviewView: React.FC<OverviewProps> = ({
     return (
         <div className="space-y-5">
             {starterContentPrompt}
+            {crossModuleSyncPrompt}
 
             <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)] gap-4">
                 <section className="quimera-dashboard-panel-card p-5 sm:p-6">
