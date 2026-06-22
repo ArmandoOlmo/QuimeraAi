@@ -255,6 +255,7 @@ const Router: React.FC<RouterProps> = ({
   if (isStoreRoute) {
     const pathParts = path.split('/');
     const storeId = pathParts[2];
+    const storeSubPath = pathParts.slice(3).join('/').replace(/^\/+|\/+$/g, '');
 
     // /store/:storeId/checkout - Checkout page
     if (path.includes('/checkout')) {
@@ -336,6 +337,15 @@ const Router: React.FC<RouterProps> = ({
               initialCategory={categorySlug}
             />
           </StorefrontLayout>
+        </Suspense>
+      );
+    }
+
+    // /store/:storeId/products|catalog|shop|tienda/productos|tienda/catalogo - Catalog inside StorefrontApp
+    if (/^(products|catalog|shop|tienda\/productos|tienda\/catalogo)$/.test(storeSubPath)) {
+      return (
+        <Suspense fallback={<LoadingScreen />}>
+          <StorefrontApp projectId={storeId} />
         </Suspense>
       );
     }
@@ -705,7 +715,6 @@ const Router: React.FC<RouterProps> = ({
 };
 
 export default Router;
-
 
 
 

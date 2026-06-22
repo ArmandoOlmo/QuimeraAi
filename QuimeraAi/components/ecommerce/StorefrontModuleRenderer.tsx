@@ -23,6 +23,8 @@ interface StorefrontModuleRendererProps {
     previewSessionKey?: string | null;
     onNavigateToProduct: (slug: string) => void;
     onNavigateToCategory: (slug: string) => void;
+    onViewAllProducts?: () => void;
+    onNavigate?: (href: string) => void;
 }
 
 const STOREFRONT_EDITOR_SECTION_CLICK = 'quimera:storefront-editor:section-click';
@@ -132,6 +134,8 @@ const StorefrontModuleRenderer: React.FC<StorefrontModuleRendererProps> = ({
     previewSessionKey,
     onNavigateToProduct,
     onNavigateToCategory,
+    onViewAllProducts,
+    onNavigate,
 }) => {
     const notifyEditorSectionClick = (
         decision: StorefrontSectionRenderDecision,
@@ -203,6 +207,8 @@ const StorefrontModuleRenderer: React.FC<StorefrontModuleRendererProps> = ({
                         onProductClick={onNavigateToProduct}
                         onCategoryClick={onNavigateToCategory}
                         onCollectionClick={onNavigateToCategory}
+                        onViewAllProducts={onViewAllProducts}
+                        onNavigate={onNavigate}
                     />,
                 );
             })}

@@ -6,6 +6,12 @@ import {
 } from '../../utils/storefrontRouter';
 
 describe('storefrontRouter', () => {
+    it('builds canonical storefront catalog URLs', () => {
+        expect(buildStorefrontCatalogUrl('abc')).toBe('/store/abc/tienda/productos');
+        expect(buildStorefrontCatalogUrl()).toBe('/tienda/productos');
+        expect(buildStorefrontCatalogUrl(null)).toBe('/tienda/productos');
+    });
+
     it('keeps storefront home and /tienda as landing pages', () => {
         expect(parseStorefrontUrl('/store/store_123')).toMatchObject({ view: 'home' });
         expect(parseStorefrontUrl('/store/store_123/')).toMatchObject({ view: 'home' });
@@ -13,12 +19,21 @@ describe('storefrontRouter', () => {
         expect(parseStorefrontUrl('/tienda')).toMatchObject({ view: 'home' });
     });
 
+    it('recognizes generic storefront catalog links', () => {
+        expect(isGenericStorefrontCatalogLink('/products')).toBe(true);
+        expect(isGenericStorefrontCatalogLink('/catalog')).toBe(true);
+        expect(isGenericStorefrontCatalogLink('/shop')).toBe(true);
+        expect(isGenericStorefrontCatalogLink('/tienda/productos')).toBe(true);
+        expect(isGenericStorefrontCatalogLink('/store/abc/tienda/productos')).toBe(true);
+        expect(isGenericStorefrontCatalogLink('/custom-sale')).toBe(false);
+    });
+
     it('routes explicit catalog paths to the all-products page', () => {
-        expect(parseStorefrontUrl('/store/store_123/products')).toMatchObject({ view: 'products' });
-        expect(parseStorefrontUrl('/store/store_123/catalog')).toMatchObject({ view: 'products' });
-        expect(parseStorefrontUrl('/store/store_123/shop')).toMatchObject({ view: 'products' });
-        expect(parseStorefrontUrl('/store/store_123/tienda/productos')).toMatchObject({ view: 'products' });
-        expect(parseStorefrontUrl('/store/store_123/tienda/catalogo')).toMatchObject({ view: 'products' });
+        expect(parseStorefrontUrl('/store/abc/tienda/productos')).toMatchObject({ view: 'products' });
+        expect(parseStorefrontUrl('/store/abc/products')).toMatchObject({ view: 'products' });
+        expect(parseStorefrontUrl('/store/abc/catalog')).toMatchObject({ view: 'products' });
+        expect(parseStorefrontUrl('/store/abc/shop')).toMatchObject({ view: 'products' });
+        expect(parseStorefrontUrl('/store/abc/tienda/catalogo')).toMatchObject({ view: 'products' });
     });
 
     it('builds canonical storefront catalog links while accepting legacy generic links', () => {
