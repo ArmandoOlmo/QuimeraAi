@@ -23,9 +23,10 @@ import {
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useOrders } from '../hooks/useOrders';
 import { useProducts } from '../hooks/useProducts';
-import { Order, OrderStatus } from '../../../../types/ecommerce';
+import { FulfillmentStatus, Order, OrderStatus, PaymentStatus } from '../../../../types/ecommerce';
 import type { StoredTimestamp } from '../../../../types/ecommerce';
 import { timestampToDate } from '../../../../utils/timestampUtils';
+import { canFulfillOrder, normalizeOrderForAdmin } from '../../../../utils/ecommerce/ecommerceOrderAdminService';
 import OrderDetailDrawer from '../components/OrderDetailDrawer';
 import { useEcommerceContext } from '../EcommerceContext';
 import { FilterChipRow } from '../../filters';
@@ -33,6 +34,8 @@ import type { FilterChipOption } from '../../filters';
 import { MotionCard } from '../../../ui/primitives/Card';
 
 type OrderStatusFilter = OrderStatus | 'all';
+type PaymentStatusFilter = PaymentStatus | 'all';
+type FulfillmentStatusFilter = FulfillmentStatus | 'all';
 type OrderStatusConfig = { icon: React.ElementType; color: string; bg: string; label: string };
 
 const ORDER_STATUS_CONFIGS: Record<OrderStatus, OrderStatusConfig> = {
@@ -43,6 +46,58 @@ const ORDER_STATUS_CONFIGS: Record<OrderStatus, OrderStatusConfig> = {
     delivered: { icon: CheckCircle, color: 'text-q-success', bg: 'bg-q-success/20', label: 'Entregado' },
     cancelled: { icon: XCircle, color: 'text-q-error', bg: 'bg-q-error/20', label: 'Cancelado' },
     refunded: { icon: DollarSign, color: 'text-q-warning', bg: 'bg-q-warning/20', label: 'Reembolsado' },
+};
+
+const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+    pending: 'Pago pendiente',
+    paid: 'Pagado',
+    failed: 'Pago fallido',
+    refunded: 'Reembolsado',
+    partially_refunded: 'Reembolso parcial',
+    cancelled: 'Pago cancelado',
+};
+
+const FULFILLMENT_STATUS_LABELS: Record<FulfillmentStatus, string> = {
+    unfulfilled: 'Sin preparar',
+    processing: 'Procesando',
+    partial: 'Parcial',
+    partially_fulfilled: 'Parcial',
+    fulfilled: 'Completado',
+    cancelled: 'Cancelado',
+};
+
+const getBadgeClassName = (tone: 'neutral' | 'success' | 'warning' | 'danger' | 'accent') => {
+    const classes = {
+        neutral: 'border-q-border bg-muted/30 text-q-text-muted',
+        success: 'border-q-success/20 bg-q-success/10 text-q-success',
+        warning: 'border-q-warning/20 bg-q-warning/10 text-q-warning',
+        danger: 'border-q-error/20 bg-q-error/10 text-q-error',
+        accent: 'border-primary/20 bg-primary/10 text-primary',
+    };
+
+    return classes[tone];
+};
+
+const getReadinessBadge = (order: Order) => {
+    if (order.status === 'cancelled' || order.fulfillmentStatus === 'cancelled') {
+        return { label: 'Bloqueado', tone: 'danger' as const };
+    }
+    if (canFulfillOrder(order)) {
+        return { label: 'Listo para fulfillment', tone: 'success' as const };
+    }
+    if (order.paymentStatus !== 'paid') {
+        return { label: 'Esperando pago', tone: 'warning' as const };
+    }
+    if (order.fulfillmentStatus === 'fulfilled') {
+        return { label: 'Fulfilled', tone: 'neutral' as const };
+    }
+    return { label: 'Revisar', tone: 'accent' as const };
+};
+
+const getOrderChannel = (order: Order) => {
+    const data = order.data || {};
+    const value = data.channel || data.source || data.salesChannel || order.paymentMethod || 'storefront';
+    return String(value);
 };
 
 const getStatusConfig = (status: unknown): OrderStatusConfig => {
@@ -56,11 +111,22 @@ const OrdersView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    const { orders, isLoading, updateOrderStatus, addTrackingInfo, addInternalNotes, updateOrderDetails, createRefund } = useOrders(user?.id || '', storeId);
+    const {
+        orders,
+        isLoading,
+        error,
+        updateOrderStatus,
+        updateFulfillmentStatus,
+        addTrackingInfo,
+        addInternalNotes,
+        updateOrderDetails,
+    } = useOrders(user?.id || '', storeId);
     const { products } = useProducts(user?.id || '', storeId);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStatus, setSelectedStatus] = useState<OrderStatusFilter>('all');
+    const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<PaymentStatusFilter>('all');
+    const [selectedFulfillmentStatus, setSelectedFulfillmentStatus] = useState<FulfillmentStatusFilter>('all');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [showDrawer, setShowDrawer] = useState(false);
 
@@ -69,17 +135,22 @@ const OrdersView: React.FC = () => {
         const normalizedSearchTerm = searchTerm.trim().toLowerCase();
 
         return orders.filter((order) => {
+            const adminOrder = normalizeOrderForAdmin(order);
             const matchesSearch =
                 !normalizedSearchTerm ||
                 order.orderNumber.toLowerCase().includes(normalizedSearchTerm) ||
                 order.customerEmail.toLowerCase().includes(normalizedSearchTerm) ||
-                order.customerName.toLowerCase().includes(normalizedSearchTerm);
+                order.customerName.toLowerCase().includes(normalizedSearchTerm) ||
+                adminOrder.orderId.toLowerCase().includes(normalizedSearchTerm);
 
             const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
+            const matchesPaymentStatus = selectedPaymentStatus === 'all' || order.paymentStatus === selectedPaymentStatus;
+            const matchesFulfillmentStatus =
+                selectedFulfillmentStatus === 'all' || order.fulfillmentStatus === selectedFulfillmentStatus;
 
-            return matchesSearch && matchesStatus;
-        });
-    }, [orders, searchTerm, selectedStatus]);
+            return matchesSearch && matchesStatus && matchesPaymentStatus && matchesFulfillmentStatus;
+        }).sort((left, right) => timestampToDate(right.createdAt).getTime() - timestampToDate(left.createdAt).getTime());
+    }, [orders, searchTerm, selectedStatus, selectedPaymentStatus, selectedFulfillmentStatus]);
 
     // Order stats
     const stats = useMemo(() => {
@@ -92,6 +163,11 @@ const OrdersView: React.FC = () => {
             delivered: orders.filter((o) => o.status === 'delivered').length,
             cancelled: orders.filter((o) => o.status === 'cancelled').length,
             refunded: orders.filter((o) => o.status === 'refunded').length,
+            paymentPending: orders.filter((o) => o.paymentStatus === 'pending').length,
+            paymentPaid: orders.filter((o) => o.paymentStatus === 'paid').length,
+            unfulfilled: orders.filter((o) => o.fulfillmentStatus === 'unfulfilled').length,
+            fulfillmentProcessing: orders.filter((o) => o.fulfillmentStatus === 'processing').length,
+            fulfilled: orders.filter((o) => o.fulfillmentStatus === 'fulfilled').length,
             revenue: orders.reduce((sum, order) => sum + (order.total || 0), 0),
             items: orders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0),
         };
@@ -107,11 +183,16 @@ const OrdersView: React.FC = () => {
     ], [orders.length, stats.delivered, stats.paid, stats.pending, stats.processing, stats.shipped, t]);
 
     const visibleOrdersLabel = `${filteredOrders.length} de ${orders.length} pedido${orders.length !== 1 ? 's' : ''}`;
-    const hasActiveFilters = Boolean(searchTerm.trim()) || selectedStatus !== 'all';
+    const hasActiveFilters = Boolean(searchTerm.trim())
+        || selectedStatus !== 'all'
+        || selectedPaymentStatus !== 'all'
+        || selectedFulfillmentStatus !== 'all';
 
     const clearFilters = () => {
         setSearchTerm('');
         setSelectedStatus('all');
+        setSelectedPaymentStatus('all');
+        setSelectedFulfillmentStatus('all');
     };
 
     const handleViewOrder = (order: Order) => {
@@ -126,6 +207,13 @@ const OrdersView: React.FC = () => {
 
     const handleUpdateOrderStatus = async (orderId: string, status: OrderStatus) => {
         const updatedOrder = await updateOrderStatus(orderId, status);
+        setSelectedOrder((currentOrder) =>
+            currentOrder?.id === orderId ? updatedOrder : currentOrder
+        );
+    };
+
+    const handleUpdateFulfillmentStatus = async (orderId: string, status: FulfillmentStatus) => {
+        const updatedOrder = await updateFulfillmentStatus(orderId, status);
         setSelectedOrder((currentOrder) =>
             currentOrder?.id === orderId ? updatedOrder : currentOrder
         );
@@ -152,13 +240,6 @@ const OrdersView: React.FC = () => {
 
     const handleUpdateOrderDetails = async (orderId: string, updates: Partial<Order>) => {
         const updatedOrder = await updateOrderDetails(orderId, updates);
-        setSelectedOrder((currentOrder) =>
-            currentOrder?.id === orderId ? updatedOrder : currentOrder
-        );
-    };
-
-    const handleRefundOrder = async (orderId: string, amount?: number, reason?: string) => {
-        const updatedOrder = await createRefund(orderId, amount, reason);
         setSelectedOrder((currentOrder) =>
             currentOrder?.id === orderId ? updatedOrder : currentOrder
         );
@@ -198,8 +279,8 @@ const OrdersView: React.FC = () => {
         },
         {
             label: t('ecommerce.fulfillment', 'Fulfillment'),
-            value: stats.shipped,
-            helper: `${stats.delivered} ${t('ecommerce.deliveredLower', 'entregados')}`,
+            value: stats.unfulfilled,
+            helper: `${stats.fulfillmentProcessing} ${t('ecommerce.processingLower', 'procesando')}`,
             icon: Truck,
             iconClassName: 'text-primary',
         },
@@ -235,6 +316,12 @@ const OrdersView: React.FC = () => {
                     {t('ecommerce.manageOrdersPro', 'Revisa pagos, preparación, envíos e incidencias desde un panel compacto.')}
                 </p>
             </div>
+
+            {error && (
+                <div className="rounded-xl border border-q-error/30 bg-q-error/10 px-4 py-3 text-sm text-q-error">
+                    {error}
+                </div>
+            )}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -301,6 +388,39 @@ const OrdersView: React.FC = () => {
                     </div>
                 </div>
 
+                <div className="mt-4 grid gap-3 border-t border-q-border/60 pt-3 sm:grid-cols-2">
+                    <label className="block">
+                        <span className="mb-2 block text-xs font-semibold uppercase text-q-text-secondary">
+                            Estado de pago
+                        </span>
+                        <select
+                            value={selectedPaymentStatus}
+                            onChange={(event) => setSelectedPaymentStatus(event.target.value as PaymentStatusFilter)}
+                            className="h-11 w-full rounded-lg border border-q-border/70 bg-q-bg/60 px-3 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                        >
+                            <option value="all">Todos los pagos</option>
+                            {Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => (
+                                <option key={value} value={value}>{label}</option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className="block">
+                        <span className="mb-2 block text-xs font-semibold uppercase text-q-text-secondary">
+                            Fulfillment
+                        </span>
+                        <select
+                            value={selectedFulfillmentStatus}
+                            onChange={(event) => setSelectedFulfillmentStatus(event.target.value as FulfillmentStatusFilter)}
+                            className="h-11 w-full rounded-lg border border-q-border/70 bg-q-bg/60 px-3 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                        >
+                            <option value="all">Todos los fulfillment</option>
+                            {Object.entries(FULFILLMENT_STATUS_LABELS).map(([value, label]) => (
+                                <option key={value} value={value}>{label}</option>
+                            ))}
+                        </select>
+                    </label>
+                </div>
+
                 {hasActiveFilters && (
                     <div className="mt-4 flex flex-col gap-3 border-t border-q-border/60 pt-3 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-sm text-q-text-muted">
@@ -347,6 +467,8 @@ const OrdersView: React.FC = () => {
                     {filteredOrders.map((order) => {
                         const statusConfig = getStatusConfig(order.status);
                         const StatusIcon = statusConfig.icon;
+                        const readiness = getReadinessBadge(order);
+                        const adminOrder = normalizeOrderForAdmin(order);
 
                         return (
                             <div key={order.id} className="rounded-xl border border-q-border bg-q-surface/50 p-3">
@@ -367,20 +489,34 @@ const OrdersView: React.FC = () => {
                                             {order.customerName}
                                         </button>
                                         <p className="truncate text-xs text-q-text-muted">{order.customerEmail}</p>
+                                        <p className="mt-1 truncate text-xs text-q-text-muted capitalize">
+                                            {getOrderChannel(order)}
+                                        </p>
                                     </div>
                                     <div className="flex-shrink-0 text-right">
                                         <p className="font-semibold text-foreground">{formatCurrency(order.total, order.currency)}</p>
                                         <p className="text-xs text-q-text-muted">
-                                            {order.items.length} {t('ecommerce.items', 'items')}
+                                            {adminOrder.items.reduce((sum, item) => sum + item.quantity, 0)} {t('ecommerce.items', 'items')}
                                         </p>
                                     </div>
                                 </div>
-                                <div className="mt-3 flex items-center justify-between gap-3">
+                                <div className="mt-3 flex flex-wrap items-center gap-2">
                                     <span
                                         className={`inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusConfig.bg} ${statusConfig.color}`}
                                     >
                                         <StatusIcon size={14} className="flex-shrink-0" />
                                         <span className="truncate">{statusConfig.label}</span>
+                                    </span>
+                                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${getBadgeClassName(order.paymentStatus === 'paid' ? 'success' : order.paymentStatus === 'failed' ? 'danger' : 'warning')}`}>
+                                        {PAYMENT_STATUS_LABELS[order.paymentStatus]}
+                                    </span>
+                                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${getBadgeClassName(readiness.tone)}`}>
+                                        {readiness.label}
+                                    </span>
+                                </div>
+                                <div className="mt-3 flex items-center justify-between gap-3">
+                                    <span className="text-xs text-q-text-muted">
+                                        {FULFILLMENT_STATUS_LABELS[order.fulfillmentStatus]}
                                     </span>
                                     <button
                                         type="button"
@@ -413,6 +549,9 @@ const OrdersView: React.FC = () => {
                                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-q-text-muted">
                                     {t('ecommerce.status', 'Estado')}
                                 </th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-q-text-muted">
+                                    Pago/Fulfillment
+                                </th>
                                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-q-text-muted">
                                     {t('ecommerce.total', 'Total')}
                                 </th>
@@ -425,6 +564,8 @@ const OrdersView: React.FC = () => {
                             {filteredOrders.map((order) => {
                                 const statusConfig = getStatusConfig(order.status);
                                 const StatusIcon = statusConfig.icon;
+                                const readiness = getReadinessBadge(order);
+                                const adminOrder = normalizeOrderForAdmin(order);
 
                                 return (
                                     <tr key={order.id} className="transition-colors hover:bg-muted/20">
@@ -436,6 +577,7 @@ const OrdersView: React.FC = () => {
                                             >
                                                 {order.orderNumber}
                                             </button>
+                                            <p className="mt-1 text-xs text-q-text-muted capitalize">{getOrderChannel(order)}</p>
                                             <button
                                                 type="button"
                                                 onClick={() => handleViewOrder(order)}
@@ -464,13 +606,26 @@ const OrdersView: React.FC = () => {
                                                 <StatusIcon size={14} />
                                                 {statusConfig.label}
                                             </span>
+                                            <span className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${getBadgeClassName(readiness.tone)}`}>
+                                                {readiness.label}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="space-y-1">
+                                                <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${getBadgeClassName(order.paymentStatus === 'paid' ? 'success' : order.paymentStatus === 'failed' ? 'danger' : 'warning')}`}>
+                                                    {PAYMENT_STATUS_LABELS[order.paymentStatus]}
+                                                </span>
+                                                <p className="text-xs text-q-text-muted">
+                                                    {FULFILLMENT_STATUS_LABELS[order.fulfillmentStatus]}
+                                                </p>
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <p className="text-foreground font-medium">
                                                 {formatCurrency(order.total, order.currency)}
                                             </p>
                                             <p className="text-q-text-muted text-sm">
-                                                {order.items.length} {t('ecommerce.items', 'items')}
+                                                {adminOrder.items.reduce((sum, item) => sum + item.quantity, 0)} {t('ecommerce.items', 'items')}
                                             </p>
                                         </td>
                                         <td className="px-4 py-3 text-right">
@@ -501,10 +656,10 @@ const OrdersView: React.FC = () => {
                     products={products}
                     onClose={handleCloseDrawer}
                     onUpdateStatus={handleUpdateOrderStatus}
+                    onUpdateFulfillmentStatus={handleUpdateFulfillmentStatus}
                     onAddTracking={handleAddTrackingInfo}
                     onUpdateInternalNotes={handleUpdateInternalNotes}
                     onUpdateOrder={handleUpdateOrderDetails}
-                    onRefundOrder={handleRefundOrder}
                 />
             )}
         </div>
