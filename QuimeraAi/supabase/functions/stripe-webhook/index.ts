@@ -1,7 +1,10 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "npm:stripe@^14.0.0";
-import { sendPaidOrderTransactionalEmails } from "../_shared/ecommerce-transactional-emails.ts";
+import {
+  sendPaidOrderTransactionalEmails,
+  sendPaymentFailedTransactionalEmail,
+} from "../_shared/ecommerce-transactional-emails.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   apiVersion: "2023-10-16",
@@ -1310,6 +1313,28 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
     failedAt,
     nextStatus === "cancelled" ? "payment_intent_cancelled" : "payment_intent_failed",
   );
+
+  try {
+    const emailResult = await sendPaymentFailedTransactionalEmail({
+      supabase,
+      order: {
+        ...order,
+        status: nextStatus,
+        payment_status: "failed",
+        payment_intent_id: paymentIntent.id,
+        stripe_payment_intent_id: paymentIntent.id,
+        data: updatePayload.data as Record<string, unknown>,
+      },
+      failedAt,
+      eventId: paymentIntent.id,
+      resendApiKey: RESEND_API_KEY,
+      defaultFromEmail: DEFAULT_FROM_EMAIL,
+    });
+    console.log("[stripe-webhook] ecommerce payment failed email result:", emailResult);
+  } catch (emailError) {
+    const message = emailError instanceof Error ? emailError.message : String(emailError);
+    console.error("[stripe-webhook] ecommerce payment failed email failed:", message);
+  }
 }
 
 async function findStoreOrderForPaymentIntent(paymentIntent: Stripe.PaymentIntent) {
