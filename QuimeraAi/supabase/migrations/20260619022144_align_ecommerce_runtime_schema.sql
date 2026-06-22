@@ -23,6 +23,7 @@ CREATE INDEX IF NOT EXISTS store_products_store_slug_idx ON public.store_product
 -- Store categories: storefront code reads categories by store_id/data.
 ALTER TABLE public.store_categories ADD COLUMN IF NOT EXISTS store_id TEXT;
 ALTER TABLE public.store_categories ADD COLUMN IF NOT EXISTS public_store_id TEXT;
+ALTER TABLE public.store_categories ADD COLUMN IF NOT EXISTS slug TEXT;
 ALTER TABLE public.store_categories ADD COLUMN IF NOT EXISTS data JSONB DEFAULT '{}'::jsonb;
 
 CREATE INDEX IF NOT EXISTS store_categories_store_id_idx ON public.store_categories(store_id);
@@ -136,8 +137,10 @@ ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS data JSONB DEFAULT '
 DO $$
 DECLARE
   target_table TEXT;
+  target_regclass REGCLASS;
   store_id_type TEXT;
   has_project_id BOOLEAN;
+  has_store_id_fk BOOLEAN;
 BEGIN
   FOREACH target_table IN ARRAY ARRAY[
     'store_products',
@@ -148,6 +151,12 @@ BEGIN
     'store_customers'
   ]
   LOOP
+    SELECT to_regclass(format('public.%I', target_table)) INTO target_regclass;
+
+    IF target_regclass IS NULL THEN
+      CONTINUE;
+    END IF;
+
     SELECT c.udt_name INTO store_id_type
     FROM information_schema.columns c
     WHERE c.table_schema = 'public'
@@ -161,6 +170,21 @@ BEGIN
         AND c.table_name = target_table
         AND c.column_name = 'project_id'
     ) INTO has_project_id;
+
+    SELECT EXISTS (
+      SELECT 1
+      FROM pg_constraint con
+      JOIN pg_attribute att
+        ON att.attrelid = con.conrelid
+       AND att.attnum = ANY(con.conkey)
+      WHERE con.conrelid = target_regclass
+        AND con.contype = 'f'
+        AND att.attname = 'store_id'
+    ) INTO has_store_id_fk;
+
+    IF has_store_id_fk THEN
+      CONTINUE;
+    END IF;
 
     IF has_project_id AND store_id_type = 'uuid' THEN
       EXECUTE format(
