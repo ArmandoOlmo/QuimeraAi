@@ -6,6 +6,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase';
 import { StorefrontProductItem } from '../types/components';
+import {
+    buildStoreIdentityOrFilter,
+    getStoreIdentityQueryIds,
+    resolveProjectBackedStoreIdentity,
+} from '../utils/ecommerce/storeIdentity';
 
 export interface UsePublicProductsOptions {
     categoryId?: string;
@@ -35,6 +40,7 @@ export const usePublicProducts = (
     const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [queryIds, setQueryIds] = useState<string[]>([]);
 
     const {
         categoryId,
@@ -45,19 +51,60 @@ export const usePublicProducts = (
         realtime = false,
     } = options;
     const productIdsKey = rawProductIds.filter(Boolean).join('|');
+    const queryIdsKey = queryIds.join('|');
+
+    useEffect(() => {
+        if (!storeId) {
+            setQueryIds([]);
+            return;
+        }
+
+        let isMounted = true;
+
+        const resolveQueryIds = async () => {
+            let ids = getStoreIdentityQueryIds(storeId);
+
+            try {
+                const { data: publicStore } = await supabase
+                    .from('public_stores')
+                    .select('id, data')
+                    .eq('id', storeId)
+                    .maybeSingle();
+
+                if (publicStore) {
+                    ids = getStoreIdentityQueryIds(resolveProjectBackedStoreIdentity({
+                        storeId,
+                        publicStoreId: publicStore.id,
+                        publicStore,
+                    }));
+                }
+            } catch (err) {
+                console.warn('[usePublicProducts] Public store identity resolution skipped:', err);
+            }
+
+            if (isMounted) setQueryIds(ids);
+        };
+
+        resolveQueryIds();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [storeId]);
 
     // Fetch categories
     useEffect(() => {
-        if (!storeId) return;
+        if (!storeId || queryIds.length === 0) return;
 
         let isMounted = true;
 
         const fetchCategories = async () => {
             try {
+                const filter = buildStoreIdentityOrFilter(queryIds);
                 const { data, error } = await supabase
                     .from('store_categories')
-                    .select('id, data')
-                    .eq('store_id', storeId);
+                    .select('*')
+                    .or(filter);
 
                 if (!isMounted) return;
 
@@ -66,8 +113,8 @@ export const usePublicProducts = (
                 if (data) {
                     setCategories(data.map((cat: any) => ({
                         id: cat.id,
-                        name: cat.data?.name || '',
-                        slug: cat.data?.slug || '',
+                        name: cat.name || cat.data?.name || '',
+                        slug: cat.slug || cat.data?.slug || '',
                     })));
                 }
             } catch (err) {
@@ -80,10 +127,10 @@ export const usePublicProducts = (
         return () => {
             isMounted = false;
         };
-    }, [storeId]);
+    }, [storeId, queryIdsKey]);
 
     const fetchProducts = useCallback(async () => {
-        if (!storeId) {
+        if (!storeId || queryIds.length === 0) {
             setProducts([]);
             setIsLoading(false);
             return;
@@ -94,12 +141,15 @@ export const usePublicProducts = (
 
         try {
             const productIds = productIdsKey ? productIdsKey.split('|').filter(Boolean) : [];
+            const filter = buildStoreIdentityOrFilter(queryIds);
 
-            // Query from store_products (hybrid schema: flat id/store_id + JSONB data)
+            // Query from store_products. Website ecommerce blocks are read-only
+            // Ecommerce Engine consumers; products/categories remain owned by
+            // the Ecommerce Engine admin and checkout flows.
             let query = supabase
                 .from('store_products')
-                .select('id, store_id, data')
-                .eq('store_id', storeId);
+                .select('*')
+                .or(filter);
 
             if (productIds.length > 0) {
                 query = query.in('id', productIds);
@@ -116,19 +166,22 @@ export const usePublicProducts = (
             if (data) {
                 fetchedProducts = data.map((doc: any) => {
                     const d = doc.data || {};
+                    const images = doc.images || d.images || [];
+                    const firstImage = Array.isArray(images) ? images[0] : null;
+                    const quantity = doc.inventory_quantity ?? doc.quantity ?? d.inventoryQuantity ?? d.quantity;
                     return {
                         id: doc.id,
-                        name: d.name || '',
-                        description: d.shortDescription || d.description || '',
-                        price: d.price || 0,
-                        compareAtPrice: d.compareAtPrice,
-                        image: d.images?.[0]?.url || d.images?.[0] || null,
-                        category: d.categoryId,
-                        inStock: d.quantity == null ? true : d.quantity > 0,
-                        rating: d.averageRating,
-                        reviewCount: d.reviewCount,
-                        slug: d.slug,
-                        updatedAt: d.updatedAt,
+                        name: doc.name || d.name || '',
+                        description: doc.short_description || doc.description || d.shortDescription || d.description || '',
+                        price: Number(doc.price ?? d.price ?? 0),
+                        compareAtPrice: doc.compare_at_price ?? d.compareAtPrice,
+                        image: firstImage?.url || firstImage || d.imageUrl || null,
+                        category: doc.category_id || d.categoryId || d.category,
+                        inStock: quantity == null ? true : Number(quantity) > 0,
+                        rating: doc.average_rating ?? d.averageRating,
+                        reviewCount: doc.review_count ?? d.reviewCount,
+                        slug: doc.slug || d.slug,
+                        updatedAt: doc.updated_at || d.updatedAt,
                     };
                 });
             }
@@ -190,7 +243,7 @@ export const usePublicProducts = (
         } finally {
             setIsLoading(false);
         }
-    }, [storeId, categoryId, searchTerm, sortBy, limitCount, productIdsKey]);
+    }, [storeId, queryIdsKey, categoryId, searchTerm, sortBy, limitCount, productIdsKey]);
 
     // Initial fetch
     useEffect(() => {
@@ -199,7 +252,7 @@ export const usePublicProducts = (
 
     // Realtime subscription (optional)
     useEffect(() => {
-        if (!storeId || !realtime) return;
+        if (!storeId || !realtime || queryIds.length === 0) return;
 
         let isMounted = true;
 
@@ -208,7 +261,7 @@ export const usePublicProducts = (
             .channel(channelId)
             .on(
                 'postgres_changes',
-                { event: '*', schema: 'public', table: 'store_products', filter: `store_id=eq.${storeId}` },
+                { event: '*', schema: 'public', table: 'store_products' },
                 () => {
                     if (isMounted) {
                         fetchProducts();
@@ -221,7 +274,7 @@ export const usePublicProducts = (
             isMounted = false;
             supabase.removeChannel(subscription);
         };
-    }, [storeId, realtime, fetchProducts]);
+    }, [storeId, queryIdsKey, realtime, fetchProducts]);
 
     return {
         products,
@@ -233,7 +286,6 @@ export const usePublicProducts = (
 };
 
 export default usePublicProducts;
-
 
 
 

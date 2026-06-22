@@ -92,9 +92,21 @@ export interface WebsiteEcommerceBlockBlueprint extends BlueprintModuleState {
     settings?: WebsiteEcommerceBlockSettings;
 }
 
+export interface WebsiteSectionBlueprint extends BlueprintModuleState {
+    id: string;
+    type: PageSection;
+    order: number;
+    visible: boolean;
+    pageIds?: string[];
+    settings?: Record<string, unknown>;
+}
+
 export interface WebsiteBlueprint extends BlueprintModuleState {
     pages: Array<{ id: string; title: string; slug: string; sections: PageSection[] }>;
     sections: PageSection[];
+    componentOrder?: PageSection[];
+    sectionVisibility?: Record<PageSection, boolean>;
+    sectionBlueprints?: WebsiteSectionBlueprint[];
     ecommerceBlocks: WebsiteEcommerceBlockBlueprint[];
     leadForms?: string[];
     chatbotPlacement?: 'none' | 'floating' | 'inline' | 'both';

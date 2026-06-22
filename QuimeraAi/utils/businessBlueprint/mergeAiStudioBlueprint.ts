@@ -9,6 +9,7 @@ import type {
     StorefrontBlueprint,
     WebsiteBlueprint,
     WebsiteEcommerceBlockBlueprint,
+    WebsiteSectionBlueprint,
 } from '../../types/businessBlueprint';
 import {
     BUSINESS_BLUEPRINT_SCHEMA_VERSION,
@@ -17,6 +18,7 @@ import {
 import type {
     WebsiteEcommerceBlockSource,
 } from '../../types/websiteEcommerceBlocks';
+import type { PageSection } from '../../types/ui';
 import type { WebsitePlan } from '../../types/websitePlan';
 import {
     getStorefrontCatalogSize,
@@ -135,7 +137,84 @@ function mergeWebsiteBlueprint(
         },
     };
 
-    return protectedOrMerged(existing, next);
+    if (!existing) return next;
+    if (existing.metadata.lockedFromRegeneration) return existing;
+
+    const protectedSections = (existing.sectionBlueprints || [])
+        .filter(section => shouldProtectFromRegeneration(section));
+    const protectedBlocks = (existing.ecommerceBlocks || [])
+        .filter(block => shouldProtectFromRegeneration(block));
+
+    if (protectedSections.length === 0 && protectedBlocks.length === 0) {
+        return next;
+    }
+
+    const existingSections = new Set(existing.sections || existing.componentOrder || []);
+    let sections = [...next.sections];
+    const sectionVisibility = {
+        ...(next.sectionVisibility || {}),
+        ...(existing.sectionVisibility || {}),
+    } as Record<PageSection, boolean>;
+    const nextSectionBlueprints = [...(next.sectionBlueprints || [])];
+
+    protectedSections.forEach(section => {
+        const index = nextSectionBlueprints.findIndex(item => item.id === section.id || item.type === section.type);
+        if (index >= 0) {
+            nextSectionBlueprints[index] = section;
+        } else {
+            nextSectionBlueprints.push(section);
+        }
+
+        sectionVisibility[section.type] = section.visible;
+
+        if (section.visible || existingSections.has(section.type)) {
+            if (!sections.includes(section.type)) {
+                sections.splice(Math.min(section.order, sections.length), 0, section.type);
+            }
+        } else {
+            sections = sections.filter(item => item !== section.type);
+        }
+    });
+
+    const protectedOrder = new Map<PageSection, number>(
+        protectedSections.map(section => [section.type, section.order]),
+    );
+    sections.sort((a, b) => {
+        const aOrder = protectedOrder.get(a);
+        const bOrder = protectedOrder.get(b);
+        if (aOrder == null && bOrder == null) return 0;
+        if (aOrder == null) return 1;
+        if (bOrder == null) return -1;
+        return aOrder - bOrder;
+    });
+
+    const nextBlocks = [...next.ecommerceBlocks];
+    protectedBlocks.forEach(block => {
+        const index = nextBlocks.findIndex(item => item.id === block.id || item.type === block.type);
+        if (index >= 0) {
+            nextBlocks[index] = block;
+        } else {
+            nextBlocks.push(block);
+        }
+    });
+
+    const pages = next.pages.map(page => ({
+        ...page,
+        sections: page.sections
+            .filter(section => sections.includes(section))
+            .concat(sections.filter(section => !page.sections.includes(section) && protectedOrder.has(section))),
+    }));
+
+    return {
+        ...next,
+        pages,
+        sections,
+        componentOrder: sections,
+        sectionVisibility,
+        sectionBlueprints: nextSectionBlueprints
+            .sort((a: WebsiteSectionBlueprint, b: WebsiteSectionBlueprint) => a.order - b.order),
+        ecommerceBlocks: nextBlocks,
+    };
 }
 
 function mergeEcommerceBlueprint(

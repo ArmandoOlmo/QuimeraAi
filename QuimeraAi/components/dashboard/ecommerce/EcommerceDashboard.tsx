@@ -49,6 +49,7 @@ import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
+import { resolveProjectBackedStoreIdentity } from '../../../utils/ecommerce/storeIdentity';
 import { supabase } from '../../../supabase';
 import type { Category, Customer, EcommerceView, Order, Product, Review, StoreSettings } from '../../../types/ecommerce';
 import type { Project } from '../../../types/project';
@@ -154,9 +155,15 @@ const EcommerceDashboard: React.FC = () => {
     // Determinar qué proyecto usar para ecommerce
     const effectiveProjectId = selectedProjectId || activeProjectId;
     const effectiveProject = projects.find(p => p.id === effectiveProjectId) || activeProject;
+    const storeIdentity = useMemo(() => resolveProjectBackedStoreIdentity({
+        projectId: effectiveProjectId,
+        project: effectiveProject,
+        businessBlueprint: effectiveProject?.businessBlueprint,
+    }), [effectiveProjectId, effectiveProject]);
 
-    // El storeId es el projectId (relación 1:1) - solo si hay proyecto válido
-    const storeId = effectiveProjectId || '';
+    // Ecommerce Engine draft tables are project-backed. The resolver owns the
+    // mapping so callers do not assume arbitrary project IDs are public stores.
+    const storeId = storeIdentity.engineStoreId || '';
 
     // Hook para gestionar ecommerce del proyecto
     const {
@@ -168,7 +175,7 @@ const EcommerceDashboard: React.FC = () => {
         getStoreId,
     } = useProjectEcommerce(userId || '', effectiveProjectId, effectiveProject?.name);
 
-    // Inicializar store (usando projectId como storeId)
+    // Inicializar la tienda del Ecommerce Engine usando la identidad canónica.
     const {
         store,
         isLoading: storeLoading,
@@ -402,6 +409,8 @@ const EcommerceDashboard: React.FC = () => {
     return (
         <EcommerceContext.Provider value={{
             storeId,
+            engineStoreId: storeIdentity.engineStoreId || undefined,
+            publicStoreId: storeIdentity.publicStoreId,
             projectId: effectiveProjectId,
             projectName: effectiveProject?.name || ''
         }}>

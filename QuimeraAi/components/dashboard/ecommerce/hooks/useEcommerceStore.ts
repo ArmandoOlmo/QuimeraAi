@@ -1,11 +1,12 @@
 /**
  * useEcommerceStore Hook
  * Hook para inicializar y gestionar la tienda de ecommerce en Supabase
- * En la arquitectura de Supabase, un "store" equivale a un "project".
+ * En Ecommerce Engine draft, la tienda canónica está respaldada por project_id.
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../../supabase';
+import { resolveProjectBackedStoreIdentity } from '../../../../utils/ecommerce/storeIdentity';
 
 export interface EcommerceStoreData {
     id: string;
@@ -31,7 +32,7 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
     const [isInitialized, setIsInitialized] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const effectiveStoreId = storeId || '';
+    const effectiveStoreId = resolveProjectBackedStoreIdentity({ projectId: storeId }).engineStoreId || '';
 
     // Función para inicializar o cargar la tienda
     const fetchAndInitializeStore = useCallback(async () => {
@@ -44,7 +45,7 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
 
         try {
             setIsLoading(true);
-            // Un "store" está vinculado a un "project". Validamos si el proyecto existe
+            // Ecommerce Engine draft store identity resolves to a project row.
             const { data: projectData, error: projectError } = await supabase
                 .from('projects')
                 .select('id, name, created_at, last_updated, user_id')
@@ -117,4 +118,3 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
 };
 
 export default useEcommerceStore;
-

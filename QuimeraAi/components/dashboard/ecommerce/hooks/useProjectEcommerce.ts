@@ -1,18 +1,19 @@
 /**
  * useProjectEcommerce Hook
  * Hook para vincular proyectos con tiendas de ecommerce en Supabase
- * Cada proyecto tiene su propia tienda usando projectId como storeId
+ * Ecommerce Engine usa una identidad project-backed para sus tablas draft.
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../../supabase';
 import { createRealtimeChannelName } from './realtimeChannel';
+import { resolveProjectBackedStoreIdentity } from '../../../../utils/ecommerce/storeIdentity';
 
 export interface ProjectEcommerceConfig {
     projectId: string;
     projectName: string;
     ecommerceEnabled: boolean;
-    storeId: string; // Será igual a projectId
+    storeId: string;
     storeName: string;
     createdAt: any;
     updatedAt: any;
@@ -44,9 +45,10 @@ export const useProjectEcommerce = (
     const [isInitialized, setIsInitialized] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // El storeId será el projectId - relación 1:1
+    // Draft products, categories, settings, inventory, and orders are keyed by
+    // project_id. The resolver centralizes that mapping for engine callers.
     const getStoreId = useCallback(() => {
-        return projectId || 'default';
+        return resolveProjectBackedStoreIdentity({ projectId }).engineStoreId || 'default';
     }, [projectId]);
 
     const fetchConfig = useCallback(async () => {
@@ -86,11 +88,12 @@ export const useProjectEcommerce = (
             }
 
             if (settings) {
+                const engineStoreId = resolveProjectBackedStoreIdentity({ projectId }).engineStoreId || projectId;
                 setConfig({
                     projectId,
                     projectName: project?.name || projectName || 'Mi Proyecto',
                     ecommerceEnabled: settings.is_active ?? true,
-                    storeId: projectId,
+                    storeId: engineStoreId,
                     storeName: settings.store_name,
                     createdAt: settings.created_at,
                     updatedAt: settings.updated_at,
@@ -345,8 +348,6 @@ export const useProjectsWithEcommerce = (userId: string) => {
 };
 
 export default useProjectEcommerce;
-
-
 
 
 

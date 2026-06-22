@@ -38,6 +38,7 @@ import {
   FileText, Layers, UserPlus, PanelRightClose, PanelRightOpen, MessageSquare, Minus, Building2, CalendarCheck,
 } from 'lucide-react';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
+import { resolveProjectBackedStoreIdentity } from '../../utils/ecommerce/storeIdentity';
 import AIContentAssistant from '../ui/AIContentAssistant';
 import ComponentTree from '../ui/ComponentTree';
 import TabbedControls from '../ui/TabbedControls';
@@ -105,7 +106,7 @@ const Controls: React.FC = () => {
   const {
     data: projectData, setData: setProjectData,
     componentOrder, setComponentOrder, activeProject, updateProjectFavicon,
-    saveProject,
+    saveProject, syncWebsiteBlueprint,
     pages, activePage, setActivePage, addPage, updatePage, deletePage, duplicatePage,
     sectionVisibility: projectSectionVisibility,
     setSectionVisibility: setProjectSectionVisibility,
@@ -176,7 +177,13 @@ const Controls: React.FC = () => {
   const [heroProductSearch, setHeroProductSearch] = useState('');
   const [showHeroImagePicker, setShowHeroImagePicker] = useState(false);
 
-  const { products: heroProducts, categories: heroCategories, isLoading: isLoadingHeroProducts } = usePublicProducts(activeProject?.id || null, { limitCount: 100 });
+  const ecommerceStoreId = useMemo(() => resolveProjectBackedStoreIdentity({
+    projectId: activeProject?.id,
+    project: activeProject,
+    businessBlueprint: activeProject?.businessBlueprint,
+  }).engineStoreId || '', [activeProject]);
+
+  const { products: heroProducts, categories: heroCategories, isLoading: isLoadingHeroProducts } = usePublicProducts(ecommerceStoreId || null, { limitCount: 100 });
 
   // Scroll to section item when assistant selects one
   useEffect(() => {
@@ -241,23 +248,30 @@ const Controls: React.FC = () => {
   // ─── setNestedData helper ─────────────────────────────────────────────────
   const lastUpdatedSectionRef = useRef<string | null>(null);
   const setNestedData = (path: string, value: any) => {
+    if (!data) return;
+
     const normalizedPath = path.replace(/\?\./g, '.');
     const sectionKey = normalizedPath.split('.')[0];
     lastUpdatedSectionRef.current = sectionKey;
-    setData(prevData => {
-      if (!prevData) return null;
-      const newData = safeClone(prevData);
-      const keys = normalizedPath.split('.');
-      let current: any = newData;
-      for (let i = 0; i < keys.length - 1; i++) {
-        const key = keys[i];
-        const nextKey = keys[i + 1];
-        if (!current[key]) current[key] = /^\d+$/.test(nextKey) ? [] : {};
-        if (typeof current[key] !== 'object') { console.warn(`Controls: Cannot traverse path '${path}' at '${key}'`); return prevData; }
-        current = current[key];
+    const newData = safeClone(data);
+    const keys = normalizedPath.split('.');
+    let current: any = newData;
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i];
+      const nextKey = keys[i + 1];
+      if (!current[key]) current[key] = /^\d+$/.test(nextKey) ? [] : {};
+      if (typeof current[key] !== 'object') {
+        console.warn(`Controls: Cannot traverse path '${path}' at '${key}'`);
+        return;
       }
-      current[keys[keys.length - 1]] = value;
-      return newData;
+      current = current[key];
+    }
+    current[keys[keys.length - 1]] = value;
+    setData(newData);
+    syncWebsiteBlueprint({
+      action: 'section_settings',
+      touchedSection: sectionKey as PageSection,
+      data: newData,
     });
   };
 
@@ -290,16 +304,16 @@ const Controls: React.FC = () => {
   }, [data, activePage, updatePage]);
 
   // Ecommerce control hooks
-  const featuredProductsControls = useFeaturedProductsControls({ data, setNestedData, storeId: activeProject?.id || '' });
-  const categoryGridControls = useCategoryGridControls({ data, setNestedData, storeId: activeProject?.id || '' });
-  const productHeroControls = useProductHeroControls({ data, setNestedData, storeId: activeProject?.id || '' });
+  const featuredProductsControls = useFeaturedProductsControls({ data, setNestedData, storeId: ecommerceStoreId });
+  const categoryGridControls = useCategoryGridControls({ data, setNestedData, storeId: ecommerceStoreId });
+  const productHeroControls = useProductHeroControls({ data, setNestedData, storeId: ecommerceStoreId });
   const trustBadgesControls = useTrustBadgesControls({ data, setNestedData });
   const saleCountdownControls = useSaleCountdownControls({ data, setNestedData });
-  const announcementBarControls = useAnnouncementBarControls({ data, setNestedData, storeId: activeProject?.id || '' });
-  const collectionBannerControls = useCollectionBannerControls({ data, setNestedData, storeId: activeProject?.id || '' });
+  const announcementBarControls = useAnnouncementBarControls({ data, setNestedData, storeId: ecommerceStoreId });
+  const collectionBannerControls = useCollectionBannerControls({ data, setNestedData, storeId: ecommerceStoreId });
   const recentlyViewedControls = useRecentlyViewedControls({ data, setNestedData });
   const productReviewsControls = useProductReviewsControls({ data, setNestedData });
-  const productBundleControls = useProductBundleControls({ data, setNestedData, storeId: activeProject?.id || '' });
+  const productBundleControls = useProductBundleControls({ data, setNestedData, storeId: ecommerceStoreId });
   const storeSettingsControls = useStoreSettingsControls({ data, setNestedData });
 
   const handleAiApply = (text: string) => { if (aiAssistField) { setNestedData(aiAssistField.path, text); setAiAssistField(null); } };
@@ -307,6 +321,11 @@ const Controls: React.FC = () => {
     if (section === 'header') return;
     const newVisibility = { ...sectionVisibility, [section as PageSection]: !sectionVisibility[section as PageSection] };
     setSectionVisibility(newVisibility);
+    syncWebsiteBlueprint({
+      action: 'section_visibility',
+      touchedSection: section as PageSection,
+      sectionVisibility: newVisibility,
+    });
     
     pushProjectUndoAction(
         newVisibility[section as PageSection] ? `Mostró la sección ${section}` : `Ocultó la sección ${section}`,
@@ -430,40 +449,49 @@ const Controls: React.FC = () => {
         ? componentOrder
         : [...componentOrder.filter(k => k !== 'footer'), section, 'footer' as PageSection]
       : newOrder;
+    const nextPages = usesPageSections && activePage
+      ? pages.map(page => page.id === activePage.id ? { ...page, sections: newOrder } : page)
+      : pages;
 
     if (usesPageSections && activePage) updatePage(activePage.id, { sections: newOrder });
     setComponentOrder(nextComponentOrder as PageSection[]);
     setEditorComponentOrder(nextComponentOrder as PageSection[]);
     const globalDefault = (componentStyles && componentStyles[section]) ? componentStyles[section] : {};
-    let newDataSnapshot: any = null;
-    setData(prevData => {
-      if (!prevData) return null;
-      const newData = safeClone(prevData);
-      const sectionDefaults = (initialData.data as any)[section] || {};
-      const existingData = newData[section] || {};
-      newData[section] = { ...sectionDefaults, ...existingData, ...globalDefault,
-        colors: { ...sectionDefaults?.colors, ...existingData?.colors, ...(globalDefault as any)?.colors },
-      };
-      newDataSnapshot = newData;
-      return newData;
-    });
+    const newDataSnapshot = safeClone(data);
+    const sectionDefaults = (initialData.data as any)[section] || {};
+    const existingData = newDataSnapshot[section] || {};
+    newDataSnapshot[section] = { ...sectionDefaults, ...existingData, ...globalDefault,
+      colors: { ...sectionDefaults?.colors, ...existingData?.colors, ...(globalDefault as any)?.colors },
+    };
+    setData(newDataSnapshot);
     
     const newVisibility = { ...sectionVisibility, [section]: true };
     setSectionVisibility(newVisibility);
+    syncWebsiteBlueprint({
+      action: 'component_add',
+      touchedSection: section,
+      data: newDataSnapshot,
+      componentOrder: nextComponentOrder as PageSection[],
+      sectionVisibility: newVisibility,
+      pages: nextPages,
+    });
     setIsAddComponentOpen(false);
     onSectionSelect(section as any);
     
     pushProjectUndoAction(`Añadió la sección ${section}`, {
-        data: newDataSnapshot || data,
+        data: newDataSnapshot,
         theme,
         componentOrder: nextComponentOrder as PageSection[],
         sectionVisibility: newVisibility,
-        pages
+        pages: nextPages
     });
   };
 
   const handleRemoveComponent = (section: PageSection) => {
     const newOrder = effectiveComponentOrder.filter(k => k !== section);
+    const nextPages = usesPageSections && activePage
+      ? pages.map(page => page.id === activePage.id ? { ...page, sections: newOrder } : page)
+      : pages;
     if (usesPageSections && activePage) {
       updatePage(activePage.id, { sections: newOrder });
     } else {
@@ -472,6 +500,13 @@ const Controls: React.FC = () => {
     }
     const newVisibility = usesPageSections ? sectionVisibility : { ...sectionVisibility, [section]: false };
     setSectionVisibility(newVisibility);
+    syncWebsiteBlueprint({
+      action: 'component_remove',
+      touchedSection: section,
+      componentOrder: usesPageSections ? componentOrder : newOrder,
+      sectionVisibility: newVisibility,
+      pages: nextPages,
+    });
     if (activeSection === section) onSectionSelect(null as any);
     
     pushProjectUndoAction(`Eliminó la sección ${section}`, {
@@ -479,7 +514,7 @@ const Controls: React.FC = () => {
         theme,
         componentOrder: usesPageSections ? componentOrder : newOrder,
         sectionVisibility: newVisibility,
-        pages
+        pages: nextPages
     });
   };
 
@@ -591,19 +626,27 @@ const Controls: React.FC = () => {
 
   // ─── Reorder handler (shared) ─────────────────────────────────────────────
   const handleReorder = (newOrder: PageSection[]) => {
+    const nextPages = usesPageSections && activePage
+      ? pages.map(page => page.id === activePage.id ? { ...page, sections: newOrder } : page)
+      : pages;
     if (usesPageSections && activePage) {
       updatePage(activePage.id, { sections: newOrder });
     } else {
       setComponentOrder(newOrder);
       setEditorComponentOrder(newOrder);
     }
+    syncWebsiteBlueprint({
+      action: 'component_reorder',
+      componentOrder: usesPageSections ? componentOrder : newOrder,
+      pages: nextPages,
+    });
     
     pushProjectUndoAction(`Reordenó las secciones`, {
         data,
         theme,
         componentOrder: usesPageSections ? componentOrder : newOrder,
         sectionVisibility,
-        pages
+        pages: nextPages
     });
   };
 

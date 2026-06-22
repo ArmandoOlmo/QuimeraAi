@@ -877,6 +877,7 @@ export function useAIWebsiteStudio() {
     const [isSavingGeneratedProject, setIsSavingGeneratedProject] = useState(false);
     const [generatedProjectSaveError, setGeneratedProjectSaveError] = useState<string | null>(null);
     const isSavingGeneratedProjectRef = useRef(false);
+    const regenerationBusinessBlueprintRef = useRef<Project['businessBlueprint'] | null>(null);
 
     // ── Voice state ─────────────────────────────────────────────────────────
     const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -1034,6 +1035,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
         setGenerationPhase(null);
         setGeneratedProject(null);
         setGeneratedProjectSaveError(null);
+        regenerationBusinessBlueprintRef.current = null;
         setIsGenerating(false);
         setIsSavingGeneratedProject(false);
         isSavingGeneratedProjectRef.current = false;
@@ -1511,6 +1513,8 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
         if (isGeneratingRef.current || !user || shouldBlockGenerationForAccess) return;
         isGeneratingRef.current = true;
         setIsGenerating(true);
+        const existingBusinessBlueprint = regenerationBusinessBlueprintRef.current;
+        regenerationBusinessBlueprintRef.current = null;
         setGeneratedProject(null);
         setGeneratedProjectSaveError(null);
 
@@ -2017,6 +2021,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
             } as Project, planForGeneration, {
                 tenantId: currentTenantId || undefined,
                 createdBy: user.id,
+                existingBusinessBlueprint,
             });
 
             if (isDev) {
@@ -2203,6 +2208,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
             setGeneratedProject(null);
             setGenerationPhase(null);
             setIsOnboardingOpen(false);
+            regenerationBusinessBlueprintRef.current = null;
         } catch (finalSaveErr) {
             console.warn('[AIWebsiteStudio] Final save failed:', finalSaveErr);
             setGeneratedProjectSaveError(
@@ -2219,17 +2225,19 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
     const regenerateGeneratedWebsite = useCallback(async () => {
         if (isGeneratingRef.current || isSavingGeneratedProjectRef.current) return;
         const planForRegeneration = websitePlan || undefined;
+        regenerationBusinessBlueprintRef.current = generatedProject?.businessBlueprint || null;
         setGeneratedProject(null);
         setGeneratedProjectSaveError(null);
         setGenerationPhase(null);
         await runGeneration(planForRegeneration);
-    }, [runGeneration, websitePlan]);
+    }, [generatedProject?.businessBlueprint, runGeneration, websitePlan]);
 
     const returnToPlanFromGeneratedPreview = useCallback(() => {
         if (isSavingGeneratedProjectRef.current) return;
         setGeneratedProject(null);
         setGeneratedProjectSaveError(null);
         setGenerationPhase(null);
+        regenerationBusinessBlueprintRef.current = null;
         if (websitePlan) setShowPlanReview(true);
     }, [websitePlan]);
 
