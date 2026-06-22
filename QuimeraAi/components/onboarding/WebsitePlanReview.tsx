@@ -7,6 +7,7 @@ import { SortableComponentChips } from '../ui/SortableComponentChips';
 import ColorControl from '../ui/ColorControl';
 import { createColorBriefFromWebsitePlan, createImportedPaletteCandidates, generateColorCandidates, selectBestColorSystem } from '../../utils/colorSystemEngine';
 import AppSelect from '../ui/AppSelect';
+import { useTranslation } from 'react-i18next';
 
 interface ComponentOption {
     key: PageSection;
@@ -24,11 +25,17 @@ interface WebsitePlanReviewProps {
 
 const COLOR_KEYS = ['primary', 'secondary', 'accent', 'background', 'surface', 'text'] as const;
 
-const MODE_LABELS: Record<WebsitePlan['generationMode'], string> = {
-    'faithful-redesign': 'Faithful redesign',
-    modernize: 'Modernize',
-    'inspired-by': 'Inspired by',
-    'from-scratch': 'From scratch',
+const GENERATION_MODES: WebsitePlan['generationMode'][] = ['faithful-redesign', 'modernize', 'inspired-by', 'from-scratch'];
+
+const COLOR_WARNING_KEYS: Record<string, string> = {
+    'Palette is too monochromatic for a full website system.': 'monochromatic',
+    'Adjusted text color for background contrast.': 'textContrast',
+    'Adjusted heading color for background contrast.': 'headingContrast',
+    'Adjusted primary color so buttons can remain readable.': 'primaryReadable',
+    'Adjusted surface color so cards and ecommerce sections stay readable.': 'surfaceReadable',
+    'Adjusted surface color to separate cards from the page background.': 'surfaceSeparation',
+    'Adjusted accent color for visibility.': 'accentVisibility',
+    'Using default colors because no candidates were available.': 'defaultColors',
 };
 
 function buildReviewColorBrief(plan: WebsitePlan) {
@@ -56,6 +63,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
     onConfirm,
     onClose,
 }) => {
+    const { t, i18n } = useTranslation();
     const [showAddMenu, setShowAddMenu] = useState(false);
     const selectedComponents = useMemo(() => plan.componentPlan.map(item => item.component), [plan.componentPlan]);
     const availableToAdd = availableComponents.filter(item => !selectedComponents.includes(item.key));
@@ -64,6 +72,26 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
         () => new Map(availableComponents.map(item => [item.key, item.label])),
         [availableComponents]
     );
+
+    const tPlan = (key: string, defaultValue: string, options?: Record<string, unknown>) => (
+        t(`aiWebsiteStudio.planReview.${key}`, { defaultValue, ...options })
+    );
+
+    const isSpanish = i18n.language?.toLowerCase().startsWith('es');
+
+    const getModeLabel = (mode: WebsitePlan['generationMode']) => tPlan(`modes.${mode}`, mode);
+
+    const getColorModeLabel = (mode: ColorCandidate['system']['mode']) => tPlan(`colorModes.${mode}`, mode);
+
+    const getColorCandidateLabel = (candidate: ColorCandidate) => (
+        isSpanish ? candidate.labelEs || candidate.label : candidate.label
+    );
+
+    const getColorWarning = (warning?: string) => {
+        if (!warning) return undefined;
+        const key = COLOR_WARNING_KEYS[warning];
+        return key ? tPlan(`colorWarnings.${key}`, warning) : warning;
+    };
 
     const setPlan = (patch: Partial<WebsitePlan>) => onPlanChange({ ...plan, ...patch });
 
@@ -133,7 +161,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                 const previous = plan.componentPlan.find(item => item.component === component);
                 return previous || {
                     component,
-                    reason: componentLabels.get(component) || 'Selected by user.',
+                    reason: componentLabels.get(component) || tPlan('selectedByUser', 'Selected by user.'),
                     confidence: 1,
                     source: 'user' as const,
                 };
@@ -186,16 +214,16 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
     );
 
     return (
-        <div className="absolute inset-0 z-[90] bg-q-text/70 backdrop-blur-md flex items-center justify-center p-0 lg:p-4">
-            <div className="w-full h-full lg:max-w-6xl lg:h-[calc(100vh-2rem)] bg-q-bg border-0 lg:border lg:border-q-border rounded-none lg:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between px-4 lg:px-6 py-3 border-b border-q-border bg-q-surface/60">
+        <div className="fixed inset-0 z-[10000] bg-q-text/70 backdrop-blur-md flex items-center justify-center p-0 sm:p-3 lg:p-4">
+            <div className="w-full h-full min-h-0 bg-q-bg border-0 shadow-2xl overflow-hidden flex flex-col sm:h-[calc(100vh-1.5rem)] sm:w-[calc(100vw-1.5rem)] sm:rounded-2xl sm:border sm:border-q-border lg:h-[calc(100vh-2rem)] lg:w-[calc(100vw-2rem)] lg:max-h-[940px] lg:max-w-[1440px]">
+                <div className="flex shrink-0 items-center justify-between px-4 lg:px-6 py-3 border-b border-q-border bg-q-surface/60">
                     <div className="min-w-0">
                         <h2 className="text-base lg:text-lg font-semibold text-q-text flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-q-accent" />
-                            Website plan
+                            {tPlan('title', 'Website plan')}
                         </h2>
                         <p className="text-xs text-q-text-secondary truncate">
-                            {plan.businessProfile.businessName || 'New website'} · {plan.businessProfile.industry || 'Industry pending'}
+                            {plan.businessProfile.businessName || tPlan('newWebsite', 'New website')} · {plan.businessProfile.industry || tPlan('industryPending', 'Industry pending')}
                         </p>
                     </div>
                     <button
@@ -207,16 +235,16 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6">
-                    <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-4 lg:gap-6">
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 lg:p-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] gap-4 lg:gap-6">
                         <div className="space-y-4">
-                            <ReviewSection title="Business" icon={<Building2 size={15} />}>
+                            <ReviewSection title={tPlan('sections.business', 'Business')} icon={<Building2 size={15} />}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <TextInput label="Name" value={plan.businessProfile.businessName} onChange={value => setBusinessField('businessName', value)} />
-                                    <TextInput label="Industry" value={plan.businessProfile.industry} onChange={value => setBusinessField('industry', value)} />
+                                    <TextInput label={tPlan('fields.name', 'Name')} value={plan.businessProfile.businessName} onChange={value => setBusinessField('businessName', value)} />
+                                    <TextInput label={tPlan('fields.industry', 'Industry')} value={plan.businessProfile.industry} onChange={value => setBusinessField('industry', value)} />
                                 </div>
-                                <TextArea label="Description" value={plan.businessProfile.description} onChange={value => setBusinessField('description', value)} />
-                                <TextInput label="Tagline" value={plan.businessProfile.tagline || ''} onChange={value => setBusinessField('tagline', value)} />
+                                <TextArea label={tPlan('fields.description', 'Description')} value={plan.businessProfile.description} onChange={value => setBusinessField('description', value)} />
+                                <TextInput label={tPlan('fields.tagline', 'Tagline')} value={plan.businessProfile.tagline || ''} onChange={value => setBusinessField('tagline', value)} />
                                 {plan.businessProfile.services.length > 0 && (
                                     <div className="flex flex-wrap gap-1.5">
                                         {plan.businessProfile.services.map((service, index) => (
@@ -228,10 +256,10 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                 )}
                             </ReviewSection>
 
-                            <ReviewSection title="Color Expert" icon={<Sparkles size={15} />}>
+                            <ReviewSection title={tPlan('sections.colorExpert', 'Color Expert')} icon={<Sparkles size={15} />}>
                                 <div className="flex items-center justify-between gap-3">
                                     <div>
-                                        <p className="text-xs text-q-text-secondary">Validated website color systems. The selected option becomes the final global color source.</p>
+                                        <p className="text-xs text-q-text-secondary">{tPlan('colorExpert.description', 'Validated website color systems. The selected option becomes the final global color source.')}</p>
                                     </div>
                                     <button
                                         type="button"
@@ -239,12 +267,12 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                         className="inline-flex items-center gap-1.5 rounded-lg border border-q-border px-2.5 py-1.5 text-[11px] text-q-text-secondary hover:text-q-accent hover:border-q-accent/50"
                                     >
                                         <RefreshCw size={12} />
-                                        Regenerate
+                                        {tPlan('actions.regenerate', 'Regenerate')}
                                     </button>
                                 </div>
                                 {importedColorSignals.length > 0 && (
                                     <div className="rounded-lg border border-q-border bg-q-surface/60 p-2">
-                                        <p className="mb-2 text-[10px] uppercase tracking-wider text-q-text-secondary">Detected colors used by Color Expert</p>
+                                        <p className="mb-2 text-[10px] uppercase tracking-wider text-q-text-secondary">{tPlan('colorExpert.detectedColors', 'Detected colors used by Color Expert')}</p>
                                         <div className="flex flex-wrap gap-1.5">
                                             {importedColorSignals.slice(0, 14).map((signal, index) => (
                                                 <span
@@ -253,7 +281,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                                     title={`${signal.label || signal.source}: ${signal.color}`}
                                                 >
                                                     <span className="h-3.5 w-3.5 rounded border border-q-border/10" style={{ backgroundColor: signal.color }} />
-                                                    <span>{signal.roleGuess || signal.source}</span>
+                                                    <span>{tPlan(`colorRoles.${signal.roleGuess || signal.source}`, signal.roleGuess || signal.source)}</span>
                                                 </span>
                                             ))}
                                         </div>
@@ -262,9 +290,9 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                 {importedPaletteCandidates.length > 0 && (
                                     <div className="space-y-2">
                                         <div>
-                                            <p className="text-[10px] uppercase tracking-wider text-q-text-secondary">Imported website palette</p>
+                                            <p className="text-[10px] uppercase tracking-wider text-q-text-secondary">{tPlan('colorExpert.importedPalette', 'Imported website palette')}</p>
                                             <p className="text-[11px] text-q-text-secondary">
-                                                Choose the original detected palette or a lightly improved version that keeps the same brand identity.
+                                                {tPlan('colorExpert.importedPaletteHint', 'Choose the original detected palette or a lightly improved version that keeps the same brand identity.')}
                                             </p>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -274,6 +302,9 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                                     candidate={candidate}
                                                     active={plan.brandProfile.selectedColorCandidateId === candidate.id}
                                                     hasEcommerce={hasEcommerceColorPreview}
+                                                    label={getColorCandidateLabel(candidate)}
+                                                    modeLabel={getColorModeLabel(candidate.system.mode)}
+                                                    warning={getColorWarning(candidate.system.warnings[0])}
                                                     onClick={() => selectColorCandidate(candidate)}
                                                 />
                                             ))}
@@ -282,7 +313,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                 )}
                                 {colorCandidates.length > 0 ? (
                                     <div className="space-y-2">
-                                        <p className="text-[10px] uppercase tracking-wider text-q-text-secondary">Expert alternatives</p>
+                                        <p className="text-[10px] uppercase tracking-wider text-q-text-secondary">{tPlan('colorExpert.expertAlternatives', 'Expert alternatives')}</p>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                             {colorCandidates.slice(0, 6).map(candidate => (
                                                 <ColorCandidateButton
@@ -290,6 +321,9 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                                     candidate={candidate}
                                                     active={plan.brandProfile.selectedColorCandidateId === candidate.id}
                                                     hasEcommerce={hasEcommerceColorPreview}
+                                                    label={getColorCandidateLabel(candidate)}
+                                                    modeLabel={getColorModeLabel(candidate.system.mode)}
+                                                    warning={getColorWarning(candidate.system.warnings[0])}
                                                     onClick={() => selectColorCandidate(candidate)}
                                                 />
                                             ))}
@@ -301,17 +335,17 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                         onClick={regenerateColorCandidates}
                                         className="w-full rounded-lg border border-dashed border-q-border px-3 py-3 text-xs text-q-text-secondary hover:border-q-accent/50 hover:text-q-accent"
                                     >
-                                        Generate expert palettes
+                                        {tPlan('colorExpert.generateExpertPalettes', 'Generate expert palettes')}
                                     </button>
                                 )}
                             </ReviewSection>
 
-                            <ReviewSection title="Brand" icon={<Palette size={15} />}>
+                            <ReviewSection title={tPlan('sections.brand', 'Brand')} icon={<Palette size={15} />}>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                     {COLOR_KEYS.map(key => (
                                         <ColorControl
                                             key={key}
-                                            label={key}
+                                            label={tPlan(`colorKeys.${key}`, key)}
                                             value={plan.brandProfile.colors[key] || '#000000'}
                                             onChange={value => setBrandColor(key, value)}
                                             paletteColors={colorControlPaletteColors}
@@ -321,7 +355,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                 </div>
                             </ReviewSection>
 
-                            <ReviewSection title="Components" icon={<LayoutTemplate size={15} />}>
+                            <ReviewSection title={tPlan('sections.components', 'Components')} icon={<LayoutTemplate size={15} />}>
                                 <div className="flex flex-wrap gap-[4px]">
                                     <SortableComponentChips items={selectedComponents} onChange={setComponents} onRemove={removeComponent} />
                                     <div className="relative">
@@ -353,7 +387,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                 </div>
                             </ReviewSection>
 
-                            <ReviewSection title="Imported Pages" icon={<FileText size={15} />}>
+                            <ReviewSection title={tPlan('sections.importedPages', 'Imported Pages')} icon={<FileText size={15} />}>
                                 {plan.contentMap.pages.length > 0 ? (
                                     <div className="grid gap-2">
                                         {plan.contentMap.pages.slice(0, 8).map((page, index) => (
@@ -367,25 +401,25 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-q-text-secondary">No imported pages.</p>
+                                    <p className="text-xs text-q-text-secondary">{tPlan('empty.noImportedPages', 'No imported pages.')}</p>
                                 )}
                             </ReviewSection>
                         </div>
 
                         <div className="space-y-4">
-                            <ReviewSection title="Mode" icon={<Sparkles size={15} />}>
+                            <ReviewSection title={tPlan('sections.mode', 'Mode')} icon={<Sparkles size={15} />}>
                                 <AppSelect
                                     value={plan.generationMode}
                                     onChange={event => setPlan({ generationMode: event.target.value as WebsitePlan['generationMode'] })}
                                     className="w-full rounded-lg border border-q-border bg-q-surface px-3 py-2 text-sm text-q-text outline-none focus:border-q-accent"
                                 >
-                                    {(Object.keys(MODE_LABELS) as WebsitePlan['generationMode'][]).map(mode => (
-                                        <option key={mode} value={mode}>{MODE_LABELS[mode]}</option>
+                                    {GENERATION_MODES.map(mode => (
+                                        <option key={mode} value={mode}>{getModeLabel(mode)}</option>
                                     ))}
                                 </AppSelect>
                             </ReviewSection>
 
-                            <ReviewSection title="Assets" icon={<Image size={15} />}>
+                            <ReviewSection title={tPlan('sections.assets', 'Assets')} icon={<Image size={15} />}>
                                 {plan.assetPlan.length > 0 ? (
                                     <div className="space-y-2">
                                         {plan.assetPlan.map(asset => (
@@ -399,25 +433,25 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                                 )}
                                                 <div className="grid grid-cols-3 gap-1">
                                                     <AssetButton active={asset.source === 'existing'} onClick={() => setAssetSource(asset.targetPath, 'existing', asset.existingUrl)}>
-                                                        Reuse
+                                                        {tPlan('assetActions.reuse', 'Reuse')}
                                                     </AssetButton>
                                                     <AssetButton active={asset.source === 'generate'} onClick={() => setAssetSource(asset.targetPath, 'generate')}>
-                                                        Generate
+                                                        {tPlan('assetActions.generate', 'Generate')}
                                                     </AssetButton>
                                                     <AssetButton active={asset.source === 'none'} onClick={() => setAssetSource(asset.targetPath, 'none')}>
-                                                        None
+                                                        {tPlan('assetActions.none', 'None')}
                                                     </AssetButton>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-q-text-secondary">No image slots planned.</p>
+                                    <p className="text-xs text-q-text-secondary">{tPlan('empty.noImageSlots', 'No image slots planned.')}</p>
                                 )}
                             </ReviewSection>
 
                             {plan.contentMap.extractedImages?.length ? (
-                                <ReviewSection title="Detected Images" icon={<Image size={15} />}>
+                                <ReviewSection title={tPlan('sections.detectedImages', 'Detected Images')} icon={<Image size={15} />}>
                                     <div className="grid grid-cols-3 gap-2">
                                         {plan.contentMap.extractedImages.slice(0, 12).map((image, index) => (
                                             <button
@@ -425,11 +459,11 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                                 type="button"
                                                 onClick={() => useDetectedImage(image.url)}
                                                 className="group relative aspect-square overflow-hidden rounded-lg border border-q-border bg-q-surface"
-                                                title={image.recommendedUse || image.alt || 'Detected image'}
+                                                title={image.recommendedUse || image.alt || tPlan('detectedImage', 'Detected image')}
                                             >
                                                 <img src={image.url} alt={image.alt || ''} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
                                                 <span className="absolute inset-x-1 bottom-1 rounded bg-q-text/70 px-1 py-0.5 text-[9px] text-white truncate">
-                                                    {image.recommendedUse || 'reuse'}
+                                                    {image.recommendedUse || tPlan('assetActions.reuseShort', 'reuse')}
                                                 </span>
                                             </button>
                                         ))}
@@ -438,7 +472,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                             ) : null}
 
                             {plan.contentMap.missingOpportunities?.length ? (
-                                <ReviewSection title="Opportunities" icon={<Sparkles size={15} />}>
+                                <ReviewSection title={tPlan('sections.opportunities', 'Opportunities')} icon={<Sparkles size={15} />}>
                                     <div className="space-y-1">
                                         {plan.contentMap.missingOpportunities.slice(0, 6).map((item, index) => (
                                             <div key={index} className="flex items-start gap-2 text-xs text-q-text-secondary">
@@ -453,24 +487,24 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-3 px-4 lg:px-6 py-3 border-t border-q-border bg-q-surface/60">
+                <div className="flex shrink-0 flex-col items-stretch justify-between gap-3 px-4 lg:px-6 py-3 border-t border-q-border bg-q-surface/60 sm:flex-row sm:items-center">
                     <button
                         type="button"
                         onClick={onClose}
                         disabled={isGenerating}
-                        className="inline-flex items-center gap-2 rounded-lg border border-q-border px-4 py-2 text-sm text-q-text-secondary hover:text-q-text hover:bg-q-surface disabled:opacity-40"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-q-border px-4 py-2 text-sm text-q-text-secondary hover:text-q-text hover:bg-q-surface disabled:opacity-40"
                     >
                         <MessageSquare className="w-4 h-4" />
-                        Volver al chat
+                        {tPlan('actions.backToChat', 'Back to chat')}
                     </button>
                     <button
                         type="button"
                         onClick={() => onConfirm(plan)}
                         disabled={isGenerating || selectedComponents.length === 0}
-                        className="inline-flex items-center gap-2 rounded-lg bg-q-accent px-5 py-2 text-sm font-semibold text-q-text-on-accent hover:opacity-90 disabled:opacity-40"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-q-accent px-5 py-2 text-sm font-semibold text-q-text-on-accent hover:opacity-90 disabled:opacity-40"
                     >
                         {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                        Generar
+                        {tPlan('actions.generate', 'Generate')}
                     </button>
                 </div>
             </div>
@@ -529,8 +563,11 @@ const ColorCandidateButton: React.FC<{
     candidate: ColorCandidate;
     active: boolean;
     hasEcommerce: boolean;
+    label: string;
+    modeLabel: string;
+    warning?: string;
     onClick: () => void;
-}> = ({ candidate, active, hasEcommerce, onClick }) => {
+}> = ({ candidate, active, hasEcommerce, label, modeLabel, warning, onClick }) => {
     const colors = candidate.system.colors;
     return (
         <button
@@ -544,8 +581,8 @@ const ColorCandidateButton: React.FC<{
         >
             <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                    <p className="text-xs font-semibold text-q-text truncate">{candidate.labelEs || candidate.label}</p>
-                    <p className="mt-0.5 text-[10px] text-q-text-secondary">{candidate.system.score} · {candidate.system.mode}</p>
+                    <p className="text-xs font-semibold text-q-text truncate">{label}</p>
+                    <p className="mt-0.5 text-[10px] text-q-text-secondary">{candidate.system.score} · {modeLabel}</p>
                 </div>
                 <div className="flex gap-1">
                     {candidate.preview.slice(0, 5).map((color, index) => (
@@ -574,8 +611,8 @@ const ColorCandidateButton: React.FC<{
                     )}
                 </div>
             </div>
-            {candidate.system.warnings.length > 0 && (
-                <p className="mt-2 text-[10px] text-q-text-secondary line-clamp-1">{candidate.system.warnings[0]}</p>
+            {warning && (
+                <p className="mt-2 text-[10px] text-q-text-secondary line-clamp-1">{warning}</p>
             )}
         </button>
     );

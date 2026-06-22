@@ -6541,6 +6541,99 @@
       "success": "🎉 **¡Tu sitio web ha sido creado exitosamente!**\n\nGenerado:\n- 📄 {{sections}} secciones\n- 🖼️ {{images}} imágenes\n- 🎨 Paleta de colores personalizada\n- 🤖 Asistente AI configurado\n\nPuedes cerrar esto y encontrar tu proyecto en el dashboard.",
       "error": "⚠️ **Error en la generación:** {{error}}\n\nPuedes intentar de nuevo."
     },
+    "planReview": {
+      "title": "Plan del sitio web",
+      "newWebsite": "Nuevo sitio web",
+      "industryPending": "Industria pendiente",
+      "selectedByUser": "Seleccionado por el usuario.",
+      "detectedImage": "Imagen detectada",
+      "sections": {
+        "business": "Negocio",
+        "colorExpert": "Color Expert",
+        "brand": "Marca",
+        "components": "Componentes",
+        "importedPages": "Páginas importadas",
+        "mode": "Modo",
+        "assets": "Recursos visuales",
+        "detectedImages": "Imágenes detectadas",
+        "opportunities": "Oportunidades"
+      },
+      "fields": {
+        "name": "Nombre",
+        "industry": "Industria",
+        "description": "Descripción",
+        "tagline": "Eslogan"
+      },
+      "actions": {
+        "regenerate": "Regenerar",
+        "backToChat": "Volver al chat",
+        "generate": "Generar"
+      },
+      "modes": {
+        "faithful-redesign": "Rediseño fiel",
+        "modernize": "Modernizar",
+        "inspired-by": "Inspirado en",
+        "from-scratch": "Desde cero"
+      },
+      "colorExpert": {
+        "description": "Sistemas de color validados para el sitio web. La opción seleccionada será la fuente final de colores globales.",
+        "detectedColors": "Colores detectados usados por Color Expert",
+        "importedPalette": "Paleta importada del sitio web",
+        "importedPaletteHint": "Elige la paleta original detectada o una versión ligeramente mejorada que mantenga la misma identidad de marca.",
+        "expertAlternatives": "Alternativas expertas",
+        "generateExpertPalettes": "Generar paletas expertas"
+      },
+      "colorModes": {
+        "light": "claro",
+        "dark": "oscuro",
+        "auto": "auto"
+      },
+      "colorKeys": {
+        "primary": "Primario",
+        "secondary": "Secundario",
+        "accent": "Acento",
+        "background": "Fondo",
+        "surface": "Superficie",
+        "text": "Texto"
+      },
+      "colorRoles": {
+        "primary": "primario",
+        "secondary": "secundario",
+        "accent": "acento",
+        "background": "fondo",
+        "surface": "superficie",
+        "text": "texto",
+        "logo": "logo",
+        "image": "imagen",
+        "unknown": "desconocido",
+        "import": "importado",
+        "css": "CSS",
+        "button": "botón",
+        "link": "enlace",
+        "navigation": "navegación",
+        "user": "usuario"
+      },
+      "colorWarnings": {
+        "monochromatic": "La paleta es demasiado monocromática para un sistema completo de sitio web.",
+        "textContrast": "Se ajustó el color del texto para mejorar el contraste con el fondo.",
+        "headingContrast": "Se ajustó el color de los títulos para mejorar el contraste con el fondo.",
+        "primaryReadable": "Se ajustó el color primario para mantener los botones legibles.",
+        "surfaceReadable": "Se ajustó el color de superficie para mantener legibles las tarjetas y secciones de ecommerce.",
+        "surfaceSeparation": "Se ajustó el color de superficie para separar las tarjetas del fondo de la página.",
+        "accentVisibility": "Se ajustó el color de acento para mejorar su visibilidad.",
+        "defaultColors": "Se usan colores predeterminados porque no había candidatos disponibles."
+      },
+      "assetActions": {
+        "reuse": "Reutilizar",
+        "reuseShort": "reutilizar",
+        "generate": "Generar",
+        "none": "Ninguna"
+      },
+      "empty": {
+        "noImportedPages": "No hay páginas importadas.",
+        "noImageSlots": "No hay espacios de imagen planificados."
+      }
+    },
     "reset": "Reiniciar Conversación",
     "voice": "Voz"
   },

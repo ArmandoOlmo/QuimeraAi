@@ -6541,6 +6541,99 @@
       "success": "🎉 **Your website has been created successfully!**\n\nGenerated:\n- 📄 {{sections}} sections\n- 🖼️ {{images}} images\n- 🎨 Custom color palette\n- 🤖 AI assistant configured\n\nYou can close this and find your project in the dashboard.",
       "error": "⚠️ **Generation error:** {{error}}\n\nYou can try again."
     },
+    "planReview": {
+      "title": "Website plan",
+      "newWebsite": "New website",
+      "industryPending": "Industry pending",
+      "selectedByUser": "Selected by user.",
+      "detectedImage": "Detected image",
+      "sections": {
+        "business": "Business",
+        "colorExpert": "Color Expert",
+        "brand": "Brand",
+        "components": "Components",
+        "importedPages": "Imported Pages",
+        "mode": "Mode",
+        "assets": "Assets",
+        "detectedImages": "Detected Images",
+        "opportunities": "Opportunities"
+      },
+      "fields": {
+        "name": "Name",
+        "industry": "Industry",
+        "description": "Description",
+        "tagline": "Tagline"
+      },
+      "actions": {
+        "regenerate": "Regenerate",
+        "backToChat": "Back to chat",
+        "generate": "Generate"
+      },
+      "modes": {
+        "faithful-redesign": "Faithful redesign",
+        "modernize": "Modernize",
+        "inspired-by": "Inspired by",
+        "from-scratch": "From scratch"
+      },
+      "colorExpert": {
+        "description": "Validated website color systems. The selected option becomes the final global color source.",
+        "detectedColors": "Detected colors used by Color Expert",
+        "importedPalette": "Imported website palette",
+        "importedPaletteHint": "Choose the original detected palette or a lightly improved version that keeps the same brand identity.",
+        "expertAlternatives": "Expert alternatives",
+        "generateExpertPalettes": "Generate expert palettes"
+      },
+      "colorModes": {
+        "light": "light",
+        "dark": "dark",
+        "auto": "auto"
+      },
+      "colorKeys": {
+        "primary": "Primary",
+        "secondary": "Secondary",
+        "accent": "Accent",
+        "background": "Background",
+        "surface": "Surface",
+        "text": "Text"
+      },
+      "colorRoles": {
+        "primary": "primary",
+        "secondary": "secondary",
+        "accent": "accent",
+        "background": "background",
+        "surface": "surface",
+        "text": "text",
+        "logo": "logo",
+        "image": "image",
+        "unknown": "unknown",
+        "import": "import",
+        "css": "CSS",
+        "button": "button",
+        "link": "link",
+        "navigation": "navigation",
+        "user": "user"
+      },
+      "colorWarnings": {
+        "monochromatic": "Palette is too monochromatic for a full website system.",
+        "textContrast": "Adjusted text color for background contrast.",
+        "headingContrast": "Adjusted heading color for background contrast.",
+        "primaryReadable": "Adjusted primary color so buttons can remain readable.",
+        "surfaceReadable": "Adjusted surface color so cards and ecommerce sections stay readable.",
+        "surfaceSeparation": "Adjusted surface color to separate cards from the page background.",
+        "accentVisibility": "Adjusted accent color for visibility.",
+        "defaultColors": "Using default colors because no candidates were available."
+      },
+      "assetActions": {
+        "reuse": "Reuse",
+        "reuseShort": "reuse",
+        "generate": "Generate",
+        "none": "None"
+      },
+      "empty": {
+        "noImportedPages": "No imported pages.",
+        "noImageSlots": "No image slots planned."
+      }
+    },
     "reset": "Reset Conversation",
     "voice": "Voice"
   },

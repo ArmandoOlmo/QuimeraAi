@@ -274,7 +274,7 @@ export function GeneratedWebsitePreview({
                         )}
                     </div>
 
-                    <div className="min-w-0 rounded-2xl border border-q-border bg-q-surface shadow-2xl shadow-black/10">
+                    <div className="min-w-0 overflow-hidden rounded-2xl border border-q-border bg-q-surface shadow-2xl shadow-black/10">
                         <div className="flex h-11 items-center gap-2 border-b border-q-border bg-q-bg/80 px-4">
                             <div className="flex gap-1.5">
                                 <span className="h-2.5 w-2.5 rounded-full bg-q-error/80" />
@@ -287,7 +287,7 @@ export function GeneratedWebsitePreview({
                             <div className="w-12" />
                         </div>
                         <div
-                            className="h-[68vh] min-h-[560px] overflow-y-auto bg-q-surface custom-scrollbar"
+                            className="relative h-[68vh] min-h-[560px] overflow-y-auto overflow-x-hidden bg-q-surface custom-scrollbar"
                             style={{ backgroundColor: project.theme?.pageBackground || project.theme?.globalColors?.background || '#ffffff' }}
                         >
                             <PageRenderer
