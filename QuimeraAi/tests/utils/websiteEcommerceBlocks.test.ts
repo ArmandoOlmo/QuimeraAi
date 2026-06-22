@@ -27,6 +27,12 @@ describe('websiteEcommerceBlocks registry', () => {
             expect(definition?.requiredService).toBe('ecommerce');
             expect(definition?.requiredFeature).toBe('ecommerceEnabled');
             expect(definition?.writes).toEqual([]);
+            expect(definition?.consumes).not.toEqual(expect.arrayContaining([
+                'variants',
+                'inventory',
+                'orders',
+                'checkout',
+            ]));
             expect(definition?.defaultTargetRoute).toBeTruthy();
         });
 

@@ -24,6 +24,10 @@ import { extractActiveHeroImage } from '../../utils/thumbnailHelper';
 import { mapSupabaseRowToProject, normalizeProjectComponentOrder, resolveProjectMenus } from '../../utils/mapSupabaseProject';
 import { isLegacyStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
 import { downloadProjectAsHtml } from '../../utils/projectExporter';
+import {
+    syncWebsiteBlueprintFromEditor,
+    type WebsiteEditorSyncInput,
+} from '../../utils/businessBlueprint';
 
 export interface ProjectUndoState {
     data: PageData | null;
@@ -193,6 +197,13 @@ const hasItems = <T,>(value: T[] | undefined | null): value is T[] => Array.isAr
 
 const isSummaryProject = (project: Project | null | undefined): boolean =>
     Boolean(project && (project as any)[SUMMARY_PROJECT_FLAG]);
+
+const isPlainRecord = (value: unknown): value is Record<string, any> =>
+    Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+
+const resolveProjectBusinessBlueprint = (project: Project | null | undefined) => (
+    project?.businessBlueprint || (isPlainRecord(project?.data) ? project.data.businessBlueprint : undefined)
+);
 
 const isHeroSectionName = (section: string): boolean =>
     section === 'hero' || /^hero[A-Z]/.test(section);
@@ -447,6 +458,7 @@ interface ProjectContextType {
 
     // Project Operations
     loadProject: (projectId: string, fromAdmin?: boolean, navigateToEditor?: boolean, projectOverride?: Project) => Promise<void>;
+    syncWebsiteBlueprint: (overrides?: Partial<WebsiteEditorSyncInput>) => void;
     saveProject: () => Promise<void>;
     publishProject: () => Promise<boolean>;
     /** Get complete snapshot of current editor state (for publishing) */
@@ -1054,6 +1066,40 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         return result;
     };
 
+    const syncWebsiteBlueprint = useCallback((overrides: Partial<WebsiteEditorSyncInput> = {}) => {
+        if (!activeProjectId) return;
+
+        const nextData = overrides.data !== undefined ? overrides.data : data;
+        if (!nextData) return;
+
+        const now = overrides.now || new Date().toISOString();
+        setProjects(prev => prev.map(project => {
+            if (project.id !== activeProjectId || isSummaryProject(project)) return project;
+
+            const nextBlueprint = syncWebsiteBlueprintFromEditor({
+                businessBlueprint: overrides.businessBlueprint || resolveProjectBusinessBlueprint(project),
+                projectId: activeProjectId,
+                projectName: project.name,
+                userId: user?.id,
+                data: nextData,
+                theme: overrides.theme || theme,
+                brandIdentity: overrides.brandIdentity || brandIdentity,
+                componentOrder: overrides.componentOrder || componentOrder,
+                sectionVisibility: overrides.sectionVisibility || sectionVisibility,
+                pages: overrides.pages || pages,
+                touchedSection: overrides.touchedSection,
+                action: overrides.action || 'save_project',
+                now,
+            });
+
+            return {
+                ...project,
+                businessBlueprint: nextBlueprint,
+                lastUpdated: now,
+            };
+        }));
+    }, [activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, pages, user?.id]);
+
     // Save current project - saves ALL fields to ensure consistency
     const saveProject = useCallback(async () => {
         if (!user || !activeProjectId || !data) return;
@@ -1146,6 +1192,21 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             return;
         }
 
+        const businessBlueprint = syncWebsiteBlueprintFromEditor({
+            businessBlueprint: resolveProjectBusinessBlueprint(project),
+            projectId: activeProjectId,
+            projectName: project.name,
+            userId: user.id,
+            data,
+            theme,
+            brandIdentity,
+            componentOrder,
+            sectionVisibility,
+            pages,
+            action: 'save_project',
+            now,
+        });
+
         // Save ALL project fields to ensure Supabase stays in sync with editor
         // Use removeUndefinedValues to filter out undefined (Supabase doesn't accept undefined)
         const updatedProject = removeUndefinedValues(sanitizeForStorage({
@@ -1187,7 +1248,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             ...(project.crmConfig && { crmConfig: project.crmConfig }),
 
             // Business Blueprint (A1 stores it in projects.data; no dedicated column yet)
-            ...(project.businessBlueprint && { businessBlueprint: project.businessBlueprint }),
+            businessBlueprint,
         }));
 
         try {
@@ -1225,7 +1286,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             setProjects(prev => prev.map(p =>
                 p.id === activeProjectId
-                    ? { ...p, ...updatedProject, status: isTemplate ? 'Template' : persistedStatus, menus: latestMenus } as Project
+                    ? { ...p, ...updatedProject, businessBlueprint, status: isTemplate ? 'Template' : persistedStatus, menus: latestMenus } as Project
                     : p
             ));
         } catch (error) {
@@ -1241,6 +1302,21 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         const project = projectsRef.current.find(p => p.id === activeProjectId);
         if (!project) return null;
+        const now = new Date().toISOString();
+        const businessBlueprint = syncWebsiteBlueprintFromEditor({
+            businessBlueprint: resolveProjectBusinessBlueprint(project),
+            projectId: activeProjectId,
+            projectName: project.name,
+            userId: user.id,
+            data,
+            theme,
+            brandIdentity,
+            componentOrder,
+            sectionVisibility,
+            pages: pages.length > 0 ? pages : project.pages || [],
+            action: 'save_project',
+            now,
+        });
 
         // Return complete snapshot of current editor state
         // This includes ALL fields that should be published
@@ -1265,7 +1341,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             // Status
             status: project.status,
-            lastUpdated: new Date().toISOString(),
+            lastUpdated: now,
+            businessBlueprint,
         };
 
         // Only include optional fields if they have values (avoid undefined)
@@ -1284,8 +1361,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (project.thumbnailUrl) snapshot.thumbnailUrl = project.thumbnailUrl;
         if (project.abTests) snapshot.abTests = project.abTests;
         if (project.crmConfig) snapshot.crmConfig = project.crmConfig;
-        if (project.businessBlueprint) snapshot.businessBlueprint = project.businessBlueprint;
-
         return snapshot;
     }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, pages, adminContext]);
 
@@ -2042,30 +2117,48 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             } as SitePage;
         }
 
-        setPages(prev => [...prev, newPage]);
+        const nextPages = [...pages, newPage];
+        setPages(nextPages);
+        syncWebsiteBlueprint({
+            action: 'page_change',
+            pages: nextPages,
+        });
         return newPage.id;
-    }, [pages, activeProject]);
+    }, [pages, activeProject, syncWebsiteBlueprint]);
 
     /**
      * Update an existing page
      */
     const updatePage = useCallback(async (pageId: string, updates: Partial<SitePage>): Promise<void> => {
-        setPages(prev => prev.map(p =>
+        const nextPages = pages.map(p =>
             p.id === pageId
                 ? { ...p, ...updates, updatedAt: new Date().toISOString() }
                 : p
-        ));
+        );
+        setPages(nextPages);
 
         // If this is the active page, also update the legacy state
+        let nextData = data;
+        let nextComponentOrder = componentOrder;
         if (pageId === activePageId) {
             if (updates.sectionData) {
-                setData(prev => prev ? { ...prev, ...updates.sectionData } : updates.sectionData as PageData);
+                nextData = data ? { ...data, ...updates.sectionData } : updates.sectionData as PageData;
+                setData(nextData);
             }
             if (updates.sections) {
+                nextComponentOrder = updates.sections;
                 setComponentOrder(updates.sections);
             }
         }
-    }, [activePageId]);
+
+        syncWebsiteBlueprint({
+            action: 'page_change',
+            data: nextData,
+            componentOrder: nextComponentOrder,
+            pages: nextPages,
+            touchedSection: updates.sections?.[0],
+        });
+    }, [pages, activePageId, data, componentOrder, syncWebsiteBlueprint]);
 
     /**
      * Delete a page
@@ -2079,35 +2172,43 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             throw new Error('No se puede eliminar la página de inicio');
         }
 
-        setPages(prev => prev.filter(p => p.id !== pageId));
+        const nextPages = pages.filter(p => p.id !== pageId);
+        setPages(nextPages);
+        syncWebsiteBlueprint({
+            action: 'page_change',
+            pages: nextPages,
+        });
 
         // If this was the active page, switch to home page
         if (pageId === activePageId) {
             const homePage = pages.find(p => p.isHomePage);
             setActivePageId(homePage?.id || null);
         }
-    }, [pages, activePageId]);
+    }, [pages, activePageId, syncWebsiteBlueprint]);
 
     /**
      * Reorder pages
      */
     const reorderPages = useCallback(async (pageIds: string[]): Promise<void> => {
-        setPages(prev => {
-            const reordered = pageIds
-                .map((id, index) => {
-                    const page = prev.find(p => p.id === id);
-                    if (page) {
-                        return { ...page, navigationOrder: index * 10 };
-                    }
-                    return null;
-                })
-                .filter(Boolean) as SitePage[];
+        const reordered = pageIds
+            .map((id, index) => {
+                const page = pages.find(p => p.id === id);
+                if (page) {
+                    return { ...page, navigationOrder: index * 10 };
+                }
+                return null;
+            })
+            .filter(Boolean) as SitePage[];
 
-            // Add any pages that weren't in the pageIds array
-            const remaining = prev.filter(p => !pageIds.includes(p.id));
-            return [...reordered, ...remaining];
+        // Add any pages that weren't in the pageIds array
+        const remaining = pages.filter(p => !pageIds.includes(p.id));
+        const nextPages = [...reordered, ...remaining];
+        setPages(nextPages);
+        syncWebsiteBlueprint({
+            action: 'page_change',
+            pages: nextPages,
         });
-    }, []);
+    }, [pages, syncWebsiteBlueprint]);
 
     /**
      * Duplicate a page
@@ -2129,9 +2230,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             updatedAt: now,
         };
 
-        setPages(prev => [...prev, newPage]);
+        const nextPages = [...pages, newPage];
+        setPages(nextPages);
+        syncWebsiteBlueprint({
+            action: 'page_change',
+            pages: nextPages,
+        });
         return newPage.id;
-    }, [pages]);
+    }, [pages, syncWebsiteBlueprint]);
 
     /**
      * Get page by slug (for routing)
@@ -2241,6 +2347,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         // Project Operations
         loadProject,
+        syncWebsiteBlueprint,
         saveProject,
         publishProject,
         getProjectSnapshot,

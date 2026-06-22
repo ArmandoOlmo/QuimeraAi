@@ -14,6 +14,7 @@ import { supabase } from '../supabase';
 import { Project } from '../types/project';
 import { componentStyles as defaultComponentStyles } from '../data/componentStyles';
 import { resolveProjectName } from '../utils/resolveProjectName';
+import { buildStoreIdentityOrFilter, getStoreIdentityQueryIds } from '../utils/ecommerce/storeIdentity';
 
 // =============================================================================
 // TYPES
@@ -356,16 +357,17 @@ async function collectEcommerceData(
     const categories: any[] = [];
 
     try {
+        const identityFilter = buildStoreIdentityOrFilter(getStoreIdentityQueryIds(projectId));
         // === PRODUCTOS ===
         const { data: productsData } = await supabase
             .from('store_products')
             .select('*')
-            .eq('store_id', projectId);
+            .or(identityFilter);
 
         if (productsData && productsData.length > 0) {
             console.log(`📦 [PublishService] Found ${productsData.length} products to publish`);
             for (const product of productsData) {
-                const productPayload = product.data || product;
+                const productPayload = { ...(product.data || {}), ...product };
                 if (productPayload.status === 'active') {
                     products.push({ id: product.id, data: productPayload });
                 }
@@ -376,12 +378,12 @@ async function collectEcommerceData(
         const { data: categoriesData } = await supabase
             .from('store_categories')
             .select('*')
-            .eq('store_id', projectId);
+            .or(identityFilter);
 
         if (categoriesData && categoriesData.length > 0) {
             console.log(`📂 [PublishService] Found ${categoriesData.length} categories to publish`);
             for (const category of categoriesData) {
-                categories.push({ id: category.id, data: category.data || category });
+                categories.push({ id: category.id, data: { ...(category.data || {}), ...category } });
             }
         }
 

@@ -62,6 +62,7 @@ import { useProject } from '../../../../contexts/project';
 import type { PageSection } from '../../../../types';
 import type { StorefrontThemeSettings } from '../../../../types/ecommerce';
 import type { Category, Product } from '../../../../types/ecommerce';
+import type { StorefrontThemePresetId } from '../../../../types/storefrontTheme';
 import type { StorefrontSectionKind } from '../../../../types/storefrontRenderer';
 import ColorControl from '../../../ui/ColorControl';
 import TabbedControls from '../../../ui/TabbedControls';
@@ -85,6 +86,7 @@ import {
     STOREFRONT_SECTION_KINDS,
     validateStorefrontSectionSettings,
 } from '../../../../utils/storefrontRenderer';
+import { STOREFRONT_THEME_PRESETS } from '../../../../utils/storefrontTheme';
 import { useEcommerceContext } from '../EcommerceContext';
 import { useCategories } from '../hooks/useCategories';
 import { useProducts } from '../hooks/useProducts';
@@ -114,6 +116,10 @@ const isRecord = (value: unknown): value is Record<string, any> =>
 
 const isStorefrontKind = (value: string): value is StorefrontSectionKind =>
     STOREFRONT_SECTION_KINDS.includes(value as StorefrontSectionKind);
+
+const isStorefrontThemePresetId = (value: unknown): value is StorefrontThemePresetId => (
+    typeof value === 'string' && value in STOREFRONT_THEME_PRESETS
+);
 
 const toSettingsRecord = (value: unknown): Record<string, unknown> =>
     isRecord(value) ? { ...value } : {};
@@ -452,6 +458,7 @@ const updateBusinessBlueprintStorefrontSections = (
     templateState: TemplateState,
     now: string,
     userId?: string,
+    themePreset?: StorefrontThemePresetId,
 ): Record<string, unknown> | undefined => {
     if (!isRecord(blueprint) || !isRecord(blueprint.storefrontBlueprint)) return undefined;
 
@@ -473,6 +480,17 @@ const updateBusinessBlueprintStorefrontSections = (
             enabled: true,
             status: templateState === 'published' ? 'published' : 'configured',
             needsReview: false,
+            ...(themePreset ? {
+                themePreset,
+                templatePreset: storefrontBlueprint.templatePreset || themePreset,
+                themeFallbackChain: [
+                    'DEFAULT_STOREFRONT_THEME',
+                    `preset:${themePreset}`,
+                    'brandColors',
+                    'projectGlobalColors',
+                    'storefrontTheme',
+                ],
+            } : {}),
             sections: nextSections,
             metadata: {
                 ...(isRecord(storefrontBlueprint.metadata) ? storefrontBlueprint.metadata : {}),
@@ -958,6 +976,7 @@ const StorefrontEditorView: React.FC = () => {
         isLoading: settingsLoading,
         isSaving: settingsSaving,
         getStorefrontTheme,
+        replaceStorefrontTheme,
     } = useStoreSettings(user?.id || '', storeId);
 
     const project = useMemo(() => (
@@ -976,6 +995,15 @@ const StorefrontEditorView: React.FC = () => {
         lastUpdated: projectLastUpdated,
     });
     const pageData = useMemo(() => getProjectPageData(project), [project]);
+    const initialThemePresetId = useMemo<StorefrontThemePresetId>(() => {
+        const projectPreset = project?.businessBlueprint?.storefrontBlueprint?.themePreset;
+        if (isStorefrontThemePresetId(projectPreset)) return projectPreset;
+
+        const pageBlueprint = isRecord(pageData.businessBlueprint) ? pageData.businessBlueprint : {};
+        const storefrontBlueprint = isRecord(pageBlueprint.storefrontBlueprint) ? pageBlueprint.storefrontBlueprint : {};
+        const nestedPreset = storefrontBlueprint.themePreset || storefrontBlueprint.templatePreset;
+        return isStorefrontThemePresetId(nestedPreset) ? nestedPreset : 'minimal';
+    }, [pageData.businessBlueprint, project?.businessBlueprint?.storefrontBlueprint?.themePreset]);
     const editorState = useMemo(
         () => (isRecord(pageData.storefrontEditor) ? pageData.storefrontEditor : {}),
         [projectContentSignature],
@@ -1018,6 +1046,7 @@ const StorefrontEditorView: React.FC = () => {
     const [templateState, setTemplateState] = useState<TemplateState>(
         editorState.templateState === 'published' ? 'published' : 'draft'
     );
+    const [selectedThemePresetId, setSelectedThemePresetId] = useState<StorefrontThemePresetId>(initialThemePresetId);
     const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
     const previewPayloadRef = useRef('');
     const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
@@ -1056,8 +1085,10 @@ const StorefrontEditorView: React.FC = () => {
         setSelectedSection(prev => initialOrder.includes(prev) ? prev : initialOrder[0] || defaultSections[0]);
         setSelectedStructurePanel(prev => (initialOrder.length === 0 && prev === null ? 'template' : prev));
         setTemplateState(editorState.templateState === 'published' ? 'published' : 'draft');
+        setSelectedThemePresetId(initialThemePresetId);
     }, [
         editorState.templateState,
+        initialThemePresetId,
         initialVisibility,
         initialOrder,
         initialOrderSignature,
@@ -1350,6 +1381,23 @@ const StorefrontEditorView: React.FC = () => {
         setTemplateState(prev => prev === 'published' ? 'draft' : prev);
     };
 
+    const applyThemePreset = async (value: string) => {
+        if (!isStorefrontThemePresetId(value)) return;
+        const preset = STOREFRONT_THEME_PRESETS[value];
+        setSelectedThemePresetId(value);
+        markTemplateDirty();
+        setError(null);
+
+        try {
+            await replaceStorefrontTheme({
+                ...previewStorefrontTheme,
+                ...preset.theme,
+            } as StorefrontThemeSettings);
+        } catch (err: any) {
+            setError(err.message || t('ecommerce.storefrontEditor.themePresetError', 'No se pudo aplicar el preset de tema.'));
+        }
+    };
+
     const handleSectionDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (!over || active.id === over.id) return;
@@ -1560,6 +1608,7 @@ const StorefrontEditorView: React.FC = () => {
                 nextState,
                 now,
                 user?.id,
+                selectedThemePresetId,
             );
             const existingStorefrontEditor = isRecord(currentPageData.storefrontEditor)
                 ? currentPageData.storefrontEditor
@@ -1787,6 +1836,22 @@ const StorefrontEditorView: React.FC = () => {
                         {t('common.published', 'Publicado')}
                     </button>
                 </div>
+            </div>
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Palette size={14} />
+                    {t('ecommerce.storefrontEditor.themeSettings', 'Tema')}
+                </label>
+                <Select
+                    label={t('ecommerce.storefrontEditor.themePreset', 'Preset')}
+                    value={selectedThemePresetId}
+                    onChange={applyThemePreset}
+                    options={(Object.values(STOREFRONT_THEME_PRESETS)).map(preset => ({
+                        value: preset.id,
+                        label: preset.label,
+                    }))}
+                    noMargin
+                />
             </div>
         </div>
     );

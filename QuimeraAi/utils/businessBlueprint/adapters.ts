@@ -126,6 +126,23 @@ function createWebsiteBlueprint(plan: WebsitePlan, now: string): WebsiteBlueprin
             sections,
         }],
         sections,
+        componentOrder: sections,
+        sectionVisibility: sections.reduce((acc, section) => {
+            acc[section] = true;
+            return acc;
+        }, {} as Record<PageSection, boolean>),
+        sectionBlueprints: sections.map((section, index) => ({
+            id: `website-section-${section}-${index + 1}`,
+            type: section,
+            order: index,
+            visible: true,
+            pageIds: ['home'],
+            ...createBlueprintModuleState(now, {
+                sourceMap: {
+                    section: `websitePlan.componentPlan.${index}`,
+                },
+            }),
+        })),
         ecommerceBlocks,
         chatbotPlacement: sections.includes('chatbot') ? 'floating' : 'none',
     };
