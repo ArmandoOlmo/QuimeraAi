@@ -143,8 +143,14 @@ export type OrderStatus =
     | 'cancelled'         // Cancelado
     | 'refunded';         // Reembolsado
 
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'partially_refunded';
-export type FulfillmentStatus = 'unfulfilled' | 'partial' | 'fulfilled';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'partially_refunded' | 'cancelled';
+export type FulfillmentStatus =
+    | 'unfulfilled'
+    | 'processing'
+    | 'partial'
+    | 'partially_fulfilled'
+    | 'fulfilled'
+    | 'cancelled';
 
 export interface OrderItem {
     id: string;
@@ -178,6 +184,8 @@ export interface Order {
     projectId?: string;              // Project-backed admin/order identifier
     storeId?: string;                // Legacy mixed identifier; inspect source before assuming type
     publicStoreId?: string;          // public_stores.id for storefront-created orders
+    data?: Record<string, unknown>;   // Raw order JSON used for admin-only metadata
+    admin?: Record<string, unknown>;  // data.admin, normalized by admin order service
     
     // Customer
     customerId?: string;

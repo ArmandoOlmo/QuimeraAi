@@ -67,12 +67,16 @@ const PAYMENT_STATUSES: ReadonlySet<Order['paymentStatus']> = new Set([
     'failed',
     'refunded',
     'partially_refunded',
+    'cancelled',
 ]);
 
 const FULFILLMENT_STATUSES: ReadonlySet<Order['fulfillmentStatus']> = new Set([
     'unfulfilled',
+    'processing',
     'partial',
+    'partially_fulfilled',
     'fulfilled',
+    'cancelled',
 ]);
 
 const normalizeOrderStatus = (value: unknown): Order['status'] => {
@@ -298,6 +302,8 @@ export const mapOrderFromDB = (row: DbRecord): Order => {
         projectId: toOptionalString(readField(row, data, 'project_id', 'projectId')),
         storeId: toOptionalString(readField(row, data, 'store_id', 'storeId')),
         publicStoreId: toOptionalString(readField(row, data, 'public_store_id', 'publicStoreId')),
+        data,
+        admin: readJsonObject(data.admin),
         customerId: toOptionalString(readField(row, data, 'customer_id', 'customerId')),
         customerEmail: toStringValue(readField(row, data, 'customer_email', 'customerEmail')),
         customerName: toStringValue(readField(row, data, 'customer_name', 'customerName')),
