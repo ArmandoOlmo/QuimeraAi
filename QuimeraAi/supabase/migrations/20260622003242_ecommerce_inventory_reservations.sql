@@ -96,10 +96,8 @@ USING (
   AND is_project_owner_or_tenant(project_id)
 );
 
-REVOKE ALL ON TABLE public.store_inventory_reservations FROM anon;
-REVOKE ALL ON TABLE public.store_inventory_movements FROM anon;
-REVOKE INSERT, UPDATE, DELETE ON TABLE public.store_inventory_reservations FROM authenticated;
-REVOKE INSERT, UPDATE, DELETE ON TABLE public.store_inventory_movements FROM authenticated;
+REVOKE ALL ON TABLE public.store_inventory_reservations FROM anon, authenticated, service_role;
+REVOKE ALL ON TABLE public.store_inventory_movements FROM anon, authenticated, service_role;
 GRANT SELECT ON TABLE public.store_inventory_reservations TO authenticated;
 GRANT SELECT ON TABLE public.store_inventory_movements TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.store_inventory_reservations TO service_role;
@@ -620,14 +618,14 @@ $$;
 
 REVOKE ALL ON FUNCTION public.reserve_store_inventory_line(
   UUID, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, INTEGER, TIMESTAMPTZ, TEXT, JSONB
-) FROM PUBLIC;
+) FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION public.commit_store_inventory_reservation(
   UUID, TEXT, TEXT, TEXT, TIMESTAMPTZ
-) FROM PUBLIC;
+) FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION public.release_store_inventory_reservation(
   UUID, TEXT, TEXT, TIMESTAMPTZ
-) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.expire_store_inventory_reservations(TIMESTAMPTZ) FROM PUBLIC;
+) FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.expire_store_inventory_reservations(TIMESTAMPTZ) FROM PUBLIC, anon, authenticated, service_role;
 
 GRANT EXECUTE ON FUNCTION public.reserve_store_inventory_line(
   UUID, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, INTEGER, TIMESTAMPTZ, TEXT, JSONB
