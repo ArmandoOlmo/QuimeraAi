@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "npm:stripe@^14.0.0";
+import {
+  calculateCartSubtotal as calculateServerCartSubtotal,
+  calculateCheckoutTotals as calculateServerCheckoutTotals,
+} from "../../../utils/ecommerce/ecommercePricingService.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   apiVersion: "2023-10-16",
@@ -1335,6 +1339,7 @@ function normalizeProduct(row: any) {
     name: row.name || data.name,
     status: row.status || data.status,
     price: Number(row.price ?? data.price ?? 0),
+    currency: row.currency || data.currency || null,
     quantity: Number(row.quantity ?? row.inventory_quantity ?? data.quantity ?? data.inventoryQuantity ?? data.inventory_quantity ?? 0),
     trackInventory: row.track_inventory ?? data.trackInventory ?? data.track_inventory ?? true,
     lowStockThreshold: Number(row.low_stock_threshold ?? data.lowStockThreshold ?? data.low_stock_threshold ?? 5),
@@ -1342,6 +1347,7 @@ function normalizeProduct(row: any) {
     variants: row.variants || data.variants || [],
     images: row.images || data.images || [],
     categoryId: row.category_id || data.categoryId || data.category_id || data.category || null,
+    isDigital: row.is_digital ?? data.isDigital ?? data.is_digital ?? false,
   };
 }
 
@@ -1372,221 +1378,57 @@ function readRuntimeField(row: any, snakeKey: string, camelKey = snakeKey) {
   return row?.[snakeKey] ?? data?.[camelKey] ?? data?.[snakeKey];
 }
 
-function readStringArray(row: any, snakeKey: string, camelKey = snakeKey) {
-  const value = readRuntimeField(row, snakeKey, camelKey);
-  if (!Array.isArray(value)) return [];
-  return value.map((item) => String(item)).filter(Boolean);
-}
-
 function normalizeDiscountCode(code: unknown) {
   return String(code || "").trim().toUpperCase();
 }
 
-function timestampMs(value: unknown): number | null {
-  if (!value) return null;
-  if (typeof value === "number") return value > 9_999_999_999 ? value : value * 1000;
-  if (typeof value === "string") {
-    const parsed = Date.parse(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-  if (typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    if (typeof record.seconds === "number") return record.seconds * 1000;
-    if (typeof record._seconds === "number") return record._seconds * 1000;
-  }
-  return null;
-}
-
-async function loadStoreDiscount(projectId: string, code: string) {
+async function loadStoreDiscountCandidates(projectId: string, code?: string | null, customerEmail?: string | null) {
   const normalizedCode = normalizeDiscountCode(code);
-  if (!normalizedCode) return null;
-
   const { data, error } = await supabase
     .from("store_discounts")
     .select("*")
     .eq("project_id", projectId)
-    .ilike("code", normalizedCode)
-    .maybeSingle();
+    .limit(100);
 
   if (error) throw error;
-  return data;
-}
 
-function getDiscountScope(discount: any) {
-  return String(readRuntimeField(discount, "applies_to", "appliesTo") || "all");
-}
-
-function getDiscountEligibleItems(discount: any, canonicalItems: any[]) {
-  const scope = getDiscountScope(discount);
-  const productIds = readStringArray(discount, "product_ids", "productIds");
-  const categoryIds = readStringArray(discount, "category_ids", "categoryIds");
-  const excludedProductIds = readStringArray(discount, "exclude_product_ids", "excludeProductIds");
-
-  return canonicalItems.filter((item) => {
-    if (excludedProductIds.includes(String(item.productId))) return false;
-    if (scope === "specific_products") return productIds.includes(String(item.productId));
-    if (scope === "specific_categories") return item.categoryId && categoryIds.includes(String(item.categoryId));
-    if (scope === "specific_collections") return false;
-    return true;
+  const candidates = (data || []).filter((discount: any) => {
+    const discountCode = normalizeDiscountCode(readRuntimeField(discount, "code", "code"));
+    const isAutomatic = readRuntimeField(discount, "is_automatic", "isAutomatic") === true;
+    return (normalizedCode && discountCode === normalizedCode) || isAutomatic;
   });
-}
 
-async function validateDiscountRules(discount: any, args: {
-  canonicalItems: any[];
-  customerEmail?: string | null;
-  projectId: string;
-  subtotal: number;
-}) {
-  const now = Date.now();
-  const code = normalizeDiscountCode(readRuntimeField(discount, "code", "code"));
-  const startsAt = timestampMs(readRuntimeField(discount, "starts_at", "startsAt"));
-  const endsAt = timestampMs(readRuntimeField(discount, "ends_at", "endsAt"));
-  const isActive = readRuntimeField(discount, "is_active", "isActive") !== false;
-  const maxUses = Number(readRuntimeField(discount, "max_uses", "maxUses") || 0);
-  const usedCount = Number(readRuntimeField(discount, "used_count", "usedCount") || 0);
-  const maxUsesPerCustomer = Number(readRuntimeField(discount, "max_uses_per_customer", "maxUsesPerCustomer") || 0);
-  const minimumPurchase = Number(readRuntimeField(discount, "minimum_purchase", "minimumPurchase") || 0);
-  const minimumQuantity = Number(readRuntimeField(discount, "minimum_quantity", "minimumQuantity") || 0);
-  const customerEligibility = String(readRuntimeField(discount, "customer_eligibility", "customerEligibility") || "everyone");
-  const totalQuantity = args.canonicalItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const normalizedEmail = String(customerEmail || "").trim().toLowerCase();
+  if (!normalizedEmail) return candidates;
 
-  if (!isActive) throw new Error("El codigo de descuento no esta activo");
-  if (startsAt && startsAt > now) throw new Error("El codigo de descuento aun no esta disponible");
-  if (endsAt && endsAt < now) throw new Error("El codigo de descuento expiro");
-  if (maxUses > 0 && usedCount >= maxUses) throw new Error("El codigo de descuento ya alcanzo su limite de uso");
-  if (minimumPurchase > 0 && args.subtotal < minimumPurchase) {
-    throw new Error(`El codigo requiere una compra minima de ${minimumPurchase.toFixed(2)}`);
-  }
-  if (minimumQuantity > 0 && totalQuantity < minimumQuantity) {
-    throw new Error(`El codigo requiere al menos ${minimumQuantity} productos`);
-  }
+  const enriched = [];
+  for (const discount of candidates) {
+    const maxUsesPerCustomer = Number(readRuntimeField(discount, "max_uses_per_customer", "maxUsesPerCustomer") || 0);
+    const discountCode = normalizeDiscountCode(readRuntimeField(discount, "code", "code"));
+    if (maxUsesPerCustomer <= 0 || !discountCode) {
+      enriched.push(discount);
+      continue;
+    }
 
-  const customerEmail = String(args.customerEmail || "").trim().toLowerCase();
-  if (customerEligibility === "first_purchase") {
-    if (!customerEmail) throw new Error("Ingresa tu email para validar este codigo");
-    const { data, error } = await supabase
-      .from("store_orders")
-      .select("id")
-      .eq("project_id", args.projectId)
-      .eq("customer_email", customerEmail)
-      .eq("payment_status", "paid")
-      .limit(1)
-      .maybeSingle();
-    if (error) throw error;
-    if (data) throw new Error("Este codigo solo aplica a la primera compra");
-  } else if (!["everyone", "all"].includes(customerEligibility)) {
-    throw new Error("Este codigo no aplica a este cliente");
-  }
-
-  if (maxUsesPerCustomer > 0 && customerEmail && code) {
-    const { count, error } = await supabase
+    const { count, error: usageError } = await supabase
       .from("store_orders")
       .select("id", { count: "exact", head: true })
-      .eq("project_id", args.projectId)
-      .eq("customer_email", customerEmail)
-      .eq("discount_code", code)
+      .eq("project_id", projectId)
+      .eq("customer_email", normalizedEmail)
+      .eq("discount_code", discountCode)
       .eq("payment_status", "paid");
-    if (error) throw error;
-    if (Number(count || 0) >= maxUsesPerCustomer) {
-      throw new Error("Ya usaste este codigo el maximo permitido");
-    }
-  }
-}
-
-function calculateLineDiscount(discount: any, eligibleItems: any[]) {
-  const type = String(readRuntimeField(discount, "type", "type") || "percentage");
-  const value = Number(readRuntimeField(discount, "value", "value") || 0);
-  const eligibleSubtotal = eligibleItems.reduce((sum, item) => sum + Number(item.totalPrice || 0), 0);
-
-  if (eligibleSubtotal <= 0) throw new Error("El codigo no aplica a los productos del carrito");
-  if (type === "percentage") return roundMoney(Math.min(eligibleSubtotal, eligibleSubtotal * (value / 100)));
-  if (type === "fixed_amount") return roundMoney(Math.min(eligibleSubtotal, value));
-  if (type === "free_shipping") return 0;
-  throw new Error("Este tipo de descuento todavia no esta disponible en checkout");
-}
-
-async function calculateDiscount(args: {
-  canonicalItems: any[];
-  code?: string | null;
-  customerEmail?: string | null;
-  projectId: string;
-  subtotal: number;
-}) {
-  const code = normalizeDiscountCode(args.code);
-  if (!code) return null;
-
-  const discount = await loadStoreDiscount(args.projectId, code);
-  if (!discount) throw new Error("Codigo de descuento invalido");
-
-  await validateDiscountRules(discount, args);
-  const eligibleItems = getDiscountEligibleItems(discount, args.canonicalItems);
-  const type = String(readRuntimeField(discount, "type", "type") || "percentage");
-  const discountAmount = calculateLineDiscount(discount, eligibleItems);
-
-  return {
-    id: discount.id,
-    code: normalizeDiscountCode(readRuntimeField(discount, "code", "code") || code),
-    type,
-    amount: discountAmount,
-    freeShipping: type === "free_shipping",
-    scope: getDiscountScope(discount),
-  };
-}
-
-function destinationMatchesZone(zone: any, shippingAddress?: any) {
-  const countries = Array.isArray(zone?.countries) ? zone.countries.map((country: unknown) => String(country).toUpperCase()) : [];
-  if (countries.length === 0) return true;
-  const country = String(shippingAddress?.country || shippingAddress?.countryCode || "").trim().toUpperCase();
-  return country ? countries.includes(country) : true;
-}
-
-function getFallbackShippingRates() {
-  return [
-    { id: "standard", name: "Envio Estandar", price: 99, estimatedDays: "5-7 dias habiles" },
-    { id: "express", name: "Envio Express", price: 199, estimatedDays: "2-3 dias habiles" },
-    { id: "overnight", name: "Entrega al Siguiente Dia", price: 349, estimatedDays: "1 dia habil" },
-  ];
-}
-
-function resolveShipping(args: {
-  discount?: any;
-  discountedSubtotal: number;
-  settings: any;
-  shippingAddress?: any;
-  shippingMethodId?: string | null;
-}) {
-  const zones = Array.isArray(args.settings.shippingZones) ? args.settings.shippingZones : [];
-  const matchingZones = zones.filter((zone: any) => destinationMatchesZone(zone, args.shippingAddress));
-  const configuredRates = (matchingZones.length > 0 ? matchingZones : zones).flatMap((zone: any) => zone.rates || []);
-  const rates = configuredRates.length > 0 ? configuredRates : getFallbackShippingRates();
-  const eligibleRates = rates.filter((rate: any) => {
-    const minOrder = Number(rate.minOrderAmount ?? rate.minOrder ?? 0);
-    return !minOrder || args.discountedSubtotal >= minOrder;
-  });
-  if (zones.length > 0 && matchingZones.length === 0) throw new Error("No hay metodos de envio disponibles para este destino");
-  if (rates.length > 0 && eligibleRates.length === 0) throw new Error("El pedido no alcanza el minimo para los metodos de envio disponibles");
-
-  const selectedRate = eligibleRates.find((rate: any) => String(rate.id) === String(args.shippingMethodId || "")) || eligibleRates[0];
-  if (!selectedRate) return { shippingTotal: 0, shippingMethodId: null, shippingMethodName: "Standard" };
-
-  let shippingTotal = roundMoney(selectedRate.price || 0);
-  let shippingMethodName = selectedRate.name || "Standard";
-  const freeShippingThreshold = Number(args.settings.freeShippingThreshold || 0);
-  if (args.discount?.freeShipping || (freeShippingThreshold > 0 && args.discountedSubtotal >= freeShippingThreshold)) {
-    shippingTotal = 0;
-    shippingMethodName = "Free Shipping";
+    if (usageError) throw usageError;
+    enriched.push({
+      ...discount,
+      customer_usage_count: Number(count || 0),
+      data: {
+        ...(discount.data || {}),
+        customerUsageCount: Number(count || 0),
+      },
+    });
   }
 
-  return {
-    shippingTotal,
-    shippingMethodId: selectedRate.id || null,
-    shippingMethodName,
-  };
-}
-
-function calculateTax(settings: any, taxableSubtotal: number) {
-  if (!settings.taxEnabled || settings.taxIncluded || settings.taxIncludedInPrice) return 0;
-  return roundMoney(Math.max(0, taxableSubtotal) * (Number(settings.taxRate || 0) / 100));
+  return enriched;
 }
 
 async function calculateCheckoutPricing(args: {
@@ -1599,86 +1441,71 @@ async function calculateCheckoutPricing(args: {
   shippingMethodId?: string | null;
   subtotal: number;
 }) {
-  const subtotal = roundMoney(args.subtotal);
-  const discount = await calculateDiscount({
+  const discounts = await loadStoreDiscountCandidates(args.projectId, args.discountCode, args.customerEmail);
+  const result = calculateServerCheckoutTotals({
+    currency: args.settings.currency || "USD",
     canonicalItems: args.canonicalItems,
-    code: args.discountCode,
-    customerEmail: args.customerEmail,
-    projectId: args.projectId,
-    subtotal,
-  });
-  const discountAmount = roundMoney(discount?.amount || 0);
-  const discountedSubtotal = roundMoney(Math.max(0, subtotal - discountAmount));
-  const shipping = resolveShipping({
-    discount,
-    discountedSubtotal,
+    discounts,
+    discountCode: args.discountCode,
     settings: args.settings,
     shippingAddress: args.shippingAddress,
     shippingMethodId: args.shippingMethodId,
+    customerEmail: args.customerEmail,
   });
-  const taxTotal = calculateTax(args.settings, discountedSubtotal);
-  const total = roundMoney(Math.max(0, discountedSubtotal + shipping.shippingTotal + taxTotal));
+
+  if (result.errors.length > 0) {
+    throw new Error(result.errors[0]);
+  }
+
+  const primaryDiscount = result.appliedDiscounts[0] || null;
+  const snapshot = result.snapshot;
 
   return {
-    subtotal,
-    discount,
-    discountCode: discount?.code || null,
-    discountAmount,
-    discountTotal: discountAmount,
-    shippingTotal: shipping.shippingTotal,
-    shippingMethodId: shipping.shippingMethodId,
-    shippingMethodName: shipping.shippingMethodName,
-    taxTotal,
-    taxName: args.settings.taxName || "Tax",
-    taxRate: Number(args.settings.taxRate || 0),
-    taxIncluded: Boolean(args.settings.taxIncluded || args.settings.taxIncludedInPrice),
-    total,
+    subtotal: result.subtotal,
+    discount: primaryDiscount,
+    appliedDiscounts: result.appliedDiscounts,
+    discountCode: primaryDiscount?.code || null,
+    discountAmount: result.discountAmount,
+    discountTotal: result.discountAmount,
+    shippingTotal: result.shippingAmount,
+    shippingMethodId: result.shippingMethod?.id || null,
+    shippingMethodName: result.shippingMethod?.name || "Standard",
+    taxTotal: result.taxAmount,
+    taxName: result.taxBreakdown[0]?.name || args.settings.taxName || "Tax",
+    taxRate: Number(result.taxBreakdown[0]?.rate ?? args.settings.taxRate ?? 0),
+    taxIncluded: Boolean(result.taxBreakdown[0]?.included || args.settings.taxIncluded || args.settings.taxIncludedInPrice),
+    taxBreakdown: result.taxBreakdown,
+    total: result.total,
+    warnings: result.warnings,
+    snapshot,
+    calculationVersion: snapshot.calculationVersion,
   };
 }
 
 async function buildStoreCanonicalItems(projectId: string, items: any[]) {
-  let subtotal = 0;
-  const canonicalItems = [];
+  const productIds = Array.from(new Set(
+    (items || []).map((item: any) => String(item.productId || "").trim()).filter(Boolean),
+  ));
+  const products = [];
 
-  for (const item of items) {
-    if (Number(item.quantity) <= 0) throw new Error("Invalid quantity");
-    const product = await getStoreProduct(projectId, item.productId);
-    if (product.status !== "active") throw new Error(`Product ${product.name} is not available`);
-
-    let availableQuantity = product.quantity;
-    let price = product.price;
-    let variantName = null;
-    if (item.variantId && product.hasVariants) {
-      const variant = product.variants.find((variant: any) => variant.id === item.variantId);
-      if (!variant) throw new Error("Variant not found");
-      availableQuantity = Number(variant.quantity || 0);
-      price = Number(variant.price || price);
-      variantName = variant.name;
-    }
-
-    if (product.trackInventory !== false && availableQuantity < Number(item.quantity)) {
-      throw new Error(`Insufficient stock for ${product.name}`);
-    }
-
-    const totalPrice = roundMoney(price * Number(item.quantity));
-    subtotal += totalPrice;
-    canonicalItems.push({
-      productId: item.productId,
-      variantId: item.variantId || null,
-      categoryId: product.categoryId || null,
-      name: variantName ? `${product.name} - ${variantName}` : product.name,
-      productName: product.name,
-      variantName,
-      imageUrl: product.images?.[0]?.url || product.images?.[0] || null,
-      quantity: Number(item.quantity),
-      trackInventory: product.trackInventory !== false,
-      availableQuantity: product.trackInventory !== false ? availableQuantity : null,
-      unitPrice: roundMoney(price),
-      totalPrice,
-    });
+  for (const productId of productIds) {
+    products.push(await getStoreProduct(projectId, productId));
   }
 
-  return { subtotal: roundMoney(subtotal), canonicalItems };
+  const subtotalResult = calculateServerCartSubtotal({
+    items: (items || []).map((item: any) => ({
+      productId: item.productId,
+      variantId: item.variantId || null,
+      quantity: Number(item.quantity || 0),
+    })),
+    products,
+  });
+
+  if (subtotalResult.errors.length > 0) {
+    throw new Error(subtotalResult.errors[0]);
+  }
+
+  return { subtotal: subtotalResult.subtotal, canonicalItems: subtotalResult.items };
 }
 
 async function buildStoreOrder(data: any, authUserId?: string | null) {
@@ -1720,6 +1547,7 @@ async function buildStoreOrder(data: any, authUserId?: string | null) {
   const cartHash = await sha256(stableStringify({
     currency,
     discountCode: pricing.discountCode,
+    appliedDiscounts: pricing.appliedDiscounts,
     items: canonicalItems.map((item) => ({
       productId: item.productId,
       variantId: item.variantId,
@@ -1781,7 +1609,26 @@ async function buildStoreOrder(data: any, authUserId?: string | null) {
       paymentMethod: "stripe",
       shippingMethod: pricing.shippingMethodName,
       shippingMethodId: pricing.shippingMethodId,
-      pricing,
+      pricing: {
+        ...pricing.snapshot,
+        subtotal: pricing.subtotal,
+        discountTotal: pricing.discountAmount,
+        shippingTotal: pricing.shippingTotal,
+        taxTotal: pricing.taxTotal,
+        total: pricing.total,
+        discount: pricing.discount,
+        discountCode: pricing.discountCode,
+        appliedDiscounts: pricing.appliedDiscounts,
+        shippingMethodId: pricing.shippingMethodId,
+        shippingMethodName: pricing.shippingMethodName,
+        taxName: pricing.taxName,
+        taxRate: pricing.taxRate,
+        taxIncluded: pricing.taxIncluded,
+        taxBreakdown: pricing.taxBreakdown,
+        warnings: pricing.warnings || [],
+        calculationVersion: pricing.calculationVersion,
+      },
+      pricingSnapshot: pricing.snapshot,
       notes: notes || null,
       authUserId: authUserId || null,
       checkoutIdempotencyKey,
