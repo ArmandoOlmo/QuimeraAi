@@ -58,15 +58,15 @@ const EmailPropertiesPanel: React.FC = () => {
             <div className="flex-shrink-0 p-4 border-b border-q-border">
                 <div className="flex items-center gap-2 mb-4">
                     <div className="flex-1">
-                        <h3 className="text-sm font-bold text-q-text-secondary uppercase tracking-wider">
+                        <h3 className="text-[11px] font-bold text-q-text-secondary tracking-normal">
                             {t('editor.properties', 'Propiedades')}
                         </h3>
                         {selectedBlock ? (
-                            <p className="text-base font-semibold text-q-text mt-1 capitalize">
+                            <p className="text-sm font-semibold text-q-text mt-1 capitalize">
                                 {selectedBlock.type}
                             </p>
                         ) : (
-                            <p className="text-base text-q-text-secondary mt-1">
+                            <p className="text-sm text-q-text-secondary mt-1">
                                 {t('email.document', 'Documento')}
                             </p>
                         )}
@@ -74,18 +74,27 @@ const EmailPropertiesPanel: React.FC = () => {
                 </div>
                 
                 {/* Tabs */}
-                <div className="flex gap-1 rounded-md border border-q-border/70 bg-q-surface/40 p-1">
+                <div
+                    data-editor-control-tabs
+                    role="tablist"
+                    className="flex gap-1 rounded-[var(--editor-control-radius)] border border-[var(--editor-control-border)] bg-[var(--editor-control-surface-muted)] p-1"
+                >
                     {tabs.map(tab => {
                         const Icon = tab.icon;
+                        const isActive = activeTab === tab.id;
                         return (
                             <button
                                 key={tab.id}
+                                type="button"
+                                role="tab"
+                                aria-selected={isActive}
+                                data-editor-control-tab
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
-                                    flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-sm text-sm font-medium transition-all
-                                    ${activeTab === tab.id 
-                                        ? 'bg-q-accent/15 text-q-accent' 
-                                        : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'
+                                    flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-[var(--editor-control-radius-sm)] text-xs font-bold transition-all
+                                    ${isActive
+                                        ? 'bg-q-surface text-q-accent shadow-sm ring-1 ring-[var(--editor-control-border)]'
+                                        : 'text-q-text-secondary hover:text-q-text hover:bg-q-surface/70'
                                     }
                                 `}
                             >
@@ -104,26 +113,38 @@ const EmailPropertiesPanel: React.FC = () => {
                         <>
                             {/* Style Sub-Tabs Header (Only if block is selected) */}
                             {selectedBlock && (
-                                <div className="flex gap-1 rounded-md border border-q-border/70 bg-q-surface/40 p-1 mb-6">
+                                <div
+                                    data-editor-control-tabs
+                                    role="tablist"
+                                    className="flex gap-1 rounded-[var(--editor-control-radius)] border border-[var(--editor-control-border)] bg-[var(--editor-control-surface-muted)] p-1 mb-5"
+                                >
                                     <button
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={styleSubTab === 'block'}
+                                        data-editor-control-tab
                                         onClick={() => setStyleSubTab('block')}
                                         className={`
-                                            flex-1 py-1.5 px-3 rounded-sm text-xs font-medium transition-all text-center
-                                            ${styleSubTab === 'block' 
-                                                ? 'bg-q-accent/15 text-q-accent' 
-                                                : 'text-q-text-secondary hover:text-q-text'
+                                            flex-1 py-2 px-3 rounded-[var(--editor-control-radius-sm)] text-xs font-bold transition-all text-center
+                                            ${styleSubTab === 'block'
+                                                ? 'bg-q-surface text-q-accent shadow-sm ring-1 ring-[var(--editor-control-border)]'
+                                                : 'text-q-text-secondary hover:text-q-text hover:bg-q-surface/70'
                                             }
                                         `}
                                     >
                                         {t('email.blockStyles', 'Bloque')}
                                     </button>
                                     <button
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={styleSubTab === 'global'}
+                                        data-editor-control-tab
                                         onClick={() => setStyleSubTab('global')}
                                         className={`
-                                            flex-1 py-1.5 px-3 rounded-sm text-xs font-medium transition-all text-center flex items-center justify-center gap-1.5
-                                            ${styleSubTab === 'global' 
-                                                ? 'bg-q-accent/15 text-q-accent' 
-                                                : 'text-q-text-secondary hover:text-q-text'
+                                            flex-1 py-2 px-3 rounded-[var(--editor-control-radius-sm)] text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5
+                                            ${styleSubTab === 'global'
+                                                ? 'bg-q-surface text-q-accent shadow-sm ring-1 ring-[var(--editor-control-border)]'
+                                                : 'text-q-text-secondary hover:text-q-text hover:bg-q-surface/70'
                                             }
                                         `}
                                     >
@@ -136,8 +157,8 @@ const EmailPropertiesPanel: React.FC = () => {
                             {/* Style Content */}
                             {styleSubTab === 'global' ? (
                                 <div>
-                                    <div className="mb-4 pb-2 border-b border-q-border">
-                                        <h4 className="text-sm font-bold text-q-text flex items-center gap-2">
+                                    <div className="mb-4 pb-3 border-b border-q-border">
+                                        <h4 className="text-sm font-semibold text-q-text flex items-center gap-2">
                                             <Settings className="w-4 h-4 text-q-text-secondary" />
                                             {t('email.globalSettings', 'Configuración Global')}
                                         </h4>
@@ -193,7 +214,7 @@ const NoBlockSelected: React.FC<NoBlockSelectedProps> = ({
             <div className="space-y-4">
                 {/* Email Subject */}
                 <div>
-                    <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
+                    <label className="editor-control-label block text-[var(--editor-control-label-size)] leading-[var(--editor-control-label-leading)] font-bold text-q-text-secondary mb-2">
                         {t('email.subject', 'Asunto del email')}
                     </label>
                     <input
@@ -201,13 +222,13 @@ const NoBlockSelected: React.FC<NoBlockSelectedProps> = ({
                         value={subject}
                         onChange={(e) => onSubjectChange(e.target.value)}
                         placeholder={t('email.subjectPlaceholder', 'Escribe el asunto...')}
-                        className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
+                        className="w-full min-h-[var(--editor-control-input-height)] bg-[var(--editor-control-input-bg)] border border-[var(--editor-control-border)] rounded-[var(--editor-control-radius)] px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-[var(--editor-control-focus-ring)] focus:border-q-accent/70"
                     />
                 </div>
                 
                 {/* Preview Text */}
                 <div>
-                    <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
+                    <label className="editor-control-label block text-[var(--editor-control-label-size)] leading-[var(--editor-control-label-leading)] font-bold text-q-text-secondary mb-2">
                         {t('email.previewText', 'Texto de vista previa')}
                     </label>
                     <textarea
@@ -215,15 +236,15 @@ const NoBlockSelected: React.FC<NoBlockSelectedProps> = ({
                         onChange={(e) => onPreviewTextChange(e.target.value)}
                         placeholder={t('email.previewTextPlaceholder', 'Texto que aparece después del asunto...')}
                         rows={3}
-                        className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent resize-none"
+                        className="w-full min-h-[92px] bg-[var(--editor-control-input-bg)] border border-[var(--editor-control-border)] rounded-[var(--editor-control-radius)] px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-[var(--editor-control-focus-ring)] focus:border-q-accent/70 resize-none"
                     />
-                    <p className="text-xs text-q-text-secondary mt-1">
+                    <p className="editor-control-caption text-xs text-q-text-secondary mt-1">
                         {t('email.previewTextHint', 'Se muestra en la bandeja de entrada después del asunto')}
                     </p>
                 </div>
                 
                 {/* Hint */}
-                <div className="bg-q-surface/50 rounded-lg p-4 mt-6">
+                <div className="bg-[var(--editor-control-surface-muted)] rounded-[var(--editor-control-radius)] border border-[var(--editor-control-border)] p-4 mt-6">
                     <div className="flex items-start gap-3">
                         <Sparkles size={20} className="text-q-accent flex-shrink-0 mt-0.5" />
                         <div>
@@ -261,8 +282,6 @@ const NoBlockStyleSelected: React.FC = () => {
 };
 
 export default EmailPropertiesPanel;
-
-
 
 
 

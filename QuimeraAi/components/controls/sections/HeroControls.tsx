@@ -306,12 +306,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
           <I18nTextArea value={data.hero.headline} onChange={(val) => setNestedData('hero.headline', val)} rows={2} />
         </AIFormControl>
-        <FontSizeSelector label={t('controls.headlineSize')} value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
 
         <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
           <I18nTextArea value={data.hero.subheadline} onChange={(val) => setNestedData('hero.subheadline', val)} rows={3} />
         </AIFormControl>
-        <FontSizeSelector label={t('controls.subheadlineSize')} value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
       </div>
 
       {/* Logo / Headline Image — optional override */}
@@ -399,14 +397,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   );
 
   const styleTab = (
-    <div className="space-y-4">      {/* ========== BACKGROUND IMAGE ========== */}
-      <BackgroundImageControl 
-        sectionKey="hero" 
-        data={data} 
-        setNestedData={setNestedData} 
-      />
-
-
+    <div className="space-y-4">
       {/* ========== TEXT LAYOUT ========== */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -503,6 +494,22 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       </div>
 
+      {/* ========== TYPOGRAPHY ========== */}
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
+          <Type size={14} />
+          {t('editor.controls.common.typography', { defaultValue: 'Tipografía' })}
+        </label>
+        <FontSizeSelector label={t('controls.headlineSize')} value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
+        <FontSizeSelector label={t('controls.subheadlineSize')} value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
+      </div>
+
+      {/* ========== BACKGROUND IMAGE ========== */}
+      <BackgroundImageControl
+        sectionKey="hero"
+        data={data}
+        setNestedData={setNestedData}
+      />
 
       {/* ========== COLORS ========== */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
