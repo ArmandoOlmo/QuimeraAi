@@ -1329,11 +1329,15 @@ function normalizeProduct(row: any) {
   const data = row?.data || {};
   return {
     id: row.id,
+    projectId: row.project_id || data.projectId || null,
+    storeId: row.store_id || data.storeId || null,
+    publicStoreId: row.public_store_id || data.publicStoreId || null,
     name: row.name || data.name,
     status: row.status || data.status,
     price: Number(row.price ?? data.price ?? 0),
-    quantity: Number(row.quantity ?? data.quantity ?? 0),
+    quantity: Number(row.quantity ?? row.inventory_quantity ?? data.quantity ?? data.inventoryQuantity ?? data.inventory_quantity ?? 0),
     trackInventory: row.track_inventory ?? data.trackInventory ?? data.track_inventory ?? true,
+    lowStockThreshold: Number(row.low_stock_threshold ?? data.lowStockThreshold ?? data.low_stock_threshold ?? 5),
     hasVariants: row.has_variants ?? data.hasVariants ?? false,
     variants: row.variants || data.variants || [],
     images: row.images || data.images || [],
@@ -1667,6 +1671,8 @@ async function buildStoreCanonicalItems(projectId: string, items: any[]) {
       variantName,
       imageUrl: product.images?.[0]?.url || product.images?.[0] || null,
       quantity: Number(item.quantity),
+      trackInventory: product.trackInventory !== false,
+      availableQuantity: product.trackInventory !== false ? availableQuantity : null,
       unitPrice: roundMoney(price),
       totalPrice,
     });
@@ -1949,8 +1955,124 @@ async function validateStoreDiscount(data: any) {
   };
 }
 
+const INVENTORY_RESERVATION_TTL_MINUTES = 15;
+
+function getInventoryReservationIds(reservations: any[]) {
+  return reservations.map((reservation) => reservation?.id).filter(Boolean);
+}
+
+function getInventoryReservationMetadataValue(reservations: any[]) {
+  return getInventoryReservationIds(reservations).slice(0, 8).join(",");
+}
+
+async function reserveInventoryForStoreOrder(
+  order: any,
+  refs: { orderId?: string | null; paymentIntentId?: string | null } = {},
+) {
+  const expiresAt = new Date(Date.now() + INVENTORY_RESERVATION_TTL_MINUTES * 60_000).toISOString();
+  const reservations: any[] = [];
+
+  for (const item of order.data.items || []) {
+    if (item.trackInventory === false) continue;
+
+    const productId = String(item.productId || "").trim();
+    const quantity = Number(item.quantity || 0);
+    if (!productId || quantity <= 0) continue;
+
+    const variantId = item.variantId ? String(item.variantId) : "";
+    const reservationKey = `inventory:reserve:${order.checkoutIdempotencyKey}:${productId}:${variantId || "default"}`;
+    const { data, error } = await supabase.rpc("reserve_store_inventory_line", {
+      p_project_id: order.projectId,
+      p_store_id: order.context.storeId,
+      p_public_store_id: order.context.storeId,
+      p_order_id: refs.orderId || null,
+      p_checkout_idempotency_key: order.checkoutIdempotencyKey,
+      p_payment_intent_id: refs.paymentIntentId || null,
+      p_product_id: productId,
+      p_variant_id: variantId || null,
+      p_quantity: quantity,
+      p_expires_at: expiresAt,
+      p_idempotency_key: reservationKey,
+      p_metadata: {
+        cartHash: order.cartHash,
+        orderNumber: order.orderNumber,
+        productName: item.productName || item.name || "",
+        variantName: item.variantName || "",
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message || `Insufficient stock for ${item.productName || item.name || productId}`);
+    }
+    if (data) reservations.push(data);
+  }
+
+  return { reservations, expiresAt };
+}
+
+async function linkInventoryReservationsToCheckout(args: {
+  checkoutIdempotencyKey: string;
+  orderId?: string | null;
+  paymentIntentId?: string | null;
+}) {
+  const updates: Record<string, unknown> = { updated_at: nowIso() };
+  if (args.orderId !== undefined) updates.order_id = args.orderId;
+  if (args.paymentIntentId !== undefined) updates.payment_intent_id = args.paymentIntentId;
+
+  const { error } = await supabase
+    .from("store_inventory_reservations")
+    .update(updates)
+    .eq("checkout_idempotency_key", args.checkoutIdempotencyKey)
+    .eq("status", "active");
+
+  if (error) throw error;
+}
+
+async function persistOrderInventoryReferences(orderId: string, orderData: any, reservations: any[], expiresAt?: string | null) {
+  const reservationIds = getInventoryReservationIds(reservations);
+  if (reservationIds.length === 0) return;
+
+  const { error } = await supabase
+    .from("store_orders")
+    .update({
+      data: {
+        ...orderData,
+        inventory: {
+          ...(orderData.inventory || {}),
+          reservationIds,
+          reservedAt: orderData.inventory?.reservedAt || nowIso(),
+          reservationExpiresAt: expiresAt || orderData.inventory?.reservationExpiresAt || null,
+        },
+        updatedAt: nowIso(),
+      },
+      updated_at: nowIso(),
+    })
+    .eq("id", orderId);
+
+  if (error) throw error;
+}
+
+async function releaseInventoryReservationsForCheckout(checkoutIdempotencyKey: string, reason = "checkout_aborted") {
+  const { data: reservations, error } = await supabase
+    .from("store_inventory_reservations")
+    .select("id")
+    .eq("checkout_idempotency_key", checkoutIdempotencyKey)
+    .eq("status", "active");
+  if (error) throw error;
+
+  for (const reservation of reservations || []) {
+    const { error: releaseError } = await supabase.rpc("release_store_inventory_reservation", {
+      p_reservation_id: reservation.id,
+      p_status: "released",
+      p_reason: reason,
+      p_released_at: nowIso(),
+    });
+    if (releaseError) throw releaseError;
+  }
+}
+
 async function createStoreCheckoutIntent(data: any, authUserId?: string | null) {
-  const order = await buildStoreOrder(data, authUserId);
+  const order: any = await buildStoreOrder(data, authUserId);
 
   const existing = await getExistingCheckoutOrder(order.checkoutIdempotencyKey);
 
@@ -1962,17 +2084,60 @@ async function createStoreCheckoutIntent(data: any, authUserId?: string | null) 
     }
 
     const reusablePaymentIntent = await findReusableStorePaymentIntent(existing);
-    if (reusablePaymentIntent) return formatStoredCheckoutResponse(existing, reusablePaymentIntent);
+    if (reusablePaymentIntent) {
+      if (existing.payment_status !== "paid" && existingData.paymentStatus !== "paid") {
+        const inventory = await reserveInventoryForStoreOrder(order, {
+          orderId: existing.id,
+          paymentIntentId: reusablePaymentIntent.id,
+        });
+        await linkInventoryReservationsToCheckout({
+          checkoutIdempotencyKey: order.checkoutIdempotencyKey,
+          orderId: existing.id,
+          paymentIntentId: reusablePaymentIntent.id,
+        });
+        await persistOrderInventoryReferences(existing.id, existingData, inventory.reservations, inventory.expiresAt);
+      }
+      return formatStoredCheckoutResponse(existing, reusablePaymentIntent);
+    }
 
     return await replaceStoreOrderPaymentIntent(existing, order);
   }
 
-  const { paymentIntent, platformFeeAmount } = await createStorePaymentIntent(order);
-  const customer = await findOrCreateStoreCustomerForOrder(order, authUserId || null);
+  const inventory = await reserveInventoryForStoreOrder(order);
+  order.inventoryReservations = inventory.reservations;
+  order.inventoryReservationIds = getInventoryReservationIds(inventory.reservations);
+
+  let paymentIntent: Stripe.PaymentIntent;
+  let platformFeeAmount: number;
+  try {
+    const createdPaymentIntent = await createStorePaymentIntent(order);
+    paymentIntent = createdPaymentIntent.paymentIntent;
+    platformFeeAmount = createdPaymentIntent.platformFeeAmount;
+  } catch (error) {
+    await releaseInventoryReservationsForCheckout(order.checkoutIdempotencyKey, "payment_intent_creation_failed").catch((releaseError) => {
+      console.warn("[stripe-api] could not release inventory after payment intent failure:", releaseError.message);
+    });
+    throw error;
+  }
+  let customer: any = null;
+  try {
+    customer = await findOrCreateStoreCustomerForOrder(order, authUserId || null);
+  } catch (error) {
+    await releaseInventoryReservationsForCheckout(order.checkoutIdempotencyKey, "customer_resolution_failed").catch((releaseError) => {
+      console.warn("[stripe-api] could not release inventory after customer failure:", releaseError.message);
+    });
+    throw error;
+  }
 
   const orderData = {
     ...order.data,
     customerId: customer?.id || null,
+    inventory: {
+      ...(order.data.inventory || {}),
+      reservationIds: order.inventoryReservationIds,
+      reservedAt: nowIso(),
+      reservationExpiresAt: inventory.expiresAt,
+    },
     pricing: {
       ...(order.data.pricing || {}),
       platformFeeTotal: platformFeeAmount / 100,
@@ -2045,13 +2210,23 @@ async function createStoreCheckoutIntent(data: any, authUserId?: string | null) 
         return await replaceStoreOrderPaymentIntent(racedOrder, order);
       }
     }
+    await releaseInventoryReservationsForCheckout(order.checkoutIdempotencyKey, "order_insert_failed").catch((releaseError) => {
+      console.warn("[stripe-api] could not release inventory after order insert failure:", releaseError.message);
+    });
     throw error;
   }
+
+  await linkInventoryReservationsToCheckout({
+    checkoutIdempotencyKey: order.checkoutIdempotencyKey,
+    orderId: inserted.id,
+    paymentIntentId: paymentIntent.id,
+  });
 
   await stripe.paymentIntents.update(paymentIntent.id, {
     metadata: {
       ...paymentIntent.metadata,
       orderId: inserted.id,
+      inventoryReservationIds: getInventoryReservationMetadataValue(inventory.reservations),
     },
   });
 
@@ -2085,6 +2260,7 @@ async function createStorePaymentIntent(order: any, idempotencySuffix = "") {
       checkoutIdempotencyKey: order.checkoutIdempotencyKey,
       cartHash: order.cartHash,
       discountCode: order.data.discountCode || "",
+      inventoryReservationIds: getInventoryReservationMetadataValue(order.inventoryReservations || []),
     },
   }, { idempotencyKey: stripeIdempotencyKey });
 
@@ -2095,14 +2271,44 @@ async function replaceStoreOrderPaymentIntent(existing: any, order: any) {
   const existingData = getOrderData(existing);
   const existingStripe = existingData.stripe || {};
   const nextAttempt = Number(existingStripe.attempt || 1) + 1;
-  const { paymentIntent, platformFeeAmount } = await createStorePaymentIntent(order, `_retry_${nextAttempt}`);
-  const customer = await findOrCreateStoreCustomerForOrder(order, order.data.authUserId || existing.user_id || null);
+  const inventory = await reserveInventoryForStoreOrder(order, { orderId: existing.id });
+  order.inventoryReservations = inventory.reservations;
+  order.inventoryReservationIds = getInventoryReservationIds(inventory.reservations);
+
+  let paymentIntent: Stripe.PaymentIntent;
+  let platformFeeAmount: number;
+  try {
+    const createdPaymentIntent = await createStorePaymentIntent(order, `_retry_${nextAttempt}`);
+    paymentIntent = createdPaymentIntent.paymentIntent;
+    platformFeeAmount = createdPaymentIntent.platformFeeAmount;
+  } catch (error) {
+    await releaseInventoryReservationsForCheckout(order.checkoutIdempotencyKey, "payment_intent_retry_failed").catch((releaseError) => {
+      console.warn("[stripe-api] could not release inventory after retry failure:", releaseError.message);
+    });
+    throw error;
+  }
+  let customer: any = null;
+  try {
+    customer = await findOrCreateStoreCustomerForOrder(order, order.data.authUserId || existing.user_id || null);
+  } catch (error) {
+    await releaseInventoryReservationsForCheckout(order.checkoutIdempotencyKey, "customer_resolution_retry_failed").catch((releaseError) => {
+      console.warn("[stripe-api] could not release inventory after retry customer failure:", releaseError.message);
+    });
+    throw error;
+  }
   const nextData = {
     ...order.data,
     customerId: customer?.id || existing.customer_id || existingData.customerId || null,
     status: "pending",
     paymentStatus: "pending",
     updatedAt: nowIso(),
+    inventory: {
+      ...(existingData.inventory || {}),
+      ...(order.data.inventory || {}),
+      reservationIds: order.inventoryReservationIds,
+      reservedAt: existingData.inventory?.reservedAt || nowIso(),
+      reservationExpiresAt: inventory.expiresAt,
+    },
     pricing: {
       ...(order.data.pricing || {}),
       platformFeeTotal: platformFeeAmount / 100,
@@ -2152,10 +2358,17 @@ async function replaceStoreOrderPaymentIntent(existing: any, order: any) {
     .single();
   if (error) throw error;
 
+  await linkInventoryReservationsToCheckout({
+    checkoutIdempotencyKey: order.checkoutIdempotencyKey,
+    orderId: existing.id,
+    paymentIntentId: paymentIntent.id,
+  });
+
   await stripe.paymentIntents.update(paymentIntent.id, {
     metadata: {
       ...paymentIntent.metadata,
       orderId: existing.id,
+      inventoryReservationIds: getInventoryReservationMetadataValue(inventory.reservations),
     },
   });
 

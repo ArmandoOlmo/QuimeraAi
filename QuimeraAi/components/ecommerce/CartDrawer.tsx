@@ -151,6 +151,11 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
     const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
     const total = Math.max(0, subtotal - discountAmount);
     const remainingForFreeShipping = freeShippingThreshold > 0 ? Math.max(0, freeShippingThreshold - subtotal) : 0;
+    const hasInventoryIssue = items.some((item) => (
+        item.trackInventory === true &&
+        typeof item.availableQuantity === 'number' &&
+        (item.availableQuantity <= 0 || item.quantity > item.availableQuantity)
+    ));
 
     const handleApplyDiscount = async () => {
         if (!discountInput.trim()) return;
@@ -311,6 +316,16 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                                                 {item.variantName}
                                             </p>
                                         )}
+                                        {item.trackInventory && typeof item.availableQuantity === 'number' && item.availableQuantity > 0 && item.quantity >= item.availableQuantity && (
+                                            <p className="mt-1 text-xs font-medium text-amber-600">
+                                                Solo quedan {item.availableQuantity}
+                                            </p>
+                                        )}
+                                        {item.trackInventory && typeof item.availableQuantity === 'number' && item.availableQuantity <= 0 && (
+                                            <p className="mt-1 text-xs font-medium text-red-600">
+                                                Agotado
+                                            </p>
+                                        )}
                                         <p className="font-bold mt-1" style={{ color: effectiveColors.priceColor }}>
                                             {currencySymbol}{item.price.toFixed(2)}
                                         </p>
@@ -344,6 +359,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                                                         e.stopPropagation();
                                                         onUpdateQuantity(item.productId, item.quantity + 1, item.variantId);
                                                     }}
+                                                    disabled={item.trackInventory === true && typeof item.availableQuantity === 'number' && item.quantity >= item.availableQuantity}
                                                     className="p-1 rounded-md transition-colors hover:opacity-70 cursor-pointer"
                                                     style={{ 
                                                         backgroundColor: effectiveColors.borderColor, 
@@ -468,7 +484,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                         {/* Checkout Button */}
                         <button
                             onClick={onCheckout}
-                            className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                            disabled={hasInventoryIssue}
+                            className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                             style={{
                                 backgroundColor: effectiveColors.buttonBackground,
                                 color: effectiveColors.buttonText
@@ -477,6 +494,11 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                             {t('ecommerce.storefront.cart.checkout')}
                             <ArrowRight size={20} />
                         </button>
+                        {hasInventoryIssue && (
+                            <p className="text-center text-xs font-medium text-red-600">
+                                Ajusta productos agotados antes de continuar.
+                            </p>
+                        )}
 
                         <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: effectiveColors.text }}>
                             <span className="inline-flex items-center gap-2 rounded-lg border px-3 py-2" style={{ borderColor: effectiveColors.borderColor }}>
@@ -504,5 +526,4 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
 };
 
 export default CartDrawer;
-
 

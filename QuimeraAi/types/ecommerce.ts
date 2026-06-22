@@ -274,6 +274,9 @@ export interface CartItem {
     image?: string;         // Alias for imageUrl, used in some components
     quantity: number;
     price: number;
+    trackInventory?: boolean;
+    availableQuantity?: number;
+    lowStockThreshold?: number;
 }
 
 export interface Cart {

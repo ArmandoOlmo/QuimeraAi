@@ -309,7 +309,7 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
         async (productId: string, quantity: number) => {
             const { error } = await supabase
                 .from('store_products')
-                .update({ quantity })
+                .update({ quantity, inventory_quantity: quantity })
                 .eq('id', productId);
 
             if (error) throw error;

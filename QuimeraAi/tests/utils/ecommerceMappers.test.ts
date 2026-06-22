@@ -13,12 +13,13 @@ describe('ecommerceMappers products', () => {
             category_id: null,
             cost_price: 12.5,
             quantity: 4,
+            inventory_quantity: 4,
             data: {
                 metaTitle: 'SEO title',
                 metaDescription: 'SEO description',
             },
         });
-        expect(mapProductToDB({ quantity: 4 })).not.toHaveProperty('inventory_quantity');
+        expect(mapProductToDB({ quantity: 4 })).toHaveProperty('inventory_quantity', 4);
     });
 
     it('hydrates cost and SEO fields from flat columns and JSON data', () => {
