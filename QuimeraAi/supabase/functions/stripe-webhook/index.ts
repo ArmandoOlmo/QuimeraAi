@@ -85,6 +85,7 @@ serve(async (req) => {
         await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
         break;
       case "payment_intent.payment_failed":
+      case "payment_intent.canceled":
         await handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
         break;
       case "charge.refunded":
@@ -670,7 +671,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     })
     .eq("id", order.id);
 
-  await decrementInventoryForPaidOrder({
+  const paidOrder = {
     ...order,
     status: "processing",
     payment_status: "paid",
@@ -678,30 +679,21 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     stripe_payment_intent_id: paymentIntent.id,
     paid_at: paidAt,
     data: paidOrderData,
-  }, paymentIntent.id, paidAt);
+  };
+
+  const committedReservations = await commitInventoryReservationsForPaidOrder(paidOrder, paymentIntent.id, paidAt);
+  if (!committedReservations) {
+    await decrementInventoryForPaidOrder(paidOrder, paymentIntent.id, paidAt);
+  }
 
   await incrementDiscountUsageForPaidOrder(order.id, paidAt);
-  await updateCustomerAccountStatsForPaidOrder({
-    ...order,
-    status: "processing",
-    payment_status: "paid",
-    payment_intent_id: paymentIntent.id,
-    stripe_payment_intent_id: paymentIntent.id,
-    paid_at: paidAt,
-    data: paidOrderData,
-  }, paidAt);
+  await updateCustomerAccountStatsForPaidOrder(paidOrder, paidAt);
 
   try {
     const emailResults = await sendPaidOrderTransactionalEmails({
       supabase,
       order: {
-        ...order,
-        status: "processing",
-        payment_status: "paid",
-        payment_intent_id: paymentIntent.id,
-        stripe_payment_intent_id: paymentIntent.id,
-        paid_at: paidAt,
-        data: paidOrderData,
+        ...paidOrder,
       },
       paidAt,
       resendApiKey: RESEND_API_KEY,
@@ -718,6 +710,131 @@ function readOrderItems(order: any): any[] {
   if (Array.isArray(order.items)) return order.items;
   if (Array.isArray(order.data?.items)) return order.data.items;
   return [];
+}
+
+function readOrderCheckoutIdempotencyKey(order: any): string | null {
+  return order.checkout_idempotency_key || order.data?.checkoutIdempotencyKey || null;
+}
+
+async function loadInventoryReservationsForOrder(order: any, paymentIntentId?: string | null, statuses = ["active", "committed"]) {
+  const reservationsById = new Map<string, any>();
+
+  const addReservations = (rows: any[] | null) => {
+    for (const row of rows || []) {
+      if (row?.id) reservationsById.set(row.id, row);
+    }
+  };
+
+  if (order.id) {
+    const { data, error } = await supabase
+      .from("store_inventory_reservations")
+      .select("*")
+      .eq("order_id", String(order.id))
+      .in("status", statuses);
+    if (error) throw error;
+    addReservations(data);
+  }
+
+  if (paymentIntentId) {
+    const { data, error } = await supabase
+      .from("store_inventory_reservations")
+      .select("*")
+      .eq("payment_intent_id", paymentIntentId)
+      .in("status", statuses);
+    if (error) throw error;
+    addReservations(data);
+  }
+
+  const checkoutIdempotencyKey = readOrderCheckoutIdempotencyKey(order);
+  if (checkoutIdempotencyKey) {
+    const { data, error } = await supabase
+      .from("store_inventory_reservations")
+      .select("*")
+      .eq("checkout_idempotency_key", checkoutIdempotencyKey)
+      .in("status", statuses);
+    if (error) throw error;
+    addReservations(data);
+  }
+
+  return Array.from(reservationsById.values());
+}
+
+async function persistOrderInventoryMetadata(order: any, inventoryUpdate: Record<string, unknown>, updatedAt: string) {
+  const { data: latestOrder, error } = await supabase
+    .from("store_orders")
+    .select("data")
+    .eq("id", order.id)
+    .maybeSingle();
+  if (error) throw error;
+
+  const latestData = latestOrder?.data || order.data || {};
+  const { error: updateError } = await supabase
+    .from("store_orders")
+    .update({
+      data: {
+        ...latestData,
+        inventory: {
+          ...(latestData.inventory || {}),
+          ...inventoryUpdate,
+        },
+        updatedAt,
+      },
+      updated_at: updatedAt,
+    })
+    .eq("id", order.id);
+  if (updateError) throw updateError;
+}
+
+async function commitInventoryReservationsForPaidOrder(order: any, paymentIntentId: string, paidAt: string): Promise<boolean> {
+  const reservations = await loadInventoryReservationsForOrder(order, paymentIntentId, ["active", "committed"]);
+  if (reservations.length === 0) return false;
+
+  const committedReservations: any[] = [];
+  for (const reservation of reservations) {
+    const { data, error } = await supabase.rpc("commit_store_inventory_reservation", {
+      p_reservation_id: reservation.id,
+      p_order_id: String(order.id),
+      p_payment_intent_id: paymentIntentId,
+      p_idempotency_key: `inventory:movement:commit:${reservation.id}:${paymentIntentId}`,
+      p_committed_at: paidAt,
+    });
+    if (error) throw error;
+    committedReservations.push(data || reservation);
+  }
+
+  await persistOrderInventoryMetadata(order, {
+    reservationIds: committedReservations.map((reservation) => reservation.id).filter(Boolean),
+    committedAt: paidAt,
+    paymentIntentId,
+  }, paidAt);
+
+  return true;
+}
+
+async function releaseInventoryReservationsForOrder(
+  order: any,
+  paymentIntentId: string,
+  releasedAt: string,
+  reason: string,
+) {
+  const reservations = await loadInventoryReservationsForOrder(order, paymentIntentId, ["active"]);
+  if (reservations.length === 0) return;
+
+  for (const reservation of reservations) {
+    const { error } = await supabase.rpc("release_store_inventory_reservation", {
+      p_reservation_id: reservation.id,
+      p_status: "released",
+      p_reason: reason,
+      p_released_at: releasedAt,
+    });
+    if (error) throw error;
+  }
+
+  await persistOrderInventoryMetadata(order, {
+    releasedAt,
+    releaseReason: reason,
+    paymentIntentId,
+  }, releasedAt);
 }
 
 function asNumber(value: unknown, fallback = 0): number {
@@ -1179,6 +1296,20 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
     .from("store_orders")
     .update(updatePayload)
     .eq("id", order.id);
+
+  await releaseInventoryReservationsForOrder(
+    {
+      ...order,
+      status: nextStatus,
+      payment_status: "failed",
+      payment_intent_id: paymentIntent.id,
+      stripe_payment_intent_id: paymentIntent.id,
+      data: updatePayload.data,
+    },
+    paymentIntent.id,
+    failedAt,
+    nextStatus === "cancelled" ? "payment_intent_cancelled" : "payment_intent_failed",
+  );
 }
 
 async function findStoreOrderForPaymentIntent(paymentIntent: Stripe.PaymentIntent) {

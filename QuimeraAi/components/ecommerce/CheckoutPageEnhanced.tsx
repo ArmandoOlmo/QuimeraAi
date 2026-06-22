@@ -98,6 +98,7 @@ interface StripeCheckoutFormProps {
     shippingOptions: ShippingOption[];
     formData: CheckoutFormData;
     currentStep: CheckoutStep;
+    cartInventoryIssues: string[];
     onFormDataChange: (field: string, value: string | boolean) => void;
     onStepChange: (step: CheckoutStep) => void;
     onShippingSelect: (option: ShippingOption) => void;
@@ -123,6 +124,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
     shippingOptions,
     formData,
     currentStep,
+    cartInventoryIssues,
     onFormDataChange,
     onStepChange,
     onShippingSelect,
@@ -147,6 +149,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
     const currencySymbol = storeSettings?.currencySymbol || '$';
     const storeName = storeSettings?.storeName || 'Tienda';
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    const hasCartInventoryIssues = cartInventoryIssues.length > 0;
     const getCheckoutIdempotencyKey = useCallback(() => {
         const cartSignature = JSON.stringify({
             storeId,
@@ -217,6 +220,10 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
         setError(null);
 
         try {
+            if (hasCartInventoryIssues) {
+                throw new Error(cartInventoryIssues[0]);
+            }
+
             if (!validateInformation()) {
                 throw new Error('Completa tu informacion de contacto y envio antes de usar pago express');
             }
@@ -299,6 +306,10 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
         setError(null);
 
         try {
+            if (hasCartInventoryIssues) {
+                throw new Error(cartInventoryIssues[0]);
+            }
+
             // 1. Submit elements (validates form data)
             const { error: submitError } = await (elements as any).submit();
             if (submitError) {
@@ -469,6 +480,15 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                                 <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">
                                     <X size={18} />
                                 </button>
+                            </div>
+                        )}
+                        {hasCartInventoryIssues && !error && (
+                            <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl flex items-start gap-3">
+                                <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+                                <div>
+                                    <p className="font-medium text-red-700 dark:text-red-400">Inventario insuficiente</p>
+                                    <p className="text-sm text-red-600 dark:text-red-300">{cartInventoryIssues[0]}</p>
+                                </div>
                             </div>
                         )}
 
@@ -770,7 +790,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                                     </button>
                                     <button
                                         onClick={handleSubmitPayment}
-                                        disabled={isProcessing || !paymentReady}
+                                        disabled={isProcessing || !paymentReady || hasCartInventoryIssues}
                                         className="flex-1 py-3.5 rounded-xl text-white font-bold disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:shadow-lg"
                                         style={{ backgroundColor: primaryColor }}
                                     >
@@ -865,6 +885,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                                                 </span>
                                                 <button
                                                     onClick={() => onUpdateQuantity(item.productId, item.quantity + 1, item.variantId)}
+                                                    disabled={item.trackInventory === true && typeof item.availableQuantity === 'number' && item.quantity >= item.availableQuantity}
                                                     className="w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                                 >
                                                     <Plus size={12} />
@@ -1090,6 +1111,17 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
         return Math.max(0, subtotal - discountAmount + shippingCost + taxAmount);
     }, [subtotal, discountAmount, shippingCost, taxAmount]);
 
+    const cartInventoryIssues = useMemo(() => {
+        return cartItems
+            .filter((item) => item.trackInventory === true && typeof item.availableQuantity === 'number')
+            .filter((item) => item.availableQuantity! <= 0 || item.quantity > item.availableQuantity!)
+            .map((item) => {
+                const name = item.productName || item.name || 'Producto';
+                if (item.availableQuantity! <= 0) return `${name} esta agotado.`;
+                return `${name} solo tiene ${item.availableQuantity} unidades disponibles.`;
+            });
+    }, [cartItems]);
+
     // Load store settings and cart
     useEffect(() => {
         const loadData = async () => {
@@ -1217,7 +1249,11 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
         setCartItems((prev) => {
             const newItems = prev.map((item) => {
                 if (item.productId === productId && item.variantId === variantId) {
-                    return { ...item, quantity };
+                    const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
+                    const nextQuantity = item.trackInventory === true && typeof item.availableQuantity === 'number'
+                        ? Math.min(requestedQuantity, Math.max(1, item.availableQuantity))
+                        : requestedQuantity;
+                    return { ...item, quantity: nextQuantity };
                 }
                 return item;
             });
@@ -1344,6 +1380,7 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
                 shippingOptions={shippingOptions}
                 formData={formData}
                 currentStep={currentStep}
+                cartInventoryIssues={cartInventoryIssues}
                 onFormDataChange={handleFormDataChange}
                 onStepChange={setCurrentStep}
                 onShippingSelect={setSelectedShipping}
@@ -1359,7 +1396,3 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
 };
 
 export default CheckoutPageEnhanced;
-
-
-
-

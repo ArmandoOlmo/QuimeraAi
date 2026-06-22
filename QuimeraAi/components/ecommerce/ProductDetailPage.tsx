@@ -44,6 +44,11 @@ interface ProductDetailPageProps {
 
 type TabType = 'description' | 'specifications' | 'shipping';
 
+const toKnownQuantity = (value: unknown): number | undefined => {
+    const parsed = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+};
+
 const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     storeId,
     productSlug,
@@ -112,7 +117,20 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         : 0;
 
     const currentPrice = selectedVariant?.price || product?.price || 0;
-    const inStock = selectedVariant ? selectedVariant.inStock : (product?.inStock ?? true);
+    const knownAvailableQuantity = selectedVariant?.inStock === false || product?.inStock === false
+        ? 0
+        : toKnownQuantity(selectedVariant?.quantity) ?? toKnownQuantity(product?.quantity);
+    const hasKnownInventoryLimit = product?.trackInventory !== false && knownAvailableQuantity !== undefined;
+    const maxQuantity = hasKnownInventoryLimit ? Math.max(0, knownAvailableQuantity) : undefined;
+    const inStock = selectedVariant
+        ? selectedVariant.inStock !== false && (!hasKnownInventoryLimit || maxQuantity! > 0)
+        : (product?.inStock ?? true) && (!hasKnownInventoryLimit || maxQuantity! > 0);
+
+    useEffect(() => {
+        if (maxQuantity !== undefined && quantity > maxQuantity) {
+            setQuantity(Math.max(1, maxQuantity));
+        }
+    }, [maxQuantity, quantity]);
 
     // Variant options grouped by type
     const variantOptions = useMemo(() => {
@@ -146,7 +164,10 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     };
 
     const incrementQuantity = () => {
-        setQuantity((q) => q + 1);
+        setQuantity((q) => {
+            if (maxQuantity !== undefined) return Math.min(maxQuantity, q + 1);
+            return q + 1;
+        });
     };
 
     const decrementQuantity = () => {
@@ -156,8 +177,9 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     };
 
     const handleAddToCart = () => {
-        if (product && onAddToCart) {
-            onAddToCart(product, quantity, selectedVariant);
+        if (product && onAddToCart && inStock) {
+            const cartQuantity = maxQuantity !== undefined ? Math.min(quantity, maxQuantity) : quantity;
+            onAddToCart(product, cartQuantity, selectedVariant);
             setAddedToCart(true);
             setTimeout(() => setAddedToCart(false), 2000);
         }
@@ -435,7 +457,9 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                         En stock
                                         {product.lowStock && (
                                             <span className="ml-2" style={{ color: colors?.warning }}>
-                                                - ¡Últimas unidades!
+                                                {knownAvailableQuantity !== undefined
+                                                    ? `- Solo quedan ${knownAvailableQuantity}`
+                                                    : '- ¡Últimas unidades!'}
                                             </span>
                                         )}
                                     </span>
@@ -511,7 +535,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                     </span>
                                     <button
                                         onClick={incrementQuantity}
-                                        className="p-3 transition-colors rounded-r-lg hover:opacity-80"
+                                        disabled={maxQuantity !== undefined && quantity >= maxQuantity}
+                                        className="p-3 disabled:opacity-50 transition-colors rounded-r-lg hover:opacity-80"
                                         style={{ color: colors?.text }}
                                     >
                                         <Plus size={20} />

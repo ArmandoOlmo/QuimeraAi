@@ -5,7 +5,7 @@
  */
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
-import { CartItem, Product, ProductVariant } from '../../../types/ecommerce';
+import { CartItem } from '../../../types/ecommerce';
 import { PublicProduct, PublicProductVariant } from '../hooks/usePublicProduct';
 
 interface CartContextValue {
@@ -34,6 +34,25 @@ interface CartContextValue {
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
+
+const toKnownQuantity = (value: unknown): number | undefined => {
+    const parsed = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+};
+
+const getKnownAvailableQuantity = (
+    product: PublicProduct,
+    variant?: PublicProductVariant,
+): number | undefined => {
+    if (variant?.inStock === false || product.inStock === false) return 0;
+    return toKnownQuantity(variant?.quantity) ?? toKnownQuantity(product.quantity);
+};
+
+const clampCartQuantity = (item: Pick<CartItem, 'trackInventory' | 'availableQuantity'>, quantity: number): number => {
+    const requestedQuantity = Math.max(0, Math.floor(Number(quantity) || 0));
+    if (!item.trackInventory || item.availableQuantity === undefined) return requestedQuantity;
+    return Math.min(requestedQuantity, Math.max(0, item.availableQuantity));
+};
 
 interface StorefrontCartProviderProps {
     storeId: string;
@@ -100,6 +119,9 @@ export const StorefrontCartProvider: React.FC<StorefrontCartProviderProps> = ({
         variant?: PublicProductVariant
     ) => {
         setItems((prevItems) => {
+            const availableQuantity = getKnownAvailableQuantity(product, variant);
+            const trackInventory = product.trackInventory !== false;
+            const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
             const existingIndex = prevItems.findIndex(
                 (item) => item.productId === product.id && item.variantId === variant?.id
             );
@@ -107,12 +129,26 @@ export const StorefrontCartProvider: React.FC<StorefrontCartProviderProps> = ({
             if (existingIndex >= 0) {
                 // Update existing item
                 const newItems = [...prevItems];
+                const nextQuantity = clampCartQuantity({
+                    trackInventory,
+                    availableQuantity,
+                }, newItems[existingIndex].quantity + requestedQuantity);
+                if (nextQuantity <= newItems[existingIndex].quantity) return prevItems;
                 newItems[existingIndex] = {
                     ...newItems[existingIndex],
-                    quantity: newItems[existingIndex].quantity + quantity,
+                    quantity: nextQuantity,
+                    trackInventory,
+                    availableQuantity,
+                    lowStockThreshold: product.lowStockThreshold,
                 };
                 return newItems;
             }
+
+            const initialQuantity = clampCartQuantity({
+                trackInventory,
+                availableQuantity,
+            }, requestedQuantity);
+            if (initialQuantity <= 0) return prevItems;
 
             // Add new item
             const imageUrl = product.images?.[0]?.url;
@@ -123,9 +159,12 @@ export const StorefrontCartProvider: React.FC<StorefrontCartProviderProps> = ({
                 name: product.name,
                 variantName: variant?.name,
                 price: variant?.price || product.price,
-                quantity,
+                quantity: initialQuantity,
                 image: imageUrl,
                 imageUrl: imageUrl,
+                trackInventory,
+                availableQuantity,
+                lowStockThreshold: product.lowStockThreshold,
             };
 
             return [...prevItems, newItem];
@@ -156,14 +195,15 @@ export const StorefrontCartProvider: React.FC<StorefrontCartProviderProps> = ({
         }
 
         setItems((prevItems) =>
-            prevItems.map((item) => {
+            prevItems.flatMap((item) => {
                 // Normalize variantId comparison
                 const itemVariantId = item.variantId || undefined;
                 const targetVariantId = variantId || undefined;
                 if (item.productId === productId && itemVariantId === targetVariantId) {
-                    return { ...item, quantity };
+                    const nextQuantity = clampCartQuantity(item, quantity);
+                    return nextQuantity > 0 ? [{ ...item, quantity: nextQuantity }] : [];
                 }
-                return item;
+                return [item];
             })
         );
     }, [removeItem]);

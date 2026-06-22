@@ -29,6 +29,7 @@ export interface PublicProductVariant {
     name: string;
     sku?: string;
     price: number;
+    quantity?: number;
     options?: Array<{ name: string; value: string }>;
     inStock: boolean;
 }
@@ -59,6 +60,8 @@ export interface PublicProduct {
     tags?: string[];
     variants?: PublicProductVariant[];
     trackInventory: boolean;
+    quantity?: number;
+    lowStockThreshold?: number;
     inStock: boolean;
     lowStock: boolean;
     isFeatured?: boolean;           // Is this a featured product

@@ -200,7 +200,10 @@ export const mapProductToDB = (product: Partial<Product>): DbRecord => {
     if (product.currency !== undefined) data.currency = product.currency;
     if (product.sku !== undefined) data.sku = product.sku;
     if (product.barcode !== undefined) data.barcode = product.barcode;
-    if (product.quantity !== undefined) data.quantity = product.quantity;
+    if (product.quantity !== undefined) {
+        data.quantity = product.quantity;
+        data.inventory_quantity = product.quantity;
+    }
     if (product.trackInventory !== undefined) data.track_inventory = product.trackInventory;
     if (product.lowStockThreshold !== undefined) data.low_stock_threshold = product.lowStockThreshold;
     if (product.images !== undefined) data.images = product.images;
