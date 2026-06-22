@@ -55,3 +55,6 @@ QUIBO_DEPLOYMENT_INFO.md
 **/serviceAccount*.json
 **/*-credentials.json
 users.json
+
+# Local Claude/Codex worktrees should never be committed
+/.claude/worktrees/
