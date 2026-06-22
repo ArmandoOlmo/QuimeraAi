@@ -262,6 +262,62 @@ export interface AutomationBlueprint extends BlueprintModuleState {
     }>;
 }
 
+export type CrossModuleSyncStatus = 'not_started' | 'previewed' | 'synced_draft' | 'dismissed';
+export type CrossModuleSyncModuleStatus = 'not_started' | 'previewed' | 'synced_draft' | 'skipped';
+export type CrossModuleSyncModule = 'chatbot' | 'leads' | 'emailMarketing' | 'analytics';
+
+export interface CrossModuleSyncDraft {
+    id: string;
+    syncKey: string;
+    module: CrossModuleSyncModule;
+    itemType: string;
+    name: string;
+    status: 'draft';
+    enabled: false;
+    active: false;
+    needsReview: true;
+    generatedByAI: true;
+    userModified: boolean;
+    safeToEdit: true;
+    source: 'ai-studio-c3';
+    createdAt: string;
+    updatedAt: string;
+    description?: string;
+    content?: string;
+    triggerType?: string;
+    subjectDraft?: string;
+    bodyOutlineDraft?: string;
+    variablesNeeded?: string[];
+    readinessBlockers?: string[];
+    metadata?: Record<string, unknown>;
+}
+
+export interface CrossModuleSyncModuleState {
+    status: CrossModuleSyncModuleStatus;
+    refs: string[];
+    drafts: CrossModuleSyncDraft[];
+}
+
+export interface CrossModuleSyncReadiness {
+    chatbotReady: boolean;
+    leadTagsReady: boolean;
+    emailFlowsReady: boolean;
+    analyticsReady: boolean;
+    needsMerchantReview: boolean;
+}
+
+export interface CrossModuleSyncState {
+    status: CrossModuleSyncStatus;
+    syncedAt?: string;
+    previewedAt?: string;
+    chatbot?: CrossModuleSyncModuleState;
+    leads?: CrossModuleSyncModuleState;
+    emailMarketing?: CrossModuleSyncModuleState;
+    analytics?: CrossModuleSyncModuleState;
+    warnings: string[];
+    readiness: CrossModuleSyncReadiness;
+}
+
 export interface BusinessBlueprint {
     blueprintVersion: string;
     schemaVersion: typeof BUSINESS_BLUEPRINT_SCHEMA_VERSION;
@@ -292,6 +348,7 @@ export interface BusinessBlueprint {
     financeBlueprint: FinanceBlueprint;
     analyticsBlueprint: AnalyticsBlueprint;
     automationBlueprint: AutomationBlueprint;
+    crossModuleSync?: CrossModuleSyncState;
 }
 
 export type BusinessBlueprintModuleKey =
