@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     buildStorefrontCatalogUrl,
     isGenericStorefrontCatalogLink,
+    normalizeStorefrontHrefForWebsiteContext,
     parseStorefrontUrl,
 } from '../../utils/storefrontRouter';
 
@@ -60,5 +61,34 @@ describe('storefrontRouter', () => {
             view: 'order-confirmation',
             params: { orderId: 'order_123' },
         });
+    });
+
+    it('normalizes storefront links for generated website/editor contexts', () => {
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc', 'abc')).toBe('/tienda');
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/', 'abc')).toBe('/tienda');
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/products', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/catalog', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/shop', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/tienda/productos', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/tienda/catalogo', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/product/red-bike', 'abc')).toBe('/tienda/producto/red-bike');
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/category/bikes', 'abc')).toBe('/tienda/categoria/bikes');
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/checkout', 'abc')).toBe('/checkout');
+        expect(normalizeStorefrontHrefForWebsiteContext('#store', 'abc')).toBe('/tienda');
+        expect(normalizeStorefrontHrefForWebsiteContext('#store/products', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('/products', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('/catalog', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('/shop', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('/tienda', 'abc')).toBe('/tienda');
+        expect(normalizeStorefrontHrefForWebsiteContext('/tienda/productos', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('/tienda/catalogo', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('/tienda/producto/red-bike', 'abc')).toBe('/tienda/producto/red-bike');
+        expect(normalizeStorefrontHrefForWebsiteContext('/tienda/categoria/bikes', 'abc')).toBe('/tienda/categoria/bikes');
+    });
+
+    it('normalizes same-origin and local absolute storefront links without intercepting external URLs', () => {
+        expect(normalizeStorefrontHrefForWebsiteContext(`${window.location.origin}/store/abc/products`, 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('http://127.0.0.1:3000/store/abc/products', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('https://example.com/store/abc', 'abc')).toBeNull();
     });
 });
