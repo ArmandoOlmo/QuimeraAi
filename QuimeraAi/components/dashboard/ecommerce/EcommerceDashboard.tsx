@@ -708,23 +708,26 @@ const AiStarterContentPrompt: React.FC<AiStarterContentPromptProps> = ({
     const [error, setError] = useState<string | null>(null);
     const ecommerceBlueprint = businessBlueprint.ecommerceBlueprint;
     const storefrontBlueprint = businessBlueprint.storefrontBlueprint;
+
+    if (!ecommerceBlueprint) return null;
+
+    const starterProducts = ecommerceBlueprint.starterProducts || [];
+    const categorySuggestions = ecommerceBlueprint.productCategories || ecommerceBlueprint.categories || [];
     const starterStatus = localStatus || ecommerceBlueprint.starterContentStatus || 'not_started';
     const isVisible = ecommerceBlueprint.enabled &&
         starterStatus !== 'created_draft' &&
         starterStatus !== 'dismissed' &&
-        ((ecommerceBlueprint.productCategories || ecommerceBlueprint.categories || []).length > 0 ||
-            ecommerceBlueprint.starterProducts.length > 0);
+        (categorySuggestions.length > 0 || starterProducts.length > 0);
 
     if (!isVisible) return null;
 
     const categoryNames = uniqueStarterNames([
-        ...(ecommerceBlueprint.productCategories || ecommerceBlueprint.categories || []),
-        ...ecommerceBlueprint.starterProducts.map(product => product.category),
+        ...categorySuggestions,
+        ...starterProducts.map(product => product.category),
     ]);
-    const starterProducts = ecommerceBlueprint.starterProducts;
     const suggestedProductCount = starterProducts.length;
     const suggestedGiftCards = ecommerceBlueprint.giftCardsEnabled || ecommerceBlueprint.giftCards?.enabled;
-    const preset = storefrontBlueprint.themePreset || storefrontBlueprint.templatePreset || t('common.draft', 'Borrador');
+    const preset = storefrontBlueprint?.themePreset || storefrontBlueprint?.templatePreset || t('common.draft', 'Borrador');
     const isBusy = Boolean(action);
 
     const persistStatus = async (status: EcommerceStarterContentStatus, nextResult?: StarterContentResult) => {
@@ -974,6 +977,9 @@ const AiCrossModuleSyncPrompt: React.FC<AiCrossModuleSyncPromptProps> = ({
     const [error, setError] = useState<string | null>(null);
     const ecommerceBlueprint = businessBlueprint.ecommerceBlueprint;
     const storefrontBlueprint = businessBlueprint.storefrontBlueprint;
+
+    if (!ecommerceBlueprint) return null;
+
     const starterStatus = ecommerceBlueprint.starterContentStatus || 'not_started';
     const syncStatus = localStatus || businessBlueprint.crossModuleSync?.status || 'not_started';
     const isVisible = ecommerceBlueprint.enabled &&
@@ -1589,6 +1595,7 @@ const OverviewView: React.FC<OverviewProps> = ({
         failed: t('ecommerce.overviewPro.payment.failed', 'Fallido'),
         refunded: t('ecommerce.overviewPro.payment.refunded', 'Reembolsado'),
         partially_refunded: t('ecommerce.overviewPro.payment.partiallyRefunded', 'Parcial'),
+        cancelled: t('ecommerce.overviewPro.payment.cancelled', 'Cancelado'),
     };
     const recentOrders = orders.slice(0, 5);
     const productsToPromote = topProducts.length > 0

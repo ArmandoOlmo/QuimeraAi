@@ -51,6 +51,9 @@ const toTimestamp = (value: unknown): StoredTimestamp => {
     return toStoredTimestamp(undefined);
 };
 
+const toOptionalTimestamp = (value: unknown): StoredTimestamp | undefined =>
+    value === undefined || value === null || value === '' ? undefined : toTimestamp(value);
+
 const ORDER_STATUSES: ReadonlySet<Order['status']> = new Set([
     'pending',
     'paid',
@@ -67,12 +70,16 @@ const PAYMENT_STATUSES: ReadonlySet<Order['paymentStatus']> = new Set([
     'failed',
     'refunded',
     'partially_refunded',
+    'cancelled',
 ]);
 
 const FULFILLMENT_STATUSES: ReadonlySet<Order['fulfillmentStatus']> = new Set([
     'unfulfilled',
+    'processing',
     'partial',
+    'partially_fulfilled',
     'fulfilled',
+    'cancelled',
 ]);
 
 const normalizeOrderStatus = (value: unknown): Order['status'] => {
@@ -298,6 +305,8 @@ export const mapOrderFromDB = (row: DbRecord): Order => {
         projectId: toOptionalString(readField(row, data, 'project_id', 'projectId')),
         storeId: toOptionalString(readField(row, data, 'store_id', 'storeId')),
         publicStoreId: toOptionalString(readField(row, data, 'public_store_id', 'publicStoreId')),
+        data,
+        admin: readJsonObject(data.admin),
         customerId: toOptionalString(readField(row, data, 'customer_id', 'customerId')),
         customerEmail: toStringValue(readField(row, data, 'customer_email', 'customerEmail')),
         customerName: toStringValue(readField(row, data, 'customer_name', 'customerName')),
@@ -336,22 +345,22 @@ export const mapOrderFromDB = (row: DbRecord): Order => {
         fulfillmentStatus: normalizeFulfillmentStatus(readField(row, data, 'fulfillment_status', 'fulfillmentStatus')),
         paymentMethod: toStringValue(readField(row, data, 'payment_method', 'paymentMethod')),
         paymentIntentId,
-        paidAt: toTimestamp(readField(row, data, 'paid_at', 'paidAt')),
+        paidAt: toOptionalTimestamp(readField(row, data, 'paid_at', 'paidAt')),
         refundedAmount,
         refunds,
         shippingMethod: toOptionalString(readField(row, data, 'shipping_method', 'shippingMethod')),
         trackingNumber: toOptionalString(readField(row, data, 'tracking_number', 'trackingNumber')),
         trackingUrl: toOptionalString(readField(row, data, 'tracking_url', 'trackingUrl')),
         carrier: toOptionalString(readField(row, data, 'carrier', 'carrier')),
-        shippedAt: toTimestamp(readField(row, data, 'shipped_at', 'shippedAt')),
-        deliveredAt: toTimestamp(readField(row, data, 'delivered_at', 'deliveredAt')),
+        shippedAt: toOptionalTimestamp(readField(row, data, 'shipped_at', 'shippedAt')),
+        deliveredAt: toOptionalTimestamp(readField(row, data, 'delivered_at', 'deliveredAt')),
         notes: toOptionalString(readField(row, data, 'notes', 'notes')),
         customerNotes: toOptionalString(readField(row, data, 'customer_notes', 'customerNotes')),
         internalNotes: toOptionalString(readField(row, data, 'internal_notes', 'internalNotes')),
         createdAt: toTimestamp(readField(row, data, 'created_at', 'createdAt')),
         updatedAt: toTimestamp(readField(row, data, 'updated_at', 'updatedAt') ?? readField(row, data, 'created_at', 'createdAt')),
-        cancelledAt: toTimestamp(readField(row, data, 'cancelled_at', 'cancelledAt')),
-        refundedAt: toTimestamp(readField(row, data, 'refunded_at', 'refundedAt')),
+        cancelledAt: toOptionalTimestamp(readField(row, data, 'cancelled_at', 'cancelledAt')),
+        refundedAt: toOptionalTimestamp(readField(row, data, 'refunded_at', 'refundedAt')),
     };
 };
 

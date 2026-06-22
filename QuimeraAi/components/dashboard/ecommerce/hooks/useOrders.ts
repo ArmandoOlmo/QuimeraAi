@@ -7,6 +7,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../../supabase';
 import { Order, OrderStatus, PaymentStatus, FulfillmentStatus, OrderItem, Address } from '../../../../types/ecommerce';
 import { mapOrderFromDB, mapOrderToDB } from '../../../../utils/ecommerceMappers';
+import {
+    appendOrderTimelineEvent,
+    canCancelOrder,
+    updateFulfillmentStatus as buildFulfillmentStatusUpdate,
+    updateMerchantNotes as buildMerchantNotesUpdate,
+    updateOrderTracking as buildOrderTrackingUpdate,
+} from '../../../../utils/ecommerce/ecommerceOrderAdminService';
 import { createRealtimeChannelName } from './realtimeChannel';
 
 interface UseOrdersOptions {
@@ -19,6 +26,14 @@ interface UseOrdersOptions {
 
 type OrderColumnUpdates = Record<string, unknown>;
 type OrderDataUpdates = Record<string, unknown>;
+type OrderAdminMutationBuilder = (
+    order: Order,
+    data: Record<string, unknown>,
+    now: string
+) => {
+    columnUpdates: OrderColumnUpdates;
+    data: Record<string, unknown>;
+};
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
     typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -113,15 +128,46 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
         []
     );
 
-    const syncOrderFromFunctionPayload = useCallback((payload: any): Order => {
-        const orderRow = payload?.order;
-        if (!orderRow) throw new Error('Order update response did not include an order');
-        const updatedOrder = mapOrderFromDB(orderRow);
-        setOrders((currentOrders) =>
-            currentOrders.map((order) => (order.id === updatedOrder.id ? updatedOrder : order))
-        );
-        return updatedOrder;
-    }, []);
+    const applyOrderAdminMutation = useCallback(
+        async (orderId: string, buildMutation: OrderAdminMutationBuilder): Promise<Order> => {
+            const now = new Date().toISOString();
+            const { data: existingRow, error: readError } = await supabase
+                .from('store_orders')
+                .select('*')
+                .eq('id', orderId)
+                .single();
+
+            if (readError) throw readError;
+
+            const existingOrder = mapOrderFromDB(existingRow);
+            const existingData = isRecord(existingRow?.data) ? existingRow.data : {};
+            const mutation = buildMutation(existingOrder, existingData, now);
+            const nextData = withoutUndefined({
+                ...mutation.data,
+                updatedAt: now,
+            });
+            const updatePayload = withoutUndefined({
+                ...mutation.columnUpdates,
+                data: nextData,
+                updated_at: now,
+            });
+
+            const { data, error } = await supabase
+                .from('store_orders')
+                .update(updatePayload)
+                .eq('id', orderId)
+                .select('*')
+                .single();
+
+            if (error) throw error;
+            const updatedOrder = mapOrderFromDB(data);
+            setOrders((currentOrders) =>
+                currentOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+            );
+            return updatedOrder;
+        },
+        []
+    );
 
     const fetchOrders = useCallback(async () => {
         if (!effectiveStoreId) return;
@@ -263,15 +309,31 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
     const updateOrderStatus = useCallback(
         async (orderId: string, status: OrderStatus) => {
             if (status === 'cancelled') {
-                const result = await supabase.functions.invoke('stripe-api', {
-                    body: {
-                        action: 'cancelStoreOrder',
-                        storeId: effectiveStoreId,
-                        orderId,
-                    },
+                return applyOrderAdminMutation(orderId, (order, data, now) => {
+                    if (!canCancelOrder({ ...order, data })) {
+                        throw new Error('Paid orders require manual refund handling before cancellation.');
+                    }
+
+                    const timeline = appendOrderTimelineEvent({
+                        data,
+                        event: {
+                            id: `order-cancelled-${now}`,
+                            type: 'system',
+                            message: 'Order cancelled by merchant admin',
+                            createdAt: now,
+                        },
+                    });
+
+                    return {
+                        data: timeline.data,
+                        columnUpdates: {
+                            status: 'cancelled',
+                            payment_status: 'cancelled',
+                            fulfillment_status: 'cancelled',
+                            cancelled_at: now,
+                        },
+                    };
                 });
-                if (result.error) throw result.error;
-                return syncOrderFromFunctionPayload(result.data?.data || result.data);
             }
 
             const updateData: any = {
@@ -308,7 +370,7 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
 
             return applyOrderUpdate(orderId, updateData, dataUpdates);
         },
-        [applyOrderUpdate, effectiveStoreId, syncOrderFromFunctionPayload]
+        [applyOrderAdminMutation, applyOrderUpdate]
     );
 
     // Update payment status
@@ -346,52 +408,47 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
     // Update fulfillment status
     const updateFulfillmentStatus = useCallback(
         async (orderId: string, fulfillmentStatus: FulfillmentStatus) => {
-            return applyOrderUpdate(
-                orderId,
-                { fulfillment_status: fulfillmentStatus },
-                { fulfillmentStatus }
+            return applyOrderAdminMutation(orderId, (order, data, now) =>
+                buildFulfillmentStatusUpdate({
+                    order,
+                    data,
+                    status: fulfillmentStatus === 'partial' ? 'partially_fulfilled' : fulfillmentStatus,
+                    now,
+                })
             );
         },
-        [applyOrderUpdate]
+        [applyOrderAdminMutation]
     );
 
     // Add tracking info
     const addTrackingInfo = useCallback(
         async (orderId: string, carrier: string, trackingNumber: string, trackingUrl?: string) => {
-            const shippedAt = new Date().toISOString();
-            return applyOrderUpdate(
-                orderId,
-                {
-                    carrier,
-                    tracking_number: trackingNumber,
-                    tracking_url: trackingUrl || null,
-                    status: 'shipped',
-                    fulfillment_status: 'fulfilled',
-                    shipped_at: shippedAt,
-                },
-                {
+            return applyOrderAdminMutation(orderId, (order, data, now) =>
+                buildOrderTrackingUpdate({
+                    order,
+                    data,
                     carrier,
                     trackingNumber,
-                    trackingUrl: trackingUrl || null,
-                    status: 'shipped',
-                    fulfillmentStatus: 'fulfilled',
-                    shippedAt,
-                }
+                    trackingUrl,
+                    now,
+                })
             );
         },
-        [applyOrderUpdate]
+        [applyOrderAdminMutation]
     );
 
     // Add internal notes
     const addInternalNotes = useCallback(
         async (orderId: string, notes: string) => {
-            return applyOrderUpdate(
-                orderId,
-                { internal_notes: notes },
-                { internalNotes: notes }
+            return applyOrderAdminMutation(orderId, (_order, data, now) =>
+                buildMerchantNotesUpdate({
+                    data,
+                    merchantNotes: notes,
+                    now,
+                })
             );
         },
-        [applyOrderUpdate]
+        [applyOrderAdminMutation]
     );
 
     const updateOrderDetails = useCallback(
@@ -406,20 +463,10 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
     );
 
     const createRefund = useCallback(
-        async (orderId: string, amount?: number, reason = 'requested_by_customer') => {
-            const result = await supabase.functions.invoke('stripe-api', {
-                body: withoutUndefined({
-                    action: 'createRefund',
-                    storeId: effectiveStoreId,
-                    orderId,
-                    amount,
-                    reason,
-                }),
-            });
-            if (result.error) throw result.error;
-            return syncOrderFromFunctionPayload(result.data?.data || result.data);
+        async () => {
+            throw new Error('Refund execution is not available in D4. Handle paid-order refunds manually until V2.');
         },
-        [effectiveStoreId, syncOrderFromFunctionPayload]
+        []
     );
 
     // Get order by ID
