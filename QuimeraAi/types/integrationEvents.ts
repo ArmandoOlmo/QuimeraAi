@@ -1,4 +1,4 @@
-import type { PlatformServiceId } from './serviceAvailability';
+import type { PlatformServiceId } from './serviceAvailability.ts';
 
 export type IntegrationEventModule =
     | 'ai-studio'
@@ -61,6 +61,9 @@ export type IntegrationEventType =
     | 'order_fulfilled'
     | 'order_refunded'
     | 'cart_abandoned'
+    | 'low_stock'
+    | 'back_in_stock'
+    | 'gift_card_purchased'
     | 'newsletter_signup'
     | 'product_inquiry'
     | 'chatbot_product_question'
@@ -84,4 +87,34 @@ export interface IntegrationEvent<TPayload extends Record<string, unknown> = Rec
     createdAt: string;
     createdBy?: string;
     correlationId?: string;
+}
+
+export type EcommerceEmailEventType =
+    | 'order_created'
+    | 'payment_succeeded'
+    | 'payment_failed'
+    | 'checkout_started'
+    | 'cart_abandoned'
+    | 'order_fulfilled'
+    | 'order_refunded'
+    | 'low_stock'
+    | 'back_in_stock'
+    | 'gift_card_purchased';
+
+export interface EcommerceEmailEvent<TPayload extends Record<string, unknown> = Record<string, unknown>> {
+    eventId: string;
+    eventType: EcommerceEmailEventType;
+    tenantId?: string | null;
+    projectId: string;
+    storeId?: string | null;
+    engineStoreId?: string | null;
+    orderId?: string | null;
+    checkoutSessionId?: string | null;
+    customerId?: string | null;
+    recipientEmail?: string | null;
+    recipientName?: string | null;
+    payload: TPayload;
+    idempotencyKey: string;
+    sourceModule: 'ecommerce';
+    createdAt: string;
 }

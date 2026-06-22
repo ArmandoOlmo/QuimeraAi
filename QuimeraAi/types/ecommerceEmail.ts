@@ -1,8 +1,14 @@
+import type {
+    EcommerceEmailEvent,
+    EcommerceEmailEventType,
+} from './integrationEvents.ts';
+
 export type EcommerceTransactionalEmailType =
     | 'order_confirmation'
     | 'merchant_new_order'
     | 'payment_failed'
     | 'abandoned_cart'
+    | 'fulfillment_confirmation'
     | 'shipping_confirmation'
     | 'refund_confirmation'
     | 'low_stock_alert'
@@ -16,6 +22,58 @@ export type EcommerceTransactionalEmailStatus =
     | 'sent'
     | 'skipped'
     | 'failed';
+
+export type EcommerceTransactionalEmailTemplateStatus = 'draft' | 'configured' | 'needs_review';
+
+export interface EcommerceEmailReadiness {
+    isReady: boolean;
+    blockers: string[];
+    warnings: string[];
+}
+
+export type {
+    EcommerceEmailEvent,
+    EcommerceEmailEventType,
+};
+
+export interface EcommerceEmailEventInput {
+    eventId?: string | null;
+    eventType: EcommerceEmailEventType;
+    tenantId?: string | null;
+    projectId: string;
+    storeId?: string | null;
+    engineStoreId?: string | null;
+    orderId?: string | null;
+    checkoutSessionId?: string | null;
+    customerId?: string | null;
+    recipientEmail?: string | null;
+    recipientName?: string | null;
+    providerEventId?: string | null;
+    payload?: Record<string, unknown>;
+    createdAt?: string;
+}
+
+export interface EcommerceTransactionalEmailTemplate {
+    id: string;
+    type: EcommerceTransactionalEmailType;
+    subject: string;
+    previewText: string;
+    bodyText: string;
+    bodyHtml?: string;
+    variables: string[];
+    requiredVariables: string[];
+    status: EcommerceTransactionalEmailTemplateStatus;
+    generatedByAI: boolean;
+    userModified: boolean;
+    readiness: EcommerceEmailReadiness;
+}
+
+export interface EcommerceEmailTemplateValidation {
+    valid: boolean;
+    missingVariables: string[];
+    blockers: string[];
+    warnings: string[];
+}
 
 export interface EcommerceEmailJob {
     id: string;
@@ -45,6 +103,7 @@ export interface EcommerceEmailRenderContext {
     payment?: Record<string, unknown> | null;
     products?: Array<Record<string, unknown>> | null;
     settings?: Record<string, unknown> | null;
+    event?: EcommerceEmailEvent | null;
 }
 
 export interface EcommerceEmailRenderResult {

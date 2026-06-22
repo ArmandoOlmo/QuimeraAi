@@ -1,13 +1,17 @@
 import {
   createResendEcommerceEmailProvider,
   createSupabaseEcommerceEmailRepository,
+  normalizeEcommerceEmailEvent,
+  sendFulfillmentConfirmationEmail,
   sendLowStockAlert,
   sendMerchantNewOrderAlert,
   sendOrderConfirmation,
   sendPaymentFailedEmail,
+  sendRefundConfirmationEmail,
 } from "../../../utils/ecommerce/ecommerceEmailService.ts";
 import type {
   EcommerceEmailDeliveryResult,
+  EcommerceEmailEvent,
   EcommerceEmailRenderContext,
 } from "../../../types/ecommerceEmail.ts";
 
@@ -17,6 +21,7 @@ interface PaidOrderEmailArgs {
   supabase: SupabaseClient;
   order: Record<string, any>;
   paidAt: string;
+  providerEventId?: string | null;
   resendApiKey?: string | null;
   defaultFromEmail: string;
 }
@@ -30,12 +35,23 @@ interface PaymentFailedEmailArgs {
   defaultFromEmail: string;
 }
 
+interface OrderLifecycleEmailArgs {
+  supabase: SupabaseClient;
+  order: Record<string, any>;
+  occurredAt: string;
+  eventId?: string | null;
+  providerEventId?: string | null;
+  resendApiKey?: string | null;
+  defaultFromEmail: string;
+}
+
 export type EcommerceTransactionalEmailResult = EcommerceEmailDeliveryResult;
 
 export async function sendPaidOrderTransactionalEmails({
   supabase,
   order,
   paidAt,
+  providerEventId,
   resendApiKey,
   defaultFromEmail,
 }: PaidOrderEmailArgs): Promise<EcommerceTransactionalEmailResult[]> {
@@ -45,14 +61,23 @@ export async function sendPaidOrderTransactionalEmails({
     status: "paid",
     paymentIntentId: readPaymentIntentId(order),
   });
-  const eventId = readPaymentIntentId(order) || order.id || paidAt;
+  const event = createOrderEmailEvent(order, "payment_succeeded", {
+    createdAt: paidAt,
+    providerEventId: providerEventId || readPaymentIntentId(order),
+    payload: {
+      paymentIntentId: readPaymentIntentId(order),
+      orderId: order.id,
+    },
+  });
+  const eventId = event.eventId;
+  const eventContext = { ...context, event };
   const results: EcommerceTransactionalEmailResult[] = [];
 
   results.push(await sendOrderConfirmation({
     repository,
     provider,
     defaultFromEmail,
-    context,
+    context: eventContext,
     eventId,
     now: paidAt,
   }));
@@ -60,7 +85,7 @@ export async function sendPaidOrderTransactionalEmails({
     repository,
     provider,
     defaultFromEmail,
-    context,
+    context: eventContext,
     eventId,
     now: paidAt,
   }));
@@ -72,8 +97,17 @@ export async function sendPaidOrderTransactionalEmails({
       provider,
       defaultFromEmail,
       context: {
-        ...context,
+        ...eventContext,
         products: [product],
+        event: createOrderEmailEvent(order, "low_stock", {
+          createdAt: paidAt,
+          providerEventId: `${eventId}:${product.id || product.product_id || "product"}`,
+          payload: {
+            productId: product.id || product.product_id,
+            currentQuantity: readQuantity(product),
+            threshold: readLowStockThreshold(product),
+          },
+        }),
       },
       product,
       currentQuantity: readQuantity(product),
@@ -102,14 +136,124 @@ export async function sendPaymentFailedTransactionalEmail({
     failureCode: order.stripe?.failureCode || order.data?.stripe?.failureCode || null,
     failureMessage: order.stripe?.failureMessage || order.data?.stripe?.failureMessage || null,
   });
+  const event = createOrderEmailEvent(order, "payment_failed", {
+    createdAt: failedAt,
+    providerEventId: eventId || readPaymentIntentId(order),
+    payload: {
+      paymentIntentId: readPaymentIntentId(order),
+      failureCode: order.stripe?.failureCode || order.data?.stripe?.failureCode || null,
+    },
+  });
 
   return sendPaymentFailedEmail({
     repository,
     provider,
     defaultFromEmail,
-    context,
-    eventId: eventId || readPaymentIntentId(order) || order.id || failedAt,
+    context: { ...context, event },
+    eventId: event.eventId,
     now: failedAt,
+  });
+}
+
+export async function sendFulfillmentTransactionalEmail({
+  supabase,
+  order,
+  occurredAt,
+  eventId,
+  providerEventId,
+  resendApiKey,
+  defaultFromEmail,
+}: OrderLifecycleEmailArgs): Promise<EcommerceTransactionalEmailResult> {
+  const repository = createSupabaseEcommerceEmailRepository(supabase);
+  const provider = createResendEcommerceEmailProvider(resendApiKey);
+  const context = await buildOrderEmailContext(supabase, order, {
+    status: "paid",
+    paymentIntentId: readPaymentIntentId(order),
+  });
+  const event = createOrderEmailEvent(order, "order_fulfilled", {
+    createdAt: occurredAt,
+    providerEventId: providerEventId || eventId || order.shipped_at || order.delivered_at || occurredAt,
+    payload: {
+      trackingNumber: order.tracking_number || order.data?.trackingNumber || null,
+      trackingUrl: order.tracking_url || order.data?.trackingUrl || null,
+      carrier: order.carrier || order.data?.carrier || null,
+    },
+  });
+
+  return sendFulfillmentConfirmationEmail({
+    repository,
+    provider,
+    defaultFromEmail,
+    context: { ...context, event },
+    eventId: event.eventId,
+    now: occurredAt,
+  });
+}
+
+export async function sendRefundTransactionalEmail({
+  supabase,
+  order,
+  occurredAt,
+  eventId,
+  providerEventId,
+  resendApiKey,
+  defaultFromEmail,
+}: OrderLifecycleEmailArgs): Promise<EcommerceTransactionalEmailResult> {
+  const repository = createSupabaseEcommerceEmailRepository(supabase);
+  const provider = createResendEcommerceEmailProvider(resendApiKey);
+  const context = await buildOrderEmailContext(supabase, order, {
+    status: "refunded",
+    paymentIntentId: readPaymentIntentId(order),
+  });
+  const event = createOrderEmailEvent(order, "order_refunded", {
+    createdAt: occurredAt,
+    providerEventId: providerEventId || eventId || order.data?.stripe?.lastRefundId || occurredAt,
+    payload: {
+      refundId: order.data?.stripe?.lastRefundId || null,
+      refundedAmount: order.refunded_amount || order.data?.refundedAmount || null,
+    },
+  });
+
+  return sendRefundConfirmationEmail({
+    repository,
+    provider,
+    defaultFromEmail,
+    context: { ...context, event },
+    eventId: event.eventId,
+    now: occurredAt,
+  });
+}
+
+function createOrderEmailEvent(
+  order: Record<string, any>,
+  eventType: EcommerceEmailEvent["eventType"],
+  options: {
+    createdAt: string;
+    providerEventId?: string | null;
+    payload?: Record<string, unknown>;
+  },
+): EcommerceEmailEvent {
+  const orderData = readObject(order.data);
+  const projectId = String(order.project_id || order.projectId || orderData.projectId || "");
+
+  return normalizeEcommerceEmailEvent({
+    eventType,
+    projectId,
+    tenantId: order.tenant_id || order.tenantId || orderData.tenantId || null,
+    storeId: order.store_id || order.storeId || orderData.storeId || projectId || null,
+    engineStoreId: order.store_id || order.storeId || orderData.engineStoreId || orderData.storeId || null,
+    orderId: order.id || order.orderId || null,
+    checkoutSessionId: order.checkout_session_id || order.checkoutSessionId || orderData.checkoutSessionId || null,
+    customerId: order.customer_id || order.customerId || orderData.customerId || null,
+    recipientEmail: order.customer_email || orderData.customerEmail || null,
+    recipientName: order.customer_name || orderData.customerName || null,
+    providerEventId: options.providerEventId,
+    payload: {
+      orderId: order.id || order.orderId || null,
+      orderNumber: order.order_number || order.orderNumber || null,
+      ...(options.payload || {}),
+    },
+    createdAt: options.createdAt,
   });
 }
 
@@ -268,7 +412,7 @@ function readLowStockThreshold(product: Record<string, any>) {
 
 function isTracked(product: Record<string, any>) {
   const data = readObject(product.data);
-  return (product.track_inventory ?? data.trackInventory ?? data.track_inventory ?? true) !== false;
+  return product.track_inventory === true || data.trackInventory === true || data.track_inventory === true;
 }
 
 function readObject(value: unknown): Record<string, any> {

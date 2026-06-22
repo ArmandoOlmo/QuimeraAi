@@ -158,7 +158,17 @@ export interface AiStudioCrossModuleBlueprints {
         enabled: boolean;
         status: 'draft' | 'needs_review';
         needsReview: true;
-        flows: Array<{ type: string; status: 'draft' | 'needs_review'; triggerEvent?: IntegrationEventType }>;
+        flows: Array<{
+            type: string;
+            status: 'draft' | 'needs_review';
+            triggerEvent?: IntegrationEventType;
+            templateType?: string;
+            enabled?: boolean;
+            needsReview?: boolean;
+            generatedByAI?: boolean;
+            userModified?: boolean;
+            readiness?: BlueprintReadiness;
+        }>;
         logEvents: IntegrationEventType[];
         readiness: BlueprintReadiness;
         sourceMap: BlueprintSourceMap;

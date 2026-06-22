@@ -1,9 +1,13 @@
 import type {
     EcommerceEmailDeliveryResult,
+    EcommerceEmailEvent,
+    EcommerceEmailEventInput,
     EcommerceEmailRenderContext,
     EcommerceEmailRenderResult,
     EcommerceEmailSettings,
+    EcommerceEmailTemplateValidation,
     EcommerceStoreEmailSettings,
+    EcommerceTransactionalEmailTemplate,
     EcommerceTransactionalEmailStatus,
     EcommerceTransactionalEmailType,
 } from '../../types/ecommerceEmail.ts';
@@ -36,6 +40,9 @@ export interface EcommerceEmailLogRow {
     status?: EcommerceTransactionalEmailStatus | string | null;
     provider_message_id?: string | null;
     provider?: string | null;
+    event_type?: string | null;
+    template_type?: string | null;
+    idempotency_key?: string | null;
     error_message?: string | null;
     error_code?: string | null;
     order_id?: string | null;
@@ -92,6 +99,272 @@ export interface SendLowStockAlertInput extends SendEcommerceEmailInput {
 const DEFAULT_FROM_EMAIL = 'Quimera Ai <no-reply@quimera.ai>';
 const DEFAULT_PRIMARY_COLOR = '#4f46e5';
 
+const configuredReadiness = { isReady: true, blockers: [], warnings: [] };
+const needsReviewReadiness = (blockers: string[] = ['Template must be reviewed before activation.']) => ({
+    isReady: false,
+    blockers,
+    warnings: [],
+});
+
+export const ECOMMERCE_TRANSACTIONAL_EMAIL_TEMPLATES: Record<EcommerceTransactionalEmailType, EcommerceTransactionalEmailTemplate> = {
+    order_confirmation: {
+        id: 'ecommerce.order_confirmation.system',
+        type: 'order_confirmation',
+        subject: 'Order {{orderNumber}} confirmed',
+        previewText: 'Confirm a customer order only after payment succeeds.',
+        bodyText: 'Customer-safe paid order summary using reviewed order, item, and total data.',
+        variables: ['storeName', 'orderNumber', 'customerEmail', 'customerName', 'orderItems', 'orderTotal', 'paymentStatus'],
+        requiredVariables: ['storeName', 'orderNumber', 'customerEmail', 'orderTotal', 'paymentConfirmed'],
+        status: 'configured',
+        generatedByAI: false,
+        userModified: false,
+        readiness: configuredReadiness,
+    },
+    merchant_new_order: {
+        id: 'ecommerce.merchant_new_order.system',
+        type: 'merchant_new_order',
+        subject: 'New paid order {{orderNumber}}',
+        previewText: 'Notify the merchant after payment succeeds.',
+        bodyText: 'Merchant-safe paid order alert with customer contact and order total.',
+        variables: ['storeName', 'merchantEmail', 'orderNumber', 'customerEmail', 'orderTotal', 'paymentStatus'],
+        requiredVariables: ['storeName', 'merchantEmail', 'orderNumber', 'orderTotal', 'paymentConfirmed'],
+        status: 'configured',
+        generatedByAI: false,
+        userModified: false,
+        readiness: configuredReadiness,
+    },
+    payment_failed: {
+        id: 'ecommerce.payment_failed.system',
+        type: 'payment_failed',
+        subject: 'Payment issue for order {{orderNumber}}',
+        previewText: 'Tell the customer a payment failed without exposing payment details.',
+        bodyText: 'Payment failed notice without card, payment method, or sensitive Stripe data.',
+        variables: ['storeName', 'orderNumber', 'customerEmail', 'customerName', 'paymentStatus'],
+        requiredVariables: ['storeName', 'orderNumber', 'customerEmail', 'paymentFailed'],
+        status: 'configured',
+        generatedByAI: false,
+        userModified: false,
+        readiness: configuredReadiness,
+    },
+    fulfillment_confirmation: {
+        id: 'ecommerce.fulfillment_confirmation.system',
+        type: 'fulfillment_confirmation',
+        subject: 'Order {{orderNumber}} fulfilled',
+        previewText: 'Confirm fulfillment without inventing tracking data.',
+        bodyText: 'Fulfillment confirmation using only stored carrier, tracking, and fulfillment status data.',
+        variables: ['storeName', 'orderNumber', 'customerEmail', 'fulfillmentStatus', 'trackingNumber', 'trackingUrl', 'carrier'],
+        requiredVariables: ['storeName', 'orderNumber', 'customerEmail', 'fulfilled'],
+        status: 'configured',
+        generatedByAI: false,
+        userModified: false,
+        readiness: configuredReadiness,
+    },
+    shipping_confirmation: {
+        id: 'ecommerce.shipping_confirmation.system',
+        type: 'shipping_confirmation',
+        subject: 'Order {{orderNumber}} fulfilled',
+        previewText: 'Alias for fulfillment confirmation.',
+        bodyText: 'Shipping notification backed by fulfillment data.',
+        variables: ['storeName', 'orderNumber', 'customerEmail', 'fulfillmentStatus', 'trackingNumber', 'trackingUrl', 'carrier'],
+        requiredVariables: ['storeName', 'orderNumber', 'customerEmail', 'fulfilled'],
+        status: 'configured',
+        generatedByAI: false,
+        userModified: false,
+        readiness: configuredReadiness,
+    },
+    refund_confirmation: {
+        id: 'ecommerce.refund_confirmation.system',
+        type: 'refund_confirmation',
+        subject: 'Refund update for order {{orderNumber}}',
+        previewText: 'Confirm a stored refund without inventing amount or reason.',
+        bodyText: 'Refund confirmation from persisted refund/payment state.',
+        variables: ['storeName', 'orderNumber', 'customerEmail', 'refundAmount', 'paymentStatus'],
+        requiredVariables: ['storeName', 'orderNumber', 'customerEmail', 'refundRecorded'],
+        status: 'configured',
+        generatedByAI: false,
+        userModified: false,
+        readiness: configuredReadiness,
+    },
+    low_stock_alert: {
+        id: 'ecommerce.low_stock_alert.system',
+        type: 'low_stock_alert',
+        subject: 'Low stock: {{productName}}',
+        previewText: 'Alert merchant only when inventory tracking is configured.',
+        bodyText: 'Merchant low stock alert from tracked inventory data.',
+        variables: ['storeName', 'merchantEmail', 'productName', 'currentQuantity', 'lowStockThreshold'],
+        requiredVariables: ['storeName', 'merchantEmail', 'productName', 'inventoryTrackingConfigured', 'lowStockThreshold'],
+        status: 'configured',
+        generatedByAI: false,
+        userModified: false,
+        readiness: configuredReadiness,
+    },
+    abandoned_cart: {
+        id: 'ecommerce.abandoned_cart.draft',
+        type: 'abandoned_cart',
+        subject: 'Still thinking it over?',
+        previewText: 'Draft cart recovery flow. Requires review before activation.',
+        bodyText: 'Draft recovery reminder using customer email, cart items, and checkout URL.',
+        variables: ['storeName', 'customerEmail', 'cartItems', 'checkoutUrl'],
+        requiredVariables: ['storeName', 'customerEmail', 'cartItems', 'checkoutUrl'],
+        status: 'needs_review',
+        generatedByAI: true,
+        userModified: false,
+        readiness: needsReviewReadiness(['Abandoned cart flow must be reviewed and enabled before sending.']),
+    },
+    back_in_stock: {
+        id: 'ecommerce.back_in_stock.draft',
+        type: 'back_in_stock',
+        subject: '{{productName}} is back in stock',
+        previewText: 'Draft back-in-stock flow. Requires consent and review.',
+        bodyText: 'Draft inventory availability alert for opted-in customers.',
+        variables: ['storeName', 'customerEmail', 'productName'],
+        requiredVariables: ['storeName', 'customerEmail', 'productName', 'inventoryTrackingConfigured'],
+        status: 'needs_review',
+        generatedByAI: true,
+        userModified: false,
+        readiness: needsReviewReadiness(['Back-in-stock flow requires customer consent and merchant review.']),
+    },
+    gift_card_confirmation: {
+        id: 'ecommerce.gift_card_confirmation.draft',
+        type: 'gift_card_confirmation',
+        subject: 'Gift card purchase confirmation',
+        previewText: 'Draft gift card confirmation. Requires delivery/redemption review.',
+        bodyText: 'Draft gift card purchase confirmation without redemption assumptions.',
+        variables: ['storeName', 'customerEmail', 'giftCardAmount', 'recipientEmail'],
+        requiredVariables: ['storeName', 'customerEmail', 'giftCardAmount'],
+        status: 'needs_review',
+        generatedByAI: true,
+        userModified: false,
+        readiness: needsReviewReadiness(['Gift card delivery and redemption rules must be configured.']),
+    },
+};
+
+export function createEcommerceEmailEventIdempotencyKey(input: {
+    tenantId?: string | null;
+    projectId: string;
+    storeId?: string | null;
+    engineStoreId?: string | null;
+    eventType: string;
+    orderId?: string | null;
+    checkoutSessionId?: string | null;
+    providerEventId?: string | null;
+    eventId?: string | null;
+}) {
+    return [
+        input.tenantId || 'tenant',
+        input.projectId || 'project',
+        input.engineStoreId || input.storeId || 'store',
+        input.eventType || 'event',
+        input.orderId || input.checkoutSessionId || 'order',
+        input.providerEventId || input.eventId || 'provider-event',
+    ].join(':');
+}
+
+export function normalizeEcommerceEmailEvent(input: EcommerceEmailEventInput): EcommerceEmailEvent {
+    const createdAt = input.createdAt || new Date().toISOString();
+    const eventId = String(
+        input.eventId
+            || input.providerEventId
+            || input.orderId
+            || input.checkoutSessionId
+            || `${input.eventType}:${createdAt}`,
+    );
+    const payload = sanitizeMetadata({
+        ...(input.payload || {}),
+        providerEventId: input.providerEventId || undefined,
+    });
+
+    return {
+        eventId,
+        eventType: input.eventType,
+        tenantId: input.tenantId || null,
+        projectId: input.projectId,
+        storeId: input.storeId || null,
+        engineStoreId: input.engineStoreId || input.storeId || null,
+        orderId: input.orderId || null,
+        checkoutSessionId: input.checkoutSessionId || null,
+        customerId: input.customerId || null,
+        recipientEmail: normalizeEmail(input.recipientEmail) || null,
+        recipientName: stringOrNull(input.recipientName),
+        payload,
+        idempotencyKey: createEcommerceEmailEventIdempotencyKey({
+            tenantId: input.tenantId,
+            projectId: input.projectId,
+            storeId: input.storeId,
+            engineStoreId: input.engineStoreId,
+            eventType: input.eventType,
+            orderId: input.orderId,
+            checkoutSessionId: input.checkoutSessionId,
+            providerEventId: input.providerEventId,
+            eventId,
+        }),
+        sourceModule: 'ecommerce',
+        createdAt,
+    };
+}
+
+export function getEcommerceTransactionalEmailTemplate(type: EcommerceTransactionalEmailType): EcommerceTransactionalEmailTemplate {
+    return ECOMMERCE_TRANSACTIONAL_EMAIL_TEMPLATES[type];
+}
+
+export function createEcommerceEmailDeliveryIdempotencyKey(input: {
+    event: EcommerceEmailEvent;
+    templateType: EcommerceTransactionalEmailType;
+    recipientEmail?: string | null;
+}) {
+    return [
+        input.event.idempotencyKey,
+        input.templateType,
+        normalizeEmail(input.recipientEmail) || 'recipient',
+    ].join(':');
+}
+
+export function validateEcommerceEmailTemplateVariables(
+    type: EcommerceTransactionalEmailType,
+    context: EcommerceEmailRenderContext,
+): EcommerceEmailTemplateValidation {
+    const template = getEcommerceTransactionalEmailTemplate(type);
+    const values = resolveTemplateVariables(type, context);
+    const missingVariables = template.requiredVariables.filter(variable => !values[variable]);
+    const blockers = [...missingVariables.map(variable => `Missing required variable: ${variable}`)];
+    const warnings: string[] = [];
+
+    if (template.status !== 'configured') {
+        blockers.push(`Template ${template.id} is ${template.status}`);
+    }
+
+    if ((type === 'order_confirmation' || type === 'merchant_new_order') && !isPaymentConfirmed(context)) {
+        blockers.push('Payment is not confirmed');
+    }
+
+    if (type === 'payment_failed' && !isPaymentFailed(context)) {
+        blockers.push('Payment failure is not confirmed');
+    }
+
+    if ((type === 'low_stock_alert' || type === 'back_in_stock') && !isInventoryTrackingConfigured(context)) {
+        blockers.push('Inventory tracking is not configured');
+    }
+
+    if ((type === 'fulfillment_confirmation' || type === 'shipping_confirmation') && !isFulfilled(context)) {
+        blockers.push('Order fulfillment is not confirmed');
+    }
+
+    if (type === 'refund_confirmation' && !hasRefundRecord(context)) {
+        blockers.push('Refund is not recorded');
+    }
+
+    if (readItems(context).some(item => !hasValidLineItemPrice(item))) {
+        warnings.push('One or more item prices are unavailable and will be omitted.');
+    }
+
+    return {
+        valid: blockers.length === 0,
+        missingVariables,
+        blockers,
+        warnings,
+    };
+}
+
 export function createSupabaseEcommerceEmailRepository(supabase: SupabaseClient): EcommerceEmailRepository {
     return {
         async getEmailSettings({ projectId, storeId }) {
@@ -124,6 +397,15 @@ export function createSupabaseEcommerceEmailRepository(supabase: SupabaseClient)
             return data || null;
         },
         async findEmailLogByIdempotencyKey(idempotencyKey) {
+            const byColumn = await supabase
+                .from('email_logs')
+                .select('*')
+                .eq('idempotency_key', idempotencyKey)
+                .limit(1)
+                .maybeSingle();
+
+            if (!byColumn.error && byColumn.data) return byColumn.data;
+
             const { data, error } = await supabase
                 .from('email_logs')
                 .select('*')
@@ -131,6 +413,7 @@ export function createSupabaseEcommerceEmailRepository(supabase: SupabaseClient)
                 .limit(1)
                 .maybeSingle();
 
+            if (error && byColumn.error) throw byColumn.error;
             if (error) throw error;
             return data || null;
         },
@@ -242,8 +525,19 @@ export function shouldSendTransactionalEmail(input: {
             }
             break;
         case 'shipping_confirmation':
+        case 'fulfillment_confirmation':
             if (input.storeSettings.sendShippingNotification === false || disabled('orderShipped')) {
                 return { shouldSend: false, reason: 'Shipping notification is disabled' };
+            }
+            break;
+        case 'refund_confirmation':
+            if (disabled('refundConfirmation')) {
+                return { shouldSend: false, reason: 'Refund confirmation is disabled' };
+            }
+            break;
+        case 'abandoned_cart':
+            if (disabled('abandonedCart')) {
+                return { shouldSend: false, reason: 'Abandoned cart flow is disabled' };
             }
             break;
         default:
@@ -268,6 +562,13 @@ export function renderEcommerceEmail(input: {
             return renderMerchantNewOrderAlert(context);
         case 'payment_failed':
             return renderPaymentFailed(context);
+        case 'fulfillment_confirmation':
+        case 'shipping_confirmation':
+            return renderFulfillmentConfirmation(context);
+        case 'refund_confirmation':
+            return renderRefundConfirmation(context);
+        case 'abandoned_cart':
+            return renderAbandonedCart(context);
         case 'low_stock_alert':
             return renderLowStockAlert(context);
         default:
@@ -296,12 +597,15 @@ export async function recordEcommerceEmailLog(input: {
     const context = input.context;
     const order = readObject(context.order);
     const customer = readObject(context.customer);
+    const event = context.event || null;
     const projectId = readProjectId(context);
+    const storeId = readStoreId(context);
     const row = await input.repository.insertEmailLog({
         project_id: projectId || null,
-        store_id: projectId || null,
+        store_id: storeId || null,
         type: 'transactional',
         template_id: input.type,
+        template_type: input.type,
         recipient_email: normalizeEmail(input.recipientEmail),
         recipient_name: input.recipientName || readCustomerName(context) || null,
         customer_id: stringOrNull(order.customer_id || order.customerId || customer.id),
@@ -309,14 +613,20 @@ export async function recordEcommerceEmailLog(input: {
         status: input.status,
         provider: 'resend',
         provider_message_id: input.providerMessageId || null,
+        event_type: event?.eventType || stringOrNull(readObject(input.metadata).eventType),
+        idempotency_key: input.idempotencyKey,
         error_message: input.error || null,
         order_id: stringOrNull(order.id || order.orderId),
         metadata: sanitizeMetadata({
             ...(input.metadata || {}),
             source: 'ecommerce',
+            sourceModule: 'ecommerce',
             ecommerceEmailType: input.type,
             idempotencyKey: input.idempotencyKey,
-            storeId: readStoreId(context),
+            eventId: event?.eventId,
+            eventType: event?.eventType,
+            eventIdempotencyKey: event?.idempotencyKey,
+            storeId,
             publicStoreId: readPublicStoreId(context),
             cartId: readCartId(context),
             orderNumber: readOrderNumber(context),
@@ -358,12 +668,49 @@ export async function queueOrSendEcommerceEmail(input: QueueOrSendEcommerceEmail
             store: normalizeStoreEmailSettings(null),
         };
 
-    const rendered = renderEcommerceEmail({ type: input.type, context: input.context });
+    const contextWithSettings: EcommerceEmailRenderContext = {
+        ...input.context,
+        settings: {
+            ...readObject(input.context.settings),
+            merchantEmail: readObject(input.context.settings).merchantEmail || settings.store.merchantEmail,
+            fromEmail: settings.email.fromEmail,
+            replyTo: settings.email.replyTo,
+            primaryColor: settings.email.primaryColor,
+        },
+    };
+    const rendered = renderEcommerceEmail({ type: input.type, context: contextWithSettings });
     let recipientEmail = normalizeEmail(input.recipientEmail);
     if (!recipientEmail && (input.type === 'merchant_new_order' || input.type === 'low_stock_alert')) {
         recipientEmail = settings.store.merchantEmail || settings.email.replyTo || settings.email.fromEmail || '';
     }
-    const recipientName = input.recipientName || readRecipientName(input.type, input.context);
+    const recipientName = input.recipientName || readRecipientName(input.type, contextWithSettings);
+    const contextForValidation: EcommerceEmailRenderContext = {
+        ...contextWithSettings,
+        ...(input.type === 'merchant_new_order' || input.type === 'low_stock_alert'
+            ? { settings: { ...readObject(contextWithSettings.settings), merchantEmail: recipientEmail } }
+            : {}),
+    };
+    const templateValidation = validateEcommerceEmailTemplateVariables(input.type, contextForValidation);
+    if (!templateValidation.valid) {
+        const reason = templateValidation.blockers.join('; ');
+        return safeRecordAndReturn({
+            repository: input.repository,
+            context: contextForValidation,
+            type: input.type,
+            status: 'skipped',
+            idempotencyKey,
+            recipientEmail,
+            recipientName,
+            subject: rendered.subject,
+            error: reason,
+            metadata: {
+                ...(input.metadata || {}),
+                templateValidation,
+            },
+            now,
+            skippedReason: reason,
+        });
+    }
     const sendDecision = shouldSendTransactionalEmail({
         type: input.type,
         recipientEmail,
@@ -375,7 +722,7 @@ export async function queueOrSendEcommerceEmail(input: QueueOrSendEcommerceEmail
     if (!sendDecision.shouldSend) {
         return safeRecordAndReturn({
             repository: input.repository,
-            context: input.context,
+            context: contextForValidation,
             type: input.type,
             status: 'skipped',
             idempotencyKey,
@@ -392,7 +739,7 @@ export async function queueOrSendEcommerceEmail(input: QueueOrSendEcommerceEmail
     if (!input.provider) {
         return safeRecordAndReturn({
             repository: input.repository,
-            context: input.context,
+            context: contextForValidation,
             type: input.type,
             status: 'queued',
             idempotencyKey,
@@ -419,7 +766,7 @@ export async function queueOrSendEcommerceEmail(input: QueueOrSendEcommerceEmail
 
         return safeRecordAndReturn({
             repository: input.repository,
-            context: input.context,
+            context: contextForValidation,
             type: input.type,
             status: 'sent',
             idempotencyKey,
@@ -434,7 +781,7 @@ export async function queueOrSendEcommerceEmail(input: QueueOrSendEcommerceEmail
         const message = error instanceof Error ? error.message : String(error);
         return safeRecordAndReturn({
             repository: input.repository,
-            context: input.context,
+            context: contextForValidation,
             type: input.type,
             status: 'failed',
             idempotencyKey,
@@ -476,6 +823,36 @@ export async function sendPaymentFailedEmail(input: SendEcommerceEmailInput) {
         recipientEmail: readCustomerEmail(input.context),
         recipientName: readCustomerName(input.context),
         idempotencyKey: input.idempotencyKey || createIdempotencyKey(input.context, 'payment_failed', input.eventId, readCustomerEmail(input.context)),
+    });
+}
+
+export async function sendFulfillmentConfirmationEmail(input: SendEcommerceEmailInput) {
+    return queueOrSendEcommerceEmail({
+        ...input,
+        type: 'fulfillment_confirmation',
+        recipientEmail: readCustomerEmail(input.context),
+        recipientName: readCustomerName(input.context),
+        idempotencyKey: input.idempotencyKey || createIdempotencyKey(input.context, 'fulfillment_confirmation', input.eventId, readCustomerEmail(input.context)),
+    });
+}
+
+export async function sendRefundConfirmationEmail(input: SendEcommerceEmailInput) {
+    return queueOrSendEcommerceEmail({
+        ...input,
+        type: 'refund_confirmation',
+        recipientEmail: readCustomerEmail(input.context),
+        recipientName: readCustomerName(input.context),
+        idempotencyKey: input.idempotencyKey || createIdempotencyKey(input.context, 'refund_confirmation', input.eventId, readCustomerEmail(input.context)),
+    });
+}
+
+export async function queueAbandonedCartEmail(input: SendEcommerceEmailInput) {
+    return queueOrSendEcommerceEmail({
+        ...input,
+        type: 'abandoned_cart',
+        recipientEmail: readCustomerEmail(input.context),
+        recipientName: readCustomerName(input.context),
+        idempotencyKey: input.idempotencyKey || createIdempotencyKey(input.context, 'abandoned_cart', input.eventId, readCustomerEmail(input.context)),
     });
 }
 
@@ -539,7 +916,7 @@ export function createMemoryEcommerceEmailRepository(input: {
             return storeSettings;
         },
         async findEmailLogByIdempotencyKey(idempotencyKey) {
-            return logs.find((log) => readObject(log.metadata).idempotencyKey === idempotencyKey) || null;
+            return logs.find((log) => log.idempotency_key === idempotencyKey || readObject(log.metadata).idempotencyKey === idempotencyKey) || null;
         },
         async insertEmailLog(row) {
             const next = {
@@ -688,7 +1065,7 @@ function renderMerchantNewOrderAlert(context: EcommerceEmailRenderContext): Ecom
         `Order: ${orderNumber}`,
         `Customer: ${readCustomerName(context) || 'Unknown customer'}`,
         `Customer email: ${readCustomerEmail(context) || 'Not provided'}`,
-        `Total: ${formatMoney(readTotal(context), readCurrency(context))}`,
+        readTotal(context) != null ? `Total: ${formatMoney(readTotal(context)!, readCurrency(context))}` : 'Total: Not available',
         `Payment status: ${readPaymentStatus(context)}`,
         `Inventory status: ${readInventoryStatus(context)}`,
         '',
@@ -718,6 +1095,71 @@ function renderPaymentFailed(context: EcommerceEmailRenderContext): EcommerceEma
 
     return {
         type: 'payment_failed',
+        subject,
+        text: body,
+        html: renderSimpleHtml(storeName, subject, body, context),
+    };
+}
+
+function renderFulfillmentConfirmation(context: EcommerceEmailRenderContext): EcommerceEmailRenderResult {
+    const orderNumber = readOrderNumber(context);
+    const storeName = readStoreName(context);
+    const trackingNumber = readTrackingNumber(context);
+    const trackingUrl = readTrackingUrl(context);
+    const carrier = readCarrier(context);
+    const subject = `Order ${orderNumber} fulfilled`;
+    const body = [
+        `Hi ${readCustomerName(context) || 'there'},`,
+        `${storeName} marked order ${orderNumber} as fulfilled.`,
+        carrier ? `Carrier: ${carrier}` : '',
+        trackingNumber ? `Tracking number: ${trackingNumber}` : '',
+        trackingUrl ? `Tracking link: ${trackingUrl}` : '',
+        !trackingNumber && !trackingUrl ? 'Tracking details were not provided by the store.' : '',
+        readStoreUrl(context) ? `Store: ${readStoreUrl(context)}` : '',
+    ].filter(Boolean).join('\n');
+
+    return {
+        type: 'fulfillment_confirmation',
+        subject,
+        text: body,
+        html: renderSimpleHtml(storeName, subject, body, context),
+    };
+}
+
+function renderRefundConfirmation(context: EcommerceEmailRenderContext): EcommerceEmailRenderResult {
+    const orderNumber = readOrderNumber(context);
+    const storeName = readStoreName(context);
+    const refundAmount = readRefundAmount(context);
+    const subject = `Refund update for order ${orderNumber}`;
+    const body = [
+        `Hi ${readCustomerName(context) || 'there'},`,
+        `${storeName} recorded a refund update for order ${orderNumber}.`,
+        refundAmount != null ? `Refund amount: ${formatMoney(refundAmount, readCurrency(context))}` : '',
+        `Payment status: ${readPaymentStatus(context)}`,
+        readStoreUrl(context) ? `Store: ${readStoreUrl(context)}` : '',
+    ].filter(Boolean).join('\n');
+
+    return {
+        type: 'refund_confirmation',
+        subject,
+        text: body,
+        html: renderSimpleHtml(storeName, subject, body, context),
+    };
+}
+
+function renderAbandonedCart(context: EcommerceEmailRenderContext): EcommerceEmailRenderResult {
+    const storeName = readStoreName(context);
+    const checkoutUrl = readCheckoutUrl(context);
+    const subject = 'Still thinking it over?';
+    const body = [
+        `Hi ${readCustomerName(context) || 'there'},`,
+        `${storeName} saved your cart draft.`,
+        renderItemsText(context),
+        checkoutUrl ? `Checkout: ${checkoutUrl}` : '',
+    ].filter(Boolean).join('\n');
+
+    return {
+        type: 'abandoned_cart',
         subject,
         text: body,
         html: renderSimpleHtml(storeName, subject, body, context),
@@ -776,19 +1218,20 @@ function renderItemsText(context: EcommerceEmailRenderContext) {
     return items.map((item) => {
         const name = item.name || item.productName || item.product_name || 'Product';
         const quantity = toNumber(item.quantity, 0);
-        const unitPrice = toNumber(item.unitPrice ?? item.unit_price ?? item.price, 0);
-        const total = toNumber(item.totalPrice ?? item.total_price, unitPrice * quantity);
-        return `- ${name} x${quantity}: ${formatMoney(total, readCurrency(context))}`;
+        const unitPrice = toOptionalNumber(item.unitPrice ?? item.unit_price ?? item.price);
+        const total = toOptionalNumber(item.totalPrice ?? item.total_price) ?? (unitPrice != null ? unitPrice * quantity : null);
+        return `- ${name} x${quantity}${total != null ? `: ${formatMoney(total, readCurrency(context))}` : ''}`;
     }).join('\n');
 }
 
 function renderTotalsText(context: EcommerceEmailRenderContext) {
-    return [
-        `Subtotal: ${formatMoney(readSubtotal(context), readCurrency(context))}`,
-        `Shipping: ${formatMoney(readShippingTotal(context), readCurrency(context))}`,
-        `Tax: ${formatMoney(readTaxTotal(context), readCurrency(context))}`,
-        `Total: ${formatMoney(readTotal(context), readCurrency(context))}`,
-    ].join('\n');
+    const lines = [
+        optionalMoneyLine('Subtotal', readSubtotal(context), readCurrency(context)),
+        optionalMoneyLine('Shipping', readShippingTotal(context), readCurrency(context)),
+        optionalMoneyLine('Tax', readTaxTotal(context), readCurrency(context)),
+        optionalMoneyLine('Total', readTotal(context), readCurrency(context)),
+    ].filter(Boolean);
+    return lines.length > 0 ? lines.join('\n') : 'Totals: Not available';
 }
 
 function createIdempotencyKey(
@@ -797,6 +1240,14 @@ function createIdempotencyKey(
     eventId?: string | null,
     recipientEmail?: string | null,
 ) {
+    if (context.event) {
+        return createEcommerceEmailDeliveryIdempotencyKey({
+            event: context.event,
+            templateType: type,
+            recipientEmail,
+        });
+    }
+
     return [
         'ecommerce',
         type,
@@ -914,28 +1365,28 @@ function readSubtotal(context: EcommerceEmailRenderContext) {
     const order = readObject(context.order);
     const totals = readObject(context.totals);
     const pricing = readObject(order.pricing || readObject(order.data).pricing);
-    return toNumber(totals.subtotal ?? order.subtotal ?? pricing.subtotal, 0);
+    return toOptionalNumber(totals.subtotal ?? order.subtotal ?? pricing.subtotal);
 }
 
 function readShippingTotal(context: EcommerceEmailRenderContext) {
     const order = readObject(context.order);
     const totals = readObject(context.totals);
     const pricing = readObject(order.pricing || readObject(order.data).pricing);
-    return toNumber(totals.shipping ?? totals.shippingTotal ?? order.shipping_amount ?? order.shippingCost ?? pricing.shippingTotal, 0);
+    return toOptionalNumber(totals.shipping ?? totals.shippingTotal ?? order.shipping_amount ?? order.shippingCost ?? pricing.shippingTotal);
 }
 
 function readTaxTotal(context: EcommerceEmailRenderContext) {
     const order = readObject(context.order);
     const totals = readObject(context.totals);
     const pricing = readObject(order.pricing || readObject(order.data).pricing);
-    return toNumber(totals.tax ?? totals.taxTotal ?? order.tax_amount ?? order.taxAmount ?? pricing.taxTotal, 0);
+    return toOptionalNumber(totals.tax ?? totals.taxTotal ?? order.tax_amount ?? order.taxAmount ?? pricing.taxTotal);
 }
 
 function readTotal(context: EcommerceEmailRenderContext) {
     const order = readObject(context.order);
     const totals = readObject(context.totals);
     const pricing = readObject(order.pricing || readObject(order.data).pricing);
-    return toNumber(totals.total ?? order.total_amount ?? order.total ?? pricing.total, 0);
+    return toOptionalNumber(totals.total ?? order.total_amount ?? order.total ?? pricing.total);
 }
 
 function readPaymentStatus(context: EcommerceEmailRenderContext) {
@@ -975,6 +1426,159 @@ function readProductAdminUrl(context: EcommerceEmailRenderContext, product: Reco
     const base = stringOrUndefined(settings.productAdminBaseUrl || settings.productsUrl);
     if (base && productId) return `${base.replace(/\/$/, '')}/${productId}`;
     return stringOrUndefined(settings.productsUrl || '/ecommerce/products');
+}
+
+function resolveTemplateVariables(
+    _type: EcommerceTransactionalEmailType,
+    context: EcommerceEmailRenderContext,
+): Record<string, boolean> {
+    return {
+        storeName: Boolean(readStoreName(context)),
+        orderNumber: Boolean(readOrderNumber(context)),
+        customerEmail: Boolean(readCustomerEmail(context)),
+        customerName: Boolean(readCustomerName(context)),
+        merchantEmail: Boolean(readMerchantEmail(context)),
+        orderItems: readItems(context).length > 0,
+        cartItems: readItems(context).length > 0,
+        checkoutUrl: Boolean(readCheckoutUrl(context)),
+        orderTotal: readTotal(context) != null,
+        paymentStatus: Boolean(readPaymentStatus(context)),
+        paymentConfirmed: isPaymentConfirmed(context),
+        paymentFailed: isPaymentFailed(context),
+        fulfilled: isFulfilled(context),
+        refundRecorded: hasRefundRecord(context),
+        refundAmount: readRefundAmount(context) != null,
+        productName: Boolean(readProductName(context)),
+        currentQuantity: readCurrentQuantity(context) != null,
+        lowStockThreshold: readLowStockThresholdFromContext(context) != null,
+        inventoryTrackingConfigured: isInventoryTrackingConfigured(context),
+        trackingNumber: Boolean(readTrackingNumber(context)),
+        trackingUrl: Boolean(readTrackingUrl(context)),
+        carrier: Boolean(readCarrier(context)),
+        giftCardAmount: readGiftCardAmount(context) != null,
+        recipientEmail: Boolean(readObject(context.event?.payload).recipientEmail || readObject(context.order).recipientEmail),
+    };
+}
+
+function isPaymentConfirmed(context: EcommerceEmailRenderContext) {
+    const status = readPaymentStatus(context).toLowerCase();
+    const order = readObject(context.order);
+    return context.event?.eventType === 'payment_succeeded'
+        || ['paid', 'succeeded', 'success', 'captured', 'payment_succeeded'].includes(status)
+        || Boolean(order.paid_at || order.paidAt);
+}
+
+function isPaymentFailed(context: EcommerceEmailRenderContext) {
+    const status = readPaymentStatus(context).toLowerCase();
+    return context.event?.eventType === 'payment_failed'
+        || ['failed', 'payment_failed', 'canceled', 'cancelled'].includes(status);
+}
+
+function isFulfilled(context: EcommerceEmailRenderContext) {
+    const order = readObject(context.order);
+    const data = readObject(order.data);
+    const status = String(
+        order.fulfillment_status
+            || order.fulfillmentStatus
+            || data.fulfillmentStatus
+            || order.status
+            || data.status
+            || '',
+    ).toLowerCase();
+
+    return context.event?.eventType === 'order_fulfilled'
+        || ['fulfilled', 'shipped', 'delivered', 'complete', 'completed'].includes(status)
+        || Boolean(order.shipped_at || order.shippedAt || order.delivered_at || order.deliveredAt);
+}
+
+function hasRefundRecord(context: EcommerceEmailRenderContext) {
+    const order = readObject(context.order);
+    const data = readObject(order.data);
+    const status = readPaymentStatus(context).toLowerCase();
+    return context.event?.eventType === 'order_refunded'
+        || ['refunded', 'partially_refunded'].includes(status)
+        || Boolean(order.refunded_at || order.refundedAt || data.refundedAt)
+        || readRefundAmount(context) != null
+        || readRefunds(context).length > 0;
+}
+
+function isInventoryTrackingConfigured(context: EcommerceEmailRenderContext) {
+    const product = readObject(context.products?.[0]);
+    const data = readObject(product.data);
+    return product.track_inventory === true
+        || product.trackInventory === true
+        || data.trackInventory === true
+        || data.track_inventory === true;
+}
+
+function hasValidLineItemPrice(item: Record<string, unknown>) {
+    const price = item.totalPrice ?? item.total_price ?? item.unitPrice ?? item.unit_price ?? item.price;
+    if (price === undefined || price === null || price === '') return false;
+    return toOptionalNumber(price) != null;
+}
+
+function readProductName(context: EcommerceEmailRenderContext) {
+    const product = readObject(context.products?.[0]);
+    return stringOrUndefined(product.name || product.productName || product.title);
+}
+
+function readCurrentQuantity(context: EcommerceEmailRenderContext) {
+    const product = readObject(context.products?.[0]);
+    const data = readObject(product.data);
+    return toOptionalNumber(product.quantity ?? product.inventoryQuantity ?? product.inventory_quantity ?? data.quantity ?? data.inventoryQuantity);
+}
+
+function readLowStockThresholdFromContext(context: EcommerceEmailRenderContext) {
+    const product = readObject(context.products?.[0]);
+    const data = readObject(product.data);
+    return toOptionalNumber(product.lowStockThreshold ?? product.low_stock_threshold ?? data.lowStockThreshold ?? data.low_stock_threshold);
+}
+
+function readTrackingNumber(context: EcommerceEmailRenderContext) {
+    const order = readObject(context.order);
+    const data = readObject(order.data);
+    return stringOrUndefined(order.tracking_number || order.trackingNumber || data.trackingNumber);
+}
+
+function readTrackingUrl(context: EcommerceEmailRenderContext) {
+    const order = readObject(context.order);
+    const data = readObject(order.data);
+    return stringOrUndefined(order.tracking_url || order.trackingUrl || data.trackingUrl);
+}
+
+function readCarrier(context: EcommerceEmailRenderContext) {
+    const order = readObject(context.order);
+    const data = readObject(order.data);
+    return stringOrUndefined(order.carrier || data.carrier || order.shipping_carrier || data.shippingCarrier);
+}
+
+function readCheckoutUrl(context: EcommerceEmailRenderContext) {
+    const order = readObject(context.order);
+    const settings = readObject(context.settings);
+    const data = readObject(order.data);
+    return stringOrUndefined(order.checkout_url || order.checkoutUrl || data.checkoutUrl || settings.checkoutUrl);
+}
+
+function readRefunds(context: EcommerceEmailRenderContext) {
+    const order = readObject(context.order);
+    const data = readObject(order.data);
+    if (Array.isArray(order.refunds)) return order.refunds as Array<Record<string, unknown>>;
+    if (Array.isArray(data.refunds)) return data.refunds as Array<Record<string, unknown>>;
+    return [];
+}
+
+function readRefundAmount(context: EcommerceEmailRenderContext) {
+    const order = readObject(context.order);
+    const data = readObject(order.data);
+    const direct = toOptionalNumber(order.refunded_amount ?? order.refundedAmount ?? data.refundedAmount);
+    if (direct != null) return direct;
+    const total = readRefunds(context).reduce((sum, refund) => sum + (toOptionalNumber(refund.amount) || 0), 0);
+    return total > 0 ? total : null;
+}
+
+function readGiftCardAmount(context: EcommerceEmailRenderContext) {
+    const payload = readObject(context.event?.payload);
+    return toOptionalNumber(payload.giftCardAmount || payload.amount);
 }
 
 function sanitizeMetadata(value: Record<string, unknown>) {
@@ -1020,6 +1624,12 @@ function toNumber(value: unknown, fallback: number) {
     return Number.isFinite(number) ? number : fallback;
 }
 
+function toOptionalNumber(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+}
+
 function toIso(value?: string | Date) {
     if (!value) return new Date().toISOString();
     if (value instanceof Date) return value.toISOString();
@@ -1032,6 +1642,10 @@ function formatMoney(value: number, currency: string) {
     } catch (_error) {
         return `$${value.toFixed(2)}`;
     }
+}
+
+function optionalMoneyLine(label: string, value: number | null, currency: string) {
+    return value == null ? '' : `${label}: ${formatMoney(value, currency)}`;
 }
 
 function escapeHtml(value: unknown) {

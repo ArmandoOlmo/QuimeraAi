@@ -224,8 +224,20 @@ export interface LeadBlueprint extends BlueprintModuleState {
     activityTimelineEvents: string[];
 }
 
+export interface EmailMarketingFlowBlueprint {
+    type: string;
+    status: 'draft' | 'needs_review' | 'configured';
+    triggerEvent?: IntegrationEventType;
+    templateType?: string;
+    enabled?: boolean;
+    needsReview?: boolean;
+    generatedByAI?: boolean;
+    userModified?: boolean;
+    readiness?: BlueprintReadiness;
+}
+
 export interface EmailMarketingBlueprint extends BlueprintModuleState {
-    flows: Array<{ type: string; status: 'draft' | 'needs_review' | 'configured'; triggerEvent?: IntegrationEventType }>;
+    flows: EmailMarketingFlowBlueprint[];
     logEvents: IntegrationEventType[];
 }
 

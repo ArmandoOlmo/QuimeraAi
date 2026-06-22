@@ -66,6 +66,22 @@ export function deriveCrossModuleBlueprints(
         ...(signals.includes('real-estate') ? ['real-estate-resource'] : []),
         ...(signals.includes('services') ? ['paid-service-interest'] : []),
     ];
+    const emailFlow = (
+        type: string,
+        triggerEvent: IntegrationEventType,
+        blockers: string[],
+        templateType = type,
+    ) => ({
+        type,
+        status: 'draft' as const,
+        triggerEvent,
+        templateType,
+        enabled: false,
+        needsReview: true,
+        generatedByAI: true,
+        userModified: false,
+        readiness: createAiStudioReadiness([], blockers),
+    });
 
     return {
         chatbotBlueprint: {
@@ -118,20 +134,23 @@ export function deriveCrossModuleBlueprints(
             status: enabled ? 'needs_review' : 'draft',
             needsReview: true,
             flows: [
-                { type: 'welcome', status: 'draft', triggerEvent: 'newsletter_signup' },
+                emailFlow('welcome', 'newsletter_signup', ['Welcome flow needs sender, audience, and copy review.']),
                 ...(enabled
                     ? [
-                        { type: 'abandoned_cart', status: 'draft' as const, triggerEvent: 'cart_abandoned' },
-                        { type: 'order_confirmation', status: 'draft' as const, triggerEvent: 'order_created' },
-                        { type: 'post_purchase', status: 'draft' as const, triggerEvent: 'purchase_completed' },
-                        { type: 'product_recommendation', status: 'draft' as const, triggerEvent: 'product_viewed' },
-                        { type: 'back_in_stock', status: 'draft' as const, triggerEvent: 'inventory_back_in_stock' },
-                        { type: 'merchant_new_order_alert', status: 'draft' as const, triggerEvent: 'order_created' },
+                        emailFlow('abandoned_cart', 'cart_abandoned', ['Cart recovery requires customer email, consent, checkout URL, sender, and copy review.']),
+                        emailFlow('order_confirmation', 'payment_succeeded', ['Order confirmation sends only after confirmed payment, valid recipient, template, and provider.']),
+                        emailFlow('post_purchase', 'purchase_completed', ['Post purchase flow requires fulfillment/audience review before activation.']),
+                        emailFlow('refund', 'order_refunded', ['Refund confirmation requires stored refund state and provider readiness.'], 'refund_confirmation'),
+                        emailFlow('shipping_confirmation', 'order_fulfilled', ['Shipping confirmation requires stored fulfillment state and provider readiness.'], 'fulfillment_confirmation'),
+                        emailFlow('low_stock_merchant_alert', 'low_stock', ['Low stock alerts require explicit inventory tracking and merchant recipient.'], 'low_stock_alert'),
+                        emailFlow('product_recommendation', 'product_viewed', ['Product recommendation flow needs catalog/audience review.']),
+                        emailFlow('back_in_stock', 'back_in_stock', ['Back-in-stock flow requires customer consent and inventory review.']),
+                        emailFlow('merchant_new_order_alert', 'payment_succeeded', ['Merchant new order alert requires merchant recipient and confirmed payment.'], 'merchant_new_order'),
                     ]
                     : []),
             ],
             logEvents: enabled
-                ? ['email_flow_queued', 'email_sent', 'cart_abandoned', 'order_created']
+                ? ['email_flow_queued', 'email_sent', 'cart_abandoned', 'payment_succeeded', 'order_fulfilled', 'order_refunded', 'low_stock']
                 : ['email_flow_queued'],
             readiness: createAiStudioReadiness([
                 'Email marketing flows are drafts only; no runtime sends are activated.',

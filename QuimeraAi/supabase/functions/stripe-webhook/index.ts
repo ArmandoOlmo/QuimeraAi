@@ -4,6 +4,7 @@ import Stripe from "npm:stripe@^14.0.0";
 import {
   sendPaidOrderTransactionalEmails,
   sendPaymentFailedTransactionalEmail,
+  sendRefundTransactionalEmail,
 } from "../_shared/ecommerce-transactional-emails.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
@@ -699,6 +700,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
         ...paidOrder,
       },
       paidAt,
+      providerEventId: paymentIntent.id,
       resendApiKey: RESEND_API_KEY,
       defaultFromEmail: DEFAULT_FROM_EMAIL,
     });
@@ -1488,4 +1490,25 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     .from("store_orders")
     .update(updatePayload)
     .eq("id", order.id);
+
+  try {
+    const emailResult = await sendRefundTransactionalEmail({
+      supabase,
+      order: {
+        ...order,
+        ...updatePayload,
+        refunded_amount: refundedAmount,
+        data: nextData,
+      },
+      occurredAt: updatedAt,
+      eventId: chargeRefunds[0]?.id || charge.id,
+      providerEventId: chargeRefunds[0]?.id || charge.id,
+      resendApiKey: RESEND_API_KEY,
+      defaultFromEmail: DEFAULT_FROM_EMAIL,
+    });
+    console.log("[stripe-webhook] ecommerce refund email result:", emailResult);
+  } catch (emailError) {
+    const message = emailError instanceof Error ? emailError.message : String(emailError);
+    console.error("[stripe-webhook] ecommerce refund email failed:", message);
+  }
 }

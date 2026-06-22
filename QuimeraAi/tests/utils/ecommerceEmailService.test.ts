@@ -316,6 +316,7 @@ describe('ecommerce email service', () => {
             id: 'prod_low',
             name: 'Spare Tube',
             inventory_quantity: 1,
+            track_inventory: true,
             low_stock_threshold: 2,
         };
         const context = emailContext({

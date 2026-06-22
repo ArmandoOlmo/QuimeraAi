@@ -245,6 +245,25 @@ function createLeadBlueprint(plan: WebsitePlan, now: string): LeadBlueprint {
     };
 }
 
+function createDraftEmailFlow(
+    type: string,
+    triggerEvent: EmailMarketingBlueprint['flows'][number]['triggerEvent'],
+    blockers: string[],
+    templateType = type,
+): EmailMarketingBlueprint['flows'][number] {
+    return {
+        type,
+        status: 'draft',
+        triggerEvent,
+        templateType,
+        enabled: false,
+        needsReview: true,
+        generatedByAI: true,
+        userModified: false,
+        readiness: ready([], blockers),
+    };
+}
+
 function createEmailMarketingBlueprint(plan: WebsitePlan, now: string): EmailMarketingBlueprint {
     return {
         ...createBlueprintModuleState(now, {
@@ -252,16 +271,21 @@ function createEmailMarketingBlueprint(plan: WebsitePlan, now: string): EmailMar
             readiness: ready(['Email flows are drafts until sender, templates, and audiences are configured.']),
         }),
         flows: [
-            { type: 'welcome', status: 'draft', triggerEvent: 'newsletter_signup' },
+            createDraftEmailFlow('welcome', 'newsletter_signup', ['Welcome flow needs sender, audience, and copy review.']),
             ...(plan.businessProfile.hasEcommerce
                 ? [
-                    { type: 'abandoned_cart', status: 'draft' as const, triggerEvent: 'cart_abandoned' },
-                    { type: 'order_confirmation', status: 'draft' as const, triggerEvent: 'order_created' },
-                    { type: 'post_purchase', status: 'draft' as const, triggerEvent: 'purchase_completed' },
+                    createDraftEmailFlow('abandoned_cart', 'cart_abandoned', ['Cart recovery requires customer email, consent, checkout URL, sender, and copy review.']),
+                    createDraftEmailFlow('order_confirmation', 'payment_succeeded', ['Transactional order confirmation sends only after payment and provider readiness are configured.']),
+                    createDraftEmailFlow('post_purchase', 'purchase_completed', ['Post-purchase follow-up needs fulfillment rules and copy review.']),
+                    createDraftEmailFlow('refund', 'order_refunded', ['Refund confirmation needs refund data and provider readiness.'], 'refund_confirmation'),
+                    createDraftEmailFlow('shipping_confirmation', 'order_fulfilled', ['Shipping confirmation needs fulfillment data and provider readiness.'], 'fulfillment_confirmation'),
+                    createDraftEmailFlow('low_stock_merchant_alert', 'low_stock', ['Low stock alerts require explicit inventory tracking and merchant recipient.'], 'low_stock_alert'),
                 ]
                 : []),
         ],
-        logEvents: ['email_flow_queued', 'email_sent'],
+        logEvents: plan.businessProfile.hasEcommerce
+            ? ['email_flow_queued', 'email_sent', 'cart_abandoned', 'payment_succeeded', 'order_fulfilled', 'order_refunded', 'low_stock']
+            : ['email_flow_queued', 'email_sent'],
     };
 }
 
