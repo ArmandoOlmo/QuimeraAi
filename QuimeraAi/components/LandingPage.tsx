@@ -508,10 +508,15 @@ const LandingPageContent: React.FC = () => {
   }, [activeProjectId, pages, scrollPreviewToTop, setActivePage]);
 
   const handleViewAllProducts = useCallback(() => {
+    if (!isEditorMode) {
+      window.history.pushState({}, '', '/tienda/productos');
+    }
     navigateInsideEditorStorefront('/tienda/productos');
-  }, [navigateInsideEditorStorefront]);
+  }, [isEditorMode, navigateInsideEditorStorefront]);
 
   const handlePreviewClickCapture = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!isEditorMode) return;
+
     const target = event.target as HTMLElement | null;
     const anchor = target?.closest?.('a[href]') as HTMLAnchorElement | null;
     if (!anchor) return;
@@ -526,7 +531,7 @@ const LandingPageContent: React.FC = () => {
     event.stopPropagation();
 
     navigateInsideEditorStorefront(normalized);
-  }, [activeProjectId, navigateInsideEditorStorefront]);
+  }, [activeProjectId, isEditorMode, navigateInsideEditorStorefront]);
 
   const handleBackToHome = () => {
     if (!isEditorMode) {
@@ -582,8 +587,31 @@ const LandingPageContent: React.FC = () => {
     setTimeout(() => { navigationGuardRef.current = false; }, 50);
 
     const storefrontHref = normalizeStorefrontHrefForWebsiteContext(href, activeProjectId);
-    if (storefrontHref && navigateInsideEditorStorefront(storefrontHref)) {
-      return;
+    if (storefrontHref) {
+      if (isEditorMode) {
+        if (navigateInsideEditorStorefront(storefrontHref)) return;
+      } else {
+        if (storefrontHref === '/tienda') {
+          handleNavigateToStore();
+          return;
+        }
+        if (storefrontHref === '/tienda/productos') {
+          handleViewAllProducts();
+          return;
+        }
+        if (storefrontHref.startsWith('/tienda/categoria/')) {
+          handleNavigateToCategory(storefrontHref.replace('/tienda/categoria/', '').replace(/\/$/, ''));
+          return;
+        }
+        if (storefrontHref.startsWith('/tienda/producto/')) {
+          handleNavigateToProduct(storefrontHref.replace('/tienda/producto/', '').replace(/\/$/, ''));
+          return;
+        }
+        if (storefrontHref === '/checkout') {
+          handleNavigateToCheckout();
+          return;
+        }
+      }
     }
 
     // Reset views
@@ -782,7 +810,7 @@ const LandingPageContent: React.FC = () => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [activePage, activeProjectId, cmsPosts, navigateInsideEditorStorefront, pages, scrollPreviewToTop, setActivePage]);
+  }, [activePage, activeProjectId, cmsPosts, handleNavigateToCategory, handleNavigateToCheckout, handleNavigateToProduct, handleNavigateToStore, handleViewAllProducts, isEditorMode, navigateInsideEditorStorefront, pages, scrollPreviewToTop, setActivePage]);
 
   // Check if we're showing a store view
   const isStoreViewActive = storeView.type !== 'none';
