@@ -11,6 +11,16 @@ import { supabase } from '../supabase';
 import { resolveProjectMenus } from './mapSupabaseProject';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+const PREVIEW_LOGICAL_ROUTE_SEGMENTS = new Set([
+    'listados',
+    'blog',
+    'tienda',
+    'producto',
+    'categoria',
+    'carrito',
+    'checkout',
+    'pedido',
+]);
 
 export interface PrefetchedPreviewData {
     project: any | null;
@@ -28,6 +38,9 @@ function parsePreviewIds(): { userId: string | null; projectId: string | null } 
     const pathname = window.location.pathname;
     if (pathname.startsWith('/preview/')) {
         const parts = pathname.replace('/preview/', '').split('/').filter(Boolean);
+        if (parts.length >= 2 && PREVIEW_LOGICAL_ROUTE_SEGMENTS.has(parts[1])) {
+            return { userId: null, projectId: parts[0] };
+        }
         if (parts.length >= 2) return { userId: parts[0], projectId: parts[1] };
         if (parts.length === 1) return { userId: null, projectId: parts[0] };
     }
