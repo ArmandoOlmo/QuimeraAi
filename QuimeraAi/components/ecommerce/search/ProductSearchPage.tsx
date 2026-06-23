@@ -28,7 +28,7 @@ import { RatingStars } from '../reviews';
 import type { ProductCardVariant, ProductCardVisualVariant } from '../../../types/productCard';
 import { createProductCardViewModel } from '../../../utils/productCard';
 import { filterRenderableStorefrontProducts } from '../../../utils/ecommerce/productDisplayGuards';
-import AppSelect from '../../ui/AppSelect';
+import StorefrontSelect from '../ui/StorefrontSelect';
 
 export type { ProductCardVariant } from '../../../types/productCard';
 
@@ -431,7 +431,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                 {/* Sort */}
                                 {showSortOptions && (
                                     <div className="relative">
-                                        <AppSelect
+                                        <StorefrontSelect
                                             value={sortBy}
                                             onChange={(e) => handleSortChange(e.target.value as SortOption)}
                                             className="appearance-none px-3 py-2 pr-8 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-colors"
@@ -447,7 +447,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                                     {option.label}
                                                 </option>
                                             ))}
-                                        </AppSelect>
+                                        </StorefrontSelect>
                                         <ChevronDown
                                             className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                                             size={16}
@@ -537,7 +537,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                             {/* Sort */}
                             {showSortOptions && (
                                 <div className="relative">
-                                    <AppSelect
+                                    <StorefrontSelect
                                         value={sortBy}
                                         onChange={(e) => handleSortChange(e.target.value as SortOption)}
                                         className="appearance-none px-3 py-2 pr-8 rounded-lg text-sm focus:outline-none focus:ring-2"
@@ -553,7 +553,7 @@ const ProductSearchPage: React.FC<ProductSearchPageProps> = ({
                                                 {option.label}
                                             </option>
                                         ))}
-                                    </AppSelect>
+                                    </StorefrontSelect>
                                     <ChevronDown
                                         className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
                                         size={16}

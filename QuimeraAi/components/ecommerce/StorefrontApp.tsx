@@ -300,6 +300,55 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     const navigateToOrder = (orderId: string, orderAccessToken?: string) => {
         navigate(`/order/${orderId}${orderAccessToken ? `?token=${encodeURIComponent(orderAccessToken)}` : ''}`);
     };
+    const navigateStorefrontHref = (href: string) => {
+        const rawHref = href.trim();
+        if (!rawHref) return;
+
+        let pathname = rawHref.split(/[?#]/)[0] || '/';
+        if (/^https?:\/\//i.test(rawHref)) {
+            try {
+                const url = new URL(rawHref);
+                if (url.origin !== window.location.origin) {
+                    window.open(rawHref, '_blank', 'noopener,noreferrer');
+                    return;
+                }
+                pathname = url.pathname;
+            } catch {
+                window.location.href = rawHref;
+                return;
+            }
+        }
+
+        const storeRoute = pathname.match(/^\/store\/[^/]+(?:\/(.*))?$/)?.[1]?.replace(/^\/+|\/+$/g, '') || '';
+        const route = storeRoute || pathname.replace(/^\/+|\/+$/g, '');
+
+        if (!route || route === 'tienda' || route === 'shop') {
+            navigateHome();
+            return;
+        }
+        if (/^(products|catalog|tienda\/productos|tienda\/catalogo)$/.test(route)) {
+            navigate('/tienda/productos');
+            return;
+        }
+        if (route.startsWith('product/')) {
+            navigateToProduct(route.replace('product/', ''));
+            return;
+        }
+        if (route.startsWith('category/')) {
+            navigateToCategory(route.replace('category/', ''));
+            return;
+        }
+        if (route.startsWith('tienda/producto/')) {
+            navigateToProduct(route.replace('tienda/producto/', ''));
+            return;
+        }
+        if (route.startsWith('tienda/categoria/')) {
+            navigateToCategory(route.replace('tienda/categoria/', ''));
+            return;
+        }
+
+        window.location.href = rawHref;
+    };
 
     const resolvedProjectData = projectData
         ? applyResolvedStorefrontEditorConfig(projectData, { mode: storefrontConfigMode })
@@ -392,6 +441,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                         projectData={resolvedProjectData}
                         onNavigateToProduct={navigateToProduct}
                         onNavigateToCategory={navigateToCategory}
+                        onNavigate={navigateStorefrontHref}
                         previewSessionKey={previewSessionKey}
                         themeColors={{
                             background: resolvedProjectData?.theme?.pageBackground || '#ffffff',

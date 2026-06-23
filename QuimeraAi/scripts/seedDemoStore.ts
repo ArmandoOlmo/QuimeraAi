@@ -5,14 +5,7 @@
  * Este script puede ejecutarse desde la consola del navegador o importarse como módulo
  */
 
-import {
-    db,
-    collection,
-    doc,
-    setDoc,
-    writeBatch,
-    serverTimestamp,
-} from '@/utils/compatData';
+import { supabase } from '@/supabase';
 
 // =============================================================================
 // TYPES
@@ -417,6 +410,358 @@ export const DEMO_STORE_SETTINGS: SeedStoreSettings = {
 // SEED FUNCTIONS
 // =============================================================================
 
+type JsonRecord = Record<string, unknown>;
+
+const nowIso = (): string => new Date().toISOString();
+
+const getErrorMessage = (error: unknown): string => {
+    if (!error) return '';
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'object' && 'message' in error) {
+        return String((error as { message?: unknown }).message || '');
+    }
+    return String(error);
+};
+
+const isMissingColumnError = (error: unknown, tableName: string, columnNames: string[]): boolean => {
+    const message = getErrorMessage(error).toLowerCase();
+    return message.includes('column') &&
+        (message.includes('could not find') || message.includes('does not exist') || message.includes('schema cache')) &&
+        (
+            message.includes(tableName.toLowerCase()) ||
+            columnNames.some((column) => message.includes(column.toLowerCase()))
+        );
+};
+
+const isProductStoreIdForeignKeyError = (error: unknown): boolean => {
+    const message = getErrorMessage(error).toLowerCase();
+    return message.includes('foreign key') &&
+        message.includes('store_products') &&
+        (message.includes('store_id') || message.includes('store_products_store_id_fkey'));
+};
+
+const buildCategoryData = (category: SeedCategory, slug: string, position: number): JsonRecord => ({
+    name: category.name,
+    slug,
+    description: category.description,
+    imageUrl: category.imageUrl || null,
+    position,
+});
+
+const mapCategoryToFlatRow = (
+    storeId: string,
+    category: SeedCategory,
+    slug: string,
+    position: number
+): JsonRecord => ({
+    project_id: storeId,
+    store_id: storeId,
+    public_store_id: storeId,
+    name: category.name,
+    slug,
+    description: category.description,
+    image_url: category.imageUrl || null,
+    position,
+    data: buildCategoryData(category, slug, position),
+});
+
+const mapCategoryToJsonOnlyRow = (
+    storeId: string,
+    category: SeedCategory,
+    slug: string,
+    position: number
+): JsonRecord => ({
+    project_id: storeId,
+    store_id: storeId,
+    public_store_id: storeId,
+    slug,
+    data: buildCategoryData(category, slug, position),
+});
+
+const readRowData = (row: JsonRecord): JsonRecord =>
+    row.data && typeof row.data === 'object' && !Array.isArray(row.data)
+        ? row.data as JsonRecord
+        : {};
+
+const buildCategoryMap = (
+    rows: JsonRecord[] | null | undefined,
+    categoriesBySlug: Map<string, SeedCategory>
+): Record<string, string> => {
+    const categoryMap: Record<string, string> = {};
+
+    (rows || []).forEach((row) => {
+        const data = readRowData(row);
+        const slug = typeof row.slug === 'string'
+            ? row.slug
+            : typeof data.slug === 'string'
+                ? data.slug
+                : '';
+        const sourceCategory = categoriesBySlug.get(slug);
+        const name = sourceCategory?.name || (typeof data.name === 'string' ? data.name : '');
+        const id = typeof row.id === 'string' ? row.id : '';
+
+        if (name && id) categoryMap[name] = id;
+    });
+
+    return categoryMap;
+};
+
+const buildProductImages = (product: SeedProduct) =>
+    product.images.map((url, index) => ({
+        id: `img-${index}`,
+        url,
+        altText: product.name,
+        position: index,
+    }));
+
+const buildProductData = (
+    storeId: string,
+    product: SeedProduct,
+    slug: string,
+    categoryId: string | null,
+    images: ReturnType<typeof buildProductImages>
+): JsonRecord => ({
+    projectId: storeId,
+    storeId,
+    publicStoreId: storeId,
+    name: product.name,
+    slug,
+    description: product.description,
+    shortDescription: product.shortDescription,
+    price: product.price,
+    compareAtPrice: product.compareAtPrice || null,
+    costPrice: Math.round(product.price * 0.6 * 100) / 100,
+    currency: 'USD',
+    sku: product.sku,
+    quantity: product.quantity,
+    inventoryQuantity: product.quantity,
+    trackInventory: true,
+    lowStockThreshold: 10,
+    images,
+    categoryId,
+    categoryName: product.categoryName,
+    tags: product.tags,
+    hasVariants: false,
+    variants: [],
+    options: [],
+    metaTitle: product.name,
+    metaDescription: product.shortDescription,
+    status: 'active',
+    isDigital: false,
+    isFeatured: product.isFeatured || false,
+});
+
+const mapProductToFlatRow = (
+    storeId: string,
+    product: SeedProduct,
+    categoryMap: Record<string, string>
+): JsonRecord => {
+    const slug = generateSlug(product.name);
+    const categoryId = categoryMap[product.categoryName] || null;
+    const images = buildProductImages(product);
+
+    return {
+        project_id: storeId,
+        store_id: storeId,
+        public_store_id: storeId,
+        category_id: categoryId,
+        name: product.name,
+        slug,
+        description: product.description,
+        short_description: product.shortDescription,
+        price: product.price,
+        compare_at_price: product.compareAtPrice || null,
+        cost_price: Math.round(product.price * 0.6 * 100) / 100,
+        currency: 'USD',
+        sku: product.sku,
+        barcode: null,
+        quantity: product.quantity,
+        inventory_quantity: product.quantity,
+        track_inventory: true,
+        low_stock_threshold: 10,
+        images,
+        tags: product.tags,
+        has_variants: false,
+        variants: [],
+        options: [],
+        status: 'active',
+        is_digital: false,
+        is_featured: product.isFeatured || false,
+        weight: null,
+        weight_unit: 'kg',
+        data: buildProductData(storeId, product, slug, categoryId, images),
+    };
+};
+
+const mapProductToCompatibleRow = (row: JsonRecord): JsonRecord => {
+    const {
+        inventory_quantity: inventoryQuantity,
+        store_id: storeId,
+        public_store_id: publicStoreId,
+        data,
+        ...flatRow
+    } = row;
+
+    return {
+        ...flatRow,
+        data: {
+            ...(data && typeof data === 'object' && !Array.isArray(data) ? data as JsonRecord : {}),
+            store_id: storeId,
+            storeId,
+            public_store_id: publicStoreId,
+            publicStoreId,
+            inventory_quantity: inventoryQuantity,
+            inventoryQuantity,
+        },
+    };
+};
+
+const mapStoreSettingsToRow = (
+    userId: string,
+    storeId: string,
+    settings: SeedStoreSettings
+): JsonRecord => {
+    const shippingZones = [
+        {
+            id: 'zone-1',
+            name: 'Nacional',
+            countries: ['MX', 'US'],
+            rates: [
+                {
+                    id: 'rate-1',
+                    name: 'Envío Estándar',
+                    price: 9.99,
+                    estimatedDays: '3-5 días',
+                },
+                {
+                    id: 'rate-2',
+                    name: 'Envío Express',
+                    price: 19.99,
+                    estimatedDays: '1-2 días',
+                },
+            ],
+        },
+    ];
+
+    return {
+        project_id: storeId,
+        store_id: storeId,
+        public_store_id: storeId,
+        store_name: settings.storeName,
+        store_email: settings.storeEmail,
+        store_phone: settings.storePhone,
+        store_logo: null,
+        currency: settings.currency,
+        currency_symbol: settings.currencySymbol,
+        tax_enabled: settings.taxEnabled,
+        tax_rate: settings.taxRate,
+        tax_name: 'IVA',
+        tax_included: false,
+        shipping_zones: shippingZones,
+        free_shipping_threshold: settings.freeShippingThreshold,
+        stripe_enabled: false,
+        paypal_enabled: false,
+        cash_on_delivery_enabled: true,
+        order_notification_email: settings.storeEmail,
+        low_stock_notifications: true,
+        low_stock_threshold: 10,
+        notify_on_new_order: true,
+        notify_on_low_stock: true,
+        send_order_confirmation: true,
+        send_shipping_notification: true,
+        require_phone: true,
+        require_shipping_address: true,
+        is_active: true,
+        data: {
+            projectId: storeId,
+            storeId,
+            publicStoreId: storeId,
+            ownerUserId: userId,
+            storeName: settings.storeName,
+            storeEmail: settings.storeEmail,
+            storePhone: settings.storePhone,
+            currency: settings.currency,
+            currencySymbol: settings.currencySymbol,
+            taxEnabled: settings.taxEnabled,
+            taxRate: settings.taxRate,
+            taxName: 'IVA',
+            taxIncluded: false,
+            shippingZones,
+            freeShippingThreshold: settings.freeShippingThreshold,
+            stripeEnabled: false,
+            paypalEnabled: false,
+            cashOnDeliveryEnabled: true,
+            orderNotificationEmail: settings.storeEmail,
+            lowStockNotifications: true,
+            lowStockThreshold: 10,
+            notifyOnNewOrder: true,
+            notifyOnLowStock: true,
+            sendOrderConfirmation: true,
+            sendShippingNotification: true,
+            requirePhone: true,
+            requireShippingAddress: true,
+            isActive: true,
+        },
+    };
+};
+
+const mapStoreSettingsToCompatibleRow = (row: JsonRecord): JsonRecord => ({
+    project_id: row.project_id,
+    store_id: row.store_id,
+    public_store_id: row.public_store_id,
+    store_name: row.store_name,
+    store_email: row.store_email,
+    currency: row.currency,
+    currency_symbol: row.currency_symbol,
+    data: {
+        ...(row.data && typeof row.data === 'object' && !Array.isArray(row.data) ? row.data as JsonRecord : {}),
+    },
+});
+
+const buildPublicStoreRow = (
+    userId: string,
+    storeId: string,
+    settings: SeedStoreSettings = DEMO_STORE_SETTINGS
+): JsonRecord => ({
+    id: storeId,
+    project_id: storeId,
+    user_id: userId,
+    data: {
+        projectId: storeId,
+        sourceProjectId: storeId,
+        userId,
+        name: settings.storeName,
+        storeName: settings.storeName,
+        description: 'Tienda de demostración',
+        currency: settings.currency,
+        currencySymbol: settings.currencySymbol,
+        updatedAt: nowIso(),
+    },
+});
+
+const ensurePublicStoreRecord = async (
+    userId: string,
+    storeId: string,
+    settings: SeedStoreSettings = DEMO_STORE_SETTINGS
+): Promise<void> => {
+    const publicStoreRow = buildPublicStoreRow(userId, storeId, settings);
+    const publicStoreResult = await supabase
+        .from('public_stores')
+        .upsert(publicStoreRow, { onConflict: 'id' });
+
+    if (!publicStoreResult.error) return;
+
+    if (!isMissingColumnError(publicStoreResult.error, 'public_stores', ['project_id', 'user_id'])) {
+        throw publicStoreResult.error;
+    }
+
+    const compatibleResult = await supabase
+        .from('public_stores')
+        .upsert({ id: storeId, data: publicStoreRow.data }, { onConflict: 'id' });
+
+    if (compatibleResult.error) throw compatibleResult.error;
+};
+
 /**
  * Generate slug from name
  */
@@ -438,47 +783,65 @@ export const seedCategories = async (
     storeId: string,
     categories: SeedCategory[] = DEMO_CATEGORIES
 ): Promise<Record<string, string>> => {
-    const categoryMap: Record<string, string> = {};
-    const batch = writeBatch(db);
-    const categoriesPath = `users/${userId}/stores/${storeId}/categories`;
-    const publicCategoriesPath = `publicStores/${storeId}/categories`;
+    void userId;
 
-    categories.forEach((category, index) => {
-        const categoryId = `demo-cat-${generateSlug(category.name)}`;
-        const categoryRef = doc(db, categoriesPath, categoryId);
-        const publicCategoryRef = doc(db, publicCategoriesPath, categoryId);
-        
-        const slug = generateSlug(category.name);
-        
-        // Private category data
-        const categoryData = {
-            name: category.name,
-            slug,
-            description: category.description,
-            imageUrl: category.imageUrl || null,
-            position: index,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        };
-        
-        // Public category data
-        const publicCategoryData = {
-            id: categoryId,
-            name: category.name,
-            slug,
-            description: category.description,
-            image: category.imageUrl || null,
-            order: index,
-            updatedAt: serverTimestamp(),
-        };
-        
-        batch.set(categoryRef, categoryData);
-        batch.set(publicCategoryRef, publicCategoryData);
-        categoryMap[category.name] = categoryId;
+    const categoriesBySlug = new Map(categories.map((category) => [generateSlug(category.name), category]));
+    const slugs = Array.from(categoriesBySlug.keys());
+
+    const { data: existingRows, error: existingError } = await supabase
+        .from('store_categories')
+        .select('id, slug, data')
+        .eq('project_id', storeId)
+        .in('slug', slugs);
+
+    if (existingError) throw existingError;
+
+    const existingMap = buildCategoryMap(existingRows as JsonRecord[] | null, categoriesBySlug);
+    const existingSlugs = new Set(
+        (existingRows || [])
+            .map((row: JsonRecord) => String(row.slug || readRowData(row).slug || ''))
+            .filter(Boolean)
+    );
+    const missingCategories = categories.filter((category) => !existingSlugs.has(generateSlug(category.name)));
+
+    if (!missingCategories.length) {
+        console.log(`✅ ${Object.keys(existingMap).length} categorías demo ya existían`);
+        return existingMap;
+    }
+
+    const rows = missingCategories.map((category, index) => {
+        const position = categories.findIndex((source) => source.name === category.name);
+        return mapCategoryToFlatRow(storeId, category, generateSlug(category.name), position >= 0 ? position : index);
     });
 
-    await batch.commit();
-    console.log(`✅ ${categories.length} categorías creadas (privadas + públicas)`);
+    const flatResult = await supabase
+        .from('store_categories')
+        .insert(rows)
+        .select('id, slug, data');
+
+    let insertedRows = flatResult.data as JsonRecord[] | null;
+    if (flatResult.error) {
+        if (!isMissingColumnError(flatResult.error, 'store_categories', ['name', 'description', 'image_url', 'position', 'store_id'])) {
+            throw flatResult.error;
+        }
+
+        const jsonRows = missingCategories.map((category, index) => {
+            const position = categories.findIndex((source) => source.name === category.name);
+            return mapCategoryToJsonOnlyRow(storeId, category, generateSlug(category.name), position >= 0 ? position : index);
+        });
+        const jsonResult = await supabase
+            .from('store_categories')
+            .insert(jsonRows)
+            .select('id, slug, data');
+
+        if (jsonResult.error) throw jsonResult.error;
+        insertedRows = jsonResult.data as JsonRecord[] | null;
+    }
+
+    const insertedMap = buildCategoryMap(insertedRows, categoriesBySlug);
+    const categoryMap = { ...existingMap, ...insertedMap };
+
+    console.log(`✅ ${missingCategories.length} categorías creadas (${Object.keys(existingMap).length} reutilizadas)`);
     return categoryMap;
 };
 
@@ -493,104 +856,70 @@ export const seedProducts = async (
     categoryMap: Record<string, string>,
     categoryNameMap?: Record<string, string>
 ): Promise<void> => {
-    const productsPath = `users/${userId}/stores/${storeId}/products`;
-    const publicProductsPath = `publicStores/${storeId}/products`;
-    
-    // Build category name map if not provided
-    const catNameMap = categoryNameMap || Object.fromEntries(
-        Object.entries(categoryMap).map(([name, id]) => [id, name])
-    );
-    
-    // Split into batches of 250 (to account for double writes)
-    const batchSize = 250;
-    for (let i = 0; i < products.length; i += batchSize) {
-        const batch = writeBatch(db);
-        const batchProducts = products.slice(i, i + batchSize);
+    void categoryNameMap;
 
-        batchProducts.forEach((product) => {
-            const productId = `demo-${generateSlug(product.name)}-${Date.now()}`;
-            const productRef = doc(db, productsPath, productId);
-            const publicProductRef = doc(db, publicProductsPath, productId);
-            
-            const slug = generateSlug(product.name);
-            const categoryId = categoryMap[product.categoryName] || null;
-            
-            const images = product.images.map((url, idx) => ({
-                id: `img-${idx}`,
-                url,
-                altText: product.name,
-                position: idx,
-            }));
-            
-            // Private product data (full)
-            const productData = {
-                name: product.name,
-                slug,
-                description: product.description,
-                shortDescription: product.shortDescription,
-                price: product.price,
-                compareAtPrice: product.compareAtPrice || null,
-                costPrice: Math.round(product.price * 0.6 * 100) / 100, // 40% margin
-                currency: 'USD',
-                sku: product.sku,
-                barcode: null,
-                quantity: product.quantity,
-                trackInventory: true,
-                lowStockThreshold: 10,
-                images,
-                categoryId,
-                tags: product.tags,
-                hasVariants: false,
-                variants: null,
-                options: null,
-                metaTitle: product.name,
-                metaDescription: product.shortDescription,
-                status: 'active',
-                isDigital: false,
-                isFeatured: product.isFeatured || false,
-                weight: null,
-                weightUnit: 'kg',
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-                publishedAt: serverTimestamp(),
-            };
-            
-            // Public product data (for storefront)
-            const publicProductData = {
-                id: productId,
-                name: product.name,
-                slug,
-                description: product.description,
-                shortDescription: product.shortDescription,
-                price: product.price,
-                compareAtPrice: product.compareAtPrice || null,
-                images,
-                categoryId,
-                categoryName: product.categoryName,
-                tags: product.tags,
-                variants: null,
-                trackInventory: true,
-                inStock: product.quantity > 0,
-                lowStock: product.quantity <= 10,
-                isFeatured: product.isFeatured || false,
-                seoTitle: product.name,
-                seoDescription: product.shortDescription,
-                status: 'active', // Required for storefront query
-                storeId,
-                userId,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            };
-            
-            batch.set(productRef, productData);
-            batch.set(publicProductRef, publicProductData);
-        });
-
-        await batch.commit();
-        console.log(`✅ Lote ${Math.floor(i / batchSize) + 1}: ${batchProducts.length} productos creados`);
+    try {
+        await ensurePublicStoreRecord(userId, storeId);
+    } catch (error) {
+        console.warn('[seedDemoStore] Public store preload skipped before products:', error);
     }
 
-    console.log(`✅ Total: ${products.length} productos creados (privados + públicos)`);
+    const skus = products.map((product) => product.sku).filter(Boolean);
+    const { data: existingRows, error: existingError } = await supabase
+        .from('store_products')
+        .select('id, sku, data')
+        .eq('project_id', storeId)
+        .in('sku', skus);
+
+    if (existingError) throw existingError;
+
+    const existingSkus = new Set(
+        (existingRows || [])
+            .map((row: JsonRecord) => String(row.sku || readRowData(row).sku || ''))
+            .filter(Boolean)
+    );
+    const missingProducts = products.filter((product) => !existingSkus.has(product.sku));
+
+    if (!missingProducts.length) {
+        console.log(`✅ ${products.length} productos demo ya existían`);
+        return;
+    }
+
+    const batchSize = 100;
+    let created = 0;
+
+    for (let i = 0; i < missingProducts.length; i += batchSize) {
+        const batchProducts = missingProducts.slice(i, i + batchSize);
+        const rows = batchProducts.map((product) => mapProductToFlatRow(storeId, product, categoryMap));
+
+        const flatResult = await supabase
+            .from('store_products')
+            .insert(rows)
+            .select('id');
+
+        if (flatResult.error) {
+            if (
+                !isMissingColumnError(flatResult.error, 'store_products', ['inventory_quantity', 'store_id', 'public_store_id', 'data']) &&
+                !isProductStoreIdForeignKeyError(flatResult.error)
+            ) {
+                throw flatResult.error;
+            }
+
+            const compatibleResult = await supabase
+                .from('store_products')
+                .insert(rows.map(mapProductToCompatibleRow))
+                .select('id');
+
+            if (compatibleResult.error) throw compatibleResult.error;
+            created += compatibleResult.data?.length || 0;
+        } else {
+            created += flatResult.data?.length || 0;
+        }
+
+        console.log(`✅ Lote ${Math.floor(i / batchSize) + 1}: ${batchProducts.length} productos procesados`);
+    }
+
+    console.log(`✅ Total: ${created} productos creados (${products.length - missingProducts.length} reutilizados)`);
 };
 
 /**
@@ -602,89 +931,55 @@ export const seedStoreSettings = async (
     storeId: string,
     settings: SeedStoreSettings = DEMO_STORE_SETTINGS
 ): Promise<void> => {
-    const settingsPath = `users/${userId}/stores/${storeId}/settings/general`;
-    const publicStorePath = `publicStores/${storeId}`;
-    const settingsRef = doc(db, settingsPath);
-    const publicStoreRef = doc(db, publicStorePath);
+    const settingsRow = mapStoreSettingsToRow(userId, storeId, settings);
+    const { data: existingSettings, error: existingSettingsError } = await supabase
+        .from('store_settings')
+        .select('id')
+        .eq('project_id', storeId)
+        .limit(1)
+        .maybeSingle();
 
-    const settingsData = {
-        // General
-        storeName: settings.storeName,
-        storeEmail: settings.storeEmail,
-        storePhone: settings.storePhone,
-        storeLogo: null,
-        currency: settings.currency,
-        currencySymbol: settings.currencySymbol,
-        
-        // Taxes
-        taxEnabled: settings.taxEnabled,
-        taxRate: settings.taxRate,
-        taxName: 'IVA',
-        taxIncluded: false,
-        
-        // Shipping
-        shippingZones: [
-            {
-                id: 'zone-1',
-                name: 'Nacional',
-                countries: ['MX', 'US'],
-                rates: [
-                    {
-                        id: 'rate-1',
-                        name: 'Envío Estándar',
-                        price: 9.99,
-                        estimatedDays: '3-5 días',
-                    },
-                    {
-                        id: 'rate-2',
-                        name: 'Envío Express',
-                        price: 19.99,
-                        estimatedDays: '1-2 días',
-                    },
-                ],
-            },
-        ],
-        freeShippingThreshold: settings.freeShippingThreshold,
-        
-        // Payments
-        stripeEnabled: false,
-        paypalEnabled: false,
-        cashOnDeliveryEnabled: true,
-        
-        // Notifications
-        orderNotificationEmail: settings.storeEmail,
-        lowStockNotifications: true,
-        lowStockThreshold: 10,
-        notifyOnNewOrder: true,
-        notifyOnLowStock: true,
-        sendOrderConfirmation: true,
-        sendShippingNotification: true,
-        
-        // Checkout
-        requirePhone: true,
-        requireShippingAddress: true,
-        
-        // Timestamps
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-    };
+    if (existingSettingsError) throw existingSettingsError;
 
-    // Public store data (for storefront)
-    const publicStoreData = {
-        id: storeId,
-        name: settings.storeName,
-        description: 'Tienda de demostración',
-        currency: settings.currency,
-        currencySymbol: settings.currencySymbol,
-        updatedAt: serverTimestamp(),
-    };
+    if (existingSettings?.id) {
+        const updateResult = await supabase
+            .from('store_settings')
+            .update(settingsRow)
+            .eq('id', existingSettings.id);
 
-    await Promise.all([
-        setDoc(settingsRef, settingsData),
-        setDoc(publicStoreRef, publicStoreData, { merge: true }),
-    ]);
-    
-    console.log('✅ Configuración de tienda guardada (privada + pública)');
+        if (updateResult.error) {
+            if (!isMissingColumnError(updateResult.error, 'store_settings', ['store_id', 'public_store_id', 'data', 'free_shipping_threshold'])) {
+                throw updateResult.error;
+            }
+
+            const compatibleResult = await supabase
+                .from('store_settings')
+                .update(mapStoreSettingsToCompatibleRow(settingsRow))
+                .eq('id', existingSettings.id);
+
+            if (compatibleResult.error) throw compatibleResult.error;
+        }
+    } else {
+        const insertResult = await supabase
+            .from('store_settings')
+            .insert(settingsRow);
+
+        if (insertResult.error) {
+            if (!isMissingColumnError(insertResult.error, 'store_settings', ['store_id', 'public_store_id', 'data', 'free_shipping_threshold'])) {
+                throw insertResult.error;
+            }
+
+            const compatibleResult = await supabase
+                .from('store_settings')
+                .insert(mapStoreSettingsToCompatibleRow(settingsRow));
+
+            if (compatibleResult.error) throw compatibleResult.error;
+        }
+    }
+
+    await ensurePublicStoreRecord(userId, storeId, settings);
+
+    console.log('✅ Configuración de tienda guardada (settings + public_store)');
 };
 
 /**
@@ -730,13 +1025,5 @@ export const seedDemoStore = async (
 };
 
 export default seedDemoStore;
-
-
-
-
-
-
-
-
 
 

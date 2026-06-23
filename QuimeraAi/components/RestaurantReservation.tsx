@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { CalendarDays, Clock, Users, User, Mail, Phone, MessageSquare, CheckCircle2, Loader2, UtensilsCrossed, Armchair } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
 import CornerGradient from './ui/CornerGradient';
-import AppSelect from './ui/AppSelect';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   none: 'py-0',
@@ -354,17 +353,17 @@ const RestaurantReservation: React.FC<RestaurantReservationProps> = ({
                   </label>
                   <div className="relative">
                     <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" style={{ color: sectionColors.inputText }} />
-                    <AppSelect
+                    <select
                       name="partySize"
                       value={formData.partySize} onChange={handleChange}
                       disabled={isSubmitting}
-                      className={`${inputBaseClasses} pl-10 disabled:opacity-50 appearance-none cursor-pointer`}
+                      className={`${inputBaseClasses} pl-10 disabled:opacity-50 cursor-pointer`}
                       style={{ backgroundColor: sectionColors.inputBackground, borderColor: sectionColors.inputBorder, color: sectionColors.inputText, '--tw-ring-color': sectionColors.accent } as React.CSSProperties}
                     >
                       {Array.from({ length: maxPartySize - minPartySize + 1 }, (_, i) => minPartySize + i).map(n => (
                         <option key={n} value={n}>{n} {n === 1 ? t('restaurant.reservation.guest') : t('restaurant.reservation.guests')}</option>
                       ))}
-                    </AppSelect>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -377,11 +376,11 @@ const RestaurantReservation: React.FC<RestaurantReservationProps> = ({
                   </label>
                   <div className="relative">
                     <Armchair className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" style={{ color: sectionColors.inputText }} />
-                    <AppSelect
+                    <select
                       name="tablePreference"
                       value={formData.tablePreference} onChange={handleChange}
                       disabled={isSubmitting}
-                      className={`${inputBaseClasses} pl-10 disabled:opacity-50 appearance-none cursor-pointer`}
+                      className={`${inputBaseClasses} pl-10 disabled:opacity-50 cursor-pointer`}
                       style={{ backgroundColor: sectionColors.inputBackground, borderColor: sectionColors.inputBorder, color: sectionColors.inputText, '--tw-ring-color': sectionColors.accent } as React.CSSProperties}
                     >
                       <option value="">{t('restaurant.reservation.noPreference')}</option>
@@ -389,7 +388,7 @@ const RestaurantReservation: React.FC<RestaurantReservationProps> = ({
                       <option value="outdoor">{t('restaurant.reservation.outdoor')}</option>
                       <option value="bar">{t('restaurant.reservation.bar')}</option>
                       <option value="private">{t('restaurant.reservation.privateRoom')}</option>
-                    </AppSelect>
+                    </select>
                   </div>
                 </div>
               )}

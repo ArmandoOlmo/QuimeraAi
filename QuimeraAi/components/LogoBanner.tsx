@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import type { SectionVisualBackgroundConfig } from '../types/components';
+import { getStorefrontSectionBackgroundStyle } from './ecommerce/sections/sectionVisualStyles';
 
 // ─── Types ───
 export interface LogoBannerItem {
@@ -44,6 +46,9 @@ export interface LogoBannerData {
   backgroundOverlayEnabled?: boolean;
   backgroundOverlayOpacity?: number;
   backgroundOverlayColor?: string;
+  backgroundPosition?: string;
+  backgroundVisual?: SectionVisualBackgroundConfig;
+  glassEffect?: boolean;
 }
 
 // ─── Font size map ───
@@ -82,6 +87,8 @@ const LogoBanner: React.FC<LogoBannerProps> = ({
   backgroundOverlayEnabled = true,
   backgroundOverlayOpacity = 50,
   backgroundOverlayColor = '#000000',
+  backgroundPosition,
+  backgroundVisual,
   glassEffect,
   onNavigate,
 }) => {
@@ -91,11 +98,23 @@ const LogoBanner: React.FC<LogoBannerProps> = ({
     { imageUrl: '', alt: 'Brand 1', link: '', linkText: '' },
   ];
 
-  const bgStyle: React.CSSProperties = useGradient
-    ? { background: `linear-gradient(${gradientAngle}deg, ${gradientFrom}, ${gradientTo})` }
-    : { backgroundColor: (glassEffect && !backgroundImageUrl) ? 'rgba(255,255,255,0.05)' : backgroundColor };
+  const usesVisualBackground = backgroundVisual?.enabled === true;
+  const bgStyle: React.CSSProperties = usesVisualBackground
+    ? getStorefrontSectionBackgroundStyle({
+        backgroundImageUrl,
+        backgroundOverlayEnabled,
+        backgroundOverlayOpacity,
+        backgroundOverlayColor,
+        backgroundPosition,
+        backgroundVisual,
+        glassEffect,
+      }, backgroundColor)
+    : useGradient
+      ? { background: `linear-gradient(${gradientAngle}deg, ${gradientFrom}, ${gradientTo})` }
+      : { backgroundColor: (glassEffect && !backgroundImageUrl) ? 'rgba(255,255,255,0.05)' : backgroundColor };
 
-  const hasBgImage = !!backgroundImageUrl;
+  const hasBgImage = !!backgroundImageUrl && !usesVisualBackground;
+  const glassClass = glassEffect && !backgroundImageUrl && !usesVisualBackground ? 'backdrop-blur-md' : '';
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (!href) return;
@@ -149,7 +168,7 @@ const LogoBanner: React.FC<LogoBannerProps> = ({
   // ─── Scrolling (Marquee) mode ───
   if (scrollEnabled && validLogos.length > 1) {
     return (
-      <div style={bgStyle} className={`relative overflow-hidden ${paddingMap[paddingY]} ${glassEffect && !hasBgImage ? 'backdrop-blur-md' : ''}`}>
+      <div style={bgStyle} className={`relative overflow-hidden ${paddingMap[paddingY]} ${glassClass}`}>
         {hasBgImage && (
           <>
             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImageUrl})` }} />
@@ -222,7 +241,7 @@ const LogoBanner: React.FC<LogoBannerProps> = ({
 
   // ─── Static Grid mode ───
   return (
-    <div style={bgStyle} className={`relative overflow-hidden ${paddingMap[paddingY]} ${glassEffect && !hasBgImage ? 'backdrop-blur-md' : ''}`}>
+    <div style={bgStyle} className={`relative overflow-hidden ${paddingMap[paddingY]} ${glassClass}`}>
       {hasBgImage && (
         <>
           <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImageUrl})` }} />

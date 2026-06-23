@@ -33,6 +33,7 @@ interface SaleCountdownProps {
     storeId?: string;
     globalColors?: StorefrontGlobalColors;
     onProductClick?: (productSlug: string) => void;
+    onNavigate?: (href: string) => void;
 }
 
 interface TimeLeft {
@@ -47,6 +48,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     storeId,
     globalColors,
     onProductClick,
+    onNavigate,
 }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
@@ -292,6 +294,12 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
             </div>
         );
     };
+    const handleCatalogClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+        if (!onNavigate) return;
+
+        event.preventDefault();
+        onNavigate(productListUrl);
+    };
 
     // Banner variant
     const renderBanner = () => (
@@ -425,6 +433,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
 
                 <a
                     href={productListUrl}
+                    onClick={handleCatalogClick}
                     className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                     style={{
                         backgroundColor: colors?.buttonBackground,
@@ -537,6 +546,7 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
                 )}
                 <a
                     href={productListUrl}
+                    onClick={handleCatalogClick}
                     className="px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
                     style={{
                         backgroundColor: colors?.buttonBackground,

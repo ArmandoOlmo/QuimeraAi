@@ -38,6 +38,7 @@ interface ProductHeroProps {
     onProductClick?: (productSlug: string) => void;
     onCollectionClick?: (collectionSlug: string) => void;
     onAddToCart?: (productId: string) => void;
+    onNavigate?: (href: string) => void;
 }
 
 const ProductHero: React.FC<ProductHeroProps> = ({
@@ -47,6 +48,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     onProductClick,
     onCollectionClick,
     onAddToCart,
+    onNavigate,
 }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
@@ -126,12 +128,22 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     };
 
     const handleButtonClick = () => {
+        const buttonUrl = data.buttonUrl?.trim();
+        if (buttonUrl && onNavigate && isGenericStorefrontCatalogLink(buttonUrl)) {
+            onNavigate(buttonUrl);
+            return;
+        }
+
         // Check if buttonUrl is a custom URL (not a generic store link)
         // Generic links like '/tienda', '#products', '' are treated as "navigate to product"
-        const isCustomUrl = data.buttonUrl && !isGenericStorefrontCatalogLink(data.buttonUrl);
+        const isCustomUrl = buttonUrl && !isGenericStorefrontCatalogLink(buttonUrl);
         
         if (isCustomUrl) {
-            window.location.href = data.buttonUrl!;
+            if (onNavigate) {
+                onNavigate(buttonUrl);
+            } else {
+                window.location.href = buttonUrl;
+            }
         } else if (featuredProduct?.slug) {
             // Navigate to the featured product (whether explicitly set via productId or default first product)
             navigateToProduct(featuredProduct.slug);
@@ -141,7 +153,11 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         } else if (data.collectionId) {
             onCollectionClick?.(data.collectionId);
         } else {
-            window.location.href = productListUrl;
+            if (onNavigate) {
+                onNavigate(productListUrl);
+            } else {
+                window.location.href = productListUrl;
+            }
         }
     };
 

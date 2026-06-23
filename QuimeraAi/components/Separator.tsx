@@ -11,7 +11,8 @@ interface SeparatorProps {
 
 const Separator: React.FC<SeparatorProps> = ({ data }) => {
     const { colors } = useSafeDesignTokens();
-    const bgColor = data.colors?.background || data.color || colors.background || '#ffffff';
+    const tokenColors = colors as Record<string, string | undefined>;
+    const bgColor = data.colors?.background || data.color || tokenColors.background || '#ffffff';
 
     return (
         <SectionBackground
@@ -21,6 +22,7 @@ const Separator: React.FC<SeparatorProps> = ({ data }) => {
             backgroundOverlayOpacity={data.backgroundOverlayOpacity}
             backgroundOverlayColor={data.backgroundOverlayColor}
             backgroundColor={bgColor}
+            backgroundVisual={data.backgroundVisual}
         >
             <section
                 className={data.glassEffect ? "backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]" : ""}

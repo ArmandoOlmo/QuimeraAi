@@ -27,6 +27,15 @@ export const STOREFRONT_SECTION_KINDS: StorefrontSectionKind[] = [
 const isNonEmptyString = (value: unknown): boolean => typeof value === 'string' && value.trim().length > 0;
 const isNonEmptyArray = (value: unknown): boolean => Array.isArray(value) && value.length > 0;
 const DEFAULT_COLLECTION_BANNER_TITLE = 'Colección destacada';
+const createDefaultVisualBackgroundSettings = () => ({
+    backgroundVisual: {
+        enabled: false,
+        mode: 'solid',
+        intensity: 55,
+        overlayOpacity: 0,
+        focusOpacity: 35,
+    },
+});
 
 export const storefrontSectionRegistry: Record<StorefrontSectionKind, StorefrontSectionRegistryItem> = {
     announcementBar: {
@@ -38,6 +47,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         isCoreSection: true,
         validVariants: ['static', 'scrolling', 'rotating'],
         defaultSettings: {
+            ...createDefaultVisualBackgroundSettings(),
             variant: 'static',
             messages: [],
             visibleIn: 'both',
@@ -74,6 +84,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         isCoreSection: true,
         validVariants: ['featured', 'collection', 'sale', 'new-arrivals'],
         defaultSettings: {
+            ...createDefaultVisualBackgroundSettings(),
             variant: 'featured',
             layout: 'split',
             visibleIn: 'store',
@@ -124,6 +135,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         isCoreSection: true,
         validVariants: ['carousel', 'grid', 'showcase'],
         defaultSettings: {
+            ...createDefaultVisualBackgroundSettings(),
             variant: 'grid',
             sourceType: 'newest',
             productsToShow: 8,
@@ -180,6 +192,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         isCoreSection: true,
         validVariants: ['cards', 'overlay', 'minimal', 'banner', 'editorial', 'bento-overlay'],
         defaultSettings: {
+            ...createDefaultVisualBackgroundSettings(),
             variant: 'overlay',
             categories: [],
             visibleIn: 'both',
@@ -222,6 +235,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         isCoreSection: true,
         validVariants: ['horizontal', 'grid', 'minimal', 'detailed', 'premium-strip', 'icon-cloud'],
         defaultSettings: {
+            ...createDefaultVisualBackgroundSettings(),
             variant: 'horizontal',
             badges: [],
             visibleIn: 'both',
@@ -263,6 +277,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         defaultVisible: true,
         validVariants: ['banner', 'floating', 'inline', 'fullwidth'],
         defaultSettings: {
+            ...createDefaultVisualBackgroundSettings(),
             variant: 'banner',
             visibleIn: 'both',
             title: 'Oferta por tiempo limitado',
@@ -315,6 +330,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         defaultVisible: true,
         validVariants: ['hero', 'split', 'minimal', 'overlay'],
         defaultSettings: {
+            ...createDefaultVisualBackgroundSettings(),
             variant: 'hero',
             visibleIn: 'store',
             title: DEFAULT_COLLECTION_BANNER_TITLE,
@@ -356,6 +372,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         defaultVisible: true,
         validVariants: ['carousel', 'grid', 'compact'],
         defaultSettings: {
+            ...createDefaultVisualBackgroundSettings(),
             variant: 'carousel',
             enabled: true,
             maxProducts: 10,
@@ -402,6 +419,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         defaultVisible: true,
         validVariants: ['list', 'cards', 'masonry', 'featured', 'spotlight'],
         defaultSettings: {
+            ...createDefaultVisualBackgroundSettings(),
             variant: 'cards',
             enabled: true,
             reviews: [
@@ -463,6 +481,7 @@ export const storefrontSectionRegistry: Record<StorefrontSectionKind, Storefront
         defaultVisible: true,
         validVariants: ['editorial', 'price-stack', 'horizontal', 'vertical', 'compact'],
         defaultSettings: {
+            ...createDefaultVisualBackgroundSettings(),
             variant: 'editorial',
             enabled: true,
             productIds: [],

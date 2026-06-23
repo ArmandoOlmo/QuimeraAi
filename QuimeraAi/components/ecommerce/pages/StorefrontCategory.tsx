@@ -8,7 +8,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs, query, where, orderBy, doc, getDoc } from '@/utils/compatData';
 import { db } from '@/utils/compatData';
 import { ShoppingBag, ChevronLeft, Filter, Loader2 } from 'lucide-react';
-import AppSelect from '../../ui/AppSelect';
+import StorefrontSelect from '../ui/StorefrontSelect';
 import { createProductCardViewModel } from '../../../utils/productCard';
 import { filterRenderableStorefrontProducts } from '../../../utils/ecommerce/productDisplayGuards';
 
@@ -157,7 +157,7 @@ const StorefrontCategory: React.FC<StorefrontCategoryProps> = ({
                         {/* Sort */}
                         <div className="flex items-center gap-2">
                             <Filter size={16} className="text-gray-400" />
-                            <AppSelect
+                            <StorefrontSelect
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as any)}
                                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
@@ -165,7 +165,7 @@ const StorefrontCategory: React.FC<StorefrontCategoryProps> = ({
                                 <option value="newest">Más recientes</option>
                                 <option value="price-asc">Precio: Menor a mayor</option>
                                 <option value="price-desc">Precio: Mayor a menor</option>
-                            </AppSelect>
+                            </StorefrontSelect>
                         </div>
                     </div>
                 </div>
@@ -252,7 +252,6 @@ const ProductCard: React.FC<{
 };
 
 export default StorefrontCategory;
-
 
 
 

@@ -45,6 +45,7 @@ interface FeaturedProductsProps {
     isEditorPreview?: boolean;
     onProductClick?: (productSlug: string) => void;
     onAddToCart?: (productId: string) => void;
+    onNavigate?: (href: string) => void;
 }
 
 const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
@@ -54,6 +55,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     isEditorPreview = false,
     onProductClick,
     onAddToCart,
+    onNavigate,
 }) => {
     const { i18n } = useTranslation();
     const projectContext = useSafeProject();
@@ -578,6 +580,11 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                     <div className={`mt-10 flex ${getContentPosition()}`}>
                         <a
                             href={productListUrl}
+                            onClick={(event) => {
+                                if (!onNavigate) return;
+                                event.preventDefault();
+                                onNavigate(productListUrl);
+                            }}
                             className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
                             style={{
                                 backgroundColor: colors?.buttonBackground,

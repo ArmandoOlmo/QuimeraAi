@@ -25,7 +25,6 @@ import type { RealtyListingsSectionData, RealtyProperty, RealtyPropertyType, Tra
 import { usePublicRealtyListings, type PublicRealtySort } from '../../hooks/usePublicRealtyListings';
 import { formatRealtyPrice, realtyPropertyTypes, resolveRealtyWebsiteColors } from '../../utils/realty';
 import { getAnimationClass, getAnimationDelay } from '../../utils/animations';
-import AppSelect from '../ui/AppSelect';
 
 interface PublicRealtyDirectoryProps {
     projectId: string;
@@ -165,12 +164,12 @@ const DirectorySelect = ({ label, className, selectClassName, children, ...props
     <label className={cx('block min-w-0', className)}>
         <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] font-body text-[var(--realty-muted)]">{label}</span>
         <span className="relative block">
-            <AppSelect
+            <select
                 className={cx(directoryInputClass, 'appearance-none pr-9', selectClassName)}
                 {...props}
             >
                 {children}
-            </AppSelect>
+            </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--realty-muted)]" size={15} />
         </span>
     </label>

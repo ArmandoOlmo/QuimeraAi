@@ -1,6 +1,8 @@
 import React, { useId } from 'react';
 import { isPendingImage } from '../../utils/imagePlaceholders';
 import { isLegacyStorageUrl } from '../../utils/imageUrlHelper';
+import type { SectionVisualBackgroundConfig } from '../../types/components';
+import { getStorefrontSectionBackgroundStyle } from '../ecommerce/sections/sectionVisualStyles';
 
 interface SectionBackgroundProps {
     /** The background image URL set from the editor */
@@ -17,6 +19,8 @@ interface SectionBackgroundProps {
     backgroundPosition?: string;
     /** Applies a frosted glass layer over the background image */
     glassEffect?: boolean;
+    /** Visual Background Engine settings */
+    backgroundVisual?: SectionVisualBackgroundConfig;
     /** Children (the actual section component) */
     children: React.ReactNode;
 }
@@ -41,15 +45,31 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
     backgroundColor,
     backgroundPosition = 'center',
     glassEffect = false,
+    backgroundVisual,
     children,
 }) => {
     const hasValidImage = backgroundImageUrl && !isPendingImage(backgroundImageUrl) && !isLegacyStorageUrl(backgroundImageUrl);
+    const childBackgroundVisual = React.isValidElement(children)
+        ? (children.props as { backgroundVisual?: SectionVisualBackgroundConfig }).backgroundVisual
+        : undefined;
+    const resolvedBackgroundVisual = backgroundVisual || childBackgroundVisual;
+    const hasVisualBackground = resolvedBackgroundVisual?.enabled === true;
     const scopeId = useId().replace(/:/g, '');
 
-    // No background image → render children directly with zero overhead
-    if (!hasValidImage) return <>{children}</>;
+    // No visual layer → render children directly with zero overhead.
+    if (!hasValidImage && !hasVisualBackground) return <>{children}</>;
 
-    const isOverlayActive = backgroundOverlayEnabled !== false;
+    const backgroundStyle = getStorefrontSectionBackgroundStyle(
+        {
+            backgroundImageUrl: hasValidImage ? backgroundImageUrl : undefined,
+            backgroundOverlayEnabled,
+            backgroundOverlayOpacity,
+            backgroundOverlayColor,
+            backgroundPosition,
+            backgroundVisual: resolvedBackgroundVisual,
+        },
+        backgroundColor,
+    );
 
     return (
         <div className="relative overflow-hidden" data-bg-scope={scopeId}>
@@ -64,26 +84,14 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
                     background-color: transparent !important;
                 }
             `}</style>
-            {/* Background Image Layer */}
+            {/* Background layers */}
             <div
-                className="absolute inset-0 bg-cover bg-no-repeat"
+                className="absolute inset-0"
                 style={{
-                    backgroundImage: `url('${backgroundImageUrl}')`,
-                    backgroundPosition: backgroundPosition || 'center',
+                    ...backgroundStyle,
                     zIndex: 0,
                 }}
             />
-            {/* Color Overlay for readability */}
-            {isOverlayActive && (
-                <div
-                    className="absolute inset-0"
-                    style={{
-                        backgroundColor: backgroundOverlayColor || backgroundColor || '#000000',
-                        opacity: (backgroundOverlayOpacity ?? 60) / 100,
-                        zIndex: 1,
-                    }}
-                />
-            )}
             {glassEffect && (
                 <div
                     className="absolute inset-0"

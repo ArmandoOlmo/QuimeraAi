@@ -23,6 +23,7 @@ interface AnnouncementBarProps {
     data: AnnouncementBarData;
     storeId?: string;
     globalColors?: StorefrontGlobalColors;
+    onNavigate?: (href: string) => void;
 }
 
 const iconMap: Record<string, React.FC<{ size?: number; className?: string }>> = {
@@ -38,7 +39,7 @@ const iconMap: Record<string, React.FC<{ size?: number; className?: string }>> =
     'mail': Mail,
 };
 
-const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, globalColors }) => {
+const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, globalColors, onNavigate }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
     const productListUrl = buildStorefrontCatalogUrl(effectiveStoreId);
@@ -120,6 +121,12 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
             default: return message.link;
         }
     };
+    const handleMessageLinkClick = (event: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        if (!onNavigate || !href || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+
+        event.preventDefault();
+        onNavigate(href);
+    };
 
     // Message content renderer
     const renderMessage = (message: AnnouncementMessage, index: number) => (
@@ -128,6 +135,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
             {message.link && message.linkText && (
                 <a
                     href={getMessageHref(message)}
+                    onClick={(event) => handleMessageLinkClick(event, getMessageHref(message))}
                     className="font-semibold underline underline-offset-2 hover:no-underline transition-all"
                     style={{ color: linkColor }}
                 >
@@ -200,6 +208,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId, global
                                 {msg.link && msg.linkText && (
                                     <a
                                         href={getMessageHref(msg)}
+                                        onClick={(event) => handleMessageLinkClick(event, getMessageHref(msg))}
                                         className="font-semibold underline underline-offset-2 hover:no-underline"
                                         style={{ color: linkColor }}
                                     >

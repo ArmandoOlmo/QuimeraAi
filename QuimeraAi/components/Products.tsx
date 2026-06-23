@@ -9,7 +9,6 @@ import { ShoppingCart, Eye, Heart, Star, Filter, Search, ChevronLeft, ChevronRig
 import { ProductsProps, StorefrontProductItem, StyleType } from '../types/components';
 import type { ProductCardVariant } from '../types/productCard';
 import { createProductCardViewModel } from '../utils/productCard';
-import AppSelect from './ui/AppSelect';
 
 // Extended props to include colors
 interface ProductsWithColorsProps extends ProductsProps {
@@ -303,7 +302,7 @@ const Products: React.FC<ProductsWithColorsProps> = ({
                         {showFilters && (
                             <div className="flex gap-4">
                                 {categories.length > 0 && (
-                                    <AppSelect
+                                    <select
                                         value={selectedCategory}
                                         onChange={(e) => setSelectedCategory(e.target.value)}
                                         className={`px-4 py-3 rounded-lg focus:outline-none focus:ring-2 ${styles.input}`}
@@ -319,10 +318,10 @@ const Products: React.FC<ProductsWithColorsProps> = ({
                                                 {cat}
                                             </option>
                                         ))}
-                                    </AppSelect>
+                                    </select>
                                 )}
 
-                                <AppSelect
+                                <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                                     className={`px-4 py-3 rounded-lg focus:outline-none focus:ring-2 ${styles.input}`}
@@ -336,7 +335,7 @@ const Products: React.FC<ProductsWithColorsProps> = ({
                                     <option value="name">Nombre</option>
                                     <option value="price-asc">Precio: menor a mayor</option>
                                     <option value="price-desc">Precio: mayor a menor</option>
-                                </AppSelect>
+                                </select>
                             </div>
                         )}
                     </div>
@@ -774,4 +773,3 @@ const ProductCard: React.FC<ProductCardProps> = ({
 };
 
 export default Products;
-

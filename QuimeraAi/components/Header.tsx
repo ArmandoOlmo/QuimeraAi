@@ -807,7 +807,7 @@ const Header: React.FC<HeaderData & {
         <header
           ref={headerRef}
           data-site-header="true"
-          className={`${positionClass} w-full left-0 right-0 z-50 transition-all duration-500 ease-in-out`}
+          className={`${positionClass} w-full left-0 right-0 z-50 overflow-x-clip transition-all duration-500 ease-in-out`}
           style={{
             height: shouldNotTakeSpace ? 0 : 'auto',
             top: `${activeTopBarOffset}px`,
@@ -850,7 +850,7 @@ const Header: React.FC<HeaderData & {
               {renderLayout()}
 
               {/* Mobile Actions - Only visible on mobile and tablet */}
-              <div className="nav:hidden flex items-center gap-0 -ml-2.5 -mr-2.5">
+              <div className="nav:hidden flex items-center gap-0 -ml-2.5">
                 {/* Cart Button (mobile) */}
                 {showCart && (
                   <button
@@ -1073,7 +1073,7 @@ const Header: React.FC<HeaderData & {
               className={`
             fixed top-0 right-0 bottom-0 w-[80vw] max-w-[320px] z-[10001]
             transform transition-transform duration-300 ease-out nav:hidden
-            ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}
+            ${isMenuOpen ? 'translate-x-0 visible' : 'translate-x-full invisible pointer-events-none'}
           `}
               style={{ backgroundColor: colors?.background }}
             >

@@ -4,17 +4,12 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { supabase } from '../../../supabase';
 import {
-    collection,
-    query,
-    where,
-    orderBy,
-    limit,
-    startAfter,
-    getDocs,
-    QueryDocumentSnapshot,
-} from '@/utils/compatData';
-import { db } from '@/utils/compatData';
+    buildStoreIdentityOrFilter,
+    getStoreIdentityQueryIds,
+    resolveProjectBackedStoreIdentity,
+} from '../../../utils/ecommerce/storeIdentity';
 import { PublicProduct } from './usePublicProduct';
 
 // Types
@@ -82,7 +77,6 @@ export const useProductSearch = (
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
     const [hasMore, setHasMore] = useState(true);
     const [totalCount, setTotalCount] = useState(0);
 
@@ -99,38 +93,153 @@ export const useProductSearch = (
         setError(null);
 
         try {
-            console.log('[useProductSearch] Loading products for store:', storeId);
-            const productsRef = collection(db, 'public_stores', storeId, 'products');
-            // First try without filter to see all products
-            const snapshot = await getDocs(productsRef);
-            console.log('[useProductSearch] Total docs found:', snapshot.size);
+            let queryIds = getStoreIdentityQueryIds(storeId);
 
-            const productsData = snapshot.docs.map((doc) => ({
-                ...doc.data(),
-                id: doc.id,
-            })) as PublicProduct[];
+            try {
+                const { data: publicStore } = await supabase
+                    .from('public_stores')
+                    .select('id, data')
+                    .eq('id', storeId)
+                    .maybeSingle();
+
+                if (publicStore) {
+                    queryIds = getStoreIdentityQueryIds(resolveProjectBackedStoreIdentity({
+                        storeId,
+                        publicStoreId: publicStore.id,
+                        publicStore,
+                    }));
+                }
+            } catch (identityError) {
+                console.warn('[useProductSearch] Public store identity resolution skipped:', identityError);
+            }
+
+            const identityFilter = buildStoreIdentityOrFilter(queryIds);
+            if (!identityFilter) {
+                setAllProducts([]);
+                setCategories([]);
+                setTags([]);
+                setPriceStats({ min: 0, max: 1000 });
+                setTotalCount(0);
+                return;
+            }
+
+            const [{ data: categoryRows, error: categoriesError }, { data: productRows, error: productsError }] = await Promise.all([
+                supabase
+                    .from('store_categories')
+                    .select('*')
+                    .or(identityFilter),
+                supabase
+                    .from('store_products')
+                    .select('*')
+                    .or(identityFilter),
+            ]);
+
+            if (categoriesError) throw categoriesError;
+            if (productsError) throw productsError;
+
+            const categoryLookup = new Map<string, { id: string; name: string; slug: string; count: number }>();
+            (categoryRows || []).forEach((category: any) => {
+                const data = category.data || {};
+                const id = String(category.id || '').trim();
+                if (!id) return;
+
+                categoryLookup.set(id, {
+                    id,
+                    name: category.name || data.name || 'Categoria',
+                    slug: category.slug || data.slug || id,
+                    count: 0,
+                });
+            });
+
+            const productsData = (productRows || []).map((row: any): PublicProduct => {
+                const data = row.data || {};
+                const rawImages = row.images || data.images || [];
+                const images = (Array.isArray(rawImages) ? rawImages : [])
+                    .map((image: any, index: number) => {
+                        const url = typeof image === 'string'
+                            ? image
+                            : image?.url || image?.src || image?.imageUrl || '';
+
+                        return {
+                            id: String(image?.id || `${row.id}-image-${index}`),
+                            url,
+                            altText: image?.altText || image?.alt || row.name || data.name || '',
+                            position: Number(image?.position ?? index),
+                        };
+                    })
+                    .filter(image => image.url);
+                const quantity = row.inventory_quantity ?? row.quantity ?? data.inventoryQuantity ?? data.quantity;
+                const trackInventory = Boolean(row.track_inventory ?? data.trackInventory ?? quantity != null);
+                const allowBackorder = Boolean(row.allow_backorder ?? data.allowBackorder);
+                const availableQuantity = quantity == null ? null : Number(quantity);
+                const categoryId = row.category_id || data.categoryId || data.category || undefined;
+                const category = categoryId ? categoryLookup.get(categoryId) : undefined;
+                const price = Number(row.price ?? data.price ?? 0);
+                const compareAtPrice = row.compare_at_price ?? data.compareAtPrice;
+                const averageRating = row.average_rating ?? data.averageRating;
+                const reviewCount = row.review_count ?? data.reviewCount;
+                const productTags = Array.isArray(row.tags)
+                    ? row.tags
+                    : Array.isArray(data.tags)
+                        ? data.tags
+                        : [];
+
+                return {
+                    id: row.id,
+                    name: row.name || data.name || '',
+                    slug: row.slug || data.slug || row.id,
+                    description: row.description || data.description || row.short_description || data.shortDescription || '',
+                    shortDescription: row.short_description || data.shortDescription,
+                    price,
+                    compareAtPrice: compareAtPrice == null ? undefined : Number(compareAtPrice),
+                    images,
+                    categoryId,
+                    categoryName: row.category_name || data.categoryName || category?.name,
+                    tags: productTags.filter((tag: unknown): tag is string => typeof tag === 'string' && Boolean(tag.trim())),
+                    variants: Array.isArray(row.variants) ? row.variants : Array.isArray(data.variants) ? data.variants : [],
+                    trackInventory,
+                    quantity: availableQuantity ?? undefined,
+                    lowStockThreshold: row.low_stock_threshold ?? data.lowStockThreshold,
+                    inStock: trackInventory ? allowBackorder || (availableQuantity ?? 0) > 0 : true,
+                    lowStock: trackInventory && availableQuantity != null && availableQuantity <= Number(row.low_stock_threshold ?? data.lowStockThreshold ?? 0),
+                    isFeatured: Boolean(row.is_featured ?? data.isFeatured),
+                    seoTitle: row.seo_title || data.seoTitle,
+                    seoDescription: row.seo_description || data.seoDescription,
+                    storeId: row.store_id || row.public_store_id || storeId,
+                    userId: row.user_id || data.userId || '',
+                    reviewStats: averageRating || reviewCount ? {
+                        averageRating: Number(averageRating || 0),
+                        totalReviews: Number(reviewCount || 0),
+                    } : undefined,
+                    averageRating: averageRating == null ? undefined : Number(averageRating),
+                    reviewCount: reviewCount == null ? undefined : Number(reviewCount),
+                    createdAt: row.created_at || data.createdAt,
+                    updatedAt: row.updated_at || data.updatedAt || row.created_at,
+                };
+            });
 
             setAllProducts(productsData);
 
             // Extract categories
-            const categoryMap = new Map<string, { id: string; name: string; slug: string; count: number }>();
+            const categoryMap = new Map(categoryLookup);
             const allTags = new Set<string>();
             let minPrice = Infinity;
             let maxPrice = 0;
 
             productsData.forEach((product) => {
                 // Category
-                if (product.categoryId && product.categoryName) {
+                if (product.categoryId) {
                     const existing = categoryMap.get(product.categoryId);
                     if (existing) {
                         existing.count++;
                     } else {
                         // Generate slug from category name if not available
-                        const categorySlug = (product as any).categorySlug || 
-                            product.categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                        const categoryName = product.categoryName || product.categoryId;
+                        const categorySlug = (product as any).categorySlug ||
+                            categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
                         categoryMap.set(product.categoryId, {
                             id: product.categoryId,
-                            name: product.categoryName,
+                            name: categoryName,
                             slug: categorySlug,
                             count: 1,
                         });
@@ -169,6 +278,14 @@ export const useProductSearch = (
     // Filter and sort products
     const filteredProducts = useMemo(() => {
         let result = [...allProducts];
+        const getProductTime = (value: unknown): number => {
+            if (!value) return 0;
+            if (typeof value === 'object' && value !== null && 'seconds' in value) {
+                return Number((value as { seconds?: unknown }).seconds || 0) * 1000;
+            }
+            const timestamp = Date.parse(String(value));
+            return Number.isFinite(timestamp) ? timestamp : 0;
+        };
 
         // Search term
         if (searchTerm) {
@@ -235,10 +352,10 @@ export const useProductSearch = (
         // Sort
         switch (sortBy) {
             case 'newest':
-                result.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                result.sort((a, b) => getProductTime(b.createdAt || b.updatedAt) - getProductTime(a.createdAt || a.updatedAt));
                 break;
             case 'oldest':
-                result.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+                result.sort((a, b) => getProductTime(a.createdAt || a.updatedAt) - getProductTime(b.createdAt || b.updatedAt));
                 break;
             case 'price_asc':
                 result.sort((a, b) => a.price - b.price);

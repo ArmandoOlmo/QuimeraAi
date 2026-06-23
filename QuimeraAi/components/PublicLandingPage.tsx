@@ -769,6 +769,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           backgroundOverlayColor={section.data?.backgroundOverlayColor || section.data?.overlayColor} 
           backgroundPosition={section.data?.backgroundPosition}
           glassEffect={glassEffect}
+          backgroundVisual={section.data?.backgroundVisual}
         >
           <Suspense fallback={null}>
             <Component {...resolvedData} isPreviewMode={isPreviewMode} />

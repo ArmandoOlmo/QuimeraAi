@@ -61,6 +61,40 @@ export interface CornerGradientConfig {
 }
 
 // =============================================================================
+// VISUAL BACKGROUND ENGINE
+// =============================================================================
+export type SectionVisualBackgroundMode = 'solid' | 'gradient' | 'focus';
+export type SectionVisualFocusAreaType = 'radial' | 'spotlight' | 'wash' | 'beam';
+
+export interface SectionVisualFocusArea {
+    id?: string;
+    type?: SectionVisualFocusAreaType;
+    x?: number; // 0-100
+    y?: number; // 0-100
+    color?: string;
+    opacity?: number; // 0-100
+    size?: number; // 0-100
+    softness?: number; // 0-100
+}
+
+export interface SectionVisualBackgroundConfig {
+    enabled?: boolean;
+    mode?: SectionVisualBackgroundMode;
+    solidColor?: string;
+    gradientBaseColor?: string;
+    gradientPrimaryColor?: string;
+    gradientSecondaryColor?: string;
+    gradientAccentColor?: string;
+    gradientBottomColor?: string;
+    focusColor?: string;
+    overlayColor?: string;
+    intensity?: number; // 0-100
+    overlayOpacity?: number; // 0-100
+    focusOpacity?: number; // 0-100
+    focusAreas?: SectionVisualFocusArea[];
+}
+
+// =============================================================================
 // CARD NEON GLOW CONFIGURATION
 // =============================================================================
 export interface CardGlowConfig {
@@ -159,6 +193,7 @@ export interface SectionBackgroundFields {
     backgroundOverlayColor?: string;
     backgroundPosition?: string;
     glassEffect?: boolean;
+    backgroundVisual?: SectionVisualBackgroundConfig;
 }
 
 // =============================================================================

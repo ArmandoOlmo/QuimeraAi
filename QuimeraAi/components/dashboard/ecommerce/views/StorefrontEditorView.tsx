@@ -65,6 +65,7 @@ import type { Category, Product } from '../../../../types/ecommerce';
 import type { StorefrontThemePresetId } from '../../../../types/storefrontTheme';
 import type { StorefrontSectionKind } from '../../../../types/storefrontRenderer';
 import ColorControl from '../../../ui/ColorControl';
+import VisualBackgroundControl from '../../../ui/VisualBackgroundControl';
 import TabbedControls from '../../../ui/TabbedControls';
 import {
     BorderRadiusSelector,
@@ -364,6 +365,11 @@ const storefrontSelectOptions: Record<string, StorefrontEditorSelectOption[]> = 
         { value: 'gradient', labelKey: 'overlayStyle.gradient', fallback: 'Degradado' },
         { value: 'solid', labelKey: 'overlayStyle.solid', fallback: 'Sólido' },
         { value: 'none', labelKey: 'overlayStyle.none', fallback: 'Sin overlay' },
+    ],
+    visualBackgroundMode: [
+        { value: 'solid', labelKey: 'visualBackgroundMode.solid', fallback: 'Sólido' },
+        { value: 'gradient', labelKey: 'visualBackgroundMode.gradient', fallback: 'Degradado' },
+        { value: 'focus', labelKey: 'visualBackgroundMode.focus', fallback: 'Foco' },
     ],
     visibleIn: [
         { value: 'both', labelKey: 'visibleIn.both', fallback: 'Landing + tienda' },
@@ -1127,6 +1133,7 @@ const StorefrontEditorView: React.FC = () => {
         objectFit: translateStorefrontSelectOptions(storefrontSelectOptions.objectFit),
         alignment: translateStorefrontSelectOptions(storefrontSelectOptions.alignment),
         overlayStyle: translateStorefrontSelectOptions(storefrontSelectOptions.overlayStyle),
+        visualBackgroundMode: translateStorefrontSelectOptions(storefrontSelectOptions.visualBackgroundMode),
         visibleIn: translateStorefrontSelectOptions(storefrontSelectOptions.visibleIn),
         sourceType: translateStorefrontSelectOptions(storefrontSelectOptions.sourceType),
         heroLayout: translateStorefrontSelectOptions(storefrontSelectOptions.heroLayout),
@@ -1914,7 +1921,6 @@ const StorefrontEditorView: React.FC = () => {
                 updateSelectedSectionSetting('productsToShow', Math.max(getSettingNumber(selectedSectionSettings, 'productsToShow', countFallback), nextIds.length || countFallback));
             }
         };
-
         const renderSectionHeader = () => (
             <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
                 <div className="flex items-start justify-between gap-3">
@@ -2169,6 +2175,16 @@ const StorefrontEditorView: React.FC = () => {
             </div>
         );
 
+        const renderVisualBackgroundControls = () => (
+            <VisualBackgroundControl
+                sectionKey={selectedSection}
+                sectionData={selectedSectionSettings as Record<string, any>}
+                setNestedData={setStorefrontNestedData}
+                title={t('ecommerce.storefrontEditor.visualBackground', 'Visual Background')}
+                className="bg-q-surface/50 p-4"
+            />
+        );
+
         const styleTab = (
             <div className="space-y-4">
                 <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
@@ -2376,6 +2392,8 @@ const StorefrontEditorView: React.FC = () => {
                         )}
                     </div>
                 )}
+
+                {renderVisualBackgroundControls()}
 
                 <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
                     <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">

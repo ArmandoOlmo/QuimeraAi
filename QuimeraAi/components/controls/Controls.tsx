@@ -49,6 +49,7 @@ import {
   useCollectionBannerControls, useRecentlyViewedControls, useProductReviewsControls,
   useProductBundleControls, useStoreSettingsControls,
 } from '../ui/EcommerceControls';
+import VisualBackgroundControl from '../ui/VisualBackgroundControl';
 import type { ControlsDeps } from './ControlsShared';
 
 // ─── Imported section renderers ─────────────────────────────────────────────
@@ -94,6 +95,25 @@ import { renderCtaNeonControls } from './sections/renderCtaNeonControls';
 import { renderPortfolioNeonControls } from './sections/renderPortfolioNeonControls';
 import { renderPricingNeonControls } from './sections/renderPricingNeonControls';
 import { renderFaqNeonControls } from './sections/renderFaqNeonControls';
+
+const SECTIONS_WITH_INLINE_VISUAL_BACKGROUND = new Set<string>([
+  'featuredProducts',
+  'categoryGrid',
+  'productHero',
+  'trustBadges',
+  'saleCountdown',
+  'announcementBar',
+  'collectionBanner',
+  'recentlyViewed',
+  'productReviews',
+  'productBundle',
+]);
+
+const NON_VISUAL_BACKGROUND_SECTIONS = new Set<string>([
+  'colors',
+  'typography',
+  'storeSettings',
+]);
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 const Controls: React.FC = () => {
@@ -598,6 +618,31 @@ const Controls: React.FC = () => {
     }
   };
 
+  const renderSharedVisualBackgroundControls = () => {
+    if (!activeSection || !data) return null;
+    if (SECTIONS_WITH_INLINE_VISUAL_BACKGROUND.has(activeSection)) return null;
+    if (NON_VISUAL_BACKGROUND_SECTIONS.has(activeSection)) return null;
+
+    const sectionData = (data as Record<string, any>)[activeSection];
+    if (!sectionData || typeof sectionData !== 'object' || Array.isArray(sectionData)) return null;
+
+    return (
+      <VisualBackgroundControl
+        sectionKey={activeSection}
+        sectionData={sectionData}
+        setNestedData={setNestedData}
+        className="mb-4"
+      />
+    );
+  };
+
+  const renderControlsPanelContent = () => (
+    <>
+      {renderSharedVisualBackgroundControls()}
+      {renderActiveSectionControls()}
+    </>
+  );
+
   // ─── Save handler (shared between desktop/mobile/tablet) ──────────────────
   const handleSave = async () => {
     if (saveStatus === 'saving') return;
@@ -744,7 +789,7 @@ const Controls: React.FC = () => {
               <X size={18} />
             </button>
           </div>
-          <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">{renderActiveSectionControls()}</div>
+          <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">{renderControlsPanelContent()}</div>
           <div className="p-4 border-t border-q-border flex-shrink-0">
             <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
               <Check size={16} /> {saveButtonText}
@@ -758,7 +803,7 @@ const Controls: React.FC = () => {
         onClose={() => { onSectionSelect(null as any); setIsSidebarOpen(true); }}
         title={activeSection ? getSectionLabel(activeSection) : ''}
         subtitle={t('landingEditor.editSection', 'Editar sección')}>
-        <div className="quimera-clean-controls p-4">{renderActiveSectionControls()}</div>
+        <div className="quimera-clean-controls p-4">{renderControlsPanelContent()}</div>
         <div className="sticky bottom-0 p-4 border-t border-q-border bg-q-surface flex-shrink-0">
           <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
             <Check size={16} /> {saveButtonText}
@@ -797,7 +842,7 @@ const Controls: React.FC = () => {
       <TabletSlidePanel isOpen={isTablet && !!activeSection}
         onClose={() => { onSectionSelect(null as any); setIsSidebarOpen(true); }}
         title={activeSection ? getSectionLabel(activeSection) : ''} position="left">
-        <div className="quimera-clean-controls p-4">{renderActiveSectionControls()}</div>
+        <div className="quimera-clean-controls p-4">{renderControlsPanelContent()}</div>
         <div className="sticky bottom-0 p-4 border-t border-q-border bg-q-surface flex-shrink-0">
           <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
             <Check size={16} /> {saveButtonText}

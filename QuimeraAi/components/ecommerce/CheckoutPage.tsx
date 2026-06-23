@@ -21,7 +21,7 @@ import {
     AlertCircle,
 } from 'lucide-react';
 import { CartItem, Address } from '../../types/ecommerce';
-import AppSelect from '../ui/AppSelect';
+import StorefrontSelect from './ui/StorefrontSelect';
 
 interface CheckoutPageProps {
     items: CartItem[];
@@ -411,7 +411,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             {t('ecommerce.storefront.checkout.country')} *
                                         </label>
-                                        <AppSelect
+                                        <StorefrontSelect
                                             value={formData.country}
                                             onChange={(e) => updateFormData('country', e.target.value)}
                                             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2"
@@ -420,7 +420,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                             <option value="Estados Unidos">{t('ecommerce.storefront.checkout.countries.usa')}</option>
                                             <option value="Canadá">{t('ecommerce.storefront.checkout.countries.canada')}</option>
                                             <option value="España">{t('ecommerce.storefront.checkout.countries.spain')}</option>
-                                        </AppSelect>
+                                        </StorefrontSelect>
                                     </div>
                                 </div>
 
@@ -710,7 +710,6 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 };
 
 export default CheckoutPage;
-
 
 
 

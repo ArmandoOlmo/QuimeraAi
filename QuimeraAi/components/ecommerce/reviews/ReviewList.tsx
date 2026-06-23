@@ -9,7 +9,7 @@ import { Review } from '../../../types/ecommerce';
 import ReviewCard from './ReviewCard';
 import { ReviewSortBy } from '../hooks/useProductReviews';
 import { ReviewColors } from './ReviewSummary';
-import AppSelect from '../../ui/AppSelect';
+import StorefrontSelect from '../ui/StorefrontSelect';
 
 interface ReviewListProps {
     reviews: Review[];
@@ -109,7 +109,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                 </p>
 
                 <div className="relative">
-                    <AppSelect
+                    <StorefrontSelect
                         value={sortBy}
                         onChange={(e) => onSortChange(e.target.value as ReviewSortBy)}
                         className="appearance-none px-4 py-2 pr-10 border rounded-lg text-sm focus:outline-none focus:ring-2"
@@ -125,7 +125,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                                 {option.label}
                             </option>
                         ))}
-                    </AppSelect>
+                    </StorefrontSelect>
                     <ChevronDown
                         className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
                         size={16}

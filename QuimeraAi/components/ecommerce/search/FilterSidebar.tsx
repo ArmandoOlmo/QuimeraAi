@@ -554,7 +554,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         shadow-2xl
                         z-50
                         transform transition-transform duration-300
-                        ${isOpen ? 'translate-x-0' : 'translate-x-full'}
+                        ${isOpen ? 'translate-x-0 visible' : 'translate-x-full invisible pointer-events-none'}
                     `
                     : `
                         fixed lg:relative lg:translate-x-0
@@ -564,7 +564,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         shadow-xl lg:shadow-none
                         z-50 lg:z-auto
                         transform transition-transform duration-300
-                        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+                        ${isOpen ? 'translate-x-0 visible' : '-translate-x-full invisible pointer-events-none lg:visible lg:pointer-events-auto'}
                     `
                 }
                 style={hasThemeColors ? { backgroundColor: colors?.background } : undefined}

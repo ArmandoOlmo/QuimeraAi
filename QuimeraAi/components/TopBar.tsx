@@ -3,7 +3,10 @@ import {
   X, Megaphone, Tag, Gift, Truck, Percent, Sparkles, Bell, Info,
   Star, Zap, Heart, ShieldCheck, Clock, Flame, Award, Crown,
   ChevronLeft, ChevronRight, Phone, Mail, MapPin, ExternalLink,
+  type LucideIcon,
 } from 'lucide-react';
+import type { SectionVisualBackgroundConfig } from '../types/components';
+import { getStorefrontSectionBackgroundStyle } from './ecommerce/sections/sectionVisualStyles';
 
 // ─── Types ───
 export interface TopBarMessage {
@@ -49,10 +52,14 @@ export interface TopBarData {
   showRotatingArrows?: boolean;
   /** Auto-rotate speed for non-scrolling mode (ms) */
   rotateSpeed?: number;
+  /** Visual Background Engine settings */
+  backgroundVisual?: SectionVisualBackgroundConfig;
+  /** Visual background focal position */
+  backgroundPosition?: string;
 }
 
 // ─── Icon map ───
-const iconMap: Record<string, React.FC<{ size?: number; className?: string; style?: React.CSSProperties }>> = {
+const iconMap: Record<string, LucideIcon> = {
   megaphone: Megaphone, tag: Tag, gift: Gift, truck: Truck, percent: Percent,
   sparkles: Sparkles, bell: Bell, info: Info, star: Star, zap: Zap,
   heart: Heart, shield: ShieldCheck, clock: Clock, flame: Flame,
@@ -97,6 +104,8 @@ const TopBar: React.FC<TopBarProps> = ({
   height,
   showRotatingArrows = true,
   rotateSpeed = 4000,
+  backgroundVisual,
+  backgroundPosition,
   onNavigate,
 }) => {
   const [isVisible, setIsVisible] = useState(true);
@@ -165,10 +174,11 @@ const TopBar: React.FC<TopBarProps> = ({
 
   if (!isVisible || validMessages.length === 0) return null;
 
-  // Background style
-  const bgStyle: React.CSSProperties = useGradient
-    ? { background: `linear-gradient(${gradientAngle}deg, ${gradientFrom}, ${gradientTo})` }
-    : { backgroundColor };
+  const bgStyle: React.CSSProperties = backgroundVisual?.enabled
+    ? getStorefrontSectionBackgroundStyle({ backgroundVisual, backgroundPosition }, backgroundColor)
+    : useGradient
+      ? { background: `linear-gradient(${gradientAngle}deg, ${gradientFrom}, ${gradientTo})` }
+      : { backgroundColor };
 
   const renderIcon = (iconName?: string) => {
     if (!iconName) return null;

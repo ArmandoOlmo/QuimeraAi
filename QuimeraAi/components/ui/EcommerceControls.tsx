@@ -9,6 +9,7 @@ import { PageData } from '../../types';
 import { CategoryItem, ComponentVisibilityContext, ProductReviewItem, TrustBadgeIcon, TrustBadgeItem } from '../../types/components';
 import { initialData } from '../../data/initialData';
 import ColorControl from './ColorControl';
+import VisualBackgroundControl from './VisualBackgroundControl';
 import TabbedControls from './TabbedControls';
 import ImagePicker from './ImagePicker';
 import { I18nInput, I18nTextArea } from './EditorControlPrimitives';
@@ -1199,6 +1200,12 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
 
     const styleTab = (
         <div className="space-y-4">
+            <VisualBackgroundControl
+                sectionKey="featuredProducts"
+                sectionData={d}
+                setNestedData={setNestedData}
+            />
+
             <ProductCardVariantControl
                 value={d.cardStyle}
                 onChange={(v) => setNestedData('featuredProducts.cardStyle', v)}
@@ -1476,6 +1483,12 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
 
     const styleTab = (
         <div className="space-y-4">
+            <VisualBackgroundControl
+                sectionKey="categoryGrid"
+                sectionData={d}
+                setNestedData={setNestedData}
+            />
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -1700,6 +1713,12 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
 
     const styleTab = (
         <div className="space-y-4">
+            <VisualBackgroundControl
+                sectionKey="productHero"
+                sectionData={d}
+                setNestedData={setNestedData}
+            />
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -1911,6 +1930,12 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
 
     const styleTab = (
         <div className="space-y-4">
+            <VisualBackgroundControl
+                sectionKey="trustBadges"
+                sectionData={d}
+                setNestedData={setNestedData}
+            />
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -2050,6 +2075,12 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
 
     const styleTab = (
         <div className="space-y-4">
+            <VisualBackgroundControl
+                sectionKey="saleCountdown"
+                sectionData={d}
+                setNestedData={setNestedData}
+            />
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -2437,6 +2468,12 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
 
     const styleTab = (
         <div className="space-y-4">
+            <VisualBackgroundControl
+                sectionKey="announcementBar"
+                sectionData={d}
+                setNestedData={setNestedData}
+            />
+
             {/* Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -2604,6 +2641,12 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
 
     const styleTab = (
         <div className="space-y-4">
+            <VisualBackgroundControl
+                sectionKey="collectionBanner"
+                sectionData={d}
+                setNestedData={setNestedData}
+            />
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -2723,6 +2766,12 @@ export const useRecentlyViewedControls = ({ data, setNestedData }: EcommerceCont
 
     const styleTab = (
         <div className="space-y-4">
+            <VisualBackgroundControl
+                sectionKey="recentlyViewed"
+                sectionData={d}
+                setNestedData={setNestedData}
+            />
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -2969,6 +3018,12 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
 
     const styleTab = (
         <div className="space-y-4">
+            <VisualBackgroundControl
+                sectionKey="productReviews"
+                sectionData={d}
+                setNestedData={setNestedData}
+            />
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -3143,6 +3198,12 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
 
     const styleTab = (
         <div className="space-y-4">
+            <VisualBackgroundControl
+                sectionKey="productBundle"
+                sectionData={d}
+                setNestedData={setNestedData}
+            />
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
