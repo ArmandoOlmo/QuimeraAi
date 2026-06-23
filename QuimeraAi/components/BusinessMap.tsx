@@ -4,6 +4,7 @@ import { MapData, BorderRadiusSize, CornerGradientConfig } from '../types';
 import { MapPin, Navigation, Phone, Mail, Clock } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { useTranslation } from 'react-i18next';
+import { resolveI18nField } from '../utils/i18nContent';
 import CornerGradient from './ui/CornerGradient';
 
 // Define libraries outside component to prevent re-renders
@@ -23,6 +24,15 @@ const isValidGoogleMapsApiKey = (value?: string) => {
     const key = value?.trim();
     if (!key) return false;
     return key.length > 20 && !/your_|placeholder|api_key|google_maps_api_key/i.test(key);
+};
+
+const resolveMapText = (value: unknown, language: string): string => {
+    if (value === undefined || value === null) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && !Array.isArray(value)) {
+        return resolveI18nField(value as Record<string, string>, language);
+    }
+    return String(value);
 };
 
 interface GoogleMapEmbedProps {
@@ -135,10 +145,23 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     businessHours,
     buttonText,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     // Get design tokens with primary color
     const { getColor } = useDesignTokens();
     const primaryColor = getColor('primary.main', '#4f46e5');
+    const activeLanguage = i18n.language?.startsWith('en')
+        ? 'en'
+        : i18n.language?.startsWith('es')
+            ? 'es'
+            : i18n.language || 'es';
+
+    const titleText = resolveMapText(title, activeLanguage);
+    const descriptionText = resolveMapText(description, activeLanguage);
+    const addressText = resolveMapText(address, activeLanguage);
+    const phoneText = resolveMapText(phone, activeLanguage).trim();
+    const emailText = resolveMapText(email, activeLanguage).trim();
+    const businessHoursText = resolveMapText(businessHours, activeLanguage);
+    const buttonTextValue = resolveMapText(buttonText, activeLanguage);
     
     // Use component colors - fallback to primary color only if not set
     const mapColors = {
@@ -150,7 +173,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     };
 
     // Translated strings
-    const directionsText = buttonText || t('components.map.getDirections', 'Get Directions');
+    const directionsText = buttonTextValue || t('components.map.getDirections', 'Get Directions');
     const loadingText = t('components.map.loading', 'Loading Map...');
     const locationLabel = t('components.map.locationLabel', 'Location');
     const navigateText = t('components.map.navigate', 'Navigate');
@@ -223,7 +246,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         fullscreenControl: true,
     }), [mapVariant]);
 
-    const mapQuery = address?.trim() || (hasCoordinates ? `${lat},${lng}` : title || locationLabel);
+    const mapQuery = addressText.trim() || (hasCoordinates ? `${lat},${lng}` : titleText || locationLabel);
     const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
 
     // Reusable contact info items for info cards
@@ -233,29 +256,31 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         return (
             <div className={`space-y-${small ? '2' : '3'}`}>
                 {/* Address */}
-                <div className="flex items-start gap-3">
-                    <MapPin className={`${iconSize} mt-0.5 shrink-0`} style={{ color: accentColor }} />
-                    <span className={textSize} style={{ color: textColor }}>{address}</span>
-                </div>
+                {addressText && (
+                    <div className="flex items-start gap-3">
+                        <MapPin className={`${iconSize} mt-0.5 shrink-0`} style={{ color: accentColor }} />
+                        <span className={textSize} style={{ color: textColor }}>{addressText}</span>
+                    </div>
+                )}
                 {/* Phone */}
-                {phone && (
-                    <a href={`tel:${phone}`} className="flex items-center gap-3 group">
+                {phoneText && (
+                    <a href={`tel:${phoneText}`} className="flex items-center gap-3 group">
                         <Phone className={`${iconSize} shrink-0`} style={{ color: accentColor }} />
-                        <span className={`${textSize} group-hover:underline`} style={{ color: textColor }}>{phone}</span>
+                        <span className={`${textSize} group-hover:underline`} style={{ color: textColor }}>{phoneText}</span>
                     </a>
                 )}
                 {/* Email */}
-                {email && (
-                    <a href={`mailto:${email}`} className="flex items-center gap-3 group">
+                {emailText && (
+                    <a href={`mailto:${emailText}`} className="flex items-center gap-3 group">
                         <Mail className={`${iconSize} shrink-0`} style={{ color: accentColor }} />
-                        <span className={`${textSize} group-hover:underline`} style={{ color: textColor }}>{email}</span>
+                        <span className={`${textSize} group-hover:underline`} style={{ color: textColor }}>{emailText}</span>
                     </a>
                 )}
                 {/* Business Hours */}
-                {businessHours && (
+                {businessHoursText && (
                     <div className="flex items-center gap-3">
                         <Clock className={`${iconSize} shrink-0`} style={{ color: accentColor }} />
-                        <span className={textSize} style={{ color: textColor }}>{businessHours}</span>
+                        <span className={textSize} style={{ color: textColor }}>{businessHoursText}</span>
                     </div>
                 )}
             </div>
@@ -309,11 +334,11 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                         {locationLabel}
                     </p>
                     <h3 className="mb-2 text-lg font-bold leading-tight font-header" style={{ color: fallbackHeading }}>
-                        {title || locationLabel}
+                        {titleText || locationLabel}
                     </h3>
-                    {address && (
+                    {addressText && (
                         <p className="mb-4 text-sm leading-relaxed opacity-80">
-                            {address}
+                            {addressText}
                         </p>
                     )}
                     <a
@@ -378,10 +403,10 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                                 className="text-2xl @lg:text-3xl font-bold mb-3 font-header"
                                 style={{ color: mapColors.heading }}
                             >
-                                {title}
+                                {titleText}
                             </h3>
                             <p className="text-sm leading-relaxed opacity-80" style={{ color: colors?.text }}>
-                                {description}
+                                {descriptionText}
                             </p>
                         </div>
 
@@ -438,12 +463,14 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                                 <MapPin className="w-5 h-5" style={{ color: accentColor }} />
                             </div>
                             <div className="min-w-0 w-full">
-                                <p className="text-sm font-bold mb-1 truncate" style={{ color: mapColors.heading }}>{title}</p>
-                                <p className="text-xs mb-2 @md:mb-3" style={{ color: colors?.text }}>{address}</p>
-                                {phone && (
+                                <p className="text-sm font-bold mb-1 truncate" style={{ color: mapColors.heading }}>{titleText}</p>
+                                {addressText && (
+                                    <p className="text-xs mb-2 @md:mb-3" style={{ color: colors?.text }}>{addressText}</p>
+                                )}
+                                {phoneText && (
                                     <p className="text-xs flex items-center gap-1.5 mb-1" style={{ color: colors?.text }}>
                                         <Phone className="w-3 h-3" style={{ color: accentColor }} />
-                                        {phone}
+                                        {phoneText}
                                     </p>
                                 )}
                                 <a
@@ -486,8 +513,8 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                                 {locationLabel}
                             </span>
                         </div>
-                        <h3 className="text-lg font-bold mb-2 font-header" style={{ color: mapColors.heading }}>{title}</h3>
-                        <p className="text-sm mb-4 @md:mb-5 leading-relaxed" style={{ color: colors?.text }}>{description}</p>
+                        <h3 className="text-lg font-bold mb-2 font-header" style={{ color: mapColors.heading }}>{titleText}</h3>
+                        <p className="text-sm mb-4 @md:mb-5 leading-relaxed" style={{ color: colors?.text }}>{descriptionText}</p>
 
                         {/* Contact info */}
                         <div className="mb-5 @sm:mb-0">
@@ -533,12 +560,14 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                     />
                     <div className="max-w-7xl mx-auto flex flex-col @md:flex-row @md:items-end @md:justify-between gap-4 @md:pointer-events-auto relative z-10">
                         <div className="flex-1">
-                            <h3 className="text-xl font-bold mb-1 font-header" style={{ color: mapColors.heading }}>{title}</h3>
-                            <p className="text-sm mb-2 @md:mb-1" style={{ color: colors?.text }}>{address}</p>
-                            {phone && (
+                            <h3 className="text-xl font-bold mb-1 font-header" style={{ color: mapColors.heading }}>{titleText}</h3>
+                            {addressText && (
+                                <p className="text-sm mb-2 @md:mb-1" style={{ color: colors?.text }}>{addressText}</p>
+                            )}
+                            {phoneText && (
                                 <p className="text-sm flex items-center gap-2" style={{ color: colors?.text }}>
                                     <Phone className="w-3.5 h-3.5" style={{ color: accentColor }} />
-                                    {phone}
+                                    {phoneText}
                                 </p>
                             )}
                         </div>
@@ -572,13 +601,13 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                             className={getFontSize(titleFontSize || 'md', 'title')}
                             style={{ color: mapColors.heading }}
                         >
-                            {title}
+                            {titleText}
                         </h2>
                         <p 
                             className={getFontSize(descriptionFontSize || 'md', 'desc')}
                             style={{ color: colors?.text }}
                         >
-                            {description}
+                            {descriptionText}
                         </p>
                     </div>
                 )}
