@@ -4,17 +4,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { 
-    doc, 
-    getDoc, 
-    collection, 
-    query, 
-    where, 
-    limit, 
-    getDocs,
-    orderBy 
-} from '@/utils/compatData';
-import { db } from '@/utils/compatData';
+import {
+    findPublicStorefrontCategory,
+    findPublicStorefrontProduct,
+} from '../../../utils/ecommerce/publicStorefrontCatalog';
 
 // Types
 export interface PublicProductImage {
@@ -106,33 +99,17 @@ export const usePublicProduct = (
         setError(null);
 
         try {
-            const productsRef = collection(db, 'public_stores', storeId, 'products');
-            
-            // First try to find by slug
-            const slugQuery = query(
-                productsRef,
-                where('slug', '==', slugOrId),
-                limit(1)
-            );
-            
-            let productDoc = await getDocs(slugQuery);
-            
-            // If not found by slug, try by ID
-            if (productDoc.empty) {
-                const idDoc = await getDoc(doc(productsRef, slugOrId));
-                if (idDoc.exists()) {
-                    const data = idDoc.data() as PublicProduct;
-                    setProduct({ ...data, id: idDoc.id });
-                    await fetchRelatedProducts(data.categoryId, idDoc.id);
-                } else {
-                    setError('Producto no encontrado');
-                    setProduct(null);
-                }
-            } else {
-                const data = productDoc.docs[0].data() as PublicProduct;
-                setProduct({ ...data, id: productDoc.docs[0].id });
-                await fetchRelatedProducts(data.categoryId, productDoc.docs[0].id);
+            const result = await findPublicStorefrontProduct(storeId, slugOrId);
+
+            if (!result.product) {
+                setError('Producto no encontrado');
+                setProduct(null);
+                setRelatedProducts([]);
+                return;
             }
+
+            setProduct(result.product as PublicProduct);
+            setRelatedProducts(result.relatedProducts as PublicProduct[]);
         } catch (err: any) {
             console.error('Error fetching product:', err);
             setError(err.message || 'Error al cargar el producto');
@@ -141,34 +118,6 @@ export const usePublicProduct = (
             setIsLoading(false);
         }
     }, [storeId, slugOrId]);
-
-    const fetchRelatedProducts = async (categoryId: string | undefined, currentProductId: string) => {
-        if (!categoryId) {
-            setRelatedProducts([]);
-            return;
-        }
-
-        try {
-            const productsRef = collection(db, 'public_stores', storeId, 'products');
-            const relatedQuery = query(
-                productsRef,
-                where('categoryId', '==', categoryId),
-                orderBy('updatedAt', 'desc'),
-                limit(12)
-            );
-
-            const relatedDocs = await getDocs(relatedQuery);
-            const related = relatedDocs.docs
-                .map(doc => ({ ...doc.data(), id: doc.id } as PublicProduct))
-                .filter(p => p.id !== currentProductId && p.inStock !== false)
-                .slice(0, 4); // Limit to 4 related products
-
-            setRelatedProducts(related);
-        } catch (err) {
-            console.error('Error fetching related products:', err);
-            setRelatedProducts([]);
-        }
-    };
 
     useEffect(() => {
         fetchProduct();
@@ -199,17 +148,16 @@ export const usePublicCategory = (storeId: string, categoryId: string | undefine
 
         const fetchCategory = async () => {
             try {
-                const categoryDoc = await getDoc(
-                    doc(db, 'public_stores', storeId, 'categories', categoryId)
-                );
-                
-                if (categoryDoc.exists()) {
-                    const data = categoryDoc.data();
+                const result = await findPublicStorefrontCategory(storeId, categoryId);
+
+                if (result.category) {
                     setCategory({
-                        id: categoryDoc.id,
-                        name: data.name,
-                        slug: data.slug,
+                        id: result.category.id,
+                        name: result.category.name,
+                        slug: result.category.slug,
                     });
+                } else {
+                    setCategory(null);
                 }
             } catch (err) {
                 console.error('Error fetching category:', err);

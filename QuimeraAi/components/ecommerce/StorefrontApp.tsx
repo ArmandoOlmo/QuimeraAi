@@ -6,8 +6,6 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { doc, getDoc } from '@/utils/compatData';
-import { db } from '@/utils/compatData';
 import StorefrontLayout from './StorefrontLayout';
 import ProductDetailPageWithCart from './ProductDetailPageWithCart';
 import CheckoutPageEnhanced from './CheckoutPageEnhanced';
@@ -24,7 +22,10 @@ import {
     applyResolvedStorefrontEditorConfig,
     type StorefrontEditorConfigMode,
 } from '../../utils/storefrontRenderer';
+import { mapSupabaseRowToProject } from '../../utils/mapSupabaseProject';
 import { parseStorefrontUrl, type StorefrontRouteState } from '../../utils/storefrontRouter';
+import { supabase } from '../../supabase';
+import type { ProductCardVariant } from '../../types/productCard';
 
 interface StorefrontAppProps {
     projectId: string;
@@ -141,6 +142,108 @@ const getPreviewPayloadSignature = (payload: unknown): string => {
     }
 };
 
+const normalizeStorefrontAnchorName = (value: string): string => (
+    value
+        .replace(/^#/, '')
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+);
+
+const getStorefrontAnchorCandidates = (anchor: string): string[] => {
+    const rawAnchor = anchor.replace(/^#/, '').trim();
+    const normalizedAnchor = normalizeStorefrontAnchorName(rawAnchor);
+    const aliases: Record<string, string> = {
+        products: 'featuredProducts',
+        productos: 'featuredProducts',
+        featuredproducts: 'featuredProducts',
+        categories: 'categoryGrid',
+        categorias: 'categoryGrid',
+        categorygrid: 'categoryGrid',
+        reviews: 'productReviews',
+        resenas: 'productReviews',
+        productreviews: 'productReviews',
+        contact: 'footer',
+        contacto: 'footer',
+        footer: 'footer',
+    };
+    const aliased = aliases[normalizedAnchor];
+
+    return Array.from(new Set([rawAnchor, aliased].filter(Boolean)));
+};
+
+const escapeCssValue = (value: string): string => (
+    typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+        ? CSS.escape(value)
+        : value.replace(/["\\]/g, '\\$&')
+);
+
+const scrollToStorefrontAnchor = (anchor: string) => {
+    if (typeof window === 'undefined') return;
+
+    const candidates = getStorefrontAnchorCandidates(anchor);
+    if (!candidates.length) return;
+
+    const findTarget = (): HTMLElement | null => {
+        for (const candidate of candidates) {
+            const escaped = escapeCssValue(candidate);
+            const target = document.querySelector<HTMLElement>(
+                `[data-storefront-section="${escaped}"], [data-storefront-editor-section="${escaped}"], #${escaped}`
+            );
+            if (target) return target;
+        }
+
+        return null;
+    };
+
+    const attemptScroll = (attempt = 0) => {
+        window.requestAnimationFrame(() => {
+            const target = findTarget();
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+
+            const delay = [80, 180, 320, 520, 800][attempt];
+            if (delay !== undefined) {
+                window.setTimeout(() => attemptScroll(attempt + 1), delay);
+            }
+        });
+    };
+
+    attemptScroll();
+};
+
+const loadPublishedStorefrontProjectData = async (projectId: string): Promise<any | null> => {
+    const { data: projectRow, error: projectError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .maybeSingle();
+
+    if (projectError) throw projectError;
+    if (projectRow) return mapSupabaseRowToProject(projectRow);
+
+    const { data: publicStoreRow, error: publicStoreError } = await supabase
+        .from('public_stores')
+        .select('*')
+        .eq('id', projectId)
+        .maybeSingle();
+
+    if (publicStoreError) throw publicStoreError;
+
+    if (publicStoreRow?.data) {
+        return {
+            ...publicStoreRow.data,
+            id: publicStoreRow.data.id || publicStoreRow.id,
+            userId: publicStoreRow.data.userId || publicStoreRow.user_id,
+        };
+    }
+
+    return null;
+};
+
 const StorefrontProductSearch: React.FC<StorefrontProductSearchProps> = ({
     projectId,
     projectData,
@@ -148,10 +251,24 @@ const StorefrontProductSearch: React.FC<StorefrontProductSearchProps> = ({
     title = 'Todos los productos',
 }) => {
     const cart = useStorefrontCart();
-    const primaryColor = projectData?.theme?.globalColors?.primary ||
+    const storeSettings = (projectData?.storeSettings || projectData?.data?.storeSettings || {}) as any;
+    const storeSettingsColors = storeSettings?.colors || {};
+    const globalColors = projectData?.theme?.globalColors || {};
+    const primaryColor = storeSettingsColors.accent ||
+        globalColors.primary ||
         projectData?.header?.colors?.accent ||
         projectData?.data?.header?.colors?.accent ||
         '#2563eb';
+    const gridColumns = [2, 3, 4, 5].includes(storeSettings?.gridColumns)
+        ? storeSettings.gridColumns as 2 | 3 | 4 | 5
+        : 4;
+    const defaultViewMode = storeSettings?.defaultViewMode === 'list' ? 'list' : 'grid';
+    const borderRadius = ['none', 'sm', 'md', 'lg', 'xl', '2xl', 'full'].includes(storeSettings?.borderRadius)
+        ? storeSettings.borderRadius
+        : 'xl';
+    const cardGap = ['sm', 'md', 'lg'].includes(storeSettings?.cardGap)
+        ? storeSettings.cardGap
+        : 'md';
 
     return (
         <ProductSearchPage
@@ -159,22 +276,32 @@ const StorefrontProductSearch: React.FC<StorefrontProductSearchProps> = ({
             onProductClick={onProductClick}
             onAddToCart={(product) => cart.addItem(product, 1)}
             primaryColor={primaryColor}
-            showFilterSidebar={true}
-            showSearchBar={true}
-            showSortOptions={true}
-            showViewModeToggle={true}
-            defaultViewMode="grid"
-            gridColumns={4}
-            cardStyle="modern"
+            embedded={true}
+            showFilterSidebar={storeSettings?.showFilterSidebar !== false}
+            filterPresentation="drawer"
+            showSearchBar={storeSettings?.showSearchBar !== false}
+            showSortOptions={storeSettings?.showSortOptions !== false}
+            showViewModeToggle={storeSettings?.showViewModeToggle !== false}
+            defaultViewMode={defaultViewMode}
+            productsPerPage={storeSettings?.productsPerPage || 12}
+            gridColumns={gridColumns}
+            cardStyle={(storeSettings?.cardStyle || 'modern') as ProductCardVariant}
+            borderRadius={borderRadius}
+            cardGap={cardGap}
+            paddingY={storeSettings?.paddingY || 'md'}
+            paddingX={storeSettings?.paddingX || 'md'}
+            currencySymbol={storeSettings?.currencySymbol || '$'}
             title={title}
             themeColors={{
-                background: projectData?.theme?.pageBackground || '#f8fafc',
-                text: projectData?.header?.colors?.text || projectData?.data?.header?.colors?.text || '#334155',
-                heading: projectData?.header?.colors?.text || projectData?.data?.header?.colors?.text || '#0f172a',
-                cardBackground: '#ffffff',
-                border: '#e2e8f0',
-                mutedText: '#64748b',
-                priceColor: primaryColor,
+                background: storeSettingsColors.background || projectData?.theme?.pageBackground || '#f8fafc',
+                text: storeSettingsColors.text || globalColors.text || projectData?.header?.colors?.text || projectData?.data?.header?.colors?.text || '#334155',
+                heading: storeSettingsColors.heading || globalColors.heading || globalColors.text || projectData?.header?.colors?.text || projectData?.data?.header?.colors?.text || '#0f172a',
+                cardBackground: storeSettingsColors.cardBackground || globalColors.surface || '#ffffff',
+                cardText: storeSettingsColors.cardText || globalColors.text || '#334155',
+                border: storeSettingsColors.borderColor || globalColors.border || '#e2e8f0',
+                mutedText: storeSettingsColors.text || globalColors.textMuted || globalColors.text || '#64748b',
+                priceColor: storeSettingsColors.priceColor || primaryColor,
+                salePriceColor: storeSettingsColors.salePriceColor || '#ef4444',
             }}
         />
     );
@@ -230,9 +357,9 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                     return;
                 }
 
-                const storeDoc = await getDoc(doc(db, 'public_stores', projectId));
-                if (storeDoc.exists()) {
-                    setProjectData(storeDoc.data());
+                const loadedProjectData = await loadPublishedStorefrontProjectData(projectId);
+                if (loadedProjectData) {
+                    setProjectData(loadedProjectData);
                     setStorefrontConfigMode('published');
                 }
             } catch (error) {
@@ -295,15 +422,89 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     const navigateHome = () => navigate('/');
     const navigateToProduct = (slug: string) => navigate(`/product/${slug}`);
     const navigateToCategory = (slug: string) => navigate(`/category/${slug}`);
+    const navigateToProducts = () => navigate('/tienda/productos');
     const navigateToCheckout = () => navigate('/checkout');
     const navigateToAccount = () => navigate('/account');
     const navigateToOrder = (orderId: string, orderAccessToken?: string) => {
         navigate(`/order/${orderId}${orderAccessToken ? `?token=${encodeURIComponent(orderAccessToken)}` : ''}`);
     };
+    const navigateStorefrontHref = (href: string) => {
+        const rawHref = href.trim();
+        if (!rawHref) return;
+
+        let pathname = rawHref.startsWith('#') ? '/' : rawHref.split(/[?#]/)[0] || '/';
+        let anchor = rawHref.includes('#')
+            ? rawHref.slice(rawHref.indexOf('#') + 1).split(/[?&]/)[0]
+            : '';
+
+        if (/^https?:\/\//i.test(rawHref)) {
+            try {
+                const url = new URL(rawHref);
+                if (url.origin !== window.location.origin) {
+                    window.open(rawHref, '_blank', 'noopener,noreferrer');
+                    return;
+                }
+                pathname = url.pathname;
+                anchor = url.hash.replace(/^#/, '');
+            } catch {
+                window.location.href = rawHref;
+                return;
+            }
+        }
+
+        const storeRoute = pathname.match(/^\/store\/[^/]+(?:\/(.*))?$/)?.[1]?.replace(/^\/+|\/+$/g, '') || '';
+        const route = storeRoute || pathname.replace(/^\/+|\/+$/g, '');
+
+        if (!route || route === 'tienda') {
+            navigateHome();
+            if (anchor) scrollToStorefrontAnchor(anchor);
+            return;
+        }
+        if (/^(products|catalog|shop|tienda\/productos|tienda\/catalogo)$/.test(route)) {
+            navigateToProducts();
+            return;
+        }
+        if (route.startsWith('product/')) {
+            navigateToProduct(route.replace('product/', ''));
+            return;
+        }
+        if (route.startsWith('category/')) {
+            navigateToCategory(route.replace('category/', ''));
+            return;
+        }
+        if (route.startsWith('collection/')) {
+            navigateToCategory(route.replace('collection/', ''));
+            return;
+        }
+        if (route.startsWith('tienda/producto/')) {
+            navigateToProduct(route.replace('tienda/producto/', ''));
+            return;
+        }
+        if (route.startsWith('tienda/categoria/')) {
+            navigateToCategory(route.replace('tienda/categoria/', ''));
+            return;
+        }
+
+        window.location.href = rawHref;
+    };
 
     const resolvedProjectData = projectData
         ? applyResolvedStorefrontEditorConfig(projectData, { mode: storefrontConfigMode })
         : projectData;
+    const globalColors = resolvedProjectData?.theme?.globalColors || {};
+    const productDetailColors = {
+        background: resolvedProjectData?.theme?.pageBackground || globalColors.background,
+        heading: globalColors.heading || globalColors.text,
+        text: globalColors.text,
+        accent: globalColors.primary || globalColors.accent,
+        cardBackground: globalColors.surface,
+        cardText: globalColors.text,
+        buttonBackground: globalColors.primary,
+        buttonText: globalColors.buttonText,
+        borderColor: globalColors.border,
+        priceColor: globalColors.primary,
+        salePriceColor: globalColors.error,
+    };
 
     // Loading state
     if (isLoading) {
@@ -337,6 +538,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                         onNavigateToStore={navigateHome}
                         onNavigateToCategory={navigateToCategory}
                         onNavigateToProduct={navigateToProduct}
+                        colors={productDetailColors}
                     />
                 );
 
@@ -392,6 +594,8 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                         projectData={resolvedProjectData}
                         onNavigateToProduct={navigateToProduct}
                         onNavigateToCategory={navigateToCategory}
+                        onViewAllProducts={navigateToProducts}
+                        onNavigate={navigateStorefrontHref}
                         previewSessionKey={previewSessionKey}
                         themeColors={{
                             background: resolvedProjectData?.theme?.pageBackground || '#ffffff',
@@ -415,6 +619,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
             onNavigateHome={navigateHome}
             onNavigateToCheckout={navigateToCheckout}
             onNavigateToAccount={navigateToAccount}
+            onNavigateStorefront={navigateStorefrontHref}
             projectData={resolvedProjectData}
         >
             {renderContent()}

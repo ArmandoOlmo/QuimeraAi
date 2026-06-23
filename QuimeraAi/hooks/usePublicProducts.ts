@@ -6,11 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase';
 import { StorefrontProductItem } from '../types/components';
-import {
-    buildStoreIdentityOrFilter,
-    getStoreIdentityQueryIds,
-    resolveProjectBackedStoreIdentity,
-} from '../utils/ecommerce/storeIdentity';
+import { loadPublicStorefrontCatalog } from '../utils/ecommerce/publicStorefrontCatalog';
 
 export interface UsePublicProductsOptions {
     categoryId?: string;
@@ -40,7 +36,6 @@ export const usePublicProducts = (
     const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [queryIds, setQueryIds] = useState<string[]>([]);
 
     const {
         categoryId,
@@ -51,87 +46,11 @@ export const usePublicProducts = (
         realtime = false,
     } = options;
     const productIdsKey = rawProductIds.filter(Boolean).join('|');
-    const queryIdsKey = queryIds.join('|');
-
-    useEffect(() => {
-        if (!storeId) {
-            setQueryIds([]);
-            return;
-        }
-
-        let isMounted = true;
-
-        const resolveQueryIds = async () => {
-            let ids = getStoreIdentityQueryIds(storeId);
-
-            try {
-                const { data: publicStore } = await supabase
-                    .from('public_stores')
-                    .select('id, data')
-                    .eq('id', storeId)
-                    .maybeSingle();
-
-                if (publicStore) {
-                    ids = getStoreIdentityQueryIds(resolveProjectBackedStoreIdentity({
-                        storeId,
-                        publicStoreId: publicStore.id,
-                        publicStore,
-                    }));
-                }
-            } catch (err) {
-                console.warn('[usePublicProducts] Public store identity resolution skipped:', err);
-            }
-
-            if (isMounted) setQueryIds(ids);
-        };
-
-        resolveQueryIds();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [storeId]);
-
-    // Fetch categories
-    useEffect(() => {
-        if (!storeId || queryIds.length === 0) return;
-
-        let isMounted = true;
-
-        const fetchCategories = async () => {
-            try {
-                const filter = buildStoreIdentityOrFilter(queryIds);
-                const { data, error } = await supabase
-                    .from('store_categories')
-                    .select('*')
-                    .or(filter);
-
-                if (!isMounted) return;
-
-                if (error) throw error;
-
-                if (data) {
-                    setCategories(data.map((cat: any) => ({
-                        id: cat.id,
-                        name: cat.name || cat.data?.name || '',
-                        slug: cat.slug || cat.data?.slug || '',
-                    })));
-                }
-            } catch (err) {
-                if (isMounted) console.error('Error fetching categories:', err);
-            }
-        };
-
-        fetchCategories();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [storeId, queryIdsKey]);
 
     const fetchProducts = useCallback(async () => {
-        if (!storeId || queryIds.length === 0) {
+        if (!storeId) {
             setProducts([]);
+            setCategories([]);
             setIsLoading(false);
             return;
         }
@@ -141,49 +60,40 @@ export const usePublicProducts = (
 
         try {
             const productIds = productIdsKey ? productIdsKey.split('|').filter(Boolean) : [];
-            const filter = buildStoreIdentityOrFilter(queryIds);
+            const catalog = await loadPublicStorefrontCatalog(storeId, {
+                maxProducts: productIds.length > 0 ? 250 : limitCount * 2,
+            });
 
-            // Query from store_products. Website ecommerce blocks are read-only
-            // Ecommerce Engine consumers; products/categories remain owned by
-            // the Ecommerce Engine admin and checkout flows.
-            let query = supabase
-                .from('store_products')
-                .select('*')
-                .or(filter);
+            setCategories(catalog.categories.map(category => ({
+                id: category.id,
+                name: category.name,
+                slug: category.slug,
+            })));
+
+            let fetchedProducts: StorefrontProductItem[] = catalog.products.map((product) => {
+                const firstImage = product.images?.[0];
+                return {
+                    id: product.id,
+                    name: product.name,
+                    description: product.shortDescription || product.description || '',
+                    price: Number(product.price ?? 0),
+                    compareAtPrice: product.compareAtPrice,
+                    image: firstImage?.url || product.imageUrl || null,
+                    category: product.categoryId || product.categorySlug || product.categoryName,
+                    inStock: product.inStock !== false,
+                    rating: product.averageRating,
+                    reviewCount: product.reviewCount,
+                    slug: product.slug,
+                    updatedAt: product.updatedAt,
+                };
+            });
 
             if (productIds.length > 0) {
-                query = query.in('id', productIds);
-            } else {
-                query = query.limit(limitCount * 2); // Fetch more to account for filtering
-            }
-
-            const { data, error } = await query;
-
-            if (error) throw error;
-
-            let fetchedProducts: StorefrontProductItem[] = [];
-
-            if (data) {
-                fetchedProducts = data.map((doc: any) => {
-                    const d = doc.data || {};
-                    const images = doc.images || d.images || [];
-                    const firstImage = Array.isArray(images) ? images[0] : null;
-                    const quantity = doc.inventory_quantity ?? doc.quantity ?? d.inventoryQuantity ?? d.quantity;
-                    return {
-                        id: doc.id,
-                        name: doc.name || d.name || '',
-                        description: doc.short_description || doc.description || d.shortDescription || d.description || '',
-                        price: Number(doc.price ?? d.price ?? 0),
-                        compareAtPrice: doc.compare_at_price ?? d.compareAtPrice,
-                        image: firstImage?.url || firstImage || d.imageUrl || null,
-                        category: doc.category_id || d.categoryId || d.category,
-                        inStock: quantity == null ? true : Number(quantity) > 0,
-                        rating: doc.average_rating ?? d.averageRating,
-                        reviewCount: doc.review_count ?? d.reviewCount,
-                        slug: doc.slug || d.slug,
-                        updatedAt: doc.updated_at || d.updatedAt,
-                    };
-                });
+                const selected = new Set(productIds);
+                fetchedProducts = fetchedProducts.filter(product => (
+                    selected.has(product.id) ||
+                    (product.slug ? selected.has(product.slug) : false)
+                ));
             }
 
             // Client-side filtering for inStock
@@ -243,7 +153,7 @@ export const usePublicProducts = (
         } finally {
             setIsLoading(false);
         }
-    }, [storeId, queryIdsKey, categoryId, searchTerm, sortBy, limitCount, productIdsKey]);
+    }, [storeId, categoryId, searchTerm, sortBy, limitCount, productIdsKey]);
 
     // Initial fetch
     useEffect(() => {
@@ -252,7 +162,7 @@ export const usePublicProducts = (
 
     // Realtime subscription (optional)
     useEffect(() => {
-        if (!storeId || !realtime || queryIds.length === 0) return;
+        if (!storeId || !realtime) return;
 
         let isMounted = true;
 
@@ -274,7 +184,7 @@ export const usePublicProducts = (
             isMounted = false;
             supabase.removeChannel(subscription);
         };
-    }, [storeId, queryIdsKey, realtime, fetchProducts]);
+    }, [storeId, realtime, fetchProducts]);
 
     return {
         products,
@@ -286,7 +196,6 @@ export const usePublicProducts = (
 };
 
 export default usePublicProducts;
-
 
 
 

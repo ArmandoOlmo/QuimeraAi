@@ -45,6 +45,7 @@ interface FeaturedProductsProps {
     isEditorPreview?: boolean;
     onProductClick?: (productSlug: string) => void;
     onAddToCart?: (productId: string) => void;
+    onViewAllProducts?: () => void;
 }
 
 const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
@@ -54,6 +55,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     isEditorPreview = false,
     onProductClick,
     onAddToCart,
+    onViewAllProducts,
 }) => {
     const { i18n } = useTranslation();
     const projectContext = useSafeProject();
@@ -576,17 +578,32 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                 {/* View All Button */}
                 {data.showViewAll && (
                     <div className={`mt-10 flex ${getContentPosition()}`}>
-                        <a
-                            href={productListUrl}
-                            className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
-                            style={{
-                                backgroundColor: colors?.buttonBackground,
-                                color: colors?.buttonText,
-                            }}
-                        >
-                            Ver todos los productos
-                            <ArrowRight size={20} />
-                        </a>
+                        {onViewAllProducts ? (
+                            <button
+                                type="button"
+                                onClick={onViewAllProducts}
+                                className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                                style={{
+                                    backgroundColor: colors?.buttonBackground,
+                                    color: colors?.buttonText,
+                                }}
+                            >
+                                Ver todos los productos
+                                <ArrowRight size={20} />
+                            </button>
+                        ) : (
+                            <a
+                                href={productListUrl}
+                                className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90 hover:gap-3`}
+                                style={{
+                                    backgroundColor: colors?.buttonBackground,
+                                    color: colors?.buttonText,
+                                }}
+                            >
+                                Ver todos los productos
+                                <ArrowRight size={20} />
+                            </a>
+                        )}
                     </div>
                 )}
             </div>

@@ -251,7 +251,7 @@ describe('storefrontRenderer registry', () => {
             },
         });
 
-        expect(decisions.slice(0, 3).map(decision => decision.status)).toEqual(['hidden', 'hidden', 'render']);
+        expect(decisions.slice(0, 3).map(decision => decision.status)).toEqual(['hidden', 'hidden', 'hidden']);
         expect(decisions[2].data.visibleIn).toBe('landing');
         expect(decisions).toHaveLength(STOREFRONT_SECTION_KINDS.length);
 
@@ -407,10 +407,40 @@ describe('storefrontRenderer registry', () => {
         const pageData = resolveStorefrontPageData(appliedProject);
 
         expect(publishedConfig).toMatchObject({
-            componentOrder: ['announcementBar', ...STOREFRONT_SECTION_KINDS.filter(section => section !== 'announcementBar')],
+            componentOrder: ['announcementBar'],
             source: 'legacy',
         });
         expect(pageData.productHero?.headline).not.toBe('Draft-only hero');
+    });
+
+    it('does not add default storefront modules to published legacy stores', () => {
+        const projectData = {
+            componentOrder: ['featuredProducts'],
+            sectionVisibility: {
+                featuredProducts: true,
+                productHero: false,
+            },
+            data: {
+                featuredProducts: {
+                    title: 'Solo publicados',
+                },
+            },
+        };
+
+        const publishedConfig = resolveStorefrontEditorConfig(projectData, { mode: 'published' });
+        const appliedProject = applyResolvedStorefrontEditorConfig(projectData, { mode: 'published' });
+        const pageData = resolveStorefrontPageData(appliedProject);
+
+        expect(publishedConfig).toMatchObject({
+            componentOrder: ['featuredProducts'],
+            sectionVisibility: {
+                featuredProducts: true,
+                productHero: false,
+            },
+            source: 'legacy',
+        });
+        expect(pageData.productHero).toBeUndefined();
+        expect(appliedProject.componentOrder).toEqual(['featuredProducts']);
     });
 
     it('lets draft storefront editor config start from published when draft is missing', () => {

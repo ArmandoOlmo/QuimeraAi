@@ -105,20 +105,36 @@ export function resolveStorefrontEditorConfig(
     );
     const selectedVisibility = toRecord(selectedConfig?.sectionVisibility) as Record<string, boolean>;
     const defaultVisibility = buildVisibleStorefrontSections();
+    const legacyVisibility = toRecord(
+        projectData?.sectionVisibility ||
+        rootData.sectionVisibility ||
+        pageData.sectionVisibility,
+    ) as Record<string, boolean>;
     const selectedSettings = selectedConfig
         ? normalizeSettings(selectedConfig.sectionSettings)
-        : buildEnabledStorefrontSectionSettings();
+        : mode === 'draft'
+            ? buildEnabledStorefrontSectionSettings()
+            : {};
 
     const resolvedOrder = hasExplicitEditorOrder
         ? selectedOrder
-        : appendDefaultStorefrontSections(selectedOrder.length > 0 ? selectedOrder : legacyOrder);
+        : selectedConfig
+            ? appendDefaultStorefrontSections(selectedOrder.length > 0 ? selectedOrder : legacyOrder)
+            : mode === 'draft'
+                ? appendDefaultStorefrontSections(legacyOrder)
+                : legacyOrder;
+    const resolvedVisibility = selectedConfig
+        ? {
+            ...defaultVisibility,
+            ...selectedVisibility,
+        }
+        : mode === 'draft'
+            ? defaultVisibility
+            : legacyVisibility;
 
     return {
         componentOrder: resolvedOrder,
-        sectionVisibility: {
-            ...defaultVisibility,
-            ...selectedVisibility,
-        },
+        sectionVisibility: resolvedVisibility,
         sectionSettings: selectedSettings,
         themeSettings: toRecord(selectedConfig?.themeSettings),
         source: selectedConfig ? (selectedConfig === editorState.published ? 'published' : 'draft') : 'legacy',

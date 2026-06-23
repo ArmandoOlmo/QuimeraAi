@@ -23,6 +23,7 @@ interface CollectionBannerProps {
     storeId?: string;
     globalColors?: StorefrontGlobalColors;
     onCollectionClick?: (collectionId: string) => void;
+    onNavigate?: (href: string) => void;
 }
 
 const CollectionBanner: React.FC<CollectionBannerProps> = ({
@@ -30,6 +31,7 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
     storeId,
     globalColors,
     onCollectionClick,
+    onNavigate,
 }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
@@ -57,7 +59,11 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
 
     const handleButtonClick = () => {
         if (data.buttonUrl) {
-            window.location.href = data.buttonUrl;
+            if (onNavigate) {
+                onNavigate(data.buttonUrl);
+            } else {
+                window.location.href = data.buttonUrl;
+            }
         } else if (data.collectionId) {
             onCollectionClick?.(data.collectionId);
         }
@@ -289,7 +295,6 @@ const CollectionBanner: React.FC<CollectionBannerProps> = ({
 };
 
 export default CollectionBanner;
-
 
 
 

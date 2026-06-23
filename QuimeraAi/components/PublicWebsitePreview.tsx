@@ -185,6 +185,77 @@ type StoreViewState =
   | { type: 'category'; slug: string }
   | { type: 'product'; slug: string };
 
+const resolveWebsiteStorefrontHref = (href: string): string | null => {
+  const rawHref = href.trim();
+  if (!rawHref) return null;
+
+  let pathname = rawHref.split(/[?#]/)[0] || '/';
+  if (/^https?:\/\//i.test(rawHref)) {
+    try {
+      const url = new URL(rawHref);
+      if (typeof window !== 'undefined' && url.origin !== window.location.origin) return null;
+      pathname = url.pathname;
+    } catch {
+      return null;
+    }
+  }
+
+  if (pathname === '/products' || pathname === '/catalog' || pathname === '/shop') {
+    return '/tienda/productos';
+  }
+
+  if (pathname.startsWith('/product/')) {
+    return `/tienda/producto/${pathname.replace('/product/', '').replace(/\/$/, '')}`;
+  }
+
+  if (pathname.startsWith('/category/')) {
+    return `/tienda/categoria/${pathname.replace('/category/', '').replace(/\/$/, '')}`;
+  }
+
+  if (pathname.startsWith('/collection/')) {
+    return `/tienda/categoria/${pathname.replace('/collection/', '').replace(/\/$/, '')}`;
+  }
+
+  if (
+    pathname === '/tienda' ||
+    pathname === '/tienda/' ||
+    pathname === '/tienda/productos' ||
+    pathname === '/tienda/productos/' ||
+    pathname === '/tienda/catalogo' ||
+    pathname === '/tienda/catalogo/' ||
+    pathname.startsWith('/tienda/categoria/') ||
+    pathname.startsWith('/tienda/producto/')
+  ) {
+    return pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname;
+  }
+
+  const storeRouteMatch = pathname.match(/^\/store\/[^/]+(?:\/(.*))?$/);
+  if (!storeRouteMatch) return null;
+
+  const route = (storeRouteMatch[1] || '').replace(/^\/+|\/+$/g, '');
+  if (!route || route === 'tienda') return '/tienda';
+  if (/^(products|catalog|shop|tienda\/productos|tienda\/catalogo)$/.test(route)) {
+    return '/tienda/productos';
+  }
+  if (route.startsWith('tienda/producto/')) {
+    return `/tienda/producto/${route.replace('tienda/producto/', '')}`;
+  }
+  if (route.startsWith('tienda/categoria/')) {
+    return `/tienda/categoria/${route.replace('tienda/categoria/', '')}`;
+  }
+  if (route.startsWith('product/')) {
+    return `/tienda/producto/${route.replace('product/', '')}`;
+  }
+  if (route.startsWith('category/')) {
+    return `/tienda/categoria/${route.replace('category/', '')}`;
+  }
+  if (route.startsWith('collection/')) {
+    return `/tienda/categoria/${route.replace('collection/', '')}`;
+  }
+
+  return null;
+};
+
 // fontStacks imported from utils/fontLoader.ts (single source of truth)
 
 interface PublicWebsitePreviewProps {
@@ -1351,6 +1422,34 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }
   }, [cmsPosts, project, activePost, activePage, storeView, updateBrowserUrl, updatePageSEO]);
 
+  const handleEcommerceNavigate = useCallback((href: string) => {
+    const storefrontHref = resolveWebsiteStorefrontHref(href) || href;
+    handleLinkNavigation(storefrontHref);
+  }, [handleLinkNavigation]);
+
+  const handlePreviewClickCapture = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    if (
+      event.defaultPrevented ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    const target = event.target as HTMLElement | null;
+    const anchor = target?.closest?.('a[href]') as HTMLAnchorElement | null;
+    if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+
+    const href = anchor.getAttribute('href') || '';
+    const storefrontHref = resolveWebsiteStorefrontHref(href);
+    if (!storefrontHref) return;
+
+    event.preventDefault();
+    handleLinkNavigation(storefrontHref);
+  }, [handleLinkNavigation]);
+
   // Inject font CSS variables AND load Google Fonts dynamically
   useEffect(() => {
     if (project?.theme) {
@@ -2039,6 +2138,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             data={compData}
             storeId={storeProjectId || undefined}
             globalColors={theme?.globalColors}
+            onProductClick={(slug) => handleEcommerceNavigate(`/tienda/producto/${slug}`)}
+            onViewAllProducts={() => handleLinkNavigation('/tienda/productos')}
           />
         ) : null;
       case 'categoryGrid':
@@ -2047,6 +2148,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             data={compData}
             storeId={storeProjectId || undefined}
             globalColors={theme?.globalColors}
+            onCategoryClick={(slug) => handleEcommerceNavigate(`/tienda/categoria/${slug}`)}
           />
         ) : null;
       case 'productHero':
@@ -2055,6 +2157,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             data={compData}
             storeId={storeProjectId || undefined}
             globalColors={theme?.globalColors}
+            onProductClick={(slug) => handleEcommerceNavigate(`/tienda/producto/${slug}`)}
+            onCollectionClick={(slug) => handleEcommerceNavigate(`/tienda/categoria/${slug}`)}
+            onNavigate={handleEcommerceNavigate}
           />
         ) : null;
       case 'saleCountdown':
@@ -2063,6 +2168,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             data={compData}
             storeId={storeProjectId || undefined}
             globalColors={theme?.globalColors}
+            onProductClick={(slug) => handleEcommerceNavigate(`/tienda/producto/${slug}`)}
+            onNavigate={handleEcommerceNavigate}
           />
         ) : null;
       case 'trustBadges':
@@ -2073,22 +2180,33 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             data={compData}
             storeId={storeProjectId || undefined}
             globalColors={theme?.globalColors}
+            onProductClick={(slug) => handleEcommerceNavigate(`/tienda/producto/${slug}`)}
           />
         ) : null;
       case 'productReviews':
         return compData ? withBackground(<ProductReviews data={compData} storeId={storeProjectId || undefined} globalColors={theme?.globalColors} />) : null;
       case 'collectionBanner':
-        return compData ? withBackground(<CollectionBanner data={compData} storeId={storeProjectId || undefined} globalColors={theme?.globalColors} />) : null;
+        return compData ? withBackground(
+          <CollectionBanner
+            data={compData}
+            storeId={storeProjectId || undefined}
+            globalColors={theme?.globalColors}
+            onCollectionClick={(slug) => handleEcommerceNavigate(`/tienda/categoria/${slug}`)}
+            onNavigate={handleEcommerceNavigate}
+          />
+        ) : null;
       case 'productBundle':
         return compData ? withBackground(
           <ProductBundle
             data={compData}
             storeId={storeProjectId || undefined}
             globalColors={theme?.globalColors}
+            onProductClick={(slug) => handleEcommerceNavigate(`/tienda/producto/${slug}`)}
+            onNavigate={handleEcommerceNavigate}
           />
         ) : null;
       case 'announcementBar':
-        return compData ? <AnnouncementBar data={compData} storeId={storeProjectId || undefined} globalColors={theme?.globalColors} /> : null;
+        return compData ? <AnnouncementBar data={compData} storeId={storeProjectId || undefined} globalColors={theme?.globalColors} onNavigate={handleEcommerceNavigate} /> : null;
       case 'separator1':
       case 'separator2':
       case 'separator3':
@@ -2225,7 +2343,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       {/* Announcement Bar - Above Header position */}
       {componentOrder?.includes('announcementBar' as PageSection) && mergedData.announcementBar?.position === 'above-header' && componentStatus?.announcementBar !== false && sectionVisibility?.announcementBar !== false && mergedData.announcementBar && (
         <div id="announcementBar-above" className="w-full">
-          <AnnouncementBar data={mergedData.announcementBar} storeId={storeProjectId || undefined} globalColors={theme?.globalColors} />
+          <AnnouncementBar data={mergedData.announcementBar} storeId={storeProjectId || undefined} globalColors={theme?.globalColors} onNavigate={handleEcommerceNavigate} />
         </div>
       )}
 
@@ -2241,7 +2359,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         <Header {...mergedData.header} links={headerLinks} onNavigate={handleLinkNavigation} forceSolid={isRealEstateRuntimePage} />
       )}
 
-      <main className="min-h-screen bg-site-base relative">
+      <main className="min-h-screen bg-site-base relative" onClickCapture={handlePreviewClickCapture}>
         {/* Loading Overlay for async navigation */}
         {loadingPost && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">

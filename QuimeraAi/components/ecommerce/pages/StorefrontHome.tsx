@@ -34,6 +34,8 @@ interface StorefrontHomeProps {
     projectData: Project;
     onNavigateToProduct: (slug: string) => void;
     onNavigateToCategory: (slug: string) => void;
+    onViewAllProducts?: () => void;
+    onNavigate?: (href: string) => void;
     themeColors: ThemeColors;
     previewSessionKey?: string | null;
 }
@@ -76,6 +78,8 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
     projectData,
     onNavigateToProduct,
     onNavigateToCategory,
+    onViewAllProducts,
+    onNavigate,
     themeColors,
     previewSessionKey,
 }) => {
@@ -85,12 +89,13 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
 
     const sectionsToRender = useMemo(() => {
         const editorSections = getStorefrontEditorSections(projectData, isEditorPreview);
+        const blueprintSections = editorSections || getBusinessBlueprintSections(projectData, pageData);
         const resolverInput = {
             pageData,
             componentOrder: projectData?.componentOrder,
             sectionVisibility: projectData?.sectionVisibility,
-            blueprintSections: editorSections || getBusinessBlueprintSections(projectData, pageData),
-            includeMissingSections: !editorSections,
+            blueprintSections,
+            includeMissingSections: isEditorPreview && !editorSections,
         };
 
         return isEditorPreview
@@ -119,6 +124,8 @@ const StorefrontHome: React.FC<StorefrontHomeProps> = ({
                     previewSessionKey={previewSessionKey}
                     onNavigateToProduct={onNavigateToProduct}
                     onNavigateToCategory={onNavigateToCategory}
+                    onViewAllProducts={onViewAllProducts}
+                    onNavigate={onNavigate}
                 />
             ) : isEditorPreview ? (
                 <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">

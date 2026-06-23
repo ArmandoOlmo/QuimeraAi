@@ -32,6 +32,7 @@ interface ProductBundleProps {
     isEditorPreview?: boolean;
     onAddToCart?: (productIds: string[]) => void;
     onProductClick?: (productSlug: string) => void;
+    onNavigate?: (href: string) => void;
 }
 
 const ProductBundle: React.FC<ProductBundleProps> = ({
@@ -41,6 +42,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     isEditorPreview = false,
     onAddToCart,
     onProductClick,
+    onNavigate,
 }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
@@ -140,7 +142,11 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
         if (onAddToCart && renderableBundleProducts.length > 0) {
             onAddToCart(renderableBundleProducts.map(product => product.id));
         } else if (data.buttonUrl) {
-            window.location.href = data.buttonUrl;
+            if (onNavigate) {
+                onNavigate(data.buttonUrl);
+            } else {
+                window.location.href = data.buttonUrl;
+            }
         }
     };
 

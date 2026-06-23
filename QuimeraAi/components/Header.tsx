@@ -220,6 +220,8 @@ const Header: React.FC<HeaderData & {
   textColor?: string;
   /** Pixel offset to push floating headers below the TopBar */
   topBarOffset?: number;
+  /** Expand floating header surfaces in runtime contexts that need full storefront navigation. */
+  forceWideFloating?: boolean;
   /** Alternative prop names from editor */
   logoImage?: string;
   showLoginButton?: boolean;
@@ -251,6 +253,7 @@ const Header: React.FC<HeaderData & {
   backgroundColor, // Accept top-level color prop from editor
   textColor, // Accept top-level color prop from editor
   topBarOffset: topBarOffsetProp, // Pixel offset from TopBar above
+  forceWideFloating = false,
   // Alternative prop names from editor
   logoImage,
   showLoginButton,
@@ -425,7 +428,7 @@ const Header: React.FC<HeaderData & {
       if (forceSolid && isFloatingLayout) {
         switch (style) {
           case 'floating-pill':
-            return 'mx-auto w-[calc(100%-3rem)] max-w-5xl rounded-full border border-white/15 shadow-lg';
+            return `mx-auto w-[calc(100%-3rem)] ${forceWideFloating ? 'max-w-7xl' : 'max-w-5xl'} rounded-full border border-white/15 shadow-lg`;
           case 'floating-glass':
             return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-xl border border-white/20';
           case 'floating-shadow':
@@ -576,28 +579,43 @@ const Header: React.FC<HeaderData & {
     const borderRadiusMap: Record<string, string> = { none: '0px', sm: '4px', md: '8px', lg: '12px', xl: '16px', '2xl': '24px', full: '9999px' };
     const ctaBorderRadius = borderRadiusMap[buttonBorderRadius || 'md'] || '8px';
 
-    const CtaButton = ({ fullWidth = false }: { fullWidth?: boolean }) => (
-      <a href={ctaUrl || '#cta'}
-        onClick={(e) => {
-          if (ctaUrl?.startsWith('#') && onNavigate) {
-            e.preventDefault();
-            onNavigate(ctaUrl);
-          }
-        }}
-        className={`
-        inline-flex items-center justify-center font-semibold transition-all duration-300 hover:opacity-85 hover:scale-[1.02] font-button
-        px-5 py-2 text-sm shadow-sm
-        ${fullWidth ? 'w-full' : ''}
-    `}
-        style={{
-          backgroundColor: colors?.buttonBackground || actualColors.accent,
-          color: colors?.buttonText || '#ffffff',
-          borderRadius: ctaBorderRadius
-        }}
-      >
-        {actualCtaText}
-      </a>
-    );
+    const CtaButton = ({ fullWidth = false }: { fullWidth?: boolean }) => {
+      const targetHref = ctaUrl || '#cta';
+      const shouldUseInternalNavigation = (() => {
+        if (!onNavigate) return false;
+        if (targetHref.startsWith('/') || targetHref.startsWith('#')) return true;
+        if (!/^https?:\/\//i.test(targetHref)) return false;
+
+        try {
+          return typeof window !== 'undefined' && new URL(targetHref).origin === window.location.origin;
+        } catch {
+          return false;
+        }
+      })();
+
+      return (
+        <a href={targetHref}
+          onClick={(e) => {
+            if (shouldUseInternalNavigation) {
+              e.preventDefault();
+              onNavigate?.(targetHref);
+            }
+          }}
+          className={`
+          inline-flex items-center justify-center font-semibold transition-all duration-300 hover:opacity-85 hover:scale-[1.02] font-button
+          px-5 py-2 text-sm shadow-sm
+          ${fullWidth ? 'w-full' : ''}
+      `}
+          style={{
+            backgroundColor: colors?.buttonBackground || actualColors.accent,
+            color: colors?.buttonText || '#ffffff',
+            borderRadius: ctaBorderRadius
+          }}
+        >
+          {actualCtaText}
+        </a>
+      );
+    };
 
     const LoginButton = () => (
       <a

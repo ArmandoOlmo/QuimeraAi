@@ -7,6 +7,7 @@ import React from 'react';
 import ProductDetailPage from './ProductDetailPage';
 import { useStorefrontCart } from './context';
 import { PublicProduct, PublicProductVariant } from './hooks/usePublicProduct';
+import type { ComponentColors } from './hooks/useUnifiedStorefrontColors';
 
 interface ProductDetailPageWithCartProps {
     storeId: string;
@@ -14,6 +15,7 @@ interface ProductDetailPageWithCartProps {
     onNavigateToStore?: () => void;
     onNavigateToCategory?: (categorySlug: string) => void;
     onNavigateToProduct?: (productSlug: string) => void;
+    colors?: ComponentColors;
 }
 
 const ProductDetailPageWithCart: React.FC<ProductDetailPageWithCartProps> = ({
@@ -22,6 +24,7 @@ const ProductDetailPageWithCart: React.FC<ProductDetailPageWithCartProps> = ({
     onNavigateToStore,
     onNavigateToCategory,
     onNavigateToProduct,
+    colors,
 }) => {
     const cart = useStorefrontCart();
 
@@ -41,12 +44,12 @@ const ProductDetailPageWithCart: React.FC<ProductDetailPageWithCartProps> = ({
             onNavigateToCategory={onNavigateToCategory}
             onNavigateToProduct={onNavigateToProduct}
             onAddToCart={handleAddToCart}
+            colors={colors}
         />
     );
 };
 
 export default ProductDetailPageWithCart;
-
 
 
 
