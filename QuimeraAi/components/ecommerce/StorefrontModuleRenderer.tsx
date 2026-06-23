@@ -23,6 +23,7 @@ interface StorefrontModuleRendererProps {
     previewSessionKey?: string | null;
     onNavigateToProduct: (slug: string) => void;
     onNavigateToCategory: (slug: string) => void;
+    onViewAllProducts?: () => void;
     onNavigate?: (href: string) => void;
 }
 
@@ -133,6 +134,7 @@ const StorefrontModuleRenderer: React.FC<StorefrontModuleRendererProps> = ({
     previewSessionKey,
     onNavigateToProduct,
     onNavigateToCategory,
+    onViewAllProducts,
     onNavigate,
 }) => {
     const notifyEditorSectionClick = (
@@ -154,12 +156,22 @@ const StorefrontModuleRenderer: React.FC<StorefrontModuleRendererProps> = ({
         }, window.location.origin);
     };
 
-    const renderEditorFrame = (
+    const renderSectionFrame = (
         decision: StorefrontSectionRenderDecision,
         children: React.ReactNode,
     ) => {
         if (!isEditorPreview) {
-            return <React.Fragment key={decision.id}>{children}</React.Fragment>;
+            return (
+                <div
+                    key={decision.id}
+                    id={String(decision.kind)}
+                    data-storefront-section={decision.kind}
+                    data-storefront-section-id={decision.id}
+                    style={{ scrollMarginTop: 120 }}
+                >
+                    {children}
+                </div>
+            );
         }
 
         return (
@@ -183,7 +195,7 @@ const StorefrontModuleRenderer: React.FC<StorefrontModuleRendererProps> = ({
                 if (decision.status !== 'render') {
                     if (!isEditorPreview || !shouldShowEditorPlaceholder(decision)) return null;
 
-                    return renderEditorFrame(
+                    return renderSectionFrame(
                         decision,
                         <StorefrontEditorSectionPlaceholder
                             decision={decision}
@@ -195,7 +207,7 @@ const StorefrontModuleRenderer: React.FC<StorefrontModuleRendererProps> = ({
                 const Component = storefrontComponentMap[decision.kind as StorefrontSectionKind];
                 if (!Component) return null;
 
-                return renderEditorFrame(
+                return renderSectionFrame(
                     decision,
                     <Component
                         storeId={storeId}
@@ -205,6 +217,7 @@ const StorefrontModuleRenderer: React.FC<StorefrontModuleRendererProps> = ({
                         onProductClick={onNavigateToProduct}
                         onCategoryClick={onNavigateToCategory}
                         onCollectionClick={onNavigateToCategory}
+                        onViewAllProducts={onViewAllProducts}
                         onNavigate={onNavigate}
                     />,
                 );

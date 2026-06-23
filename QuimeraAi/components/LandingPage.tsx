@@ -104,6 +104,7 @@ import { useSafeEditor } from '../contexts/EditorContext';
 import { useSafeTenant } from '../contexts/tenant';
 import { sanitizeI18nObject } from '../utils/sanitizeData';
 import { useTranslation } from 'react-i18next';
+import { normalizeStorefrontHrefForWebsiteContext } from '../utils/storefrontRouter';
 
 // ... (rest of imports)
 
@@ -451,8 +452,86 @@ const LandingPageContent: React.FC = () => {
     };
   }, [cmsPosts, isLoadingCMS, pages, setActivePage]);
 
+  const scrollPreviewToTop = useCallback(() => {
+    if (previewRef?.current) {
+      previewRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [previewRef]);
+
+  const navigateInsideEditorStorefront = useCallback((href: string) => {
+    const normalized = normalizeStorefrontHrefForWebsiteContext(href, activeProjectId);
+    if (!normalized) return false;
+
+    setActivePost(null);
+    setActiveCategorySlug(null);
+    setBlogSlugNotFound(false);
+    setActivePropertySlug(null);
+    setShowRealtyDirectory(false);
+    const homePage = pages.find(page => page.isHomePage);
+    setActivePage(homePage ? homePage.id : null);
+
+    if (normalized === '/tienda') {
+      setStoreView({ type: 'store' });
+      scrollPreviewToTop();
+      return true;
+    }
+
+    if (normalized === '/tienda/productos') {
+      setStoreView({ type: 'products' });
+      scrollPreviewToTop();
+      return true;
+    }
+
+    if (normalized.startsWith('/tienda/categoria/')) {
+      const slug = normalized.replace('/tienda/categoria/', '').replace(/\/$/, '');
+      setStoreView({ type: 'category', slug });
+      scrollPreviewToTop();
+      return true;
+    }
+
+    if (normalized.startsWith('/tienda/producto/')) {
+      const slug = normalized.replace('/tienda/producto/', '').replace(/\/$/, '');
+      setStoreView({ type: 'product', slug });
+      scrollPreviewToTop();
+      return true;
+    }
+
+    if (normalized === '/checkout') {
+      setStoreView({ type: 'checkout' });
+      scrollPreviewToTop();
+      return true;
+    }
+
+    return false;
+  }, [activeProjectId, pages, scrollPreviewToTop, setActivePage]);
+
+  const handleViewAllProducts = useCallback(() => {
+    navigateInsideEditorStorefront('/tienda/productos');
+  }, [navigateInsideEditorStorefront]);
+
+  const handlePreviewClickCapture = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    const anchor = target?.closest?.('a[href]') as HTMLAnchorElement | null;
+    if (!anchor) return;
+
+    const href = anchor.getAttribute('href');
+    if (!href) return;
+
+    const normalized = normalizeStorefrontHrefForWebsiteContext(href, activeProjectId);
+    if (!normalized) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    navigateInsideEditorStorefront(normalized);
+  }, [activeProjectId, navigateInsideEditorStorefront]);
+
   const handleBackToHome = () => {
-    window.history.pushState({}, '', '/');
+    if (!isEditorMode) {
+      window.history.pushState({}, '', '/');
+    }
     setActivePost(null);
     setActiveCategorySlug(null);
     setBlogSlugNotFound(false);
@@ -462,37 +541,37 @@ const LandingPageContent: React.FC = () => {
     // Reset multi-page active page to home (or null for legacy projects)
     const homePage = pages.find(page => page.isHomePage);
     setActivePage(homePage ? homePage.id : null);
-    window.scrollTo(0, 0);
+    scrollPreviewToTop();
   };
 
   // Store navigation handlers - use real paths
   const handleNavigateToStore = useCallback(() => {
-    window.history.pushState({}, '', '/tienda');
-    setShowRealtyDirectory(false);
-    setStoreView({ type: 'store' });
-    window.scrollTo(0, 0);
-  }, []);
+    if (!isEditorMode) {
+      window.history.pushState({}, '', '/tienda');
+    }
+    navigateInsideEditorStorefront('/tienda');
+  }, [isEditorMode, navigateInsideEditorStorefront]);
 
   const handleNavigateToCategory = useCallback((categorySlug: string) => {
-    window.history.pushState({}, '', `/tienda/categoria/${categorySlug}`);
-    setShowRealtyDirectory(false);
-    setStoreView({ type: 'category', slug: categorySlug });
-    window.scrollTo(0, 0);
-  }, []);
+    if (!isEditorMode) {
+      window.history.pushState({}, '', `/tienda/categoria/${categorySlug}`);
+    }
+    navigateInsideEditorStorefront(`/tienda/categoria/${categorySlug}`);
+  }, [isEditorMode, navigateInsideEditorStorefront]);
 
   const handleNavigateToProduct = useCallback((productSlug: string) => {
-    window.history.pushState({}, '', `/tienda/producto/${productSlug}`);
-    setShowRealtyDirectory(false);
-    setStoreView({ type: 'product', slug: productSlug });
-    window.scrollTo(0, 0);
-  }, []);
+    if (!isEditorMode) {
+      window.history.pushState({}, '', `/tienda/producto/${productSlug}`);
+    }
+    navigateInsideEditorStorefront(`/tienda/producto/${productSlug}`);
+  }, [isEditorMode, navigateInsideEditorStorefront]);
 
   const handleNavigateToCheckout = useCallback(() => {
-    window.history.pushState({}, '', '/checkout');
-    setShowRealtyDirectory(false);
-    setStoreView({ type: 'checkout' });
-    window.scrollTo(0, 0);
-  }, []);
+    if (!isEditorMode) {
+      window.history.pushState({}, '', '/checkout');
+    }
+    navigateInsideEditorStorefront('/checkout');
+  }, [isEditorMode, navigateInsideEditorStorefront]);
 
   // Universal navigation handler for Header links
   const handleLinkNavigation = useCallback((href: string) => {
@@ -501,6 +580,11 @@ const LandingPageContent: React.FC = () => {
     navigationGuardRef.current = true;
     // Clear the guard after a tick in case no hashchange/popstate fires
     setTimeout(() => { navigationGuardRef.current = false; }, 50);
+
+    const storefrontHref = normalizeStorefrontHrefForWebsiteContext(href, activeProjectId);
+    if (storefrontHref && navigateInsideEditorStorefront(storefrontHref)) {
+      return;
+    }
 
     // Reset views
     setActivePost(null);
@@ -520,7 +604,7 @@ const LandingPageContent: React.FC = () => {
         // effectiveComponentOrder falls back to the global componentOrder
         setActivePage(null);
       }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollPreviewToTop();
       return;
     }
 
@@ -549,7 +633,7 @@ const LandingPageContent: React.FC = () => {
       console.log('[LandingPage] Navigating to blog category:', slug);
       setActivePropertySlug(null);
       setActiveCategorySlug(slug);
-      window.scrollTo(0, 0);
+      scrollPreviewToTop();
       return;
     }
 
@@ -561,11 +645,11 @@ const LandingPageContent: React.FC = () => {
         setActivePropertySlug(null);
         setActivePost(post);
         setBlogSlugNotFound(false);
-        window.scrollTo(0, 0);
+        scrollPreviewToTop();
       } else {
         console.warn(`[LandingPage] Blog post not found for slug: ${slug}`);
         setBlogSlugNotFound(true);
-        window.scrollTo(0, 0);
+        scrollPreviewToTop();
       }
       return;
     }
@@ -574,7 +658,7 @@ const LandingPageContent: React.FC = () => {
     if (href === '/tienda/productos' || href === '/tienda/productos/' || href === '/tienda/catalogo' || href === '/tienda/catalogo/') {
       setActivePropertySlug(null);
       setStoreView({ type: 'products' });
-      window.scrollTo(0, 0);
+      scrollPreviewToTop();
       return;
     }
 
@@ -582,7 +666,7 @@ const LandingPageContent: React.FC = () => {
     if (href === '/tienda' || href === '/tienda/') {
       setActivePropertySlug(null);
       setStoreView({ type: 'store' });
-      window.scrollTo(0, 0);
+      scrollPreviewToTop();
       return;
     }
 
@@ -591,7 +675,7 @@ const LandingPageContent: React.FC = () => {
       const slug = href.replace('/tienda/categoria/', '').replace(/\/$/, '');
       setActivePropertySlug(null);
       setStoreView({ type: 'category', slug });
-      window.scrollTo(0, 0);
+      scrollPreviewToTop();
       return;
     }
 
@@ -600,7 +684,7 @@ const LandingPageContent: React.FC = () => {
       const slug = href.replace('/tienda/producto/', '').replace(/\/$/, '');
       setActivePropertySlug(null);
       setStoreView({ type: 'product', slug });
-      window.scrollTo(0, 0);
+      scrollPreviewToTop();
       return;
     }
 
@@ -608,7 +692,7 @@ const LandingPageContent: React.FC = () => {
     if (href === '/checkout' || href === '/checkout/') {
       setActivePropertySlug(null);
       setStoreView({ type: 'checkout' });
-      window.scrollTo(0, 0);
+      scrollPreviewToTop();
       return;
     }
 
@@ -618,7 +702,7 @@ const LandingPageContent: React.FC = () => {
       const post = cmsPosts.find(p => p.slug === slug);
       if (post) {
         setActivePost(post);
-        window.scrollTo(0, 0);
+        scrollPreviewToTop();
       }
       return;
     }
@@ -626,14 +710,14 @@ const LandingPageContent: React.FC = () => {
     if (href === '#store') {
       setActivePropertySlug(null);
       setStoreView({ type: 'store' });
-      window.scrollTo(0, 0);
+      scrollPreviewToTop();
       return;
     }
 
     if (href === '#store/products' || href === '#store/catalog') {
       setActivePropertySlug(null);
       setStoreView({ type: 'products' });
-      window.scrollTo(0, 0);
+      scrollPreviewToTop();
       return;
     }
 
@@ -641,7 +725,7 @@ const LandingPageContent: React.FC = () => {
       const slug = href.replace('#store/category/', '');
       setActivePropertySlug(null);
       setStoreView({ type: 'category', slug });
-      window.scrollTo(0, 0);
+      scrollPreviewToTop();
       return;
     }
 
@@ -649,7 +733,7 @@ const LandingPageContent: React.FC = () => {
       const slug = href.replace('#store/product/', '');
       setActivePropertySlug(null);
       setStoreView({ type: 'product', slug });
-      window.scrollTo(0, 0);
+      scrollPreviewToTop();
       return;
     }
 
@@ -667,7 +751,7 @@ const LandingPageContent: React.FC = () => {
       setActivePage(null);
       setShowRealtyDirectory(true);
       window.history.pushState({}, '', '/listados');
-      window.scrollTo(0, 0);
+      scrollPreviewToTop();
       return;
     }
 
@@ -687,7 +771,7 @@ const LandingPageContent: React.FC = () => {
 
       if (matchedPage) {
         setActivePage(matchedPage.id);
-        window.scrollTo(0, 0);
+        scrollPreviewToTop();
         return;
       }
     }
@@ -698,7 +782,7 @@ const LandingPageContent: React.FC = () => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [activePage, cmsPosts, pages, setActivePage]);
+  }, [activePage, activeProjectId, cmsPosts, navigateInsideEditorStorefront, pages, scrollPreviewToTop, setActivePage]);
 
   // Check if we're showing a store view
   const isStoreViewActive = storeView.type !== 'none';
@@ -940,6 +1024,12 @@ const LandingPageContent: React.FC = () => {
     );
   }, [componentStatus, effectiveSectionVisibility]);
 
+  const shouldShowStorefrontCart = Boolean(
+    activeProjectId &&
+    isAnyEcommerceComponentEnabled &&
+    (storefrontProducts.length > 0 || cart.itemCount > 0 || isStoreViewActive)
+  );
+
   /**
    * Verifica si un componente de ecommerce debe mostrarse en el contexto actual
    * @param componentKey - Clave del componente (ej: 'featuredProducts')
@@ -1154,6 +1244,7 @@ const LandingPageContent: React.FC = () => {
         storeId={activeProjectId || undefined}
         globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
+        onViewAllProducts={handleViewAllProducts}
       />
     ) : null,
     categoryGrid: mergedCategoryGridData ? (
@@ -1170,6 +1261,8 @@ const LandingPageContent: React.FC = () => {
         storeId={activeProjectId || undefined}
         globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
+        onCollectionClick={handleNavigateToCategory}
+        onNavigate={handleLinkNavigation}
       />
     ) : null,
     saleCountdown: mergedSaleCountdownData ? (
@@ -1178,6 +1271,7 @@ const LandingPageContent: React.FC = () => {
         storeId={activeProjectId || undefined}
         globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
+        onNavigate={handleLinkNavigation}
       />
     ) : null,
     trustBadges: mergedTrustBadgesData ? (
@@ -1200,6 +1294,7 @@ const LandingPageContent: React.FC = () => {
         storeId={activeProjectId || undefined}
         globalColors={theme.globalColors}
         onCollectionClick={handleNavigateToCategory}
+        onNavigate={handleLinkNavigation}
       />
     ) : null,
     productBundle: mergedProductBundleData ? (
@@ -1208,10 +1303,11 @@ const LandingPageContent: React.FC = () => {
         storeId={activeProjectId || undefined}
         globalColors={theme.globalColors}
         onProductClick={handleNavigateToProduct}
+        onNavigate={handleLinkNavigation}
       />
     ) : null,
     announcementBar: mergedAnnouncementBarData ? (
-      <AnnouncementBar data={mergedAnnouncementBarData} storeId={activeProjectId || undefined} globalColors={theme.globalColors} />
+      <AnnouncementBar data={mergedAnnouncementBarData} storeId={activeProjectId || undefined} globalColors={theme.globalColors} onNavigate={handleLinkNavigation} />
     ) : null,
     realEstateListings: (
       <SectionBackground backgroundImageUrl={mergedRealEstateListingsData?.backgroundImageUrl} backgroundColor={mergedRealEstateListingsData?.colors?.background} backgroundOverlayEnabled={mergedRealEstateListingsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedRealEstateListingsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedRealEstateListingsData?.backgroundOverlayColor} backgroundPosition={mergedRealEstateListingsData?.backgroundPosition}>
@@ -1569,6 +1665,7 @@ const LandingPageContent: React.FC = () => {
   return (
     <div
       className={`text-slate-200 overflow-x-hidden transition-colors duration-500`}
+      onClickCapture={handlePreviewClickCapture}
     // Use inline style for background color to handle dynamic values safely
     // The `bg-[color]` utility doesn't handle undefined values gracefully in runtime CSS generation
     // Note: Removed font-body class from here - each component applies its own font class
@@ -1615,7 +1712,7 @@ const LandingPageContent: React.FC = () => {
         {...mergedHeaderData}
         links={headerLinks}
         forceSolid={isStoreViewActive || showRealtyDirectory || Boolean(activePropertySlug) || Boolean(activePage?.sections?.includes('propertyDetail') || activePage?.sections?.includes('propertyDirectory'))}
-        showCart={storefrontProducts.length > 0 && isAnyEcommerceComponentEnabled}
+        showCart={shouldShowStorefrontCart}
         cartItemCount={cart.itemCount}
         onCartClick={cart.toggleCart}
         onNavigate={handleLinkNavigation}
@@ -1625,7 +1722,7 @@ const LandingPageContent: React.FC = () => {
       />
 
       {/* Cart Drawer - only when store has products AND ecommerce is enabled */}
-      {storefrontProducts.length > 0 && isAnyEcommerceComponentEnabled && (
+      {shouldShowStorefrontCart && (
         <CartDrawer
           isOpen={cart.isCartOpen}
           onClose={cart.closeCart}
@@ -1798,6 +1895,7 @@ const LandingPageContent: React.FC = () => {
           <ProductSearchPage
             storeId={activeProjectId}
             onProductClick={handleNavigateToProduct}
+            onAddToCart={(product) => cart.addItem(product, 1)}
             primaryColor={theme.globalColors?.primary || '#6366f1'}
             embedded={true}
             title="Todos los productos"
@@ -1847,6 +1945,7 @@ const LandingPageContent: React.FC = () => {
             <ProductSearchPage
               storeId={activeProjectId}
               onProductClick={handleNavigateToProduct}
+              onAddToCart={(product) => cart.addItem(product, 1)}
               initialCategory={storeView.slug}
               primaryColor={theme.globalColors?.primary || '#6366f1'}
               embedded={true}

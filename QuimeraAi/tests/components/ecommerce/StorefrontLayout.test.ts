@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+    buildStorefrontHeaderLinks,
     calculateStorefrontHeaderClearance,
+    isStorefrontHomeNavigationLink,
     normalizeProjectPublicData,
 } from '../../../components/ecommerce/StorefrontLayout';
 
@@ -103,5 +105,33 @@ describe('StorefrontLayout data normalization', () => {
             text: '#f8fafc',
             accent: '#22c55e',
         });
+    });
+
+    it('does not duplicate Inicio when the project navigation already includes home', () => {
+        const links = buildStorefrontHeaderLinks('store-1', [
+            { text: 'Inicio', href: '/' },
+            { text: 'Tienda', href: '/tienda' },
+            { text: 'Inicio', href: '#home' },
+        ], true);
+
+        expect(links).toEqual([
+            { text: 'Inicio', href: '/' },
+            { text: 'Tienda', href: '/tienda' },
+        ]);
+    });
+
+    it('adds an Inicio link when the project navigation has no home target', () => {
+        expect(buildStorefrontHeaderLinks('store-1', [
+            { text: 'Tienda', href: '/tienda' },
+        ], true)).toEqual([
+            { text: 'Inicio', href: '#' },
+            { text: 'Tienda', href: '/tienda' },
+        ]);
+    });
+
+    it('normalizes accented home labels for storefront navigation', () => {
+        expect(isStorefrontHomeNavigationLink({ text: 'Início', href: '/otra' })).toBe(true);
+        expect(isStorefrontHomeNavigationLink({ text: 'Productos', href: '/' })).toBe(true);
+        expect(isStorefrontHomeNavigationLink({ text: 'Tienda', href: '/tienda' })).toBe(false);
     });
 });

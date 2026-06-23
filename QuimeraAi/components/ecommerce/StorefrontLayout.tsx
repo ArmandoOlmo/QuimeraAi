@@ -22,6 +22,7 @@ interface StorefrontLayoutProps {
     onNavigateHome?: () => void;
     onNavigateToCheckout?: () => void;
     onNavigateToAccount?: () => void;
+    onNavigateStorefront?: (href: string) => void;
     projectData?: ProjectPublicData;
 }
 
@@ -142,6 +143,52 @@ export const normalizeProjectPublicData = (value: unknown): ProjectPublicData | 
     };
 };
 
+const normalizeNavigationText = (value: unknown): string =>
+    String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase();
+
+const normalizeNavigationHref = (value: unknown): string =>
+    String(value || '')
+        .trim()
+        .replace(/^https?:\/\/[^/]+/i, '')
+        .replace(/\/+$/g, '') || '/';
+
+export const isStorefrontHomeNavigationLink = (link: MenuItemNav): boolean => {
+    const text = normalizeNavigationText(link.text);
+    const href = normalizeNavigationHref(link.href);
+
+    return text === 'inicio' ||
+        text === 'home' ||
+        href === '/' ||
+        href === '#' ||
+        href === '/inicio' ||
+        href === '/home';
+};
+
+export const buildStorefrontHeaderLinks = (
+    storeId: string,
+    navigationLinks: MenuItemNav[],
+    hasHomeHandler: boolean,
+): MenuItemNav[] => {
+    let hasHomeLink = false;
+    const dedupedLinks = navigationLinks.filter(link => {
+        if (!isStorefrontHomeNavigationLink(link)) return true;
+        if (hasHomeLink) return false;
+        hasHomeLink = true;
+        return true;
+    });
+
+    if (hasHomeLink) return dedupedLinks;
+
+    return [
+        { text: 'Inicio', href: hasHomeHandler ? '#' : `/preview/${storeId}` },
+        ...dedupedLinks,
+    ];
+};
+
 /**
  * Inner layout component that uses cart context
  */
@@ -151,6 +198,7 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
     onNavigateHome,
     onNavigateToCheckout,
     onNavigateToAccount,
+    onNavigateStorefront,
     projectData,
 }) => {
     const cart = useStorefrontCart();
@@ -213,11 +261,22 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
         return header?.links || [];
     })();
 
-    // Prepare final header links - add Home link that goes back to landing
-    const headerLinks = [
-        { text: 'Inicio', href: onNavigateHome ? '#' : `/preview/${storeId}` },
-        ...navigationLinks,
-    ];
+    // Prepare final header links - add Home only when the project header does not already include one.
+    const headerLinks = buildStorefrontHeaderLinks(storeId, navigationLinks, Boolean(onNavigateHome));
+
+    const handleHeaderNavigate = (href: string) => {
+        if (onNavigateStorefront) {
+            onNavigateStorefront(href);
+            return;
+        }
+
+        if (isStorefrontHomeNavigationLink({ text: '', href })) {
+            onNavigateHome?.();
+            return;
+        }
+
+        window.location.href = href;
+    };
 
     const handleCheckout = () => {
         cart.closeCart();
@@ -269,7 +328,11 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
     return (
         <div
             className="min-h-screen"
-            style={{ backgroundColor }}
+            style={{
+                backgroundColor,
+                '--site-base-bg': backgroundColor,
+                '--property-detail-bg': backgroundColor,
+            } as React.CSSProperties}
         >
             {/* Header from the project */}
             {projectData?.header && (
@@ -283,7 +346,9 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
                         showCart={true}
                         cartItemCount={cart.itemCount}
                         onCartClick={cart.toggleCart}
+                        onNavigate={handleHeaderNavigate}
                         forceSolid={true}
+                        forceWideFloating={true}
                     />
                 </div>
             )}
@@ -366,10 +431,13 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
             />
 
             <footer
+                id="footer"
+                data-storefront-section="footer"
                 className="mt-16 border-t"
                 style={{
                     backgroundColor: projectData?.header?.colors?.background || '#ffffff',
-                    borderColor: 'rgba(15,23,42,0.08)'
+                    borderColor: 'rgba(15,23,42,0.08)',
+                    scrollMarginTop: 120,
                 }}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -409,6 +477,7 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
     onNavigateHome,
     onNavigateToCheckout,
     onNavigateToAccount,
+    onNavigateStorefront,
     projectData: initialProjectData,
 }) => {
     const [fetchedProjectData, setFetchedProjectData] = useState<ProjectPublicData | null>(null);
@@ -546,6 +615,7 @@ const StorefrontLayout: React.FC<StorefrontLayoutProps> = ({
                     onNavigateHome={onNavigateHome}
                     onNavigateToCheckout={onNavigateToCheckout}
                     onNavigateToAccount={onNavigateToAccount}
+                    onNavigateStorefront={onNavigateStorefront}
                     projectData={projectData}
                 >
                     {children}
