@@ -4,18 +4,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-    collection,
-    query,
-    where,
-    orderBy,
-    limit,
-    startAfter,
-    getDocs,
-    QueryDocumentSnapshot,
-} from '@/utils/compatData';
-import { db } from '@/utils/compatData';
 import { PublicProduct } from './usePublicProduct';
+import { loadPublicStorefrontCatalog } from '../../../utils/ecommerce/publicStorefrontCatalog';
 
 // Types
 export type SortOption = 
@@ -82,7 +72,6 @@ export const useProductSearch = (
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
     const [hasMore, setHasMore] = useState(true);
     const [totalCount, setTotalCount] = useState(0);
 
@@ -100,15 +89,10 @@ export const useProductSearch = (
 
         try {
             console.log('[useProductSearch] Loading products for store:', storeId);
-            const productsRef = collection(db, 'public_stores', storeId, 'products');
-            // First try without filter to see all products
-            const snapshot = await getDocs(productsRef);
-            console.log('[useProductSearch] Total docs found:', snapshot.size);
+            const catalog = await loadPublicStorefrontCatalog(storeId);
+            console.log('[useProductSearch] Total docs found:', catalog.products.length);
 
-            const productsData = snapshot.docs.map((doc) => ({
-                ...doc.data(),
-                id: doc.id,
-            })) as PublicProduct[];
+            const productsData = catalog.products as PublicProduct[];
 
             setAllProducts(productsData);
 
@@ -145,7 +129,16 @@ export const useProductSearch = (
                 if (product.price > maxPrice) maxPrice = product.price;
             });
 
-            setCategories(Array.from(categoryMap.values()));
+            catalog.categories.forEach((category) => {
+                categoryMap.set(category.id, {
+                    id: category.id,
+                    name: category.name,
+                    slug: category.slug,
+                    count: category.count || categoryMap.get(category.id)?.count || 0,
+                });
+            });
+
+            setCategories(Array.from(categoryMap.values()).filter(category => category.count > 0 || category.id));
             setTags(Array.from(allTags).sort());
             setPriceStats({
                 min: minPrice === Infinity ? 0 : minPrice,

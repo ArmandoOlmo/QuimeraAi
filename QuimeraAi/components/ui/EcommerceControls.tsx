@@ -14,7 +14,7 @@ import ImagePicker from './ImagePicker';
 import { I18nInput, I18nTextArea } from './EditorControlPrimitives';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
 import { useCMS } from '../../contexts/cms/CMSContext';
-import { X, Check, Search, ChevronDown, ChevronUp, ChevronRight, FolderOpen, Package, Image as ImageIcon, Loader2, SlidersHorizontal, ShoppingBag, ShoppingCart, LayoutGrid, Maximize2, Palette, Info, Grid, List, MessageCircle, Trash2, Plus, FileText, Scale } from 'lucide-react';
+import { X, Check, Search, ChevronDown, ChevronUp, ChevronRight, FolderOpen, Package, Image as ImageIcon, Loader2, SlidersHorizontal, ShoppingBag, ShoppingCart, LayoutGrid, Maximize2, Palette, Info, Grid, List, MessageCircle, Trash2, Plus, FileText, Scale, Home, Link2 } from 'lucide-react';
 import {
     normalizeWebsiteEcommerceCTARouteType,
     normalizeWebsiteEcommerceResponsiveBehavior,
@@ -177,17 +177,19 @@ const VisibilityContextSelector = ({
     onChange: (val: ComponentVisibilityContext) => void
 }) => {
     const { t } = useTranslation();
+    const visibilityOptions = [
+        { value: 'both' as ComponentVisibilityContext, label: t('editor.controls.ecommerce.visibility.both', 'Both'), Icon: Link2 },
+        { value: 'landing' as ComponentVisibilityContext, label: t('editor.controls.ecommerce.visibility.landing', 'Landing Only'), Icon: Home },
+        { value: 'store' as ComponentVisibilityContext, label: t('editor.controls.ecommerce.visibility.store', 'Store Only'), Icon: ShoppingBag },
+    ];
+
     return (
         <div className="mb-4 p-3 bg-q-bg rounded-lg border border-q-border">
             <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase tracking-wider">
                 {t('editor.controls.ecommerce.visibility.label', 'Show in')}
             </label>
             <div className="flex bg-q-surface rounded-md border border-q-border p-1 gap-1">
-                {[
-                    { value: 'both', label: t('editor.controls.ecommerce.visibility.both', 'Both'), icon: '🔗' },
-                    { value: 'landing', label: t('editor.controls.ecommerce.visibility.landing', 'Landing Only'), icon: '🏠' },
-                    { value: 'store', label: t('editor.controls.ecommerce.visibility.store', 'Store Only'), icon: '🛒' },
-                ].map((opt) => (
+                {visibilityOptions.map(({ Icon, ...opt }) => (
                     <button
                         key={opt.value}
                         onClick={() => onChange(opt.value as ComponentVisibilityContext)}
@@ -196,15 +198,15 @@ const VisibilityContextSelector = ({
                             : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'
                             }`}
                     >
-                        <span>{opt.icon}</span>
+                        <Icon size={14} />
                         <span className="hidden sm:inline">{opt.label}</span>
                     </button>
                 ))}
             </div>
             <p className="text-[10px] text-q-text-secondary mt-2 leading-tight">
-                • <strong>{t('editor.controls.ecommerce.visibility.both', 'Both')}:</strong> {t('editor.controls.ecommerce.visibility.bothDesc', 'Visible on landing page and store')}<br />
-                • <strong>{t('editor.controls.ecommerce.visibility.landing', 'Landing Only')}:</strong> {t('editor.controls.ecommerce.visibility.landingDesc', 'Only on the main page')}<br />
-                • <strong>{t('editor.controls.ecommerce.visibility.store', 'Store Only')}:</strong> {t('editor.controls.ecommerce.visibility.storeDesc', 'Only on store/category/product views')}
+                <strong>{t('editor.controls.ecommerce.visibility.both', 'Both')}:</strong> {t('editor.controls.ecommerce.visibility.bothDesc', 'Visible on landing page and store')}<br />
+                <strong>{t('editor.controls.ecommerce.visibility.landing', 'Landing Only')}:</strong> {t('editor.controls.ecommerce.visibility.landingDesc', 'Only on the main page')}<br />
+                <strong>{t('editor.controls.ecommerce.visibility.store', 'Store Only')}:</strong> {t('editor.controls.ecommerce.visibility.storeDesc', 'Only on store/category/product views')}
             </p>
         </div>
     );
@@ -334,6 +336,13 @@ const CTARouteControls = ({
         cart: t('editor.controls.ecommerce.routeCart', 'Cart'),
         custom: t('editor.controls.ecommerce.routeCustom', 'Custom URL'),
     };
+    const storefrontRouteOptions = [
+        { value: '/tienda/productos', label: t('editor.controls.ecommerce.routeAllProducts', 'All products') },
+        { value: '/tienda', label: t('editor.controls.ecommerce.routeStoreHome', 'Store home') },
+    ];
+    const normalizedStorefrontRoute = storefrontRouteOptions.some(option => option.value === route)
+        ? route || storefrontRouteOptions[0].value
+        : (fallbackRoute === '/tienda' ? '/tienda' : storefrontRouteOptions[0].value);
 
     const resolveRoute = (updates: Partial<{
         routeType: WebsiteEcommerceCTARouteType;
@@ -354,7 +363,10 @@ const CTARouteControls = ({
     const updateRouteType = (next: string) => {
         const nextType = normalizeWebsiteEcommerceCTARouteType(next);
         onRouteTypeChange(nextType);
-        onRouteChange(resolveRoute({ routeType: nextType }));
+        onRouteChange(resolveRoute({
+            routeType: nextType,
+            route: nextType === 'storefront' ? normalizedStorefrontRoute : undefined,
+        }));
     };
 
     return (
@@ -374,11 +386,11 @@ const CTARouteControls = ({
             />
 
             {normalizedRouteType === 'storefront' && (
-                <Input
+                <SelectControl
                     label={t('editor.controls.ecommerce.storefrontRoute', 'Storefront Route')}
-                    value={route || fallbackRoute}
-                    onChange={(e) => onRouteChange(resolveRoute({ route: e.target.value }))}
-                    placeholder="/store"
+                    value={normalizedStorefrontRoute}
+                    options={storefrontRouteOptions}
+                    onChange={(value) => onRouteChange(resolveRoute({ route: value }))}
                 />
             )}
 
@@ -1476,6 +1488,86 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
 
     const styleTab = (
         <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.textAlignment', 'Text Alignment')}
+                    value={d.textAlignment || 'left'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('productHero.textAlignment', v)}
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.contentPosition', 'Content Position')}
+                    value={d.contentPosition || 'left'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('productHero.contentPosition', v)}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+                <FontSizeSelector
+                    label={t('editor.controls.ecommerce.headlineSize', 'Headline Size')}
+                    value={d.headlineFontSize || 'xl'}
+                    onChange={(v) => setNestedData('productHero.headlineFontSize', v)}
+                />
+                <FontSizeSelector
+                    label={t('editor.controls.ecommerce.subheadlineSize', 'Subheadline Size')}
+                    value={d.subheadlineFontSize || 'md'}
+                    onChange={(v) => setNestedData('productHero.subheadlineFontSize', v)}
+                />
+            </div>
+
+            <SliderControl
+                label={t('editor.controls.ecommerce.height', 'Height (px)')}
+                value={d.height || 520}
+                min={280}
+                max={900}
+                step={20}
+                onChange={(v) => setNestedData('productHero.height', v)}
+            />
+
+            <SelectControl
+                label={t('editor.controls.ecommerce.overlayStyle', 'Overlay Style')}
+                value={d.overlayStyle || 'gradient'}
+                options={[
+                    { value: 'gradient', label: t('editor.controls.ecommerce.gradient', 'Gradient') },
+                    { value: 'solid', label: t('editor.controls.ecommerce.solid', 'Solid') },
+                    { value: 'none', label: t('common.none', 'None') },
+                ]}
+                onChange={(v) => setNestedData('productHero.overlayStyle', v)}
+            />
+
+            <SliderControl
+                label={t('editor.controls.ecommerce.overlayOpacity', 'Overlay Opacity')}
+                value={d.overlayOpacity ?? 55}
+                min={0}
+                max={100}
+                step={5}
+                onChange={(v) => setNestedData('productHero.overlayOpacity', v)}
+            />
+
+            <div className="grid grid-cols-2 gap-2">
+                <BorderRadiusSelector
+                    label={t('editor.controls.ecommerce.sectionRadius', 'Section Radius')}
+                    value={d.borderRadius || d.buttonBorderRadius || 'xl'}
+                    onChange={(v) => setNestedData('productHero.borderRadius', v)}
+                    extended
+                />
+                <BorderRadiusSelector
+                    label={t('editor.controls.ecommerce.buttonRadius', 'Button Radius')}
+                    value={d.buttonBorderRadius || 'xl'}
+                    onChange={(v) => setNestedData('productHero.buttonBorderRadius', v)}
+                    extended
+                />
+            </div>
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -1588,6 +1680,18 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
     const d = data.productHero;
     const heroSource = d.sourceType || (d.collectionId ? 'collection' : d.productId ? 'product' : 'featured');
     const gridCategories = data?.categoryGrid?.categories || [];
+    const setHeroProductId = (id: string | undefined) => {
+        setNestedData('productHero.productId', id || '');
+        if (d.ctaRouteType === 'product') {
+            setNestedData('productHero.buttonUrl', id ? `/product/${id}` : '/tienda/productos');
+        }
+    };
+    const setHeroCollectionId = (id: string | undefined) => {
+        setNestedData('productHero.collectionId', id || '');
+        if (d.ctaRouteType === 'collection') {
+            setNestedData('productHero.buttonUrl', id ? `/collection/${id}` : '/tienda/productos');
+        }
+    };
 
     const contentTab = (
         <div className="space-y-4">
@@ -1595,6 +1699,32 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 value={d.visibleIn}
                 onChange={(v) => setNestedData('productHero.visibleIn', v)}
             />
+
+            <Input
+                label={t('editor.controls.ecommerce.headline', 'Headline')}
+                value={d.headline || ''}
+                onChange={(e) => setNestedData('productHero.headline', e.target.value)}
+            />
+
+            <TextArea
+                label={t('editor.controls.ecommerce.subheadline', 'Subheadline')}
+                value={d.subheadline || ''}
+                onChange={(e) => setNestedData('productHero.subheadline', e.target.value)}
+                rows={3}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+                <Input
+                    label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
+                    value={d.buttonText || ''}
+                    onChange={(e) => setNestedData('productHero.buttonText', e.target.value)}
+                />
+                <Input
+                    label={t('editor.controls.ecommerce.addToCartText', 'Add to Cart Text')}
+                    value={d.addToCartButtonText || ''}
+                    onChange={(e) => setNestedData('productHero.addToCartButtonText', e.target.value)}
+                />
+            </div>
 
             <SelectControl
                 label={t('editor.controls.ecommerce.heroSource', 'Hero Source')}
@@ -1608,13 +1738,16 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                     setNestedData('productHero.sourceType', v);
                     if (v !== 'product') setNestedData('productHero.productId', '');
                     if (v !== 'collection') setNestedData('productHero.collectionId', '');
+                    if (v === 'featured' && d.ctaRouteType === 'storefront') {
+                        setNestedData('productHero.buttonUrl', '/tienda/productos');
+                    }
                 }}
             />
 
             {heroSource === 'product' && storeId && (
                 <SingleProductSelector
                     selectedProductId={d.productId}
-                    onSelect={(id) => setNestedData('productHero.productId', id)}
+                    onSelect={setHeroProductId}
                     storeId={storeId}
                 />
             )}
@@ -1622,12 +1755,20 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
             {heroSource === 'collection' && (
                 <SingleCollectionSelector
                     selectedCollectionId={d.collectionId}
-                    onSelect={(id) => setNestedData('productHero.collectionId', id)}
+                    onSelect={setHeroCollectionId}
                     storeId={storeId}
                     gridCategories={gridCategories}
                     label={t('editor.controls.ecommerce.collection', 'Collection')}
                 />
             )}
+
+            <ImagePicker
+                label={t('editor.controls.ecommerce.backgroundImage', 'Background Image')}
+                value={d.backgroundImageUrl || ''}
+                onChange={(url) => setNestedData('productHero.backgroundImageUrl', url)}
+                storeId={storeId}
+                generationContext="background"
+            />
 
             <SelectControl
                 label={t('editor.controls.ecommerce.layout', 'Layout')}
@@ -1681,6 +1822,20 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 onChange={(v) => setNestedData('productHero.showAddToCartButton', v)}
             />
 
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showBadge', 'Show Badge')}
+                checked={d.showBadge === true}
+                onChange={(v) => setNestedData('productHero.showBadge', v)}
+            />
+
+            {d.showBadge && (
+                <Input
+                    label={t('editor.controls.ecommerce.badgeText', 'Badge Text')}
+                    value={d.badgeText || ''}
+                    onChange={(e) => setNestedData('productHero.badgeText', e.target.value)}
+                />
+            )}
+
             <CTARouteControls
                 routeType={d.ctaRouteType}
                 route={d.buttonUrl}
@@ -1688,12 +1843,12 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 collectionId={d.collectionId}
                 storeId={storeId}
                 gridCategories={gridCategories}
-                fallbackRoute="/store"
+                fallbackRoute="/tienda/productos"
                 label={t('editor.controls.ecommerce.buttonRoute', 'Button Route')}
                 onRouteTypeChange={(v) => setNestedData('productHero.ctaRouteType', v)}
                 onRouteChange={(v) => setNestedData('productHero.buttonUrl', v)}
-                onProductChange={(v) => setNestedData('productHero.productId', v)}
-                onCollectionChange={(v) => setNestedData('productHero.collectionId', v)}
+                onProductChange={setHeroProductId}
+                onCollectionChange={setHeroCollectionId}
             />
         </div>
     );
@@ -1761,6 +1916,21 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                     onChange={(c) => setNestedData('productHero.colors?.buttonText', c)}
                 />
             </div>
+
+            {d.showAddToCartButton && (
+                <div className="grid grid-cols-2 gap-3">
+                    <ColorControl
+                        label={t('editor.controls.ecommerce.addToCartBackground', 'Cart BG')}
+                        value={d.colors?.addToCartBackground || d.colors?.accent || '#10B981'}
+                        onChange={(c) => setNestedData('productHero.colors?.addToCartBackground', c)}
+                    />
+                    <ColorControl
+                        label={t('editor.controls.ecommerce.addToCartText', 'Cart Text')}
+                        value={d.colors?.addToCartText || d.colors?.buttonText || '#ffffff'}
+                        onChange={(c) => setNestedData('productHero.colors?.addToCartText', c)}
+                    />
+                </div>
+            )}
 
 
             {/* Badge Colors */}

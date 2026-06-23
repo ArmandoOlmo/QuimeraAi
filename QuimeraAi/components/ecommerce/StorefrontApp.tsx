@@ -6,8 +6,6 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { doc, getDoc } from '@/utils/compatData';
-import { db } from '@/utils/compatData';
 import StorefrontLayout from './StorefrontLayout';
 import ProductDetailPageWithCart from './ProductDetailPageWithCart';
 import CheckoutPageEnhanced from './CheckoutPageEnhanced';
@@ -24,7 +22,9 @@ import {
     applyResolvedStorefrontEditorConfig,
     type StorefrontEditorConfigMode,
 } from '../../utils/storefrontRenderer';
+import { mapSupabaseRowToProject } from '../../utils/mapSupabaseProject';
 import { parseStorefrontUrl, type StorefrontRouteState } from '../../utils/storefrontRouter';
+import { supabase } from '../../supabase';
 import type { ProductCardVariant } from '../../types/productCard';
 
 interface StorefrontAppProps {
@@ -142,6 +142,108 @@ const getPreviewPayloadSignature = (payload: unknown): string => {
     }
 };
 
+const normalizeStorefrontAnchorName = (value: string): string => (
+    value
+        .replace(/^#/, '')
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+);
+
+const getStorefrontAnchorCandidates = (anchor: string): string[] => {
+    const rawAnchor = anchor.replace(/^#/, '').trim();
+    const normalizedAnchor = normalizeStorefrontAnchorName(rawAnchor);
+    const aliases: Record<string, string> = {
+        products: 'featuredProducts',
+        productos: 'featuredProducts',
+        featuredproducts: 'featuredProducts',
+        categories: 'categoryGrid',
+        categorias: 'categoryGrid',
+        categorygrid: 'categoryGrid',
+        reviews: 'productReviews',
+        resenas: 'productReviews',
+        productreviews: 'productReviews',
+        contact: 'footer',
+        contacto: 'footer',
+        footer: 'footer',
+    };
+    const aliased = aliases[normalizedAnchor];
+
+    return Array.from(new Set([rawAnchor, aliased].filter(Boolean)));
+};
+
+const escapeCssValue = (value: string): string => (
+    typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+        ? CSS.escape(value)
+        : value.replace(/["\\]/g, '\\$&')
+);
+
+const scrollToStorefrontAnchor = (anchor: string) => {
+    if (typeof window === 'undefined') return;
+
+    const candidates = getStorefrontAnchorCandidates(anchor);
+    if (!candidates.length) return;
+
+    const findTarget = (): HTMLElement | null => {
+        for (const candidate of candidates) {
+            const escaped = escapeCssValue(candidate);
+            const target = document.querySelector<HTMLElement>(
+                `[data-storefront-section="${escaped}"], [data-storefront-editor-section="${escaped}"], #${escaped}`
+            );
+            if (target) return target;
+        }
+
+        return null;
+    };
+
+    const attemptScroll = (attempt = 0) => {
+        window.requestAnimationFrame(() => {
+            const target = findTarget();
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+
+            const delay = [80, 180, 320, 520, 800][attempt];
+            if (delay !== undefined) {
+                window.setTimeout(() => attemptScroll(attempt + 1), delay);
+            }
+        });
+    };
+
+    attemptScroll();
+};
+
+const loadPublishedStorefrontProjectData = async (projectId: string): Promise<any | null> => {
+    const { data: projectRow, error: projectError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .maybeSingle();
+
+    if (projectError) throw projectError;
+    if (projectRow) return mapSupabaseRowToProject(projectRow);
+
+    const { data: publicStoreRow, error: publicStoreError } = await supabase
+        .from('public_stores')
+        .select('*')
+        .eq('id', projectId)
+        .maybeSingle();
+
+    if (publicStoreError) throw publicStoreError;
+
+    if (publicStoreRow?.data) {
+        return {
+            ...publicStoreRow.data,
+            id: publicStoreRow.data.id || publicStoreRow.id,
+            userId: publicStoreRow.data.userId || publicStoreRow.user_id,
+        };
+    }
+
+    return null;
+};
+
 const StorefrontProductSearch: React.FC<StorefrontProductSearchProps> = ({
     projectId,
     projectData,
@@ -255,9 +357,9 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                     return;
                 }
 
-                const storeDoc = await getDoc(doc(db, 'public_stores', projectId));
-                if (storeDoc.exists()) {
-                    setProjectData(storeDoc.data());
+                const loadedProjectData = await loadPublishedStorefrontProjectData(projectId);
+                if (loadedProjectData) {
+                    setProjectData(loadedProjectData);
                     setStorefrontConfigMode('published');
                 }
             } catch (error) {
@@ -330,7 +432,11 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
         const rawHref = href.trim();
         if (!rawHref) return;
 
-        let pathname = rawHref.split(/[?#]/)[0] || '/';
+        let pathname = rawHref.startsWith('#') ? '/' : rawHref.split(/[?#]/)[0] || '/';
+        let anchor = rawHref.includes('#')
+            ? rawHref.slice(rawHref.indexOf('#') + 1).split(/[?&]/)[0]
+            : '';
+
         if (/^https?:\/\//i.test(rawHref)) {
             try {
                 const url = new URL(rawHref);
@@ -339,6 +445,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                     return;
                 }
                 pathname = url.pathname;
+                anchor = url.hash.replace(/^#/, '');
             } catch {
                 window.location.href = rawHref;
                 return;
@@ -350,6 +457,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
 
         if (!route || route === 'tienda') {
             navigateHome();
+            if (anchor) scrollToStorefrontAnchor(anchor);
             return;
         }
         if (/^(products|catalog|shop|tienda\/productos|tienda\/catalogo)$/.test(route)) {
@@ -362,6 +470,10 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
         }
         if (route.startsWith('category/')) {
             navigateToCategory(route.replace('category/', ''));
+            return;
+        }
+        if (route.startsWith('collection/')) {
+            navigateToCategory(route.replace('collection/', ''));
             return;
         }
         if (route.startsWith('tienda/producto/')) {
@@ -379,6 +491,20 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     const resolvedProjectData = projectData
         ? applyResolvedStorefrontEditorConfig(projectData, { mode: storefrontConfigMode })
         : projectData;
+    const globalColors = resolvedProjectData?.theme?.globalColors || {};
+    const productDetailColors = {
+        background: resolvedProjectData?.theme?.pageBackground || globalColors.background,
+        heading: globalColors.heading || globalColors.text,
+        text: globalColors.text,
+        accent: globalColors.primary || globalColors.accent,
+        cardBackground: globalColors.surface,
+        cardText: globalColors.text,
+        buttonBackground: globalColors.primary,
+        buttonText: globalColors.buttonText,
+        borderColor: globalColors.border,
+        priceColor: globalColors.primary,
+        salePriceColor: globalColors.error,
+    };
 
     // Loading state
     if (isLoading) {
@@ -412,6 +538,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
                         onNavigateToStore={navigateHome}
                         onNavigateToCategory={navigateToCategory}
                         onNavigateToProduct={navigateToProduct}
+                        colors={productDetailColors}
                     />
                 );
 
@@ -492,6 +619,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
             onNavigateHome={navigateHome}
             onNavigateToCheckout={navigateToCheckout}
             onNavigateToAccount={navigateToAccount}
+            onNavigateStorefront={navigateStorefrontHref}
             projectData={resolvedProjectData}
         >
             {renderContent()}

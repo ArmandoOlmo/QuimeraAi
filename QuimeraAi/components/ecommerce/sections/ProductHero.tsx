@@ -53,12 +53,15 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
     const productListUrl = buildStorefrontCatalogUrl(effectiveStoreId);
+    const websiteCatalogPath = '/tienda/productos';
+    const heroSource = data.sourceType || (data.collectionId ? 'collection' : data.productId ? 'product' : 'featured');
     
     // Unified colors system
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors, globalColors);
     
     const { products, isLoading } = usePublicProducts(effectiveStoreId, {
-        productIds: data.productId ? [data.productId] : undefined,
+        productIds: heroSource === 'product' && data.productId ? [data.productId] : undefined,
+        categoryId: heroSource === 'collection' && data.collectionId ? data.collectionId : undefined,
         limitCount: 1,
     });
 
@@ -66,11 +69,11 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     const featuredProduct = React.useMemo(() => {
         const renderableProducts = filterRenderableStorefrontProducts(products);
 
-        if (data.productId) {
+        if (heroSource === 'product' && data.productId) {
             return renderableProducts.find(p => p.id === data.productId);
         }
         return renderableProducts[0];
-    }, [products, data.productId]);
+    }, [products, data.productId, heroSource]);
     const featuredProductCard = React.useMemo(() => (
         featuredProduct
             ? createProductCardViewModel(featuredProduct, {
@@ -116,6 +119,13 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     const getTextAlignment = () => getStorefrontTextAlignmentClass(data.textAlignment, 'left');
     const getContentPosition = () => getStorefrontContentPositionClass(data.contentPosition, 'left');
     const getOverlayBackground = () => getStorefrontOverlayBackground(data.overlayStyle, (colors as any)?.overlayColor || colors?.background, data.overlayOpacity);
+    const getResponsiveSectionClass = () => data.responsiveBehavior === 'hide' ? 'hidden md:block' : '';
+    const getSplitLayoutClass = () => data.responsiveBehavior === 'scroll'
+        ? 'flex gap-6 overflow-x-auto snap-x snap-mandatory pb-2 lg:grid lg:grid-cols-12 lg:gap-12 lg:overflow-visible lg:pb-0'
+        : 'grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12';
+    const getSplitItemClass = () => data.responsiveBehavior === 'scroll'
+        ? 'min-w-[78vw] snap-start lg:min-w-0'
+        : '';
 
     // Helper to navigate to product - uses callback if available, otherwise direct hash navigation
     const navigateToProduct = (slugOrId: string) => {
@@ -129,8 +139,12 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
     const handleButtonClick = () => {
         const buttonUrl = data.buttonUrl?.trim();
-        if (buttonUrl && onNavigate && isGenericStorefrontCatalogLink(buttonUrl)) {
-            onNavigate(buttonUrl);
+        if (buttonUrl && isGenericStorefrontCatalogLink(buttonUrl)) {
+            if (onNavigate) {
+                onNavigate(websiteCatalogPath);
+            } else {
+                window.location.href = productListUrl;
+            }
             return;
         }
 
@@ -314,20 +328,20 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         
         return (
             <div
-                className={`${getPaddingY()} ${getPaddingX()}`}
+                className={`${getResponsiveSectionClass()} ${getPaddingY()} ${getPaddingX()}`}
                 style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
             >
                 <div className="max-w-7xl mx-auto">
-                    <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center`}>
+                    <div className={`${getSplitLayoutClass()} items-center`}>
                         {/* Image Side (Left) */}
-                        <div className={`${gridCols.image} order-1`}>
+                        <div className={`${gridCols.image} ${getSplitItemClass()} order-1`}>
                             <div className={`${getImageSize()} mx-auto lg:mx-0`}>
                                 {renderProductImage()}
                             </div>
                         </div>
 
                         {/* Content Side (Right) */}
-                        <div className={`${gridCols.content} order-2`}>
+                        <div className={`${gridCols.content} ${getSplitItemClass()} order-2`}>
                             {renderProductInfo(true)}
                         </div>
                     </div>
@@ -342,18 +356,18 @@ const ProductHero: React.FC<ProductHeroProps> = ({
         
         return (
             <div
-                className={`${getPaddingY()} ${getPaddingX()}`}
+                className={`${getResponsiveSectionClass()} ${getPaddingY()} ${getPaddingX()}`}
                 style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
             >
                 <div className="max-w-7xl mx-auto">
-                    <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center`}>
+                    <div className={`${getSplitLayoutClass()} items-center`}>
                         {/* Content Side (Left) */}
-                        <div className={`${gridCols.content} order-2 lg:order-1`}>
+                        <div className={`${gridCols.content} ${getSplitItemClass()} order-2 lg:order-1`}>
                             {renderProductInfo(true)}
                         </div>
 
                         {/* Image Side (Right) */}
-                        <div className={`${gridCols.image} order-1 lg:order-2`}>
+                        <div className={`${gridCols.image} ${getSplitItemClass()} order-1 lg:order-2`}>
                             <div className={`${getImageSize()} mx-auto lg:ml-auto lg:mr-0`}>
                                 {renderProductImage()}
                             </div>
@@ -366,11 +380,11 @@ const ProductHero: React.FC<ProductHeroProps> = ({
 
     // Layout: Full Width
     const renderFull = () => {
-        const imageUrl = featuredProduct?.image || data.backgroundImageUrl;
+        const imageUrl = data.backgroundImageUrl || featuredProduct?.image;
         
         return (
             <div
-                className={`relative overflow-hidden ${getSectionRadius()}`}
+                className={`${getResponsiveSectionClass()} relative overflow-hidden ${getSectionRadius()}`}
                 style={{
                     ...getStorefrontSectionBackgroundStyle(data, colors?.background),
                     minHeight: `${data.height || 520}px`,
@@ -410,7 +424,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     const renderCentered = () => {
         return (
             <div
-                className={`${getPaddingY()} ${getPaddingX()}`}
+                className={`${getResponsiveSectionClass()} ${getPaddingY()} ${getPaddingX()}`}
                 style={getStorefrontSectionBackgroundStyle(data, colors?.background)}
             >
                 <div className="max-w-4xl mx-auto">

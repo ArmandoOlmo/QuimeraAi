@@ -73,12 +73,18 @@ describe('storefrontRouter', () => {
         expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/tienda/catalogo', 'abc')).toBe('/tienda/productos');
         expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/product/red-bike', 'abc')).toBe('/tienda/producto/red-bike');
         expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/category/bikes', 'abc')).toBe('/tienda/categoria/bikes');
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/collection/bikes', 'abc')).toBe('/tienda/categoria/bikes');
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/tienda/producto/red-bike', 'abc')).toBe('/tienda/producto/red-bike');
+        expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/tienda/categoria/bikes', 'abc')).toBe('/tienda/categoria/bikes');
         expect(normalizeStorefrontHrefForWebsiteContext('/store/abc/checkout', 'abc')).toBe('/checkout');
         expect(normalizeStorefrontHrefForWebsiteContext('#store', 'abc')).toBe('/tienda');
         expect(normalizeStorefrontHrefForWebsiteContext('#store/products', 'abc')).toBe('/tienda/productos');
         expect(normalizeStorefrontHrefForWebsiteContext('/products', 'abc')).toBe('/tienda/productos');
         expect(normalizeStorefrontHrefForWebsiteContext('/catalog', 'abc')).toBe('/tienda/productos');
         expect(normalizeStorefrontHrefForWebsiteContext('/shop', 'abc')).toBe('/tienda/productos');
+        expect(normalizeStorefrontHrefForWebsiteContext('/product/red-bike', 'abc')).toBe('/tienda/producto/red-bike');
+        expect(normalizeStorefrontHrefForWebsiteContext('/category/bikes', 'abc')).toBe('/tienda/categoria/bikes');
+        expect(normalizeStorefrontHrefForWebsiteContext('/collection/bikes', 'abc')).toBe('/tienda/categoria/bikes');
         expect(normalizeStorefrontHrefForWebsiteContext('/tienda', 'abc')).toBe('/tienda');
         expect(normalizeStorefrontHrefForWebsiteContext('/tienda/productos', 'abc')).toBe('/tienda/productos');
         expect(normalizeStorefrontHrefForWebsiteContext('/tienda/catalogo', 'abc')).toBe('/tienda/productos');

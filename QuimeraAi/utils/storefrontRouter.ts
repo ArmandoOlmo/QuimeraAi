@@ -101,6 +101,18 @@ export function normalizeStorefrontHrefForWebsiteContext(href: string, storeId?:
     if (lowerPath === '/tienda') return '/tienda';
     if (lowerPath === '/products' || lowerPath === '/catalog' || lowerPath === '/shop') return '/tienda/productos';
     if (lowerPath === '/tienda/productos' || lowerPath === '/tienda/catalogo') return '/tienda/productos';
+    if (lowerPath.startsWith('/product/')) {
+        const slug = path.slice('/product/'.length).replace(/^\/+|\/+$/g, '');
+        return slug ? `/tienda/producto/${slug}` : null;
+    }
+    if (lowerPath.startsWith('/category/')) {
+        const slug = path.slice('/category/'.length).replace(/^\/+|\/+$/g, '');
+        return slug ? `/tienda/categoria/${slug}` : null;
+    }
+    if (lowerPath.startsWith('/collection/')) {
+        const slug = path.slice('/collection/'.length).replace(/^\/+|\/+$/g, '');
+        return slug ? `/tienda/categoria/${slug}` : null;
+    }
     if (lowerPath.startsWith('/tienda/producto/')) {
         const slug = path.slice('/tienda/producto/'.length).replace(/^\/+|\/+$/g, '');
         return slug ? `/tienda/producto/${slug}` : null;
@@ -126,6 +138,16 @@ export function normalizeStorefrontHrefForWebsiteContext(href: string, storeId?:
     if (lowerSubPath === 'tienda/productos' || lowerSubPath === 'tienda/catalogo') return '/tienda/productos';
     if (lowerSubPath === 'checkout') return '/checkout';
 
+    if (lowerSubPath.startsWith('tienda/producto/')) {
+        const slug = subPath.slice('tienda/producto/'.length).replace(/^\/+|\/+$/g, '');
+        return slug ? `/tienda/producto/${slug}` : null;
+    }
+
+    if (lowerSubPath.startsWith('tienda/categoria/')) {
+        const slug = subPath.slice('tienda/categoria/'.length).replace(/^\/+|\/+$/g, '');
+        return slug ? `/tienda/categoria/${slug}` : null;
+    }
+
     if (lowerSubPath.startsWith('product/')) {
         const slug = subPath.slice('product/'.length).replace(/^\/+|\/+$/g, '');
         return slug ? `/tienda/producto/${slug}` : null;
@@ -133,6 +155,11 @@ export function normalizeStorefrontHrefForWebsiteContext(href: string, storeId?:
 
     if (lowerSubPath.startsWith('category/')) {
         const slug = subPath.slice('category/'.length).replace(/^\/+|\/+$/g, '');
+        return slug ? `/tienda/categoria/${slug}` : null;
+    }
+
+    if (lowerSubPath.startsWith('collection/')) {
+        const slug = subPath.slice('collection/'.length).replace(/^\/+|\/+$/g, '');
         return slug ? `/tienda/categoria/${slug}` : null;
     }
 

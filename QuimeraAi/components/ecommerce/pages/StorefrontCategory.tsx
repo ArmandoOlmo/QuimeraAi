@@ -5,12 +5,11 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs, query, where, orderBy, doc, getDoc } from '@/utils/compatData';
-import { db } from '@/utils/compatData';
 import { ShoppingBag, ChevronLeft, Filter, Loader2 } from 'lucide-react';
 import AppSelect from '../../ui/AppSelect';
 import { createProductCardViewModel } from '../../../utils/productCard';
 import { filterRenderableStorefrontProducts } from '../../../utils/ecommerce/productDisplayGuards';
+import { findPublicStorefrontCategory } from '../../../utils/ecommerce/publicStorefrontCatalog';
 
 interface StorefrontCategoryProps {
     storeId: string;
@@ -52,31 +51,28 @@ const StorefrontCategory: React.FC<StorefrontCategoryProps> = ({
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                // Find category by slug
-                const categoriesRef = collection(db, 'public_stores', storeId, 'categories');
-                const categoryQuery = query(categoriesRef, where('slug', '==', categorySlug));
-                const categorySnapshot = await getDocs(categoryQuery);
-                
-                if (!categorySnapshot.empty) {
-                    const categoryData = {
-                        id: categorySnapshot.docs[0].id,
-                        ...categorySnapshot.docs[0].data()
-                    } as Category;
-                    setCategory(categoryData);
+                const result = await findPublicStorefrontCategory(storeId, categorySlug);
 
-                    // Fetch products in this category
-                    const productsRef = collection(db, 'public_stores', storeId, 'products');
-                    const productsQuery = query(
-                        productsRef,
-                        where('category', '==', categoryData.id),
-                        where('status', '==', 'active')
-                    );
-                    const productsSnapshot = await getDocs(productsQuery);
-                    const productsList = productsSnapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    })) as Product[];
-                    setProducts(productsList);
+                if (result.category) {
+                    setCategory({
+                        id: result.category.id,
+                        name: result.category.name,
+                        slug: result.category.slug,
+                        description: result.category.description,
+                        image: result.category.image,
+                    });
+                    setProducts(result.products.map(product => ({
+                        id: product.id,
+                        name: product.name,
+                        slug: product.slug,
+                        price: product.price,
+                        compareAtPrice: product.compareAtPrice,
+                        images: product.images.map(image => image.url),
+                        category: product.categoryId || product.categorySlug || product.categoryName,
+                    })));
+                } else {
+                    setCategory(null);
+                    setProducts([]);
                 }
             } catch (error) {
                 console.error('Error fetching category data:', error);
@@ -252,7 +248,6 @@ const ProductCard: React.FC<{
 };
 
 export default StorefrontCategory;
-
 
 
 

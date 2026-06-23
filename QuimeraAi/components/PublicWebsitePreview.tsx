@@ -204,6 +204,18 @@ const resolveWebsiteStorefrontHref = (href: string): string | null => {
     return '/tienda/productos';
   }
 
+  if (pathname.startsWith('/product/')) {
+    return `/tienda/producto/${pathname.replace('/product/', '').replace(/\/$/, '')}`;
+  }
+
+  if (pathname.startsWith('/category/')) {
+    return `/tienda/categoria/${pathname.replace('/category/', '').replace(/\/$/, '')}`;
+  }
+
+  if (pathname.startsWith('/collection/')) {
+    return `/tienda/categoria/${pathname.replace('/collection/', '').replace(/\/$/, '')}`;
+  }
+
   if (
     pathname === '/tienda' ||
     pathname === '/tienda/' ||
@@ -225,11 +237,20 @@ const resolveWebsiteStorefrontHref = (href: string): string | null => {
   if (/^(products|catalog|shop|tienda\/productos|tienda\/catalogo)$/.test(route)) {
     return '/tienda/productos';
   }
+  if (route.startsWith('tienda/producto/')) {
+    return `/tienda/producto/${route.replace('tienda/producto/', '')}`;
+  }
+  if (route.startsWith('tienda/categoria/')) {
+    return `/tienda/categoria/${route.replace('tienda/categoria/', '')}`;
+  }
   if (route.startsWith('product/')) {
     return `/tienda/producto/${route.replace('product/', '')}`;
   }
   if (route.startsWith('category/')) {
     return `/tienda/categoria/${route.replace('category/', '')}`;
+  }
+  if (route.startsWith('collection/')) {
+    return `/tienda/categoria/${route.replace('collection/', '')}`;
   }
 
   return null;
