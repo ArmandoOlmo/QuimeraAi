@@ -94,6 +94,10 @@ const asCheckoutString = (value: unknown): string | undefined => (
     typeof value === 'string' && value.trim() ? value.trim() : undefined
 );
 
+const isCheckoutUuid = (value: string | null | undefined): boolean => (
+    Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value))
+);
+
 const getCheckoutData = (row?: CheckoutDbRecord | null): CheckoutDbRecord => (
     isCheckoutRecord(row?.data) ? row.data : {}
 );
@@ -1265,19 +1269,28 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
 
                 const savedCart = localStorage.getItem(`cart_${storeId}`);
                 if (savedCart) {
-                    const cart = JSON.parse(savedCart);
-                    setCartItems(Array.isArray(cart.items) ? cart.items : []);
+                    try {
+                        const cart = JSON.parse(savedCart);
+                        setCartItems(Array.isArray(cart.items) ? cart.items : []);
+                    } catch (error) {
+                        console.warn('Ignoring invalid checkout cart cache:', error);
+                        setCartItems([]);
+                    }
                 } else {
                     setCartItems([]);
                 }
 
-                const { data: projectRow, error: projectError } = await supabase
-                    .from('projects')
-                    .select('*')
-                    .eq('id', storeId)
-                    .maybeSingle();
+                let projectRow: CheckoutDbRecord | null = null;
+                if (isCheckoutUuid(storeId)) {
+                    const { data, error } = await supabase
+                        .from('projects')
+                        .select('*')
+                        .eq('id', storeId)
+                        .maybeSingle();
 
-                if (projectError) throw projectError;
+                    if (error) throw error;
+                    projectRow = data;
+                }
 
                 let publicStoreRow: CheckoutDbRecord | null = null;
                 let linkedProjectRow: CheckoutDbRecord | null = projectRow;
@@ -1302,7 +1315,7 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
                 });
                 const settingsProjectId = identity.projectId || identity.engineStoreId || storeId;
 
-                if (!linkedProjectRow && identity.projectId) {
+                if (!linkedProjectRow && identity.projectId && isCheckoutUuid(identity.projectId)) {
                     const { data, error } = await supabase
                         .from('projects')
                         .select('*')
@@ -1313,13 +1326,17 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
                     linkedProjectRow = data;
                 }
 
-                const { data: settingsRow, error: settingsError } = await supabase
-                    .from('store_settings')
-                    .select('*')
-                    .eq('project_id', settingsProjectId)
-                    .maybeSingle();
+                let settingsRow: CheckoutDbRecord | null = null;
+                if (isCheckoutUuid(settingsProjectId)) {
+                    const { data, error } = await supabase
+                        .from('store_settings')
+                        .select('*')
+                        .eq('project_id', settingsProjectId)
+                        .maybeSingle();
 
-                if (settingsError) throw settingsError;
+                    if (error) throw error;
+                    settingsRow = data;
+                }
 
                 const nextStoreSettings = buildCheckoutStoreSettings({
                     identity,
