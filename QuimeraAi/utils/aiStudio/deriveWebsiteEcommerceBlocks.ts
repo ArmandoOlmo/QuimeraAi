@@ -103,13 +103,20 @@ export function deriveWebsiteEcommerceBlocks(
     if (!ecommerceBlueprint.enabled || !storefrontBlueprint.enabled) return [];
 
     const text = getBriefText(input);
-    const blocks: AiStudioWebsiteEcommerceBlockSuggestion[] = [
-        makeBlock('featuredProducts', 0, input, 'ecommerceBlueprint.starterProducts'),
-        makeBlock('categoryShowcase', 1, input, 'ecommerceBlueprint.productCategories'),
-        makeBlock('shopCTA', 2, input, 'storefrontBlueprint.routeStrategy'),
-    ];
+    const hasProductsOrReviewableDrafts = ecommerceBlueprint.starterProducts.length > 0;
+    const hasCategories = ecommerceBlueprint.productCategories.length > 0;
+    const hasEnoughProductsForCarousel = ecommerceBlueprint.starterProducts.length >= 4;
+    const blocks: AiStudioWebsiteEcommerceBlockSuggestion[] = [];
 
-    if (ecommerceBlueprint.starterProducts.length > 3) {
+    if (hasProductsOrReviewableDrafts) {
+        blocks.push(makeBlock('featuredProducts', blocks.length, input, 'ecommerceBlueprint.starterProducts'));
+    }
+
+    if (hasCategories) {
+        blocks.push(makeBlock('categoryShowcase', blocks.length, input, 'ecommerceBlueprint.productCategories'));
+    }
+
+    if (hasEnoughProductsForCarousel) {
         blocks.push(makeBlock('productCarousel', blocks.length, input, 'ecommerceBlueprint.starterProducts'));
     }
 
@@ -119,6 +126,14 @@ export function deriveWebsiteEcommerceBlocks(
 
     if (/\b(promo|promotion|discount|sale|oferta|descuento)\b/i.test(text)) {
         blocks.push(makeBlock('promoBanner', blocks.length, input, 'merchantApproval.required', false));
+    }
+
+    if (/\b(best sellers?|top sellers?|mas vendidos|más vendidos)\b/i.test(text)) {
+        blocks.push(makeBlock('bestSellersStrip', blocks.length, input, 'salesData.required', false));
+    }
+
+    if (!hasProductsOrReviewableDrafts || !hasCategories || blocks.length === 0) {
+        blocks.push(makeBlock('shopCTA', blocks.length, input, 'storefrontBlueprint.routeStrategy'));
     }
 
     return blocks;

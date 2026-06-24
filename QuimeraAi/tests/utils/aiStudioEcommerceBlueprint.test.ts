@@ -126,7 +126,8 @@ describe('AI Studio ecommerce blueprint derivation', () => {
         expect(storefrontBlueprint.enabled).toBe(true);
         expect(['fitness', 'marketplace']).toContain(storefrontBlueprint.themePreset);
         expect(['quickBuy', 'imageFirst', 'marketplace']).toContain(storefrontBlueprint.productCardVariant);
-        expect(websiteEcommerceBlocks.map(block => block.type)).toEqual(expect.arrayContaining(['featuredProducts', 'categoryShowcase', 'shopCTA']));
+        expect(websiteEcommerceBlocks.map(block => block.type)).toEqual(expect.arrayContaining(['featuredProducts', 'categoryShowcase']));
+        expect(websiteEcommerceBlocks.map(block => block.type)).not.toContain('shopCTA');
         expect(crossModule.chatbotBlueprint.productKnowledge.length).toBeGreaterThan(0);
         expect(crossModule.leadBlueprint.leadTags).toEqual(expect.arrayContaining(['ecommerce', 'product-interest', 'abandoned-cart', 'high-intent', 'gift-card']));
         expect(crossModule.emailMarketingBlueprint.flows.map(flow => flow.type)).toEqual(expect.arrayContaining([
