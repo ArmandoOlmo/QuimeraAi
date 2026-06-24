@@ -91,6 +91,22 @@ html.light {
   --q-space-6: 1.5rem;
   --q-duration-fast: 150ms;
   --q-duration-normal: 200ms;
+  --editor-control-radius: var(--q-radius-md);
+  --editor-control-radius-sm: var(--q-radius-sm);
+  --editor-control-field-gap: 0.5rem;
+  --editor-control-group-gap: 1rem;
+  --editor-control-panel-pad: 1rem;
+  --editor-control-input-height: 2.5rem;
+  --editor-control-label-size: 0.6875rem;
+  --editor-control-label-leading: 1rem;
+  --editor-control-body-size: 0.875rem;
+  --editor-control-caption-size: 0.75rem;
+  --editor-control-border: color-mix(in srgb, var(--q-border) 78%, transparent);
+  --editor-control-border-strong: color-mix(in srgb, var(--q-border-strong) 70%, var(--q-border));
+  --editor-control-surface: color-mix(in srgb, var(--q-surface) 76%, var(--q-bg) 24%);
+  --editor-control-surface-muted: color-mix(in srgb, var(--q-surface-overlay) 82%, var(--q-bg) 18%);
+  --editor-control-input-bg: color-mix(in srgb, var(--q-bg) 84%, var(--q-surface) 16%);
+  --editor-control-focus-ring: color-mix(in srgb, var(--q-accent) 28%, transparent);
 
   /* Elevation */
   --shadow-card: 0 1px 2px rgba(34, 29, 24, 0.04);
@@ -1697,31 +1713,98 @@ body {
   background-color: hsla(var(--primary), 0.1);
 }
 
-/* Editor controls: flatter control groups with less visual framing. */
-.quimera-clean-controls .bg-q-surface\/50.p-4.rounded-lg.border.border-q-border {
+/* Editor controls: tokenized control rhythm shared by web, admin landing and email editors. */
+.quimera-clean-controls {
+  --control-radius: var(--editor-control-radius);
+  --control-radius-sm: var(--editor-control-radius-sm);
+  --control-gap: var(--editor-control-group-gap);
+  --control-field-gap: var(--editor-control-field-gap);
+  color: var(--q-text);
+}
+
+.quimera-clean-controls :is(label, .editor-control-label) {
+  color: var(--q-text-secondary);
+  font-size: var(--editor-control-label-size);
+  line-height: var(--editor-control-label-leading);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.quimera-clean-controls :is(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), textarea, select) {
+  min-height: var(--editor-control-input-height);
+  border-color: var(--editor-control-border);
+  border-radius: var(--control-radius);
+  background: var(--editor-control-input-bg);
+  color: var(--q-text);
+  font-size: var(--editor-control-body-size);
+}
+
+.quimera-clean-controls :is(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), textarea, select):focus {
+  border-color: color-mix(in srgb, var(--q-accent) 68%, var(--q-border));
+  box-shadow: 0 0 0 2px var(--editor-control-focus-ring);
+  outline: none;
+}
+
+.quimera-clean-controls textarea {
+  min-height: 5.75rem;
+  line-height: 1.5;
+}
+
+.quimera-clean-controls :is(p, .editor-control-caption) {
+  color: var(--q-text-secondary);
+}
+
+.quimera-clean-controls :is(hr) {
+  border-color: color-mix(in srgb, var(--q-border) 62%, transparent);
+}
+
+.quimera-clean-controls [data-editor-control-tabs] {
+  border-color: var(--editor-control-border);
+  border-radius: var(--control-radius);
+  background: var(--editor-control-surface-muted);
+}
+
+.quimera-clean-controls [data-editor-control-tab] {
+  border-radius: var(--control-radius-sm);
+  min-height: 2.25rem;
+}
+
+.quimera-clean-controls [data-editor-tab-panel] {
+  animation: fadeIn 160ms ease-out;
+}
+
+.quimera-clean-controls .bg-q-surface\/50.p-4.rounded-lg.border.border-q-border,
+.quimera-clean-controls .bg-q-surface\/50.p-3.rounded-lg.border.border-q-border,
+.quimera-clean-controls .bg-q-surface\/50.rounded-lg.p-4.border.border-q-border,
+.quimera-clean-controls .bg-q-surface\/50.rounded-lg.p-3.border.border-q-border {
   background: transparent;
   border-width: 0 0 1px;
   border-color: color-mix(in srgb, var(--q-border) 58%, transparent);
   border-radius: 0;
-  padding: 0 0 1.25rem;
+  padding: 0 0 var(--editor-control-panel-pad);
   box-shadow: none;
 }
 
-.quimera-clean-controls .bg-q-surface\/50.rounded-xl.p-4.border.border-q-border\/50 {
+.quimera-clean-controls .bg-q-surface\/50.rounded-xl.p-4.border.border-q-border\/50,
+.quimera-clean-controls .bg-q-surface\/50.rounded-xl.p-3.border.border-q-border\/50 {
   background: transparent;
   border-width: 0 0 1px;
   border-color: color-mix(in srgb, var(--q-border) 58%, transparent);
   border-radius: 0;
-  padding: 0 0 1.25rem;
+  padding: 0 0 var(--editor-control-panel-pad);
   box-shadow: none;
 }
 
-.quimera-clean-controls .bg-q-surface\/50.p-4.rounded-lg.border.border-q-border:last-child {
+.quimera-clean-controls .bg-q-surface\/50.p-4.rounded-lg.border.border-q-border:last-child,
+.quimera-clean-controls .bg-q-surface\/50.p-3.rounded-lg.border.border-q-border:last-child,
+.quimera-clean-controls .bg-q-surface\/50.rounded-lg.p-4.border.border-q-border:last-child,
+.quimera-clean-controls .bg-q-surface\/50.rounded-lg.p-3.border.border-q-border:last-child {
   border-bottom-width: 0;
   padding-bottom: 0;
 }
 
-.quimera-clean-controls .bg-q-surface\/50.rounded-xl.p-4.border.border-q-border\/50:last-child {
+.quimera-clean-controls .bg-q-surface\/50.rounded-xl.p-4.border.border-q-border\/50:last-child,
+.quimera-clean-controls .bg-q-surface\/50.rounded-xl.p-3.border.border-q-border\/50:last-child {
   border-bottom-width: 0;
   padding-bottom: 0;
 }

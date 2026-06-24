@@ -9,22 +9,32 @@ import { ChevronDown, Check, ArrowUpLeft, ArrowUp, ArrowUpRight, ArrowLeft, Circ
 import { mergeI18nValue } from '../../utils/i18nContent';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 
+export const controlFieldClass = 'mb-4';
+export const controlLabelClass = 'editor-control-label block text-[var(--editor-control-label-size)] leading-[var(--editor-control-label-leading)] font-bold text-q-text-secondary mb-2';
+export const controlInputClass = 'w-full min-h-[var(--editor-control-input-height)] bg-[var(--editor-control-input-bg)] border border-[var(--editor-control-border)] rounded-[var(--editor-control-radius)] px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-[var(--editor-control-focus-ring)] focus:border-q-accent/70 transition-all placeholder:text-q-text-secondary/50';
+export const controlTextareaClass = `${controlInputClass} resize-y min-h-[92px] leading-6`;
+export const controlSegmentClass = 'flex bg-[var(--editor-control-surface-muted)] rounded-[var(--editor-control-radius)] border border-[var(--editor-control-border)] p-1';
+export const controlSegmentButtonClass = (selected: boolean) => `flex-1 min-h-8 px-2 py-1.5 text-xs font-semibold rounded-[var(--editor-control-radius-sm)] transition-colors ${
+  selected ? 'bg-q-accent text-q-text-on-accent shadow-sm' : 'text-q-text-secondary hover:text-q-text hover:bg-q-surface/80'
+}`;
+export const controlHintClass = 'editor-control-caption text-xs leading-5 text-q-text-secondary';
+
 export const Input = ({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?: string }) => (
-  <div className={`mb-4 ${className || ''}`}>
-    {label && <label className="block text-[11px] font-semibold text-q-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>}
+  <div className={`${controlFieldClass} ${className || ''}`}>
+    {label && <label className={controlLabelClass}>{label}</label>}
     <input
       {...props}
-      className="w-full bg-q-bg/80 border border-q-border/80 rounded-md px-3 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/25 focus:border-q-accent/70 transition-all placeholder:text-q-text-secondary/50"
+      className={controlInputClass}
     />
   </div>
 );
 
 export const TextArea = ({ label, className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: string }) => (
-  <div className={`mb-4 ${className || ''}`}>
-    {label && <label className="block text-[11px] font-semibold text-q-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>}
+  <div className={`${controlFieldClass} ${className || ''}`}>
+    {label && <label className={controlLabelClass}>{label}</label>}
     <textarea
       {...props}
-      className="w-full bg-q-bg/80 border border-q-border/80 rounded-md px-3 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/25 focus:border-q-accent/70 resize-y min-h-[88px] transition-all placeholder:text-q-text-secondary/50"
+      className={controlTextareaClass}
     />
   </div>
 );
@@ -41,21 +51,21 @@ export const I18nInput = ({ label, value, onChange, className, ...props }: Omit<
   };
 
   return (
-    <div className={`mb-4 ${className || ''}`}>
+    <div className={`${controlFieldClass} ${className || ''}`}>
       <div className={`flex items-center ${label ? 'justify-between mb-1.5' : 'justify-end mb-1'}`}>
         {label ? (
-          <label className="block text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">{label}</label>
+          <label className={controlLabelClass.replace('mb-2', 'mb-0')}>{label}</label>
         ) : <div />}
-        <div className="flex bg-q-surface rounded overflow-hidden border border-q-border/60">
-          <button type="button" onClick={() => setActiveLang('es')} className={`px-2 py-0.5 text-[10px] font-medium transition-colors ${activeLang === 'es' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-bg'}`}>ES</button>
-          <button type="button" onClick={() => setActiveLang('en')} className={`px-2 py-0.5 text-[10px] font-medium transition-colors ${activeLang === 'en' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-bg'}`}>EN</button>
+        <div className="flex bg-[var(--editor-control-surface-muted)] rounded-[var(--editor-control-radius-sm)] overflow-hidden border border-[var(--editor-control-border)]">
+          <button type="button" onClick={() => setActiveLang('es')} className={`px-2 py-1 text-[10px] font-bold transition-colors ${activeLang === 'es' ? 'bg-q-accent text-q-text-on-accent' : 'text-q-text-secondary hover:bg-q-surface/80'}`}>ES</button>
+          <button type="button" onClick={() => setActiveLang('en')} className={`px-2 py-1 text-[10px] font-bold transition-colors ${activeLang === 'en' ? 'bg-q-accent text-q-text-on-accent' : 'text-q-text-secondary hover:bg-q-surface/80'}`}>EN</button>
         </div>
       </div>
       <input
         {...props}
         value={currentValue}
         onChange={handleChange}
-        className="w-full bg-q-bg/80 border border-q-border/80 rounded-md px-3 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/25 focus:border-q-accent/70 transition-all placeholder:text-q-text-secondary/50"
+        className={controlInputClass}
       />
     </div>
   );
@@ -73,21 +83,21 @@ export const I18nTextArea = ({ label, value, onChange, className, ...props }: Om
   };
 
   return (
-    <div className={`mb-4 ${className || ''}`}>
+    <div className={`${controlFieldClass} ${className || ''}`}>
       <div className={`flex items-center ${label ? 'justify-between mb-1.5' : 'justify-end mb-1'}`}>
         {label ? (
-          <label className="block text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">{label}</label>
+          <label className={controlLabelClass.replace('mb-2', 'mb-0')}>{label}</label>
         ) : <div />}
-        <div className="flex bg-q-surface rounded overflow-hidden border border-q-border/60">
-          <button type="button" onClick={() => setActiveLang('es')} className={`px-2 py-0.5 text-[10px] font-medium transition-colors ${activeLang === 'es' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-bg'}`}>ES</button>
-          <button type="button" onClick={() => setActiveLang('en')} className={`px-2 py-0.5 text-[10px] font-medium transition-colors ${activeLang === 'en' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-bg'}`}>EN</button>
+        <div className="flex bg-[var(--editor-control-surface-muted)] rounded-[var(--editor-control-radius-sm)] overflow-hidden border border-[var(--editor-control-border)]">
+          <button type="button" onClick={() => setActiveLang('es')} className={`px-2 py-1 text-[10px] font-bold transition-colors ${activeLang === 'es' ? 'bg-q-accent text-q-text-on-accent' : 'text-q-text-secondary hover:bg-q-surface/80'}`}>ES</button>
+          <button type="button" onClick={() => setActiveLang('en')} className={`px-2 py-1 text-[10px] font-bold transition-colors ${activeLang === 'en' ? 'bg-q-accent text-q-text-on-accent' : 'text-q-text-secondary hover:bg-q-surface/80'}`}>EN</button>
         </div>
       </div>
       <textarea
         {...props}
         value={currentValue}
         onChange={handleChange}
-        className="w-full bg-q-bg/80 border border-q-border/80 rounded-md px-3 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/25 focus:border-q-accent/70 resize-y min-h-[88px] transition-all placeholder:text-q-text-secondary/50"
+        className={controlTextareaClass}
       />
     </div>
   );
@@ -96,8 +106,8 @@ export const I18nTextArea = ({ label, value, onChange, className, ...props }: Om
 export const I18nStringArrayEditor = ({ label, value, onChange, placeholder, className }: { label?: string, value: any[], onChange: (val: any[]) => void, placeholder?: string, className?: string }) => {
   const items = Array.isArray(value) ? value : [];
   return (
-    <div className={`mb-4 ${className || ''}`}>
-      {label && <label className="block text-[11px] font-semibold text-q-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>}
+    <div className={`${controlFieldClass} ${className || ''}`}>
+      {label && <label className={controlLabelClass}>{label}</label>}
       <div className="space-y-2">
         {items.map((item, index) => (
           <div key={index} className="flex gap-2 items-start">
@@ -128,7 +138,7 @@ export const I18nStringArrayEditor = ({ label, value, onChange, placeholder, cla
         <button
           type="button"
           onClick={() => onChange([...items, { es: '', en: '' }])}
-          className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-xs font-medium mt-2"
+          className="w-full min-h-[var(--editor-control-input-height)] border border-dashed border-[var(--editor-control-border)] rounded-[var(--editor-control-radius)] text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-xs font-semibold mt-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           Add Item
@@ -217,14 +227,14 @@ export const Select = ({ label, options, groups, value, onChange, className, noM
 
   return (
     <div className={`${noMargin ? '' : 'mb-3'} ${className || ''}`} ref={containerRef}>
-      {label && <label className="block text-[11px] font-semibold text-q-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>}
+      {label && <label className={controlLabelClass}>{label}</label>}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between bg-q-bg/80 border rounded-md px-3 py-2.5 text-sm text-q-text transition-all cursor-pointer ${
+        className={`w-full min-h-[var(--editor-control-input-height)] flex items-center justify-between bg-[var(--editor-control-input-bg)] border rounded-[var(--editor-control-radius)] px-3 py-2 text-sm text-q-text transition-all cursor-pointer ${
           isOpen
-            ? 'border-q-accent/70 ring-2 ring-q-accent/20'
-            : 'border-q-border/80 hover:border-q-accent/50'
+            ? 'border-q-accent/70 ring-2 ring-[var(--editor-control-focus-ring)]'
+            : 'border-[var(--editor-control-border)] hover:border-q-accent/50'
         }`}
       >
         <span className="truncate">{resolveLabel(selectedOption?.label ?? value)}</span>
@@ -232,7 +242,7 @@ export const Select = ({ label, options, groups, value, onChange, className, noM
       </button>
       {isOpen && (
         <div className="relative z-[999]">
-          <div className="absolute top-1 left-0 right-0 bg-q-surface border border-q-border rounded-lg shadow-xl overflow-hidden">
+          <div className="absolute top-1 left-0 right-0 bg-q-surface border border-[var(--editor-control-border)] rounded-[var(--editor-control-radius)] shadow-xl overflow-hidden">
             <div ref={listRef} className="max-h-56 overflow-y-auto overscroll-contain">
               {groups ? (
                 groups.map((group, gi) => (
@@ -255,8 +265,8 @@ export const Select = ({ label, options, groups, value, onChange, className, noM
 };
 
 export const ToggleControl = ({ label, checked, onChange }: { label?: string, checked: boolean, onChange: (checked: boolean) => void }) => (
-  <div className={`flex items-center ${label ? 'justify-between gap-4 rounded-md py-2.5 mb-1' : ''}`}>
-    {label && <label className="text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider leading-4">{label}</label>}
+  <div className={`flex items-center ${label ? 'justify-between gap-4 rounded-[var(--editor-control-radius)] py-2.5 mb-1' : ''}`}>
+    {label && <label className={controlLabelClass.replace('block ', '').replace('mb-2', 'mb-0')}>{label}</label>}
     <button
       type="button"
       role="switch"
@@ -265,7 +275,7 @@ export const ToggleControl = ({ label, checked, onChange }: { label?: string, ch
       onMouseDown={(e) => e.stopPropagation()}
       onDragStart={(e) => e.preventDefault()}
       draggable={false}
-      className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay/80'} quimera-editor-switch relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-q-accent/40 focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
+      className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay/80'} quimera-editor-switch relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--editor-control-focus-ring)] focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
     >
       <span
         aria-hidden="true"
@@ -277,13 +287,13 @@ export const ToggleControl = ({ label, checked, onChange }: { label?: string, ch
 
 export const FontSizeSelector = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => (
   <div className="mb-3">
-    <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-    <div className="flex bg-q-surface rounded-md border border-q-border p-1">
+    <label className={controlLabelClass}>{label}</label>
+    <div className={controlSegmentClass}>
       {['sm', 'md', 'lg', 'xl'].map((size) => (
         <button
           key={size}
           onClick={() => onChange(size)}
-          className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
+          className={controlSegmentButtonClass(value === size)}
         >
           {size.toUpperCase()}
         </button>
@@ -300,13 +310,13 @@ export const PaddingSelector = ({ label, value, onChange, showNone = false, show
   ];
   return (
     <div className="mb-3">
-      <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-      <div className="flex bg-q-surface rounded-md border border-q-border p-1">
+      <label className={controlLabelClass}>{label}</label>
+      <div className={controlSegmentClass}>
         {options.map((size) => (
           <button
             key={size}
             onClick={() => onChange(size)}
-            className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
+            className={controlSegmentButtonClass(value === size)}
           >
             {size === 'none' ? '0' : size.toUpperCase()}
           </button>
@@ -322,13 +332,13 @@ export const BorderRadiusSelector = ({ label, value, onChange, extended = false 
     : [{ v: 'none', l: 'None' }, { v: 'md', l: 'Med' }, { v: 'xl', l: 'Lg' }, { v: 'full', l: 'Full' }];
   return (
     <div className="mb-3">
-      <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-      <div className="flex bg-q-surface rounded-md border border-q-border p-1">
+      <label className={controlLabelClass}>{label}</label>
+      <div className={controlSegmentClass}>
         {options.map((opt) => (
           <button
             key={opt.v}
             onClick={() => onChange(opt.v)}
-            className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
+            className={controlSegmentButtonClass(value === opt.v)}
           >
             {opt.l}
           </button>
@@ -375,7 +385,7 @@ export const SliderControl = ({
   return (
     <div className={className || ''}>
       {label && (
-        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
+        <label className={controlLabelClass}>
           {label}: {displayValue}
         </label>
       )}
@@ -396,11 +406,11 @@ export const PositionGridControl = ({ label, value, onChange }: { label?: string
   return (
     <div className="mt-3 pt-3 border-t border-q-border/30">
       {label && (
-        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider block mb-2">
+        <label className={controlLabelClass}>
           {label}
         </label>
       )}
-      <div className="grid grid-cols-3 gap-1 bg-q-bg p-1.5 rounded-md border border-q-border w-fit mx-auto">
+      <div className="grid grid-cols-3 gap-1 bg-[var(--editor-control-input-bg)] p-1.5 rounded-[var(--editor-control-radius)] border border-[var(--editor-control-border)] w-fit mx-auto">
         {[
           { id: 'top left', icon: ArrowUpLeft },
           { id: 'top center', icon: ArrowUp },
@@ -423,7 +433,7 @@ export const PositionGridControl = ({ label, value, onChange }: { label?: string
               }}
               className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all ${
                 (value || 'center center') === pos.id
-                  ? 'bg-q-accent text-q-bg shadow-md scale-110'
+                  ? 'bg-q-accent text-q-text-on-accent shadow-md scale-110'
                   : 'text-q-text-secondary hover:bg-q-surface-overlay hover:text-q-text'
               }`}
               title={pos.id}

@@ -294,14 +294,14 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
         if (structureItemId === 'navigation') {
             return (
                 <div className="w-full">
-                    <div className="text-center p-6 bg-q-surface/50 border border-q-border rounded-xl mt-4 mb-6">
-                        <h3 className="text-lg font-semibold text-q-text mb-2">{t('editor.controls.navigation.globalManagementTitle', 'Gestión de Navegación Global')}</h3>
-                        <p className="text-q-text-muted text-sm mb-6">
+                    <div className="p-4 bg-[var(--editor-control-surface-muted)] border border-[var(--editor-control-border)] rounded-[var(--editor-control-radius)] mt-4 mb-5">
+                        <h3 className="text-sm font-semibold text-q-text mb-2">{t('editor.controls.navigation.globalManagementTitle', 'Gestión de Navegación Global')}</h3>
+                        <p className="text-q-text-muted text-sm leading-6 mb-4">
                             {t('editor.controls.navigation.globalManagementDesc', 'El menú principal, logotipo y botones se administran centralizadamente. Use los controles de estilo abajo para modificar su apariencia en esta landing page.')}
                         </p>
                         <button
                             onClick={() => navigate('/admin/landing-navigation')}
-                            className="px-4 py-2 bg-q-accent text-black font-semibold rounded-lg hover:bg-q-accent/10 transition-colors w-full"
+                            className="min-h-[var(--editor-control-input-height)] px-4 py-2 bg-q-accent text-q-text-on-accent font-semibold rounded-[var(--editor-control-radius)] hover:opacity-90 transition-colors w-full"
                         >
                             {t('editor.controls.navigation.openManager', 'Abrir Gestor de Navegación')}
                         </button>
@@ -313,14 +313,14 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
         if (structureItemId === 'footerGlobal') {
             return (
-                <div className="w-full text-center p-6 bg-q-surface/50 border border-q-border rounded-xl mt-4">
-                    <h3 className="text-lg font-semibold text-q-text mb-2">Gestión del Footer Global</h3>
-                    <p className="text-q-text-muted text-sm mb-6">
+                <div className="w-full p-4 bg-[var(--editor-control-surface-muted)] border border-[var(--editor-control-border)] rounded-[var(--editor-control-radius)] mt-4">
+                    <h3 className="text-sm font-semibold text-q-text mb-2">Gestión del Footer Global</h3>
+                    <p className="text-q-text-muted text-sm leading-6 mb-4">
                         El pie de página y enlaces sociales de la Landing Page pública ahora se administran desde el panel centralizado.
                     </p>
                     <button
                         onClick={() => navigate('/admin/landing-navigation')}
-                        className="px-4 py-2 bg-q-accent text-black font-semibold rounded-lg hover:bg-q-accent/10 transition-colors w-full"
+                        className="min-h-[var(--editor-control-input-height)] px-4 py-2 bg-q-accent text-q-text-on-accent font-semibold rounded-[var(--editor-control-radius)] hover:opacity-90 transition-colors w-full"
                     >
                         Abrir Gestor del Footer
                     </button>
@@ -334,7 +334,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
              // For now, render standard global controls if possible or a message to use theme settings.
              return (
                  <div className="w-full">
-                     <p className="text-q-text-muted text-sm">
+                     <p className="text-q-text-muted text-sm leading-6 mb-4">
                          {t('landingEditor.structureNote', 'Utilice las pestañas para editar la estructura y diseño.')}
                      </p>
                      {structureItemId === 'colors' && (
@@ -372,7 +372,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                       portalContainer={portalContainer}
                                   />
                               </div>
-                              <p className="text-xs text-q-text-muted mt-2">
+                              <p className="editor-control-caption text-xs text-q-text-muted mt-2 leading-5">
                                   Estos colores se aplicarán globalmente en todo el Landing Page, pero pueden sobrescribirse en las configuraciones específicas de cada sección.
                               </p>
                           </div>
@@ -439,7 +439,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                   <h4 className="text-sm font-semibold text-q-text mb-3">Estilos Todo Mayúsculas</h4>
 
                                   <div className="space-y-3">
-                                      <label className="flex items-center justify-between p-3 border border-q-border rounded-lg hover:border-q-accent transition-colors cursor-pointer">
+                                      <label className="flex items-center justify-between p-3 border border-[var(--editor-control-border)] rounded-[var(--editor-control-radius)] bg-[var(--editor-control-surface-muted)] hover:border-q-accent transition-colors cursor-pointer">
                                           <span className="text-sm font-medium text-q-text">Títulos en Mayúsculas</span>
                                           <input
                                               type="checkbox"
@@ -449,7 +449,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                           />
                                       </label>
 
-                                      <label className="flex items-center justify-between p-3 border border-q-border rounded-lg hover:border-q-accent transition-colors cursor-pointer">
+                                      <label className="flex items-center justify-between p-3 border border-[var(--editor-control-border)] rounded-[var(--editor-control-radius)] bg-[var(--editor-control-surface-muted)] hover:border-q-accent transition-colors cursor-pointer">
                                           <span className="text-sm font-medium text-q-text">Botones en Mayúsculas</span>
                                           <input
                                               type="checkbox"
@@ -459,7 +459,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                           />
                                       </label>
 
-                                      <label className="flex items-center justify-between p-3 border border-q-border rounded-lg hover:border-q-accent transition-colors cursor-pointer">
+                                      <label className="flex items-center justify-between p-3 border border-[var(--editor-control-border)] rounded-[var(--editor-control-radius)] bg-[var(--editor-control-surface-muted)] hover:border-q-accent transition-colors cursor-pointer">
                                           <span className="text-sm font-medium text-q-text">Menú en Mayúsculas</span>
                                           <input
                                               type="checkbox"
