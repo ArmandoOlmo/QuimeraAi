@@ -138,6 +138,35 @@ function formatDateKey(date: Date): string {
     return date.toISOString().split('T')[0];
 }
 
+function toDate(value: any): Date | null {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (typeof value === 'string') {
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? null : date;
+    }
+    if (typeof value.seconds === 'number') {
+        return new Date(value.seconds * 1000);
+    }
+    return null;
+}
+
+function toUnixSeconds(value: any): number | null {
+    const date = toDate(value);
+    return date ? Math.floor(date.getTime() / 1000) : null;
+}
+
+function getConversationKey(message: any): string {
+    return message.conversationId || message.senderId || message.recipientId || 'unknown';
+}
+
+function isResponseToMessage(inboundMessage: any, outboundMessage: any): boolean {
+    if (inboundMessage.conversationId && outboundMessage.conversationId) {
+        return inboundMessage.conversationId === outboundMessage.conversationId;
+    }
+    return outboundMessage.recipientId === inboundMessage.senderId;
+}
+
 // =============================================================================
 // HOOK
 // =============================================================================
@@ -261,7 +290,7 @@ export const useSocialChatAnalytics = (projectId: string) => {
             const channelMessages = messages.filter((m: any) => m.channel === channel);
             const inbound = channelMessages.filter((m: any) => m.direction === 'inbound');
             const outbound = channelMessages.filter((m: any) => m.direction === 'outbound');
-            const conversations = new Set(channelMessages.map((m: any) => m.senderId)).size;
+            const conversations = new Set(channelMessages.map(getConversationKey)).size;
             const aiHandled = channelMessages.filter((m: any) => m.processedByAI).length;
             const escalated = channelMessages.filter((m: any) => m.escalatedToHuman).length;
 
@@ -270,12 +299,17 @@ export const useSocialChatAnalytics = (projectId: string) => {
             let responseCount = 0;
 
             inbound.forEach((inMsg: any) => {
+                const inboundSeconds = toUnixSeconds(inMsg.timestamp);
+                if (!inboundSeconds) return;
+
                 const response = outbound.find((outMsg: any) => 
-                    outMsg.timestamp?.seconds > inMsg.timestamp?.seconds &&
-                    outMsg.recipientId === inMsg.senderId
+                    (toUnixSeconds(outMsg.timestamp) || 0) > inboundSeconds &&
+                    isResponseToMessage(inMsg, outMsg)
                 );
                 if (response) {
-                    const responseTime = response.timestamp.seconds - inMsg.timestamp.seconds;
+                    const outboundSeconds = toUnixSeconds(response.timestamp);
+                    if (!outboundSeconds) return;
+                    const responseTime = outboundSeconds - inboundSeconds;
                     if (responseTime > 0 && responseTime < 3600) { // Ignore responses > 1 hour
                         totalResponseTime += responseTime;
                         responseCount++;
@@ -317,7 +351,8 @@ export const useSocialChatAnalytics = (projectId: string) => {
         
         messages.forEach((msg: any) => {
             if (!msg.timestamp) return;
-            const date = new Date(msg.timestamp.seconds * 1000);
+            const date = toDate(msg.timestamp);
+            if (!date) return;
             const dateKey = formatDateKey(date);
             
             const existing = dailyMap.get(dateKey);
@@ -328,7 +363,7 @@ export const useSocialChatAnalytics = (projectId: string) => {
                 if (!conversationsByDay.has(dateKey)) {
                     conversationsByDay.set(dateKey, new Set());
                 }
-                conversationsByDay.get(dateKey)?.add(msg.senderId);
+                conversationsByDay.get(dateKey)?.add(getConversationKey(msg));
             }
         });
 
@@ -349,12 +384,17 @@ export const useSocialChatAnalytics = (projectId: string) => {
         const outbound = messages.filter((m: any) => m.direction === 'outbound');
 
         inbound.forEach((inMsg: any) => {
+            const inboundSeconds = toUnixSeconds(inMsg.timestamp);
+            if (!inboundSeconds) return;
+
             const response = outbound.find((outMsg: any) =>
-                outMsg.timestamp?.seconds > inMsg.timestamp?.seconds &&
-                outMsg.recipientId === inMsg.senderId
+                (toUnixSeconds(outMsg.timestamp) || 0) > inboundSeconds &&
+                isResponseToMessage(inMsg, outMsg)
             );
             if (response) {
-                const responseTime = response.timestamp.seconds - inMsg.timestamp.seconds;
+                const outboundSeconds = toUnixSeconds(response.timestamp);
+                if (!outboundSeconds) return;
+                const responseTime = outboundSeconds - inboundSeconds;
                 if (responseTime > 0 && responseTime < 3600) {
                     responseTimes.push(responseTime);
                 }
@@ -399,7 +439,10 @@ export const useSocialChatAnalytics = (projectId: string) => {
 
         conversations.forEach((conv: any) => {
             if (conv.startedAt && conv.lastMessageAt) {
-                const duration = (conv.lastMessageAt.seconds - conv.startedAt.seconds) / 60;
+                const startedAtSeconds = toUnixSeconds(conv.startedAt);
+                const lastMessageAtSeconds = toUnixSeconds(conv.lastMessageAt);
+                if (!startedAtSeconds || !lastMessageAtSeconds) return;
+                const duration = (lastMessageAtSeconds - startedAtSeconds) / 60;
                 if (duration > 0 && duration < 1440) { // Max 24 hours
                     totalDuration += duration;
                     durationCount++;
@@ -481,7 +524,6 @@ export const useSocialChatAnalytics = (projectId: string) => {
 };
 
 export default useSocialChatAnalytics;
-
 
 
 

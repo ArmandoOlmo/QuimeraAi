@@ -368,6 +368,18 @@ const PageRenderer: React.FC<PageRendererProps> = ({
         // Border radius values from theme
         const cardBorderRadius = theme.cardBorderRadius || 'xl';
         const buttonBorderRadius = theme.buttonBorderRadius || 'xl';
+        const sectionBackgroundProps = (data: any) => ({
+            backgroundImageUrl: data?.backgroundImageUrl,
+            backgroundColor: data?.colors?.background || data?.backgroundColor,
+            backgroundOverlayEnabled: data?.backgroundOverlayEnabled,
+            backgroundOverlayOpacity: data?.backgroundOverlayOpacity,
+            backgroundOverlayColor: data?.backgroundOverlayColor,
+            backgroundPosition: data?.backgroundPosition,
+            backgroundBlurEnabled: data?.backgroundBlurEnabled,
+            backgroundBlurAmount: data?.backgroundBlurAmount,
+            backgroundBlurColor: data?.backgroundBlurColor,
+            glassEffect: data?.glassEffect,
+        });
 
         // Helper for Quimera sections to automatically get background image support
         const renderQuimeraSection = (key: string, data: any, Component: any, extraProps: any = {}) => {
@@ -375,13 +387,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             return (
                 <SectionBackground 
                     key={key}
-                    backgroundImageUrl={data.backgroundImageUrl} 
-                    backgroundColor={data.colors?.background || data.backgroundColor} 
-                    backgroundOverlayEnabled={data.backgroundOverlayEnabled} 
-                    backgroundOverlayOpacity={data.backgroundOverlayOpacity} 
-                    backgroundOverlayColor={data.backgroundOverlayColor} 
-                    backgroundPosition={data.backgroundPosition}
-                    glassEffect={data.glassEffect}
+                    {...sectionBackgroundProps(data)}
                 >
                     <Component {...data} isPreviewMode={isPreview} {...extraProps} />
                 </SectionBackground>
@@ -412,12 +418,12 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
                     return <Hero key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
                 })();
-                return <SectionBackground backgroundImageUrl={heroData?.backgroundImageUrl} backgroundColor={heroData?.colors?.background} backgroundOverlayEnabled={heroData?.backgroundOverlayEnabled} backgroundOverlayOpacity={heroData?.backgroundOverlayOpacity} backgroundOverlayColor={heroData?.backgroundOverlayColor} backgroundPosition={heroData?.backgroundPosition} glassEffect={heroData?.glassEffect}>{heroComponent}</SectionBackground>;
+                return <SectionBackground {...sectionBackgroundProps(heroData)}>{heroComponent}</SectionBackground>;
             }
 
             case 'heroSplit':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.heroSplit?.backgroundImageUrl} backgroundColor={mergedData.heroSplit?.colors?.background} backgroundOverlayEnabled={mergedData.heroSplit?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.heroSplit?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.heroSplit?.backgroundOverlayColor} backgroundPosition={mergedData.heroSplit?.backgroundPosition}>
+                    <SectionBackground {...sectionBackgroundProps(mergedData.heroSplit)}>
                         <HeroSplit
                             key={key}
                             {...mergedData.heroSplit}
@@ -430,7 +436,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             case 'heroGallery': {
                 const galleryData = mergedData.heroGallery;
                 return galleryData ? (
-                    <SectionBackground backgroundImageUrl={galleryData?.backgroundImageUrl} backgroundColor={galleryData?.colors?.background} backgroundOverlayEnabled={galleryData?.backgroundOverlayEnabled} backgroundOverlayOpacity={galleryData?.backgroundOverlayOpacity} backgroundOverlayColor={galleryData?.backgroundOverlayColor} backgroundPosition={galleryData?.backgroundPosition}>
+                    <SectionBackground {...sectionBackgroundProps(galleryData)}>
                         <HeroGallery
                             key={key}
                             {...galleryData}
@@ -444,7 +450,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             case 'heroWave': {
                 const waveData = mergedData.heroWave;
                 return waveData ? (
-                    <SectionBackground backgroundImageUrl={waveData?.backgroundImageUrl} backgroundColor={waveData?.colors?.background} backgroundOverlayEnabled={waveData?.backgroundOverlayEnabled} backgroundOverlayOpacity={waveData?.backgroundOverlayOpacity} backgroundOverlayColor={waveData?.backgroundOverlayColor} backgroundPosition={waveData?.backgroundPosition}>
+                    <SectionBackground {...sectionBackgroundProps(waveData)}>
                         <HeroWave
                             key={key}
                             {...waveData}
@@ -458,7 +464,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             case 'heroNova': {
                 const novaData = mergedData.heroNova;
                 return novaData ? (
-                    <SectionBackground backgroundImageUrl={novaData?.backgroundImageUrl} backgroundColor={novaData?.colors?.background} backgroundOverlayEnabled={novaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={novaData?.backgroundOverlayOpacity} backgroundOverlayColor={novaData?.backgroundOverlayColor} backgroundPosition={novaData?.backgroundPosition}>
+                    <SectionBackground {...sectionBackgroundProps(novaData)}>
                         <HeroNova
                             key={key}
                             {...novaData}
@@ -472,7 +478,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             case 'heroLead': {
                 const leadData = mergedData.heroLead;
                 return leadData ? (
-                    <SectionBackground backgroundImageUrl={leadData?.backgroundImageUrl} backgroundColor={leadData?.colors?.background} backgroundOverlayEnabled={leadData?.backgroundOverlayEnabled} backgroundOverlayOpacity={leadData?.backgroundOverlayOpacity} backgroundOverlayColor={leadData?.backgroundOverlayColor} backgroundPosition={leadData?.backgroundPosition}>
+                    <SectionBackground {...sectionBackgroundProps(leadData)}>
                         <HeroLead
                             key={key}
                             {...leadData}
@@ -703,7 +709,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             case 'heroLumina': {
                 const data = (mergedData as any).heroLumina;
                 return data ? (
-                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                    <SectionBackground {...sectionBackgroundProps(data)}>
                         <HeroLumina key={key} {...data} borderRadius={data.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />
                     </SectionBackground>
                 ) : null;
@@ -767,7 +773,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             case 'heroNeon': {
                 const data = (mergedData as any).heroNeon;
                 return data ? (
-                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                    <SectionBackground {...sectionBackgroundProps(data)}>
                         <HeroNeon key={key} {...data} borderRadius={data.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />
                     </SectionBackground>
                 ) : null;

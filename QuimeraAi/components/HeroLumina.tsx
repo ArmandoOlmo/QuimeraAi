@@ -13,6 +13,14 @@ export interface HeroLuminaData {
     secondaryCtaLink?: string;
     textLayout?: string;
     glassEffect?: boolean;
+    backgroundImageUrl?: string;
+    backgroundOverlayEnabled?: boolean;
+    backgroundOverlayOpacity?: number;
+    backgroundOverlayColor?: string;
+    backgroundPosition?: string;
+    backgroundBlurEnabled?: boolean;
+    backgroundBlurAmount?: number;
+    backgroundBlurColor?: string;
     luminaAnimation?: LuminaAnimationConfig;
     colors?: {
         background?: string;

@@ -5,14 +5,7 @@
  * Este script puede ejecutarse desde la consola del navegador o importarse como módulo
  */
 
-import {
-    db,
-    collection,
-    doc,
-    setDoc,
-    writeBatch,
-    serverTimestamp,
-} from '@/utils/compatData';
+import { supabase } from '@/supabase';
 
 // =============================================================================
 // TYPES
@@ -429,299 +422,361 @@ const generateSlug = (name: string): string => {
         .replace(/(^-|-$)/g, '');
 };
 
+const cyrb128 = (value: string): number[] => {
+    let h1 = 1779033703;
+    let h2 = 3144134277;
+    let h3 = 1013904242;
+    let h4 = 2773480762;
+
+    for (let i = 0; i < value.length; i++) {
+        const k = value.charCodeAt(i);
+        h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+        h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+        h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+        h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+    }
+
+    h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+    h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+    h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+    h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+
+    return [(h1 ^ h2 ^ h3 ^ h4) >>> 0, (h2 ^ h1) >>> 0, (h3 ^ h1) >>> 0, (h4 ^ h1) >>> 0];
+};
+
+const deterministicUuid = (namespace: string, value: string): string => {
+    const bytes = cyrb128(`${namespace}:${value}`).flatMap((hash) => [
+        (hash >>> 24) & 0xff,
+        (hash >>> 16) & 0xff,
+        (hash >>> 8) & 0xff,
+        hash & 0xff,
+    ]);
+
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+    const hex = bytes.map((byte) => byte.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+};
+
+const shippingZones = [
+    {
+        id: 'zone-1',
+        name: 'Nacional',
+        countries: ['MX', 'US'],
+        rates: [
+            {
+                id: 'rate-1',
+                name: 'Envío Estándar',
+                price: 9.99,
+                estimatedDays: '3-5 días',
+            },
+            {
+                id: 'rate-2',
+                name: 'Envío Express',
+                price: 19.99,
+                estimatedDays: '1-2 días',
+            },
+        ],
+    },
+];
+
+const ensurePublicStore = async (
+    userId: string,
+    storeId: string,
+    settings: SeedStoreSettings = DEMO_STORE_SETTINGS
+) => {
+    const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .select('id, name, user_id, created_at, last_updated')
+        .eq('id', storeId)
+        .maybeSingle();
+
+    if (projectError) throw projectError;
+
+    const ownerId = project?.user_id || userId;
+    const now = new Date().toISOString();
+
+    const { error } = await supabase
+        .from('public_stores')
+        .upsert({
+            id: storeId,
+            user_id: ownerId,
+            data: {
+                id: storeId,
+                projectId: storeId,
+                userId: ownerId,
+                name: settings.storeName || project?.name || 'Tienda Demo Quimera',
+                description: 'Tienda de demostración',
+                currency: settings.currency,
+                currencySymbol: settings.currencySymbol,
+                updatedAt: now,
+            },
+            created_at: project?.created_at || now,
+        }, { onConflict: 'id' });
+
+    if (error) throw error;
+};
+
+const upsertRows = async (table: string, rows: any[]) => {
+    const batchSize = 100;
+    for (let i = 0; i < rows.length; i += batchSize) {
+        const batch = rows.slice(i, i + batchSize);
+        const { error } = await supabase
+            .from(table)
+            .upsert(batch, { onConflict: 'id' });
+
+        if (error) throw error;
+    }
+};
+
 /**
- * Seed categories for a store
- * Writes to both private and public collections
+ * Seed categories for a store.
  */
 export const seedCategories = async (
     userId: string,
     storeId: string,
     categories: SeedCategory[] = DEMO_CATEGORIES
 ): Promise<Record<string, string>> => {
-    const categoryMap: Record<string, string> = {};
-    const batch = writeBatch(db);
-    const categoriesPath = `users/${userId}/stores/${storeId}/categories`;
-    const publicCategoriesPath = `publicStores/${storeId}/categories`;
+    await ensurePublicStore(userId, storeId);
 
-    categories.forEach((category, index) => {
-        const categoryId = `demo-cat-${generateSlug(category.name)}`;
-        const categoryRef = doc(db, categoriesPath, categoryId);
-        const publicCategoryRef = doc(db, publicCategoriesPath, categoryId);
-        
+    const now = new Date().toISOString();
+    const categoryMap: Record<string, string> = {};
+
+    const rows = categories.map((category, index) => {
         const slug = generateSlug(category.name);
-        
-        // Private category data
-        const categoryData = {
-            name: category.name,
-            slug,
-            description: category.description,
-            imageUrl: category.imageUrl || null,
-            position: index,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        };
-        
-        // Public category data
-        const publicCategoryData = {
+        const categoryId = deterministicUuid(storeId, `category:${slug}`);
+        categoryMap[category.name] = categoryId;
+
+        const data = {
             id: categoryId,
             name: category.name,
             slug,
             description: category.description,
+            imageUrl: category.imageUrl || null,
             image: category.imageUrl || null,
+            parentId: null,
+            position: index,
             order: index,
-            updatedAt: serverTimestamp(),
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
         };
-        
-        batch.set(categoryRef, categoryData);
-        batch.set(publicCategoryRef, publicCategoryData);
-        categoryMap[category.name] = categoryId;
+
+        return {
+            id: categoryId,
+            store_id: storeId,
+            project_id: storeId,
+            data,
+            created_at: now,
+            updated_at: now,
+        };
     });
 
-    await batch.commit();
-    console.log(`✅ ${categories.length} categorías creadas (privadas + públicas)`);
+    await upsertRows('store_categories', rows);
+    console.log(`${categories.length} categorias creadas o actualizadas`);
     return categoryMap;
 };
 
 /**
- * Seed products for a store
- * Writes to both private and public collections
+ * Seed products for a store.
  */
 export const seedProducts = async (
     userId: string,
     storeId: string,
     products: SeedProduct[] = DEMO_PRODUCTS,
-    categoryMap: Record<string, string>,
-    categoryNameMap?: Record<string, string>
+    categoryMap: Record<string, string>
 ): Promise<void> => {
-    const productsPath = `users/${userId}/stores/${storeId}/products`;
-    const publicProductsPath = `publicStores/${storeId}/products`;
-    
-    // Build category name map if not provided
-    const catNameMap = categoryNameMap || Object.fromEntries(
-        Object.entries(categoryMap).map(([name, id]) => [id, name])
-    );
-    
-    // Split into batches of 250 (to account for double writes)
-    const batchSize = 250;
-    for (let i = 0; i < products.length; i += batchSize) {
-        const batch = writeBatch(db);
-        const batchProducts = products.slice(i, i + batchSize);
+    await ensurePublicStore(userId, storeId);
 
-        batchProducts.forEach((product) => {
-            const productId = `demo-${generateSlug(product.name)}-${Date.now()}`;
-            const productRef = doc(db, productsPath, productId);
-            const publicProductRef = doc(db, publicProductsPath, productId);
-            
-            const slug = generateSlug(product.name);
-            const categoryId = categoryMap[product.categoryName] || null;
-            
-            const images = product.images.map((url, idx) => ({
-                id: `img-${idx}`,
-                url,
-                altText: product.name,
-                position: idx,
-            }));
-            
-            // Private product data (full)
-            const productData = {
-                name: product.name,
-                slug,
-                description: product.description,
-                shortDescription: product.shortDescription,
-                price: product.price,
-                compareAtPrice: product.compareAtPrice || null,
-                costPrice: Math.round(product.price * 0.6 * 100) / 100, // 40% margin
-                currency: 'USD',
-                sku: product.sku,
-                barcode: null,
-                quantity: product.quantity,
-                trackInventory: true,
-                lowStockThreshold: 10,
-                images,
-                categoryId,
-                tags: product.tags,
-                hasVariants: false,
-                variants: null,
-                options: null,
-                metaTitle: product.name,
-                metaDescription: product.shortDescription,
-                status: 'active',
-                isDigital: false,
-                isFeatured: product.isFeatured || false,
-                weight: null,
-                weightUnit: 'kg',
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-                publishedAt: serverTimestamp(),
-            };
-            
-            // Public product data (for storefront)
-            const publicProductData = {
-                id: productId,
-                name: product.name,
-                slug,
-                description: product.description,
-                shortDescription: product.shortDescription,
-                price: product.price,
-                compareAtPrice: product.compareAtPrice || null,
-                images,
-                categoryId,
-                categoryName: product.categoryName,
-                tags: product.tags,
-                variants: null,
-                trackInventory: true,
-                inStock: product.quantity > 0,
-                lowStock: product.quantity <= 10,
-                isFeatured: product.isFeatured || false,
-                seoTitle: product.name,
-                seoDescription: product.shortDescription,
-                status: 'active', // Required for storefront query
-                storeId,
-                userId,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            };
-            
-            batch.set(productRef, productData);
-            batch.set(publicProductRef, publicProductData);
-        });
+    const now = new Date().toISOString();
+    const rows = products.map((product) => {
+        const slug = generateSlug(product.name);
+        const productId = deterministicUuid(storeId, `product:${slug}`);
+        const categoryId = categoryMap[product.categoryName] || null;
+        const images = product.images.map((url, index) => ({
+            id: `img-${index}`,
+            url,
+            altText: product.name,
+            position: index,
+        }));
+        const lowStockThreshold = 10;
 
-        await batch.commit();
-        console.log(`✅ Lote ${Math.floor(i / batchSize) + 1}: ${batchProducts.length} productos creados`);
-    }
+        const data = {
+            id: productId,
+            name: product.name,
+            slug,
+            description: product.description,
+            shortDescription: product.shortDescription,
+            price: product.price,
+            compareAtPrice: product.compareAtPrice || null,
+            costPrice: Math.round(product.price * 0.6 * 100) / 100,
+            currency: 'USD',
+            sku: product.sku,
+            barcode: null,
+            quantity: product.quantity,
+            trackInventory: true,
+            lowStockThreshold,
+            images,
+            categoryId,
+            categoryName: product.categoryName,
+            tags: product.tags,
+            hasVariants: false,
+            variants: [],
+            options: [],
+            metaTitle: product.name,
+            metaDescription: product.shortDescription,
+            seoTitle: product.name,
+            seoDescription: product.shortDescription,
+            status: 'active',
+            isDigital: false,
+            isFeatured: product.isFeatured || false,
+            inStock: product.quantity > 0,
+            lowStock: product.quantity <= lowStockThreshold,
+            weight: null,
+            weightUnit: 'kg',
+            storeId,
+            userId,
+            createdAt: now,
+            updatedAt: now,
+            publishedAt: now,
+        };
 
-    console.log(`✅ Total: ${products.length} productos creados (privados + públicos)`);
+        return {
+            id: productId,
+            store_id: storeId,
+            project_id: storeId,
+            name: product.name,
+            slug,
+            description: product.description,
+            short_description: product.shortDescription,
+            price: product.price,
+            compare_at_price: product.compareAtPrice || null,
+            cost_price: Math.round(product.price * 0.6 * 100) / 100,
+            currency: 'USD',
+            sku: product.sku,
+            barcode: null,
+            quantity: product.quantity,
+            track_inventory: true,
+            low_stock_threshold: lowStockThreshold,
+            images,
+            category_id: categoryId,
+            tags: product.tags,
+            has_variants: false,
+            variants: [],
+            options: [],
+            status: 'active',
+            is_digital: false,
+            is_featured: product.isFeatured || false,
+            weight: null,
+            weight_unit: 'kg',
+            data,
+            created_at: now,
+            updated_at: now,
+        };
+    });
+
+    await upsertRows('store_products', rows);
+    console.log(`${products.length} productos creados o actualizados`);
 };
 
 /**
- * Seed store settings
- * Writes to both private settings and public store document
+ * Seed store settings.
  */
 export const seedStoreSettings = async (
     userId: string,
     storeId: string,
     settings: SeedStoreSettings = DEMO_STORE_SETTINGS
 ): Promise<void> => {
-    const settingsPath = `users/${userId}/stores/${storeId}/settings/general`;
-    const publicStorePath = `publicStores/${storeId}`;
-    const settingsRef = doc(db, settingsPath);
-    const publicStoreRef = doc(db, publicStorePath);
+    await ensurePublicStore(userId, storeId, settings);
 
     const settingsData = {
-        // General
-        storeName: settings.storeName,
-        storeEmail: settings.storeEmail,
-        storePhone: settings.storePhone,
-        storeLogo: null,
+        store_name: settings.storeName,
+        store_email: settings.storeEmail,
+        store_phone: settings.storePhone,
+        store_logo: null,
         currency: settings.currency,
-        currencySymbol: settings.currencySymbol,
-        
-        // Taxes
-        taxEnabled: settings.taxEnabled,
-        taxRate: settings.taxRate,
-        taxName: 'IVA',
-        taxIncluded: false,
-        
-        // Shipping
-        shippingZones: [
-            {
-                id: 'zone-1',
-                name: 'Nacional',
-                countries: ['MX', 'US'],
-                rates: [
-                    {
-                        id: 'rate-1',
-                        name: 'Envío Estándar',
-                        price: 9.99,
-                        estimatedDays: '3-5 días',
-                    },
-                    {
-                        id: 'rate-2',
-                        name: 'Envío Express',
-                        price: 19.99,
-                        estimatedDays: '1-2 días',
-                    },
-                ],
-            },
-        ],
-        freeShippingThreshold: settings.freeShippingThreshold,
-        
-        // Payments
-        stripeEnabled: false,
-        paypalEnabled: false,
-        cashOnDeliveryEnabled: true,
-        
-        // Notifications
-        orderNotificationEmail: settings.storeEmail,
-        lowStockNotifications: true,
-        lowStockThreshold: 10,
-        notifyOnNewOrder: true,
-        notifyOnLowStock: true,
-        sendOrderConfirmation: true,
-        sendShippingNotification: true,
-        
-        // Checkout
-        requirePhone: true,
-        requireShippingAddress: true,
-        
-        // Timestamps
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        currency_symbol: settings.currencySymbol,
+        tax_enabled: settings.taxEnabled,
+        tax_rate: settings.taxRate,
+        tax_name: 'IVA',
+        tax_included: false,
+        shipping_zones: shippingZones,
+        free_shipping_threshold: settings.freeShippingThreshold,
+        stripe_enabled: false,
+        paypal_enabled: false,
+        cash_on_delivery_enabled: true,
+        order_notification_email: settings.storeEmail,
+        low_stock_notifications: true,
+        low_stock_threshold: 10,
+        notify_on_new_order: true,
+        notify_on_low_stock: true,
+        send_order_confirmation: true,
+        send_shipping_notification: true,
+        require_phone: true,
+        require_shipping_address: true,
+        is_active: true,
+        updated_at: new Date().toISOString(),
     };
 
-    // Public store data (for storefront)
-    const publicStoreData = {
-        id: storeId,
-        name: settings.storeName,
-        description: 'Tienda de demostración',
-        currency: settings.currency,
-        currencySymbol: settings.currencySymbol,
-        updatedAt: serverTimestamp(),
-    };
+    const { data: existingSettings, error: fetchError } = await supabase
+        .from('store_settings')
+        .select('id')
+        .eq('project_id', storeId)
+        .limit(1)
+        .maybeSingle();
 
-    await Promise.all([
-        setDoc(settingsRef, settingsData),
-        setDoc(publicStoreRef, publicStoreData, { merge: true }),
-    ]);
-    
-    console.log('✅ Configuración de tienda guardada (privada + pública)');
+    if (fetchError) throw fetchError;
+
+    if (existingSettings?.id) {
+        const { error } = await supabase
+            .from('store_settings')
+            .update(settingsData)
+            .eq('id', existingSettings.id);
+
+        if (error) throw error;
+    } else {
+        const { error } = await supabase
+            .from('store_settings')
+            .insert({
+                project_id: storeId,
+                ...settingsData,
+                created_at: new Date().toISOString(),
+            });
+
+        if (error) throw error;
+    }
+
+    console.log('Configuracion de tienda guardada');
 };
 
 /**
- * Main function to seed entire demo store
+ * Main function to seed entire demo store.
  */
 export const seedDemoStore = async (
     userId: string,
     storeId: string
 ): Promise<{ success: boolean; message: string }> => {
     try {
-        console.log('🚀 Iniciando seed de tienda demo...');
-        console.log(`   Usuario: ${userId}`);
-        console.log(`   Tienda: ${storeId}`);
+        console.log('Iniciando seed de tienda demo...');
+        console.log(`Usuario: ${userId}`);
+        console.log(`Tienda: ${storeId}`);
 
-        // 1. Seed categories
-        console.log('\n📁 Creando categorías...');
+        console.log('Creando categorias...');
         const categoryMap = await seedCategories(userId, storeId);
 
-        // 2. Seed products
-        console.log('\n📦 Creando productos...');
+        console.log('Creando productos...');
         await seedProducts(userId, storeId, DEMO_PRODUCTS, categoryMap);
 
-        // 3. Seed store settings
-        console.log('\n⚙️ Configurando tienda...');
+        console.log('Configurando tienda...');
         await seedStoreSettings(userId, storeId);
-
-        console.log('\n✅ ¡Tienda demo creada exitosamente!');
-        console.log(`   - ${DEMO_CATEGORIES.length} categorías`);
-        console.log(`   - ${DEMO_PRODUCTS.length} productos`);
-        console.log(`   - Configuración completa`);
 
         return {
             success: true,
-            message: `Tienda demo creada: ${DEMO_CATEGORIES.length} categorías, ${DEMO_PRODUCTS.length} productos`,
+            message: `Tienda demo creada: ${DEMO_CATEGORIES.length} categorias, ${DEMO_PRODUCTS.length} productos`,
         };
     } catch (error: any) {
-        console.error('❌ Error al crear tienda demo:', error);
+        console.error('Error al crear tienda demo:', error);
         return {
             success: false,
             message: `Error: ${error.message}`,
@@ -730,7 +785,6 @@ export const seedDemoStore = async (
 };
 
 export default seedDemoStore;
-
 
 
 

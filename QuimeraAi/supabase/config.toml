@@ -15,6 +15,11 @@ enabled = true
 verify_jwt = true
 entrypoint = "./functions/stripe-api/index.ts"
 
+[functions.storefront-api]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/storefront-api/index.ts"
+
 [functions.stripe-webhook]
 enabled = true
 verify_jwt = false

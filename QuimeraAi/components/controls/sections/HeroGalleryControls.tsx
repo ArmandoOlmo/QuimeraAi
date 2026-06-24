@@ -14,7 +14,7 @@ import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, PositionGridControl, SliderControl
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
-import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps, CtaLinkPicker } from '../ControlsShared';
+import { BackgroundBlurControl, BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps, CtaLinkPicker } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -265,6 +265,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           value={data?.heroGallery?.bgPosition || 'center center'}
           onChange={(val) => setNestedData('heroGallery.bgPosition', val)}
         />
+      </div>
+
+      {/* Background Blur */}
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <BackgroundBlurControl sectionKey="heroGallery" data={data} setNestedData={setNestedData} />
       </div>
 
       {/* Hero Height */}

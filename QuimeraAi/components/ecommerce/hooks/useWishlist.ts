@@ -3,20 +3,8 @@
  * Hook para gestionar la lista de deseos/favoritos
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-    collection,
-    doc,
-    setDoc,
-    deleteDoc,
-    onSnapshot,
-    query,
-    orderBy,
-    serverTimestamp,
-    getDocs,
-    where,
-} from '@/utils/compatData';
-import { db } from '@/utils/compatData';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../../../supabase';
 import { PublicProduct } from './usePublicProduct';
 
 // Types
@@ -46,6 +34,22 @@ export interface UseWishlistReturn {
 // Local storage key for anonymous users
 const WISHLIST_STORAGE_KEY = 'quimera_wishlist';
 
+const timestampFromDate = (value?: string | null) => ({
+    seconds: value ? Math.floor(new Date(value).getTime() / 1000) : Math.floor(Date.now() / 1000),
+    nanoseconds: 0,
+});
+
+const mapWishlistRow = (row: any): WishlistItem => ({
+    id: row.id,
+    productId: row.product_id,
+    productName: row.product_name,
+    productSlug: row.product_slug,
+    productImage: row.product_image || undefined,
+    productPrice: Number(row.product_price || 0),
+    productCompareAtPrice: row.product_compare_at_price != null ? Number(row.product_compare_at_price) : undefined,
+    addedAt: timestampFromDate(row.added_at),
+});
+
 /**
  * Hook para gestionar wishlist
  * Soporta usuarios autenticados (Supabase) y anónimos (localStorage)
@@ -57,16 +61,6 @@ export const useWishlist = (
     const [items, setItems] = useState<WishlistItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    // Get session ID for anonymous users
-    const getSessionId = useCallback(() => {
-        let sessionId = localStorage.getItem('quimera_session_id');
-        if (!sessionId) {
-            sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            localStorage.setItem('quimera_session_id', sessionId);
-        }
-        return sessionId;
-    }, []);
 
     // Load wishlist from localStorage (for anonymous users)
     const loadLocalWishlist = useCallback(() => {
@@ -104,35 +98,51 @@ export const useWishlist = (
         setError(null);
 
         if (userId) {
-            // Authenticated user - use Supabase
-            const wishlistRef = collection(
-                db,
-                'users',
-                userId,
-                'stores',
-                storeId,
-                'wishlist'
-            );
-            const q = query(wishlistRef, orderBy('addedAt', 'desc'));
+            let active = true;
 
-            const unsubscribe = onSnapshot(
-                q,
-                (snapshot) => {
-                    const wishlistItems = snapshot.docs.map((doc) => ({
-                        ...doc.data(),
-                        id: doc.id,
-                    })) as WishlistItem[];
-                    setItems(wishlistItems);
-                    setIsLoading(false);
-                },
-                (err) => {
-                    console.error('Error loading wishlist:', err);
-                    setError(err.message);
-                    setIsLoading(false);
+            const fetchWishlist = async () => {
+                const { data, error } = await supabase
+                    .from('store_wishlists')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .eq('store_id', storeId)
+                    .order('added_at', { ascending: false });
+
+                if (!active) return;
+
+                if (error) {
+                    console.error('Error loading wishlist:', error);
+                    setError(error.message);
+                } else {
+                    setItems((data || []).map(mapWishlistRow));
+                    setError(null);
                 }
-            );
+                setIsLoading(false);
+            };
 
-            return () => unsubscribe();
+            void fetchWishlist();
+
+            const channelName = `store_wishlists:${storeId}:${userId}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+            const channel = supabase
+                .channel(channelName)
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'store_wishlists',
+                        filter: `store_id=eq.${storeId}`,
+                    },
+                    () => {
+                        void fetchWishlist();
+                    }
+                )
+                .subscribe();
+
+            return () => {
+                active = false;
+                void supabase.removeChannel(channel);
+            };
         } else {
             // Anonymous user - use localStorage
             const localItems = loadLocalWishlist();
@@ -165,21 +175,24 @@ export const useWishlist = (
             };
 
             if (userId) {
-                // Supabase
                 try {
-                    const wishlistRef = doc(
-                        db,
-                        'users',
-                        userId,
-                        'stores',
-                        storeId,
-                        'wishlist',
-                        product.id
-                    );
-                    await setDoc(wishlistRef, {
-                        ...wishlistItem,
-                        addedAt: serverTimestamp(),
-                    });
+                    const id = `${storeId}:${userId}:${product.id}`;
+                    const { error } = await supabase
+                        .from('store_wishlists')
+                        .upsert({
+                            id,
+                            user_id: userId,
+                            store_id: storeId,
+                            product_id: product.id,
+                            product_name: product.name,
+                            product_slug: product.slug,
+                            product_image: product.images?.[0]?.url || null,
+                            product_price: product.price,
+                            product_compare_at_price: product.compareAtPrice || null,
+                            added_at: new Date().toISOString(),
+                        }, { onConflict: 'id' });
+
+                    if (error) throw error;
                 } catch (err: any) {
                     console.error('Error adding to wishlist:', err);
                     setError(err.message);
@@ -201,18 +214,15 @@ export const useWishlist = (
     const removeFromWishlist = useCallback(
         async (productId: string) => {
             if (userId) {
-                // Supabase
                 try {
-                    const wishlistRef = doc(
-                        db,
-                        'users',
-                        userId,
-                        'stores',
-                        storeId,
-                        'wishlist',
-                        productId
-                    );
-                    await deleteDoc(wishlistRef);
+                    const { error } = await supabase
+                        .from('store_wishlists')
+                        .delete()
+                        .eq('user_id', userId)
+                        .eq('store_id', storeId)
+                        .eq('product_id', productId);
+
+                    if (error) throw error;
                 } catch (err: any) {
                     console.error('Error removing from wishlist:', err);
                     setError(err.message);
@@ -242,19 +252,14 @@ export const useWishlist = (
     // Clear wishlist
     const clearWishlist = useCallback(async () => {
         if (userId) {
-            // Supabase - delete all docs
             try {
-                const wishlistRef = collection(
-                    db,
-                    'users',
-                    userId,
-                    'stores',
-                    storeId,
-                    'wishlist'
-                );
-                const snapshot = await getDocs(wishlistRef);
-                const deletePromises = snapshot.docs.map((doc) => deleteDoc(doc.ref));
-                await Promise.all(deletePromises);
+                const { error } = await supabase
+                    .from('store_wishlists')
+                    .delete()
+                    .eq('user_id', userId)
+                    .eq('store_id', storeId);
+
+                if (error) throw error;
             } catch (err: any) {
                 console.error('Error clearing wishlist:', err);
                 setError(err.message);
@@ -280,7 +285,6 @@ export const useWishlist = (
 };
 
 export default useWishlist;
-
 
 
 

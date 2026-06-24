@@ -15,6 +15,7 @@ export type MessageDirection = 'inbound' | 'outbound';
 
 export interface SocialMessage {
     id: string;
+    conversationId?: string;
     projectId: string;
     channel: SocialChannel;
     direction: MessageDirection;
@@ -340,7 +341,6 @@ export type {
     SocialMessage as SocialChatMessage,
     SocialConversation as ChatConversation,
 };
-
 
 
 

@@ -23,6 +23,8 @@ import {
 import { CartItem, Address } from '../../types/ecommerce';
 import AppSelect from '../ui/AppSelect';
 
+type PaymentMethod = 'stripe' | 'paypal' | 'cod';
+
 interface CheckoutPageProps {
     items: CartItem[];
     subtotal: number;
@@ -36,6 +38,7 @@ interface CheckoutPageProps {
     primaryColor?: string;
     storeName?: string;
     requiresShipping?: boolean;
+    availablePaymentMethods?: PaymentMethod[];
 }
 
 export interface CheckoutOrderData {
@@ -46,7 +49,7 @@ export interface CheckoutOrderData {
     billingAddress?: Address;
     sameAsBilling: boolean;
     notes?: string;
-    paymentMethod: 'stripe' | 'paypal' | 'cod';
+    paymentMethod: PaymentMethod;
 }
 
 type CheckoutStep = 'information' | 'shipping' | 'payment';
@@ -64,6 +67,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     primaryColor = '#6366f1',
     storeName = 'Tu Tienda',
     requiresShipping = true,
+    availablePaymentMethods = ['stripe', 'paypal', 'cod'],
 }) => {
     const { t } = useTranslation();
     const [currentStep, setCurrentStep] = useState<CheckoutStep>('information');
@@ -84,7 +88,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
         country: 'México',
         sameAsBilling: true,
         notes: '',
-        paymentMethod: 'stripe' as 'stripe' | 'paypal' | 'cod',
+        paymentMethod: (availablePaymentMethods[0] || 'cod') as PaymentMethod,
     });
 
     const [billingAddress, setBillingAddress] = useState({
@@ -125,7 +129,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             case 'shipping':
                 return true; // Shipping method selection
             case 'payment':
-                return !!formData.paymentMethod;
+                return !!formData.paymentMethod && availablePaymentMethods.includes(formData.paymentMethod);
             default:
                 return false;
         }
@@ -498,88 +502,94 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 </h2>
 
                                 <div className="space-y-3">
-                                    <label
-                                        className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                                            formData.paymentMethod === 'stripe'
-                                                ? ''
-                                                : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                                        }`}
-                                        style={formData.paymentMethod === 'stripe' ? { borderColor: primaryColor } : {}}
-                                    >
-                                        <input
-                                            type="radio"
-                                            name="payment"
-                                            value="stripe"
-                                            checked={formData.paymentMethod === 'stripe'}
-                                            onChange={(e) => updateFormData('paymentMethod', e.target.value)}
-                                            className="w-4 h-4"
-                                            style={{ accentColor: primaryColor }}
-                                        />
-                                        <div className="flex-1">
-                                            <p className="font-medium text-gray-900 dark:text-white">
-                                                {t('ecommerce.storefront.checkout.creditDebit')}
-                                            </p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                {t('ecommerce.storefront.checkout.creditDebitBrands')}
-                                            </p>
-                                        </div>
-                                        <CreditCard className="text-gray-400" size={24} />
-                                    </label>
+                                    {availablePaymentMethods.includes('stripe') && (
+                                        <label
+                                            className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                                                formData.paymentMethod === 'stripe'
+                                                    ? ''
+                                                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                                            }`}
+                                            style={formData.paymentMethod === 'stripe' ? { borderColor: primaryColor } : {}}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="payment"
+                                                value="stripe"
+                                                checked={formData.paymentMethod === 'stripe'}
+                                                onChange={(e) => updateFormData('paymentMethod', e.target.value as PaymentMethod)}
+                                                className="w-4 h-4"
+                                                style={{ accentColor: primaryColor }}
+                                            />
+                                            <div className="flex-1">
+                                                <p className="font-medium text-gray-900 dark:text-white">
+                                                    {t('ecommerce.storefront.checkout.creditDebit')}
+                                                </p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                    {t('ecommerce.storefront.checkout.creditDebitBrands')}
+                                                </p>
+                                            </div>
+                                            <CreditCard className="text-gray-400" size={24} />
+                                        </label>
+                                    )}
 
-                                    <label
-                                        className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                                            formData.paymentMethod === 'paypal'
-                                                ? ''
-                                                : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                                        }`}
-                                        style={formData.paymentMethod === 'paypal' ? { borderColor: primaryColor } : {}}
-                                    >
-                                        <input
-                                            type="radio"
-                                            name="payment"
-                                            value="paypal"
-                                            checked={formData.paymentMethod === 'paypal'}
-                                            onChange={(e) => updateFormData('paymentMethod', e.target.value)}
-                                            className="w-4 h-4"
-                                            style={{ accentColor: primaryColor }}
-                                        />
-                                        <div className="flex-1">
-                                            <p className="font-medium text-gray-900 dark:text-white">
-                                                {t('ecommerce.storefront.checkout.paypal')}
-                                            </p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                {t('ecommerce.storefront.checkout.paypalDesc')}
-                                            </p>
-                                        </div>
-                                    </label>
+                                    {availablePaymentMethods.includes('paypal') && (
+                                        <label
+                                            className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                                                formData.paymentMethod === 'paypal'
+                                                    ? ''
+                                                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                                            }`}
+                                            style={formData.paymentMethod === 'paypal' ? { borderColor: primaryColor } : {}}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="payment"
+                                                value="paypal"
+                                                checked={formData.paymentMethod === 'paypal'}
+                                                onChange={(e) => updateFormData('paymentMethod', e.target.value as PaymentMethod)}
+                                                className="w-4 h-4"
+                                                style={{ accentColor: primaryColor }}
+                                            />
+                                            <div className="flex-1">
+                                                <p className="font-medium text-gray-900 dark:text-white">
+                                                    {t('ecommerce.storefront.checkout.paypal')}
+                                                </p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                    {t('ecommerce.storefront.checkout.paypalDesc')}
+                                                </p>
+                                            </div>
+                                        </label>
+                                    )}
 
-                                    <label
-                                        className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                                            formData.paymentMethod === 'cod'
-                                                ? ''
-                                                : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                                        }`}
-                                        style={formData.paymentMethod === 'cod' ? { borderColor: primaryColor } : {}}
-                                    >
-                                        <input
-                                            type="radio"
-                                            name="payment"
-                                            value="cod"
-                                            checked={formData.paymentMethod === 'cod'}
-                                            onChange={(e) => updateFormData('paymentMethod', e.target.value)}
-                                            className="w-4 h-4"
-                                            style={{ accentColor: primaryColor }}
-                                        />
-                                        <div className="flex-1">
-                                            <p className="font-medium text-gray-900 dark:text-white">
-                                                {t('ecommerce.storefront.checkout.cashOnDelivery')}
-                                            </p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                {t('ecommerce.storefront.checkout.cashOnDeliveryDesc')}
-                                            </p>
-                                        </div>
-                                        <Truck className="text-gray-400" size={24} />
-                                    </label>
+                                    {availablePaymentMethods.includes('cod') && (
+                                        <label
+                                            className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                                                formData.paymentMethod === 'cod'
+                                                    ? ''
+                                                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                                            }`}
+                                            style={formData.paymentMethod === 'cod' ? { borderColor: primaryColor } : {}}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="payment"
+                                                value="cod"
+                                                checked={formData.paymentMethod === 'cod'}
+                                                onChange={(e) => updateFormData('paymentMethod', e.target.value as PaymentMethod)}
+                                                className="w-4 h-4"
+                                                style={{ accentColor: primaryColor }}
+                                            />
+                                            <div className="flex-1">
+                                                <p className="font-medium text-gray-900 dark:text-white">
+                                                    {t('ecommerce.storefront.checkout.cashOnDelivery')}
+                                                </p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                    {t('ecommerce.storefront.checkout.cashOnDeliveryDesc')}
+                                                </p>
+                                            </div>
+                                            <Truck className="text-gray-400" size={24} />
+                                        </label>
+                                    )}
                                 </div>
 
                                 {/* Notes */}
@@ -710,9 +720,6 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 };
 
 export default CheckoutPage;
-
-
-
 
 
 

@@ -64,7 +64,29 @@ const OrderConfirmationDisplay: React.FC<{
     currencySymbol = '$',
     primaryColor = '#6366f1',
     storeName = 'Tu Tienda',
-}) => {
+	}) => {
+	    const shippingAddress = order.shippingAddress;
+	    const orderItems = order.items || [];
+	    const itemLineTotal = (item: any) => {
+	        const explicitTotal = Number(item.totalPrice ?? item.total ?? 0);
+	        if (Number.isFinite(explicitTotal) && explicitTotal > 0) return explicitTotal;
+
+	        const unitPrice = Number(item.price ?? item.unitPrice ?? 0);
+	        const quantity = Number(item.quantity || 0);
+	        return Number.isFinite(unitPrice) && Number.isFinite(quantity) ? unitPrice * quantity : 0;
+	    };
+	    const subtotal = Number(order.subtotal ?? orderItems.reduce((sum, item) => sum + itemLineTotal(item), 0));
+	    const discountAmount = Number(order.discountAmount ?? 0);
+	    const taxAmount = Number(order.taxAmount ?? 0);
+	    const rawTotal = order.total === undefined || order.total === null ? undefined : Number(order.total);
+	    const inferredShippingCost =
+	        rawTotal !== undefined && order.shippingCost == null
+	            ? Math.max(0, rawTotal - subtotal + discountAmount - taxAmount)
+	            : 0;
+	    const shippingCost = Number(order.shippingCost ?? inferredShippingCost);
+	    const total = Number(order.total ?? Math.max(0, subtotal - discountAmount + shippingCost + taxAmount));
+	    const paymentMethod = order.paymentMethod || (order.paymentStatus === 'pending' ? 'cod' : '');
+
     const formatDate = (timestamp: StoredTimestamp) => {
         return timestampToDate(timestamp).toLocaleDateString('es-MX', {
             weekday: 'long',
@@ -137,8 +159,14 @@ const OrderConfirmationDisplay: React.FC<{
                                     Confirmación enviada
                                 </p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    Enviamos un email de confirmación a{' '}
-                                    <span className="font-medium">{order.customerEmail}</span>
+                                    {order.customerEmail ? (
+                                        <>
+                                            Enviamos un email de confirmación a{' '}
+                                            <span className="font-medium">{order.customerEmail}</span>
+                                        </>
+                                    ) : (
+                                        'Tu pedido quedo registrado correctamente.'
+                                    )}
                                 </p>
                             </div>
                         </div>
@@ -159,16 +187,16 @@ const OrderConfirmationDisplay: React.FC<{
                             {/* Payment */}
                             <div className="flex items-start gap-3">
                                 <CreditCard className="text-gray-400 flex-shrink-0" size={20} />
-                                <div>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Método de pago</p>
-                                    <p className="font-medium text-gray-900 dark:text-white capitalize">
-                                        {order.paymentMethod === 'stripe'
-                                            ? 'Tarjeta'
-                                            : order.paymentMethod === 'cod'
-                                            ? 'Contra entrega'
-                                            : order.paymentMethod}
-                                    </p>
-                                </div>
+	                                <div>
+	                                    <p className="text-sm text-gray-500 dark:text-gray-400">Método de pago</p>
+	                                    <p className="font-medium text-gray-900 dark:text-white capitalize">
+	                                        {paymentMethod === 'stripe'
+	                                            ? 'Tarjeta'
+	                                            : paymentMethod === 'cod'
+	                                            ? 'Contra entrega'
+	                                            : paymentMethod || 'No especificado'}
+	                                    </p>
+	                                </div>
                             </div>
 
                             {/* Shipping Address */}
@@ -176,20 +204,28 @@ const OrderConfirmationDisplay: React.FC<{
                                 <MapPin className="text-gray-400 flex-shrink-0" size={20} />
                                 <div>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">Dirección de envío</p>
-                                    <p className="font-medium text-gray-900 dark:text-white">
-                                        {order.shippingAddress.firstName} {order.shippingAddress.lastName}
-                                    </p>
-                                    <p className="text-gray-600 dark:text-gray-400">
-                                        {order.shippingAddress.address1}
-                                        {order.shippingAddress.address2 && `, ${order.shippingAddress.address2}`}
-                                    </p>
-                                    <p className="text-gray-600 dark:text-gray-400">
-                                        {order.shippingAddress.city}, {order.shippingAddress.state}{' '}
-                                        {order.shippingAddress.zipCode}
-                                    </p>
-                                    <p className="text-gray-600 dark:text-gray-400">
-                                        {order.shippingAddress.country}
-                                    </p>
+                                    {shippingAddress ? (
+                                        <>
+                                            <p className="font-medium text-gray-900 dark:text-white">
+                                                {shippingAddress.firstName} {shippingAddress.lastName}
+                                            </p>
+                                            <p className="text-gray-600 dark:text-gray-400">
+                                                {shippingAddress.address1}
+                                                {shippingAddress.address2 && `, ${shippingAddress.address2}`}
+                                            </p>
+                                            <p className="text-gray-600 dark:text-gray-400">
+                                                {shippingAddress.city}, {shippingAddress.state}{' '}
+                                                {shippingAddress.zipCode}
+                                            </p>
+                                            <p className="text-gray-600 dark:text-gray-400">
+                                                {shippingAddress.country}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <p className="text-gray-600 dark:text-gray-400">
+                                            Disponible en el detalle interno del pedido.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -197,14 +233,14 @@ const OrderConfirmationDisplay: React.FC<{
                         {/* Order Items */}
                         <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                             <h3 className="font-bold text-gray-900 dark:text-white mb-4">
-                                Productos ({order.items.length})
+                                Productos ({orderItems.length})
                             </h3>
                             <div className="space-y-4">
-                                {order.items.map((item, index) => (
+                                {orderItems.map((item, index) => (
                                     <div key={index} className="flex items-center gap-4">
-                                        {item.image ? (
+                                        {item.image || item.imageUrl ? (
                                             <img
-                                                src={item.image}
+                                                src={item.image || item.imageUrl}
                                                 alt={item.productName}
                                                 className="w-16 h-16 object-cover rounded-lg"
                                             />
@@ -225,45 +261,45 @@ const OrderConfirmationDisplay: React.FC<{
                                             <p className="text-sm text-gray-500 dark:text-gray-400">
                                                 Cantidad: {item.quantity}
                                             </p>
-                                        </div>
-                                        <p className="font-medium text-gray-900 dark:text-white">
-                                            {currencySymbol}{(item.price * item.quantity).toFixed(2)}
-                                        </p>
-                                    </div>
-                                ))}
+	                                        </div>
+	                                        <p className="font-medium text-gray-900 dark:text-white">
+	                                            {currencySymbol}{itemLineTotal(item).toFixed(2)}
+	                                        </p>
+	                                    </div>
+	                                ))}
                             </div>
                         </div>
 
                         {/* Order Summary */}
-                        <div className="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-2">
-                            <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                                <span>Subtotal</span>
-                                <span>{currencySymbol}{order.subtotal.toFixed(2)}</span>
-                            </div>
-                            {order.discountAmount && order.discountAmount > 0 && (
-                                <div className="flex justify-between text-green-600">
-                                    <span>Descuento ({order.discountCode})</span>
-                                    <span>-{currencySymbol}{order.discountAmount.toFixed(2)}</span>
-                                </div>
-                            )}
-                            <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                                <span>Envío</span>
-                                <span>
-                                    {order.shippingCost === 0
-                                        ? 'Gratis'
-                                        : `${currencySymbol}${order.shippingCost.toFixed(2)}`}
-                                </span>
-                            </div>
-                            {order.taxAmount > 0 && (
-                                <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                                    <span>Impuestos</span>
-                                    <span>{currencySymbol}{order.taxAmount.toFixed(2)}</span>
-                                </div>
-                            )}
-                            <div className="flex justify-between text-xl font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-700">
-                                <span>Total</span>
-                                <span>{currencySymbol}{order.total.toFixed(2)}</span>
-                            </div>
+	                        <div className="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-2">
+	                            <div className="flex justify-between text-gray-600 dark:text-gray-400">
+	                                <span>Subtotal</span>
+	                                <span>{currencySymbol}{subtotal.toFixed(2)}</span>
+	                            </div>
+	                            {discountAmount > 0 && (
+	                                <div className="flex justify-between text-green-600">
+	                                    <span>Descuento ({order.discountCode})</span>
+	                                    <span>-{currencySymbol}{discountAmount.toFixed(2)}</span>
+	                                </div>
+	                            )}
+	                            <div className="flex justify-between text-gray-600 dark:text-gray-400">
+	                                <span>Envío</span>
+	                                <span>
+	                                    {shippingCost === 0
+	                                        ? 'Gratis'
+	                                        : `${currencySymbol}${shippingCost.toFixed(2)}`}
+	                                </span>
+	                            </div>
+	                            {taxAmount > 0 && (
+	                                <div className="flex justify-between text-gray-600 dark:text-gray-400">
+	                                    <span>Impuestos</span>
+	                                    <span>{currencySymbol}{taxAmount.toFixed(2)}</span>
+	                                </div>
+	                            )}
+	                            <div className="flex justify-between text-xl font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-700">
+	                                <span>Total</span>
+	                                <span>{currencySymbol}{total.toFixed(2)}</span>
+	                            </div>
                         </div>
                     </div>
                 </div>
@@ -381,6 +417,7 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = (props) => {
                 }
 
                 setOrder(orderData as Order);
+                localStorage.removeItem(`cart_${storeId}`);
                 setIsLoading(false);
             } catch (err: any) {
                 console.error('Error fetching order:', err);

@@ -71,6 +71,9 @@ const HeroLead: React.FC<HeroLeadProps> = ({
   showMessageField = true,
   // Styling
   glassEffect,
+  backgroundBlurEnabled,
+  backgroundBlurAmount,
+  backgroundBlurColor,
   paddingY = 'md',
   paddingX = 'md',
   cardBorderRadius = 'xl',
@@ -195,6 +198,14 @@ const HeroLead: React.FC<HeroLeadProps> = ({
     formCardOpacity < 100
       ? hexToRgba(c.formBackground, formCardOpacity / 100)
       : c.formBackground;
+  const isBackgroundBlurActive = backgroundBlurEnabled ?? glassEffect ?? false;
+  const backgroundBlurStyle = isBackgroundBlurActive
+    ? {
+        backdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+        WebkitBackdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+        backgroundColor: hexToRgba(backgroundBlurColor || '#ffffff', 0.12),
+      }
+    : undefined;
 
   // ── Info panel ────────────────────────────────────────────────────────────
   const infoPanel = (
@@ -212,8 +223,11 @@ const HeroLead: React.FC<HeroLeadProps> = ({
             className="absolute inset-0 bg-cover"
             style={{ backgroundImage: `url(${imageUrl})`, backgroundPosition: imagePosition || 'center' }}
           />
+          {isBackgroundBlurActive && (
+            <div className="absolute inset-0" style={backgroundBlurStyle} />
+          )}
           <div
-            className={`absolute inset-0 ${glassEffect ? 'backdrop-blur-md' : ''}`}
+            className="absolute inset-0"
             style={{ backgroundColor: hexToRgba(c.infoBackground || c.background, overlayOpacity / 100) }}
           />
         </>

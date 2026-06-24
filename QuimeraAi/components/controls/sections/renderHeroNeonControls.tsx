@@ -313,7 +313,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
   const styleTab = (
     <div className="space-y-4">
       {/* Background Image Setup */}
-      <BackgroundImageControl sectionKey="heroNeon" data={data} setNestedData={setNestedData} />
+      <BackgroundImageControl sectionKey="heroNeon" data={data} setNestedData={setNestedData} showBlurControls />
 
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-4 mb-4">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2 mb-2">

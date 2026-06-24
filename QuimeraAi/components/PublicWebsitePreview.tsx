@@ -2024,6 +2024,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         backgroundOverlayColor={compData.backgroundOverlayColor}
         backgroundColor={compData.colors?.background}
         backgroundPosition={compData.backgroundPosition}
+        backgroundBlurEnabled={compData.backgroundBlurEnabled}
+        backgroundBlurAmount={compData.backgroundBlurAmount}
+        backgroundBlurColor={compData.backgroundBlurColor}
+        glassEffect={compData.glassEffect}
       >
         {element}
       </SectionBackground>

@@ -1,6 +1,7 @@
 import React, { useId } from 'react';
 import { isPendingImage } from '../../utils/imagePlaceholders';
 import { isLegacyStorageUrl } from '../../utils/imageUrlHelper';
+import { hexToRgba } from '../../utils/colorUtils';
 
 interface SectionBackgroundProps {
     /** The background image URL set from the editor */
@@ -17,6 +18,12 @@ interface SectionBackgroundProps {
     backgroundPosition?: string;
     /** Applies a frosted glass layer over the background image */
     glassEffect?: boolean;
+    /** Enables/disables the blur layer independently from glassEffect */
+    backgroundBlurEnabled?: boolean;
+    /** Blur amount in px */
+    backgroundBlurAmount?: number;
+    /** Tint color applied to the blur layer */
+    backgroundBlurColor?: string;
     /** Children (the actual section component) */
     children: React.ReactNode;
 }
@@ -41,6 +48,9 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
     backgroundColor,
     backgroundPosition = 'center',
     glassEffect = false,
+    backgroundBlurEnabled,
+    backgroundBlurAmount,
+    backgroundBlurColor,
     children,
 }) => {
     const hasValidImage = backgroundImageUrl && !isPendingImage(backgroundImageUrl) && !isLegacyStorageUrl(backgroundImageUrl);
@@ -50,6 +60,9 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
     if (!hasValidImage) return <>{children}</>;
 
     const isOverlayActive = backgroundOverlayEnabled !== false;
+    const isBlurActive = backgroundBlurEnabled ?? glassEffect;
+    const blurAmount = Math.max(0, backgroundBlurAmount ?? 22);
+    const blurTint = hexToRgba(backgroundBlurColor || '#ffffff', 0.12);
 
     return (
         <div className="relative overflow-hidden" data-bg-scope={scopeId}>
@@ -84,13 +97,13 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
                     }}
                 />
             )}
-            {glassEffect && (
+            {isBlurActive && (
                 <div
                     className="absolute inset-0"
                     style={{
-                        backdropFilter: 'blur(22px) saturate(1.45)',
-                        WebkitBackdropFilter: 'blur(22px) saturate(1.45)',
-                        backgroundColor: 'rgba(255,255,255,0.04)',
+                        backdropFilter: `blur(${blurAmount}px) saturate(1.45)`,
+                        WebkitBackdropFilter: `blur(${blurAmount}px) saturate(1.45)`,
+                        backgroundColor: blurTint,
                         zIndex: 2,
                     }}
                 />

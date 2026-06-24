@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, Users, CalendarCheck, ArrowRight, Bot, CheckCircle2, UserPlus, Sparkles } from 'lucide-react';
+import { MessageSquare, Users, CalendarCheck, ArrowRight, Bot, CheckCircle2, UserPlus, Sparkles, type LucideIcon } from 'lucide-react';
 
 interface ChatbotWorkflowQuimeraProps {
     title?: string;
@@ -24,7 +24,7 @@ interface ChatbotWorkflowQuimeraProps {
     imagePosition?: 'left' | 'right';
 }
 
-const iconMap: Record<string, React.FC<{ className?: string }>> = {
+const iconMap: Record<string, LucideIcon> = {
     MessageSquare, Users, CalendarCheck, Bot, UserPlus
 };
 

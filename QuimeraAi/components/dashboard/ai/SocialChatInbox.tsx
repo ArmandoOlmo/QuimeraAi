@@ -82,18 +82,18 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
     const activeStatusFilter: StatusFilter = (filter.status as StatusFilter | undefined) ?? 'all';
 
     // Get channel icon
-    const getChannelIcon = (channel: SocialChannel, size: number = 16) => {
+    const getChannelIcon = (channel: SocialChannel, size: number = 16, className = '') => {
         switch (channel) {
             case 'whatsapp':
-                return <Phone size={size} />;
+                return <Phone size={size} className={className} />;
             case 'facebook':
-                return <Facebook size={size} />;
+                return <Facebook size={size} className={className} />;
             case 'instagram':
-                return <Instagram size={size} />;
+                return <Instagram size={size} className={className} />;
             case 'web':
-                return <Globe size={size} />;
+                return <Globe size={size} className={className} />;
             default:
-                return <MessageCircle size={size} />;
+                return <MessageCircle size={size} className={className} />;
         }
     };
 
@@ -156,9 +156,14 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
     };
 
     // Format timestamp
-    const formatTime = (timestamp: { seconds: number; nanoseconds: number } | undefined) => {
+    const formatTime = (timestamp: { seconds: number; nanoseconds: number } | string | Date | undefined) => {
         if (!timestamp) return '';
-        const date = new Date(timestamp.seconds * 1000);
+        const date = timestamp instanceof Date
+            ? timestamp
+            : typeof timestamp === 'string'
+                ? new Date(timestamp)
+                : new Date(timestamp.seconds * 1000);
+        if (Number.isNaN(date.getTime())) return '';
         return formatDistanceToNow(date, { addSuffix: true, locale });
     };
 
@@ -280,7 +285,7 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
                                         )}
                                     </div>
                                     <div className={`absolute -bottom-1 -right-1 p-1 rounded-full ${getChannelColor(conv.channel)}`}>
-                                        {React.cloneElement(getChannelIcon(conv.channel, 10) as React.ReactElement, { className: 'text-white' })}
+                                        {getChannelIcon(conv.channel, 10, 'text-white')}
                                     </div>
                                 </div>
 
@@ -340,7 +345,7 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
                                 )}
                             </div>
                             <div className={`absolute -bottom-1 -right-1 p-1 rounded-full ${getChannelColor(activeConversation.channel)}`}>
-                                {React.cloneElement(getChannelIcon(activeConversation.channel, 10) as React.ReactElement, { className: 'text-white' })}
+                                {getChannelIcon(activeConversation.channel, 10, 'text-white')}
                             </div>
                         </div>
                         <div>
@@ -496,4 +501,3 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
 };
 
 export default SocialChatInbox;
-

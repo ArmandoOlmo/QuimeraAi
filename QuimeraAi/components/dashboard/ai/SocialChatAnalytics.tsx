@@ -39,12 +39,12 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
         { id: 'lastMonth', label: 'Mes pasado' },
     ];
 
-    const getChannelIcon = (channel: SocialChannel) => {
+    const getChannelIcon = (channel: SocialChannel, className = '') => {
         switch (channel) {
-            case 'whatsapp': return <Phone size={16} />;
-            case 'facebook': return <Facebook size={16} />;
-            case 'instagram': return <Instagram size={16} />;
-            case 'web': return <Globe size={16} />;
+            case 'whatsapp': return <Phone size={14} className={className} />;
+            case 'facebook': return <Facebook size={14} className={className} />;
+            case 'instagram': return <Instagram size={14} className={className} />;
+            case 'web': return <Globe size={14} className={className} />;
         }
     };
 
@@ -217,7 +217,7 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <div className={`p-1.5 rounded-lg ${getChannelColor(channel.channel)}`}>
-                                                {React.cloneElement(getChannelIcon(channel.channel) as React.ReactElement, { size: 14, className: 'text-white' })}
+                                                {getChannelIcon(channel.channel, 'text-white')}
                                             </div>
                                             <span className="font-medium capitalize">{channel.channel}</span>
                                         </div>
@@ -366,7 +366,6 @@ const SocialChatAnalytics: React.FC<SocialChatAnalyticsProps> = ({ projectId }) 
 };
 
 export default SocialChatAnalytics;
-
 
 
 

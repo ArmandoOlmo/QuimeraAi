@@ -59,6 +59,7 @@ export interface UserEmailActionsReturn {
 
     // Send campaign
     showSendConfirmModal: boolean;
+    setShowSendConfirmModal: (v: boolean) => void;
     sendingCampaignId: string | null;
     sendCampaignError: string | null;
     sendCampaignSuccess: string | null;
@@ -790,7 +791,7 @@ export function useUserEmailActions(
         showTestEmailModal, setShowTestEmailModal,
         testEmail, setTestEmail,
         sendingTest, testSendError, testSendSuccess,
-        showSendConfirmModal, sendingCampaignId,
+        showSendConfirmModal, setShowSendConfirmModal, sendingCampaignId,
         sendCampaignError, sendCampaignSuccess,
         showDetailPanel, setShowDetailPanel,
         detailCampaign, setDetailCampaign,

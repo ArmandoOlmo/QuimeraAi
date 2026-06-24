@@ -23,6 +23,10 @@ export interface HeroNovaSlide {
 }
 
 export interface HeroNovaData {
+    glassEffect?: boolean;
+    backgroundBlurEnabled?: boolean;
+    backgroundBlurAmount?: number;
+    backgroundBlurColor?: string;
     slides: HeroNovaSlide[];
     /** Large centered display text (brand name, etc.) */
     displayText?: string;
@@ -75,6 +79,9 @@ interface HeroNovaProps extends HeroNovaData {
 
 const HeroNova: React.FC<HeroNovaProps> = ({
   glassEffect, slides = [],
+    backgroundBlurEnabled,
+    backgroundBlurAmount,
+    backgroundBlurColor,
     displayText = '',
     showDisplayText = true,
     autoPlaySpeed = 6000,
@@ -178,6 +185,14 @@ const HeroNova: React.FC<HeroNovaProps> = ({
     const ctaText = colors?.ctaText || '#1a1a1a';
     const ctaBg = colors?.ctaBackground || '#ffffff';
     const bgColor = colors?.background || '#1a1a1a';
+    const isBackgroundBlurActive = backgroundBlurEnabled ?? glassEffect ?? false;
+    const backgroundBlurStyle = isBackgroundBlurActive
+        ? {
+            backdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+            WebkitBackdropFilter: `blur(${Math.max(0, backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+            backgroundColor: hexToRgba(backgroundBlurColor || '#ffffff', 0.12),
+        }
+        : undefined;
 
     // ─── Slideshow ───
     const goToPrevious = () => {
@@ -276,13 +291,16 @@ const HeroNova: React.FC<HeroNovaProps> = ({
                                 style={{ backgroundColor: slide.backgroundColor || bgColor }}
                             />
                         )}
+                        {(bgImage || bgVideo) && isBackgroundBlurActive && (
+                            <div className="absolute inset-0" style={backgroundBlurStyle} />
+                        )}
                     </div>
                 );
             })}
 
             {/* ─── Overlay ─── */}
             <div
-                className={`absolute inset-0 z-[2] ${glassEffect ? 'backdrop-blur-md' : ''}`}
+                className="absolute inset-0 z-[2]"
                 style={{ backgroundColor: `rgba(0, 0, 0, ${overlayOpacity > 1 ? overlayOpacity / 100 : overlayOpacity})` }}
             />
 

@@ -36,6 +36,8 @@ interface TrackingResult {
     updatedAt: { seconds: number };
 }
 
+const STOREFRONT_API_FUNCTION = 'storefront-api';
+
 const OrderTracker: React.FC<OrderTrackerProps> = ({
     storeId,
     primaryColor = '#6366f1',
@@ -60,19 +62,39 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({
         setResult(null);
 
         try {
-            const response = await supabase.functions.invoke('stripe-api', {
+            const response = await supabase.functions.invoke(STOREFRONT_API_FUNCTION, {
                 body: {
                     action: 'trackOrder',
+                    storeId,
                     orderNumber: orderNumber.trim(),
                     email: email.trim().toLowerCase(),
-                }
+                },
             });
 
             if (response.error) throw response.error;
             const data = response.data?.data || response.data;
 
-            if (data.found && data.order) {
-                setResult(data.order);
+            const order = data.found && data.order ? data.order : data;
+            if (order?.id || order?.orderId) {
+                const createdAt = typeof order.createdAt === 'string'
+                    ? { seconds: Math.floor(new Date(order.createdAt).getTime() / 1000) }
+                    : order.createdAt;
+                const updatedAt = typeof order.updatedAt === 'string'
+                    ? { seconds: Math.floor(new Date(order.updatedAt).getTime() / 1000) }
+                    : order.updatedAt || createdAt;
+
+                setResult({
+                    orderId: order.orderId || order.id,
+                    storeId: order.storeId || storeId || '',
+                    orderNumber: order.orderNumber,
+                    status: order.status,
+                    paymentStatus: order.paymentStatus,
+                    fulfillmentStatus: order.fulfillmentStatus,
+                    trackingNumber: order.trackingNumber,
+                    trackingUrl: order.trackingUrl,
+                    createdAt,
+                    updatedAt,
+                });
             } else {
                 setError(data.error || 'Pedido no encontrado');
             }
@@ -321,9 +343,6 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({
 };
 
 export default OrderTracker;
-
-
-
 
 
 

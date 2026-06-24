@@ -497,7 +497,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         <span className="text-sm font-medium">{t('landingChatbot.tabs.appearance', 'Apariencia')}</span>
                                     </div>
                                     <span className="text-xs font-bold px-2 py-1 rounded text-primary bg-primary/10">
-                                        {formData.appearance.useAppColors ? 'Colores de App' : 'Personalizado'}
+                                        {formData.appearance.colorSource === 'app' ? 'Colores de App' : 'Personalizado'}
                                     </span>
                                 </div>
                             </div>

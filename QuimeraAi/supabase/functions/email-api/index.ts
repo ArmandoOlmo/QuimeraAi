@@ -172,29 +172,72 @@ async function sendTestEmail(userId: string, payload: Record<string, unknown>) {
   return { sent: 1 };
 }
 
+function emailsFromAudienceMembers(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => typeof item === "string" ? item : item?.email)
+      .filter(Boolean)
+      .map(String);
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const emails = Array.isArray(record.emails) ? record.emails : [];
+    return emails.filter(Boolean).map(String);
+  }
+  return [];
+}
+
+function uniqueEmails(values: string[]) {
+  return Array.from(
+    new Set(
+      values
+        .map((email) => email.trim().toLowerCase())
+        .filter((email) => email.includes("@")),
+    ),
+  );
+}
+
 async function getCampaignRecipients(campaign: Record<string, any>) {
   const direct = Array.isArray(campaign.custom_recipient_emails)
     ? campaign.custom_recipient_emails
     : [];
 
   const audienceId = campaign.audience_segment_id || campaign.audience_id;
-  if (!audienceId) return direct.map(String).filter(Boolean);
+  if (!audienceId && campaign.audience_type !== "all") return uniqueEmails(direct.map(String));
+
+  if (!audienceId && campaign.audience_type === "all") {
+    const { data: audiences, error } = await supabase
+      .from("email_audiences")
+      .select("static_members,source")
+      .eq("store_id", campaign.store_id);
+
+    if (error) throw error;
+
+    const audienceEmails = (audiences || []).flatMap((audience) => [
+      ...emailsFromAudienceMembers(audience.static_members),
+      ...emailsFromAudienceMembers(audience.source),
+    ]);
+
+    return uniqueEmails([...direct.map(String), ...audienceEmails]);
+  }
 
   const { data: audience, error } = await supabase
     .from("email_audiences")
     .select("static_members,source")
+    .eq("store_id", campaign.store_id)
     .eq("id", audienceId)
     .maybeSingle();
 
   if (error) throw error;
 
-  const staticMembers = Array.isArray(audience?.static_members) ? audience.static_members : [];
-  const sourceMembers = Array.isArray(audience?.source) ? audience.source : [];
-  const emails = [...direct, ...staticMembers, ...sourceMembers]
-    .map((item) => typeof item === "string" ? item : item?.email)
-    .filter(Boolean);
+  const emails = [
+    ...direct.map(String),
+    ...emailsFromAudienceMembers(audience?.static_members),
+    ...emailsFromAudienceMembers(audience?.source),
+  ];
 
-  return Array.from(new Set(emails.map((email: string) => email.toLowerCase())));
+  return uniqueEmails(emails);
 }
 
 async function sendCampaign(userId: string, payload: Record<string, unknown>) {
@@ -238,7 +281,8 @@ async function sendCampaign(userId: string, payload: Record<string, unknown>) {
     .from("email_campaigns")
     .update({
       status: "sent",
-      stats: { ...(campaign.stats || {}), sent },
+      sent_at: new Date().toISOString(),
+      stats: { ...(campaign.stats || {}), totalRecipients: recipients.length, sent },
       updated_at: new Date().toISOString(),
     })
     .eq("id", campaignId);

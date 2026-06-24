@@ -5,6 +5,7 @@ import { getFontStack } from '../utils/fontLoader';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getBorderRadiusClass } from '../utils/styleUtils';
+import { hexToRgba } from '../utils/colorUtils';
 
 export interface HeroNeonProps extends HeroNeonData {
     isPreviewMode?: boolean;
@@ -65,6 +66,14 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
         cardBackground: 'rgba(20, 20, 20, 0.8)',
         buttonBackground: '#FBB92B',
         buttonText: '#000000' };
+    const isBackgroundBlurActive = data.backgroundBlurEnabled ?? data.glassEffect ?? false;
+    const backgroundBlurStyle = isBackgroundBlurActive
+        ? {
+            backdropFilter: `blur(${Math.max(0, data.backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+            WebkitBackdropFilter: `blur(${Math.max(0, data.backgroundBlurAmount ?? 12)}px) saturate(1.3)`,
+            backgroundColor: hexToRgba(data.backgroundBlurColor || '#ffffff', 0.12),
+        }
+        : undefined;
 
     const positionClasses = useMemo(() => {
         switch (textPosition) {
@@ -202,6 +211,9 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
                                     alt={currentSlide.headline} 
                                     className="w-full h-full object-cover" 
                                 />
+                                {isBackgroundBlurActive && (
+                                    <div className="absolute inset-0 pointer-events-none" style={backgroundBlurStyle} />
+                                )}
                                 {/* Overlay to ensure text readability */}
                                 <div className="absolute inset-0 bg-black/40 pointer-events-none" />
                             </div>

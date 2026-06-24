@@ -13,6 +13,10 @@ import type { Category } from '../../../types/ecommerce';
 import ProductSearchPage from '../search/ProductSearchPage';
 import type { ProductCardVariant } from '../../../types/productCard';
 
+type ProductSearchGridColumns = 2 | 3 | 4 | 5;
+type ProductSearchCardStyle = 'minimal' | 'modern' | 'elegant' | 'overlay';
+type ProductSearchCardGap = 'sm' | 'md' | 'lg';
+
 interface CategoryProductsSectionProps {
     /** Store ID for loading products */
     storeId: string;
@@ -52,6 +56,20 @@ interface CategoryProductsSectionProps {
     /** Navigation callback */
     onProductClick?: (productSlug: string) => void;
 }
+
+const normalizeGridColumns = (columns: number): ProductSearchGridColumns =>
+    ([2, 3, 4, 5] as const).includes(columns as ProductSearchGridColumns)
+        ? columns as ProductSearchGridColumns
+        : 4;
+
+const normalizeCardStyle = (style: CategoryProductsSectionProps['cardStyle']): ProductSearchCardStyle => {
+    if (style === 'classic') return 'elegant';
+    if (style === 'bordered') return 'minimal';
+    return style || 'modern';
+};
+
+const normalizeCardGap = (gap: CategoryProductsSectionProps['cardGap']): ProductSearchCardGap =>
+    gap === 'xl' ? 'lg' : gap || 'md';
 
 /**
  * CategoryProductsSection
@@ -106,10 +124,10 @@ const CategoryProductsSection: React.FC<CategoryProductsSectionProps> = ({
                 showViewModeToggle={showViewModeToggle}
                 defaultViewMode={defaultViewMode}
                 productsPerPage={productsPerPage}
-                gridColumns={gridColumns}
-                cardStyle={cardStyle}
+                gridColumns={normalizeGridColumns(gridColumns)}
+                cardStyle={normalizeCardStyle(cardStyle)}
                 borderRadius={borderRadius}
-                cardGap={cardGap}
+                cardGap={normalizeCardGap(cardGap)}
                 paddingY={paddingY}
                 paddingX={paddingX}
                 themeColors={themeColors}
