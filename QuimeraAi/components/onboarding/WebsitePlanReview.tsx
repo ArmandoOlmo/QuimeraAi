@@ -186,8 +186,8 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
     );
 
     return (
-        <div className="absolute inset-0 z-[90] bg-q-text/70 backdrop-blur-md flex items-center justify-center p-0 lg:p-4">
-            <div className="w-full h-full lg:max-w-6xl lg:h-[calc(100vh-2rem)] bg-q-bg border-0 lg:border lg:border-q-border rounded-none lg:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-[10000] bg-q-text/70 backdrop-blur-md flex items-center justify-center p-0 lg:p-4">
+            <div className="w-full h-full min-h-0 lg:max-w-6xl lg:max-h-[calc(100dvh-2rem)] bg-q-bg border-0 lg:border lg:border-q-border rounded-none lg:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between px-4 lg:px-6 py-3 border-b border-q-border bg-q-surface/60">
                     <div className="min-w-0">
                         <h2 className="text-base lg:text-lg font-semibold text-q-text flex items-center gap-2">
@@ -207,7 +207,7 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6">
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 lg:p-6">
                     <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-4 lg:gap-6">
                         <div className="space-y-4">
                             <ReviewSection title="Business" icon={<Building2 size={15} />}>
