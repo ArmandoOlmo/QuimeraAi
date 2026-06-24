@@ -2,6 +2,8 @@
 
 Canonical components live in `src/design-system/components`.
 
+Canonical availability does not imply immediate visual adoption in approved editors. DS-05 locks the current builder/editor baseline; see `VISUAL_BASELINE.md` before replacing editor primitives.
+
 ## Foundation
 
 - `Button`: `primary`, `secondary`, `ghost`, `subtle`, `destructive`, `link`, `icon`
@@ -64,6 +66,8 @@ Compatibility wrappers also exist in `components/ui` for lowercase imports: `but
 - `ColorPickerField`: the official DS wrapper around the existing `ColorControl`; do not create another picker.
 - `ComponentTree`: keeps its legacy section-row UI for now.
 - `ControlsShared`: keeps its legacy editor shell UI for now.
+- `SectionCard`, `InspectorGroup` and `BuilderControl`: canonical DS contracts for new or explicitly approved builder work. Do not use them to visually replace approved editor surfaces without screenshot parity or design approval.
+- Visual locked components are marked in `src/design-system/registry/componentRegistry.ts` with `visualStatus: "visual-locked"` and `migrationMode: "do-not-touch-visual"`.
 
 ## Ecommerce
 
@@ -71,3 +75,5 @@ Compatibility wrappers also exist in `components/ui` for lowercase imports: `but
 - `EcommerceControls`: storefront/editor controls keep their previous visual treatment for now.
 
 Existing storefront variants still exist in `utils/productCard`. New AI-generated storefront UI should normalize variants through the registry before rendering.
+
+For DS-06, normalize ecommerce/product/storefront surfaces structurally first. Do not change Storefront Builder editor controls unless the PR is explicitly scoped to visual review.

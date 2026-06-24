@@ -20,6 +20,12 @@ import type {
 } from '../../types/websiteEcommerceBlocks';
 import type { PageSection } from '../../types/ui';
 import type { WebsitePlan } from '../../types/websitePlan';
+import type { ComponentVariantPlan } from '../../types/componentAnatomy';
+import type {
+    ComponentPlan,
+    ComponentPlanValidationResult,
+    ComponentSelectionContext,
+} from '../../types/componentRegistry';
 import {
     getStorefrontCatalogSize,
 } from '../storefrontTheme';
@@ -29,6 +35,8 @@ import type {
     AiStudioStorefrontBlueprint,
     AiStudioWebsiteEcommerceBlockSuggestion,
 } from '../aiStudio';
+import type { DesignCriticResult } from '../aiStudio/designCritic';
+import { getComponentDefinition } from '../../registry/componentRegistry';
 import { createBusinessBlueprintFromWebsitePlan, createBlueprintModuleState, shouldProtectFromRegeneration } from './adapters';
 
 export interface MergeAiStudioBlueprintOptions {
@@ -46,6 +54,11 @@ export interface MergeAiStudioBlueprintInput {
     ecommerceBlueprint: AiStudioEcommerceBlueprint;
     storefrontBlueprint: AiStudioStorefrontBlueprint;
     websiteEcommerceBlocks: AiStudioWebsiteEcommerceBlockSuggestion[];
+    componentSelectionContext?: ComponentSelectionContext;
+    componentPlan?: ComponentPlan;
+    componentVariantPlan?: ComponentVariantPlan[];
+    designCritic?: DesignCriticResult;
+    componentValidation?: ComponentPlanValidationResult;
     chatbotBlueprint: AiStudioCrossModuleBlueprints['chatbotBlueprint'];
     leadBlueprint: AiStudioCrossModuleBlueprints['leadBlueprint'];
     emailMarketingBlueprint: AiStudioCrossModuleBlueprints['emailMarketingBlueprint'];
@@ -114,19 +127,137 @@ function toWebsiteEcommerceBlockBlueprint(
     };
 }
 
+interface WebsiteDesignIntelligenceInput {
+    componentPlan?: ComponentPlan;
+    componentVariantPlan?: ComponentVariantPlan[];
+    designCritic?: DesignCriticResult;
+    componentValidation?: ComponentPlanValidationResult;
+}
+
+function getDesignByWebsiteSection(
+    input: WebsiteDesignIntelligenceInput,
+): Map<PageSection, {
+    selection: ComponentPlan['selectedComponents'][number];
+    variant?: ComponentVariantPlan;
+}> {
+    const bySection = new Map<PageSection, {
+        selection: ComponentPlan['selectedComponents'][number];
+        variant?: ComponentVariantPlan;
+    }>();
+
+    input.componentPlan?.selectedComponents.forEach(selection => {
+        const component = getComponentDefinition(selection.componentId);
+        if (component?.implementationStatus !== 'rendered') return;
+        const section = component?.renderTargets?.websiteSection;
+        if (!section || bySection.has(section)) return;
+        bySection.set(section, {
+            selection,
+            variant: input.componentVariantPlan?.find(variant => variant.componentId === selection.componentId),
+        });
+    });
+
+    return bySection;
+}
+
+function getSelectedWebsiteSections(input: WebsiteDesignIntelligenceInput): PageSection[] {
+    const sections: PageSection[] = [];
+    input.componentPlan?.selectedComponents.forEach(selection => {
+        const component = getComponentDefinition(selection.componentId);
+        if (component?.implementationStatus !== 'rendered') return;
+        const section = component.renderTargets?.websiteSection;
+        if (section && !sections.includes(section)) sections.push(section);
+    });
+    return sections;
+}
+
+function enrichWebsiteSectionBlueprint(
+    section: WebsiteSectionBlueprint,
+    input: WebsiteDesignIntelligenceInput,
+    designBySection: Map<PageSection, { selection: ComponentPlan['selectedComponents'][number]; variant?: ComponentVariantPlan }>,
+): WebsiteSectionBlueprint {
+    const design = designBySection.get(section.type);
+    if (!design || shouldProtectFromRegeneration(section)) return section;
+
+    return {
+        ...section,
+        componentId: design.selection.componentId,
+        layoutVariant: design.variant?.layoutVariant,
+        styleVariant: design.variant?.styleVariant,
+        activeSlots: design.variant?.activeSlots,
+        backgroundChoice: design.variant?.backgroundChoice,
+        mediaTreatment: design.variant?.mediaTreatment,
+        density: design.variant?.density,
+        mobileBehavior: design.variant?.mobileBehavior,
+        designPatternIds: design.variant?.designPatternIds,
+        designScore: input.designCritic?.scores.total,
+        designRationale: design.variant?.designRationale || design.selection.reason,
+        selectionConfidence: design.selection.confidence,
+        sourceMap: {
+            ...(section.sourceMap || {}),
+            componentRegistry: `componentRegistry.${design.selection.componentId}`,
+            implementationStatus: design.selection.implementationStatus,
+            componentAnatomy: design.variant ? `componentAnatomyRegistry.${design.selection.componentId}.${design.variant.layoutVariant}` : `componentAnatomyRegistry.${design.selection.componentId}`,
+            componentSelection: 'aiStudio.componentSelection',
+            designCritic: 'aiStudio.designCritic',
+            validation: input.componentValidation?.valid ? 'componentPlan.valid' : 'componentPlan.review_required',
+        },
+    };
+}
+
 function mergeWebsiteBlueprint(
     base: WebsiteBlueprint,
     existing: WebsiteBlueprint | undefined,
     blocks: AiStudioWebsiteEcommerceBlockSuggestion[],
     now: string,
+    designInput: WebsiteDesignIntelligenceInput = {},
 ): WebsiteBlueprint {
+    const selectedWebsiteSections = getSelectedWebsiteSections(designInput);
+    const baseSections = [...base.sections];
+    selectedWebsiteSections.forEach(section => {
+        if (!baseSections.includes(section)) baseSections.push(section);
+    });
+    const designBySection = getDesignByWebsiteSection(designInput);
+    const baseSectionBlueprints = [...(base.sectionBlueprints || [])];
+    selectedWebsiteSections.forEach(section => {
+        if (baseSectionBlueprints.some(item => item.type === section)) return;
+        baseSectionBlueprints.push({
+            id: `website-section-${section}-${baseSectionBlueprints.length + 1}`,
+            type: section,
+            order: baseSectionBlueprints.length,
+            visible: true,
+            pageIds: ['home'],
+            ...createBlueprintModuleState(now, {
+                sourceMap: {
+                    section: 'aiStudio.componentSelection',
+                },
+            }),
+        });
+    });
+
     const next: WebsiteBlueprint = {
         ...base,
         needsReview: true,
+        pages: base.pages.map(page => ({
+            ...page,
+            sections: baseSections,
+        })),
+        sections: baseSections,
+        componentOrder: baseSections,
+        sectionVisibility: baseSections.reduce((acc, section) => {
+            acc[section] = base.sectionVisibility?.[section] ?? true;
+            return acc;
+        }, {} as Record<PageSection, boolean>),
+        sectionBlueprints: baseSectionBlueprints.map(section => (
+            enrichWebsiteSectionBlueprint(section, designInput, designBySection)
+        )),
         ecommerceBlocks: blocks.map((block, index) => toWebsiteEcommerceBlockBlueprint(block, index, now)),
         sourceMap: {
             ...(base.sourceMap || {}),
             ecommerceBlocks: 'aiStudio.deriveWebsiteEcommerceBlocks',
+            componentSelection: 'aiStudio.componentSelection',
+            componentAnatomy: 'aiStudio.componentAnatomyRegistry',
+            designPatternLibrary: 'aiStudio.designPatternLibrary',
+            designCritic: 'aiStudio.designCritic',
         },
         metadata: {
             ...base.metadata,
@@ -134,6 +265,18 @@ function mergeWebsiteBlueprint(
             updatedAt: now,
             lastSyncedAt: now,
             generationSource: 'ai-studio-c1',
+        },
+        readiness: {
+            ...base.readiness,
+            warnings: [
+                ...(base.readiness.warnings || []),
+                ...(designInput.designCritic && !designInput.designCritic.passed
+                    ? ['Design Intelligence score is below publish threshold and needs review.']
+                    : []),
+                ...(designInput.componentValidation && !designInput.componentValidation.valid
+                    ? ['Component plan validation found blocking issues.']
+                    : []),
+            ],
         },
     };
 
@@ -398,7 +541,18 @@ export function mergeAiStudioBlueprint(input: MergeAiStudioBlueprintInput): Busi
     const existing = input.existingBusinessBlueprint || undefined;
     const ecommerceBlueprint = mergeEcommerceBlueprint(base.ecommerceBlueprint, existing?.ecommerceBlueprint, input.ecommerceBlueprint, now);
     const storefrontBlueprint = mergeStorefrontBlueprint(base.storefrontBlueprint, existing?.storefrontBlueprint, input.storefrontBlueprint, input.ecommerceBlueprint, now);
-    const websiteBlueprint = mergeWebsiteBlueprint(base.websiteBlueprint, existing?.websiteBlueprint, input.websiteEcommerceBlocks, now);
+    const websiteBlueprint = mergeWebsiteBlueprint(
+        base.websiteBlueprint,
+        existing?.websiteBlueprint,
+        input.websiteEcommerceBlocks,
+        now,
+        {
+            componentPlan: input.componentPlan,
+            componentVariantPlan: input.componentVariantPlan,
+            designCritic: input.designCritic,
+            componentValidation: input.componentValidation,
+        },
+    );
 
     return {
         ...base,
@@ -413,6 +567,11 @@ export function mergeAiStudioBlueprint(input: MergeAiStudioBlueprintInput): Busi
             ecommerceBlueprint: 'aiStudio.deriveEcommerceBlueprintFromBusinessBrief',
             storefrontBlueprint: 'aiStudio.deriveStorefrontBlueprintFromBusinessBrief',
             websiteEcommerceBlocks: 'aiStudio.deriveWebsiteEcommerceBlocks',
+            componentSelection: 'aiStudio.componentSelection',
+            componentAnatomy: 'aiStudio.componentAnatomyRegistry',
+            designPatternLibrary: 'aiStudio.designPatternLibrary',
+            designCritic: 'aiStudio.designCritic',
+            componentValidation: 'aiStudio.validateComponentPlan',
             crossModuleBlueprints: 'aiStudio.deriveCrossModuleBlueprints',
         },
         metadata: {

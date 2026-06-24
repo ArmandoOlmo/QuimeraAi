@@ -8,6 +8,7 @@
 - Added component registry for AI Studio/builders.
 - Added gradient presets and background controls.
 - Added design-system audit script and `npm run ds:audit`.
+- Added DS-05 visual baseline governance and scoped audit modes.
 - Prepared Button compatibility aliases for canonical variants.
 - Updated `components/ui/input.tsx` to use DS Input.
 - Updated `AppButton` to wrap DS Button.
@@ -79,6 +80,25 @@ DS-04 audit progress:
 - Changed-file audit after restoration: 5 findings, limited to legacy buttons in select primitives and the low-level sidebar rail.
 - Scoped shell audit: 24 -> 1 finding; the remaining item is the low-level rail button in `components/ui/sidebar.tsx`.
 
+## Migrated in DS-05
+
+- Added `VISUAL_BASELINE.md` to lock the approved visual state for Website Builder, Landing Page Studio, Storefront Builder and AI Editor surfaces.
+- Updated governance rules so broad DS migration PRs cannot redesign `EditorControlPrimitives`, `ComponentTree`, `ControlsShared`, `EcommerceControls`, `ColorControl`, editor panels, canvas chrome or color/gradient controls.
+- Added registry metadata for visual status, migration mode, allowed change types, visual lock reason and visual approval requirements.
+- Marked `AppShell`, `PageHeader` and `SidebarNav` as DS-normalized or migration-safe.
+- Marked visual editor primitives as `visual-locked` / `do-not-touch-visual`.
+- Extended `npm run ds:audit` with scoped baseline modes:
+  - `npm run ds:audit -- --visual-locked --baseline`
+  - `npm run ds:audit -- --shell --baseline`
+
+DS-05 audit baseline:
+
+- Global audit: 942 files scanned, 10,650 findings.
+- Visual locked audit: 62 files scanned, 1,203 findings, 1,203 baseline-allowed, 0 needs-review.
+- Shell audit: 13 files scanned, 5 findings, all legacy buttons in low-level sidebar/select primitives.
+- Changed-file audit for DS-05 files: 17 files scanned, 0 findings.
+- Editor visual debt is now tracked as approved baseline debt, not an automatic cleanup target.
+
 ## Recommended PR Sequence
 
 ### PR DS-00 Audit
@@ -112,7 +132,14 @@ DS-04 audit progress:
 - Panels globales.
 - Navegacion principal.
 
-### PR DS-05 Product / Storefront / Ecommerce Surface Normalization
+### PR DS-05 Visual Baseline Lock + Structural Guardrails - Completed
+
+- Visual baseline documentation.
+- Governance for locked editor surfaces.
+- Registry metadata for visual status and migration mode.
+- Scoped audit modes for visual locked and shell surfaces.
+
+### PR DS-06 Product / Storefront / Ecommerce Surface Normalization
 
 - Product rows.
 - Collection rows.
@@ -125,7 +152,7 @@ DS-04 audit progress:
 - Cart/storefront UI surfaces.
 - Reduce ecommerce/storefront-specific visual debt without changing commerce data flows.
 
-### PR DS-06 Governance + QA
+### PR DS-07 Governance + QA
 
 - Turn `npm run ds:audit -- --strict` on for changed files.
 - Add visual regression coverage for dashboard, settings, builder inspector and ecommerce admin.
@@ -136,6 +163,7 @@ DS-04 audit progress:
 - React type duplication appears in markdown/chat/sidebar primitives.
 - Many storefront/marketing pages intentionally use inline editable styles; audit needs allowlists by surface.
 - `legacy-button` count is high because raw buttons are common in old screens.
+- Visual locked editor files intentionally keep baseline debt until a focused visual review approves otherwise.
 
 ## Acceptance Checklist
 
@@ -146,3 +174,4 @@ DS-04 audit progress:
 - Background presets are reusable.
 - Audit script runs.
 - Migration plan identifies next PRs and risks.
+- Visual locked editor surfaces are protected by docs, registry metadata and scoped audit output.

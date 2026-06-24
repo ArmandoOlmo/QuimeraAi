@@ -1,5 +1,23 @@
 # Editor Patterns
 
+## Visual Baseline
+
+DS-05 locks the approved editor visual baseline. Treat `VISUAL_BASELINE.md` as the source of truth before changing builder/editor UI.
+
+The following surfaces are visual locked unless a focused product/design review approves a change:
+
+- Website Builder
+- Website Landing Page Studio
+- Storefront Builder
+- AI Editor / AI Studio editor surfaces
+- `ComponentTree`
+- `EditorControlPrimitives`
+- `EcommerceControls`
+- `ControlsShared`
+- existing Color Picker, sliders, toggles, inputs, background controls and gradient controls
+
+Audit findings in these surfaces are baseline findings. Do not reduce them by changing editor visuals in unrelated DS PRs.
+
 ## Shared Builder Model
 
 Website Builder, Website Landing Page Studio and Storefront Builder should share editor primitives:
@@ -66,6 +84,7 @@ Current adoption:
 - `components/ui/EditorControlPrimitives.tsx` keeps its previous visual primitives.
 - `components/ui/EcommerceControls.tsx` keeps its previous visual controls.
 - `components/controls/ControlsShared.tsx` keeps its previous shared editor controls.
+- Registry marks these areas as `visual-locked` / `do-not-touch-visual`.
 
 ## Background Controls
 
@@ -91,6 +110,8 @@ Use the value helpers:
 Use `ColorPickerField`. It wraps the existing `components/ui/ColorControl.tsx`.
 
 Do not add a second picker until the existing one is fully replaced.
+
+`ColorControl` is visually locked as the official picker source. Wrapper work must preserve the existing picker behavior and visual treatment.
 
 Legacy controls that still import `ColorControl` directly are acceptable while migrating section-by-section, but new shared controls should use `ColorPickerField` or the `BackgroundControls` color fields.
 

@@ -15,6 +15,25 @@ export type ComponentRegistryCategory =
 
 export type ComponentRegistryStatus = 'stable' | 'beta' | 'deprecated';
 
+export type ComponentVisualStatus = 'ds-normalized' | 'migration-safe' | 'visual-locked' | 'available' | 'needs-review';
+
+export type ComponentMigrationMode =
+  | 'visual-and-structural'
+  | 'structural-only'
+  | 'new-work-only'
+  | 'do-not-touch-visual';
+
+export type ComponentAllowedChangeType =
+  | 'docs'
+  | 'registry'
+  | 'types'
+  | 'tokens'
+  | 'bug-fix'
+  | 'accessibility'
+  | 'compatibility-wrapper'
+  | 'structural-migration'
+  | 'visual-change';
+
 export type QuimeraModule =
   | 'ai-studio'
   | 'dashboard'
@@ -52,6 +71,11 @@ export interface ComponentRegistryItem {
   editorSupport: boolean;
   aiSelectable: boolean;
   status: ComponentRegistryStatus;
+  visualStatus?: ComponentVisualStatus;
+  migrationMode?: ComponentMigrationMode;
+  visualLockReason?: string;
+  allowedChangeTypes?: ComponentAllowedChangeType[];
+  requiresVisualApproval?: boolean;
   notes?: string;
 }
 
@@ -80,6 +104,28 @@ const builderModules: QuimeraModule[] = [
   'website-landing-page-studio',
   'storefront-builder',
 ];
+
+const migrationSafeChanges: ComponentAllowedChangeType[] = [
+  'docs',
+  'registry',
+  'types',
+  'tokens',
+  'bug-fix',
+  'accessibility',
+  'compatibility-wrapper',
+  'structural-migration',
+];
+
+const visualLockedChanges: ComponentAllowedChangeType[] = [
+  'docs',
+  'registry',
+  'types',
+  'bug-fix',
+  'accessibility',
+];
+
+const editorVisualLockReason =
+  'Approved editor/builder visual baseline. Do not change visual output or swap primitives without focused product/design approval.';
 
 export const componentRegistry: ComponentRegistryItem[] = [
   {
@@ -226,6 +272,10 @@ export const componentRegistry: ComponentRegistryItem[] = [
     editorSupport: false,
     aiSelectable: false,
     status: 'stable',
+    visualStatus: 'ds-normalized',
+    migrationMode: 'visual-and-structural',
+    allowedChangeTypes: migrationSafeChanges,
+    requiresVisualApproval: false,
     notes: 'Adopted by Dashboard and SettingsPage in DS-04 without changing routes or navigation state.',
   },
   {
@@ -240,6 +290,10 @@ export const componentRegistry: ComponentRegistryItem[] = [
     editorSupport: false,
     aiSelectable: true,
     status: 'stable',
+    visualStatus: 'ds-normalized',
+    migrationMode: 'visual-and-structural',
+    allowedChangeTypes: migrationSafeChanges,
+    requiresVisualApproval: false,
     notes: 'Use for new dashboard/settings/admin pages instead of hand-rolled page title rows.',
   },
   {
@@ -254,6 +308,10 @@ export const componentRegistry: ComponentRegistryItem[] = [
     editorSupport: false,
     aiSelectable: false,
     status: 'beta',
+    visualStatus: 'migration-safe',
+    migrationMode: 'structural-only',
+    allowedChangeTypes: migrationSafeChanges,
+    requiresVisualApproval: false,
     notes: 'DS-04 normalized visible navigation actions, icon sizing, active/hover surfaces, and layout widths while preserving permissions, route handling, DnD order, and mobile gestures.',
   },
   {
@@ -268,6 +326,10 @@ export const componentRegistry: ComponentRegistryItem[] = [
     editorSupport: true,
     aiSelectable: true,
     status: 'stable',
+    visualStatus: 'available',
+    migrationMode: 'new-work-only',
+    allowedChangeTypes: migrationSafeChanges,
+    requiresVisualApproval: true,
     notes: 'Available for future builder adoption. ComponentTree keeps its legacy visual treatment for now to preserve the editor look.',
   },
   {
@@ -282,6 +344,10 @@ export const componentRegistry: ComponentRegistryItem[] = [
     editorSupport: true,
     aiSelectable: true,
     status: 'stable',
+    visualStatus: 'available',
+    migrationMode: 'new-work-only',
+    allowedChangeTypes: migrationSafeChanges,
+    requiresVisualApproval: true,
     notes: 'Available for future inspector adoption. Existing editor controls keep their legacy visual treatment for now.',
   },
   {
@@ -296,6 +362,10 @@ export const componentRegistry: ComponentRegistryItem[] = [
     editorSupport: true,
     aiSelectable: true,
     status: 'stable',
+    visualStatus: 'available',
+    migrationMode: 'new-work-only',
+    allowedChangeTypes: migrationSafeChanges,
+    requiresVisualApproval: true,
     notes: 'Now supports helper text, error, required, disabled, action slot, tooltip help and compact density.',
   },
   {
@@ -310,6 +380,10 @@ export const componentRegistry: ComponentRegistryItem[] = [
     editorSupport: true,
     aiSelectable: true,
     status: 'beta',
+    visualStatus: 'available',
+    migrationMode: 'new-work-only',
+    allowedChangeTypes: migrationSafeChanges,
+    requiresVisualApproval: true,
     notes: 'Available directly from src/design-system/backgrounds. Legacy editor primitives keep their existing visual controls for now.',
   },
   {
@@ -324,6 +398,10 @@ export const componentRegistry: ComponentRegistryItem[] = [
     editorSupport: true,
     aiSelectable: true,
     status: 'beta',
+    visualStatus: 'available',
+    migrationMode: 'new-work-only',
+    allowedChangeTypes: migrationSafeChanges,
+    requiresVisualApproval: true,
     notes: 'Shares implementation with BackgroundControls; do not fork gradient logic.',
   },
   {
@@ -339,7 +417,88 @@ export const componentRegistry: ComponentRegistryItem[] = [
     editorSupport: true,
     aiSelectable: false,
     status: 'beta',
+    visualStatus: 'visual-locked',
+    migrationMode: 'do-not-touch-visual',
+    visualLockReason: editorVisualLockReason,
+    allowedChangeTypes: visualLockedChanges,
+    requiresVisualApproval: true,
     notes: 'Visual migration was rolled back to preserve the existing editor design. Storefront rendering logic remains unchanged.',
+  },
+  {
+    id: 'builder.editor-control-primitives',
+    name: 'EditorControlPrimitives',
+    category: 'editor-control',
+    description: 'Approved legacy editor inputs, selects, toggles, sliders and segmented controls used by builder inspectors.',
+    componentPath: 'components/ui/EditorControlPrimitives.tsx',
+    allowedModules: builderModules,
+    variants: ['approved-baseline'],
+    tokensUsed: ['editor.visualBaseline'],
+    editorSupport: true,
+    aiSelectable: false,
+    status: 'stable',
+    visualStatus: 'visual-locked',
+    migrationMode: 'do-not-touch-visual',
+    visualLockReason: editorVisualLockReason,
+    allowedChangeTypes: visualLockedChanges,
+    requiresVisualApproval: true,
+    notes: 'Compatibility surface for existing builders. DS wrappers may be introduced only when screenshots confirm no visual drift.',
+  },
+  {
+    id: 'builder.controls-shared',
+    name: 'ControlsShared',
+    category: 'editor-control',
+    description: 'Shared approved editor controls for website and landing page section inspectors.',
+    componentPath: 'components/controls/ControlsShared.tsx',
+    allowedModules: ['website-builder', 'website-landing-page-studio', 'ai-studio'],
+    variants: ['approved-baseline'],
+    tokensUsed: ['editor.visualBaseline'],
+    editorSupport: true,
+    aiSelectable: false,
+    status: 'stable',
+    visualStatus: 'visual-locked',
+    migrationMode: 'do-not-touch-visual',
+    visualLockReason: editorVisualLockReason,
+    allowedChangeTypes: visualLockedChanges,
+    requiresVisualApproval: true,
+    notes: 'Do not replace labels, sliders, color fields or panel spacing as part of unrelated DS cleanup.',
+  },
+  {
+    id: 'builder.component-tree',
+    name: 'ComponentTree',
+    category: 'editor-control',
+    description: 'Approved section tree and ordering UI for builder left panels.',
+    componentPath: 'components/ui/ComponentTree.tsx',
+    allowedModules: builderModules,
+    variants: ['approved-baseline', 'selected', 'hidden', 'dragging'],
+    tokensUsed: ['editor.visualBaseline'],
+    editorSupport: true,
+    aiSelectable: false,
+    status: 'stable',
+    visualStatus: 'visual-locked',
+    migrationMode: 'do-not-touch-visual',
+    visualLockReason: editorVisualLockReason,
+    allowedChangeTypes: visualLockedChanges,
+    requiresVisualApproval: true,
+    notes: 'Do not swap to SectionCard unless a focused editor redesign is approved.',
+  },
+  {
+    id: 'builder.color-control',
+    name: 'ColorControl',
+    category: 'editor-control',
+    description: 'Existing official color picker used by builders and wrapped by ColorPickerField.',
+    componentPath: 'components/ui/ColorControl.tsx',
+    allowedModules: builderModules,
+    variants: ['picker', 'swatch', 'alpha'],
+    tokensUsed: ['editor.visualBaseline'],
+    editorSupport: true,
+    aiSelectable: false,
+    status: 'stable',
+    visualStatus: 'visual-locked',
+    migrationMode: 'do-not-touch-visual',
+    visualLockReason: 'Color picker is the approved official color control. Do not introduce a second picker or change the current picker visually without approval.',
+    allowedChangeTypes: visualLockedChanges,
+    requiresVisualApproval: true,
+    notes: 'ColorPickerField is the DS wrapper around this picker; this file remains the source of truth for color picking behavior.',
   },
   {
     id: 'ds.badge',

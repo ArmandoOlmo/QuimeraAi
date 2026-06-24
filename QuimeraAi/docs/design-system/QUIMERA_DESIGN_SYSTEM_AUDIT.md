@@ -79,6 +79,8 @@ Audit por scope:
 - Global: `npm run ds:audit`
 - Archivos modificados del workspace: `npm run ds:audit -- --changed`
 - Paths concretos: `npm run ds:audit -- --path components/ui/EditorControlPrimitives.tsx --path components/ui/EcommerceControls.tsx`
+- Visual locked editors: `npm run ds:audit -- --visual-locked --baseline`
+- Shell/navigation: `npm run ds:audit -- --shell --baseline`
 
 Principales inconsistencias:
 
@@ -147,6 +149,15 @@ Adopcion DS-04:
 - `components/ui/sidebar.tsx` usa tokens de ancho y elimina sombras outline arbitrarias, manteniendo el rail raw por compatibilidad de primitive.
 - `componentRegistry` incluye `AppShell`, `PageHeader` y `SidebarNav`.
 
+Adopcion DS-05:
+
+- `VISUAL_BASELINE.md` define el baseline visual aprobado y las superficies bloqueadas.
+- `GOVERNANCE.md` ahora distingue migraciones visuales, estructurales, new-work-only y do-not-touch visual.
+- `componentRegistry` agrega `visualStatus`, `migrationMode`, `visualLockReason`, `allowedChangeTypes` y `requiresVisualApproval`.
+- `AppShell`, `PageHeader` y `SidebarNav` quedan marcados como DS-normalized o migration-safe.
+- `EditorControlPrimitives`, `ControlsShared`, `ComponentTree`, `EcommerceControls` y `ColorControl` quedan marcados como visual-locked.
+- `npm run ds:audit` reporta scopes y baseline debt para editores bloqueados y shell.
+
 ## Areas No Migradas Todavia
 
 - `components/ui/sidebar.tsx` mantiene un rail `<button>` raw de bajo nivel por compatibilidad con el primitive y `Slot`.
@@ -165,9 +176,19 @@ Adopcion DS-04:
 - Type-check global sigue fallando por deuda existente, pero el filtro de archivos tocados por DS-04 no reporta errores nuevos.
 - Audit scoped de shell/settings/dashboard: 24 -> 1 finding. El finding restante es el rail raw de `components/ui/sidebar.tsx`.
 
-## Recomendacion DS-05
+## Resultado DS-05
 
-PR DS-05 debe enfocarse en Product / Storefront / Ecommerce Surface Normalization:
+- Audit global: `npm run ds:audit` pasa con 942 archivos y 10,650 findings.
+- Visual locked audit: `npm run ds:audit -- --visual-locked --baseline` pasa con 62 archivos, 1,203 findings, 1,203 baseline-allowed y 0 needs-review.
+- Shell audit: `npm run ds:audit -- --shell --baseline` pasa con 13 archivos y 5 findings de botones legacy en primitives/selects de bajo nivel.
+- Changed audit: `npm run ds:audit -- --changed --baseline` pasa con 17 archivos y 0 findings para los archivos DS-05 actuales.
+- El script distingue scopes `visual-locked`, `shell`, `ds-internal` y `approved-legacy-wrapper`.
+- La deuda visual de editores queda documentada como baseline aprobado, no como target automatico de migracion.
+- No se deben tocar visualmente los editores bloqueados en PRs amplios del Design System.
+
+## Recomendacion DS-06
+
+PR DS-06 debe enfocarse en Product / Storefront / Ecommerce Surface Normalization:
 
 - product rows
 - collection rows
