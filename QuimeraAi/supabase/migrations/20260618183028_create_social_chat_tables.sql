@@ -111,7 +111,6 @@ AS $$
           FROM public.tenant_members tm
           WHERE tm.tenant_id = p.tenant_id
             AND tm.user_id = auth.uid()
-            AND COALESCE(tm.status, 'active') = 'active'
         )
       )
   );

@@ -88,7 +88,22 @@ ALTER TABLE public.store_discounts ADD COLUMN IF NOT EXISTS is_automatic BOOLEAN
 ALTER TABLE public.store_reviews ADD COLUMN IF NOT EXISTS admin_response_at TIMESTAMPTZ;
 ALTER TABLE public.store_reviews ADD COLUMN IF NOT EXISTS product_name TEXT;
 ALTER TABLE public.store_reviews ADD COLUMN IF NOT EXISTS images JSONB DEFAULT '[]'::jsonb;
-ALTER TABLE public.store_reviews ALTER COLUMN product_id TYPE TEXT USING product_id::text;
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'store_reviews'
+      AND column_name = 'product_id'
+      AND data_type <> 'text'
+  ) THEN
+    DROP POLICY IF EXISTS "Public can insert reviews" ON public.store_reviews;
+    DROP POLICY IF EXISTS "Storefront can create pending reviews" ON public.store_reviews;
+    ALTER TABLE public.store_reviews ALTER COLUMN product_id TYPE TEXT USING product_id::text;
+  END IF;
+END $$;
 
 CREATE UNIQUE INDEX IF NOT EXISTS store_wishlists_user_store_product_uidx
   ON public.store_wishlists (user_id, store_id, product_id)
