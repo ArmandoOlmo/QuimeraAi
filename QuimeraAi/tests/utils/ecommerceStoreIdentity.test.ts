@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     buildStoreIdentityOrFilter,
+    getStorefrontReferenceId,
     getStoreIdentityQueryIds,
     resolveProjectBackedStoreIdentity,
 } from '../../utils/ecommerce/storeIdentity';
@@ -19,6 +20,7 @@ describe('ecommerce store identity', () => {
             storefrontStoreId: '11111111-1111-4111-8111-111111111111',
             source: 'project-backed-engine',
         });
+        expect(getStorefrontReferenceId(identity)).toBe('11111111-1111-4111-8111-111111111111');
     });
 
     it('resolves public store data back to the source project', () => {
@@ -36,6 +38,19 @@ describe('ecommerce store identity', () => {
         expect(identity.engineStoreId).toBe('22222222-2222-4222-8222-222222222222');
         expect(identity.publicStoreId).toBe('public-store');
         expect(identity.storefrontStoreId).toBe('public-store');
+        expect(getStorefrontReferenceId(identity)).toBe('public-store');
+    });
+
+    it('keeps checkout writes project-backed when a published store has no public store row', () => {
+        const identity = resolveProjectBackedStoreIdentity({
+            storeId: '0b15d914-a886-4374-a6d1-441f6638997b',
+            projectId: '0b15d914-a886-4374-a6d1-441f6638997b',
+        });
+
+        expect(identity.storeId).toBe('0b15d914-a886-4374-a6d1-441f6638997b');
+        expect(identity.publicStoreId).toBeNull();
+        expect(identity.storefrontStoreId).toBe('0b15d914-a886-4374-a6d1-441f6638997b');
+        expect(getStorefrontReferenceId(identity)).toBe('0b15d914-a886-4374-a6d1-441f6638997b');
     });
 
     it('builds read filters without comparing text store IDs to UUID project_id', () => {

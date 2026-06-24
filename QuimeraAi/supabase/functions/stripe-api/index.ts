@@ -1215,18 +1215,59 @@ function randomToken(prefix = "") {
   return `${prefix}${token}`;
 }
 
+function isRecord(value: unknown): value is Record<string, any> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function asStoreString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function getPublicStoreProjectId(publicStore: any): string | null {
+  const publicData = isRecord(publicStore?.data) ? publicStore.data : {};
+  return asStoreString(publicStore?.project_id)
+    || asStoreString(publicStore?.projectId)
+    || asStoreString(publicData.projectId)
+    || asStoreString(publicData.project_id)
+    || asStoreString(publicData.sourceProjectId);
+}
+
 async function getStoreContext(storeId: string) {
   if (!storeId) throw new Error("storeId is required");
 
-  const { data: publicStore } = await supabase
-    .from("public_stores")
+  const { data: directProject, error: projectError } = await supabase
+    .from("projects")
     .select("*")
     .eq("id", storeId)
     .maybeSingle();
+  if (projectError) throw projectError;
 
-  const publicData = publicStore?.data || {};
-  const projectId = publicData.projectId || publicData.project_id || publicStore?.project_id || storeId;
-  const ownerId = publicStore?.user_id || publicData.userId || publicData.user_id || null;
+  let publicStore: any = null;
+  if (!directProject) {
+    const { data, error } = await supabase
+      .from("public_stores")
+      .select("*")
+      .eq("id", storeId)
+      .maybeSingle();
+    if (error) throw error;
+    publicStore = data;
+  }
+
+  const publicData = isRecord(publicStore?.data) ? publicStore.data : {};
+  const projectId = directProject?.id || getPublicStoreProjectId(publicStore) || storeId;
+  let project = directProject;
+
+  if (!project && projectId) {
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("id", projectId)
+      .maybeSingle();
+    if (error) throw error;
+    project = data;
+  }
+
+  const ownerId = project?.user_id || publicStore?.user_id || publicData.userId || publicData.user_id || null;
 
   const { data: settingsRow, error: settingsError } = await supabase
     .from("store_settings")
@@ -1256,7 +1297,24 @@ async function getStoreContext(storeId: string) {
     storeName: settingsRow.store_name || settingsRow.data?.storeName || "Store",
   };
 
-  return { storeId, projectId, ownerId, settingsRow, settings, publicStore };
+  const canonicalStoreId = settingsRow.project_id || projectId;
+  const publicStoreId = publicStore?.id || null;
+
+  return {
+    storeId: canonicalStoreId,
+    projectId: canonicalStoreId,
+    publicStoreId,
+    storefrontStoreId: publicStoreId || canonicalStoreId,
+    ownerId,
+    settingsRow,
+    settings,
+    publicStore,
+    project,
+  };
+}
+
+function getOrderStorefrontReferenceId(order: any): string | null {
+  return order?.context?.publicStoreId || order?.context?.storefrontStoreId || order?.context?.storeId || null;
 }
 
 function getOrderData(row: any) {
@@ -1588,6 +1646,9 @@ async function buildStoreOrder(data: any, authUserId?: string | null) {
     cartHash,
     data: {
       orderNumber,
+      projectId,
+      storeId: context.storeId,
+      publicStoreId: context.publicStoreId || context.storefrontStoreId || context.storeId,
       customerEmail,
       customerName,
       customerPhone: customerPhone || null,
@@ -1682,6 +1743,7 @@ async function findOrCreateStoreCustomerForOrder(order: any, authUserId?: string
 
   const nameParts = splitCustomerName(orderData.customerName);
   const shippingAddress = normalizeCustomerAddress(orderData.shippingAddress, orderData.customerName);
+  const storefrontReferenceId = getOrderStorefrontReferenceId(order);
 
   const { data: existingCustomer, error: customerError } = await supabase
     .from("store_customers")
@@ -1701,7 +1763,7 @@ async function findOrCreateStoreCustomerForOrder(order: any, authUserId?: string
       .update({
         user_id: authUserId || existingCustomer.user_id || null,
         store_id: order.context.storeId,
-        public_store_id: order.context.storeId,
+        public_store_id: storefrontReferenceId,
         first_name: existingCustomer.first_name || nameParts.firstName || shippingAddress.firstName || "Customer",
         last_name: existingCustomer.last_name || nameParts.lastName || shippingAddress.lastName || "",
         phone: existingCustomer.phone || orderData.customerPhone || shippingAddress.phone || null,
@@ -1712,7 +1774,7 @@ async function findOrCreateStoreCustomerForOrder(order: any, authUserId?: string
           ...data,
           userId: authUserId || existingCustomer.user_id || data.userId || null,
           storeId: order.context.storeId,
-          publicStoreId: order.context.storeId,
+          publicStoreId: storefrontReferenceId,
           addresses,
           defaultShippingAddress: existingCustomer.default_shipping_address || data.defaultShippingAddress || shippingAddress,
           defaultBillingAddress: existingCustomer.default_billing_address || data.defaultBillingAddress || orderData.billingAddress || shippingAddress,
@@ -1732,7 +1794,7 @@ async function findOrCreateStoreCustomerForOrder(order: any, authUserId?: string
     .insert({
       project_id: order.projectId,
       store_id: order.context.storeId,
-      public_store_id: order.context.storeId,
+      public_store_id: storefrontReferenceId,
       user_id: authUserId || null,
       email,
       first_name: nameParts.firstName || shippingAddress.firstName || "Customer",
@@ -1747,7 +1809,7 @@ async function findOrCreateStoreCustomerForOrder(order: any, authUserId?: string
       data: {
         userId: authUserId || null,
         storeId: order.context.storeId,
-        publicStoreId: order.context.storeId,
+        publicStoreId: storefrontReferenceId,
         addresses: shippingAddress.address1 ? [shippingAddress] : [],
         defaultShippingAddress: shippingAddress.address1 ? shippingAddress : null,
         defaultBillingAddress: orderData.billingAddress || shippingAddress || null,
@@ -1818,6 +1880,7 @@ async function reserveInventoryForStoreOrder(
 ) {
   const expiresAt = new Date(Date.now() + INVENTORY_RESERVATION_TTL_MINUTES * 60_000).toISOString();
   const reservations: any[] = [];
+  const storefrontReferenceId = getOrderStorefrontReferenceId(order);
 
   for (const item of order.data.items || []) {
     if (item.trackInventory === false) continue;
@@ -1831,7 +1894,7 @@ async function reserveInventoryForStoreOrder(
     const { data, error } = await supabase.rpc("reserve_store_inventory_line", {
       p_project_id: order.projectId,
       p_store_id: order.context.storeId,
-      p_public_store_id: order.context.storeId,
+      p_public_store_id: storefrontReferenceId,
       p_order_id: refs.orderId || null,
       p_checkout_idempotency_key: order.checkoutIdempotencyKey,
       p_payment_intent_id: refs.paymentIntentId || null,
@@ -1998,11 +2061,12 @@ async function createStoreCheckoutIntent(data: any, authUserId?: string | null) 
     },
   };
 
+  const storefrontReferenceId = getOrderStorefrontReferenceId(order);
   const { data: inserted, error } = await supabase
     .from("store_orders")
     .insert({
       store_id: order.context.storeId,
-      public_store_id: order.context.storeId,
+      public_store_id: storefrontReferenceId,
       user_id: authUserId || null,
       project_id: order.projectId,
       order_number: order.orderNumber,
@@ -2101,6 +2165,7 @@ async function createStorePaymentIntent(order: any, idempotencySuffix = "") {
     transfer_data: { destination: order.connectedAccountId },
     metadata: {
       storeId: order.context.storeId,
+      publicStoreId: getOrderStorefrontReferenceId(order) || "",
       projectId: order.projectId,
       ownerId: order.ownerId || "",
       orderNumber: order.orderNumber,

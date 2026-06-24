@@ -39,10 +39,14 @@ import {
     CheckCircle2,
     Wallet,
 } from 'lucide-react';
-import { doc, getDoc, collection, addDoc, serverTimestamp } from '@/utils/compatData';
-import { db } from '@/utils/compatData';
 import { supabase } from '../../supabase';
-import { CartItem, Address, Order, StoreSettings } from '../../types/ecommerce';
+import { CartItem, StoreSettings } from '../../types/ecommerce';
+import { mapStoreSettingsFromDB } from '../../utils/ecommerceMappers';
+import {
+    getStorefrontReferenceId,
+    resolveProjectBackedStoreIdentity,
+    type EcommerceStoreIdentity,
+} from '../../utils/ecommerce/storeIdentity';
 
 // =============================================================================
 // TYPES
@@ -79,6 +83,137 @@ interface ShippingOption {
 }
 
 type CheckoutStep = 'information' | 'shipping' | 'payment';
+
+type CheckoutDbRecord = Record<string, any>;
+
+const isCheckoutRecord = (value: unknown): value is CheckoutDbRecord => (
+    Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+);
+
+const asCheckoutString = (value: unknown): string | undefined => (
+    typeof value === 'string' && value.trim() ? value.trim() : undefined
+);
+
+const isCheckoutUuid = (value: string | null | undefined): boolean => (
+    Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value))
+);
+
+const getCheckoutData = (row?: CheckoutDbRecord | null): CheckoutDbRecord => (
+    isCheckoutRecord(row?.data) ? row.data : {}
+);
+
+const resolveCheckoutStoreName = (
+    settingsRow?: CheckoutDbRecord | null,
+    projectRow?: CheckoutDbRecord | null,
+    publicStoreRow?: CheckoutDbRecord | null,
+): string => {
+    const settingsData = getCheckoutData(settingsRow);
+    const projectData = getCheckoutData(projectRow);
+    const publicStoreData = getCheckoutData(publicStoreRow);
+
+    return asCheckoutString(settingsRow?.store_name)
+        || asCheckoutString(settingsData.storeName)
+        || asCheckoutString(settingsData.store_name)
+        || asCheckoutString(publicStoreData.storeName)
+        || asCheckoutString(publicStoreData.store_name)
+        || asCheckoutString(publicStoreData.name)
+        || asCheckoutString(projectRow?.name)
+        || asCheckoutString(projectRow?.title)
+        || asCheckoutString(projectData.storeName)
+        || asCheckoutString(projectData.name)
+        || 'Store';
+};
+
+const resolveCheckoutStoreEmail = (
+    settingsRow?: CheckoutDbRecord | null,
+    publicStoreRow?: CheckoutDbRecord | null,
+): string => {
+    const settingsData = getCheckoutData(settingsRow);
+    const publicStoreData = getCheckoutData(publicStoreRow);
+
+    return asCheckoutString(settingsRow?.store_email)
+        || asCheckoutString(settingsData.storeEmail)
+        || asCheckoutString(settingsData.store_email)
+        || asCheckoutString(publicStoreData.storeEmail)
+        || asCheckoutString(publicStoreData.store_email)
+        || '';
+};
+
+const buildCheckoutStoreSettings = ({
+    identity,
+    routeStoreId,
+    settingsRow,
+    projectRow,
+    publicStoreRow,
+}: {
+    identity: EcommerceStoreIdentity;
+    routeStoreId: string;
+    settingsRow?: CheckoutDbRecord | null;
+    projectRow?: CheckoutDbRecord | null;
+    publicStoreRow?: CheckoutDbRecord | null;
+}): StoreSettings => {
+    const now = new Date().toISOString();
+    const canonicalStoreId = identity.storeId || identity.engineStoreId || routeStoreId;
+    const storefrontReferenceId = getStorefrontReferenceId(identity) || routeStoreId;
+    const fallback: StoreSettings = {
+        projectId: identity.projectId || identity.engineStoreId || undefined,
+        storeId: canonicalStoreId || undefined,
+        publicStoreId: storefrontReferenceId || undefined,
+        storeName: resolveCheckoutStoreName(settingsRow, projectRow, publicStoreRow),
+        storeEmail: resolveCheckoutStoreEmail(settingsRow, publicStoreRow),
+        currency: 'USD',
+        currencySymbol: '$',
+        taxEnabled: false,
+        taxRate: 0,
+        taxIncluded: false,
+        taxIncludedInPrice: false,
+        shippingZones: [],
+        stripeEnabled: false,
+        paypalEnabled: false,
+        cashOnDeliveryEnabled: false,
+        orderNotificationEmail: '',
+        lowStockNotifications: false,
+        lowStockThreshold: 5,
+        notifyOnNewOrder: true,
+        notifyOnLowStock: true,
+        sendOrderConfirmation: true,
+        sendShippingNotification: true,
+        requirePhone: false,
+        requireShippingAddress: true,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+    };
+
+    if (!settingsRow) return fallback;
+
+    const mapped = mapStoreSettingsFromDB(settingsRow);
+    return {
+        ...fallback,
+        ...mapped,
+        projectId: fallback.projectId || mapped.projectId,
+        storeId: fallback.storeId || mapped.storeId,
+        publicStoreId: fallback.publicStoreId || mapped.publicStoreId,
+        storeName: mapped.storeName || fallback.storeName,
+        storeEmail: mapped.storeEmail || fallback.storeEmail,
+        currency: mapped.currency || fallback.currency,
+        currencySymbol: mapped.currencySymbol || fallback.currencySymbol,
+        shippingZones: mapped.shippingZones || fallback.shippingZones,
+        createdAt: mapped.createdAt || fallback.createdAt,
+        updatedAt: mapped.updatedAt || fallback.updatedAt,
+    };
+};
+
+const getCheckoutPublishableKey = (settings: StoreSettings): string | undefined => (
+    settings.stripePublishableKey || import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+);
+
+const isStripeReadyForCheckout = (settings: StoreSettings, publishableKey?: string): boolean => Boolean(
+    settings.stripeEnabled
+    && publishableKey
+    && settings.stripeConnectAccountId
+    && settings.stripeConnectChargesEnabled
+);
 
 // =============================================================================
 // STRIPE CHECKOUT FORM (Inner component with Stripe hooks)
@@ -1011,6 +1146,7 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const [stripePromise, setStripePromise] = useState<any>(null);
     const [clientSecret, setClientSecret] = useState<string | null>(null);
+    const [checkoutLoadError, setCheckoutLoadError] = useState<string | null>(null);
     const [currentStep, setCurrentStep] = useState<CheckoutStep>('information');
 
     // Form data
@@ -1126,53 +1262,107 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
     useEffect(() => {
         const loadData = async () => {
             try {
-                // Get store settings from public_stores
-                const publicStoreRef = doc(db, 'public_stores', storeId);
-                const publicStoreDoc = await getDoc(publicStoreRef);
+                setIsLoading(true);
+                setCheckoutLoadError(null);
+                setStripePromise(null);
+                setStoreSettings(null);
 
-                if (!publicStoreDoc.exists()) {
-                    console.error('Store not found in public_stores');
-                    onBack();
-                    return;
-                }
-
-                const storeOwnerId = publicStoreDoc.data()?.userId;
-
-                // Get store settings from public_stores (publicly accessible)
-                const settingsRef = doc(db, `public_stores/${storeId}/settings/store`);
-                const settingsDoc = await getDoc(settingsRef);
-                
-                const publicStoreData = publicStoreDoc.data();
-                const settingsData = settingsDoc.exists() ? settingsDoc.data() : {};
-                setStoreSettings({ ...publicStoreData, ...settingsData } as StoreSettings);
-
-                // Initialize Stripe
-                const publishableKey = settingsData?.stripePublishableKey || 
-                    publicStoreData?.stripePublishableKey ||
-                    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-
-                if (publishableKey) {
-                    const stripe = loadStripe(publishableKey);
-                    setStripePromise(stripe);
-                }
-
-                // Get cart from localStorage for now (can be enhanced with Supabase)
                 const savedCart = localStorage.getItem(`cart_${storeId}`);
                 if (savedCart) {
-                    const cart = JSON.parse(savedCart);
-                    setCartItems(cart.items || []);
+                    try {
+                        const cart = JSON.parse(savedCart);
+                        setCartItems(Array.isArray(cart.items) ? cart.items : []);
+                    } catch (error) {
+                        console.warn('Ignoring invalid checkout cart cache:', error);
+                        setCartItems([]);
+                    }
+                } else {
+                    setCartItems([]);
+                }
+
+                let projectRow: CheckoutDbRecord | null = null;
+                if (isCheckoutUuid(storeId)) {
+                    const { data, error } = await supabase
+                        .from('projects')
+                        .select('*')
+                        .eq('id', storeId)
+                        .maybeSingle();
+
+                    if (error) throw error;
+                    projectRow = data;
+                }
+
+                let publicStoreRow: CheckoutDbRecord | null = null;
+                let linkedProjectRow: CheckoutDbRecord | null = projectRow;
+
+                if (!projectRow) {
+                    const { data, error } = await supabase
+                        .from('public_stores')
+                        .select('*')
+                        .eq('id', storeId)
+                        .maybeSingle();
+
+                    if (error) throw error;
+
+                    publicStoreRow = data;
+                }
+
+                const identity = resolveProjectBackedStoreIdentity({
+                    storeId,
+                    projectId: projectRow?.id,
+                    publicStoreId: publicStoreRow?.id,
+                    publicStore: publicStoreRow,
+                });
+                const settingsProjectId = identity.projectId || identity.engineStoreId || storeId;
+
+                if (!linkedProjectRow && identity.projectId && isCheckoutUuid(identity.projectId)) {
+                    const { data, error } = await supabase
+                        .from('projects')
+                        .select('*')
+                        .eq('id', identity.projectId)
+                        .maybeSingle();
+
+                    if (error) throw error;
+                    linkedProjectRow = data;
+                }
+
+                let settingsRow: CheckoutDbRecord | null = null;
+                if (isCheckoutUuid(settingsProjectId)) {
+                    const { data, error } = await supabase
+                        .from('store_settings')
+                        .select('*')
+                        .eq('project_id', settingsProjectId)
+                        .maybeSingle();
+
+                    if (error) throw error;
+                    settingsRow = data;
+                }
+
+                const nextStoreSettings = buildCheckoutStoreSettings({
+                    identity,
+                    routeStoreId: storeId,
+                    settingsRow,
+                    projectRow: linkedProjectRow,
+                    publicStoreRow,
+                });
+                setStoreSettings(nextStoreSettings);
+
+                const publishableKey = getCheckoutPublishableKey(nextStoreSettings);
+                if (publishableKey && isStripeReadyForCheckout(nextStoreSettings, publishableKey)) {
+                    setStripePromise(loadStripe(publishableKey));
                 }
 
                 // Create payment intent is now done in handleSubmitPayment using Deferred Intent flow.
                 setIsLoading(false);
             } catch (error) {
                 console.error('Error loading checkout data:', error);
+                setCheckoutLoadError('No se pudo cargar la configuracion de checkout para esta tienda.');
                 setIsLoading(false);
             }
         };
 
         loadData();
-    }, [storeId, onBack]);
+    }, [storeId]);
 
     // Set default shipping
     useEffect(() => {
@@ -1288,6 +1478,28 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
                 <div className="text-center">
                     <Loader2 className="w-12 h-12 animate-spin text-indigo-500 mx-auto mb-4" />
                     <p className="text-gray-600 dark:text-gray-400">Cargando checkout...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (checkoutLoadError) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+                <div className="text-center max-w-md">
+                    <AlertCircle className="w-20 h-20 text-amber-500 mx-auto mb-6" />
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                        Checkout no disponible
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                        {checkoutLoadError}
+                    </p>
+                    <button
+                        onClick={onBack}
+                        className="px-6 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                        Volver
+                    </button>
                 </div>
             </div>
         );
