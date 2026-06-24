@@ -1,4 +1,10 @@
 import * as React from 'react';
+import {
+  Button,
+  type DesignSystemButtonSize,
+  type DesignSystemButtonVariant,
+} from '@/src/design-system/components/Button';
+import { cn } from '@/utils';
 
 export type AppButtonVariant =
   | 'primary'
@@ -21,27 +27,23 @@ export interface AppButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEle
   type?: 'button' | 'submit' | 'reset';
 }
 
-const variantClasses: Record<AppButtonVariant, string> = {
-  primary: 'bg-q-accent text-q-text-on-accent shadow-sm shadow-q-accent/15 hover:opacity-90 focus-visible:ring-q-accent/35',
-  secondary: 'border border-border-subtle bg-q-surface text-q-text hover:bg-q-surface-overlay focus-visible:ring-q-accent/25',
-  ghost: 'bg-transparent text-q-text-muted hover:bg-q-surface-overlay hover:text-q-text focus-visible:ring-q-accent/25',
-  outline: 'border border-border-subtle bg-q-surface text-q-text hover:bg-q-surface-overlay focus-visible:ring-q-accent/25',
-  danger: 'bg-q-error text-white shadow-sm shadow-q-error/20 hover:opacity-90 focus-visible:ring-q-error/30',
-  premium: 'bg-q-accent text-q-text-on-accent shadow-sm shadow-q-accent/15 hover:opacity-90 focus-visible:ring-q-accent/35 dark:text-q-text-on-accent dark:shadow-lg dark:shadow-q-accent/20 black:text-q-text-on-accent',
-  icon: 'bg-transparent text-q-text-muted hover:bg-q-surface-overlay hover:text-q-text focus-visible:ring-q-accent/25',
+const variantMap: Record<AppButtonVariant, DesignSystemButtonVariant> = {
+  primary: 'primary',
+  secondary: 'secondary',
+  ghost: 'ghost',
+  outline: 'secondary',
+  danger: 'destructive',
+  premium: 'primary',
+  icon: 'icon',
 };
 
-const sizeClasses: Record<AppButtonSize, string> = {
-  sm: 'h-8 px-3 text-xs',
-  md: 'h-9 px-4 text-sm',
-  lg: 'h-11 px-5 text-sm',
-  'icon-sm': 'h-8 w-8 p-0',
-  'icon-md': 'h-9 w-9 p-0',
+const sizeMap: Record<AppButtonSize, DesignSystemButtonSize> = {
+  sm: 'sm',
+  md: 'md',
+  lg: 'lg',
+  'icon-sm': 'icon-sm',
+  'icon-md': 'icon-md',
 };
-
-function joinClasses(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ');
-}
 
 export const AppButton = React.forwardRef<HTMLButtonElement, AppButtonProps>(function AppButton(
   {
@@ -59,39 +61,28 @@ export const AppButton = React.forwardRef<HTMLButtonElement, AppButtonProps>(fun
   },
   ref,
 ) {
-  const isDisabled = disabled || loading;
   const shouldUseIconSizing = variant === 'icon' || size === 'icon-sm' || size === 'icon-md';
 
   return (
-    <button
+    <Button
       ref={ref}
       type={type}
-      disabled={isDisabled}
-      aria-busy={loading || undefined}
-      data-loading={loading ? 'true' : undefined}
-      className={joinClasses(
-        'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--q-radius-md)] font-semibold outline-none transition-all duration-150 ease-out',
-        'focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-55 active:scale-[0.98]',
-        '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:h-[var(--icon-sm)] [&_svg:not([class*="size-"])]:w-[var(--icon-sm)]',
-        variantClasses[variant],
-        sizeClasses[size],
+      disabled={disabled}
+      loading={loading}
+      leftIcon={leftIcon}
+      rightIcon={rightIcon}
+      variant={variantMap[variant]}
+      size={sizeMap[size]}
+      fullWidth={fullWidth}
+      className={cn(
         shouldUseIconSizing && 'aspect-square',
-        fullWidth && 'w-full',
+        variant === 'premium' && 'dark:text-q-text-on-accent dark:shadow-lg dark:shadow-q-accent/20 black:text-q-text-on-accent',
         className,
       )}
       {...props}
     >
-      {loading ? (
-        <span
-          aria-hidden="true"
-          className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-        />
-      ) : (
-        leftIcon
-      )}
       {children}
-      {rightIcon}
-    </button>
+    </Button>
   );
 });
 

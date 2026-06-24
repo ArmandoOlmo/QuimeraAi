@@ -16,6 +16,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "type-check": "tsc --noEmit",
+    "ds:audit": "tsx scripts/audit-design-system.ts",
     "lint": "echo 'Linting...' && exit 0",
     "deploy": "vercel deploy --prod",
     "deploy:preview": "vercel deploy",

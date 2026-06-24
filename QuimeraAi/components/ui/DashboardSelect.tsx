@@ -7,6 +7,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
+import { cn } from '@/utils';
 
 export interface DashboardSelectOption {
     value: string;
@@ -80,7 +81,7 @@ const DashboardSelect: React.FC<DashboardSelectProps> = ({
     const selectedOption = options.find(opt => opt.value === value);
 
     return (
-        <div className={`relative min-w-0 ${className}`} ref={containerRef}>
+        <div className={cn('relative min-w-0', className)} ref={containerRef}>
             {/* Trigger Button */}
             <button
                 type="button"
@@ -88,7 +89,7 @@ const DashboardSelect: React.FC<DashboardSelectProps> = ({
                     if (!disabled) setIsOpen(!isOpen);
                 }}
                 disabled={disabled}
-                className={`flex h-10 w-full min-w-0 items-center justify-between rounded-xl border px-3 text-sm transition-all ${
+                className={`flex h-10 w-full min-w-0 items-center justify-between rounded-[var(--q-radius-md)] border px-3 text-sm shadow-[var(--q-shadow-card)] transition-all duration-[var(--q-duration-fast)] ${
                     disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
                 } ${
                     isOpen
@@ -102,8 +103,8 @@ const DashboardSelect: React.FC<DashboardSelectProps> = ({
 
             {/* Dropdown List */}
             {isOpen && (
-                <div className="absolute top-full mt-1 left-0 right-0 z-[999] bg-q-surface border border-q-border/60 rounded-xl shadow-xl overflow-hidden backdrop-blur-xl">
-                    <div ref={listRef} className="max-h-56 overflow-y-auto overscroll-contain py-1">
+                <div className="absolute top-full mt-1 left-0 right-0 z-[999] overflow-hidden rounded-[var(--q-radius-lg)] border border-q-border/60 bg-q-surface shadow-[var(--q-shadow-dropdown)] backdrop-blur-xl">
+                    <div ref={listRef} className="max-h-56 overflow-y-auto overscroll-contain py-1 quimera-ds-scrollbar">
                         {options.map(opt => {
                             const isSelected = opt.value === value;
                             return (

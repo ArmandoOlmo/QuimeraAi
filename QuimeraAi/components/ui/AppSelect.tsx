@@ -233,7 +233,7 @@ function AppSelect({
         onClick={() => setIsOpen((open) => !open)}
         onKeyDown={handleKeyDown}
         className={cn(
-          'flex h-10 min-w-0 items-center justify-between gap-2 rounded-[var(--q-radius-md)] border border-border-subtle bg-q-surface px-3 text-left text-sm text-q-text shadow-[var(--shadow-card)] transition-all',
+          'flex h-10 min-w-0 items-center justify-between gap-2 rounded-[var(--q-radius-md)] border border-border-subtle bg-q-surface px-3 text-left text-sm text-q-text shadow-[var(--q-shadow-card)] transition-all duration-[var(--q-duration-fast)]',
           'hover:border-q-border focus:outline-none focus:ring-2 focus:ring-q-accent/25',
           'disabled:cursor-not-allowed disabled:opacity-60',
           isOpen && 'border-q-accent/60 bg-q-surface ring-2 ring-q-accent/20',
@@ -257,7 +257,7 @@ function AppSelect({
           id={listboxId}
           ref={listRef}
           role="listbox"
-          className="absolute left-0 right-0 top-full z-[9999] mt-1 max-h-60 overflow-y-auto rounded-[var(--radius-card-compact)] border border-border-subtle bg-q-surface py-1 shadow-[var(--shadow-elevated)]"
+          className="absolute left-0 right-0 top-full z-[9999] mt-1 max-h-60 overflow-y-auto rounded-[var(--q-radius-lg)] border border-border-subtle bg-q-surface py-1 shadow-[var(--q-shadow-dropdown)] quimera-ds-scrollbar"
         >
           {options.map((option, index) => {
             const isSelected = option.value === selectedValue;
