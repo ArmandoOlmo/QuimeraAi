@@ -112,6 +112,10 @@ export function getStoreIdentityQueryIds(identityOrStoreId?: EcommerceStoreIdent
     return Array.from(ids);
 }
 
+export function getStorefrontReferenceId(identity: EcommerceStoreIdentity): string | null {
+    return identity.publicStoreId || identity.storefrontStoreId || identity.storeId;
+}
+
 export function buildStoreIdentityOrFilter(ids: string[]): string {
     const safeIds = Array.from(new Set(ids.map(id => id.trim()).filter(Boolean)));
     return safeIds
