@@ -26,6 +26,30 @@ import {
 } from 'lucide-react';
 import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../../ui/EcommerceControls';
 
+const applyTestimonialsEditorialMosaicDefaults = (data: any, setNestedData: ControlsDeps['setNestedData']) => {
+  const currentTestimonials = data?.testimonials || {};
+  setNestedData('testimonials', {
+    ...currentTestimonials,
+    testimonialsVariant: 'editorial-mosaic',
+    paddingY: 'lg',
+    paddingX: 'md',
+    borderRadius: 'xl',
+    cardShadow: 'none',
+    borderStyle: 'solid',
+    cardPadding: 28,
+    colors: {
+      ...(currentTestimonials.colors || {}),
+      background: '#f7f1e8',
+      heading: '#242424',
+      description: '#2f2f2f',
+      text: '#3f3a33',
+      subtitleColor: '#5f5850',
+      accent: '#b45d3f',
+      cardBackground: '#ffffff',
+      borderColor: '#e5ded2',
+    },
+  });
+};
 
 export const renderTestimonialsControls = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
@@ -44,7 +68,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <Select
           label={t('controls.styleVariant')}
           value={(data.testimonials as any).testimonialsVariant || 'classic'}
-          onChange={(v) => setNestedData('testimonials.testimonialsVariant', v)}
+          onChange={(v) => {
+            if (v === 'editorial-mosaic') {
+              applyTestimonialsEditorialMosaicDefaults(data, setNestedData);
+              return;
+            }
+            setNestedData('testimonials.testimonialsVariant', v);
+          }}
           options={[
             { value: 'classic', label: 'Classic' },
             { value: 'minimal-cards', label: 'Minimal Cards' },
@@ -53,7 +83,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'neon-border', label: 'Neon Border' },
             { value: 'floating-cards', label: 'Floating Cards' },
             { value: 'gradient-shift', label: 'Gradient Shift' },
-            { value: 'neon-glow', label: 'Neon Glow (Resplandor Interior)' }
+            { value: 'neon-glow', label: 'Neon Glow (Resplandor Interior)' },
+            { value: 'editorial-mosaic', label: t('editor.controls.testimonials.editorialMosaic') }
           ]}
         />
       </div>
@@ -295,7 +326,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Select
             label={t('controls.styleVariant')}
             value={(data.testimonials as any).testimonialsVariant || 'classic'}
-            onChange={(v) => setNestedData('testimonials.testimonialsVariant', v)}
+            onChange={(v) => {
+              if (v === 'editorial-mosaic') {
+                applyTestimonialsEditorialMosaicDefaults(data, setNestedData);
+                return;
+              }
+              setNestedData('testimonials.testimonialsVariant', v);
+            }}
             options={[
               { value: 'classic', label: 'Classic' },
               { value: 'minimal-cards', label: 'Minimal Cards' },
@@ -304,7 +341,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               { value: 'neon-border', label: 'Neon Border' },
               { value: 'floating-cards', label: 'Floating Cards' },
               { value: 'gradient-shift', label: 'Gradient Shift' },
-              { value: 'neon-glow', label: 'Neon Glow (Resplandor Interior)' }
+              { value: 'neon-glow', label: 'Neon Glow (Resplandor Interior)' },
+              { value: 'editorial-mosaic', label: t('editor.controls.testimonials.editorialMosaic') }
             ]}
           />
         </div>

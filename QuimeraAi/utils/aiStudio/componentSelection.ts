@@ -14,7 +14,7 @@ import { componentRegistry, getComponentsForBuilder } from '../../registry/compo
 import { getBriefText } from './types';
 
 const capabilityPatterns: Array<[BusinessCapability, RegExp]> = [
-    ['restaurant', /\b(restaurant|restaurante|cafe|cafeteria|menu|food|comida|catering)\b/i],
+    ['restaurant', /\b(restaurant|restaurante|caf[eé]|cafeteria|menu|food|comida|catering|steakhouse|bakery|panader[ií]a|bar|sushi|pizza|brunch|fine dining|casual dining|food truck)\b/i],
     ['restaurantReservations', /\b(reservation|reservas?|reservar|table|mesa)\b/i],
     ['realEstate', /\b(real estate|realtor|broker|property|listing|listings|propiedad|inmobili|bienes raices|buyer|seller)\b/i],
     ['appointments', /\b(appointment|booking|book|cita|reserva|schedule|agendar|consultation|repair|test ride)\b/i],
@@ -65,7 +65,7 @@ const normalizeIndustry = (value: string): string => {
     if (/\b(electric bike|e-bike|ebike|bicycle|bike|cycling|bicicleta)\b/i.test(text)) return 'electric_bikes';
     if (/\b(ai|artificial intelligence|software|saas|app|platform)\b/i.test(text)) return 'ai_saas';
     if (/\b(real estate|realtor|broker|property|inmobili|bienes raices)\b/i.test(text)) return 'real_estate';
-    if (/\b(restaurant|restaurante|cafe|food|comida|catering)\b/i.test(text)) return 'restaurant';
+    if (/\b(restaurant|restaurante|caf[eé]|food|comida|catering|steakhouse|bakery|panader[ií]a|bar|sushi|pizza|brunch|fine dining|casual dining|food truck)\b/i.test(text)) return 'restaurant';
     if (/\b(gallery|portfolio|photography|artist|art|creative)\b/i.test(text)) return 'portfolio';
     if (/\b(luxury|premium|boutique|high-end)\b/i.test(text)) return 'premium_retail';
     if (/\b(ecommerce|shop|store|retail|tienda)\b/i.test(text)) return 'ecommerce';
@@ -136,12 +136,14 @@ function availableDataFromInput(
     const productsCount = ecommerceBlueprint?.starterProducts.length || plan?.contentMap.products?.length || 0;
     const categoriesCount = ecommerceBlueprint?.productCategories.length || 0;
     const servicesCount = input.services?.length || plan?.businessProfile.services.length || 0;
+    const menuSignalCount = (plan as unknown as { businessBlueprint?: { restaurantBlueprint?: { menuDraft?: { items?: unknown[] } } } } | undefined)
+        ?.businessBlueprint?.restaurantBlueprint?.menuDraft?.items?.length || 0;
 
     return {
         productsCount,
         categoriesCount,
         servicesCount,
-        menuItemsCount: plan?.contentMap.menuItems?.length || (/\b(menu|dish|catering)\b/i.test(getBriefText(input)) ? servicesCount : 0),
+        menuItemsCount: plan?.contentMap.menuItems?.length || menuSignalCount || (/\b(menu|dish|catering|steakhouse|bakery|sushi|pizza|brunch)\b/i.test(getBriefText(input)) ? Math.max(servicesCount, 1) : 0),
         listingsCount: plan?.contentMap.properties?.length || 0,
         portfolioItemsCount: plan?.contentMap.extractedImages?.length || 0,
         testimonialsCount: plan?.contentMap.testimonials?.length || 0,

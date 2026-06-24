@@ -5,6 +5,8 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import { hexToRgba, getNeonGlowStyles } from '../utils/colorUtils';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import CornerGradient from './ui/CornerGradient';
+import ImagePlaceholder from './ui/ImagePlaceholder';
+import { isPendingImage } from '../utils/imagePlaceholders';
 
 interface TestimonialCardProps {
   quote: string;
@@ -78,6 +80,16 @@ const shadowClasses: Record<string, string> = {
   lg: 'shadow-lg',
   xl: 'shadow-xl shadow-purple-500/10',
 };
+
+const EDITORIAL_MOSAIC_IMAGE_ASPECT_RATIO = '3 / 4';
+const EDITORIAL_MOSAIC_INFO_ASPECT_RATIO = '1 / 1';
+
+const getEditorialMosaicClampStyle = (lines: number): React.CSSProperties => ({
+  display: '-webkit-box',
+  WebkitLineClamp: lines,
+  WebkitBoxOrient: 'vertical',
+  overflow: 'hidden',
+});
 
 // Helper to get safe shadow class
 const getShadowClass = (shadow?: string): string => {
@@ -278,6 +290,119 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   );
 };
 
+const EditorialMosaicTestimonialCard: React.FC<{
+  quote: string;
+  name: string;
+  title: string;
+  imageUrl?: string;
+  index: number;
+  colors: {
+    accent: string;
+    borderColor?: string;
+    text: string;
+    heading: string;
+    cardBackground: string;
+    personTitle: string;
+  };
+  borderRadius: BorderRadiusSize;
+  cardPadding: number;
+  animationType?: AnimationType;
+  enableAnimation?: boolean;
+}> = ({
+  quote,
+  name,
+  title,
+  imageUrl,
+  index,
+  colors,
+  borderRadius,
+  cardPadding,
+  animationType = 'fade-in-up',
+  enableAnimation = true,
+}) => {
+  const animationClass = getAnimationClass(animationType, enableAnimation);
+  const imageFirst = index % 2 === 0;
+
+  const imagePanel = (
+    <div
+      className={`group relative overflow-hidden border bg-black ${borderRadiusClasses[borderRadius]}`}
+      style={{
+        aspectRatio: EDITORIAL_MOSAIC_IMAGE_ASPECT_RATIO,
+        borderColor: colors.borderColor || 'transparent',
+      }}
+    >
+      {isPendingImage(imageUrl) ? (
+        <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className="absolute inset-0 h-full w-full" />
+      ) : (
+        <img
+          src={imageUrl}
+          alt={name}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+      )}
+    </div>
+  );
+
+  const textPanel = (
+    <div
+      className={`overflow-hidden border ${borderRadiusClasses[borderRadius]}`}
+      style={{
+        aspectRatio: EDITORIAL_MOSAIC_INFO_ASPECT_RATIO,
+        padding: cardPadding,
+        backgroundColor: colors.cardBackground,
+        borderColor: colors.borderColor || 'transparent',
+      }}
+    >
+      <div className="flex h-full min-h-0 flex-col justify-between gap-4">
+        <blockquote
+          className="text-lg md:text-xl font-header font-medium leading-tight"
+          style={{
+            color: colors.heading,
+            ...getEditorialMosaicClampStyle(5),
+          }}
+        >
+          "{quote}"
+        </blockquote>
+        <div className="shrink-0">
+          <p className="text-sm font-bold font-body" style={{ color: colors.text }}>{name}</p>
+          {title && (
+            <p
+              className="mt-1 text-sm font-body"
+              style={{
+                color: colors.personTitle,
+                ...getEditorialMosaicClampStyle(1),
+              }}
+            >
+              {title}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <article
+      className={`break-inside-avoid ${animationClass}`}
+      style={{ animationDelay: getAnimationDelay(index, 0.08) }}
+    >
+      <div className="flex flex-col gap-3">
+        {imageFirst ? (
+          <>
+            {imagePanel}
+            {textPanel}
+          </>
+        ) : (
+          <>
+            {textPanel}
+            {imagePanel}
+          </>
+        )}
+      </div>
+    </article>
+  );
+};
+
 interface TestimonialsProps extends TestimonialsData {
   borderRadius?: BorderRadiusSize;
   cardShadow?: string;
@@ -343,6 +468,49 @@ const Testimonials: React.FC<TestimonialsProps> = ({
       personTitle: actualColors.subtitleColor || '#94a3b8',
     };
   }, [actualColors]);
+
+  if (testimonialsVariant === 'editorial-mosaic') {
+    return (
+      <section id="testimonials" className={`w-full relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || '#f7f1e8', 0.55) : actualColors.background || '#f7f1e8' }}>
+        <CornerGradient config={cornerGradient} />
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
+          <div className="mx-auto mb-16 max-w-4xl text-center md:mb-20">
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-normal leading-[1.05]`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+            {description && (
+              <p className={`${descriptionSizeClasses[descriptionFontSize]} mx-auto mt-6 max-w-2xl font-body`} style={{ color: safeColors.description }}>
+                {description}
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {items.map((testimonial, index) => (
+              <EditorialMosaicTestimonialCard
+                key={index}
+                quote={testimonial.quote}
+                name={testimonial.name}
+                title={testimonial.title}
+                imageUrl={testimonial.imageUrl}
+                index={index}
+                colors={{
+                  accent: actualColors.accent,
+                  borderColor: actualColors.borderColor,
+                  text: colors?.text || '#3f3a33',
+                  heading: colors?.heading || '#242424',
+                  cardBackground: colors?.cardBackground || '#ffffff',
+                  personTitle: colors?.subtitleColor || colors?.description || '#5f5850',
+                }}
+                borderRadius={borderRadius}
+                cardPadding={cardPadding}
+                animationType={animationType}
+                enableAnimation={enableCardAnimation}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="testimonials" className={`w-full relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background , 0.4) : actualColors.background }}>

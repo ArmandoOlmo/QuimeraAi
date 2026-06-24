@@ -15,6 +15,7 @@ import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
+import { RestaurantEngineBindingControl } from '../RestaurantEngineBindingControl';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -114,6 +115,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const contentTab = (
     <div className="space-y-4">
+      <RestaurantEngineBindingControl
+        data={data}
+        selectedRestaurantId={data?.map?.restaurantId || data?.menu?.restaurantId || data?.restaurantReservation?.restaurantId || ''}
+        manualPath="map.restaurantId"
+        setNestedData={setNestedData}
+        t={t}
+      />
+
       <I18nInput label={t('editor.controls.common.title')} value={data?.map.title} onChange={(val) => setNestedData('map.title', val)} />
       <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.map.titleFontSize || 'md'} onChange={(v) => setNestedData('map.titleFontSize', v)} />
 

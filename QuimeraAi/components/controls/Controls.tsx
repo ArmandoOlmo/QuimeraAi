@@ -17,6 +17,7 @@ import { useAdmin } from '../../contexts/admin';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { initialData } from '../../data/initialData';
+import { isRetiredDesignSuiteSection } from '../../data/retiredSuites';
 import { PageSection } from '../../types';
 import { SitePage } from '../../types/project';
 import { usePlanAccess } from '../../hooks/usePlanFeatures';
@@ -231,7 +232,11 @@ const Controls: React.FC = () => {
   const effectiveComponentOrder = useMemo(() => {
     const raw = usesPageSections ? activePage!.sections : componentOrder;
     const seen = new Set<PageSection>();
-    return raw.filter(s => { if (seen.has(s)) return false; seen.add(s); return true; });
+    return raw.filter(s => {
+      if (seen.has(s) || isRetiredDesignSuiteSection(s)) return false;
+      seen.add(s);
+      return true;
+    });
   }, [activePage, componentOrder, usesPageSections]);
 
   const effectiveSectionVisibility = useMemo(() => {
@@ -439,10 +444,12 @@ const Controls: React.FC = () => {
       section !== 'typography' &&
       section !== 'footer' &&
       section !== 'colors' &&
+      !isRetiredDesignSuiteSection(section) &&
       (!ECOMMERCE_SECTIONS.has(section) || canAddEcommerceComponents)
   );
 
   const handleAddComponent = (section: PageSection) => {
+    if (isRetiredDesignSuiteSection(section)) return;
     const newOrder = [...effectiveComponentOrder.filter(k => k !== 'footer'), section, 'footer' as PageSection];
     const nextComponentOrder = usesPageSections
       ? componentOrder.includes(section)
@@ -626,25 +633,26 @@ const Controls: React.FC = () => {
 
   // ─── Reorder handler (shared) ─────────────────────────────────────────────
   const handleReorder = (newOrder: PageSection[]) => {
+    const sanitizedOrder = newOrder.filter(section => !isRetiredDesignSuiteSection(section));
     const nextPages = usesPageSections && activePage
-      ? pages.map(page => page.id === activePage.id ? { ...page, sections: newOrder } : page)
+      ? pages.map(page => page.id === activePage.id ? { ...page, sections: sanitizedOrder } : page)
       : pages;
     if (usesPageSections && activePage) {
-      updatePage(activePage.id, { sections: newOrder });
+      updatePage(activePage.id, { sections: sanitizedOrder });
     } else {
-      setComponentOrder(newOrder);
-      setEditorComponentOrder(newOrder);
+      setComponentOrder(sanitizedOrder);
+      setEditorComponentOrder(sanitizedOrder);
     }
     syncWebsiteBlueprint({
       action: 'component_reorder',
-      componentOrder: usesPageSections ? componentOrder : newOrder,
+      componentOrder: usesPageSections ? componentOrder : sanitizedOrder,
       pages: nextPages,
     });
     
     pushProjectUndoAction(`Reordenó las secciones`, {
         data,
         theme,
-        componentOrder: usesPageSections ? componentOrder : newOrder,
+        componentOrder: usesPageSections ? componentOrder : sanitizedOrder,
         sectionVisibility,
         pages: nextPages
     });

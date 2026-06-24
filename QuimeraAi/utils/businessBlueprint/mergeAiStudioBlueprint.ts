@@ -6,6 +6,7 @@ import type {
     EmailMarketingBlueprint,
     LeadBlueprint,
     BlueprintSource,
+    RestaurantBlueprint,
     StorefrontBlueprint,
     WebsiteBlueprint,
     WebsiteEcommerceBlockBlueprint,
@@ -29,6 +30,7 @@ import type {
 import {
     getStorefrontCatalogSize,
 } from '../storefrontTheme';
+import { isRetiredDesignSuiteSection } from '../../data/retiredSuites';
 import type {
     AiStudioCrossModuleBlueprints,
     AiStudioEcommerceBlueprint,
@@ -38,6 +40,7 @@ import type {
 import type { DesignCriticResult } from '../aiStudio/designCritic';
 import { getComponentDefinition } from '../../registry/componentRegistry';
 import { createBusinessBlueprintFromWebsitePlan, createBlueprintModuleState, shouldProtectFromRegeneration } from './adapters';
+import { mergeRenderableSectionVariantSettings } from './renderableSectionVariants';
 
 export interface MergeAiStudioBlueprintOptions {
     projectId?: string;
@@ -54,6 +57,7 @@ export interface MergeAiStudioBlueprintInput {
     ecommerceBlueprint: AiStudioEcommerceBlueprint;
     storefrontBlueprint: AiStudioStorefrontBlueprint;
     websiteEcommerceBlocks: AiStudioWebsiteEcommerceBlockSuggestion[];
+    restaurantBlueprint?: RestaurantBlueprint;
     componentSelectionContext?: ComponentSelectionContext;
     componentPlan?: ComponentPlan;
     componentVariantPlan?: ComponentVariantPlan[];
@@ -178,7 +182,7 @@ function enrichWebsiteSectionBlueprint(
     const design = designBySection.get(section.type);
     if (!design || shouldProtectFromRegeneration(section)) return section;
 
-    return {
+    return mergeRenderableSectionVariantSettings({
         ...section,
         componentId: design.selection.componentId,
         layoutVariant: design.variant?.layoutVariant,
@@ -201,7 +205,7 @@ function enrichWebsiteSectionBlueprint(
             designCritic: 'aiStudio.designCritic',
             validation: input.componentValidation?.valid ? 'componentPlan.valid' : 'componentPlan.review_required',
         },
-    };
+    });
 }
 
 function mergeWebsiteBlueprint(
@@ -211,13 +215,15 @@ function mergeWebsiteBlueprint(
     now: string,
     designInput: WebsiteDesignIntelligenceInput = {},
 ): WebsiteBlueprint {
-    const selectedWebsiteSections = getSelectedWebsiteSections(designInput);
-    const baseSections = [...base.sections];
+    const selectedWebsiteSections = getSelectedWebsiteSections(designInput)
+        .filter(section => !isRetiredDesignSuiteSection(section));
+    const baseSections = [...base.sections].filter(section => !isRetiredDesignSuiteSection(section));
     selectedWebsiteSections.forEach(section => {
         if (!baseSections.includes(section)) baseSections.push(section);
     });
     const designBySection = getDesignByWebsiteSection(designInput);
-    const baseSectionBlueprints = [...(base.sectionBlueprints || [])];
+    const baseSectionBlueprints = [...(base.sectionBlueprints || [])]
+        .filter(section => !isRetiredDesignSuiteSection(section.type));
     selectedWebsiteSections.forEach(section => {
         if (baseSectionBlueprints.some(item => item.type === section)) return;
         baseSectionBlueprints.push({
@@ -284,7 +290,7 @@ function mergeWebsiteBlueprint(
     if (existing.metadata.lockedFromRegeneration) return existing;
 
     const protectedSections = (existing.sectionBlueprints || [])
-        .filter(section => shouldProtectFromRegeneration(section));
+        .filter(section => shouldProtectFromRegeneration(section) && !isRetiredDesignSuiteSection(section.type));
     const protectedBlocks = (existing.ecommerceBlocks || [])
         .filter(block => shouldProtectFromRegeneration(block));
 
@@ -292,7 +298,9 @@ function mergeWebsiteBlueprint(
         return next;
     }
 
-    const existingSections = new Set(existing.sections || existing.componentOrder || []);
+    const existingSectionList: PageSection[] = (existing.sections || existing.componentOrder || [])
+        .filter(section => !isRetiredDesignSuiteSection(section));
+    const existingSections = new Set<PageSection>(existingSectionList);
     let sections = [...next.sections];
     const sectionVisibility = {
         ...(next.sectionVisibility || {}),
@@ -330,6 +338,10 @@ function mergeWebsiteBlueprint(
         if (bOrder == null) return -1;
         return aOrder - bOrder;
     });
+    sections = sections.filter(section => !isRetiredDesignSuiteSection(section));
+    const sanitizedSectionVisibility = Object.fromEntries(
+        Object.entries(sectionVisibility).filter(([section]) => !isRetiredDesignSuiteSection(section))
+    ) as Record<PageSection, boolean>;
 
     const nextBlocks = [...next.ecommerceBlocks];
     protectedBlocks.forEach(block => {
@@ -353,8 +365,9 @@ function mergeWebsiteBlueprint(
         pages,
         sections,
         componentOrder: sections,
-        sectionVisibility,
+        sectionVisibility: sanitizedSectionVisibility,
         sectionBlueprints: nextSectionBlueprints
+            .filter(section => !isRetiredDesignSuiteSection(section.type))
             .sort((a: WebsiteSectionBlueprint, b: WebsiteSectionBlueprint) => a.order - b.order),
         ecommerceBlocks: nextBlocks,
     };
@@ -531,6 +544,23 @@ function mergeEmailMarketingBlueprint(
     return protectedOrMerged(existing, next);
 }
 
+function mergeRestaurantBlueprint(
+    base: RestaurantBlueprint,
+    existing: RestaurantBlueprint | undefined,
+    derived: RestaurantBlueprint | undefined,
+    now: string,
+): RestaurantBlueprint {
+    const next: RestaurantBlueprint = {
+        ...(derived || base),
+        metadata: {
+            ...((derived || base).metadata),
+            lastSyncedAt: now,
+        },
+    };
+
+    return protectedOrMerged(existing, next);
+}
+
 export function mergeAiStudioBlueprint(input: MergeAiStudioBlueprintInput): BusinessBlueprint {
     const now = input.options?.now || input.ecommerceBlueprint.metadata.generatedAt || new Date().toISOString();
     const base = createBusinessBlueprintFromWebsitePlan(input.websitePlan, {
@@ -567,6 +597,7 @@ export function mergeAiStudioBlueprint(input: MergeAiStudioBlueprintInput): Busi
             ecommerceBlueprint: 'aiStudio.deriveEcommerceBlueprintFromBusinessBrief',
             storefrontBlueprint: 'aiStudio.deriveStorefrontBlueprintFromBusinessBrief',
             websiteEcommerceBlocks: 'aiStudio.deriveWebsiteEcommerceBlocks',
+            restaurantBlueprint: input.restaurantBlueprint ? 'aiStudio.deriveRestaurantBlueprintFromBusinessBrief' : 'businessBlueprint.adapters.createRestaurantBlueprintFromWebsitePlan',
             componentSelection: 'aiStudio.componentSelection',
             componentAnatomy: 'aiStudio.componentAnatomyRegistry',
             designPatternLibrary: 'aiStudio.designPatternLibrary',
@@ -605,7 +636,7 @@ export function mergeAiStudioBlueprint(input: MergeAiStudioBlueprintInput): Busi
         emailMarketingBlueprint: mergeEmailMarketingBlueprint(base.emailMarketingBlueprint, existing?.emailMarketingBlueprint, input.emailMarketingBlueprint, now),
         mediaBlueprint: protectedOrMerged(existing?.mediaBlueprint, base.mediaBlueprint),
         appointmentsBlueprint: protectedOrMerged(existing?.appointmentsBlueprint, base.appointmentsBlueprint),
-        restaurantBlueprint: protectedOrMerged(existing?.restaurantBlueprint, base.restaurantBlueprint),
+        restaurantBlueprint: mergeRestaurantBlueprint(base.restaurantBlueprint, existing?.restaurantBlueprint, input.restaurantBlueprint, now),
         realEstateBlueprint: protectedOrMerged(existing?.realEstateBlueprint, base.realEstateBlueprint),
         financeBlueprint: protectedOrMerged(existing?.financeBlueprint, base.financeBlueprint),
         analyticsBlueprint: protectedOrMerged(existing?.analyticsBlueprint, base.analyticsBlueprint),

@@ -154,6 +154,7 @@ export interface HeaderData extends SectionBackgroundFields {
 // =============================================================================
 export interface SectionBackgroundFields {
     backgroundImageUrl?: string;
+    backgroundImageOpacity?: number;
     backgroundOverlayEnabled?: boolean;
     backgroundOverlayOpacity?: number;
     backgroundOverlayColor?: string;
@@ -702,7 +703,7 @@ export interface FeatureItem {
 
 export interface FeaturesData extends SectionBackgroundFields {
     glassEffect?: boolean;
-    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'bento-overlay' | 'cinematic-gym' | 'neon-glow' | 'press-release';
+    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'bento-overlay' | 'cinematic-gym' | 'neon-glow' | 'press-release' | 'editorial-mosaic';
     title: string;
     subtitle?: string;              // Alias for description
     description: string;
@@ -734,7 +735,7 @@ export interface FeaturesData extends SectionBackgroundFields {
 // =============================================================================
 // TESTIMONIALS
 // =============================================================================
-export type TestimonialsVariant = 'classic' | 'minimal-cards' | 'glassmorphism' | 'gradient-glow' | 'neon-border' | 'floating-cards' | 'gradient-shift' | 'neon-glow';
+export type TestimonialsVariant = 'classic' | 'minimal-cards' | 'glassmorphism' | 'gradient-glow' | 'neon-border' | 'floating-cards' | 'gradient-shift' | 'neon-glow' | 'editorial-mosaic';
 
 export interface TestimonialItem {
     quote: string;
@@ -1314,6 +1315,8 @@ export type MapVariant = 'modern' | 'minimal' | 'dark-tech' | 'retro' | 'night' 
 
 export interface MapData extends SectionBackgroundFields {
     glassEffect?: boolean;
+    dataSource?: 'manual' | 'restaurant';
+    restaurantId?: string;
     title: string;
     description: string;
     address: string;
@@ -1351,7 +1354,7 @@ export interface MapData extends SectionBackgroundFields {
 // =============================================================================
 // MENU (RESTAURANT)
 // =============================================================================
-export type MenuVariant = 'classic' | 'modern-grid' | 'elegant-list' | 'full-image' | 'text-only';
+export type MenuVariant = 'classic' | 'modern-grid' | 'elegant-list' | 'full-image' | 'text-only' | 'editorial-mosaic';
 
 export interface MenuItem {
     name: string;

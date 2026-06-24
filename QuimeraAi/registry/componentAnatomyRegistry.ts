@@ -210,6 +210,7 @@ export const componentAnatomyRegistry: Record<ComponentId, ComponentAnatomyEntry
         layoutVariants: [
             variant('cardsGrid', 'Cards Grid', 'Feature cards with concise proof.', ['headline', 'items'], ['website_home', 'ai_saas_landing']),
             variant('bentoGrid', 'Bento Grid', 'Varied feature grid with hierarchy.', ['headline', 'items', 'media'], ['ai_saas_landing', 'ecommerce_home']),
+            variant('editorialMosaic', 'Editorial Mosaic', 'Magazine-style masonry with photo cards and text proof tiles.', ['headline', 'items', 'media'], ['website_home', 'portfolio_home', 'restaurant_home'], ['premium_retail', 'restaurant', 'portfolio']),
             variant('splitWithFeatureList', 'Split Feature List', 'Media and prioritized feature list.', ['headline', 'items', 'media'], ['service_landing', 'ai_saas_landing']),
             variant('compactRows', 'Compact Rows', 'Dense but scannable rows.', ['headline', 'items'], ['local_business_home']),
         ],
@@ -231,6 +232,7 @@ export const componentAnatomyRegistry: Record<ComponentId, ComponentAnatomyEntry
             variant('singleFeatureQuote', 'Single Feature Quote', 'One strong quote with attribution.', ['headline', 'quotes'], ['website_home', 'portfolio_home']),
             variant('carousel', 'Carousel', 'Scrollable proof for many quotes.', ['headline', 'quotes'], ['ecommerce_home', 'service_landing'], ['all'], 'carouselMobile'),
             variant('logoWallWithQuotes', 'Logo Wall With Quotes', 'Logos plus selected quote proof.', ['headline', 'logos', 'quotes'], ['ai_saas_landing']),
+            variant('editorialMosaic', 'Editorial Mosaic', 'Masonry proof wall with portrait quote cards and text tiles.', ['headline', 'quotes', 'logos'], ['website_home', 'portfolio_home', 'restaurant_home'], ['premium_retail', 'restaurant', 'portfolio']),
             variant('editorialProof', 'Editorial Proof', 'Long-form proof note for premium/editorial pages.', ['headline', 'quotes'], ['restaurant_home', 'portfolio_home']),
         ],
         backgroundOptions: ['plain', 'surface', 'brandTint'],
@@ -562,12 +564,13 @@ export const componentAnatomyRegistry: Record<ComponentId, ComponentAnatomyEntry
         description: 'Restaurant menu/offers anatomy.',
         availableSlots: [
             slot('headline', 'Headline', 'content', true),
-            slot('menuItems', 'Menu items', 'data', true),
+            slot('menuItems', 'Menu items', 'data', true, 'restaurantBlueprint.menuDraft.items'),
             slot('cta', 'CTA', 'cta'),
         ],
         layoutVariants: [
             variant('menuHighlights', 'Menu Highlights', 'Featured menu items.', ['headline', 'menuItems', 'cta'], ['restaurant_home']),
             variant('editorialMenu', 'Editorial Menu', 'Warm editorial menu block.', ['headline', 'menuItems'], ['restaurant_home'], ['restaurant']),
+            variant('editorialMosaic', 'Editorial Mosaic', 'Magazine-style menu masonry with photo-backed dishes and text tiles.', ['headline', 'menuItems'], ['restaurant_home'], ['restaurant']),
             variant('categoryMenu', 'Category Menu', 'Menu grouped by category.', ['headline', 'menuItems'], ['restaurant_home']),
         ],
         mediaOptions: ['imageGrid', 'singleImage'],
@@ -580,7 +583,7 @@ export const componentAnatomyRegistry: Record<ComponentId, ComponentAnatomyEntry
             slot('headline', 'Headline', 'content', true),
             slot('description', 'Description', 'content'),
             slot('cta', 'CTA', 'cta', true),
-            slot('details', 'Reservation details', 'data'),
+            slot('details', 'Reservation details', 'data', false, 'restaurantBlueprint.reservations'),
         ],
         layoutVariants: [
             variant('reservationCTA', 'Reservation CTA', 'Reservation-focused CTA.', ['headline', 'description', 'cta', 'details'], ['restaurant_home', 'appointment_landing']),
@@ -593,7 +596,7 @@ export const componentAnatomyRegistry: Record<ComponentId, ComponentAnatomyEntry
         description: 'Restaurant location and hours anatomy.',
         availableSlots: [
             slot('headline', 'Headline', 'content', true),
-            slot('location', 'Location/hours', 'data', true),
+            slot('location', 'Location/hours', 'data', true, 'restaurantBlueprint.profile'),
             slot('map', 'Map', 'media'),
         ],
         layoutVariants: [

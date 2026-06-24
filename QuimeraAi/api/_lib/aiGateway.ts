@@ -5,6 +5,21 @@ import type { McpAuthContext } from './mcpAuth.js';
 
 type GeneratorKind = 'content' | 'image' | 'multimodal' | 'prompt';
 type SaveDestination = 'project' | 'media' | 'admin' | 'none';
+const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-image-preview';
+const OPENAI_IMAGE_MODEL_ALIASES = new Set([
+  'openai/gpt-5-image',
+  'gpt-5-image',
+  'openai/gpt-image-1',
+  'gpt-image-1',
+]);
+
+function resolveImageModel(model?: string): string {
+  const normalizedModel = model?.toLowerCase();
+  if (!normalizedModel || OPENAI_IMAGE_MODEL_ALIASES.has(normalizedModel)) {
+    return DEFAULT_IMAGE_MODEL;
+  }
+  return model;
+}
 
 export interface GeneratorPreset {
   id: string;
@@ -47,7 +62,7 @@ export const GENERATOR_PRESETS: GeneratorPreset[] = [
   {
     id: 'hero-image',
     kind: 'image',
-    model: 'gemini-3.1-flash-image-preview',
+    model: DEFAULT_IMAGE_MODEL,
     label: 'Hero image',
     estimatedCredits: 4,
     capabilities: ['image', 'hero', 'banner', 'visual-identity'],
@@ -56,7 +71,7 @@ export const GENERATOR_PRESETS: GeneratorPreset[] = [
   {
     id: 'background-image',
     kind: 'image',
-    model: 'gemini-3.1-flash-image-preview',
+    model: DEFAULT_IMAGE_MODEL,
     label: 'Section background',
     estimatedCredits: 4,
     capabilities: ['image', 'background', 'negative-space'],
@@ -65,7 +80,7 @@ export const GENERATOR_PRESETS: GeneratorPreset[] = [
   {
     id: 'product-image',
     kind: 'image',
-    model: 'gemini-3.1-flash-image-preview',
+    model: DEFAULT_IMAGE_MODEL,
     label: 'Product image',
     estimatedCredits: 4,
     capabilities: ['image', 'product', 'ecommerce'],
@@ -74,7 +89,7 @@ export const GENERATOR_PRESETS: GeneratorPreset[] = [
   {
     id: 'template-thumbnail',
     kind: 'image',
-    model: 'gemini-3.1-flash-image-preview',
+    model: DEFAULT_IMAGE_MODEL,
     label: 'Template thumbnail',
     estimatedCredits: 4,
     capabilities: ['image', 'thumbnail', 'template-preview'],
@@ -83,7 +98,7 @@ export const GENERATOR_PRESETS: GeneratorPreset[] = [
   {
     id: 'logo-asset',
     kind: 'image',
-    model: 'gemini-3.1-flash-image-preview',
+    model: DEFAULT_IMAGE_MODEL,
     label: 'Logo and brand asset',
     estimatedCredits: 4,
     capabilities: ['image', 'logo', 'brand-asset', 'transparent-background'],
@@ -640,11 +655,12 @@ export async function generateImage(
   const preset = presetFor(input.modelPreset, 'image');
   const prompt = buildImagePrompt(input);
   const operation = operationForPreset(preset, input.imageOptions);
+  const imageModel = resolveImageModel(input.imageOptions?.model || preset.model);
   const creditsUsed = CREDIT_COSTS[operation] || preset.estimatedCredits;
   const warnings: string[] = [];
   let usage: AiGatewayResult['usage'] = {
     provider: 'openrouter',
-    model: preset.model,
+    model: imageModel,
     promptTokens: 0,
     completionTokens: 0,
     totalTokens: 0,
@@ -657,7 +673,7 @@ export async function generateImage(
       projectId: input.projectId || `image-gen-${input.tenantId}`,
       userId: auth.userId || auth.agentId,
       prompt,
-      model: input.imageOptions?.model || preset.model,
+      model: imageModel,
       aspectRatio: input.imageOptions?.aspectRatio || preset.defaultConfig?.aspectRatio || '1:1',
       resolution: input.imageOptions?.resolution || preset.defaultConfig?.resolution || '1K',
       style: input.imageOptions?.style,
@@ -679,7 +695,7 @@ export async function generateImage(
 
     usage = {
       provider: response.metadata?.provider || 'openrouter',
-      model: response.metadata?.model || preset.model,
+      model: response.metadata?.model || imageModel,
       promptTokens: prompt.length,
       completionTokens: 0,
       totalTokens: prompt.length,

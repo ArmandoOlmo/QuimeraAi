@@ -26,6 +26,30 @@ import {
 } from 'lucide-react';
 import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../../ui/EcommerceControls';
 
+const applyFeaturesEditorialMosaicDefaults = (data: any, setNestedData: ControlsDeps['setNestedData']) => {
+  const currentFeatures = data?.features || {};
+  setNestedData('features', {
+    ...currentFeatures,
+    featuresVariant: 'editorial-mosaic',
+    gridColumns: 4,
+    imageHeight: 430,
+    paddingY: 'lg',
+    paddingX: 'md',
+    borderRadius: 'xl',
+    colors: {
+      ...(currentFeatures.colors || {}),
+      background: '#f7f1e8',
+      heading: '#242424',
+      description: '#2f2f2f',
+      text: '#3f3a33',
+      accent: '#b45d3f',
+      cardBackground: '#ffffff',
+      cardHeading: '#242424',
+      cardText: '#3f3a33',
+      borderColor: '#e5ded2',
+    },
+  });
+};
 
 export const renderFeaturesControls = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
@@ -80,6 +104,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           >
             Press Release
           </button>
+          <button type="button"             onClick={() => applyFeaturesEditorialMosaicDefaults(data, setNestedData)}
+            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'editorial-mosaic' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
+          >
+            {t('editor.controls.features.editorialMosaic')}
+          </button>
         </div>
         <p className="text-xs text-q-text-secondary mt-2">
           {currentVariant === 'classic'
@@ -90,7 +119,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 ? t('editor.controls.features.descPremium')
                 : currentVariant === 'bento-overlay'
                   ? '🎭 Bento layout con imágenes full-bleed y texto overlay'
-                  : t('editor.controls.features.descOverlay')}
+                  : currentVariant === 'editorial-mosaic'
+                    ? t('editor.controls.features.descEditorialMosaic')
+                    : t('editor.controls.features.descOverlay')}
         </p>
       </div>
 
@@ -429,6 +460,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             label={t('editor.controls.features.styleVariant')}
             value={currentVariant}
             onChange={(v) => {
+              if (v === 'editorial-mosaic') {
+                applyFeaturesEditorialMosaicDefaults(data, setNestedData);
+                return;
+              }
               setNestedData('features.featuresVariant', v);
               if (v === 'image-overlay') {
                 setNestedData('features.gridColumns', 4);
@@ -441,7 +476,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               { value: 'bento-overlay', label: 'Bento Overlay (Imágenes + Texto)' },
               { value: 'image-overlay', label: 'Overlay (Tarjetas Completas)' },
               { value: 'neon-glow', label: 'Neon Glow (Resplandor Interior)' },
-              { value: 'press-release', label: 'Press Release (Curvas Dinámicas)' }
+              { value: 'press-release', label: 'Press Release (Curvas Dinámicas)' },
+              { value: 'editorial-mosaic', label: t('editor.controls.features.editorialMosaic') }
             ]}
           />
           <p className="text-xs text-q-text-secondary mt-2">
@@ -455,7 +491,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                     ? '🎭 Bento layout con imágenes full-bleed y texto overlay'
                     : currentVariant === 'press-release'
                       ? '📰 Tarjetas de prensa con bordes curvos dinámicos'
-                      : t('editor.controls.features.descOverlay', '🖼️ Imágenes completas con texto superpuesto')}
+                      : currentVariant === 'editorial-mosaic'
+                        ? t('editor.controls.features.descEditorialMosaic', 'Editorial mosaic with photo cards and text tiles')
+                        : t('editor.controls.features.descOverlay', '🖼️ Imágenes completas con texto superpuesto')}
           </p>
         </div>
 

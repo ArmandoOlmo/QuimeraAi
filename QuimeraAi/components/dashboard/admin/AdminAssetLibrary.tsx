@@ -901,7 +901,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
         <>
         <div className="flex-1 flex flex-col overflow-hidden relative h-full">
                 {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center z-20 sticky top-0">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                         {!noLayout && (
                             <button

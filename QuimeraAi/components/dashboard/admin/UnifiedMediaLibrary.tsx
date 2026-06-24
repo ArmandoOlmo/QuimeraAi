@@ -180,7 +180,7 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
             </aside>
 
             <div className="flex-1 flex min-h-0 flex-col overflow-hidden relative">
- <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
                     <div className="flex items-center gap-4">
                         <button onClick={() => {}} className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"><Menu className="w-5 h-5" /></button>
                         <div className="flex items-center gap-2">

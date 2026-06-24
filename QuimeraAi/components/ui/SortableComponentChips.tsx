@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   DndContext,
   closestCenter,
@@ -25,6 +26,7 @@ interface SortableChipProps {
 }
 
 function SortableChip({ id, onRemove }: SortableChipProps) {
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -33,6 +35,7 @@ function SortableChip({ id, onRemove }: SortableChipProps) {
     transition,
     isDragging,
   } = useSortable({ id });
+  const label = t(`studioUX.componentLabels.${id}`);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -54,11 +57,11 @@ function SortableChip({ id, onRemove }: SortableChipProps) {
       >
         <GripVertical size={10} />
       </div>
-      <span className="px-1 select-none">{id}</span>
+      <span className="px-1 select-none">{label}</span>
       <button
         onClick={() => onRemove(id)}
         className="p-0.5 hover:bg-q-error/20 hover:text-q-error rounded transition-colors"
-        title={`Remove ${id}`}
+        title={t('studioUX.removeComponent', { name: label })}
       >
         <X size={10} />
       </button>

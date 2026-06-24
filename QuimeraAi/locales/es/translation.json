@@ -1323,6 +1323,9 @@
     "next": "Siguiente",
     "previous": "Anterior",
     "search": "Buscar...",
+    "searchFont": "Buscar fuente...",
+    "noFontsFound": "No se encontraron fuentes",
+    "fontPreviewSample": "El veloz murciélago hindú comía feliz cardillo y kiwi",
     "error": "Error",
     "success": "Éxito",
     "close": "Cerrar",
@@ -4512,6 +4515,8 @@
         "dish": "Platillo",
         "dishes": "Platillos",
         "menuStyle": "Estilo de Menú",
+        "editorialMosaic": "Mosaico Editorial",
+        "editorialMosaicDesc": "Paneles de foto alternados con cajas blancas de contenido para cada plato.",
         "dishName": "Nombre del Platillo",
         "price": "Precio",
         "image": "Imagen",
@@ -4576,6 +4581,8 @@
       },
       "testimonials": {
         "cardStyling": "Estilo de Tarjeta",
+        "editorialMosaic": "Mosaico Editorial",
+        "editorialMosaicDesc": "Mosaico de prueba social con retratos, citas y tarjetas de texto",
         "cardShadow": "Sombra de Tarjeta",
         "borderStyle": "Estilo de Borde",
         "none": "Ninguno",
@@ -4593,10 +4600,12 @@
         "bento": "Bento",
         "premium": "Premium",
         "overlay": "Superposición",
+        "editorialMosaic": "Mosaico Editorial",
         "descClassic": "📦 Layout de cuadrícula tradicional",
         "descBento": "✨ Layout moderno bento asimétrico",
         "descPremium": "🎯 Bento premium con primera tarjeta destacada",
         "descOverlay": "🖼️ Imágenes completas con texto superpuesto",
+        "descEditorialMosaic": "Mosaico estilo revista con tarjetas de foto y bloques de texto",
         "overlaySettings": "Configuración de Superposición",
         "textAlignment": "Alineación de Texto",
         "showSectionHeader": "Mostrar Encabezado de Sección",
@@ -5423,7 +5432,7 @@
     "emailMarketingQuimera": "AI Newsletters",
     "separatorSection": "Separador 5",
     "modelNanoBananaDesc": "Calidad visual nivel Pro a velocidad Flash. Ideal para iteraciones rápidas con referencias.",
-    "modelGptImageDesc": "Combina razonamiento GPT-5.4 con GPT Image 2. Ideal para composiciones complejas y detalladas.",
+    "modelGptImageDesc": "Generación de imágenes de OpenAI para composiciones complejas y detalladas con fuerte seguimiento del prompt.",
     "credits": "créditos"
   },
   "email": {
@@ -6523,6 +6532,146 @@
       "noData": "No pude extraer datos específicos de esa URL, pero puedes contarme sobre tu negocio y te ayudaré desde cero.",
       "error": "⚠️ No pude acceder a ese sitio web. El sitio podría estar bloqueando acceso externo o la URL podría ser incorrecta. ¡Aún puedes contarme sobre tu negocio manualmente!"
     },
+    "flow": {
+      "empty": {
+        "title": "Crea tu website con AI",
+        "description": "Describe tu negocio y Quimera creará la estructura del website, copy, dirección visual y secciones.",
+        "examples": {
+          "localBusiness": "Tengo una tienda de bicicletas eléctricas en Guaynabo...",
+          "restaurant": "Crea un website moderno para un restaurante...",
+          "portfolio": "Crea un portafolio para una galería de arte moderno..."
+        }
+      },
+      "quickPrompts": {
+        "localBusiness": "Negocio local",
+        "ecommerceStore": "Tienda ecommerce",
+        "restaurant": "Restaurante",
+        "portfolio": "Portafolio",
+        "serviceBusiness": "Negocio de servicios",
+        "realEstate": "Bienes raíces"
+      },
+      "progressSteps": {
+        "understandingBusiness": "Entendiendo el negocio",
+        "planningStructure": "Planificando la estructura",
+        "selectingComponents": "Seleccionando componentes",
+        "creatingVisualDirection": "Creando dirección visual",
+        "writingContent": "Redactando contenido",
+        "preparingPreview": "Preparando preview",
+        "savingProject": "Guardando proyecto"
+      },
+      "actions": {
+        "generateWebsite": "Generar Website",
+        "generatingWebsite": "Generando Website",
+        "addDetails": "Añadir detalles",
+        "improveBrief": "Mejorar brief",
+        "improveBriefPrompt": "Ayúdame a mejorar este brief del website antes de generar.",
+        "readyHelper": "Puedes editar todo después. Los detalles no críticos faltantes quedarán marcados para revisión."
+      },
+      "summary": {
+        "title": "Lo que entendí",
+        "subtitle": "Brief del proyecto web",
+        "outputLabel": "Website / Proyecto",
+        "fields": {
+          "business": "Negocio",
+          "industry": "Industria",
+          "servicesProducts": "Servicios/productos",
+          "audience": "Audiencia",
+          "websiteGoal": "Objetivo del website",
+          "style": "Estilo",
+          "ecommerceIntent": "Intención ecommerce",
+          "locationContact": "Ubicación/contacto",
+          "missingCritical": "Campos críticos faltantes"
+        },
+        "values": {
+          "businessMissing": "Aún no provisto",
+          "industryAssumed": "AI puede inferirla desde la descripción",
+          "servicesProductsAssumed": "Se redactará desde el objetivo del website",
+          "audienceAssumed": "Audiencia por defecto inferida desde el contexto del negocio",
+          "websiteGoalAssumed": "Crear un website listo para publicar",
+          "styleAssumed": "Dirección visual generada por AI",
+          "ecommerceIncluded": "Puede incluir bloques ecommerce",
+          "ecommerceNotDetected": "No se detectó intención ecommerce",
+          "locationContactReview": "Se puede editar después",
+          "missingCriticalNone": "Ninguno"
+        },
+        "badges": {
+          "website": "Website",
+          "ecommerceIntent": "Intención ecommerce",
+          "projectDraft": "Draft de proyecto",
+          "leadContactSections": "Secciones de leads/contacto",
+          "editableLater": "Editable después"
+        },
+        "warnings": {
+          "nonCriticalReviewMessage": "{{field}} se puede revisar después."
+        }
+      },
+      "result": {
+        "title": "Website creado",
+        "subtitle": "El contenido final está listo para revisión antes de publicar.",
+        "metrics": {
+          "pagesCreated": "Páginas creadas",
+          "sectionsCreated": "Secciones creadas",
+          "styleGenerated": "Estilo generado",
+          "ecommerceBlocks": "Bloques ecommerce",
+          "leadContactSections": "Secciones de leads/contacto"
+        },
+        "values": {
+          "yes": "Sí",
+          "included": "Incluido",
+          "notIncluded": "No incluido"
+        }
+      }
+    },
+    "preview": {
+      "completedBadge": "Generación completada",
+      "title": "Tu website está listo",
+      "description": "Revisa el resultado generado antes de guardarlo como proyecto y abrirlo en el editor.",
+      "generatedSummary": "Resumen generado",
+      "actions": {
+        "backToPlan": "Volver al plan",
+        "regenerate": "Regenerar",
+        "copySummary": "Copiar resumen",
+        "copied": "Copiado",
+        "copyFailed": "No copiado",
+        "saveAndOpen": "Guardar y abrir editor"
+      },
+      "copySummary": {
+        "project": "Proyecto: {{value}}",
+        "industry": "Industria: {{value}}",
+        "brief": "Brief: {{value}}",
+        "hero": "Hero: {{value}}",
+        "message": "Mensaje: {{value}}",
+        "sections": "Secciones: {{value}}"
+      },
+      "sections": {
+        "services": "Servicios",
+        "features": "Beneficios",
+        "testimonials": "Testimonios",
+        "faq": "FAQ",
+        "cta": "CTA",
+        "leads": "Contacto",
+        "newsletter": "Newsletter",
+        "portfolio": "Portafolio",
+        "pricing": "Precios",
+        "menu": "Menú",
+        "map": "Ubicación",
+        "howItWorks": "Proceso",
+        "team": "Equipo"
+      },
+      "values": {
+        "yes": "Sí",
+        "no": "No"
+      },
+      "ecommerce": {
+        "title": "Ecommerce sugerido",
+        "enabled": "Activo",
+        "starterDrafts": "Drafts iniciales",
+        "storefrontPreset": "Preset de tienda",
+        "productCard": "Tarjeta de producto",
+        "needsReview": "Necesita revisión",
+        "reviewInSuite": "Revisar en Ecommerce Suite"
+      }
+    },
     "briefPanel": {
       "title": "Resumen del Negocio",
       "readiness": "Preparación",
@@ -6539,6 +6688,29 @@
       "hours": "Horario",
       "colors": "Colores",
       "components": "Componentes",
+      "typography": "Tipografía",
+      "missingInformation": "La información que falta",
+      "noMissingInformation": "No falta información crítica.",
+      "required": "Requerido",
+      "reviewLater": "Revisar luego",
+      "colorTokens": {
+        "primary": "Primario",
+        "secondary": "Secundario",
+        "accent": "Acento",
+        "background": "Fondo",
+        "surface": "Superficie",
+        "text": "Texto"
+      },
+      "fontRoles": {
+        "header": "Títulos",
+        "body": "Texto",
+        "button": "Botones"
+      },
+      "referenceImages": "Imágenes de referencia",
+      "uploadReference": "Subir imágenes de referencia",
+      "uploadReferenceHint": "Personas, lugares, productos o inspiración de estilo",
+      "localUpload": "Local",
+      "adminLibrary": "Librería Admin",
       "pending": "pendiente...",
       "generateButton": "🚀 Generar Website",
       "generating": "Generando...",
@@ -6572,8 +6744,15 @@
         "imageFailed": "❌ Falló: {{key}} (omitido)",
         "assembling": "📦 Ensamblando sitio web, {{completed}} imágenes generadas, {{failed}} fallidas",
         "saving": "💾 Guardando tu sitio web...",
-        "done": "🎉 ¡Sitio web creado exitosamente!"
+        "done": "🎉 ¡Sitio web creado exitosamente!",
+        "sampleContentGenerated": "Contenido de muestra generado — {{count}} componentes incluidos",
+        "templateDraftCreated": "Draft de plantilla creado. El contenido de muestra requiere revisión admin."
       },
+      "steps": {
+        "sampleContentCompiled": "Contenido de muestra compilado. Preparando preview de plantilla...",
+        "templateDraftCreated": "Draft de plantilla creado."
+      },
+      "templateSuccess": "Draft de plantilla creado.\n\nGenerado:\n- {{components}} componentes reutilizables\n- {{images}} imágenes de muestra\n- Contenido de muestra marcado para revisión\n- Estado: Draft de plantilla",
       "success": "🎉 **¡Tu sitio web ha sido creado exitosamente!**\n\nGenerado:\n- 📄 {{sections}} secciones\n- 🖼️ {{images}} imágenes\n- 🎨 Paleta de colores personalizada\n- 🤖 Asistente AI configurado\n\nPuedes cerrar esto y encontrar tu proyecto en el dashboard.",
       "error": "⚠️ **Error en la generación:** {{error}}\n\nPuedes intentar de nuevo."
     },
@@ -6758,7 +6937,7 @@
       "contentPlaceholder": "Genera contenido con AI o pega copy listo para publicar.",
       "preview": "Preview",
       "copy": "Copiar",
-      "generateWithAi": "Generar con AI",
+      "generateWithAi": "Generar con IA",
       "save": "Guardar campaña",
       "unscheduled": "Sin fecha",
       "hasContent": "Con contenido",
@@ -10894,6 +11073,23 @@
     "globalSettings": "Configuración Global",
     "backToDashboard": "Volver",
     "accessMessage": "Tienes acceso a todas las funciones administrativas de la plataforma.",
+    "loadingPanel": "Cargando panel...",
+    "adminConsole": "Consola Admin",
+    "commandCenter": "Centro de mando",
+    "commandCenterDesc": "Vista clara para operar permisos, contenido, analítica, automatizaciones y configuración global sin leer cada módulo uno por uno.",
+    "availableModules": "Módulos",
+    "newTools": "Nuevos",
+    "activeView": "Vista",
+    "priorityAccess": "Prioridad",
+    "quickAccess": "Acceso rápido",
+    "quickAccessDesc": "Las áreas que normalmente concentran operación, clientes, contenido y salud del sistema.",
+    "moduleCount": "{{count}} módulos",
+    "mcpTitle": "MCP / API Keys",
+    "mcpDesc": "Crear y revocar llaves para agentes, scopes y acceso al MCP.",
+    "chatbotPrompts": "Prompts de Chatbot",
+    "chatbotPromptsDesc": "Configurar instrucciones globales para todos los chatbots de proyectos.",
+    "executionMode": "Modo de ejecución (próximamente)",
+    "executionModeDesc": "Configura el comportamiento de ejecución del asistente. Función en desarrollo.",
     "finances": "Finanzas & MRR",
     "financesDesc": "Dashboard financiero completo con gráficas, MRR, ingresos por plan y crecimiento.",
     "financesDetail": {
@@ -11069,6 +11265,7 @@
       "back": "Volver",
       "filters": "Filtros",
       "new": "Nueva",
+      "generateWithAi": "Generar con IA",
       "totalTemplates": "Total de Plantillas",
       "sitesCreated": "Sitios Creados",
       "mostPopular": "Más Popular",
@@ -13597,6 +13794,88 @@
       "openInMaps": "Abrir en Google Maps"
     }
   },
+  "studioUX": {
+    "quickPrompts": "Prompts rápidos",
+    "removeComponent": "Eliminar {{name}}",
+    "componentLabels": {
+      "hero": "Hero",
+      "heroSplit": "Hero dividido",
+      "heroGallery": "Galería hero",
+      "heroWave": "Hero wave",
+      "heroNova": "Hero nova",
+      "heroLead": "Hero con lead",
+      "topBar": "Barra superior",
+      "logoBanner": "Banner de logos",
+      "banner": "Banner",
+      "features": "Beneficios",
+      "testimonials": "Testimonios",
+      "pricing": "Precios",
+      "faq": "FAQ",
+      "cta": "CTA",
+      "services": "Servicios",
+      "video": "Video",
+      "howItWorks": "Cómo funciona",
+      "menu": "Menú",
+      "realEstateListings": "Propiedades",
+      "leads": "Leads",
+      "newsletter": "Newsletter",
+      "map": "Mapa",
+      "signupFloat": "Captura flotante",
+      "slideshow": "Slideshow",
+      "portfolio": "Portafolio",
+      "team": "Equipo",
+      "separator1": "Separador 1",
+      "separator2": "Separador 2",
+      "separator3": "Separador 3",
+      "separator4": "Separador 4",
+      "separator5": "Separador 5"
+    },
+    "summary": {
+      "aiGeneratedNeedsReview": "Generado por AI / requiere revisión"
+    },
+    "progress": {
+      "generationProgress": "Progreso de generación",
+      "events": "Eventos"
+    },
+    "readiness": {
+      "missing": {
+        "businessContext": "nombre o descripción del negocio",
+        "industry": "industria",
+        "offerOrGoal": "servicios/productos u objetivo del website",
+        "templateType": "tipo de plantilla",
+        "requiredModules": "módulos requeridos",
+        "targetAudience": "audiencia objetivo",
+        "designStyle": "estilo visual",
+        "sampleContentReviewNotes": "notas de revisión del contenido de muestra",
+        "locationContact": "ubicación/contacto",
+        "audience": "audiencia",
+        "style": "estilo"
+      },
+      "website": {
+        "readyLabel": "Listo para generar",
+        "needsDetailLabel": "Falta un detalle",
+        "blockedLabel": "Falta información crítica",
+        "readyHelper": "Puedo generar ahora y marcar los detalles faltantes para revisión.",
+        "blockedHelper": "Añade el contexto crítico faltante antes de generar."
+      },
+      "template": {
+        "readyLabel": "Listo para generar plantilla",
+        "needsTemplateTypeLabel": "Falta el tipo de plantilla",
+        "needsIndustryLabel": "Falta la industria",
+        "needsReviewLabel": "Requiere revisión admin",
+        "readyHelper": "El contenido de muestra quedará marcado como contenido de plantilla para revisión admin.",
+        "blockedHelper": "Añade el detalle faltante de la plantilla y luego genera el draft reutilizable."
+      },
+      "assumptions": {
+        "contactLater": "El contacto y la ubicación se pueden añadir después.",
+        "visualStyle": "AI puede proponer un estilo visual y marcarlo para revisión.",
+        "audience": "AI puede inferir una audiencia por defecto desde el contexto del negocio.",
+        "componentPlan": "AI puede elegir un plan de componentes reutilizable para revisión.",
+        "templateVisualDirection": "AI puede proponer la dirección visual y marcarla para revisión.",
+        "sampleContent": "El contenido de muestra permanece etiquetado como contenido de plantilla."
+      }
+    }
+  },
   "aiTemplateStudio": {
     "title": "Estudio de Plantillas IA",
     "poweredBy": "Impulsado por Quimera AI",
@@ -13612,7 +13891,8 @@
       "contact": "📞 **Información de contacto**",
       "voiceHint": "También puedes usar el **🎤 modo de voz** para hablarme directamente.",
       "existingWebsite": "💡 ¿Ya tienes un sitio web? Haz clic en el botón **🌐 Importar** para extraer tu información automáticamente.",
-      "startQuestion": "**Cuéntame, ¿qué tipo de negocio tienes?**"
+      "startQuestion": "**Cuéntame, ¿qué tipo de negocio tienes?**",
+      "templateStudio": "Crea plantillas reutilizables con AI\n\nDescribe la plantilla reutilizable que quieres crear para futuros usuarios. Mantendré todo el copy generado etiquetado como contenido de muestra y guardaré el resultado como draft de plantilla.\n\nPuntos de partida útiles:\n- Plantilla de restaurante con menú y reservas\n- Plantilla ecommerce con secciones de productos\n- Plantilla de portafolio para servicios creativos\n- Plantilla de negocio de servicios con captura de leads\n- Landing de bienes raíces\n\n¿Qué plantilla reutilizable creamos?"
     },
     "chat": {
       "thinking": "Pensando...",
@@ -13621,7 +13901,7 @@
       "stopVoice": "Detener voz",
       "startVoice": "Iniciar voz",
       "errorMessage": "⚠️ Hubo un error procesando tu mensaje. Por favor intenta de nuevo.",
-      "generatingHint": "Generando tu sitio web... Mira el progreso en la ventana de detalles."
+      "generatingHint": "Generando el draft de plantilla. Mira el progreso en la ventana de detalles."
     },
     "extraction": {
       "buttonLabel": "Importar Web",
@@ -13634,6 +13914,116 @@
       "analyzing": "🔍 Analizando tu sitio web... Estoy escaneando la navegación, redes sociales, información de contacto, colores, servicios y más. Esto puede tomar un momento.",
       "noData": "No pude extraer datos específicos de esa URL, pero puedes contarme sobre tu negocio y te ayudaré desde cero.",
       "error": "⚠️ No pude acceder a ese sitio web. El sitio podría estar bloqueando acceso externo o la URL podría ser incorrecta. ¡Aún puedes contarme sobre tu negocio manualmente!"
+    },
+    "flow": {
+      "empty": {
+        "title": "Crea plantillas reutilizables con AI",
+        "description": "Describe la plantilla reutilizable que quieres crear para futuros usuarios.",
+        "examples": {
+          "restaurant": "Crea una plantilla de restaurante con menú y reservas...",
+          "ecommerce": "Crea una plantilla ecommerce premium...",
+          "realEstate": "Crea una landing de bienes raíces..."
+        }
+      },
+      "quickPrompts": {
+        "restaurantTemplate": "Plantilla de restaurante",
+        "ecommerceTemplate": "Plantilla ecommerce",
+        "portfolioTemplate": "Plantilla de portafolio",
+        "serviceBusinessTemplate": "Plantilla de servicios",
+        "realEstateTemplate": "Plantilla de bienes raíces",
+        "landingPageTemplate": "Plantilla landing page"
+      },
+      "progressSteps": {
+        "understandingGoal": "Entendiendo el objetivo",
+        "planningStructure": "Planificando estructura reutilizable",
+        "selectingComponents": "Seleccionando componentes",
+        "creatingSampleContent": "Creando contenido de muestra",
+        "creatingVisualDirection": "Creando dirección visual",
+        "preparingPreview": "Preparando preview de plantilla",
+        "savingDraft": "Guardando draft de plantilla"
+      },
+      "brief": {
+        "templateInfo": "Información de plantilla",
+        "sampleModules": "Módulos de muestra",
+        "sampleContact": "Contacto de muestra"
+      },
+      "actions": {
+        "generateTemplate": "Generar Plantilla",
+        "generatingTemplate": "Generando Plantilla",
+        "addModules": "Añadir módulos",
+        "improveTemplateBrief": "Mejorar brief de plantilla",
+        "improveTemplateBriefPrompt": "Ayúdame a mejorar este brief de plantilla reutilizable antes de generar.",
+        "readyHelper": "El contenido de muestra quedará marcado como contenido de plantilla."
+      },
+      "summary": {
+        "title": "Resumen de plantilla",
+        "subtitle": "Brief de estructura reutilizable",
+        "outputLabel": "Draft de plantilla",
+        "fields": {
+          "templateName": "Nombre de plantilla",
+          "templateType": "Tipo de plantilla",
+          "industry": "Industria",
+          "compatibleIndustries": "Industrias compatibles",
+          "targetAudience": "Audiencia objetivo",
+          "requiredModules": "Módulos requeridos",
+          "optionalModules": "Módulos opcionales",
+          "designStyle": "Estilo visual",
+          "sampleContentStatus": "Estado del contenido de muestra",
+          "designPatterns": "Patrones de diseño",
+          "componentPlan": "Plan de componentes"
+        },
+        "values": {
+          "notNamedYet": "Aún sin nombre",
+          "needsTemplateType": "Falta tipo de plantilla",
+          "needsIndustry": "Falta industria",
+          "toBeReviewedByAdmin": "A revisar por admin",
+          "adjacentServiceVariants": "variantes de servicios adyacentes",
+          "targetAudience": "Futuros usuarios que creen desde esta plantilla reutilizable",
+          "targetAudienceForReadiness": "Futuros usuarios que comiencen desde esta plantilla",
+          "requiredModulesAssumed": "AI puede seleccionar módulos reutilizables",
+          "optionalModulesAssumed": "FAQ, testimonios y newsletter se pueden añadir después",
+          "designStyleAssumed": "Dirección visual generada por AI",
+          "sampleContentStatus": "Contenido de muestra | Draft de plantilla | Requiere revisión",
+          "sampleContentStatusForReadiness": "Contenido de muestra, draft de plantilla, requiere revisión",
+          "designPatternsAssumed": "Generado durante la planificación de componentes",
+          "componentPlanPending": "Estructura reutilizable pendiente",
+          "componentPlanSelected": "{{count}} módulos seleccionados"
+        },
+        "badges": {
+          "templateDraft": "Draft de plantilla",
+          "sampleContent": "Contenido de muestra",
+          "needsReview": "Requiere revisión"
+        },
+        "warnings": {
+          "sampleContentReview": "El contenido de muestra debe revisarse antes de publicar.",
+          "adminReviewMessage": "{{field}} requiere revisión admin."
+        }
+      },
+      "result": {
+        "title": "Draft de plantilla creado",
+        "subtitle": "El contenido de muestra reutilizable se guardó como draft de plantilla y requiere revisión admin.",
+        "metrics": {
+          "templateDraft": "Draft de plantilla",
+          "sampleContent": "Contenido de muestra",
+          "componentsIncluded": "Componentes incluidos",
+          "compatibleIndustries": "Industrias compatibles",
+          "requiredModules": "Módulos requeridos",
+          "optionalModules": "Módulos opcionales"
+        },
+        "values": {
+          "created": "Creado",
+          "pending": "Pendiente",
+          "generatedForReview": "Generado para revisión",
+          "needsReview": "Requiere revisión"
+        },
+        "actions": {
+          "previewTemplate": "Preview de plantilla",
+          "saveAsDraft": "Guardar como draft",
+          "markAsReady": "Marcar como lista",
+          "markReadyTooltip": "Revisa en Template Management antes de marcarla como lista.",
+          "regenerateSampleContent": "Regenerar contenido de muestra"
+        }
+      }
     },
     "briefPanel": {
       "title": "Brief de la Plantilla",
@@ -13651,27 +14041,52 @@
       "hours": "Horario",
       "colors": "Colores",
       "components": "Componentes",
+      "typography": "Tipografía",
+      "addComponent": "Añadir componente",
+      "missingInformation": "La información que falta",
+      "noMissingInformation": "No falta información crítica.",
+      "required": "Requerido",
+      "reviewLater": "Revisar luego",
+      "colorTokens": {
+        "primary": "Primario",
+        "secondary": "Secundario",
+        "accent": "Acento",
+        "background": "Fondo",
+        "surface": "Superficie",
+        "text": "Texto"
+      },
+      "fontRoles": {
+        "header": "Títulos",
+        "body": "Texto",
+        "button": "Botones"
+      },
+      "referenceImages": "Imágenes de referencia",
+      "uploadReference": "Subir imágenes de referencia",
+      "uploadReferenceHint": "Personas, lugares, productos o inspiración de estilo",
+      "localUpload": "Local",
+      "adminLibrary": "Librería Admin",
       "pending": "pendiente...",
       "generateButton": "Generar Plantilla",
       "generating": "Generando...",
       "keepChatting": "Sigue conversando, necesito más información para crear tu sitio"
     },
     "generation": {
-      "creating": "Creando: {{name}}",
-      "websiteCreated": "¡Website Creado!",
-      "yourWebsite": "Tu Website",
+      "creating": "Creando plantilla: {{name}}",
+      "websiteCreated": "¡Draft de plantilla creado!",
+      "yourWebsite": "Tu Plantilla",
+      "yourTemplate": "Plantilla reutilizable",
       "phases": {
-        "content": "Generando Contenido",
-        "images": "Creando Imágenes",
-        "finalizing": "Ensamblando Website",
-        "done": "¡Completo!"
+        "content": "Contenido de muestra",
+        "images": "Imágenes de muestra",
+        "finalizing": "Guardando draft",
+        "done": "Draft de plantilla"
       },
       "stats": {
         "images": "Imágenes:",
         "failed": "Fallidas:",
         "progress": "Progreso:"
       },
-      "generatedImages": "Imágenes Generadas",
+      "generatedImages": "Imágenes de muestra",
       "events": {
         "starting": "🚀 Iniciando generación del sitio web para \"{{name}}\"",
         "generatingContent": "📝 Generando estructura y contenido del sitio web con IA...",
@@ -13684,8 +14099,15 @@
         "imageFailed": "❌ Falló: {{key}} (omitido)",
         "assembling": "📦 Ensamblando sitio web, {{completed}} imágenes generadas, {{failed}} fallidas",
         "saving": "💾 Guardando tu sitio web...",
-        "done": "🎉 ¡Sitio web creado exitosamente!"
+        "done": "🎉 ¡Sitio web creado exitosamente!",
+        "sampleContentGenerated": "Contenido de muestra generado — {{count}} componentes incluidos",
+        "templateDraftCreated": "Draft de plantilla creado. El contenido de muestra requiere revisión admin."
       },
+      "steps": {
+        "sampleContentCompiled": "Contenido de muestra compilado. Preparando preview de plantilla...",
+        "templateDraftCreated": "Draft de plantilla creado."
+      },
+      "templateSuccess": "Draft de plantilla creado.\n\nGenerado:\n- {{components}} componentes reutilizables\n- {{images}} imágenes de muestra\n- Contenido de muestra marcado para revisión\n- Estado: Draft de plantilla",
       "success": "🎉 **¡Tu sitio web ha sido creado exitosamente!**\n\nGenerado:\n- 📄 {{sections}} secciones\n- 🖼️ {{images}} imágenes\n- 🎨 Paleta de colores personalizada\n- 🤖 Asistente AI configurado\n\nPuedes cerrar esto y encontrar tu proyecto en el dashboard.",
       "error": "⚠️ **Error en la generación:** {{error}}\n\nPuedes intentar de nuevo."
     },

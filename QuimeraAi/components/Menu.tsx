@@ -75,6 +75,16 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   full: 'rounded-3xl',
 };
 
+const EDITORIAL_MOSAIC_IMAGE_ASPECT_RATIO = '3 / 4';
+const EDITORIAL_MOSAIC_INFO_ASPECT_RATIO = '1 / 1';
+
+const getEditorialMosaicClampStyle = (lines: number): React.CSSProperties => ({
+    display: '-webkit-box',
+    WebkitLineClamp: lines,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+});
+
 // Helper function to check if background is light/white
 const isBackgroundLight = (backgroundColor: string | undefined): boolean => {
     if (!backgroundColor) return false;
@@ -396,10 +406,7 @@ const FullImageMenuCard: React.FC<{
 }> = ({ item, colors, borderRadius, index, textAlignment = 'center', animationType = 'fade-in-up', enableAnimation = true }) => {
     const animationClass = getAnimationClass(animationType, enableAnimation);
     
-    // Use specific colors - respect user's choices
-    const priceColor = colors?.priceColor || hexToRgba(colors?.accent || '#4f46e5', 0.3);
-    const titleColor = colors?.cardTitleColor || '#ffffff';
-    const textColor = colors?.cardText || colors?.text || '#ffffff';
+    const overlayTextColor = '#ffffff';
     
     // Text alignment classes
     const alignmentClasses: Record<string, string> = {
@@ -431,7 +438,7 @@ const FullImageMenuCard: React.FC<{
             
             {/* Gradient Overlay */}
             <div 
-                className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300"
+                className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-300"
             />
             
             {/* Special Badge */}
@@ -449,7 +456,7 @@ const FullImageMenuCard: React.FC<{
             {item.category && (
                 <div 
                     className="absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider z-10"
-                    style={{ backgroundColor: hexToRgba(colors?.accent, 0.2), color: colors?.accent, backdropFilter: 'blur(8px)' }}
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)', color: overlayTextColor, backdropFilter: 'blur(8px)' }}
                 >
                     {item.category}
                 </div>
@@ -460,7 +467,7 @@ const FullImageMenuCard: React.FC<{
                 {/* Price */}
                 <span 
                     className="text-3xl font-black mb-2 font-header drop-shadow-lg" 
-                    style={{ color: priceColor }}
+                    style={{ color: overlayTextColor }}
                 >
                     {item.price}
                 </span>
@@ -468,7 +475,7 @@ const FullImageMenuCard: React.FC<{
                 {/* Title */}
                 <h3 
                     className="text-2xl font-bold mb-2 font-header drop-shadow-md" 
-                    style={{ color: titleColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}
+                    style={{ color: overlayTextColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}
                 >
                     {item.name}
                 </h3>
@@ -476,7 +483,7 @@ const FullImageMenuCard: React.FC<{
                 {/* Description */}
                 <p 
                     className="text-sm leading-relaxed font-body opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 max-w-xs drop-shadow-sm" 
-                    style={{ color: textColor }}
+                    style={{ color: overlayTextColor }}
                 >
                     {item.description}
                 </p>
@@ -653,6 +660,112 @@ const TextOnlyMenuCard: React.FC<{
 };
 
 // =============================================================================
+// VARIANT 6: EDITORIAL MOSAIC
+// =============================================================================
+const EditorialMosaicMenuCard: React.FC<{
+    item: MenuItem;
+    colors: any;
+    borderRadius: string;
+    index: number;
+    animationType?: AnimationType;
+    enableAnimation?: boolean;
+}> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true }) => {
+    const animationClass = getAnimationClass(animationType, enableAnimation);
+    const imageFirst = index % 2 === 0;
+    const cardBg = colors?.cardBackground || '#ffffff';
+    const titleColor = colors?.cardTitleColor || '#242424';
+    const textColor = colors?.cardText || '#3f3a33';
+    const priceColor = colors?.priceColor || colors?.accent || '#b45d3f';
+    const borderColor = colors?.borderColor || '#e5ded2';
+
+    const imagePanel = (
+        <div
+            className={`group relative overflow-hidden bg-black ${borderRadius}`}
+            style={{ aspectRatio: EDITORIAL_MOSAIC_IMAGE_ASPECT_RATIO }}
+        >
+            {isPendingImage(item.imageUrl) ? (
+                <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className="absolute inset-0 h-full w-full" />
+            ) : (
+                <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+            )}
+        </div>
+    );
+
+    const textPanel = (
+        <div
+            className={`border p-5 sm:p-6 ${borderRadius}`}
+            style={{
+                backgroundColor: cardBg,
+                borderColor,
+                aspectRatio: EDITORIAL_MOSAIC_INFO_ASPECT_RATIO,
+            }}
+        >
+            <div className="flex h-full min-h-0 flex-col justify-between gap-4">
+                <div className="min-h-0">
+                    {item.category && (
+                        <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.22em] font-body" style={{ color: colors?.accent || priceColor }}>
+                            {item.category}
+                        </p>
+                    )}
+                    <h3
+                        className="text-xl md:text-2xl font-header font-semibold leading-tight"
+                        style={{
+                            color: titleColor,
+                            textTransform: 'var(--headings-transform, none)' as any,
+                            letterSpacing: 'var(--headings-spacing, normal)',
+                            ...getEditorialMosaicClampStyle(2),
+                        }}
+                    >
+                        {item.name}
+                    </h3>
+                    {item.description && (
+                        <p
+                            className="mt-3 text-sm font-body leading-relaxed"
+                            style={{
+                                color: textColor,
+                                ...getEditorialMosaicClampStyle(3),
+                            }}
+                        >
+                            {item.description}
+                        </p>
+                    )}
+                </div>
+                <p className="shrink-0 text-2xl md:text-3xl font-header font-semibold" style={{ color: priceColor }}>
+                    {item.price}
+                </p>
+            </div>
+        </div>
+    );
+
+    return (
+        <article
+            className={`break-inside-avoid ${animationClass}`}
+            style={{
+                animationDelay: getAnimationDelay(index, 0.08),
+            }}
+        >
+            <div className="flex flex-col gap-3">
+                {imageFirst ? (
+                    <>
+                        {imagePanel}
+                        {textPanel}
+                    </>
+                ) : (
+                    <>
+                        {textPanel}
+                        {imagePanel}
+                    </>
+                )}
+            </div>
+        </article>
+    );
+};
+
+// =============================================================================
 // MAIN COMPONENT
 // =============================================================================
 interface MenuProps extends MenuData {
@@ -701,7 +814,7 @@ const Menu: React.FC<MenuProps> = ({
             price: ri.currency ? `${ri.currency} ${Number(ri.price || 0).toFixed(2)}` : `$${Number(ri.price || 0).toFixed(2)}`,
             imageUrl: ri.imageUrl || '',
             category: ri.category || '',
-            isSpecial: ri.dietaryTags?.includes('special') || ri.isAvailable === false ? false : undefined as any,
+            isSpecial: ((ri.dietaryTags as readonly string[] | undefined)?.includes('special') || ri.isAvailable === false) ? false : undefined as any,
         }));
     }, [dataSource, restaurantItems, items]);
     
@@ -823,6 +936,29 @@ const Menu: React.FC<MenuProps> = ({
                 </div>
             )}
 
+            {/* Menu Items - Editorial Mosaic Variant */}
+            {menuVariant === 'editorial-mosaic' && (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                    {effectiveItems.map((item, index) => (
+                        <EditorialMosaicMenuCard
+                            key={index}
+                            item={item}
+                            colors={{
+                                ...menuColors,
+                                cardBackground: colors?.cardBackground || '#ffffff',
+                                cardTitleColor: colors?.cardTitleColor || '#242424',
+                                cardText: colors?.cardText || '#3f3a33',
+                                borderColor: colors?.borderColor || '#e5ded2',
+                            }}
+                            borderRadius={borderRadiusClasses[borderRadius]}
+                            index={index}
+                            animationType={animationType}
+                            enableAnimation={enableCardAnimation}
+                        />
+                    ))}
+                </div>
+            )}
+
             {/* Menu Items - Text Only Variant */}
             {menuVariant === 'text-only' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 max-w-6xl mx-auto">
@@ -845,4 +981,3 @@ const Menu: React.FC<MenuProps> = ({
 };
 
 export default Menu;
-

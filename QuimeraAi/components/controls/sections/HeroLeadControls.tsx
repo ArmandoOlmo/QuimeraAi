@@ -112,7 +112,7 @@ export const renderHeroLeadControls = (deps: ControlsDeps) => {
       </div>
 
       {/* Background Image (SectionBackground) */}
-      <BackgroundImageControl sectionKey="heroLead" data={data} setNestedData={setNestedData} showBlurControls />
+      <BackgroundImageControl sectionKey="heroLead" data={data} setNestedData={setNestedData} showImageOpacityControl showBlurControls />
 
       {/* Layout */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">

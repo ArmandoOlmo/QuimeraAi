@@ -224,7 +224,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         description: 'Canonical system for menus, hours, locations, reservations, restaurant analytics, and restaurant ecommerce offers.',
         requiredService: 'restaurants',
         gatingReason: 'Requires restaurants service availability.',
-        compatibleIndustries: ['restaurant', 'cafe', 'food'],
+        compatibleIndustries: ['restaurant', 'cafe', 'food', 'bar', 'bakery', 'catering', 'steakhouse', 'sushi', 'pizza', 'brunch', 'food-truck'],
         editableBy: ['restaurant-engine', 'ai-studio'],
         readsFrom: ['ecommerce', 'emailMarketing'],
         writesTo: ['crm', 'emailMarketing', 'analytics'],

@@ -61,7 +61,7 @@ export const COMPONENT_OPTIONS = {
         name: 'Features Section',
         category: 'content',
         options: {
-            featuresVariant: ['classic', 'modern', 'bento-premium', 'image-overlay'],
+            featuresVariant: ['classic', 'modern', 'bento-premium', 'image-overlay', 'bento-overlay', 'neon-glow', 'press-release', 'editorial-mosaic'],
             gridColumns: [2, 3, 4],
             overlayTextAlignment: ['left', 'center', 'right'],
         },
@@ -72,7 +72,7 @@ export const COMPONENT_OPTIONS = {
         name: 'Testimonials Section',
         category: 'content',
         options: {
-            testimonialsVariant: ['classic', 'minimal-cards', 'glassmorphism', 'gradient-glow', 'neon-border', 'floating-cards', 'gradient-shift'],
+            testimonialsVariant: ['classic', 'minimal-cards', 'glassmorphism', 'gradient-glow', 'neon-border', 'floating-cards', 'gradient-shift', 'neon-glow', 'editorial-mosaic'],
         },
         colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground'],
     },
@@ -216,7 +216,7 @@ export const COMPONENT_OPTIONS = {
         name: 'Restaurant Menu',
         category: 'content',
         options: {
-            menuVariant: ['classic', 'modern-grid', 'elegant-list', 'full-image'],
+            menuVariant: ['classic', 'modern-grid', 'elegant-list', 'full-image', 'text-only', 'editorial-mosaic'],
             textAlignment: ['left', 'center', 'right'],
         },
         colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'priceColor', 'cardTitleColor', 'cardText'],

@@ -98,15 +98,15 @@ Non-Profit: header='outfit' or 'manrope', body='inter' or 'open-sans', button='o
 
 **Component Variant Options (for componentOrder selection):**
 - hero: Main landing section (REQUIRED)
-- features: Key benefits display [variants: classic, modern, bento-premium]
+- features: Key benefits display [variants: classic, modern, bento-premium, bento-overlay, image-overlay, editorial-mosaic]
 - services: Services showcase [variants: cards, grid, minimal]
-- testimonials: Customer reviews [variants: classic, minimal-cards, glassmorphism, gradient-glow, floating-cards]
+- testimonials: Customer reviews [variants: classic, minimal-cards, glassmorphism, gradient-glow, floating-cards, editorial-mosaic]
 - pricing: Pricing tiers [variants: classic, gradient, glassmorphism, minimalist]
 - faq: FAQ section [variants: classic, cards, gradient, minimal]
 - team: Team members [variants: classic, cards, minimal, overlay]
 - portfolio: Work showcase
 - slideshow: Image gallery [variants: classic, kenburns, cards3d, thumbnails]
-- menu: Restaurant menu [variants: classic, modern-grid, elegant-list]
+- menu: Restaurant menu [variants: classic, modern-grid, elegant-list, full-image, editorial-mosaic]
 - leads: Contact form [variants: classic, split-gradient, floating-glass, minimal-border]
 - realEstateListings: Realtor property listings connected to Quimera Real Estate OS and the existing leads form
 - newsletter: Email signup
@@ -115,10 +115,6 @@ Non-Profit: header='outfit' or 'manrope', body='inter' or 'open-sans', button='o
 - howItWorks: Process steps
 - banner: Promotional banner [variants: classic, gradient-overlay, side-text, centered]
 - footer: Site footer (REQUIRED - always last)
-
-**DESIGN SUITE RULES:**
-- IF THE USER REQUESTS "Lumina Suite" OR "Lumina Style", you MUST exclusively use Lumina components (heroLumina, featuresLumina, ctaLumina, portfolioLumina, pricingLumina, testimonialsLumina, faqLumina) instead of the standard ones.
-- IF THE USER REQUESTS "Neon Suite" OR "Neon Style", you MUST exclusively use Neon components (heroNeon, featuresNeon, ctaNeon, portfolioNeon, pricingNeon, testimonialsNeon, faqNeon) instead of the standard ones.
 
 ═══════════════════════════════════════════════════════════
 EXPERT COLOR THEORY — PALETTE DESIGN
@@ -142,6 +138,9 @@ EXPERT COLOR THEORY — PALETTE DESIGN
 5. For DARK backgrounds: text MUST be #ffffff or very light (luminance > 0.8)
 6. For LIGHT backgrounds: text MUST be #1a1a1a or very dark (luminance < 0.2)
 7. Buttons always use primary brand color with contrasting text
+8. Use no more than three non-neutral brand colors total: primary, secondary, and accent. Background and text must be neutral roles, not extra brand hues.
+9. Header and footer MUST use the same solid dark brand color with white (#ffffff) typography. Never use white, off-white, pale, transparent, glass, or gradient backgrounds for header/footer.
+10. Text placed directly over images MUST be white (#ffffff) with a dark overlay/scrim strong enough for WCAG AA contrast. If text sits inside an opaque solid panel/card over the image, the panel may use a semantic brand color with readable text.
 
 **Modern Palette Trends 2025-2026:**
 - Clay & earth palettes: warm neutrals (#d4a373, #e8d5b7) with terracotta accents (#c75b39)
@@ -194,8 +193,9 @@ Generate a JSON object defining the visual strategy.
 
 **HEADER & FOOTER RULES (MANDATORY):**
 - headerStyle MUST always be 'sticky-solid' - the header will use the primary brand color as solid background, never transparent.
-- Header and Footer MUST have the SAME background color (primary brand color)
-- Both header and footer backgrounds must be SOLID colors, never transparent or gradient
+- Header and Footer MUST have the SAME background color: a solid dark brand color with white (#ffffff) typography.
+- Both header and footer backgrounds must be SOLID colors, never white, off-white, pale, transparent, glass, or gradient.
+- Use no more than three non-neutral brand colors total: primary, secondary, and accent.
 - Page background should default to white (#ffffff) or a very light neutral color to provide contrast`,
     model: 'gemini-3.1-pro-preview',
     version: 6,
@@ -249,17 +249,16 @@ Generate a JSON object defining the visual strategy.
 - hero.heroVariant: 'classic' | 'modern' | 'gradient' | 'fitness'
 - hero.imageStyle: 'default' | 'glow' | 'float' | 'hexagon' | 'polaroid'
 - hero.imagePosition: 'left' | 'right'
-- features.featuresVariant: 'classic' | 'modern' | 'bento-premium' | 'image-overlay'
+- features.featuresVariant: 'classic' | 'modern' | 'bento-premium' | 'bento-overlay' | 'image-overlay' | 'neon-glow' | 'press-release' | 'editorial-mosaic'
 - portfolio.portfolioVariant: 'classic' | 'image-overlay'
-- testimonials.testimonialsVariant: 'classic' | 'minimal-cards' | 'glassmorphism' | 'gradient-glow' | 'floating-cards'
-- NOTE: If the component is a Lumina or Neon component (e.g., heroNeon, featuresLumina), DO NOT use the standard variant keys like heroVariant or featuresVariant. They represent their own unique standalone suite architecture.
+- testimonials.testimonialsVariant: 'classic' | 'minimal-cards' | 'glassmorphism' | 'gradient-glow' | 'neon-border' | 'floating-cards' | 'gradient-shift' | 'neon-glow' | 'editorial-mosaic'
 - pricing.pricingVariant: 'classic' | 'gradient' | 'glassmorphism' | 'minimalist'
 - faq.faqVariant: 'classic' | 'cards' | 'gradient' | 'minimal'
 - services.servicesVariant: 'cards' | 'grid' | 'minimal'
 - team.teamVariant: 'classic' | 'cards' | 'minimal' | 'overlay'
 - slideshow.slideshowVariant: 'classic' | 'kenburns' | 'cards3d' | 'thumbnails'
 - leads.leadsVariant: 'classic' | 'split-gradient' | 'floating-glass' | 'minimal-border'
-- menu.menuVariant: 'classic' | 'modern-grid' | 'elegant-list'
+- menu.menuVariant: 'classic' | 'modern-grid' | 'elegant-list' | 'full-image' | 'text-only' | 'editorial-mosaic'
 - map.mapVariant: 'modern' | 'minimal' | 'dark-tech' | 'retro' | 'night'
 - banner.bannerVariant: 'classic' | 'gradient-overlay' | 'side-text' | 'centered'
 - header.layout: 'minimal'
@@ -300,13 +299,15 @@ sparkles, zap, star, award, trophy, rocket, lightbulb, heart, check-circle, shie
     - Elegant aesthetic = refined, sophisticated language with flowing prose
     - Tech aesthetic = precise, modern language with industry terminology
     - Playful aesthetic = warm, energetic language with personality
-    - VISUAL RHYTHM: Alternate section background colors to create depth. Never use the same background for consecutive sections. Pattern: light → dark → accent → light → dark
+    - VISUAL RHYTHM: Alternate section backgrounds using only the approved semantic roles. Do not introduce extra hues beyond primary, secondary, and accent.
     - Create specific image prompts using imageStyleDescription
     - Each section heading should be compelling and unique — avoid generic titles like "Our Services"
 
 4.  **Color Architecture (Expert Design Rules):**
     - Header background = PRIMARY brand color (SOLID, never transparent)
     - Footer background = PRIMARY brand color (SOLID, SAME as header)
+    - Header and footer typography = #ffffff with WCAG AA contrast
+    - Use no more than three non-neutral brand colors total: primary, secondary, and accent
     - Page background = White (#ffffff) or very light neutral color for contrast with header/footer
     - SECTION COLOR RHYTHM (alternate for visual depth):
       * Hero: Dark background (brand primary or deep color) with light text
@@ -498,6 +499,7 @@ Return ONLY valid JSON. No markdown.
     "features.items.0.imageUrl": "Image for feature 1, {{industry}} context, {{aesthetic}} aesthetic, professional",
     "features.items.1.imageUrl": "Image for feature 2, {{industry}} context, {{aesthetic}} aesthetic, professional",
     "features.items.2.imageUrl": "Image for feature 3, {{industry}} context, {{aesthetic}} aesthetic, professional",
+    "features.items.3.imageUrl": "Image for feature 4, {{industry}} context, {{aesthetic}} aesthetic, professional",
     
     "portfolio.items.0.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, high quality",
     "portfolio.items.1.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, professional",
@@ -822,11 +824,11 @@ Generate or rewrite content for the specific UI element described below. Ensure 
     version: 2,
   },
 
-  // Image Generation - Quimera Nano Banana 2
+  // Image Generation - Gemini Nano Banana 2
   {
     name: 'image-generation-gallery',
     area: 'Image Generation',
-    description: "Generates images using Quimera Nano Banana 2 - supports multiple aspect ratios, thinking level, reference images, theme colors, and photorealistic quality.",
+    description: "Generates images using Gemini Nano Banana 2 via OpenRouter - supports multiple aspect ratios, reference images, theme colors, and fast photorealistic iterations.",
     template: `{{prompt}}, {{style}}, professional high quality photo, {{lighting}}, {{cameraAngle}}, {{colorGrading}}, {{themeColors}}, {{depthOfField}}, no blurry, no distorted text, high quality`,
     model: 'gemini-3.1-flash-image-preview',
     version: 12,

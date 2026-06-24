@@ -277,7 +277,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-q-bg">
                 {/* ── Header ─────────────────────────────────────────────── */}
- <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 shrink-0">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 shrink-0">
                     <div className="flex items-center gap-1 sm:gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-q-text-muted hover:text-foreground">
                             <Menu className="w-5 h-5" />

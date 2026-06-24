@@ -15,6 +15,7 @@ import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
+import { RestaurantEngineBindingControl } from '../RestaurantEngineBindingControl';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -26,6 +27,30 @@ import {
 } from 'lucide-react';
 import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../../ui/EcommerceControls';
 
+const applyMenuEditorialMosaicDefaults = (data: any, setNestedData: ControlsDeps['setNestedData']) => {
+  const currentMenu = data?.menu || {};
+  setNestedData('menu', {
+    ...currentMenu,
+    menuVariant: 'editorial-mosaic',
+    paddingY: 'lg',
+    paddingX: 'md',
+    borderRadius: 'xl',
+    showIcon: false,
+    colors: {
+      ...(currentMenu.colors || {}),
+      background: '#f7f1e8',
+      heading: '#242424',
+      text: '#2f2f2f',
+      description: '#2f2f2f',
+      accent: '#b45d3f',
+      cardBackground: '#ffffff',
+      cardTitleColor: '#242424',
+      cardText: '#3f3a33',
+      priceColor: '#b45d3f',
+      borderColor: '#e5ded2',
+    },
+  });
+};
 
 export const renderMenuControlsWithTabs = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
@@ -44,10 +69,17 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'classic', label: '🍽️ Classic' },
             { value: 'modern-grid', label: '✨ Modern' },
             { value: 'elegant-list', label: '📋 Elegant' },
-            { value: 'full-image', label: '📷 Full Photo' }
+            { value: 'full-image', label: '📷 Full Photo' },
+            { value: 'editorial-mosaic', label: t('editor.controls.menu.editorialMosaic') }
           ].map((variant) => (
             <button type="button"               key={variant.value}
-              onClick={() => setNestedData('menu.menuVariant', variant.value)}
+              onClick={() => {
+                if (variant.value === 'editorial-mosaic') {
+                  applyMenuEditorialMosaicDefaults(data, setNestedData);
+                  return;
+                }
+                setNestedData('menu.menuVariant', variant.value);
+              }}
               className={`px-2 py-2 rounded-md border text-xs transition-all ${(data?.menu?.menuVariant || 'classic') === variant.value
                 ? 'bg-q-accent text-q-bg border-q-accent shadow-sm font-bold'
                 : 'bg-q-surface text-q-text-primary border-q-border hover:border-q-accent'
@@ -62,6 +94,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           {(data?.menu?.menuVariant || 'classic') === 'modern-grid' && '✨ Bento-style grid with dynamic layouts.'}
           {(data?.menu?.menuVariant || 'classic') === 'elegant-list' && '📋 Magazine-style horizontal list layout.'}
           {(data?.menu?.menuVariant || 'classic') === 'full-image' && '📷 Full photo cards with text overlay at bottom.'}
+          {(data?.menu?.menuVariant || 'classic') === 'editorial-mosaic' && t('editor.controls.menu.editorialMosaicDesc')}
         </p>
 
         {/* Text Alignment - Only for full-image variant */}
@@ -124,14 +157,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {/* Restaurant ID — only visible when dataSource is 'restaurant' */}
         {data?.menu?.dataSource === 'restaurant' && (
           <div className="mt-3 pt-3 border-t border-q-border/50 animate-fade-in-up">
-            <Input
-              label={t('restaurant.reservation.restaurantIdLabel', 'Restaurant ID')}
-              value={data?.menu?.restaurantId || ''}
-              onChange={(val) => setNestedData('menu.restaurantId', val)}
+            <RestaurantEngineBindingControl
+              data={data}
+              selectedRestaurantId={data?.menu?.restaurantId || data?.restaurantReservation?.restaurantId || data?.map?.restaurantId || ''}
+              manualPath="menu.restaurantId"
+              setNestedData={setNestedData}
+              t={t}
             />
-            <p className="text-xs text-q-text-secondary mt-1 italic">
-              {t('restaurant.reservation.restaurantIdHelp', 'Vincula este menú al restaurante creado en el módulo de Restaurantes.')}
-            </p>
           </div>
         )}
       </div>

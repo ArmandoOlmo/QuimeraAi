@@ -373,7 +373,7 @@ describe('AI Component Selection + Design Intelligence Layer', () => {
         expect(result.selection.componentPlan.pageIntent).toBe('restaurant_home');
         expect(selectedIds(result)).toEqual(expect.arrayContaining(['restaurantMenu', 'restaurantReservation', 'restaurantLocation']));
         expect(selectedIds(result)).not.toContain('productCarousel');
-        expect(variantFor(result, 'restaurantMenu')?.layoutVariant).toBe('editorialMenu');
+        expect(['editorialMenu', 'editorialMosaic']).toContain(variantFor(result, 'restaurantMenu')?.layoutVariant);
     });
 
     it('selects SaaS, local service, and real-estate patterns with valid mobile variants', () => {

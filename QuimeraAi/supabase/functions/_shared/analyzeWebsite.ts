@@ -664,7 +664,7 @@ function recommendComponentsForImport(industry: string, pagePurposes: string[], 
     return ["heroNova", "portfolio", "slideshow", "services", "testimonials", "cta", "footer"];
   }
   if (/tech|software|saas|ai|cyber|web3/.test(lower)) {
-    return ["heroNeon", "featuresNeon", "pricingNeon", "testimonialsNeon", "faqNeon", "ctaNeon", "footer"];
+    return ["heroWave", "features", "pricing", "testimonials", "faq", "cta", "footer"];
   }
   return ["heroLead", "services", "features", "howItWorks", "testimonials", "faq", "leads", "map", "footer"];
 }

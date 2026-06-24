@@ -1,4 +1,5 @@
 import { PageSection, Project, SitePage } from '../types';
+import { isRetiredDesignSuiteSection } from '../data/retiredSuites';
 import { resolveI18nSectionData } from './i18nContent';
 import { resolveProjectName } from './resolveProjectName';
 
@@ -124,15 +125,11 @@ const HERO_SECTIONS = new Set<string>([
   'heroWave',
   'heroNova',
   'heroLead',
-  'heroLumina',
-  'heroNeon',
   'heroQuimera',
 ]);
 
 const FEATURE_SECTIONS = new Set<string>([
   'features',
-  'featuresLumina',
-  'featuresNeon',
   'featuresQuimera',
   'services',
   'howItWorks',
@@ -153,8 +150,6 @@ const FEATURE_SECTIONS = new Set<string>([
 
 const CARD_GRID_SECTIONS = new Set<string>([
   'portfolio',
-  'portfolioLumina',
-  'portfolioNeon',
   'team',
   'products',
   'featuredProducts',
@@ -166,22 +161,16 @@ const CARD_GRID_SECTIONS = new Set<string>([
 
 const TESTIMONIAL_SECTIONS = new Set<string>([
   'testimonials',
-  'testimonialsLumina',
-  'testimonialsNeon',
   'testimonialsQuimera',
 ]);
 
 const FAQ_SECTIONS = new Set<string>([
   'faq',
-  'faqLumina',
-  'faqNeon',
   'faqQuimera',
 ]);
 
 const CTA_SECTIONS = new Set<string>([
   'cta',
-  'ctaLumina',
-  'ctaNeon',
   'ctaQuimera',
   'newsletter',
   'leads',
@@ -577,6 +566,7 @@ const renderGenericSection = (section: string, data: SectionRecord | undefined):
 };
 
 const renderSection = (section: PageSection | string, rawData: SectionRecord | undefined, project: Project, language: string): string => {
+  if (isRetiredDesignSuiteSection(section)) return '';
   if (STRUCTURAL_SECTIONS.has(section)) return '';
   const data = rawData ? resolveI18nSectionData(rawData, language) as SectionRecord : undefined;
   if (HERO_SECTIONS.has(section)) return renderHero(section, data, project);
@@ -584,7 +574,7 @@ const renderSection = (section: PageSection | string, rawData: SectionRecord | u
   if (CARD_GRID_SECTIONS.has(section)) return renderCards(section, data, section === 'menu' ? 'Menu' : 'Contenido');
   if (TESTIMONIAL_SECTIONS.has(section)) return renderTestimonials(section, data);
   if (FAQ_SECTIONS.has(section)) return renderFaq(section, data);
-  if (section === 'pricing' || section === 'pricingLumina' || section === 'pricingNeon' || section === 'pricingQuimera') return renderPricing(section, data);
+  if (section === 'pricing' || section === 'pricingQuimera') return renderPricing(section, data);
   if (GALLERY_SECTIONS.has(section)) return renderGallery(section, data);
   if (CTA_SECTIONS.has(section)) return renderCta(section, data);
   if (section === 'map') return renderMap(section, data);
@@ -727,7 +717,7 @@ export const generateProjectHtml = (rawProject: Project, options: HtmlExportOpti
   const navPages = pages.filter(page => page.showInNavigation !== false);
 
   const body = pages.map((page, pageIndex) => {
-    const sections = Array.from(new Set((page.sections || project.componentOrder || []).filter(Boolean)));
+    const sections = Array.from(new Set((page.sections || project.componentOrder || []).filter(section => Boolean(section) && !isRetiredDesignSuiteSection(section))));
     const pageTitle = pageIndex > 0 ? `
       <section id="${escapeAttribute(getPageAnchor(page))}" class="section">
         <div class="container narrow">

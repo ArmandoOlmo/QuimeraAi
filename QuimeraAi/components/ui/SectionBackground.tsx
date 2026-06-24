@@ -6,6 +6,8 @@ import { hexToRgba } from '../../utils/colorUtils';
 interface SectionBackgroundProps {
     /** The background image URL set from the editor */
     backgroundImageUrl?: string;
+    /** Background image opacity (0-100). Defaults to 100 */
+    backgroundImageOpacity?: number;
     /** Whether the overlay is enabled (defaults to true for backward compat) */
     backgroundOverlayEnabled?: boolean;
     /** Overlay opacity (0-100). Defaults to 60 for readability */
@@ -42,6 +44,7 @@ interface SectionBackgroundProps {
  */
 const SectionBackground: React.FC<SectionBackgroundProps> = ({
     backgroundImageUrl,
+    backgroundImageOpacity = 100,
     backgroundOverlayEnabled = true,
     backgroundOverlayOpacity = 60,
     backgroundOverlayColor,
@@ -63,6 +66,7 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
     const isBlurActive = backgroundBlurEnabled ?? glassEffect;
     const blurAmount = Math.max(0, backgroundBlurAmount ?? 22);
     const blurTint = hexToRgba(backgroundBlurColor || '#ffffff', 0.12);
+    const imageOpacity = Math.max(0, Math.min(100, backgroundImageOpacity ?? 100)) / 100;
 
     return (
         <div className="relative overflow-hidden" data-bg-scope={scopeId}>
@@ -83,6 +87,7 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
                 style={{
                     backgroundImage: `url('${backgroundImageUrl}')`,
                     backgroundPosition: backgroundPosition || 'center',
+                    opacity: imageOpacity,
                     zIndex: 0,
                 }}
             />

@@ -247,7 +247,7 @@ export function classifyCommerceSignals(input: AiStudioBusinessBriefInput): AiSt
         if (pattern.test(text) && !signals.includes(signal)) signals.push(signal);
     };
 
-    add('restaurant', /\b(restaurant|restaurante|cafe|cafeteria|food|menu|reservas?|comida|meal|catering)\b/i);
+    add('restaurant', /\b(restaurant|restaurante|caf[eé]|cafeteria|food|menu|reservas?|comida|meal|catering|steakhouse|bakery|panader[ií]a|bar|sushi|pizza|brunch|fine dining|casual dining|food truck)\b/i);
     add('real-estate', /\b(real estate|realtor|broker|inmobili|propiedad|buyer|seller|listings?|bienes raices|bienes raices)\b/i);
     add('fitness', /\b(fitness|gym|gimnasio|sport|sports|crossfit|bike|bikes|bicycle|bicicleta|cycling|yoga|training)\b/i);
     add('luxury', /\b(luxury|premium|jewelry|joyeria|high-end|boutique|curated|curado)\b/i);

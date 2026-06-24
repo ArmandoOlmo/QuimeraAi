@@ -13,6 +13,13 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const AI_PROXY_URL = import.meta.env.VITE_AI_PROXY_URL ||
     import.meta.env.VITE_VIDEO_PROXY_URL ||
     `${SUPABASE_URL}/functions/v1/ai-proxy`;
+const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-image-preview';
+const OPENAI_IMAGE_MODEL_ALIASES = new Set([
+    'openai/gpt-5-image',
+    'gpt-5-image',
+    'openai/gpt-image-1',
+    'gpt-image-1',
+]);
 
 /**
  * Call the AI proxy Edge Function.
@@ -119,10 +126,30 @@ export interface GeminiProxyError {
  * Get the fallback model for when capacity is unavailable
  */
 function getFallbackModel(model: string): string | null {
+    const normalizedModel = model.toLowerCase();
+    if (normalizedModel === 'openai/gpt-5.3-codex' || normalizedModel === 'gpt-5.3-codex') {
+        return 'qwen/qwen3-max';
+    }
     if (model.startsWith('gemini-3')) {
         return 'gemini-2.5-flash';
     }
     return null;
+}
+
+function getImageFallbackModel(model: string): string | null {
+    const normalizedModel = model.toLowerCase();
+    if (OPENAI_IMAGE_MODEL_ALIASES.has(normalizedModel)) {
+        return DEFAULT_IMAGE_MODEL;
+    }
+    return null;
+}
+
+function resolveImageGenerationModel(model?: string): string {
+    const normalizedModel = model?.toLowerCase();
+    if (!normalizedModel || OPENAI_IMAGE_MODEL_ALIASES.has(normalizedModel)) {
+        return DEFAULT_IMAGE_MODEL;
+    }
+    return model;
 }
 
 /**
@@ -163,6 +190,32 @@ function notifyCreditsUpdated(response: unknown): void {
             billing,
         },
     }));
+}
+
+async function readProxyError(response: Response): Promise<GeminiProxyError> {
+    try {
+        return await response.json();
+    } catch {
+        return { error: `Proxy error: ${response.status}` };
+    }
+}
+
+function proxyErrorDetail(errorData: GeminiProxyError): string {
+    if (!errorData.details) return '';
+    return typeof errorData.details === 'string'
+        ? errorData.details.slice(0, 300)
+        : JSON.stringify(errorData.details).slice(0, 300);
+}
+
+function proxyErrorMessage(errorData: GeminiProxyError, fallbackMessage: string): string {
+    const message = errorData.error || fallbackMessage;
+    const detail = proxyErrorDetail(errorData);
+    return detail ? `${message} | Details: ${detail}` : message;
+}
+
+function shouldFallbackForProxyStatus(status: number, errorData: GeminiProxyError): boolean {
+    if (errorData.error === 'CREDITS_EXHAUSTED') return false;
+    return status === 400 || status === 408 || status === 422 || status >= 500;
 }
 
 /**
@@ -208,10 +261,16 @@ export async function generateContentViaProxy(
 
         // Don't retry on 402 CREDITS_EXHAUSTED — this is a terminal error
         if (response.status === 402) {
-            const errorData: GeminiProxyError = await response.json();
-            throw new Error(errorData.error === 'CREDITS_EXHAUSTED'
-                ? 'CREDITS_EXHAUSTED'
-                : errorData.error || 'Payment required');
+            const errorData = await readProxyError(response);
+            if (errorData.error === 'CREDITS_EXHAUSTED') {
+                throw new Error('CREDITS_EXHAUSTED');
+            }
+            const fallbackModel = getFallbackModel(model);
+            if (fallbackModel) {
+                console.warn(`[Gemini] Model ${model} returned 402 (${proxyErrorMessage(errorData, 'Payment required')}), falling back to ${fallbackModel}`);
+                return generateContentViaProxy(projectId, prompt, fallbackModel, config, userId, tools);
+            }
+            throw new Error(proxyErrorMessage(errorData, 'Payment required'));
         }
 
         // Retry on 429 rate limit with exponential backoff
@@ -228,11 +287,17 @@ export async function generateContentViaProxy(
         }
 
         if (!response.ok) {
-            const errorData = await response.json();
-            const msg = errorData.error || `Proxy error: ${response.status}`;
-            const detail = errorData.details ? ` | Details: ${typeof errorData.details === 'string' ? errorData.details.slice(0, 300) : JSON.stringify(errorData.details).slice(0, 300)}` : '';
-            console.error('[Gemini Proxy] Error:', msg, detail);
-            throw new Error(msg + detail);
+            const errorData = await readProxyError(response);
+            const msg = proxyErrorMessage(errorData, `Proxy error: ${response.status}`);
+            const fallbackModel = shouldFallbackForProxyStatus(response.status, errorData)
+                ? getFallbackModel(model)
+                : null;
+            if (fallbackModel) {
+                console.warn(`[Gemini] Model ${model} failed (${msg}), falling back to ${fallbackModel}`);
+                return generateContentViaProxy(projectId, prompt, fallbackModel, config, userId, tools);
+            }
+            console.error('[Gemini Proxy] Error:', msg);
+            throw new Error(msg);
         }
 
         const data: GeminiProxyResponse = await response.json();
@@ -316,10 +381,16 @@ export async function generateChatContentViaProxy(
 
         // Don't retry on 402 CREDITS_EXHAUSTED — this is a terminal error
         if (response.status === 402) {
-            const errorData: GeminiProxyError = await response.json();
-            throw new Error(errorData.error === 'CREDITS_EXHAUSTED'
-                ? 'CREDITS_EXHAUSTED'
-                : errorData.error || 'Payment required');
+            const errorData = await readProxyError(response);
+            if (errorData.error === 'CREDITS_EXHAUSTED') {
+                throw new Error('CREDITS_EXHAUSTED');
+            }
+            const fallbackModel = getFallbackModel(model);
+            if (fallbackModel) {
+                console.warn(`[Gemini Chat] Model ${model} returned 402 (${proxyErrorMessage(errorData, 'Payment required')}), falling back to ${fallbackModel}`);
+                return generateChatContentViaProxy(projectId, history, currentMessage, systemInstruction, fallbackModel, config, userId);
+            }
+            throw new Error(proxyErrorMessage(errorData, 'Payment required'));
         }
 
         // Retry on 429 rate limit with exponential backoff
@@ -336,11 +407,17 @@ export async function generateChatContentViaProxy(
         }
 
         if (!response.ok) {
-            const errorData = await response.json();
-            const msg = errorData.error || `Proxy error: ${response.status}`;
-            const detail = errorData.details ? ` | Details: ${typeof errorData.details === 'string' ? errorData.details.slice(0, 300) : JSON.stringify(errorData.details).slice(0, 300)}` : '';
-            console.error('[Gemini Chat Proxy] Error:', msg, detail);
-            throw new Error(msg + detail);
+            const errorData = await readProxyError(response);
+            const msg = proxyErrorMessage(errorData, `Proxy error: ${response.status}`);
+            const fallbackModel = shouldFallbackForProxyStatus(response.status, errorData)
+                ? getFallbackModel(model)
+                : null;
+            if (fallbackModel) {
+                console.warn(`[Gemini Chat] Model ${model} failed (${msg}), falling back to ${fallbackModel}`);
+                return generateChatContentViaProxy(projectId, history, currentMessage, systemInstruction, fallbackModel, config, userId);
+            }
+            console.error('[Gemini Chat Proxy] Error:', msg);
+            throw new Error(msg);
         }
 
         const data: GeminiProxyResponse = await response.json();
@@ -543,7 +620,7 @@ export async function getUsageStats(projectId: string) {
 
 /**
  * Image generation configuration
- * Supports Quimera Nano Banana 2 advanced controls
+ * Supports OpenRouter image generation with advanced controls
  */
 export interface ImageGenerationConfig {
     aspectRatio?: string;
@@ -593,15 +670,16 @@ function dataUrlToProxyImage(image: string): { mimeType: string; data: string } 
 }
 
 /**
- * Generate image using the secure Gemini proxy
+ * Generate image using the secure AI proxy
  * This keeps the API key secure on the server side
- * Supports Quimera Nano Banana 2 with full controls
+ * Supports Gemini image generation via OpenRouter with full controls
  */
 export async function generateImageViaProxy(
     userId: string,
     prompt: string,
     config: ImageGenerationConfig = {},
-    projectId?: string
+    projectId?: string,
+    _fallbackAttempted: boolean = false
 ): Promise<ImageProxyResponse> {
     try {
         // Image generation request - logging disabled for production
@@ -610,13 +688,14 @@ export async function generateImageViaProxy(
         const inlineReferenceImages = referenceImages
             ?.map(dataUrlToProxyImage)
             .filter((image): image is { mimeType: string; data: string } => Boolean(image));
+        const requestedModel = resolveImageGenerationModel(config.model);
 
         const response = await callAiProxy({
                 userId,
                 projectId: projectId || `image-gen-${userId}`,
                 prompt,
-                // Model selection (defaults to Nano Banana 2 - gemini-3.1-flash-image-preview)
-                model: config.model || 'gemini-3.1-flash-image-preview',
+                // Model selection (defaults to Gemini Nano Banana 2 via OpenRouter)
+                model: requestedModel,
                 aspectRatio: config.aspectRatio || '1:1',
                 style: config.style,
                 resolution: config.resolution || '1K',
@@ -644,9 +723,25 @@ export async function generateImageViaProxy(
             });
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
+            const errorData = await readProxyError(response);
+            const msg = proxyErrorMessage(errorData, `Image generation failed: ${response.status}`);
+            const fallbackModel = !_fallbackAttempted && shouldFallbackForProxyStatus(response.status, errorData)
+                ? getImageFallbackModel(requestedModel)
+                : null;
+
+            if (fallbackModel) {
+                console.warn(`[Image Proxy] Model ${requestedModel} failed (${msg}), falling back to ${fallbackModel}`);
+                return generateImageViaProxy(
+                    userId,
+                    prompt,
+                    { ...config, model: fallbackModel },
+                    projectId,
+                    true,
+                );
+            }
+
             console.error('Image proxy error:', errorData);
-            throw new Error(errorData.error || `Image generation failed: ${response.status}`);
+            throw new Error(msg);
         }
 
         const data: ImageProxyResponse = await response.json();
@@ -779,8 +874,3 @@ export function shouldUseProxy(): boolean {
     // This ensures the API key is NEVER exposed in the browser
     return true;
 }
-
-
-
-
-

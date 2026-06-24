@@ -1,17 +1,11 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc } from '@/utils/compatData';
-import { db } from '@/utils/compatData';
 import { RestaurantMenuItem, RestaurantSettings } from '../types/restaurants';
-
-interface PublicRestaurantMenuPayload {
-  restaurant?: RestaurantSettings;
-  items?: RestaurantMenuItem[];
-}
+import { loadPublicRestaurantMenu } from '../services/restaurants/publicRestaurantMenuService';
 
 /**
  * Hook to fetch public restaurant menu data from Supabase.
- * Reads from the `publicRestaurantMenus/{restaurantId}` collection,
- * which is synced by the restaurant dashboard when menu items are updated.
+ * Reads canonical public restaurant/menu data so website blocks mirror the
+ * Restaurant Engine without relying on the legacy public menu document shape.
  */
 export function usePublicRestaurantMenu(restaurantId: string | null | undefined) {
   const [items, setItems] = useState<RestaurantMenuItem[]>([]);
@@ -32,14 +26,14 @@ export function usePublicRestaurantMenu(restaurantId: string | null | undefined)
 
     const load = async () => {
       try {
-        const ref = doc(db, 'publicRestaurantMenus', restaurantId);
-        const snap = await getDoc(ref);
         if (cancelled) return;
 
-        if (snap.exists()) {
-          const payload = snap.data() as PublicRestaurantMenuPayload;
-          setItems(payload.items || []);
-          setRestaurant(payload.restaurant || null);
+        const payload = await loadPublicRestaurantMenu(restaurantId);
+        if (cancelled) return;
+
+        if (payload) {
+          setItems(payload.items);
+          setRestaurant(payload.restaurant);
         } else {
           setItems([]);
           setRestaurant(null);

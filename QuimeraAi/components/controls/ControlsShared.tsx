@@ -264,8 +264,9 @@ export const BackgroundImageControl: React.FC<{
   sectionKey: string;
   data: any;
   setNestedData: (path: string, value: any) => void;
+  showImageOpacityControl?: boolean;
   showBlurControls?: boolean;
-}> = ({ sectionKey, data, setNestedData, showBlurControls = false }) => {
+}> = ({ sectionKey, data, setNestedData, showImageOpacityControl = false, showBlurControls = false }) => {
   const { t } = useTranslation();
   const sectionData = (data as any)?.[sectionKey] || data || {};
   const hasImage = !!sectionData?.backgroundImageUrl;
@@ -351,6 +352,17 @@ export const BackgroundImageControl: React.FC<{
 
       {hasImage && (
         <div className="mt-4 pt-4 border-t border-q-border/50 space-y-3 animate-fade-in-up">
+          {showImageOpacityControl && (
+            <SliderControl
+              label={t('editor.controls.common.imageOpacity', 'Opacidad de imagen')}
+              value={sectionData?.backgroundImageOpacity ?? 100}
+              onChange={(v) => setNestedData(`${sectionKey}.backgroundImageOpacity`, v)}
+              min={0}
+              max={100}
+              step={5}
+              suffix="%"
+            />
+          )}
           <h5 className="text-xs font-bold text-q-text-muted uppercase tracking-wider">Overlay</h5>
           <ToggleControl
             label={t('editor.controls.common.enableOverlay')}

@@ -161,7 +161,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
     return (
         <div className="flex flex-col h-screen bg-q-bg">
             {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
                 <div className="flex items-center gap-4">
                     <HeaderBackButton onClick={onClose} label={t('common.back', 'Volver')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                     <div className="flex items-center gap-2">

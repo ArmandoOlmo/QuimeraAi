@@ -260,10 +260,135 @@ export interface AppointmentsBlueprint extends BlueprintModuleState {
     availabilityStatus: 'not_configured' | 'draft' | 'configured';
 }
 
+export type RestaurantBlueprintDraftStatus = 'draft' | 'needs_review' | 'configured' | 'disabled';
+export type RestaurantPublishStatus = 'not_published' | 'published';
+export type RestaurantPriceSource = 'user-provided' | 'ai-suggested' | 'unset';
+export type RestaurantAvailabilityStatus = 'draft' | 'available' | 'unavailable';
+export type RestaurantConfirmationMode = 'manual' | 'auto';
+export type RestaurantBlueprintSource = 'ai-studio' | 'manual' | 'imported';
+export type RestaurantPublicMenuRouteStrategy = '/menu/:restaurantId';
+
+export interface RestaurantProfileBlueprint {
+    name: string;
+    cuisineType: string;
+    address: string;
+    phone: string;
+    email?: string;
+    hours: string;
+    logoUrl?: string;
+    heroImageUrl?: string;
+    publicSlug?: string;
+    languagesEnabled: string[];
+    currency: string;
+    sourceMap: BlueprintSourceMap;
+    readiness: BlueprintReadiness;
+}
+
+export interface RestaurantMenuItemDraftBlueprint {
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    suggestedPrice?: number;
+    currency: string;
+    priceSource: RestaurantPriceSource;
+    ingredients: string[];
+    allergens: string[];
+    dietaryTags: string[];
+    imagePrompt?: string;
+    imageUrl?: string;
+    isFeatured: boolean;
+    availabilityStatus: RestaurantAvailabilityStatus;
+    needsReview: boolean;
+    generatedByAI: boolean;
+    userModified: boolean;
+    lockedFromRegeneration?: boolean;
+}
+
+export interface RestaurantMenuDraftBlueprint {
+    categories: string[];
+    items: RestaurantMenuItemDraftBlueprint[];
+    dietaryTags: string[];
+    allergens: string[];
+    modifiers: string[];
+    upsells: string[];
+    priceSource: RestaurantPriceSource;
+    generatedByAI: boolean;
+    userModified: boolean;
+    needsReview: boolean;
+    status: Extract<RestaurantBlueprintDraftStatus, 'draft' | 'needs_review' | 'configured'>;
+    publishStatus: RestaurantPublishStatus;
+}
+
+export interface RestaurantReservationBlueprint {
+    enabled: boolean;
+    status: RestaurantBlueprintDraftStatus;
+    maxPartySize: number;
+    minPartySize: number;
+    reservationInterval: number;
+    averageTableDuration: number;
+    tablePreferences: string[];
+    capacityRules: string[];
+    depositRequired: boolean;
+    depositProductId?: string;
+    cancellationPolicy: string;
+    confirmationMode: RestaurantConfirmationMode;
+    source: RestaurantBlueprintSource;
+    needsReview: boolean;
+    readiness: BlueprintReadiness;
+}
+
+export interface RestaurantPublicMenuBlueprint {
+    enabled: boolean;
+    qrMenuEnabled: boolean;
+    routeStrategy: RestaurantPublicMenuRouteStrategy;
+    qrCodeStatus: RestaurantBlueprintDraftStatus | 'not_generated';
+    categoryNavigationEnabled: boolean;
+    stickyCtaEnabled: boolean;
+    showCallButton: boolean;
+    showMapButton: boolean;
+    showReserveButton: boolean;
+    themePreset: string;
+    menuVariant: string;
+    mobileBehavior: 'sticky_actions' | 'simple_stack';
+}
+
+export interface RestaurantEcommerceOfferItemBlueprint {
+    enabled: boolean;
+    status: RestaurantBlueprintDraftStatus;
+    ecommerceProductDraftId?: string;
+    needsReview: boolean;
+}
+
+export interface RestaurantEcommerceOffersBlueprint {
+    giftCards: RestaurantEcommerceOfferItemBlueprint;
+    cateringPackages: RestaurantEcommerceOfferItemBlueprint;
+    eventTickets: RestaurantEcommerceOfferItemBlueprint;
+    reservationDeposits: RestaurantEcommerceOfferItemBlueprint;
+    mealKits: RestaurantEcommerceOfferItemBlueprint;
+    merch: RestaurantEcommerceOfferItemBlueprint;
+}
+
+export interface RestaurantIntegrationBlueprint {
+    chatbotKnowledgeSources: string[];
+    crmLeadSources: string[];
+    crmTags: string[];
+    emailFlows: string[];
+    analyticsEvents: string[];
+    financeRevenueSources: string[];
+    automationFlows: string[];
+}
+
 export interface RestaurantBlueprint extends BlueprintModuleState {
+    profile: RestaurantProfileBlueprint;
+    menuDraft: RestaurantMenuDraftBlueprint;
+    reservations: RestaurantReservationBlueprint;
+    publicMenu: RestaurantPublicMenuBlueprint;
+    ecommerceOffers: RestaurantEcommerceOffersBlueprint;
+    integrations: RestaurantIntegrationBlueprint;
     menuSignals: string[];
     reservationRules: string[];
-    ecommerceOffers: string[];
+    legacyEcommerceOffers: string[];
 }
 
 export interface RealEstateBlueprint extends BlueprintModuleState {

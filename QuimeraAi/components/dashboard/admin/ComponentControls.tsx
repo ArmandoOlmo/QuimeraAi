@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { EditableComponentID, PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, ResponsiveStyles, AnimationConfig, ServiceIcon, AnimationType } from '../../../types';
 import { useAdmin } from '../../../contexts/admin';
 import { useProject } from '../../../contexts/project';
@@ -190,6 +191,7 @@ interface ComponentControlsProps {
 }
 
 const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponentId }) => {
+    const { t } = useTranslation();
     const { componentStyles: contextStyles, customComponents, updateComponentStyle } = useAdmin();
     const { activeProject, saveProject, theme } = useProject();
     const { currentTenant } = useTenant();
@@ -217,6 +219,18 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         const currentColors = styles?.colors || {};
         const newColors = { ...defaultColors, ...currentColors, [colorName]: value };
         updateComponentStyle(selectedComponentId, { colors: newColors }, isCustom);
+    };
+
+    const applyEditorialMosaicPreset = async (variantKey: string, preset: Record<string, any>) => {
+        const defaultColors = componentStyles[baseComponent]?.colors || {};
+        const currentColors = (styles as any)?.colors || {};
+        const { colors, ...stylePreset } = preset;
+        await updateComponentStyle(selectedComponentId, {
+            [variantKey]: 'editorial-mosaic',
+            ...stylePreset,
+            ...(colors ? { colors: { ...defaultColors, ...currentColors, ...colors } } : {}),
+        }, isCustom);
+        setLocalRefresh(prev => prev + 1);
     };
 
     const handleResponsiveStylesUpdate = async (responsiveStyles: ResponsiveStyles) => {
@@ -387,7 +401,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <label className="block text-xs font-bold text-q-text-secondary uppercase mb-2">
                         Features Style
                     </label>
-                    <div className="grid grid-cols-4 gap-2 mb-2">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-2">
                         <button
                             onClick={() => handleStyleChange('featuresVariant', 'classic')}
                             className={`px-3 py-2 rounded-md border transition-all text-sm ${currentVariant === 'classic'
@@ -424,6 +438,32 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         >
                             Overlay
                         </button>
+                        <button
+                            onClick={() => applyEditorialMosaicPreset('featuresVariant', {
+                                gridColumns: 4,
+                                imageHeight: 430,
+                                paddingY: 'lg',
+                                paddingX: 'md',
+                                borderRadius: 'xl',
+                                colors: {
+                                    background: '#f7f1e8',
+                                    heading: '#242424',
+                                    description: '#2f2f2f',
+                                    text: '#3f3a33',
+                                    accent: '#b45d3f',
+                                    cardBackground: '#ffffff',
+                                    cardHeading: '#242424',
+                                    cardText: '#3f3a33',
+                                    borderColor: '#e5ded2',
+                                },
+                            })}
+                            className={`px-3 py-2 rounded-md border transition-all text-sm ${currentVariant === 'editorial-mosaic'
+                                ? 'bg-q-accent text-q-bg border-q-accent'
+                                : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
+                                }`}
+                        >
+                            {t('editor.controls.features.editorialMosaic', 'Editorial Mosaic')}
+                        </button>
                     </div>
                     <p className="text-xs text-q-text-secondary mt-1">
                         {currentVariant === 'classic'
@@ -432,7 +472,9 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 ? '✨ Modern asymmetrical bento grid layout'
                                 : currentVariant === 'bento-premium'
                                     ? '🎯 Premium bento with featured first card'
-                                    : '🖼️ Full-width images with text overlay'}
+                                    : currentVariant === 'editorial-mosaic'
+                                        ? t('editor.controls.features.descEditorialMosaic', 'Editorial mosaic with photo cards and text tiles')
+                                        : '🖼️ Full-width images with text overlay'}
                     </p>
                 </div>
 
@@ -692,6 +734,32 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         >
                             🌈 Shift
                         </button>
+                        <button
+                            onClick={() => applyEditorialMosaicPreset('testimonialsVariant', {
+                                paddingY: 'lg',
+                                paddingX: 'md',
+                                borderRadius: 'xl',
+                                cardShadow: 'none',
+                                borderStyle: 'solid',
+                                cardPadding: 28,
+                                colors: {
+                                    background: '#f7f1e8',
+                                    heading: '#242424',
+                                    description: '#2f2f2f',
+                                    text: '#3f3a33',
+                                    subtitleColor: '#5f5850',
+                                    accent: '#b45d3f',
+                                    cardBackground: '#ffffff',
+                                    borderColor: '#e5ded2',
+                                },
+                            })}
+                            className={`px-3 py-2 text-xs font-semibold rounded-sm transition-colors ${currentVariant === 'editorial-mosaic'
+                                ? 'bg-q-accent text-q-bg'
+                                : 'text-q-text-secondary hover:bg-q-surface-overlay'
+                                }`}
+                        >
+                            {t('editor.controls.testimonials.editorialMosaic', 'Editorial Mosaic')}
+                        </button>
                     </div>
                     <p className="text-xs text-q-text-secondary mt-1">
                         {currentVariant === 'classic' && '📋 Traditional cards with borders and shadows'}
@@ -701,6 +769,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         {currentVariant === 'neon-border' && '⚡ Animated neon border with pulsing effect'}
                         {currentVariant === 'floating-cards' && '🎈 3D floating cards with depth and rotation'}
                         {currentVariant === 'gradient-shift' && '🌈 Animated shifting gradient backgrounds'}
+                        {currentVariant === 'editorial-mosaic' && t('editor.controls.testimonials.editorialMosaicDesc', 'Editorial proof mosaic with image quotes and text tiles')}
                     </p>
                 </div>
 
@@ -1570,11 +1639,34 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <Layout size={14} />
                         Menu Style
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
-                        {['classic', 'modern-grid', 'elegant-list'].map((variant) => (
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                        {['classic', 'modern-grid', 'elegant-list', 'full-image', 'editorial-mosaic'].map((variant) => (
                             <button
                                 key={variant}
-                                onClick={() => handleStyleChange('menuVariant', variant)}
+                                onClick={() => {
+                                    if (variant === 'editorial-mosaic') {
+                                        applyEditorialMosaicPreset('menuVariant', {
+                                            paddingY: 'lg',
+                                            paddingX: 'md',
+                                            borderRadius: 'xl',
+                                            showIcon: false,
+                                            colors: {
+                                                background: '#f7f1e8',
+                                                heading: '#242424',
+                                                text: '#2f2f2f',
+                                                description: '#2f2f2f',
+                                                accent: '#b45d3f',
+                                                cardBackground: '#ffffff',
+                                                cardTitleColor: '#242424',
+                                                cardText: '#3f3a33',
+                                                priceColor: '#b45d3f',
+                                                borderColor: '#e5ded2',
+                                            },
+                                        });
+                                        return;
+                                    }
+                                    handleStyleChange('menuVariant', variant);
+                                }}
                                 className={`px-2 py-2 rounded-md border text-xs transition-all ${currentVariant === variant
                                     ? 'bg-q-accent text-q-bg border-q-accent shadow-sm font-bold'
                                     : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
@@ -1583,6 +1675,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 {variant === 'classic' && '🍽️ Classic'}
                                 {variant === 'modern-grid' && '✨ Modern'}
                                 {variant === 'elegant-list' && '📋 Elegant'}
+                                {variant === 'full-image' && 'Full Photo'}
+                                {variant === 'editorial-mosaic' && t('editor.controls.menu.editorialMosaic', 'Editorial Mosaic')}
                             </button>
                         ))}
                     </div>
@@ -1590,6 +1684,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         {currentVariant === 'classic' && '🍽️ Traditional grid cards with images on top.'}
                         {currentVariant === 'modern-grid' && '✨ Bento-style grid with dynamic layouts.'}
                         {currentVariant === 'elegant-list' && '📋 Magazine-style horizontal list layout.'}
+                        {currentVariant === 'full-image' && 'Full photo cards with text overlay at bottom.'}
+                        {currentVariant === 'editorial-mosaic' && t('editor.controls.menu.editorialMosaicDesc', 'Alternating photo panels and white content boxes for each dish.')}
                     </p>
                 </div>
 

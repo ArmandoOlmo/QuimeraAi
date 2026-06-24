@@ -15,7 +15,7 @@ import type { ColorCandidate } from '../../types/colorSystem';
 import ColorControl from './ColorControl';
 import CoolorsImporter from './CoolorsImporter';
 import { colorPalettes, ColorPalette, getDefaultGlobalColors } from '../../data/colorPalettes';
-import { hexToRgba } from '../../utils/colorUtils';
+import { darkenColor, hexToRgba } from '../../utils/colorUtils';
 import { createColorBriefFromTheme, generateColorCandidates, toGlobalColors } from '../../utils/colorSystemEngine';
 import { fontOptions, fontStacks, formatFontName, getFontStack, loadAllFonts, resolveFontFamily } from '../../utils/fontLoader';
 import { Type, Palette, Check, Sparkles, Grid, RotateCcw, Info, Loader2, Upload, ChevronDown } from 'lucide-react';
@@ -140,6 +140,29 @@ const readableMutedTextOn = (background?: string, preferred?: string): string =>
     return base;
 };
 
+export const getSolidShellBackgroundForWhiteText = (colors?: Partial<GlobalColors>): string => {
+    const candidates = [
+        colors?.primary,
+        colors?.secondary,
+        colors?.accent,
+        colors?.heading,
+        colors?.text,
+    ].filter((color): color is string => Boolean(normalizeHexForContrast(color)));
+
+    const accessibleSolid = candidates.find(color => colorContrastRatio('#ffffff', color) >= 4.5);
+    if (accessibleSolid) return normalizeHexForContrast(accessibleSolid) || accessibleSolid;
+
+    const base = candidates[0] || '#0f172a';
+    for (const percent of [35, 50, 65, 75]) {
+        const darkened = darkenColor(base, percent);
+        if (normalizeHexForContrast(darkened) && colorContrastRatio('#ffffff', darkened) >= 4.5) {
+            return darkened;
+        }
+    }
+
+    return '#0f172a';
+};
+
 const getReadableRoles = (colors: GlobalColors) => {
     const backgroundText = readableTextOn(colors.background, colors.text);
     const backgroundHeading = readableTextOn(colors.background, colors.heading || colors.text);
@@ -172,6 +195,8 @@ const getReadableRoles = (colors: GlobalColors) => {
  */
 export const generateComponentColorMappings = (colors: GlobalColors): Record<string, Record<string, string>> => {
     const readable = getReadableRoles(colors);
+    const shellBackground = getSolidShellBackgroundForWhiteText(colors);
+    const shellButtonBackground = colors?.accent || colors?.secondary || shellBackground;
 
     return {
         hero: {
@@ -377,19 +402,20 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             heading: readable.backgroundHeading,
         },
         footer: {
-            background: colors?.surface,
-            border: colors?.border,
-            text: readable.surfaceMuted,
-            linkHover: colors?.primary,
-            heading: readable.surfaceHeading,
+            background: shellBackground,
+            border: 'rgba(255, 255, 255, 0.18)',
+            text: '#ffffff',
+            linkHover: '#ffffff',
+            heading: '#ffffff',
+            description: 'rgba(255, 255, 255, 0.82)',
         },
         header: {
-            background: colors?.primary,
-            text: readable.primaryText,
-            accent: readable.primaryText,
+            background: shellBackground,
+            text: '#ffffff',
+            accent: '#ffffff',
             border: 'transparent',
-            buttonBackground: colors?.secondary,
-            buttonText: readable.secondaryText,
+            buttonBackground: shellButtonBackground,
+            buttonText: readableTextOn(shellButtonBackground),
         },
         menu: {
             background: colors?.background,

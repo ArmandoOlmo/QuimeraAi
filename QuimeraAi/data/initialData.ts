@@ -2736,9 +2736,9 @@ const componentOrder: PageSection[] = [
     // Structure
     'colors', 'typography', 'header',
     // Content
-    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'heroLumina', 'heroNeon', 'topBar', 'logoBanner', 'banner', 'features', 'featuresLumina', 'featuresNeon', 'testimonials', 'testimonialsLumina', 'testimonialsNeon', 'slideshow',
+    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
     'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
-    'pricing', 'pricingLumina', 'pricingNeon', 'faq', 'faqLumina', 'faqNeon', 'portfolio', 'portfolioLumina', 'portfolioNeon', 'cta', 'ctaLumina', 'ctaNeon', 'services', 'team', 'video', 'howItWorks', 'menu',
+    'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
     // Ecommerce
     'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
     'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner', 'productBundle', 'announcementBar',

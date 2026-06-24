@@ -77,6 +77,16 @@ const objectFitClasses: Record<ObjectFit, string> = {
   'scale-down': 'object-scale-down',
 };
 
+const EDITORIAL_MOSAIC_IMAGE_ASPECT_RATIO = '3 / 4';
+const EDITORIAL_MOSAIC_INFO_ASPECT_RATIO = '1 / 1';
+
+const getEditorialMosaicClampStyle = (lines: number): React.CSSProperties => ({
+  display: '-webkit-box',
+  WebkitLineClamp: lines,
+  WebkitBoxOrient: 'vertical',
+  overflow: 'hidden',
+});
+
 // Text alignment classes for overlay variant
 const textAlignmentClasses: Record<TextAlignment, string> = {
   left: 'text-left items-start',
@@ -464,9 +474,128 @@ const PressReleaseCard = ({ feature, index, colors, borderRadius, onNavigate, im
   );
 };
 
+// --- Editorial Mosaic Style ---
+const EditorialMosaicFeatureCard = ({ feature, index, colors, borderRadius, onNavigate, imageObjectFit, animationType = 'fade-in-up', enableAnimation = true }: {
+  feature: FeatureItem;
+  index: number;
+  colors: any;
+  borderRadius: string;
+  onNavigate?: (href: string) => void;
+  imageObjectFit: ObjectFit;
+  animationType?: AnimationType;
+  enableAnimation?: boolean;
+}) => {
+  const animationClass = getAnimationClass(animationType, enableAnimation);
+  const delay = getAnimationDelay(index, 0.08);
+  const isExternal = feature.linkUrl?.startsWith('http');
+  const imageFirst = index % 2 === 0;
+  const cardBackground = colors?.cardBackground || '#ffffff';
+  const cardHeading = colors?.cardHeading || colors?.heading || '#242424';
+  const cardText = colors?.cardText || colors?.text || '#3f3a33';
+  const borderColor = colors?.borderColor || 'transparent';
+
+  const imagePanel = (
+    <div
+      className={`group relative overflow-hidden border bg-black ${borderRadius}`}
+      style={{
+        aspectRatio: EDITORIAL_MOSAIC_IMAGE_ASPECT_RATIO,
+        borderColor,
+      }}
+    >
+      {isPendingImage(feature.imageUrl) ? (
+        <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className="absolute inset-0 h-full w-full" />
+      ) : (
+        <img
+          src={feature.imageUrl}
+          alt={feature.title}
+          className={`absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-105 ${objectFitClasses[imageObjectFit] || 'object-cover'}`}
+        />
+      )}
+    </div>
+  );
+
+  const textPanel = (
+    <div
+      className={`border p-5 sm:p-6 ${borderRadius}`}
+      style={{
+        aspectRatio: EDITORIAL_MOSAIC_INFO_ASPECT_RATIO,
+        backgroundColor: cardBackground,
+        borderColor,
+      }}
+    >
+      <div className="flex h-full min-h-0 flex-col justify-between gap-4">
+        <div className="min-h-0">
+          <h3
+            className="text-xl md:text-2xl font-header font-semibold leading-tight"
+            style={{
+              color: cardHeading,
+              textTransform: 'var(--headings-transform, none)' as any,
+              letterSpacing: 'var(--headings-spacing, normal)',
+              ...getEditorialMosaicClampStyle(2),
+            }}
+          >
+            {feature.title}
+          </h3>
+          {feature.description && (
+            <p
+              className="mt-3 text-sm font-body leading-relaxed"
+              style={{
+                color: cardText,
+                ...getEditorialMosaicClampStyle(4),
+              }}
+            >
+              {feature.description}
+            </p>
+          )}
+        </div>
+        {feature.linkUrl && (
+          <a
+            href={feature.linkUrl}
+            target={isExternal ? '_blank' : undefined}
+            rel={isExternal ? 'noopener noreferrer' : undefined}
+            onClick={(e) => {
+              if (onNavigate && feature.linkUrl && !feature.linkUrl.startsWith('http://') && !feature.linkUrl.startsWith('https://')) {
+                e.preventDefault();
+                onNavigate(feature.linkUrl);
+              }
+            }}
+            className="inline-flex shrink-0 items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] transition-opacity hover:opacity-70"
+            style={{ color: colors?.accent || cardHeading }}
+          >
+            <span>{feature.linkText || 'Learn more'}</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <article
+      className={`break-inside-avoid ${animationClass}`}
+      style={{ animationDelay: delay }}
+    >
+      <div className="flex flex-col gap-3">
+        {imageFirst ? (
+          <>
+            {imagePanel}
+            {textPanel}
+          </>
+        ) : (
+          <>
+            {textPanel}
+            {imagePanel}
+          </>
+        )}
+      </div>
+    </article>
+  );
+};
+
 interface FeaturesProps extends FeaturesData {
   borderRadius: BorderRadiusSize;
   onNavigate?: (href: string) => void;
+  isPreview?: boolean;
 }
 
 const Features: React.FC<FeaturesProps> = ({
@@ -561,6 +690,56 @@ const Features: React.FC<FeaturesProps> = ({
     3: 'md:grid-cols-2 lg:grid-cols-3',
     4: 'md:grid-cols-2 lg:grid-cols-4',
   };
+
+  if (featuresVariant === 'editorial-mosaic') {
+    return (
+      <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || '#f7f1e8', 0.55) : actualColors.background }}>
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          {(title?.trim() || description?.trim()) && (
+            <div className="mx-auto mb-16 max-w-4xl text-center md:mb-20">
+              {title && (
+                <h2
+                  className={`${titleSizeClasses[titleFontSize]} font-header font-normal leading-[1.05]`}
+                  style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}
+                >
+                  {title}
+                </h2>
+              )}
+              {description && (
+                <p className={`${descriptionSizeClasses[descriptionFontSize]} mx-auto mt-6 max-w-2xl font-body`} style={{ color: safeColors.description }}>
+                  {description}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {(items || []).map((feature, index) => (
+              <EditorialMosaicFeatureCard
+                key={index}
+                feature={feature}
+                index={index}
+                colors={{
+                  ...actualColors,
+                  cardBackground: colors?.cardBackground || '#ffffff',
+                  cardHeading: (colors as any)?.cardHeading || '#242424',
+                  cardText: (colors as any)?.cardText || '#3f3a33',
+                  heading: (colors as any)?.cardHeading || '#242424',
+                  text: (colors as any)?.cardText || '#3f3a33',
+                  borderColor: colors?.borderColor || '#e5ded2',
+                }}
+                borderRadius={borderRadiusClasses[borderRadius]}
+                onNavigate={onNavigate}
+                imageObjectFit={imageObjectFit}
+                animationType={animationType}
+                enableAnimation={enableCardAnimation}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   // --- RENDERIZADO IMAGE OVERLAY ---
   if (featuresVariant === 'image-overlay') {
@@ -731,7 +910,7 @@ const Features: React.FC<FeaturesProps> = ({
                       >
                         {isPendingImage(feature.imageUrl) ? (
                           <ImagePlaceholder
-                            aspectRatio="video"
+                            aspectRatio="16:9"
                             showGenerateButton={false}
                             className="h-full"
                           />

@@ -39,6 +39,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import LandingPageControls from './LandingPageControls';
 import Modal from '../../ui/Modal';
 import { GlobalColors } from '../../../types';
+import { isRetiredDesignSuiteSection } from '../../../data/retiredSuites';
 import { generateHeroWaveGradientColors, contrastText } from '../../ui/GlobalStylesControl';
 import { hexToRgba } from '../../../utils/colorUtils';
 import { supabase } from '../../../supabase';
@@ -57,6 +58,12 @@ interface LandingPageEditorProps {
 }
 
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
+const isContentSection = (section: LandingSection) =>
+    section.type !== 'header' &&
+    section.type !== 'footer' &&
+    section.type !== 'typography' &&
+    section.type !== 'colors' &&
+    !isRetiredDesignSuiteSection(section.type);
 
 // Available components for landing page (CONTENIDO section)
 const AVAILABLE_COMPONENTS = [
@@ -245,13 +252,14 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     // Helper to update sections with undo tracking
     const updateSectionsWithUndo = useCallback((newSections: LandingSection[], description: string) => {
+        const sanitizedSections = newSections.filter(section => !isRetiredDesignSuiteSection(section.type));
         pushAction({
             type: 'update_sections',
             description,
             previousState: sections,
-            newState: newSections,
+            newState: sanitizedSections,
         });
-        setSections(newSections);
+        setSections(sanitizedSections);
         setHasUnsavedChanges(true);
     }, [sections, pushAction]);
     const [selectedSection, setSelectedSection] = useState<string | null>(null);
@@ -441,13 +449,15 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 if (error) throw error;
 
                 if (rows && rows.length > 0) {
-                    const loadedSections: LandingSection[] = rows.map(row => ({
-                        id: row.id,
-                        type: row.type,
-                        enabled: row.enabled,
-                        order: row.order,
-                        data: row.data || {},
-                    }));
+                    const loadedSections: LandingSection[] = rows
+                        .map(row => ({
+                            id: row.id,
+                            type: row.type,
+                            enabled: row.enabled,
+                            order: row.order,
+                            data: row.data || {},
+                        }))
+                        .filter(section => !isRetiredDesignSuiteSection(section.type));
 
                     // Ensure required structure sections exist
                     const mergedSections = ensureStructureSections(loadedSections);
@@ -753,6 +763,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     // Add new component
     const addComponent = (type: string) => {
+        if (isRetiredDesignSuiteSection(type)) return;
         const newSection: LandingSection = {
             id: `${type}-${Date.now()}`,
             type,
@@ -1309,7 +1320,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 px-4 lg:px-6 flex items-center z-20 sticky top-0 relative">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-14 px-4 lg:px-6 flex items-center z-20 sticky top-0 relative">
                     {/* Left Section */}
                     <div className="flex items-center gap-3">
                         <button
@@ -1475,7 +1486,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                     <ChevronDown size={14} className={`transition-transform ${isContentExpanded ? '' : '-rotate-90'}`} />
                                     <FileText size={14} />
                                     <span>{t('landingEditor.content', 'CONTENIDO')}</span>
-                                    <span className="text-q-text-muted">({sections.filter(s => s.type !== 'header' && s.type !== 'footer' && s.type !== 'typography' && s.type !== 'colors').length})</span>
+                                    <span className="text-q-text-muted">({sections.filter(isContentSection).length})</span>
                                 </button>
 
                                 {isContentExpanded && (
@@ -1486,11 +1497,11 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                         onDragEnd={handleDragEnd}
                                     >
                                         <SortableContext
-                                            items={sections.filter(s => s.type !== 'header' && s.type !== 'footer' && s.type !== 'typography' && s.type !== 'colors').map(s => s.id)}
+                                            items={sections.filter(isContentSection).map(s => s.id)}
                                             strategy={verticalListSortingStrategy}
                                         >
                                             <div className="mt-1 space-y-0.5 pl-2">
-                                                {sections.filter(s => s.type !== 'header' && s.type !== 'footer' && s.type !== 'typography' && s.type !== 'colors').map((section) => (
+                                                {sections.filter(isContentSection).map((section) => (
                                                     <SortableSectionItem
                                                         key={section.id}
                                                         section={section}

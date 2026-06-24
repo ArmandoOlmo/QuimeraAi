@@ -732,7 +732,7 @@ Text to format:
 
             <div className="flex flex-col flex-1 min-w-0">
                 {/* ── CMS-style Header (merged, no sub-header) ── */}
- <header className="quimera-dashboard-header-bar h-12 px-3 lg:px-4 flex items-center z-20 sticky top-0">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-12 px-3 lg:px-4 flex items-center z-20 sticky top-0">
                     {/* Left Section - Icon */}
                     <div className="flex items-center gap-2">
                         <button

@@ -271,7 +271,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}

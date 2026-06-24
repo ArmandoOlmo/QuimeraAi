@@ -115,7 +115,7 @@ export interface ComponentDataRequirement {
 export interface ComponentDataAccess {
     reads: string[];
     writes: [];
-    canonicalSystem?: 'business-blueprint' | 'ecommerce-engine' | 'storefront-blueprint' | 'website-builder';
+    canonicalSystem?: 'business-blueprint' | 'ecommerce-engine' | 'restaurant-engine' | 'storefront-blueprint' | 'website-builder';
     presentationOwner?: 'website-builder' | 'storefront-builder' | 'ecommerce-admin';
 }
 

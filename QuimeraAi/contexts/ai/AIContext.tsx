@@ -16,6 +16,22 @@ import { canPerformOperation, consumeCreditsWithPoolDetection } from '../../serv
 import { Modality } from '@google/genai';
 import { supabase } from '../../supabase';
 
+const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-image-preview';
+const OPENAI_IMAGE_MODEL_ALIASES = new Set([
+    'openai/gpt-5-image',
+    'gpt-5-image',
+    'openai/gpt-image-1',
+    'gpt-image-1',
+]);
+
+function resolveImageModelOption(model?: string): string {
+    const normalizedModel = model?.toLowerCase();
+    if (!normalizedModel || OPENAI_IMAGE_MODEL_ALIASES.has(normalizedModel)) {
+        return DEFAULT_IMAGE_MODEL;
+    }
+    return model;
+}
+
 interface EnhancePromptOptions {
     usage?: 'section-background' | 'component-image' | 'admin-asset' | 'project-library' | 'template-thumbnail';
     generationContext?: 'background' | 'general';
@@ -657,6 +673,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         aiPromptHints?: string[];
     }): Promise<string> => {
         const startTime = Date.now();
+        const imageModel = resolveImageModelOption(options?.model);
 
         try {
             const destination = options?.destination || 'user';
@@ -766,7 +783,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                         resolution: options?.resolution,
                         referenceImages: options?.referenceImages,
                         // Quimera AI specific options
-                        model: options?.model,
+                        model: imageModel,
                         thinkingLevel: options?.thinkingLevel,
                         personGeneration: options?.personGeneration,
                         temperature: options?.temperature,
@@ -785,7 +802,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                             userId: user?.id,
                             operation: creditOperation,
                             creditsUsed: imageCredits,
-                            description: `Generación de imagen (${options?.model || 'gemini-3.1-flash-image-preview'})`,
+                            description: `Generación de imagen (${imageModel})`,
                             metadata: {
                                 destination,
                                 resolution: options?.resolution || '1K',
@@ -801,7 +818,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
                 await logApiCall({
                     endpoint: 'imagen/generate',
-                    model: options?.model || 'imagen-4.0-nano-banana-002',
+                    model: imageModel,
                     feature: 'image_generation',
                     promptTokens: enhancedPrompt.length,
                     completionTokens: 0,
@@ -916,7 +933,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         } catch (error) {
             await logApiCall({
                 endpoint: 'imagen/generate',
-                model: 'imagen-4.0-nano-banana-002',
+                model: imageModel,
                 feature: 'image_generation',
                 promptTokens: prompt.length,
                 completionTokens: 0,

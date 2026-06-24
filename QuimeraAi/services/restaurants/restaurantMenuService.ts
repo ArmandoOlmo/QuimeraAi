@@ -42,6 +42,16 @@ export async function createMenuItem(
     isFeatured: data.isFeatured ?? false,
     upsellItems: cleanArray(data.upsellItems),
     aiGenerated: data.aiGenerated ?? false,
+    generatedByAI: data.generatedByAI ?? data.aiGenerated ?? false,
+    needsReview: data.needsReview,
+    userModified: data.userModified,
+    lockedFromRegeneration: data.lockedFromRegeneration,
+    source: data.source,
+    blueprintItemId: data.blueprintItemId,
+    syncKey: data.syncKey,
+    priceSource: data.priceSource,
+    publishStatus: data.publishStatus,
+    availabilityStatus: data.availabilityStatus,
     position: data.position ?? Date.now(),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -94,6 +104,16 @@ export async function saveGeneratedMenu(
       isFeatured: item.isFeatured ?? false,
       upsellItems: item.upsellItems || [],
       aiGenerated: true,
+      generatedByAI: item.generatedByAI ?? true,
+      needsReview: item.needsReview,
+      userModified: item.userModified,
+      lockedFromRegeneration: item.lockedFromRegeneration,
+      source: item.source,
+      blueprintItemId: item.blueprintItemId,
+      syncKey: item.syncKey,
+      priceSource: item.priceSource,
+      publishStatus: item.publishStatus,
+      availabilityStatus: item.availabilityStatus,
       position: item.position ?? index,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -101,6 +121,11 @@ export async function saveGeneratedMenu(
   });
   await batch.commit();
   await syncPublicMenuItems(scope, restaurantId);
+}
+
+export async function getMenuItems(scope: RestaurantScope, restaurantId: string): Promise<RestaurantMenuItem[]> {
+  const snap = await getDocs(query(collection(db, getMenuItemsPath(scope, restaurantId)), orderBy('position', 'asc')));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }) as RestaurantMenuItem);
 }
 
 export function listenMenuItems(
@@ -117,8 +142,7 @@ export function listenMenuItems(
 }
 
 export async function syncPublicMenuItems(scope: RestaurantScope, restaurantId: string) {
-  const snap = await getDocs(query(collection(db, getMenuItemsPath(scope, restaurantId)), orderBy('position', 'asc')));
-  const items = snap.docs.map((item) => ({ id: item.id, ...item.data() }) as RestaurantMenuItem);
+  const items = await getMenuItems(scope, restaurantId);
   await setDoc(
     doc(db, 'publicRestaurantMenus', restaurantId),
     {

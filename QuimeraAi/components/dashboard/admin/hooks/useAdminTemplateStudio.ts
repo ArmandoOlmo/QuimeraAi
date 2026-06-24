@@ -5,9 +5,9 @@
  * through natural conversation, then generates a complete website from scratch.
  *
  * Models:
- *  - Chat: gemini-3.1-pro-preview (best available)
+ *  - Chat: openai/gpt-5.3-codex via OpenRouter
  *  - Voice: gemini-3.1-flash-live-preview
- *  - Images: gemini-3-pro-image-preview
+ *  - Images: gemini-3.1-flash-image-preview via OpenRouter Images API
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
@@ -27,18 +27,20 @@ import { logApiCall } from '../../../../services/apiLoggingService';
 import { Conversation, Role } from '@elevenlabs/client';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { getGoogleGenAI } from '../../../../utils/genAiClient';
-import { generateComponentColorMappings, generateHeroWaveGradientColors } from '../../../ui/GlobalStylesControl';
+import { generateComponentColorMappings, generateHeroWaveGradientColors, getSolidShellBackgroundForWhiteText } from '../../../ui/GlobalStylesControl';
 import { generateAiAssistantConfig, GlobalColors } from '../../../../utils/chatbotConfigGenerator';
 import { generatePagesFromLegacyProject } from '../../../../utils/legacyMigration';
 import { extractHeroImage } from '../../../../contexts/project/ProjectContext';
 import { analyzeWebsite } from '../../../../utils/analyzeWebsiteClient';
-import { PageSection, SitePage } from '../../../../types';
+import { PageSection, Project, SitePage } from '../../../../types';
+import { isRetiredDesignSuiteSection } from '../../../../data/retiredSuites';
 import { supabase } from '../../../../supabase';
+import { getStudioReadiness } from '../../../../utils/studioUX';
 
 // ── Models ──────────────────────────────────────────────────────────────────
-const MODEL_CHAT = 'qwen/qwen3-max';  // Flagship orchestrator — 262K context, 32K output
+const MODEL_CHAT = 'openai/gpt-5.3-codex';
 const MODEL_VOICE = 'gemini-3.1-flash-live-preview';
-const MODEL_IMAGE = 'gemini-3-pro-image-preview';
+const MODEL_IMAGE = 'gemini-3.1-flash-image-preview';
 
 const isDev = import.meta.env.DEV;
 const ELEVENLABS_AGENT_ID = '52ac360bd7d15d8bd5e86b214d14338adc732616468d4dc145ce3d12df400eb5';
@@ -122,8 +124,6 @@ const createEmptyBrief = (): BusinessBrief => ({
 const ALL_SECTIONS: PageSection[] = [
     'colors', 'typography', 'header',
     'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
-    'heroLumina', 'featuresLumina', 'ctaLumina', 'portfolioLumina', 'pricingLumina', 'testimonialsLumina', 'faqLumina',
-    'heroNeon', 'testimonialsNeon', 'featuresNeon', 'ctaNeon', 'portfolioNeon', 'pricingNeon', 'faqNeon',
     'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
     'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu', 'realEstateListings',
     'leads', 'newsletter', 'map', 'chatbot', 'cmsFeed', 'signupFloat', 'footer',
@@ -138,6 +138,388 @@ function buildVisibility(enabledSections: PageSection[]): Record<string, boolean
     vis['header'] = true;
     vis['footer'] = true;
     return vis;
+}
+
+function hashString(value: string): number {
+    let hash = 0;
+    for (let i = 0; i < value.length; i += 1) {
+        hash = ((hash << 5) - hash) + value.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash);
+}
+
+function pickFrom<T>(items: T[], seed: string): T {
+    return items[hashString(seed) % items.length];
+}
+
+function normalizeTemplateDesignIndustry(brief: BusinessBrief): string {
+    const text = `${brief.industry || ''} ${brief.subIndustry || ''} ${brief.description || ''}`.toLowerCase();
+    if (brief.hasEcommerce || /ecommerce|e-commerce|shop|store|retail|producto|tienda/.test(text)) return 'ecommerce';
+    if (/restaurant|restaurante|cafe|food|bakery|bar|menu/.test(text)) return 'restaurant';
+    if (/real estate|inmobili|property|propiedad|realtor/.test(text)) return 'real-estate';
+    if (/tech|software|saas|ai|ia|web3|cyber/.test(text)) return 'technology';
+    if (/creative|portfolio|arte|cultur|diseño|design|artist|photograph/.test(text)) return 'creative';
+    return 'services';
+}
+
+function hasTemplateDesignSignal(brief: BusinessBrief, pattern: RegExp): boolean {
+    const text = [
+        brief.businessName,
+        brief.industry,
+        brief.subIndustry,
+        brief.description,
+        brief.tagline,
+        ...(brief.services || []).flatMap(service => [service.name, service.description]),
+    ].filter(Boolean).join(' ').toLowerCase();
+    return pattern.test(text);
+}
+
+function applyTemplateDesignStrategyToGeneratedData(
+    data: any,
+    componentOrder: PageSection[],
+    brief: BusinessBrief,
+    finalTheme: any,
+): void {
+    if (!data || typeof data !== 'object') return;
+
+    const industry = normalizeTemplateDesignIndustry(brief);
+    const seed = `${brief.businessName}|${industry}|${componentOrder.join(',')}|template-design`;
+    const isVisual = ['creative', 'restaurant', 'real-estate'].includes(industry) || hasTemplateDesignSignal(brief, /\b(gallery|galería|portfolio|portafolio|visual|photo|foto|cultural|cultura|arte|design|diseño|event|travel|spa|salon|construction|architecture)\b/i);
+    const isPremium = hasTemplateDesignSignal(brief, /\b(premium|luxury|lujo|boutique|exclusive|exclusivo|high-end|profesional|enterprise|editorial|mosaic|mosaico|magazine|revista|health|wellness|self-care)\b/i);
+    const preferEditorial = isVisual || isPremium || industry === 'restaurant';
+
+    if (data.features && typeof data.features === 'object') {
+        data.features.featuresVariant = preferEditorial
+            ? 'editorial-mosaic'
+            : pickFrom(['bento-premium', 'modern', 'press-release', 'editorial-mosaic'], `${seed}|features`);
+        data.features.gridColumns = data.features.featuresVariant === 'editorial-mosaic' ? 4 : (data.features.gridColumns || 3);
+        data.features.imageHeight = data.features.featuresVariant === 'editorial-mosaic' ? 420 : (data.features.imageHeight || 340);
+        data.features.showSectionHeader = true;
+        data.features.enableCardAnimation = true;
+    }
+
+    if (data.testimonials && typeof data.testimonials === 'object') {
+        data.testimonials.testimonialsVariant = preferEditorial
+            ? 'editorial-mosaic'
+            : pickFrom(['floating-cards', 'gradient-shift', 'minimal-cards', 'editorial-mosaic'], `${seed}|testimonials`);
+        data.testimonials.enableCardAnimation = true;
+    }
+
+    if (data.menu && typeof data.menu === 'object') {
+        data.menu.menuVariant = industry === 'restaurant' || preferEditorial
+            ? 'editorial-mosaic'
+            : pickFrom(['modern-grid', 'elegant-list', 'editorial-mosaic'], `${seed}|menu`);
+        data.menu.gridColumns = data.menu.menuVariant === 'editorial-mosaic' ? 4 : data.menu.gridColumns;
+        data.menu.showSectionHeader = true;
+        data.menu.enableCardAnimation = true;
+    }
+
+    const globalColors = finalTheme?.globalColors || brief.colorPalette;
+    for (const key of ['features', 'testimonials', 'menu']) {
+        if (data[key] && typeof data[key] === 'object') {
+            data[key].colors = {
+                ...(data[key].colors || {}),
+                background: data[key].colors?.background || globalColors.background,
+                heading: data[key].colors?.heading || globalColors.heading || globalColors.text,
+                text: data[key].colors?.text || globalColors.text,
+                accent: data[key].colors?.accent || globalColors.accent || globalColors.primary,
+            };
+        }
+    }
+}
+
+const BRIEF_PLACEHOLDER_PATTERN = /^(?:\[.*\]|\{.*\}|GENERATE_TEXT|GENERATE_SHORT_TEXT|N\/A|NA|not provided|not detected|not available|no detectado|no disponible|none|null|undefined|#hex)$/i;
+const VALID_HEX_COLOR_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+const CORE_TEMPLATE_BRIEF_FIELDS: Array<keyof Pick<BusinessBrief, 'businessName' | 'industry'>> = ['businessName', 'industry'];
+const GENERATION_RELEVANT_MISSING_FIELDS = new Set<string>([
+    'businessName',
+    'industry',
+    'description',
+    'services',
+    'suggestedComponents',
+    'contactInfo.email',
+    'contactInfo.phone',
+    'contactInfo.address',
+    'contactInfo.businessHours',
+    'contactInfo.instagram',
+]);
+const BRIEF_FIELD_ALIASES: Record<string, string> = {
+    name: 'businessName',
+    business: 'businessName',
+    businessname: 'businessName',
+    'business name': 'businessName',
+    template: 'businessName',
+    templatename: 'businessName',
+    'template name': 'businessName',
+    type: 'industry',
+    templatetype: 'industry',
+    'template type': 'industry',
+    category: 'industry',
+    modules: 'suggestedComponents',
+    requiredmodules: 'suggestedComponents',
+    'required modules': 'suggestedComponents',
+    components: 'suggestedComponents',
+    phone: 'contactInfo.phone',
+    telephone: 'contactInfo.phone',
+    email: 'contactInfo.email',
+    address: 'contactInfo.address',
+    location: 'contactInfo.address',
+    hours: 'contactInfo.businessHours',
+    businesshours: 'contactInfo.businessHours',
+    instagram: 'contactInfo.instagram',
+    ig: 'contactInfo.instagram',
+};
+
+function cleanBriefTextValue(value: unknown): string | undefined {
+    if (typeof value !== 'string') return undefined;
+    const trimmed = value.trim();
+    if (!trimmed || BRIEF_PLACEHOLDER_PATTERN.test(trimmed)) return undefined;
+    return trimmed;
+}
+
+function normalizeInstagram(value: unknown): string | undefined {
+    const cleaned = cleanBriefTextValue(value);
+    if (!cleaned) return undefined;
+
+    const urlMatch = cleaned.match(/instagram\.com\/([A-Za-z0-9._]+)/i);
+    const rawHandle = urlMatch?.[1] || cleaned.replace(/^instagram\s*[:@]?\s*/i, '').replace(/^ig\s*[:@]?\s*/i, '');
+    const handle = rawHandle.replace(/^@/, '').split(/[/?#\s]/)[0].replace(/[^A-Za-z0-9._]/g, '');
+    return handle ? `@${handle}` : undefined;
+}
+
+function cleanContactInfo(contactInfo?: Partial<BusinessBrief['contactInfo']> | null): BusinessBrief['contactInfo'] {
+    if (!contactInfo || typeof contactInfo !== 'object') return {};
+
+    const cleaned: BusinessBrief['contactInfo'] = {};
+    const email = cleanBriefTextValue(contactInfo.email);
+    const phone = cleanBriefTextValue(contactInfo.phone);
+    const address = cleanBriefTextValue(contactInfo.address);
+    const city = cleanBriefTextValue(contactInfo.city);
+    const state = cleanBriefTextValue(contactInfo.state);
+    const country = cleanBriefTextValue(contactInfo.country);
+    const businessHours = cleanBriefTextValue(contactInfo.businessHours);
+    const facebook = cleanBriefTextValue(contactInfo.facebook);
+    const instagram = normalizeInstagram(contactInfo.instagram);
+    const twitter = cleanBriefTextValue(contactInfo.twitter);
+    const tiktok = cleanBriefTextValue(contactInfo.tiktok);
+
+    if (email) cleaned.email = email;
+    if (phone) cleaned.phone = phone;
+    if (address) cleaned.address = address;
+    if (city) cleaned.city = city;
+    if (state) cleaned.state = state;
+    if (country) cleaned.country = country;
+    if (businessHours) cleaned.businessHours = businessHours;
+    if (facebook) cleaned.facebook = facebook;
+    if (instagram) cleaned.instagram = instagram;
+    if (twitter) cleaned.twitter = twitter;
+    if (tiktok) cleaned.tiktok = tiktok;
+
+    return cleaned;
+}
+
+function preferDetailedContactValue(existing?: string, incoming?: string): string | undefined {
+    const cleanedExisting = cleanBriefTextValue(existing);
+    const cleanedIncoming = cleanBriefTextValue(incoming);
+    if (!cleanedExisting) return cleanedIncoming;
+    if (!cleanedIncoming) return cleanedExisting;
+    return cleanedIncoming.length >= cleanedExisting.length ? cleanedIncoming : cleanedExisting;
+}
+
+function mergeContactInfo(
+    existing?: Partial<BusinessBrief['contactInfo']> | null,
+    incoming?: Partial<BusinessBrief['contactInfo']> | null,
+): BusinessBrief['contactInfo'] {
+    const cleanedExisting = cleanContactInfo(existing);
+    const cleanedIncoming = cleanContactInfo(incoming);
+    return {
+        ...cleanedExisting,
+        ...cleanedIncoming,
+        address: preferDetailedContactValue(cleanedExisting.address, cleanedIncoming.address),
+        businessHours: preferDetailedContactValue(cleanedExisting.businessHours, cleanedIncoming.businessHours),
+    };
+}
+
+function hasBriefValue(value: unknown): boolean {
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'string') return Boolean(cleanBriefTextValue(value));
+    return Boolean(value);
+}
+
+function getBriefPathValue(brief: BusinessBrief, path: string): unknown {
+    return path.split('.').reduce<unknown>((current, key) => {
+        if (!current || typeof current !== 'object') return undefined;
+        return (current as Record<string, unknown>)[key];
+    }, brief);
+}
+
+function normalizeMissingFieldPath(field: unknown): string | undefined {
+    const cleaned = cleanBriefTextValue(field);
+    if (!cleaned) return undefined;
+
+    const path = cleaned.replace(/^businessBrief\./i, '').replace(/^brief\./i, '').trim();
+    const aliasKey = path.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+    const compactAliasKey = aliasKey.replace(/\s+/g, '');
+    return BRIEF_FIELD_ALIASES[aliasKey] || BRIEF_FIELD_ALIASES[compactAliasKey] || path;
+}
+
+function normalizeSuggestedComponents(components: unknown): PageSection[] | null {
+    if (!Array.isArray(components)) return null;
+    const allowed = new Set<PageSection>(ALL_SECTIONS);
+    const normalized = components
+        .map(component => cleanBriefTextValue(String(component)))
+        .filter((component): component is string => Boolean(component))
+        .filter((component, index, all) => all.indexOf(component) === index)
+        .filter((component): component is PageSection => allowed.has(component as PageSection) && !isRetiredDesignSuiteSection(component as PageSection));
+
+    return normalized.length > 0 ? normalized : null;
+}
+
+function normalizeColorPalette(colorPalette: unknown): Partial<BusinessBrief['colorPalette']> | null {
+    if (!colorPalette || typeof colorPalette !== 'object') return null;
+    const cleaned: Partial<BusinessBrief['colorPalette']> = {};
+    for (const key of ['primary', 'secondary', 'accent', 'background', 'surface', 'text'] as const) {
+        const value = cleanBriefTextValue((colorPalette as Record<string, unknown>)[key]);
+        if (value && VALID_HEX_COLOR_PATTERN.test(value)) cleaned[key] = value;
+    }
+    return Object.keys(cleaned).length > 0 ? cleaned : null;
+}
+
+function normalizeFontPairing(fontPairing: unknown): Partial<BusinessBrief['fontPairing']> | null {
+    if (!fontPairing || typeof fontPairing !== 'object') return null;
+    const cleaned: Partial<BusinessBrief['fontPairing']> = {};
+    for (const key of ['header', 'body', 'button'] as const) {
+        const value = cleanBriefTextValue((fontPairing as Record<string, unknown>)[key]);
+        if (value) cleaned[key] = value.toLowerCase().replace(/\s+/g, '-');
+    }
+    return Object.keys(cleaned).length > 0 ? cleaned : null;
+}
+
+function normalizeServices(services: unknown): BusinessBrief['services'] | null {
+    if (!Array.isArray(services)) return null;
+    const cleaned = services
+        .map(service => {
+            if (typeof service === 'string') return { name: cleanBriefTextValue(service) || '', description: '' };
+            if (!service || typeof service !== 'object') return { name: '', description: '' };
+            const record = service as Record<string, unknown>;
+            return {
+                name: cleanBriefTextValue(record.name || record.title || record.service) || '',
+                description: cleanBriefTextValue(record.description || record.details || record.summary) || '',
+            };
+        })
+        .filter(service => service.name);
+    return cleaned.length > 0 ? cleaned : null;
+}
+
+function normalizeTemplateBriefCompletion(brief: BusinessBrief): BusinessBrief {
+    const normalized: BusinessBrief = {
+        ...brief,
+        businessName: cleanBriefTextValue(brief.businessName) || '',
+        industry: cleanBriefTextValue(brief.industry) || '',
+        subIndustry: cleanBriefTextValue(brief.subIndustry),
+        description: cleanBriefTextValue(brief.description) || '',
+        tagline: cleanBriefTextValue(brief.tagline) || '',
+        services: (brief.services || [])
+            .map(service => ({
+                name: cleanBriefTextValue(service.name) || '',
+                description: cleanBriefTextValue(service.description) || '',
+            }))
+            .filter(service => service.name),
+        contactInfo: mergeContactInfo(brief.contactInfo),
+        suggestedComponents: normalizeSuggestedComponents(brief.suggestedComponents) || [],
+        missingFields: [],
+    };
+
+    const missing = new Set<string>();
+    for (const field of brief.missingFields || []) {
+        const normalizedField = normalizeMissingFieldPath(field);
+        if (!normalizedField || !GENERATION_RELEVANT_MISSING_FIELDS.has(normalizedField)) continue;
+        if (!hasBriefValue(getBriefPathValue(normalized, normalizedField))) missing.add(normalizedField);
+    }
+    for (const field of CORE_TEMPLATE_BRIEF_FIELDS) {
+        if (!hasBriefValue(normalized[field])) missing.add(field);
+    }
+
+    let calculatedScore = 0;
+    if (hasBriefValue(normalized.businessName)) calculatedScore += 25;
+    if (hasBriefValue(normalized.industry)) calculatedScore += 25;
+    if (hasBriefValue(normalized.description)) calculatedScore += 15;
+    if (normalized.services.length > 0) calculatedScore += 10;
+    if (normalized.suggestedComponents.length > 0) calculatedScore += 15;
+    if (hasBriefValue(normalized.tagline)) calculatedScore += 5;
+    if (hasBriefValue(normalized.contactInfo.email) || hasBriefValue(normalized.contactInfo.phone) || hasBriefValue(normalized.contactInfo.address)) calculatedScore += 5;
+
+    const missingFields = Array.from(missing);
+    let readinessScore = Math.max(brief.readinessScore || 0, calculatedScore);
+    if (missingFields.length === 0 && readinessScore >= 70) readinessScore = Math.max(readinessScore, 80);
+
+    return {
+        ...normalized,
+        readinessScore: Math.min(100, Math.round(readinessScore)),
+        missingFields,
+    };
+}
+
+function parseBriefDataFromText(text: string): { briefData: any | null; cleanedText: string } {
+    const tagMatch = text.match(/<!--\s*BRIEF\s*:\s*([\s\S]*?)-->/i);
+    if (tagMatch) {
+        const parsed = safeJsonParse(tagMatch[1], null);
+        return {
+            briefData: parsed,
+            cleanedText: text.replace(/<!--\s*BRIEF\s*:[\s\S]*?-->/gi, '').trim(),
+        };
+    }
+
+    const labelMatch = text.match(/(?:^|\n)\s*BRIEF\s*:\s*({[\s\S]*})\s*$/i);
+    if (labelMatch) {
+        const parsed = safeJsonParse(labelMatch[1], null);
+        return {
+            briefData: parsed,
+            cleanedText: text.replace(labelMatch[0], '').trim(),
+        };
+    }
+
+    const fencedMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    const parsed = safeJsonParse(fencedMatch?.[1] || text, null);
+    const looksLikeBrief = parsed && typeof parsed === 'object' && (
+        'businessName' in parsed ||
+        'industry' in parsed ||
+        'suggestedComponents' in parsed ||
+        'colorPalette' in parsed ||
+        'fontPairing' in parsed
+    );
+
+    return {
+        briefData: looksLikeBrief ? parsed : null,
+        cleanedText: looksLikeBrief
+            ? (fencedMatch ? text.replace(fencedMatch[0], '').trim() : (text.trim().startsWith('{') ? '' : text.trim()))
+            : text.trim(),
+    };
+}
+
+function extractContactDetailsFromText(text: string): BusinessBrief['contactInfo'] {
+    const contactInfo: BusinessBrief['contactInfo'] = {};
+    const email = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
+    const phone = text.match(/(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/)?.[0];
+    const instagramUrl = text.match(/instagram\.com\/([A-Za-z0-9._]+)/i)?.[0];
+    const instagramLabel = text.match(/(?:instagram|ig)\s*[:@]?\s*(@?[A-Za-z0-9._]{2,30})/i)?.[1];
+    const instagramHandle = text.match(/(^|[\s(])@([A-Za-z0-9._]{2,30})(?=$|[\s),.;])/i)?.[2];
+    const addressLabel = text.match(/(?:direcci[oó]n|address|ubicaci[oó]n|estamos en|located at)\s*:?\s*([^\n.]+)/i)?.[1];
+    const streetAddress = text.match(/\b(?:\d{1,6}\s+(?:Calle|Ave\.?|Avenida|Road|Rd\.?|Street|St\.?|Boulevard|Blvd\.?)\s+[^\n.]+|(?:Calle|Ave\.?|Avenida|Road|Rd\.?|Street|St\.?|Boulevard|Blvd\.?)\s+[^\n.]*?\d{1,6}[^\n.]*)/i)?.[0];
+    const hoursLabel = text.match(/(?:horario|horarios|business hours|hours)\s*:?\s*([^\n.]+)/i)?.[1];
+    const hoursPattern = text.match(/((?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|lun|mar|mi[eé]|jue|vie|s[aá]b|dom|monday|tuesday|wednesday|thursday|friday|saturday|sunday)[^\n.]{0,140}?\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?|am|pm)?\s*(?:-|–|—|a|to)\s*\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?|am|pm)?)/i)?.[1];
+
+    if (email) contactInfo.email = email;
+    if (phone) contactInfo.phone = phone.replace(/\s+/g, ' ').trim();
+    if (instagramUrl || instagramLabel || instagramHandle) {
+        const normalized = normalizeInstagram(instagramUrl || instagramLabel || instagramHandle);
+        if (normalized) contactInfo.instagram = normalized;
+    }
+    if (addressLabel || streetAddress) contactInfo.address = (addressLabel || streetAddress || '').trim();
+    if (hoursLabel || hoursPattern) contactInfo.businessHours = (hoursLabel || hoursPattern || '').trim();
+
+    return cleanContactInfo(contactInfo);
 }
 
 // ── Safe JSON parse ─────────────────────────────────────────────────────────
@@ -199,6 +581,7 @@ export function useAdminTemplateStudio(onSuccess?: () => void) {
     // ── Generation state ────────────────────────────────────────────────────
     const [isGenerating, setIsGenerating] = useState(false);
     const [generationPhase, setGenerationPhase] = useState<GenerationPhase | null>(null);
+    const [generatedTemplate, setGeneratedTemplate] = useState<Project | null>(null);
     const isGeneratingRef = useRef(false);
 
     // ── Voice state ─────────────────────────────────────────────────────────
@@ -215,7 +598,19 @@ export function useAdminTemplateStudio(onSuccess?: () => void) {
     const [isExtracting, setIsExtracting] = useState(false);
 
     // ── Computed ─────────────────────────────────────────────────────────────
-    const canGenerate = businessBrief.readinessScore >= 70 && !isGenerating;
+    const studioReadiness = getStudioReadiness({
+        kind: 'template',
+        templateName: businessBrief.businessName,
+        templateType: businessBrief.industry || businessBrief.description,
+        industry: businessBrief.industry,
+        description: businessBrief.description,
+        requiredModules: businessBrief.suggestedComponents,
+        designStyle: `${businessBrief.fontPairing?.header || ''} ${businessBrief.fontPairing?.body || ''}`.trim(),
+        sampleContentStatus: 'Sample content, template draft, needs review',
+        missingFields: businessBrief.missingFields,
+        readinessScore: businessBrief.readinessScore,
+    });
+    const canGenerate = studioReadiness.canGenerate && !isGenerating;
 
     // ═════════════════════════════════════════════════════════════════════════
     // SYSTEM PROMPT
@@ -223,7 +618,7 @@ export function useAdminTemplateStudio(onSuccess?: () => void) {
 
     const buildSystemPrompt = useCallback(() => {
         const lang = i18n.language === 'es' ? 'Spanish' : 'English';
-        return `You are Quimera AI — a Senior Creative Director & Web Design Expert with over 20 years of experience at world-class digital agencies. You specialize in color theory, typography, modern UI/UX trends, and conversion-focused web design. You help users create stunning, award-worthy websites through natural conversation.
+        return `You are Quimera AI — a Senior Creative Director & Web Design Expert with over 20 years of experience at world-class digital agencies. You specialize in color theory, typography, modern UI/UX trends, and conversion-focused web design. You help admins create reusable website templates through a guided Studio Flow.
 
 YOUR EXPERTISE:
 - Color Theory: 60-30-10 rule, color temperature, WCAG AA contrast, psychological color associations
@@ -231,33 +626,29 @@ YOUR EXPERTISE:
 - Modern Trends (2025-2026): Glassmorphism, bento grids, oversized typography, scroll-driven animations, soft gradients, neobrutalism accents, warm neutrals, clay palettes
 - Conversion Design: Strategic CTA placement, visual hierarchy, trust signals, social proof positioning
 
-YOUR GOAL: Extract all the business information needed to generate a complete website, then propose a design using your expert knowledge.
+YOUR GOAL: Extract the template intent needed to generate a reusable template draft with sample content, then propose a design using your expert knowledge.
 
 CONVERSATION PHASES:
-1. DISCOVERY — Ask about the business: name, industry/type, what makes it special
-2. VALUE PROPOSITION — Understand services/products, unique selling points, target audience
-3. CONTACT & LOCATION — Get contact details, address, social media, business hours
-4. E-COMMERCE — Ask if they sell products online (if relevant to their industry)
-5. DESIGN PROPOSAL — Propose colors, components, typography and overall aesthetic based on industry. Explain WHY you chose each color and font (e.g., "I chose Playfair Display for your headers because serif fonts convey the elegance and trust your law firm needs")
-6. CONFIRMATION — Summarize everything and ask if they're ready to generate
+1. TEMPLATE DISCOVERY — Ask for template type, industry, and reusable purpose
+2. STRUCTURE — Understand required modules, optional modules, and compatible industries
+3. SAMPLE CONTENT — Confirm that all business copy is sample/dummy/template content
+4. DESIGN PROPOSAL — Propose colors, components, typography and overall aesthetic based on industry
+5. CONFIRMATION — Summarize the template draft and recommend generating when minimum context is ready
 
 CRITICAL RULES:
-1. Be conversational, warm, and enthusiastic. This is a creative collaboration, not a form.
-2. Ask 1-2 questions at a time, never overwhelm with many questions.
+1. Be conversational and concise. This is a guided admin template flow, not a long interview.
+2. Ask one question at a time. If the user provides enough context, summarize and move toward generation instead of continuing the interview.
 3. After EVERY response, include a hidden brief update tag with ALL currently known information:
    <!--BRIEF:{"businessName":"[GENERATE_TEXT]","industry":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]","tagline":"[GENERATE_TEXT]","services":[{"name":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]"}],"contactInfo":{"email":"[GENERATE_TEXT]","phone":"[GENERATE_TEXT]","address":"[GENERATE_TEXT]","city":"[GENERATE_TEXT]","state":"[GENERATE_TEXT]","country":"[GENERATE_TEXT]","businessHours":"[GENERATE_TEXT]","instagram":"[GENERATE_TEXT]","facebook":"[GENERATE_TEXT]","twitter":"[GENERATE_TEXT]","tiktok":"[GENERATE_TEXT]"},"hasEcommerce":false,"colorPalette":{"primary":"#hex","secondary":"#hex","accent":"#hex","background":"#hex","surface":"#hex","text":"#hex"},"fontPairing":{"header":"[FONT_KEY_FROM_GUIDE]","body":"[FONT_KEY_FROM_GUIDE]","button":"[FONT_KEY_FROM_GUIDE]"},"suggestedComponents":["hero","services","features","testimonials","faq","cta","leads","newsletter","map","signupFloat"],"readinessScore":0,"missingFields":["businessName","industry"],"referenceImageContext":""}-->
 4. Update readinessScore progressively: 0-20 (just started), 20-40 (basic info), 40-60 (good detail), 60-80 (almost ready), 80-100 (ready to generate)
 5. For suggestedComponents, pick from: hero, heroSplit, heroGallery, heroWave, heroNova, heroLead, topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, video, howItWorks, menu, realEstateListings, leads, newsletter, map, signupFloat, separator1, separator2, separator3. NEVER include: slideshow, portfolio, team. heroLead is a split hero with integrated lead form. Use realEstateListings only for realtor/property websites, and pair it with the existing leads component.
-   - IF THE USER REQUESTS "Lumina Suite", OR if the industry is related to AI, Luxury, Enterprise, or Data, you MUST exclusively use Lumina components (heroLumina, featuresLumina, ctaLumina, portfolioLumina, pricingLumina, testimonialsLumina, faqLumina) instead of the standard ones.
-   - IF THE USER REQUESTS "Neon Suite", OR if the industry is related to Tech, Gaming, Web3, Cyber, or eSports, you MUST exclusively use Neon components (heroNeon, featuresNeon, ctaNeon, portfolioNeon, pricingNeon, testimonialsNeon, faqNeon) instead of the standard ones.
 6. Apply your expert color theory knowledge to choose palettes (see COLOR PALETTES section below)
 7. Apply your expert typography knowledge to choose font pairings (see TYPOGRAPHY section below). ALWAYS include fontPairing in the BRIEF tag using the exact font key strings from the available fonts list (e.g. "playfair-display", "space-grotesk", "inter"). Choose fonts that match the industry personality.
-8. When readinessScore >= 80, you MUST do the following:
+8. When minimum context exists (template type and industry), you MUST do the following:
    a. Summarize all the information gathered in a clear list.
-   b. Tell the user that you have everything you need.
-   c. Explicitly instruct them to press the **"🚀 Generate Website"** button on the right panel (or on mobile, tap the "Brief" button first).
-   d. Warn them that the generation process takes **several minutes** (approximately 3-5 minutes) because the AI needs to generate all the content, create custom images, and assemble everything. Tell them to be patient and NOT close the window.
-   e. Example: "¡Tengo todo lo que necesito! Para comenzar, presiona el botón **🚀 Generate Website** en el panel derecho. El proceso toma entre 3-5 minutos porque voy a generar todo el contenido, crear imágenes personalizadas y ensamblar tu sitio completo. ¡No cierres la ventana y verás el progreso en tiempo real!"
+   b. Tell the user that you can generate a template draft now and mark sample content for admin review.
+   c. Explicitly instruct them to press the **"Generate Template"** button.
+   d. Warn them that the generation process takes several minutes because the AI needs to create reusable structure, sample content, images, and preview data. Tell them to keep the window open.
 9. ALWAYS respond in ${lang}. The BRIEF tag must always use English field names but values in the user's language.
 10. Use markdown formatting for clear, readable responses. Use **bold** for emphasis, bullet lists for options.
 11. If the user provides a URL or existing website, acknowledge it and extract whatever info you can from the conversation.
@@ -268,9 +659,6 @@ AVAILABLE COMPONENTS
 You have these components at your disposal. Choose whichever combination best fits — there are NO rigid industry rules. Be creative:
 
 HERO VARIANTS (pick ONE): hero, heroSplit, heroGallery, heroWave, heroNova, heroLead
-SUITE COMPONENTS (use ALL from ONE suite if the user requests it, or if the vibe fits):
-  - Lumina Suite: heroLumina, featuresLumina, ctaLumina, portfolioLumina, pricingLumina, testimonialsLumina, faqLumina
-  - Neon Suite: heroNeon, featuresNeon, ctaNeon, portfolioNeon, pricingNeon, testimonialsNeon, faqNeon
 STANDARD: topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, team, video, howItWorks, menu, realEstateListings, leads, newsletter, map, signupFloat, portfolio, slideshow
 DECORATIVE: separator1, separator2, separator3, separator4, separator5
 
@@ -279,7 +667,7 @@ RULES:
 - realEstateListings = only for property/real estate. Pair with leads.
 - banner MUST always be included.
 - ALWAYS include at least one hero variant.
-- Vary header styles freely: sticky-solid, floating-glass, floating-pill, transparent-blur, edge-minimal, edge-bordered, transparent-gradient-dark, etc.
+- Use solid header styles only: sticky-solid, edge-solid, or edge-bordered. Never use transparent, glass, floating, or gradient headers.
 
 ═══════════════════════════════════════════════════════════
 COLOR THEORY FUNDAMENTALS
@@ -292,8 +680,13 @@ COLOR THEORY FUNDAMENTALS
 - Dark bg → white/light text  |  Light bg → dark text  |  Min 4.5:1 ratio
 
 **Hard Rules:**
+- Use no more than three non-neutral brand colors total: primary, secondary, and accent. Background, surface, and text roles must stay neutral and must not introduce extra brand hues.
+- Header and footer MUST use the exact same solid dark brand color. Never use white, off-white, pale, transparent, glass, or gradient backgrounds for header/footer.
+- Header and footer typography MUST be white (#ffffff) with WCAG AA contrast.
 - Text over colored backgrounds MUST be white (#ffffff) — critical for nav \u0026 hero.
-- Footer bg MUST NEVER be white. Use a solid color or match the header.
+- Text placed directly over images MUST be white (#ffffff) with a dark overlay/scrim strong enough for WCAG AA contrast. If text sits inside an opaque solid panel/card over the image, the panel may use a semantic brand color with readable text.
+- Never request or reuse images only to create blurred/glass/decorative section backgrounds. Use the existing gradient controls instead: cornerGradient, gradientStart/gradientEnd, gradientColors, radial or multi-stop overlays when supported, plus solid semantic colors.
+- Hero variants, banners, menu items, Realty/property components, product/collection heroes, portfolio, slideshow, team, and testimonial portraits remain image-backed when relevant.
 
 Be original with palettes. Use color psychology, modern trends, and brand personality.
 
@@ -324,24 +717,10 @@ Example: "referenceImageContext":"Use this person as the business owner in hero 
 
 ${referenceImagesRef.current.length > 0 ? `⚠️ The user has currently uploaded ${referenceImagesRef.current.length} reference image(s). If you haven't already asked how they want them used, ASK NOW.` : ''}
 
-Remember: You are building a COMPLETE website — every component needs full, rich content. Be thorough in your information gathering.`;
+Remember: You are building a REUSABLE TEMPLATE DRAFT. Every component needs realistic sample content, but it must never be described as final content for a real business.`;
     }, [i18n.language, referenceImages.length]);
 
-    const buildWelcomeText = useCallback(() => `${t('aiTemplateStudio.welcome.greeting')}
-
-${t('aiTemplateStudio.welcome.description')}
-
-${t('aiTemplateStudio.welcome.whatINeed')}
-- ${t('aiTemplateStudio.welcome.businessName')}
-- ${t('aiTemplateStudio.welcome.services')}
-- ${t('aiTemplateStudio.welcome.style')}
-- ${t('aiTemplateStudio.welcome.contact')}
-
-${t('aiTemplateStudio.welcome.voiceHint')}
-
-${t('aiTemplateStudio.welcome.existingWebsite')}
-
-${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
+    const buildWelcomeText = useCallback(() => t('aiTemplateStudio.welcome.templateStudio'), [t]);
 
     // ═════════════════════════════════════════════════════════════════════════
     // INIT
@@ -353,6 +732,7 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
         const welcomeMsg: DisplayMessage = { role: 'model', text: welcomeText, timestamp: Date.now() };
         setMessages([welcomeMsg]);
         setBusinessBrief(createEmptyBrief());
+        setGeneratedTemplate(null);
         setGenerationPhase(null);
         setIsGenerating(false);
 
@@ -386,7 +766,7 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
 
         // Add user message
         const userMsg: DisplayMessage = { role: 'user', text: url, timestamp: Date.now() };
-        setMessages(prev => [...prev, { role: 'model', text: t('aiWebsiteStudio.extraction.analyzing'), timestamp: Date.now() }]);
+        setMessages(prev => [...prev, { role: 'model', text: t('aiTemplateStudio.extraction.analyzing'), timestamp: Date.now() }]);
 
         try {
             const cfData = await analyzeWebsite(url);
@@ -399,7 +779,7 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
 
             // 2. Map Cloud Function result into our BusinessBrief
             const lang = i18n.language === 'es' ? 'es' : 'en';
-            setBusinessBrief(prev => ({
+            setBusinessBrief(prev => normalizeTemplateBriefCompletion({
                 ...prev,
                 businessName: result.businessName || prev.businessName,
                 industry: result.industry || prev.industry,
@@ -408,17 +788,16 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
                 services: result.services?.length
                     ? result.services.map((s: any) => ({ name: s.name, description: s.description || '' }))
                     : prev.services,
-                contactInfo: {
-                    ...prev.contactInfo,
-                    email: result.contactInfo?.email || prev.contactInfo.email,
-                    phone: result.contactInfo?.phone || prev.contactInfo.phone,
-                    address: result.contactInfo?.address || prev.contactInfo.address,
+                contactInfo: mergeContactInfo(prev.contactInfo, {
+                    email: result.contactInfo?.email,
+                    phone: result.contactInfo?.phone,
+                    address: result.contactInfo?.address,
                     businessHours: result.contactInfo?.businessHours
                         ? (typeof result.contactInfo.businessHours === 'string'
                             ? result.contactInfo.businessHours
                             : JSON.stringify(result.contactInfo.businessHours))
-                        : prev.contactInfo.businessHours,
-                },
+                        : undefined,
+                }),
                 // Map branding into colorPalette
                 colorPalette: result.branding ? {
                     ...prev.colorPalette,
@@ -463,7 +842,7 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
                   (result.contactInfo?.address ? `**Dirección:** ${result.contactInfo.address}\n` : '') +
                   (socialLinks.length ? `**Redes sociales:** ${socialLinks.join(', ')}\n` : '') +
                   (brandingLines.length ? `\n**Branding detectado:**\n${brandingLines.join('\n')}\n` : '') +
-                  `\nHe importado toda la información disponible. ¿Hay algo que quieras ajustar o agregar antes de generar tu sitio web?`
+                  `\nHe importado toda la información disponible como inspiración de template. ¿Quieres ajustar módulos reutilizables o sample content antes de generar el borrador de template?`
                 : `✅ **Website analyzed:** ${url} (${pagesScraped} ${pagesScraped === 1 ? 'page' : 'pages'} scraped)\n\n` +
                   `**Business:** ${result.businessName || 'Not detected'}\n` +
                   `**Industry:** ${result.industry || 'Not detected'}\n` +
@@ -475,11 +854,11 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
                   (result.contactInfo?.address ? `**Address:** ${result.contactInfo.address}\n` : '') +
                   (socialLinks.length ? `**Social media:** ${socialLinks.join(', ')}\n` : '') +
                   (brandingLines.length ? `\n**Branding detected:**\n${brandingLines.join('\n')}\n` : '') +
-                  `\nI've imported all available information. Would you like to adjust or add anything before generating your website?`;
+                  `\nI've imported all available information as template inspiration. Would you like to adjust reusable modules or sample content before generating the template draft?`;
 
             // 4. Update chat messages
             setMessages(prev => {
-                const filtered = prev.filter(m => m.text !== t('aiWebsiteStudio.extraction.analyzing'));
+                const filtered = prev.filter(m => m.text !== t('aiTemplateStudio.extraction.analyzing'));
                 return [...filtered, userMsg, { role: 'model', text: summaryText, timestamp: Date.now() }];
             });
 
@@ -491,12 +870,12 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
             ];
 
         } catch (error) {
-            console.error('[AIWebsiteStudio] Website extraction failed:', error);
+            console.error('[AdminTemplateStudio] Website extraction failed:', error);
             setMessages(prev => {
-                const filtered = prev.filter(m => m.text !== t('aiWebsiteStudio.extraction.analyzing'));
+                const filtered = prev.filter(m => m.text !== t('aiTemplateStudio.extraction.analyzing'));
                 return [...filtered, userMsg, {
                     role: 'model',
-                    text: t('aiWebsiteStudio.extraction.error'),
+                    text: t('aiTemplateStudio.extraction.error'),
                     timestamp: Date.now(),
                 }];
             });
@@ -510,38 +889,57 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
     // ═════════════════════════════════════════════════════════════════════════
 
     const extractAndUpdateBrief = useCallback((text: string): string => {
-        const briefMatch = text.match(/<!--BRIEF:([\s\S]*?)-->/);
-        if (!briefMatch) return text;
+        const { briefData, cleanedText } = parseBriefDataFromText(text);
+        if (!briefData) return text;
 
         try {
-            const briefData = JSON.parse(briefMatch[1]);
+            const normalizedSuggestedComponents = normalizeSuggestedComponents(briefData.suggestedComponents);
+            const briefBusinessName = cleanBriefTextValue(briefData.businessName);
+            const briefIndustry = cleanBriefTextValue(briefData.industry);
+            const briefSubIndustry = cleanBriefTextValue(briefData.subIndustry);
+            const briefDescription = cleanBriefTextValue(briefData.description);
+            const briefTagline = cleanBriefTextValue(briefData.tagline);
+            const briefReferenceImageContext = cleanBriefTextValue(briefData.referenceImageContext);
+            const cleanedContactInfo = cleanContactInfo(briefData.contactInfo);
+            const hasCleanedContactInfo = Object.keys(cleanedContactInfo).length > 0;
+            const cleanedServices = normalizeServices(briefData.services);
+            const cleanedColorPalette = normalizeColorPalette(briefData.colorPalette);
+            const cleanedFontPairing = normalizeFontPairing(briefData.fontPairing);
+
             setBusinessBrief(prev => {
                 const updated = { ...prev };
-                if (briefData.businessName) updated.businessName = briefData.businessName;
-                if (briefData.industry) updated.industry = briefData.industry;
-                if (briefData.subIndustry) updated.subIndustry = briefData.subIndustry;
-                if (briefData.description) updated.description = briefData.description;
-                if (briefData.tagline) updated.tagline = briefData.tagline;
-                if (briefData.services && Array.isArray(briefData.services)) updated.services = briefData.services;
-                if (briefData.contactInfo) updated.contactInfo = { ...prev.contactInfo, ...briefData.contactInfo };
+                if (briefBusinessName) updated.businessName = briefBusinessName;
+                if (briefIndustry) updated.industry = briefIndustry;
+                if (briefSubIndustry) updated.subIndustry = briefSubIndustry;
+                if (briefDescription) updated.description = briefDescription;
+                if (briefTagline) updated.tagline = briefTagline;
+                if (cleanedServices) updated.services = cleanedServices;
+                if (hasCleanedContactInfo) updated.contactInfo = mergeContactInfo(prev.contactInfo, cleanedContactInfo);
                 if (briefData.hasEcommerce !== undefined) updated.hasEcommerce = briefData.hasEcommerce;
-                if (briefData.ecommerceType) updated.ecommerceType = briefData.ecommerceType;
-                if (briefData.colorPalette) updated.colorPalette = { ...prev.colorPalette, ...briefData.colorPalette };
-                if (briefData.fontPairing) updated.fontPairing = { ...prev.fontPairing, ...briefData.fontPairing };
-                if (briefData.suggestedComponents && Array.isArray(briefData.suggestedComponents)) {
-                    updated.suggestedComponents = briefData.suggestedComponents as PageSection[];
-                }
+                if (cleanBriefTextValue(briefData.ecommerceType)) updated.ecommerceType = cleanBriefTextValue(briefData.ecommerceType);
+                if (cleanedColorPalette) updated.colorPalette = { ...prev.colorPalette, ...cleanedColorPalette };
+                if (cleanedFontPairing) updated.fontPairing = { ...prev.fontPairing, ...cleanedFontPairing };
+                if (normalizedSuggestedComponents) updated.suggestedComponents = normalizedSuggestedComponents;
                 if (typeof briefData.readinessScore === 'number') updated.readinessScore = briefData.readinessScore;
                 if (briefData.missingFields && Array.isArray(briefData.missingFields)) updated.missingFields = briefData.missingFields;
-                if (briefData.referenceImageContext) updated.referenceImageContext = briefData.referenceImageContext;
-                return updated;
+                if (briefReferenceImageContext) updated.referenceImageContext = briefReferenceImageContext;
+                return normalizeTemplateBriefCompletion(updated);
             });
         } catch (e) {
-            if (isDev) console.warn('[AIWebsiteStudio] Failed to parse brief:', e);
+            if (isDev) console.warn('[AdminTemplateStudio] Failed to parse brief:', e);
         }
 
-        // Remove the brief tag from visible text
-        return text.replace(/<!--BRIEF:[\s\S]*?-->/g, '').trim();
+        return cleanedText;
+    }, []);
+
+    const applyUserTextBriefPatch = useCallback((text: string) => {
+        const extractedContactInfo = extractContactDetailsFromText(text);
+        if (Object.keys(extractedContactInfo).length === 0) return;
+
+        setBusinessBrief(prev => normalizeTemplateBriefCompletion({
+            ...prev,
+            contactInfo: mergeContactInfo(prev.contactInfo, extractedContactInfo),
+        }));
     }, []);
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -555,6 +953,7 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
         setMessages(prev => [...prev, userMsg]);
         setInput('');
         setIsThinking(true);
+        applyUserTextBriefPatch(text.trim());
 
         historyRef.current.push({ role: 'user', text: text.trim() });
 
@@ -598,7 +997,7 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
         } finally {
             setIsThinking(false);
         }
-    }, [isThinking, user, buildSystemPrompt, extractAndUpdateBrief]);
+    }, [isThinking, user, buildSystemPrompt, extractAndUpdateBrief, applyUserTextBriefPatch]);
 
     // Auto-scroll
     useEffect(() => {
@@ -713,9 +1112,10 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
         if (isGeneratingRef.current || !user) return;
         isGeneratingRef.current = true;
         setIsGenerating(true);
+        setGeneratedTemplate(null);
 
         const brief = businessBrief;
-        if (isDev) console.log('[AIWebsiteStudio] Starting website generation for:', brief.businessName);
+        if (isDev) console.log('[AdminTemplateStudio] Starting template generation for:', brief.businessName);
 
         const addEvent = (type: GenerationEvent['type'], message: string, imageUrl?: string, imageKey?: string) => {
             const event: GenerationEvent = { timestamp: Date.now(), type, message, imageUrl, imageKey };
@@ -728,10 +1128,10 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
             // ══════════════════════════════════════════════════════════════════
             // PHASE 1: Create project skeleton (0-5%)
             // ══════════════════════════════════════════════════════════════════
-            setGenerationPhase({ phase: 'content', progress: 2, currentStep: 'Creating project...', imagesTotal: 0, imagesCompleted: 0, imagesFailed: 0, events: [{ timestamp: Date.now(), type: 'start', message: `Starting website generation for "${brief.businessName}"` }], generatedImages: [] });
+            setGenerationPhase({ phase: 'content', progress: 2, currentStep: 'Planning reusable template...', imagesTotal: 0, imagesCompleted: 0, imagesFailed: 0, events: [{ timestamp: Date.now(), type: 'start', message: `Starting template draft for "${brief.businessName || brief.industry || 'Reusable template'}"` }], generatedImages: [] });
 
             const projectId = createUuid();
-            addEvent('content', 'Creating project...');
+            addEvent('content', 'Planning reusable template structure...');
 
             // Build theme from brief
             const theme = {
@@ -763,7 +1163,7 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
             // Minimal memory skeleton — will be filled with AI content, only saved at the very end
             const skeletonProject = {
                 id: projectId,
-                name: brief.businessName || 'My Website',
+                name: brief.businessName || 'My Template',
                 thumbnailUrl: '',
                 status: 'Draft' as const,
                 lastUpdated: new Date().toISOString(),
@@ -781,18 +1181,18 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
                 sectionVisibility: {} as Record<string, boolean>,
                 pages: [] as SitePage[],
                 menus: [] as any[],
-                generatedWith: 'AI Website Studio',
+                generatedWith: 'Admin AI Template Studio',
             };
 
             const finalProjectId = projectId;
-            if (isDev) console.log('[AIWebsiteStudio] In-memory Project initialized with ID:', finalProjectId);
+            if (isDev) console.log('[AdminTemplateStudio] In-memory template initialized with ID:', finalProjectId);
 
-            setGenerationPhase(prev => prev ? { ...prev, progress: 5, currentStep: 'Project created! Generating content...' } : prev);
+            setGenerationPhase(prev => prev ? { ...prev, progress: 5, currentStep: 'Template draft initialized. Generating sample content...' } : prev);
 
             // ══════════════════════════════════════════════════════════════════
             // PHASE 2: Generate content with AI (5-35%)
             // ══════════════════════════════════════════════════════════════════
-            addEvent('content', 'Generating website structure & content with AI...');
+            addEvent('content', 'Generating reusable structure and sample content with AI...');
 
             const contentPrompt = buildContentGenerationPrompt(brief, isSpanish);
 
@@ -816,14 +1216,14 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
             }
 
             const componentCount = Object.keys(websiteData.data).length;
-            addEvent('content', `Content generated — ${componentCount} components created`);
-            if (isDev) console.log('[AIWebsiteStudio] Generated components:', Object.keys(websiteData.data));
+            addEvent('content', t('aiTemplateStudio.generation.events.sampleContentGenerated', { count: componentCount }));
+            if (isDev) console.log('[AdminTemplateStudio] Generated template components:', Object.keys(websiteData.data));
 
             // ══════════════════════════════════════════════════════════════════
             // PHASE 3: Map content to components & save project (35-40%)
             // ══════════════════════════════════════════════════════════════════
-            setGenerationPhase(prev => prev ? { ...prev, progress: 35, currentStep: 'Mapping content to components...' } : prev);
-            addEvent('content', 'Mapping content to components...');
+            setGenerationPhase(prev => prev ? { ...prev, progress: 35, currentStep: 'Selecting reusable components...' } : prev);
+            addEvent('content', 'Mapping sample content to reusable components...');
 
             // Merge AI theme with brief theme
             const finalTheme = websiteData.theme ? { ...theme, ...websiteData.theme, globalColors: { ...theme.globalColors, ...(websiteData.theme.globalColors || {}) } } : theme;
@@ -859,7 +1259,8 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
             }
 
             // Build component order & visibility
-            const componentOrder: PageSection[] = websiteData.componentOrder || brief.suggestedComponents || ['colors', 'typography', 'header', 'hero', 'services', 'features', 'cta', 'footer'];
+            const componentOrder: PageSection[] = (websiteData.componentOrder || brief.suggestedComponents || ['colors', 'typography', 'header', 'hero', 'services', 'features', 'cta', 'footer'])
+                .filter((section: PageSection) => !isRetiredDesignSuiteSection(section));
             if (!componentOrder.includes('colors')) componentOrder.unshift('colors');
             if (!componentOrder.includes('typography')) componentOrder.splice(1, 0, 'typography');
             if (!componentOrder.includes('header')) componentOrder.splice(2, 0, 'header');
@@ -874,6 +1275,8 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
             } else {
                 componentOrder.push('banner');
             }
+
+            applyTemplateDesignStrategyToGeneratedData(finalData, componentOrder, brief, finalTheme);
 
             const sectionVisibility = buildVisibility(componentOrder.filter(c => !['colors', 'typography', 'header', 'footer'].includes(c)));
 
@@ -917,9 +1320,9 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
                 lastUpdated: new Date().toISOString(),
             };
 
-            if (isDev) console.log('[AIWebsiteStudio] Project content compiled successfully in-memory');
+            if (isDev) console.log('[AdminTemplateStudio] Template content compiled successfully in-memory');
 
-            setGenerationPhase(prev => prev ? { ...prev, progress: 40, currentStep: 'Content compiled! Scanning for images...' } : prev);
+            setGenerationPhase(prev => prev ? { ...prev, progress: 40, currentStep: t('aiTemplateStudio.generation.steps.sampleContentCompiled') } : prev);
 
             // ══════════════════════════════════════════════════════════════════
             // PHASE 4: Scan for empty imageUrl fields (40%)
@@ -1016,61 +1419,14 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
 
             if (isDev) console.log(`[AIWebsiteStudio] Images: ${completed}/${imageSlots.length} (${failed} failed)`);
 
-            // ══════════════════════════════════════════════════════════════════
-            // PHASE 5.5: Propagate hero images as background to glass sections
-            // ══════════════════════════════════════════════════════════════════
-            const heroImagesForBg: string[] = [];
-
-            if (finalData.hero?.imageUrl) heroImagesForBg.push(finalData.hero.imageUrl);
-            if (finalData.heroSplit?.imageUrl) heroImagesForBg.push(finalData.heroSplit.imageUrl);
-            if (finalData.heroLead?.imageUrl) heroImagesForBg.push(finalData.heroLead.imageUrl);
-            if (finalData.heroLumina?.imageUrl) heroImagesForBg.push(finalData.heroLumina.imageUrl);
-            if (finalData.heroNova?.imageUrl) heroImagesForBg.push(finalData.heroNova.imageUrl);
-
-            if (finalData.heroGallery?.slides && Array.isArray(finalData.heroGallery.slides)) {
-                finalData.heroGallery.slides.forEach((s: any) => { if (s.backgroundImage) heroImagesForBg.push(s.backgroundImage) });
-            }
-            if (finalData.heroWave?.slides && Array.isArray(finalData.heroWave.slides)) {
-                finalData.heroWave.slides.forEach((s: any) => { if (s.backgroundImage) heroImagesForBg.push(s.backgroundImage) });
-            }
-            if (finalData.heroNova?.slides && Array.isArray(finalData.heroNova.slides)) {
-                finalData.heroNova.slides.forEach((s: any) => { if (s.backgroundImage) heroImagesForBg.push(s.backgroundImage) });
-            }
-            if (finalData.heroNeon?.slides && Array.isArray(finalData.heroNeon.slides)) {
-                finalData.heroNeon.slides.forEach((s: any) => { if (s.imageUrl) heroImagesForBg.push(s.imageUrl) });
-            }
-
-            if (heroImagesForBg.length > 0) {
-                const glassBgSections = [
-                    'features', 'services', 'testimonials', 'pricing', 'faq',
-                    'cta', 'leads', 'newsletter', 'video', 'howItWorks',
-                    'featuresLumina', 'ctaLumina', 'portfolioLumina', 'pricingLumina', 'testimonialsLumina', 'faqLumina',
-                    'featuresNeon', 'ctaNeon', 'portfolioNeon', 'pricingNeon', 'testimonialsNeon', 'faqNeon'
-                ];
-                let bgIndex = 0;
-                for (const comp of glassBgSections) {
-                    if (finalData[comp] && typeof finalData[comp] === 'object') {
-                        const isSuite = comp.includes('Lumina') || comp.includes('Neon');
-                        // Use background image if it specifically asked for glassEffect or if it's a Neon/Lumina component which looks good with backgrounds
-                        if (finalData[comp].glassEffect || isSuite) {
-                            const bgImage = heroImagesForBg[bgIndex % heroImagesForBg.length];
-                            finalData[comp].backgroundImageUrl = bgImage;
-                            finalData[comp].imageUrl = bgImage; // Fallback for components that might use imageUrl instead
-                            finalData[comp].backgroundOverlayEnabled = true;
-                            finalData[comp].backgroundOverlayOpacity = 75;
-                            finalData[comp].glassEffect = true;
-                            bgIndex++;
-                        }
-                    }
-                }
-                if (isDev) console.log(`[AIWebsiteStudio] Glass backgrounds set for sections using ${heroImagesForBg.length} hero images sequentially`);
-            }
+            // Decorative glass/blur section backgrounds use gradients and semantic colors.
+            // Hero, banner, menu, Realty, product, portfolio, slideshow, team, and testimonial images stay image-backed.
 
             // ══════════════════════════════════════════════════════════════════
             // PHASE 6: Final project update with images (95-100%)
             // ══════════════════════════════════════════════════════════════════
-            addEvent('save', `Saving final website with ${completed} images...`);
-            setGenerationPhase(prev => prev ? { ...prev, phase: 'finalizing', progress: 95, currentStep: 'Saving final website...' } : prev);
+            addEvent('save', `Saving template draft with ${completed} images...`);
+            setGenerationPhase(prev => prev ? { ...prev, phase: 'finalizing', progress: 95, currentStep: 'Saving template draft...' } : prev);
 
             // Build the complete project object
             const fullProject = {
@@ -1116,34 +1472,27 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
                     new Promise<void>((_, reject) => setTimeout(() => reject(new Error('Final save timeout')), 30000)),
                 ]);
             } catch (finalSaveErr: any) {
-                console.warn('[AIWebsiteStudio] Final save failed:', finalSaveErr);
+                console.warn('[AdminTemplateStudio] Final save failed:', finalSaveErr);
                 const errorMessage = finalSaveErr?.message || String(finalSaveErr);
                 throw new Error(`Database save failed: ${errorMessage}`);
             }
 
-            addEvent('done', 'Website created successfully!');
-            setGenerationPhase(prev => prev ? { ...prev, phase: 'done', progress: 100, currentStep: 'Website created successfully!' } : prev);
+            addEvent('done', t('aiTemplateStudio.generation.events.templateDraftCreated'));
+            setGenerationPhase(prev => prev ? { ...prev, phase: 'done', progress: 100, currentStep: t('aiTemplateStudio.generation.steps.templateDraftCreated') } : prev);
+            setGeneratedTemplate(fullProject as Project);
 
-            if (isDev) console.log('[AIWebsiteStudio] Website created successfully!');
+            if (isDev) console.log('[AdminTemplateStudio] Template draft created successfully!');
 
-            const successMsg = t('aiWebsiteStudio.generation.success', {
-                sections: Object.keys(finalData).length,
+            const successMsg = t('aiTemplateStudio.generation.templateSuccess', {
+                components: Object.keys(finalData).length,
                 images: completed,
             });
             setMessages(prev => [...prev, { role: 'model', text: successMsg, timestamp: Date.now() }]);
 
-            // ══════════════════════════════════════════════════════════════════
-            // AUTO-CLOSE: Close the modal
-            // ══════════════════════════════════════════════════════════════════
-            setTimeout(() => {
-                setGenerationPhase(null);
-                if (onSuccess) onSuccess();
-            }, 3000);
-
         } catch (error) {
-            console.error('[AIWebsiteStudio] Generation failed:', error);
+            console.error('[AdminTemplateStudio] Generation failed:', error);
             setGenerationPhase(null);
-            const errorMsg = t('aiWebsiteStudio.generation.error', {
+            const errorMsg = t('aiTemplateStudio.generation.error', {
                 error: error instanceof Error ? error.message : String(error),
             });
             setMessages(prev => [...prev, { role: 'model', text: errorMsg, timestamp: Date.now() }]);
@@ -1152,6 +1501,19 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
             setIsGenerating(false);
         }
     }, [businessBrief, user, currentTenantId, t, generateImage, refreshProjects, i18n.language, onSuccess]);
+
+    const closeTemplateResult = useCallback(() => {
+        setGenerationPhase(null);
+        setGeneratedTemplate(null);
+        if (onSuccess) onSuccess();
+    }, [onSuccess]);
+
+    const regenerateTemplateDraft = useCallback(() => {
+        if (isGeneratingRef.current) return;
+        setGeneratedTemplate(null);
+        setGenerationPhase(null);
+        void startGeneration();
+    }, [startGeneration]);
 
     // ═════════════════════════════════════════════════════════════════════════
     // PUBLIC API
@@ -1173,6 +1535,7 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
     }, []);
 
     const toggleBriefComponent = useCallback((component: PageSection) => {
+        if (isRetiredDesignSuiteSection(component)) return;
         setBusinessBrief(prev => {
             const exists = prev.suggestedComponents.includes(component);
             return {
@@ -1187,7 +1550,7 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
     const setBriefComponents = useCallback((components: PageSection[]) => {
         setBusinessBrief(prev => ({
             ...prev,
-            suggestedComponents: components
+            suggestedComponents: components.filter(section => !isRetiredDesignSuiteSection(section))
         }));
     }, []);
 
@@ -1216,7 +1579,8 @@ ${t('aiTemplateStudio.welcome.startQuestion')}`, [t]);
         // Reference Images
         referenceImages, addReferenceImage, removeReferenceImage,
         // Generation
-        isGenerating, generationPhase, canGenerate, startGeneration,
+        isGenerating, generationPhase, generatedTemplate, canGenerate, startGeneration,
+        closeTemplateResult, regenerateTemplateDraft,
         // Website extraction
         showUrlModal, setShowUrlModal, isExtracting, extractWebsiteData,
         // Init
@@ -1414,6 +1778,20 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
         }
     }
 
+    // ── Menu items ─────────────────────────────────────────────────────────
+    if (componentOrder.includes('menu') && data.menu?.items && Array.isArray(data.menu.items)) {
+        data.menu.items.slice(0, 6).forEach((item: any, i: number) => {
+            if (!item.imageUrl) {
+                slots.push({
+                    path: `menu.items.${i}.imageUrl`,
+                    componentType: 'menu',
+                    context: item.name || item.description || `Menu item ${i + 1}`,
+                    aspectRatio: '4:3',
+                });
+            }
+        });
+    }
+
     // ── Portfolio items ─────────────────────────────────────────────────────
     for (const portfolioKey of ['portfolio', 'portfolioNeon', 'portfolioLumina']) {
         if (componentOrder.includes(portfolioKey) && data[portfolioKey]) {
@@ -1512,7 +1890,7 @@ function buildSmartImagePrompt(brief: BusinessBrief, slot: ImageSlot): string {
         menu: `Commercial food/product photography. Overhead or 45-degree angle, carefully styled, appetizing.`,
         team: `A professional headshot/portrait. Natural expression, clean background, warm lighting.`,
         portfolio: `A portfolio showcase image demonstrating quality work/results.`,
-        cta: `A slightly blurred atmospheric background that works behind text. Moody, ambient.`,
+        cta: `A conversion-focused section visual only when the CTA component explicitly supports an image. Avoid decorative blur-only backgrounds; prefer solid colors and gradient controls for ambient depth.`,
         banner: `A stunning ultra-wide panoramic background image. Cinematic composition, atmospheric depth, dramatic lighting.`,
     };
 
@@ -1585,7 +1963,10 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         ? brief.suggestedComponents
         : ['hero', 'services', 'features', 'testimonials', 'faq', 'cta', 'banner', 'footer'];
 
-    let filteredComponents = baseComponents.filter(c => !EXCLUDED_COMPONENTS.includes(c));
+    let filteredComponents = baseComponents.filter(c =>
+        !EXCLUDED_COMPONENTS.includes(c) &&
+        !isRetiredDesignSuiteSection(c)
+    );
     
     // Ensure at least one hero variant is always present
     const hasAnyHero = filteredComponents.some(c => c.startsWith('hero'));
@@ -1638,11 +2019,11 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     }
 
 
-    const allHeaderStyles = 'sticky-solid|sticky-transparent|floating|edge-solid|edge-minimal|edge-bordered|floating-pill|floating-glass|floating-shadow|transparent-blur|transparent-bordered|transparent-gradient|transparent-gradient-dark|tabbed|segmented-pill';
+    const solidHeaderStyles = 'sticky-solid|edge-solid|edge-bordered';
 
     componentExamples += `
     "header": {
-      "style": "[SELECT ONE freely. Options: ${allHeaderStyles}]",
+      "style": "[SELECT ONE. Options: ${solidHeaderStyles}]",
       "layout": "[SELECT: minimal|center|stack|classic]",
       "isSticky": true,
       "height": 95,
@@ -1655,11 +2036,8 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         "background": "[GENERATE HEX COLOR MATCHING BRAND OR DARK THEME — NEVER use white #ffffff]",
         "text": "#ffffff",
         "buttonBackground": "${brief.colorPalette.accent}",
-        "buttonText": "[GENERATE HEX COLOR that strongly contrasts with buttonBackground]",
-        "gradientDarkColor": "[IF style IS 'transparent-gradient-dark' THEN generate a DARKER shade of the header background color — NEVER use pure black #000000, ELSE omit]",
-        "gradientFadeColor": "[IF style IS 'transparent-gradient' THEN generate a LIGHTER shade of the header background color — NEVER use pure white #ffffff, ELSE omit]"
+        "buttonText": "[GENERATE HEX COLOR that strongly contrasts with buttonBackground]"
       },
-      "gradientFadeSize": "[IF style IS 'transparent-gradient' OR 'transparent-gradient-dark' THEN SELECT number between 10 and 30 for gradient size, default 15, ELSE omit]",
       "links": ${JSON.stringify(headerLinks)}
     },`;
 
@@ -1849,8 +2227,8 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     } else {
         componentExamples += `
     "${featuresKey}": {
-      "featuresVariant": "[SELECT: classic|modern|bento-premium|bento-overlay|image-overlay]",
-      "gridColumns": "[IF featuresVariant IS 'image-overlay' THEN select 4 ELSE select 2 or 3]",
+      "featuresVariant": "[SELECT: classic|modern|bento-premium|bento-overlay|image-overlay|editorial-mosaic]",
+      "gridColumns": "[IF featuresVariant IS 'image-overlay' OR 'editorial-mosaic' THEN select 4 ELSE select 2 or 3]",
       "title": "${isSpanish ? 'Características' : 'Features'}",
       "imageHeight": 430,
       "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.primary}", "opacity": 15, "size": 35},
@@ -1869,15 +2247,15 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         componentExamples += `
     "menu": {
       "title": "${isSpanish ? 'Nuestro Menú' : 'Our Menu'}",
-      "menuVariant": "text-only",
+      "menuVariant": "[SELECT: classic|modern-grid|elegant-list|full-image|editorial-mosaic]",
       "categories": ["${isSpanish ? 'Entradas' : 'Starters'}", "${isSpanish ? 'Platos Principales' : 'Main Courses'}", "${isSpanish ? 'Postres' : 'Desserts'}"],
       "items": [
-        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]"},
-        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]"},
-        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]"},
-        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]"},
-        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]"},
-        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]"}
+        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]", "imageUrl": ""}
       ]
     },`;
     }
@@ -1903,7 +2281,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     "testimonialsLumina": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "luminaAnimation": {"enabled": true}, "testimonials": [{"quote": "[GENERATE_TEXT]", "authorName": "[GENERATE_TEXT]", "authorRole": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "authorName": "[GENERATE_TEXT]", "authorRole": "[GENERATE_TEXT]"}]},`;
     } else {
         componentExamples += `
-    "${testimonialsKey}": {"testimonialsVariant": "[SELECT: classic|minimal-cards|glassmorphism|gradient-glow|neon-border|floating-cards|gradient-shift]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.secondary}", "opacity": 10, "size": 40}, "items": [{"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}]},`;
+    "${testimonialsKey}": {"testimonialsVariant": "[SELECT: classic|minimal-cards|glassmorphism|gradient-glow|neon-border|floating-cards|gradient-shift|editorial-mosaic]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.secondary}", "opacity": 10, "size": 40}, "items": [{"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
     }
 
     const faqKey = filteredComponents.find(c => c.startsWith('faq')) || 'faq';
@@ -1982,6 +2360,19 @@ COLOR PALETTE:
 - Surface: ${brief.colorPalette.surface}
 - Text: ${brief.colorPalette.text}
 
+COLOR SYSTEM LOCK:
+The color palette above was produced by Quimera Color Expert. Use these exact color roles as semantic tokens.
+Do not invent new brand hex colors, do not replace theme.globalColors, and do not make accessibility decisions with new colors.
+If a component needs button text, badge text, overlays, cards, or ecommerce colors, derive them from the provided semantic roles.
+
+CHROME AND IMAGE TEXT RULES:
+- Use no more than three non-neutral brand colors total: primary, secondary, and accent. Background, surface, and text are neutral roles.
+- Header and footer MUST use the same solid dark brand color and white (#ffffff) typography. Never use white, off-white, pale, transparent, glass, or gradient backgrounds for header/footer.
+- Header style MUST be one of: sticky-solid, edge-solid, edge-bordered.
+- Any text placed directly over an image MUST be white (#ffffff) with a dark overlay/scrim strong enough for WCAG AA contrast. If the text is inside an opaque solid panel/card over the image, the panel may use a semantic brand color with readable text.
+- Never use generated images only as blurred/glass/decorative section backgrounds. Use the existing gradient controls instead: cornerGradient, gradientStart/gradientEnd, gradientColors, radial or multi-stop overlays when supported, plus solid semantic colors. Do not limit decorative backgrounds to linear gradients.
+- Keep image-backed content for hero sections, banner, menu items, Realty/property components, product/collection heroes, portfolio, slideshow, team, and testimonial portraits.
+
 COMPONENTS TO GENERATE: ${filteredComponents.join(', ')}
 
 LANGUAGE: All content MUST be in ${lang}.
@@ -2007,12 +2398,12 @@ OUTPUT FORMAT: Return a single JSON object with this EXACT structure:
 }
 
 CRITICAL RULES:
-1. For components that support images (hero/heroGallery, banner, features, portfolio, team, testimonials, slideshow), YOU MUST set imageUrl or backgroundImageUrl to an empty string "".
+1. For image-backed components (hero/heroGallery/heroWave/heroNova/heroLead/heroSplit, banner, menu, Realty/property components, product/collection heroes, features, portfolio, team, testimonials, slideshow), YOU MUST set imageUrl, backgroundImage, or backgroundImageUrl to an empty string "" so the image generator can fill it.
 2. Include RICH, detailed, REAL content for EVERY component — no lorem ipsum, no placeholder text.
 3. Each component's items array MUST have the correct number of items with full content. ALL list-based components (features, portfolio, team, testimonials, services, faq) MUST have EXACTLY 3 items.
 4. For topBar: messages MUST be promotional announcements or call-to-actions. NEVER put address or phone numbers here. Use only these icons: megaphone, tag, gift, truck, percent, sparkles, star, zap, heart, flame.
 5. For heroGallery/heroNeon/heroNova/heroWave: generate EXACTLY 2 slides with real headlines and subheadlines. Each slide must have: headline, subheadline, primaryCta, primaryCtaLink, backgroundImage or imageUrl (empty string "").
-6. For menu: generate at least 6 realistic menu items with real names, descriptions, and prices. TEXT ONLY — NO imageUrl or placeholders.
+6. For menu: generate at least 6 realistic menu items with real names, descriptions, prices, categories, and "imageUrl": "". Use a visual menuVariant: classic, modern-grid, elegant-list, full-image, or editorial-mosaic. Never use text-only.
 7. For header links: the "href" values MUST point to the actual sections on the page using anchors (e.g. "/#services"). Only link to sections that exist in the componentOrder.
 8. For features, portfolio, team, testimonials, and slideshow: generate EXACTLY 3 items. Include "imageUrl": "" (or "backgroundImage": "") in each item.
 9. For services: generate EXACTLY 3 items. Use the business's ACTUAL services from the brief (max 3). TEXT ONLY — no imageUrl.
@@ -2021,8 +2412,11 @@ CRITICAL RULES:
 12. For footer: Include real contact info inside the 'contactInfo' object. 'linkColumns' is strictly for page navigation links like 'Inicio' or 'Servicios'.
 13. For howItWorks: generate EXACTLY 3 steps with titles, descriptions, and valid lucide icons.
 14. For properties marked with [SELECT: a|b|c...], you MUST intelligently choose exactly ONE of the provided options based on what best fits the industry's aesthetic. Do not output the brackets.
-15. For header.style: VARY it based on the industry. Examples: restaurants/bars → 'transparent-gradient-dark' or 'edge-solid'; tech/SaaS → 'floating-glass' or 'floating-pill'; fitness/gym → 'sticky-solid' or 'edge-bordered'; luxury/spa → 'transparent-blur' or 'floating-shadow'; professional/corporate → 'edge-minimal' or 'sticky-solid'; creative/portfolio → 'transparent-bordered' or 'floating-glass'. NEVER always pick the same style.
+15. For header.style: choose ONLY a solid style from 'sticky-solid', 'edge-solid', or 'edge-bordered'. Do not use transparent, glass, floating, blur, or gradient header styles.
+16. Header and footer colors must match exactly: same solid dark background, white text, white headings, and no light/white shell backgrounds.
+17. Do not generate arbitrary new hex colors. Use the COLOR PALETTE values as semantic tokens; the application will apply validated component mappings after generation.
 18. For map: use the COMPLETE address including street, city, state, and country. The address field must contain the full location string.
+19. Do not set section-level backgroundImageUrl/imageUrl for decorative glass, blur, or ambient backgrounds outside the allowed image-backed components. Use the component's gradient controls instead: cornerGradient, gradientStart/gradientEnd, gradientColors, radial/multi-stop overlays where supported, and semantic colors.
 
 RESPOND WITH ONLY VALID JSON. NO MARKDOWN, NO BACKTICKS, NO EXPLANATION.`;
 }
@@ -2035,16 +2429,24 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
     if (!data || typeof data !== 'object') return;
 
     // Header defaults
+    if (!data.header || typeof data.header !== 'object') data.header = {};
     if (data.header && typeof data.header === 'object') {
         if (!data.header.logoText) data.header.logoText = brief.businessName || 'My Business';
         if (!data.header.logoType) data.header.logoType = 'text';
-        if (!data.header.style) data.header.style = 'floating-glass';
+        if (!data.header.style) data.header.style = 'sticky-solid';
         if (!data.header.layout) data.header.layout = 'minimal';
         if (data.header.isSticky === undefined) data.header.isSticky = true;
+        const solidHeaderStyles = new Set(['sticky-solid', 'edge-solid', 'edge-bordered']);
+        if (!solidHeaderStyles.has(data.header.style)) data.header.style = 'sticky-solid';
+        data.header.glassEffect = false;
 
-        // Enforce white text for navigation
+        // Enforce a solid, shared header/footer shell with white text.
+        const shellBackground = getSolidShellBackgroundForWhiteText(brief.colorPalette || {});
         if (!data.header.colors) data.header.colors = {};
+        data.header.colors.background = shellBackground;
         data.header.colors.text = '#ffffff';
+        data.header.colors.accent = '#ffffff';
+        data.header.colors.border = data.header.style === 'edge-bordered' ? 'rgba(255, 255, 255, 0.18)' : 'transparent';
 
         // Normalize: AI may generate 'navLinks' but HeaderData uses 'links'
         if (data.header.navLinks && !data.header.links) {
@@ -2263,9 +2665,21 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
     }
 
     // Footer defaults
+    if (!data.footer || typeof data.footer !== 'object') data.footer = {};
     if (data.footer && typeof data.footer === 'object') {
         if (!data.footer.title) data.footer.title = brief.businessName || '';
         if (!data.footer.description) data.footer.description = brief.description?.substring(0, 200) || '';
+        const shellBackground = getSolidShellBackgroundForWhiteText(brief.colorPalette || {});
+        data.footer.glassEffect = false;
+        data.footer.colors = {
+            ...(data.footer.colors || {}),
+            background: shellBackground,
+            border: 'rgba(255, 255, 255, 0.18)',
+            text: '#ffffff',
+            heading: '#ffffff',
+            description: 'rgba(255, 255, 255, 0.82)',
+            linkHover: '#ffffff',
+        };
     }
 
     // Leads / Newsletter defaults

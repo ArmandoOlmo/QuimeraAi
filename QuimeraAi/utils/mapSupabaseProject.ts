@@ -1,5 +1,6 @@
 import { PageSection, Project, SitePage, ThemeData } from '../types';
 import { initialData } from '../data/initialData';
+import { isRetiredDesignSuiteSection } from '../data/retiredSuites';
 import { generatePagesFromLegacyProject } from './legacyMigration';
 import { resolveProjectName } from './resolveProjectName';
 
@@ -24,7 +25,9 @@ function nonEmptyObject<T extends Record<string, any>>(value: unknown): T | unde
 
 function normalizeSections(sections: unknown): PageSection[] | undefined {
     if (!Array.isArray(sections)) return undefined;
-    return sections.map(section => (SECTION_ALIASES[String(section)] ?? section) as PageSection);
+    return sections
+        .map(section => (SECTION_ALIASES[String(section)] ?? section) as PageSection)
+        .filter(section => !isRetiredDesignSuiteSection(section));
 }
 
 const GLOBAL_CONTROL_SECTIONS = new Set<PageSection>(['colors', 'typography']);
@@ -77,16 +80,16 @@ function normalizePages(pages: unknown): SitePage[] | undefined {
 
 const ORDER_HINTS: PageSection[] = [
     'colors', 'typography', 'header',
-    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'heroLumina', 'heroNeon',
+    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
     'topBar', 'logoBanner', 'banner',
-    'features', 'featuresLumina', 'featuresNeon',
-    'testimonials', 'testimonialsLumina', 'testimonialsNeon',
+    'features',
+    'testimonials',
     'slideshow',
     'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
-    'pricing', 'pricingLumina', 'pricingNeon',
-    'faq', 'faqLumina', 'faqNeon',
-    'portfolio', 'portfolioLumina', 'portfolioNeon',
-    'cta', 'ctaLumina', 'ctaNeon',
+    'pricing',
+    'faq',
+    'portfolio',
+    'cta',
     'services', 'team', 'video', 'howItWorks', 'menu',
     'storeSettings', 'products', 'announcementBar', 'productHero', 'featuredProducts', 'categoryGrid',
     'trustBadges', 'saleCountdown', 'collectionBanner', 'recentlyViewed', 'productReviews', 'productBundle',

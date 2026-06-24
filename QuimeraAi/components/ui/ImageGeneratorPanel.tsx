@@ -147,15 +147,6 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
             icon: Zap,
             credits: '5x',
             description: t('editor.modelNanoBananaDesc', { defaultValue: 'Pro-level visual quality at Flash speed. Best for fast iterations with references.' })
-        },
-        {
-            id: 'gpt-5.4-image-2',
-            label: 'GPT-5.4 Image 2',
-            provider: 'OpenAI',
-            value: 'gpt-5.4-image-2',
-            icon: Sparkles,
-            credits: '8x',
-            description: t('editor.modelGptImageDesc', { defaultValue: 'Combines GPT-5.4 reasoning with GPT Image 2. Best for complex, detailed compositions.' })
         }
     ], [t]);
 

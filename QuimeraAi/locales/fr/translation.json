@@ -777,6 +777,41 @@
     }
   },
   "superadmin": {
+    "loadingPanel": "Chargement du panneau...",
+    "adminConsole": "Console admin",
+    "commandCenter": "Centre de commande",
+    "commandCenterDesc": "Une vue claire pour gérer les permissions, le contenu, l'analytique, les automatisations et la configuration globale sans lire chaque module un par un.",
+    "availableModules": "Modules",
+    "newTools": "Nouveaux",
+    "activeView": "Vue",
+    "priorityAccess": "Priorité",
+    "quickAccess": "Accès rapide",
+    "quickAccessDesc": "Les zones qui concentrent généralement les opérations, les clients, le contenu et la santé du système.",
+    "moduleCount": "{{count}} modules",
+    "mcpTitle": "MCP / clés API",
+    "mcpDesc": "Créer et révoquer des clés pour les agents, les scopes et l'accès MCP.",
+    "chatbotPrompts": "Prompts de chatbot",
+    "chatbotPromptsDesc": "Configurer les instructions globales pour tous les chatbots des projets.",
+    "executionMode": "Mode d'exécution (bientôt)",
+    "executionModeDesc": "Configurer le comportement d'exécution de l'assistant. Fonction en développement.",
+    "categoryCore": "Principal",
+    "categoryContent": "Contenu",
+    "categoryDevelopment": "Développement",
+    "categoryAnalytics": "Analytique",
+    "categorySystem": "Système",
+    "searchFeatures": "Rechercher des fonctionnalités...",
+    "showingResults": "{{count}} fonctionnalités sur {{total}} affichées",
+    "clearFilters": "Effacer les filtres",
+    "noResultsFound": "Aucun résultat trouvé",
+    "noResultsDesc": "Essayez d'autres termes de recherche ou filtres",
+    "viewAllFeatures": "Voir toutes les fonctionnalités",
+    "new": "Nouveau",
+    "viewGrid": "Vue grille",
+    "viewList": "Vue liste",
+    "viewCompact": "Vue compacte",
+    "templateManagement": {
+      "generateWithAi": "Générer avec l'IA"
+    },
     "news": {
       "title": "Actualités & Mises à jour",
       "create": "Nouvel Article",
@@ -1281,6 +1316,18 @@
         "buttonText": "Texte du bouton",
         "title": "Titre",
         "buttonBorderRadius": "Coins du Bouton"
+      },
+      "features": {
+        "editorialMosaic": "Mosaïque éditoriale",
+        "descEditorialMosaic": "Mosaïque façon magazine avec cartes photo et blocs de texte"
+      },
+      "testimonials": {
+        "editorialMosaic": "Mosaïque éditoriale",
+        "editorialMosaicDesc": "Mosaïque de preuve sociale avec portraits, citations et blocs de texte"
+      },
+      "menu": {
+        "editorialMosaic": "Mosaïque éditoriale",
+        "editorialMosaicDesc": "Panneaux photo alternés avec boîtes de contenu blanches pour chaque plat."
       }
     }
   },

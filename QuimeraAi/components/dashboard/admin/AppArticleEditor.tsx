@@ -175,7 +175,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
             {/* Main Editor */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
                     <div className="flex items-center gap-4">
                         <HeaderBackButton onClick={onClose} label={t('common.back', 'Back')} />
                         <div className="h-6 w-px bg-border" />

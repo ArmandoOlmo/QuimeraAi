@@ -1135,6 +1135,9 @@
     "next": "Next",
     "previous": "Previous",
     "search": "Search...",
+    "searchFont": "Search font...",
+    "noFontsFound": "No fonts found",
+    "fontPreviewSample": "The quick brown fox jumps over the lazy dog",
     "error": "Error",
     "success": "Success",
     "close": "Close",
@@ -4500,6 +4503,8 @@
         "dish": "Dish",
         "dishes": "Dishes",
         "menuStyle": "Menu Style",
+        "editorialMosaic": "Editorial Mosaic",
+        "editorialMosaicDesc": "Alternating photo panels and white content boxes for each dish.",
         "dishName": "Dish Name",
         "price": "Price",
         "image": "Image",
@@ -4576,6 +4581,8 @@
       },
       "testimonials": {
         "cardStyling": "Card Styling",
+        "editorialMosaic": "Editorial Mosaic",
+        "editorialMosaicDesc": "Proof mosaic with portrait quotes and text tiles",
         "cardShadow": "Card Shadow",
         "borderStyle": "Border Style",
         "none": "None",
@@ -4593,10 +4600,12 @@
         "bento": "Bento",
         "premium": "Premium",
         "overlay": "Overlay",
+        "editorialMosaic": "Editorial Mosaic",
         "descClassic": "📦 Traditional Grid Layout",
         "descBento": "✨ Modern Asymmetrical Bento Layout",
         "descPremium": "🎯 Premium Bento with Highlighted First Card",
         "descOverlay": "🖼️ Full-width Images with Overlay Text",
+        "descEditorialMosaic": "Magazine-style mosaic with photo cards and text tiles",
         "overlaySettings": "Overlay Settings",
         "textAlignment": "Text Alignment",
         "showSectionHeader": "Show Section Header",
@@ -5423,7 +5432,7 @@
     "emailMarketingQuimera": "AI Newsletters",
     "separatorSection": "Separator 5",
     "modelNanoBananaDesc": "Pro-level visual quality at Flash speed. Best for fast iterations with references.",
-    "modelGptImageDesc": "Combines GPT-5.4 reasoning with GPT Image 2. Best for complex, detailed compositions.",
+    "modelGptImageDesc": "OpenAI image generation for complex, detailed compositions with strong prompt following.",
     "credits": "credits"
   },
   "email": {
@@ -6523,6 +6532,146 @@
       "noData": "I wasn't able to extract specific data from that URL, but you can tell me about your business and I'll help you from scratch.",
       "error": "⚠️ I couldn't access that website. The site might be blocking external access or the URL may be incorrect. You can still tell me about your business manually!"
     },
+    "flow": {
+      "empty": {
+        "title": "Create your website with AI",
+        "description": "Describe your business and Quimera will create the website structure, copy, design direction and sections.",
+        "examples": {
+          "localBusiness": "I run an electric bike shop in Guaynabo...",
+          "restaurant": "Create a modern website for a restaurant...",
+          "portfolio": "Build a portfolio for a modern art gallery..."
+        }
+      },
+      "quickPrompts": {
+        "localBusiness": "Local business",
+        "ecommerceStore": "Ecommerce store",
+        "restaurant": "Restaurant",
+        "portfolio": "Portfolio",
+        "serviceBusiness": "Service business",
+        "realEstate": "Real estate"
+      },
+      "progressSteps": {
+        "understandingBusiness": "Understanding business",
+        "planningStructure": "Planning website structure",
+        "selectingComponents": "Selecting components",
+        "creatingVisualDirection": "Creating visual direction",
+        "writingContent": "Writing content",
+        "preparingPreview": "Preparing preview",
+        "savingProject": "Saving project"
+      },
+      "actions": {
+        "generateWebsite": "Generate Website",
+        "generatingWebsite": "Generating Website",
+        "addDetails": "Add Details",
+        "improveBrief": "Improve Brief",
+        "improveBriefPrompt": "Help me improve this website brief before generating.",
+        "readyHelper": "You can edit everything later. Missing non-critical details will be marked for review."
+      },
+      "summary": {
+        "title": "What I understood",
+        "subtitle": "Website project brief",
+        "outputLabel": "Website / Project",
+        "fields": {
+          "business": "Business",
+          "industry": "Industry",
+          "servicesProducts": "Services/products",
+          "audience": "Audience",
+          "websiteGoal": "Website goal",
+          "style": "Style",
+          "ecommerceIntent": "Ecommerce intent",
+          "locationContact": "Location/contact",
+          "missingCritical": "Missing critical fields"
+        },
+        "values": {
+          "businessMissing": "Not provided yet",
+          "industryAssumed": "AI can infer from the description",
+          "servicesProductsAssumed": "Will be drafted from the website goal",
+          "audienceAssumed": "Default audience inferred from business context",
+          "websiteGoalAssumed": "Create a publish-ready website",
+          "styleAssumed": "AI-generated visual direction",
+          "ecommerceIncluded": "Ecommerce blocks may be included",
+          "ecommerceNotDetected": "No ecommerce intent detected",
+          "locationContactReview": "Can be edited later",
+          "missingCriticalNone": "None"
+        },
+        "badges": {
+          "website": "Website",
+          "ecommerceIntent": "Ecommerce intent",
+          "projectDraft": "Project draft",
+          "leadContactSections": "Lead/contact sections",
+          "editableLater": "Editable later"
+        },
+        "warnings": {
+          "nonCriticalReviewMessage": "{{field}} can be reviewed later."
+        }
+      },
+      "result": {
+        "title": "Website created",
+        "subtitle": "Final content is ready to review before publishing.",
+        "metrics": {
+          "pagesCreated": "Pages created",
+          "sectionsCreated": "Sections created",
+          "styleGenerated": "Style generated",
+          "ecommerceBlocks": "Ecommerce blocks",
+          "leadContactSections": "Lead/contact sections"
+        },
+        "values": {
+          "yes": "Yes",
+          "included": "Included",
+          "notIncluded": "Not included"
+        }
+      }
+    },
+    "preview": {
+      "completedBadge": "Generation completed",
+      "title": "Your website is ready",
+      "description": "Review the generated result before saving it as a project and opening it in the editor.",
+      "generatedSummary": "Generated summary",
+      "actions": {
+        "backToPlan": "Back to plan",
+        "regenerate": "Regenerate",
+        "copySummary": "Copy summary",
+        "copied": "Copied",
+        "copyFailed": "Not copied",
+        "saveAndOpen": "Save and open editor"
+      },
+      "copySummary": {
+        "project": "Project: {{value}}",
+        "industry": "Industry: {{value}}",
+        "brief": "Brief: {{value}}",
+        "hero": "Hero: {{value}}",
+        "message": "Message: {{value}}",
+        "sections": "Sections: {{value}}"
+      },
+      "sections": {
+        "services": "Services",
+        "features": "Benefits",
+        "testimonials": "Testimonials",
+        "faq": "FAQ",
+        "cta": "CTA",
+        "leads": "Contact",
+        "newsletter": "Newsletter",
+        "portfolio": "Portfolio",
+        "pricing": "Pricing",
+        "menu": "Menu",
+        "map": "Location",
+        "howItWorks": "Process",
+        "team": "Team"
+      },
+      "values": {
+        "yes": "Yes",
+        "no": "No"
+      },
+      "ecommerce": {
+        "title": "Suggested ecommerce",
+        "enabled": "Enabled",
+        "starterDrafts": "Starter drafts",
+        "storefrontPreset": "Storefront preset",
+        "productCard": "Product card",
+        "needsReview": "Needs review",
+        "reviewInSuite": "Review in Ecommerce Suite"
+      }
+    },
     "briefPanel": {
       "title": "Business Brief",
       "readiness": "Readiness",
@@ -6539,6 +6688,29 @@
       "hours": "Hours",
       "colors": "Colors",
       "components": "Components",
+      "typography": "Typography",
+      "missingInformation": "Missing information",
+      "noMissingInformation": "No critical information is missing.",
+      "required": "Required",
+      "reviewLater": "Review later",
+      "colorTokens": {
+        "primary": "Primary",
+        "secondary": "Secondary",
+        "accent": "Accent",
+        "background": "Background",
+        "surface": "Surface",
+        "text": "Text"
+      },
+      "fontRoles": {
+        "header": "Headings",
+        "body": "Body",
+        "button": "Buttons"
+      },
+      "referenceImages": "Reference Images",
+      "uploadReference": "Upload reference images",
+      "uploadReferenceHint": "People, places, products, or style inspiration",
+      "localUpload": "Local",
+      "adminLibrary": "Admin Library",
       "pending": "pending...",
       "generateButton": "🚀 Generate Website",
       "generating": "Generating...",
@@ -6572,8 +6744,15 @@
         "imageFailed": "❌ Failed: {{key}} (skipped)",
         "assembling": "📦 Assembling website, {{completed}} images generated, {{failed}} failed",
         "saving": "💾 Saving your website...",
-        "done": "🎉 Website created successfully!"
+        "done": "🎉 Website created successfully!",
+        "sampleContentGenerated": "Sample content generated — {{count}} components included",
+        "templateDraftCreated": "Template draft created. Sample content needs admin review."
       },
+      "steps": {
+        "sampleContentCompiled": "Sample content compiled. Preparing template preview...",
+        "templateDraftCreated": "Template draft created."
+      },
+      "templateSuccess": "Template draft created.\n\nGenerated:\n- {{components}} reusable components\n- {{images}} sample images\n- Sample content marked for review\n- Status: Template draft",
       "success": "🎉 **Your website has been created successfully!**\n\nGenerated:\n- 📄 {{sections}} sections\n- 🖼️ {{images}} images\n- 🎨 Custom color palette\n- 🤖 AI assistant configured\n\nYou can close this and find your project in the dashboard.",
       "error": "⚠️ **Generation error:** {{error}}\n\nYou can try again."
     },
@@ -10880,6 +11059,23 @@
     "globalSettings": "Global Settings",
     "backToDashboard": "Back to Dashboard",
     "accessMessage": "You have access to all administrative functions of the platform.",
+    "loadingPanel": "Loading panel...",
+    "adminConsole": "Admin Console",
+    "commandCenter": "Command center",
+    "commandCenterDesc": "A clear view for managing permissions, content, analytics, automations, and global configuration without reading every module one by one.",
+    "availableModules": "Modules",
+    "newTools": "New",
+    "activeView": "View",
+    "priorityAccess": "Priority",
+    "quickAccess": "Quick access",
+    "quickAccessDesc": "The areas that usually concentrate operations, clients, content, and system health.",
+    "moduleCount": "{{count}} modules",
+    "mcpTitle": "MCP / API Keys",
+    "mcpDesc": "Create and revoke keys for agents, scopes, and MCP access.",
+    "chatbotPrompts": "Chatbot Prompts",
+    "chatbotPromptsDesc": "Configure global instructions for all project chatbots.",
+    "executionMode": "Execution Mode (Coming Soon)",
+    "executionModeDesc": "Configure assistant execution behavior. Feature in development.",
     "finances": "Finances & MRR",
     "financesDesc": "Complete financial dashboard with charts, MRR, revenue by plan, and growth.",
     "financesDetail": {
@@ -11072,6 +11268,7 @@
       "back": "Back",
       "filters": "Filters",
       "new": "New",
+      "generateWithAi": "Generate with AI",
       "totalTemplates": "Total Templates",
       "sitesCreated": "Sites Created",
       "mostPopular": "Most Popular",
@@ -13583,6 +13780,88 @@
       "openInMaps": "Open in Google Maps"
     }
   },
+  "studioUX": {
+    "quickPrompts": "Quick prompts",
+    "removeComponent": "Remove {{name}}",
+    "componentLabels": {
+      "hero": "Hero",
+      "heroSplit": "Split hero",
+      "heroGallery": "Hero gallery",
+      "heroWave": "Hero wave",
+      "heroNova": "Hero nova",
+      "heroLead": "Lead hero",
+      "topBar": "Top bar",
+      "logoBanner": "Logo banner",
+      "banner": "Banner",
+      "features": "Features",
+      "testimonials": "Testimonials",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "cta": "CTA",
+      "services": "Services",
+      "video": "Video",
+      "howItWorks": "How it works",
+      "menu": "Menu",
+      "realEstateListings": "Properties",
+      "leads": "Leads",
+      "newsletter": "Newsletter",
+      "map": "Map",
+      "signupFloat": "Floating signup",
+      "slideshow": "Slideshow",
+      "portfolio": "Portfolio",
+      "team": "Team",
+      "separator1": "Separator 1",
+      "separator2": "Separator 2",
+      "separator3": "Separator 3",
+      "separator4": "Separator 4",
+      "separator5": "Separator 5"
+    },
+    "summary": {
+      "aiGeneratedNeedsReview": "AI-generated / needs review"
+    },
+    "progress": {
+      "generationProgress": "Generation progress",
+      "events": "Events"
+    },
+    "readiness": {
+      "missing": {
+        "businessContext": "business name or description",
+        "industry": "industry",
+        "offerOrGoal": "services/products or website goal",
+        "templateType": "template type",
+        "requiredModules": "required modules",
+        "targetAudience": "target audience",
+        "designStyle": "design style",
+        "sampleContentReviewNotes": "sample content review notes",
+        "locationContact": "location/contact",
+        "audience": "audience",
+        "style": "style"
+      },
+      "website": {
+        "readyLabel": "Ready to generate",
+        "needsDetailLabel": "Needs one more detail",
+        "blockedLabel": "Missing critical info",
+        "readyHelper": "I can generate now and mark missing details for review.",
+        "blockedHelper": "Add the missing critical context before generating."
+      },
+      "template": {
+        "readyLabel": "Ready to generate template",
+        "needsTemplateTypeLabel": "Needs template type",
+        "needsIndustryLabel": "Needs industry",
+        "needsReviewLabel": "Needs admin review",
+        "readyHelper": "Sample content will be marked as template content and kept for admin review.",
+        "blockedHelper": "Add the missing template detail, then generate the reusable draft."
+      },
+      "assumptions": {
+        "contactLater": "Contact and location can be added later.",
+        "visualStyle": "AI can draft a visual style and mark it for review.",
+        "audience": "AI can infer a default audience from the business context.",
+        "componentPlan": "AI can choose a reusable component plan for review.",
+        "templateVisualDirection": "AI can draft the visual direction and mark it for review.",
+        "sampleContent": "Sample content remains labeled as template content."
+      }
+    }
+  },
   "aiTemplateStudio": {
     "title": "Admin AI Template Studio",
     "poweredBy": "Powered by Quimera AI",
@@ -13598,7 +13877,8 @@
       "contact": "📞 **Contact information**",
       "voiceHint": "You can also use **🎤 voice mode** to talk to me directly.",
       "existingWebsite": "💡 Already have a website? Click the **🌐 Import** button to extract your business info automatically!",
-      "startQuestion": "**Tell me, what kind of business do you have?**"
+      "startQuestion": "**Tell me, what kind of business do you have?**",
+      "templateStudio": "Create reusable templates with AI\n\nDescribe the reusable template you want to create for future users. I will keep all generated copy labeled as sample content and save the result as a template draft.\n\nHelpful starting points:\n- Restaurant template with menu and reservations\n- Ecommerce template with product sections\n- Portfolio template for creative services\n- Service business template with lead capture\n- Real estate landing template\n\nWhat reusable template should we create?"
     },
     "chat": {
       "thinking": "Thinking...",
@@ -13607,7 +13887,7 @@
       "stopVoice": "Stop voice",
       "startVoice": "Start voice",
       "errorMessage": "⚠️ There was an error processing your message. Please try again.",
-      "generatingHint": "Generating your website... See the progress overlay for details."
+      "generatingHint": "Generating your template draft. See the progress overlay for details."
     },
     "extraction": {
       "buttonLabel": "Import Website",
@@ -13620,6 +13900,116 @@
       "analyzing": "🔍 Analyzing your website... I'm scanning navigation, social links, contact info, colors, services, and more. This may take a moment.",
       "noData": "I wasn't able to extract specific data from that URL, but you can tell me about your business and I'll help you from scratch.",
       "error": "⚠️ I couldn't access that website. The site might be blocking external access or the URL may be incorrect. You can still tell me about your business manually!"
+    },
+    "flow": {
+      "empty": {
+        "title": "Create reusable templates with AI",
+        "description": "Describe the reusable template you want to create for future users.",
+        "examples": {
+          "restaurant": "Create a restaurant template with menu and reservations...",
+          "ecommerce": "Create a premium ecommerce template...",
+          "realEstate": "Create a real estate landing template..."
+        }
+      },
+      "quickPrompts": {
+        "restaurantTemplate": "Restaurant template",
+        "ecommerceTemplate": "Ecommerce template",
+        "portfolioTemplate": "Portfolio template",
+        "serviceBusinessTemplate": "Service business template",
+        "realEstateTemplate": "Real estate template",
+        "landingPageTemplate": "Landing page template"
+      },
+      "progressSteps": {
+        "understandingGoal": "Understanding template goal",
+        "planningStructure": "Planning reusable structure",
+        "selectingComponents": "Selecting components",
+        "creatingSampleContent": "Creating sample content",
+        "creatingVisualDirection": "Creating visual direction",
+        "preparingPreview": "Preparing template preview",
+        "savingDraft": "Saving template draft"
+      },
+      "brief": {
+        "templateInfo": "Template Info",
+        "sampleModules": "Sample modules",
+        "sampleContact": "Sample contact"
+      },
+      "actions": {
+        "generateTemplate": "Generate Template",
+        "generatingTemplate": "Generating Template",
+        "addModules": "Add Modules",
+        "improveTemplateBrief": "Improve Template Brief",
+        "improveTemplateBriefPrompt": "Help me improve this reusable template brief before generating.",
+        "readyHelper": "Sample content will be marked as template content."
+      },
+      "summary": {
+        "title": "Template summary",
+        "subtitle": "Reusable structure brief",
+        "outputLabel": "Template draft",
+        "fields": {
+          "templateName": "Template name",
+          "templateType": "Template type",
+          "industry": "Industry",
+          "compatibleIndustries": "Compatible industries",
+          "targetAudience": "Target audience",
+          "requiredModules": "Required modules",
+          "optionalModules": "Optional modules",
+          "designStyle": "Design style",
+          "sampleContentStatus": "Sample content status",
+          "designPatterns": "Design patterns",
+          "componentPlan": "Component plan"
+        },
+        "values": {
+          "notNamedYet": "Not named yet",
+          "needsTemplateType": "Needs template type",
+          "needsIndustry": "Needs industry",
+          "toBeReviewedByAdmin": "To be reviewed by admin",
+          "adjacentServiceVariants": "adjacent service variants",
+          "targetAudience": "Future users creating from this reusable template",
+          "targetAudienceForReadiness": "Future users who start from this template",
+          "requiredModulesAssumed": "AI can select reusable modules",
+          "optionalModulesAssumed": "FAQ, testimonials, newsletter can be added later",
+          "designStyleAssumed": "AI-generated visual direction",
+          "sampleContentStatus": "Sample content | Template draft | Needs review",
+          "sampleContentStatusForReadiness": "Sample content, template draft, needs review",
+          "designPatternsAssumed": "Generated during component planning",
+          "componentPlanPending": "Pending reusable structure",
+          "componentPlanSelected": "{{count}} modules selected"
+        },
+        "badges": {
+          "templateDraft": "Template draft",
+          "sampleContent": "Sample content",
+          "needsReview": "Needs review"
+        },
+        "warnings": {
+          "sampleContentReview": "Sample content must be reviewed before publishing.",
+          "adminReviewMessage": "{{field}} needs admin review."
+        }
+      },
+      "result": {
+        "title": "Template draft created",
+        "subtitle": "Reusable sample content is saved as a template draft and needs admin review.",
+        "metrics": {
+          "templateDraft": "Template draft",
+          "sampleContent": "Sample content",
+          "componentsIncluded": "Components included",
+          "compatibleIndustries": "Compatible industries",
+          "requiredModules": "Required modules",
+          "optionalModules": "Optional modules"
+        },
+        "values": {
+          "created": "Created",
+          "pending": "Pending",
+          "generatedForReview": "Generated for review",
+          "needsReview": "Needs review"
+        },
+        "actions": {
+          "previewTemplate": "Preview Template",
+          "saveAsDraft": "Save as Draft",
+          "markAsReady": "Mark as Ready",
+          "markReadyTooltip": "Review in Template Management before marking ready.",
+          "regenerateSampleContent": "Regenerate Sample Content"
+        }
+      }
     },
     "briefPanel": {
       "title": "Template Brief",
@@ -13637,27 +14027,52 @@
       "hours": "Hours",
       "colors": "Colors",
       "components": "Components",
+      "typography": "Typography",
+      "addComponent": "Add component",
+      "missingInformation": "Missing information",
+      "noMissingInformation": "No critical information is missing.",
+      "required": "Required",
+      "reviewLater": "Review later",
+      "colorTokens": {
+        "primary": "Primary",
+        "secondary": "Secondary",
+        "accent": "Accent",
+        "background": "Background",
+        "surface": "Surface",
+        "text": "Text"
+      },
+      "fontRoles": {
+        "header": "Headings",
+        "body": "Body",
+        "button": "Buttons"
+      },
+      "referenceImages": "Reference Images",
+      "uploadReference": "Upload reference images",
+      "uploadReferenceHint": "People, places, products, or style inspiration",
+      "localUpload": "Local",
+      "adminLibrary": "Admin Library",
       "pending": "pending...",
       "generateButton": "Generate Template",
       "generating": "Generating...",
       "keepChatting": "Keep chatting, I need more info to build your site"
     },
     "generation": {
-      "creating": "Creating: {{name}}",
-      "websiteCreated": "Website Created!",
-      "yourWebsite": "Your Website",
+      "creating": "Creating template: {{name}}",
+      "websiteCreated": "Template Draft Created!",
+      "yourWebsite": "Your Template",
+      "yourTemplate": "Reusable template",
       "phases": {
-        "content": "Generating Content",
-        "images": "Creating Images",
-        "finalizing": "Assembling Website",
-        "done": "Complete!"
+        "content": "Sample Content",
+        "images": "Sample Images",
+        "finalizing": "Saving Draft",
+        "done": "Template Draft"
       },
       "stats": {
         "images": "Images:",
         "failed": "Failed:",
         "progress": "Progress:"
       },
-      "generatedImages": "Generated Images",
+      "generatedImages": "Sample Images",
       "events": {
         "starting": "🚀 Starting website generation for \"{{name}}\"",
         "generatingContent": "📝 Generating website structure & content with AI...",
@@ -13670,8 +14085,15 @@
         "imageFailed": "❌ Failed: {{key}} (skipped)",
         "assembling": "📦 Assembling website, {{completed}} images generated, {{failed}} failed",
         "saving": "💾 Saving your website...",
-        "done": "🎉 Website created successfully!"
+        "done": "🎉 Website created successfully!",
+        "sampleContentGenerated": "Sample content generated — {{count}} components included",
+        "templateDraftCreated": "Template draft created. Sample content needs admin review."
       },
+      "steps": {
+        "sampleContentCompiled": "Sample content compiled. Preparing template preview...",
+        "templateDraftCreated": "Template draft created."
+      },
+      "templateSuccess": "Template draft created.\n\nGenerated:\n- {{components}} reusable components\n- {{images}} sample images\n- Sample content marked for review\n- Status: Template draft",
       "success": "🎉 **Your website has been created successfully!**\n\nGenerated:\n- 📄 {{sections}} sections\n- 🖼️ {{images}} images\n- 🎨 Custom color palette\n- 🤖 AI assistant configured\n\nYou can close this and find your project in the dashboard.",
       "error": "⚠️ **Generation error:** {{error}}\n\nYou can try again."
     },

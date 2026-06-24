@@ -52,6 +52,24 @@ function openRouterHeaders(): Record<string, string> {
     };
 }
 
+async function readOpenRouterJson(response: Response, context: string): Promise<any> {
+    const responseText = await response.text();
+    if (!responseText.trim()) {
+        throw httpError(`${context} returned an empty response`, 502, {
+            upstreamStatus: response.status,
+        });
+    }
+
+    try {
+        return JSON.parse(responseText);
+    } catch (_error) {
+        throw httpError(`${context} returned invalid JSON`, 502, {
+            upstreamStatus: response.status,
+            upstreamBody: responseText.slice(0, 500),
+        });
+    }
+}
+
 function resolveOmniSlug(models: Array<{ id: string; name?: string }>): string | null {
     const omni = models.find(m => {
         const lower = `${m.id} ${m.name || ''}`.toLowerCase();
@@ -555,6 +573,8 @@ function mapModelToOpenRouter(model: string): string {
         'gemini-3.1-pro-preview': 'google/gemini-2.5-pro',
         'gemini-3.1-flash-lite-preview': 'google/gemini-2.5-flash',
         // Image Models
+        'gpt-5-image': 'openai/gpt-5-image',
+        'gpt-image-1': 'openai/gpt-image-1',
         'gemini-3.1-flash-image-preview': 'google/gemini-3.1-flash-image-preview', // Nano Banana 2
         'imagen-4.0-nano-banana-002': 'google/gemini-3.1-flash-image-preview',
         'gemini-3-pro-image-preview': 'google/gemini-3-pro-image-preview',
@@ -593,6 +613,95 @@ function imageInputToUrl(input: unknown): string | null {
     }
 
     return null;
+}
+
+function readImageStringOption(
+    payload: Record<string, unknown>,
+    config: Record<string, unknown>,
+    keys: string[],
+    fallback?: string,
+): string | undefined {
+    for (const key of keys) {
+        const value = payload[key] ?? config[key];
+        if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    return fallback;
+}
+
+function readImageNumberOption(
+    payload: Record<string, unknown>,
+    config: Record<string, unknown>,
+    keys: string[],
+): number | undefined {
+    for (const key of keys) {
+        const value = payload[key] ?? config[key];
+        const numberValue = Number(value);
+        if (Number.isFinite(numberValue)) return numberValue;
+    }
+    return undefined;
+}
+
+function normalizeImageOutputFormat(value?: string): string {
+    const normalized = (value || 'jpeg').toLowerCase().replace('jpg', 'jpeg');
+    return ['jpeg', 'png', 'webp'].includes(normalized) ? normalized : 'jpeg';
+}
+
+function imageMimeTypeForFormat(outputFormat: string): string {
+    return `image/${outputFormat === 'jpg' ? 'jpeg' : outputFormat}`;
+}
+
+function pickOpenRouterImageValue(data: any): string {
+    const first = Array.isArray(data?.data) ? data.data[0] : data?.data;
+    const candidates = [
+        first?.b64_json,
+        first?.image,
+        first?.url,
+        first?.image_url?.url,
+        data?.b64_json,
+        data?.image,
+        data?.url,
+    ];
+
+    for (const candidate of candidates) {
+        if (typeof candidate === 'string' && candidate.trim()) return candidate.trim();
+    }
+
+    return '';
+}
+
+async function resolveImageToBase64(
+    imageValue: string,
+    fallbackMimeType: string,
+): Promise<{ image: string; mimeType: string } | null> {
+    if (!imageValue) return null;
+
+    if (imageValue.startsWith('data:')) {
+        const [header, data] = imageValue.split(',', 2);
+        const mimeMatch = header.match(/data:([^;]+);/);
+        return {
+            image: data || '',
+            mimeType: mimeMatch?.[1] || fallbackMimeType,
+        };
+    }
+
+    if (imageValue.startsWith('http://') || imageValue.startsWith('https://')) {
+        const imageResponse = await fetch(imageValue);
+        if (!imageResponse.ok) return null;
+
+        const bytes = new Uint8Array(await imageResponse.arrayBuffer());
+        let binary = '';
+        const chunkSize = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+            binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+        }
+
+        return {
+            image: btoa(binary),
+            mimeType: imageResponse.headers.get('Content-Type') || fallbackMimeType,
+        };
+    }
+
+    return { image: imageValue, mimeType: fallbackMimeType };
 }
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
@@ -1684,6 +1793,85 @@ serve(async (req) => {
             .filter((url, index, all) => all.indexOf(url) === index)
             .slice(0, 14);
 
+        if (isImageGen) {
+            const configRecord = isPlainRecord(config) ? config : {};
+            const outputFormat = normalizeImageOutputFormat(
+                readImageStringOption(payload, configRecord, ['output_format', 'outputFormat'], 'jpeg'),
+            );
+            const imageBody: Record<string, unknown> = {
+                model: orModel,
+                prompt: prompt || ' ',
+                resolution: readImageStringOption(payload, configRecord, ['resolution'], '1K'),
+                aspect_ratio: readImageStringOption(payload, configRecord, ['aspect_ratio', 'aspectRatio'], '1:1'),
+                quality: readImageStringOption(payload, configRecord, ['quality'], 'high'),
+                output_format: outputFormat,
+            };
+
+            const size = readImageStringOption(payload, configRecord, ['size']);
+            const background = readImageStringOption(payload, configRecord, ['background']);
+            const outputCompression = readImageNumberOption(payload, configRecord, ['output_compression', 'outputCompression']);
+            const seed = readImageNumberOption(payload, configRecord, ['seed']);
+            const imageCount = readImageNumberOption(payload, configRecord, ['n', 'count']);
+
+            if (size) imageBody.size = size;
+            if (background) imageBody.background = background;
+            if (outputCompression != null) imageBody.output_compression = outputCompression;
+            if (seed != null) imageBody.seed = seed;
+            if (imageCount != null && imageCount > 0) imageBody.n = Math.floor(imageCount);
+            if (imageInputs.length > 0) {
+                imageBody.input_references = imageInputs.map((imageUrl) => ({
+                    type: 'image_url',
+                    image_url: { url: imageUrl },
+                }));
+            }
+
+            console.log(`[ai-proxy] Requesting image: model=${orModel}, route=/images, references=${imageInputs.length}, resolution=${String(imageBody.resolution)}, aspect_ratio=${String(imageBody.aspect_ratio)}`);
+
+            const orResponse = await fetch(`${OPENROUTER_BASE}/images`, {
+                method: 'POST',
+                headers: openRouterHeaders(),
+                body: JSON.stringify(imageBody),
+            });
+
+            if (!orResponse.ok) {
+                const errorText = await orResponse.text();
+                console.error(`[OpenRouter Images] Error: ${orResponse.status} ${errorText}`);
+                return new Response(
+                    JSON.stringify({ error: `OpenRouter Images API error: ${orResponse.status}`, details: errorText }),
+                    { status: orResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+            }
+
+            const data = await readOpenRouterJson(orResponse, 'OpenRouter Images API');
+            const imageValue = pickOpenRouterImageValue(data);
+            const resolvedImage = await resolveImageToBase64(imageValue, imageMimeTypeForFormat(outputFormat));
+
+            if (!resolvedImage?.image) {
+                console.error('[ai-proxy] No image extracted from OpenRouter Images response:', JSON.stringify(data).slice(0, 500));
+                return new Response(
+                    JSON.stringify({ error: 'No image data returned from OpenRouter Images API', details: JSON.stringify(data).slice(0, 300) }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+            }
+
+            const billingResult = billingContext ? await consumeResolvedCredits(billingContext) : null;
+
+            return new Response(
+                JSON.stringify({
+                    success: true,
+                    image: resolvedImage.image,
+                    mimeType: resolvedImage.mimeType,
+                    metadata: {
+                        model: orModel,
+                        provider: 'openrouter',
+                        route: '/images',
+                        billing: billingResult,
+                    }
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+
         // Handle prompt with or without images (vision/reference images)
         if (imageInputs.length > 0) {
             const contentParts: any[] = [{ type: 'text', text: prompt || ' ' }];
@@ -1735,7 +1923,7 @@ serve(async (req) => {
             );
         }
 
-        const data = await orResponse.json();
+        const data = await readOpenRouterJson(orResponse, 'OpenRouter Chat API');
         
         // Handle Image Generation Response Format
         if (isImageGen) {

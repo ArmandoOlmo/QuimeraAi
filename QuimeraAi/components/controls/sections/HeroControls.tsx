@@ -112,6 +112,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         sectionKey="hero" 
         data={data} 
         setNestedData={setNestedData} 
+        showImageOpacityControl
         showBlurControls
       />
 
@@ -405,6 +406,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         sectionKey="hero" 
         data={data} 
         setNestedData={setNestedData} 
+        showImageOpacityControl
         showBlurControls
       />
 

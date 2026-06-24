@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, Search, Check } from 'lucide-react';
 import { fontOptions, fontStacks, formatFontName, loadAllFonts } from '../../utils/fontLoader';
 import { FontFamily } from '../../types';
@@ -18,6 +19,8 @@ interface FontFamilyPickerProps {
     onChange: (font: FontFamily) => void;
     /** Whether to show the live font preview box below the picker (default: true) */
     showPreview?: boolean;
+    /** Compact inspector mode without extra margin or large type */
+    compact?: boolean;
 }
 
 const FontFamilyPicker: React.FC<FontFamilyPickerProps> = ({
@@ -25,7 +28,9 @@ const FontFamilyPicker: React.FC<FontFamilyPickerProps> = ({
     value,
     onChange,
     showPreview = true,
+    compact = false,
 }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -90,20 +95,22 @@ const FontFamilyPicker: React.FC<FontFamilyPickerProps> = ({
     const selectedStack = fontStacks[value] || "'Inter', sans-serif";
 
     return (
-        <div className="mb-3" ref={containerRef}>
-            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
-                {label}
-            </label>
+        <div className={compact ? 'relative' : 'mb-3'} ref={containerRef}>
+            {label && (
+                <label className={compact ? 'sr-only' : 'block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider'}>
+                    {label}
+                </label>
+            )}
 
             {/* Trigger Button */}
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full flex items-center justify-between bg-q-surface border rounded-md px-3 py-2.5 text-base text-q-text transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between bg-q-surface border rounded-md text-q-text transition-all cursor-pointer ${
                     isOpen
                         ? 'border-q-accent ring-1 ring-q-accent'
                         : 'border-q-border hover:border-q-accent/50'
-                }`}
+                } ${compact ? 'h-9 px-2 text-sm' : 'px-3 py-2.5 text-base'}`}
                 style={{ fontFamily: selectedStack }}
             >
                 <span className="truncate">{formatFontName(value)}</span>
@@ -123,7 +130,7 @@ const FontFamilyPicker: React.FC<FontFamilyPickerProps> = ({
                                     type="text"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Buscar fuente..."
+                                    placeholder={t('common.searchFont')}
                                     className="w-full bg-q-bg border border-q-border rounded-md pl-10 pr-3 py-2.5 text-base text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-1 focus:ring-q-accent"
                                 />
                             </div>
@@ -133,7 +140,7 @@ const FontFamilyPicker: React.FC<FontFamilyPickerProps> = ({
                         <div ref={listRef} className="max-h-64 overflow-y-auto overscroll-contain">
                             {filteredFonts.length === 0 ? (
                                 <div className="px-3 py-4 text-sm text-q-text-secondary text-center">
-                                    No se encontraron fuentes
+                                    {t('common.noFontsFound')}
                                 </div>
                             ) : (
                                 filteredFonts.map(font => {
@@ -174,7 +181,7 @@ const FontFamilyPicker: React.FC<FontFamilyPickerProps> = ({
                         {formatFontName(value)}
                     </p>
                     <p className="text-sm text-q-text-secondary mt-1">
-                        The quick brown fox jumps over the lazy dog
+                        {t('common.fontPreviewSample')}
                     </p>
                 </div>
             )}

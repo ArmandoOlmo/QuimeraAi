@@ -777,6 +777,41 @@
     }
   },
   "superadmin": {
+    "loadingPanel": "Carregando painel...",
+    "adminConsole": "Console admin",
+    "commandCenter": "Centro de comando",
+    "commandCenterDesc": "Uma visão clara para operar permissões, conteúdo, analytics, automações e configuração global sem ler cada módulo um por um.",
+    "availableModules": "Módulos",
+    "newTools": "Novos",
+    "activeView": "Vista",
+    "priorityAccess": "Prioridade",
+    "quickAccess": "Acesso rápido",
+    "quickAccessDesc": "As áreas que normalmente concentram operação, clientes, conteúdo e saúde do sistema.",
+    "moduleCount": "{{count}} módulos",
+    "mcpTitle": "MCP / chaves de API",
+    "mcpDesc": "Criar e revogar chaves para agentes, escopos e acesso ao MCP.",
+    "chatbotPrompts": "Prompts de chatbot",
+    "chatbotPromptsDesc": "Configurar instruções globais para todos os chatbots dos projetos.",
+    "executionMode": "Modo de execução (em breve)",
+    "executionModeDesc": "Configure o comportamento de execução do assistente. Recurso em desenvolvimento.",
+    "categoryCore": "Principal",
+    "categoryContent": "Conteúdo",
+    "categoryDevelopment": "Desenvolvimento",
+    "categoryAnalytics": "Analytics",
+    "categorySystem": "Sistema",
+    "searchFeatures": "Pesquisar funcionalidades...",
+    "showingResults": "Mostrando {{count}} de {{total}} funcionalidades",
+    "clearFilters": "Limpar filtros",
+    "noResultsFound": "Nenhum resultado encontrado",
+    "noResultsDesc": "Tente outros termos de pesquisa ou filtros",
+    "viewAllFeatures": "Ver todas as funcionalidades",
+    "new": "Novo",
+    "viewGrid": "Vista em grade",
+    "viewList": "Vista em lista",
+    "viewCompact": "Vista compacta",
+    "templateManagement": {
+      "generateWithAi": "Gerar com IA"
+    },
     "news": {
       "title": "Notícias & Atualizações",
       "create": "Nova Publicação",
@@ -1281,6 +1316,18 @@
         "buttonText": "Texto do botão",
         "title": "Título",
         "buttonBorderRadius": "Cantos do Botão"
+      },
+      "features": {
+        "editorialMosaic": "Mosaico editorial",
+        "descEditorialMosaic": "Mosaico estilo revista com cartões de foto e blocos de texto"
+      },
+      "testimonials": {
+        "editorialMosaic": "Mosaico editorial",
+        "editorialMosaicDesc": "Mosaico de prova social com retratos, citações e blocos de texto"
+      },
+      "menu": {
+        "editorialMosaic": "Mosaico editorial",
+        "editorialMosaicDesc": "Painéis de foto alternados com caixas brancas de conteúdo para cada prato."
       }
     }
   },

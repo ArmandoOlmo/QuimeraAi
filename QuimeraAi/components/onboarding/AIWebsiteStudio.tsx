@@ -11,13 +11,13 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    X, Mic, MicOff, Send, Sparkles, Loader2, ChevronRight,
-    Building2, Palette, Phone, CheckCircle2, Circle,
-    MessageSquare, Zap, LayoutTemplate, Image, FileText, Package, Save, PartyPopper,
-    RefreshCcw, Volume2, Globe, Upload, Plus, Minus, Type
+    X, Mic, MicOff, Send, Loader2,
+    Building2, Palette, Phone,
+    Zap, LayoutTemplate, Image,
+    RefreshCcw, Volume2, Globe, Upload, Plus, Type
 } from 'lucide-react';
 import { useUI } from '../../contexts/core/UIContext';
-import { useAIWebsiteStudio, BusinessBrief, GenerationPhase, GenerationEvent } from './hooks/useAIWebsiteStudio';
+import { useAIWebsiteStudio, BusinessBrief, GenerationPhase } from './hooks/useAIWebsiteStudio';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
 import ColorControl from '../ui/ColorControl';
@@ -27,6 +27,10 @@ import FontFamilyPicker from '../ui/FontFamilyPicker';
 import { SortableComponentChips } from '../ui/SortableComponentChips';
 import { WebsitePlanReview } from './WebsitePlanReview';
 import { GeneratedWebsitePreview } from './GeneratedWebsitePreview';
+import StudioActionBar from '../studio/StudioActionBar';
+import StudioGenerationOverlay from '../studio/StudioGenerationOverlay';
+import StudioSummaryPanel from '../studio/StudioSummaryPanel';
+import { getAiStudioSummary, getAiStudioSummaryCopy, type StudioUXSummary } from '../../utils/studioUX';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -36,7 +40,9 @@ const AIWebsiteStudio: React.FC = () => {
     const { isOnboardingOpen, setIsOnboardingOpen, onboardingMode } = useUI();
     const studio = useAIWebsiteStudio();
     const [isMobileBriefOpen, setIsMobileBriefOpen] = useState(false);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
     const { t } = useTranslation();
+    const translate = (key: string, options?: Record<string, unknown>) => t(key, options);
 
     // Auto-open: when ?onboarding=ai was used, automatically open the studio
     useEffect(() => {
@@ -104,6 +110,18 @@ const AIWebsiteStudio: React.FC = () => {
             e.preventDefault();
             studio.sendMessage(studio.input);
         }
+    };
+
+    const summary = getAiStudioSummary({
+        brief: studio.businessBrief,
+        websitePlan: studio.websitePlan,
+        selectedComponents: studio.businessBrief.suggestedComponents,
+        generatedProject: studio.generatedProject,
+        copy: getAiStudioSummaryCopy(translate),
+    });
+
+    const focusInput = () => {
+        inputRef.current?.focus();
     };
 
     return (
@@ -265,6 +283,7 @@ const AIWebsiteStudio: React.FC = () => {
                                 )}
                                 {/* Text input — min-h-[40px] to match buttons */}
                                 <textarea
+                                    ref={inputRef}
                                     value={studio.input}
                                     onChange={e => studio.setInput(e.target.value)}
                                     onKeyDown={handleKeyDown}
@@ -297,7 +316,7 @@ const AIWebsiteStudio: React.FC = () => {
 
                     {/* RIGHT: Business Brief Panel (desktop) */}
                     <div className="hidden lg:flex w-[360px] flex-col border-l border-q-border/70 bg-q-surface/55 backdrop-blur-xl overflow-y-auto custom-scrollbar">
-                        <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} onSetComponents={studio.setBriefComponents} availableComponents={studio.availableComponents} />
+                        <BriefPanel summary={summary} brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} onSetComponents={studio.setBriefComponents} availableComponents={studio.availableComponents} />
                     </div>
 
                     {/* RIGHT: Business Brief Panel (mobile bottom sheet) */}
@@ -322,12 +341,34 @@ const AIWebsiteStudio: React.FC = () => {
                                 </div>
                                 {/* Content — scrollable */}
                                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                    <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} onSetComponents={studio.setBriefComponents} availableComponents={studio.availableComponents} />
+                                    <BriefPanel summary={summary} brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} onSetComponents={studio.setBriefComponents} availableComponents={studio.availableComponents} />
                                 </div>
                             </div>
                         </div>
                     )}
                 </div>
+
+                <StudioActionBar
+                    primaryLabel={studio.isGenerating ? t('aiWebsiteStudio.flow.actions.generatingWebsite') : t('aiWebsiteStudio.flow.actions.generateWebsite')}
+                    onPrimary={studio.startGeneration}
+                    primaryDisabled={!studio.canGenerate || studio.isAccessLoading}
+                    loading={studio.isGenerating}
+                    helperText={summary.readiness.canGenerate
+                        ? t('aiWebsiteStudio.flow.actions.readyHelper')
+                        : summary.readiness.helperText}
+                    secondaryActions={[
+                        {
+                            label: t('aiWebsiteStudio.flow.actions.improveBrief'),
+                            onClick: () => studio.sendMessage(t('aiWebsiteStudio.flow.actions.improveBriefPrompt')),
+                            disabled: studio.isThinking || studio.isGenerating,
+                        },
+                        {
+                            label: t('aiWebsiteStudio.flow.actions.addDetails'),
+                            onClick: focusInput,
+                            disabled: studio.isGenerating,
+                        },
+                    ]}
+                />
 
                 {/* URL EXTRACTION MODAL */}
                 {studio.showUrlModal && (
@@ -410,6 +451,7 @@ const ChatBubble: React.FC<{ message: { role: 'user' | 'model'; text: string; is
 const COLOR_KEYS = ['primary', 'secondary', 'accent', 'background', 'surface', 'text'] as const;
 
 const BriefPanel: React.FC<{
+    summary: StudioUXSummary;
     brief: BusinessBrief;
     canGenerate: boolean;
     isGenerating: boolean;
@@ -422,10 +464,8 @@ const BriefPanel: React.FC<{
     onToggleComponent: (component: PageSection) => void;
     onSetComponents: (components: PageSection[]) => void;
     availableComponents: { key: PageSection; label: string }[];
-}> = ({ brief, canGenerate, isGenerating, onGenerate, referenceImages, onAddReferenceImage, onRemoveReferenceImage, onUpdateColor, onUpdateFont, onToggleComponent, onSetComponents, availableComponents }) => {
+}> = ({ summary, brief, referenceImages, onAddReferenceImage, onRemoveReferenceImage, onUpdateColor, onUpdateFont, onToggleComponent, onSetComponents, availableComponents }) => {
     const { t } = useTranslation();
-    const readiness = brief.readinessScore;
-    const readinessColor = readiness >= 80 ? '#22c55e' : readiness >= 50 ? '#f59e0b' : readiness >= 20 ? '#ef4444' : '#6b7280';
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [showComponentPicker, setShowComponentPicker] = useState(false);
@@ -454,131 +494,106 @@ const BriefPanel: React.FC<{
 
     // Components not yet selected
     const availableToAdd = availableComponents.filter(c => !brief.suggestedComponents.includes(c.key));
+    const businessRows = [
+        { label: t('aiWebsiteStudio.briefPanel.name'), value: brief.businessName },
+        { label: t('aiWebsiteStudio.briefPanel.industry'), value: brief.industry },
+        { label: t('aiWebsiteStudio.briefPanel.tagline'), value: brief.tagline },
+    ].filter(row => formatBriefValue(row.value));
+    const contactRows = [
+        { label: t('aiWebsiteStudio.briefPanel.email'), value: brief.contactInfo.email },
+        { label: t('aiWebsiteStudio.briefPanel.phone'), value: brief.contactInfo.phone },
+        { label: t('aiWebsiteStudio.briefPanel.address'), value: brief.contactInfo.address },
+        { label: t('aiWebsiteStudio.briefPanel.hours'), value: brief.contactInfo.businessHours },
+    ].filter(row => formatBriefValue(row.value));
 
     return (
-        <div className="flex-1 flex flex-col p-4 space-y-4 text-xs">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-q-text flex items-center gap-2">
-                    <MessageSquare size={14} className="text-q-accent" />
-                    {t('aiWebsiteStudio.briefPanel.title')}
-                </h3>
-            </div>
-
-            {/* Generate Button */}
-            <div className="pb-2">
-                <button
-                    onClick={onGenerate}
-                    disabled={!canGenerate || isGenerating}
-                    className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-                        canGenerate && !isGenerating
-                            ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 cursor-pointer'
-                            : 'bg-q-surface-overlay/40 text-q-text-secondary/40 cursor-not-allowed'
-                    }`}
-                >
-                    {isGenerating ? (
-                        <>
-                            <Loader2 size={16} className="animate-spin" />
-                            {t('aiWebsiteStudio.briefPanel.generating')}
-                        </>
-                    ) : (
-                        <>
-                            <Sparkles size={16} />
-                            {t('aiWebsiteStudio.briefPanel.generateButton')}
-                        </>
-                    )}
-                </button>
-                {!canGenerate && !isGenerating && (
-                    <p className="text-center text-[10px] text-q-text-secondary/50 mt-2">
-                        {t('aiWebsiteStudio.briefPanel.keepChatting')}
-                    </p>
-                )}
-            </div>
-
-            {/* Readiness Score */}
-            <div className="bg-q-bg rounded-xl p-3 border border-q-border">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-q-text-secondary">{t('aiWebsiteStudio.briefPanel.readiness')}</span>
-                    <span className="font-bold" style={{ color: readinessColor }}>{readiness}%</span>
-                </div>
-                <div className="w-full h-2 bg-q-surface-overlay rounded-full overflow-hidden">
-                    <div
-                        className="h-full rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${readiness}%`, background: `linear-gradient(90deg, ${readinessColor}80, ${readinessColor})` }}
-                    />
-                </div>
-                {brief.missingFields.length > 0 && readiness < 80 && (
-                    <p className="mt-2 text-[10px] text-q-text-secondary/60">
-                        {t('aiWebsiteStudio.briefPanel.missing')} {brief.missingFields.join(', ')}
-                    </p>
-                )}
-            </div>
+        <div className="flex-1 flex flex-col gap-3 p-3 text-xs">
+            <StudioSummaryPanel
+                summary={summary}
+                reviewLabel={t('studioUX.summary.aiGeneratedNeedsReview')}
+                missingOnly
+                missingTitle={t('aiWebsiteStudio.briefPanel.missingInformation')}
+                missingEmptyLabel={t('aiWebsiteStudio.briefPanel.noMissingInformation')}
+                missingRequiredLabel={t('aiWebsiteStudio.briefPanel.required')}
+                missingReviewLabel={t('aiWebsiteStudio.briefPanel.reviewLater')}
+            />
 
             {/* Business Info */}
-            <BriefSection title={t('aiWebsiteStudio.briefPanel.business')} icon={<Building2 size={13} />}>
-                <BriefField label={t('aiWebsiteStudio.briefPanel.name')} value={brief.businessName} />
-                <BriefField label={t('aiWebsiteStudio.briefPanel.industry')} value={brief.industry} />
-                <BriefField label={t('aiWebsiteStudio.briefPanel.tagline')} value={brief.tagline} />
-                {brief.description && (
-                    <p className="text-q-text-secondary/60 line-clamp-2 mt-1">{brief.description}</p>
-                )}
-            </BriefSection>
+            {(businessRows.length > 0 || brief.description) && (
+                <InspectorSection title={t('aiWebsiteStudio.briefPanel.business')} icon={<Building2 size={13} />}>
+                    <div className="space-y-1.5">
+                        {businessRows.map(row => (
+                            <BriefCompactField key={row.label} label={row.label} value={row.value} />
+                        ))}
+                    </div>
+                    {brief.description && (
+                        <p className="mt-2 line-clamp-3 rounded-md border border-q-border/60 bg-q-surface/35 px-2 py-1.5 text-[11px] leading-relaxed text-q-text-secondary">
+                            {brief.description}
+                        </p>
+                    )}
+                </InspectorSection>
+            )}
 
             {/* Services */}
             {brief.services.length > 0 && (
-                <BriefSection title={`${t('aiWebsiteStudio.briefPanel.services')} (${brief.services.length})`} icon={<Zap size={13} />}>
-                    {brief.services.map((s, i) => (
-                        <div key={i} className="flex items-start gap-1.5 text-q-text-secondary">
-                            <CheckCircle2 size={11} className="text-q-success/60 mt-0.5 flex-shrink-0" />
-                            <span>{formatBriefValue(s.name)}</span>
-                        </div>
-                    ))}
-                </BriefSection>
+                <InspectorSection title={`${t('aiWebsiteStudio.briefPanel.services')} (${brief.services.length})`} icon={<Zap size={13} />}>
+                    <div className="flex flex-wrap gap-1.5">
+                        {brief.services.map((s, i) => (
+                            <span key={i} className="rounded-md border border-q-border/60 bg-q-surface/45 px-2 py-1 text-[10px] font-medium text-q-text-secondary">
+                                {formatBriefValue(s.name)}
+                            </span>
+                        ))}
+                    </div>
+                </InspectorSection>
             )}
 
             {/* Contact */}
-            {(brief.contactInfo.email || brief.contactInfo.phone || brief.contactInfo.address) && (
-                <BriefSection title={t('aiWebsiteStudio.briefPanel.contact')} icon={<Phone size={13} />}>
-                    {brief.contactInfo.email && <BriefField label={t('aiWebsiteStudio.briefPanel.email')} value={brief.contactInfo.email} />}
-                    {brief.contactInfo.phone && <BriefField label={t('aiWebsiteStudio.briefPanel.phone')} value={brief.contactInfo.phone} />}
-                    {brief.contactInfo.address && <BriefField label={t('aiWebsiteStudio.briefPanel.address')} value={brief.contactInfo.address} />}
-                    {brief.contactInfo.businessHours && <BriefField label={t('aiWebsiteStudio.briefPanel.hours')} value={brief.contactInfo.businessHours} />}
-                </BriefSection>
+            {contactRows.length > 0 && (
+                <InspectorSection title={t('aiWebsiteStudio.briefPanel.contact')} icon={<Phone size={13} />}>
+                    <div className="space-y-1.5">
+                        {contactRows.map(row => (
+                            <BriefCompactField key={row.label} label={row.label} value={row.value} />
+                        ))}
+                    </div>
+                </InspectorSection>
             )}
 
             {/* Color Palette */}
-            <BriefSection title={t('aiWebsiteStudio.briefPanel.colors')} icon={<Palette size={13} />}>
-                <div className="grid grid-cols-2 gap-2">
+            <InspectorSection title={t('aiWebsiteStudio.briefPanel.colors')} icon={<Palette size={13} />}>
+                <div className="grid grid-cols-2 gap-2 min-[420px]:grid-cols-3">
                     {COLOR_KEYS.map(key => (
-                        <ColorControl
+                        <ColorTokenControl
                             key={key}
-                            label={key}
+                            label={t(`aiWebsiteStudio.briefPanel.colorTokens.${key}`)}
                             value={brief.colorPalette[key]}
                             onChange={(newColor) => onUpdateColor(key, newColor)}
-                            variant="editor"
                         />
                     ))}
                 </div>
-            </BriefSection>
+            </InspectorSection>
 
             {/* Typography */}
-            <BriefSection title={t('aiWebsiteStudio.briefPanel.typography', { defaultValue: 'Typography' })} icon={<Type size={13} />}>
+            <InspectorSection title={t('aiWebsiteStudio.briefPanel.typography')} icon={<Type size={13} />}>
                 <div className="space-y-2">
                     {(['header', 'body', 'button'] as const).map(key => (
-                        <div key={key} className="flex flex-col gap-1">
-                            <span className="text-[10px] text-q-text-secondary uppercase">{key}</span>
+                        <div key={key} className="grid grid-cols-[58px_minmax(0,1fr)] items-center gap-2">
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-q-text-secondary">
+                                {t(`aiWebsiteStudio.briefPanel.fontRoles.${key}`)}
+                            </span>
                             <FontFamilyPicker
                                 label=""
                                 value={brief.fontPairing[key]}
                                 onChange={(val) => onUpdateFont(key, val)}
+                                showPreview={false}
+                                compact
                             />
                         </div>
                     ))}
                 </div>
-            </BriefSection>
+            </InspectorSection>
 
             {/* Components — Uniform compact chips */}
-            <BriefSection title={`${t('aiWebsiteStudio.briefPanel.components')} (${brief.suggestedComponents.length})`} icon={<LayoutTemplate size={13} />}>
+            <InspectorSection title={`${t('aiWebsiteStudio.briefPanel.components')} (${brief.suggestedComponents.length})`} icon={<LayoutTemplate size={13} />}>
                 <div className="flex flex-wrap gap-[3px]">
                     <SortableComponentChips
                         items={brief.suggestedComponents}
@@ -608,10 +623,10 @@ const BriefPanel: React.FC<{
                         )}
                     </div>
                 </div>
-            </BriefSection>
+            </InspectorSection>
 
             {/* Reference Images */}
-            <BriefSection title={`${t('aiWebsiteStudio.briefPanel.referenceImages', { defaultValue: 'Reference Images' })} (${referenceImages.length}/14)`} icon={<Image size={13} />}>
+            <InspectorSection title={`${t('aiWebsiteStudio.briefPanel.referenceImages')} (${referenceImages.length}/14)`} icon={<Image size={13} />}>
                 <input
                     type="file"
                     ref={fileInputRef}
@@ -621,23 +636,25 @@ const BriefPanel: React.FC<{
                     className="hidden"
                 />
                 <div
-                    className={`w-full border-2 border-dashed rounded-xl transition-colors cursor-pointer group p-4 flex flex-col items-center justify-center gap-2 ${
-                        isDragging ? 'border-q-accent bg-q-accent/10' : 'border-q-border hover:border-q-accent/50 bg-q-bg/30'
+                    className={`w-full rounded-lg border border-dashed px-3 py-2 transition-colors cursor-pointer group ${
+                        isDragging ? 'border-q-accent bg-q-accent/10' : 'border-q-border hover:border-q-accent/50 bg-q-surface/30'
                     }`}
                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                     onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
                     onDrop={(e) => { e.preventDefault(); setIsDragging(false); if (e.dataTransfer.files) handleFiles(e.dataTransfer.files); }}
                     onClick={() => fileInputRef.current?.click()}
                 >
-                    <div className="size-8 rounded-full bg-q-surface-overlay/20 group-hover:bg-q-accent/10 flex items-center justify-center transition-colors">
-                        <Upload size={16} className="text-q-text-secondary group-hover:text-q-accent transition-colors" />
+                    <div className="flex items-center gap-2">
+                        <Upload size={13} className="text-q-text-secondary group-hover:text-q-accent transition-colors" />
+                        <div className="min-w-0">
+                            <div className="truncate text-[10px] font-semibold text-q-text-secondary group-hover:text-q-accent">
+                                {t('aiWebsiteStudio.briefPanel.uploadReference')}
+                            </div>
+                            <div className="truncate text-[9px] text-q-text-secondary/55">
+                                {t('aiWebsiteStudio.briefPanel.uploadReferenceHint')}
+                            </div>
+                        </div>
                     </div>
-                    <span className="text-[10px] font-medium text-q-text-secondary group-hover:text-q-accent transition-colors text-center">
-                        {t('aiWebsiteStudio.briefPanel.uploadReference', { defaultValue: 'Upload reference images' })}
-                    </span>
-                    <span className="text-[9px] text-q-text-secondary/50">
-                        {t('aiWebsiteStudio.briefPanel.uploadReferenceHint', { defaultValue: 'People, places, products, or style inspiration' })}
-                    </span>
                 </div>
 
                 <div className="flex gap-2 w-full mt-2">
@@ -645,13 +662,13 @@ const BriefPanel: React.FC<{
                         onClick={() => fileInputRef.current?.click()}
                         className="flex-1 py-1.5 rounded-lg border border-q-border hover:border-q-accent text-[10px] text-q-text-secondary hover:text-q-accent transition-colors flex items-center justify-center gap-1.5"
                     >
-                        <Upload size={12} /> Local
+                        <Upload size={12} /> {t('aiWebsiteStudio.briefPanel.localUpload')}
                     </button>
                     <button
                         onClick={() => setShowLibraryPicker(true)}
                         className="flex-1 py-1.5 rounded-lg border border-q-border hover:border-q-accent text-[10px] text-q-text-secondary hover:text-q-accent transition-colors flex items-center justify-center gap-1.5 bg-q-accent/10 text-q-accent border-q-accent/20"
                     >
-                        <Image size={12} /> Librería Admin
+                        <Image size={12} /> {t('aiWebsiteStudio.briefPanel.adminLibrary')}
                     </button>
                 </div>
 
@@ -685,20 +702,36 @@ const BriefPanel: React.FC<{
                         ))}
                     </div>
                 )}
-            </BriefSection>
+            </InspectorSection>
         </div>
     );
 };
 
 // ── Brief sub-components ────────────────────────────────────────────────────
 
-const BriefSection: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
-    <div className="space-y-1.5">
-        <div className="flex items-center gap-1.5 text-q-text-secondary font-medium">
+const InspectorSection: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
+    <section className="rounded-lg border border-q-border/75 bg-q-bg/70 p-3">
+        <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-q-text-secondary">
             {icon}
             <span>{title}</span>
         </div>
-        <div className="pl-5 space-y-1">{children}</div>
+        {children}
+    </section>
+);
+
+const ColorTokenControl: React.FC<{ label: string; value: string; onChange: (value: string) => void }> = ({ label, value, onChange }) => (
+    <div className="flex min-w-0 items-center gap-2 rounded-lg border border-q-border/70 bg-q-surface/40 px-2 py-2">
+        <ColorControl
+            label={label}
+            value={value}
+            onChange={onChange}
+            variant="editor"
+            compact
+        />
+        <div className="min-w-0">
+            <div className="truncate text-[9px] font-semibold uppercase tracking-wide text-q-text-secondary">{label}</div>
+            <div className="truncate font-mono text-[10px] text-q-text">{value?.toUpperCase?.() || value}</div>
+        </div>
     </div>
 );
 
@@ -737,198 +770,56 @@ function formatBriefValue(value: unknown): string {
     return String(value);
 }
 
-const BriefField: React.FC<{ label: string; value?: unknown }> = ({ label, value }) => {
+const BriefCompactField: React.FC<{ label: string; value?: unknown }> = ({ label, value }) => {
     const displayValue = formatBriefValue(value);
+    if (!displayValue) return null;
+
     return (
-        <div className="flex items-center gap-1.5">
-            {displayValue ? <CheckCircle2 size={10} className="text-q-success/60 flex-shrink-0" /> : <Circle size={10} className="text-q-text-secondary/30 flex-shrink-0" />}
-            <span className="text-q-text-secondary/60">{label}:</span>
-            <span className={`truncate ${displayValue ? 'text-q-text' : 'text-q-text-secondary/30 italic'}`}>{displayValue || '...'}</span>
+        <div className="grid grid-cols-[76px_minmax(0,1fr)] items-center gap-2 rounded-md border border-q-border/60 bg-q-surface/35 px-2 py-1.5">
+            <span className="truncate text-[10px] font-semibold uppercase tracking-wide text-q-text-secondary">{label}</span>
+            <span className="truncate text-[11px] font-medium text-q-text">{displayValue}</span>
         </div>
     );
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// GENERATION OVERLAY — uses editor tokens for theme support
-// ═══════════════════════════════════════════════════════════════════════════
-
-const PHASE_LABELS_KEY: Record<string, string> = {
-    content: 'aiWebsiteStudio.generation.phases.content',
-    images: 'aiWebsiteStudio.generation.phases.images',
-    finalizing: 'aiWebsiteStudio.generation.phases.finalizing',
-    done: 'aiWebsiteStudio.generation.phases.done',
-};
+function getWebsiteProgressStep(phase: GenerationPhase, stepCount: number): number {
+    if (phase.phase === 'done') return stepCount - 1;
+    if (phase.phase === 'finalizing') return 5;
+    if (phase.phase === 'images') return 4;
+    if (phase.progress >= 35) return 2;
+    if (phase.progress >= 5) return 1;
+    return 0;
+}
 
 const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string }> = ({ phase, businessName }) => {
     const { t } = useTranslation();
-    const eventsEndRef = useRef<HTMLDivElement>(null);
     const isDone = phase.phase === 'done';
-
-    // Auto-scroll event log
-    useEffect(() => {
-        eventsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [phase.events.length]);
-
-    const progressColor = isDone ? '#22c55e' : '#818cf8';
-    const circumference = 2 * Math.PI * 52;
-    const strokeDashoffset = circumference - (phase.progress / 100) * circumference;
-
-    return (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-q-text/70 backdrop-blur-md" style={{ animation: 'aws-fadeIn 0.4s ease' }}>
-            <div className="w-full h-full lg:max-w-3xl lg:h-[600px] lg:max-h-[calc(100%-2rem)] lg:mx-4 flex flex-col rounded-none lg:rounded-2xl border-0 lg:border lg:border-q-border bg-q-surface shadow-none lg:shadow-2xl overflow-hidden">
-
-                {/* ── Header ── */}
-                <div className="px-6 pt-6 pb-4 border-b border-q-border">
-                    <div className="flex items-center gap-4">
-                        {/* Progress Ring */}
-                        <div className="relative w-[72px] h-[72px] flex-shrink-0">
-                            <svg className="transform -rotate-90" width="72" height="72" viewBox="0 0 120 120">
-                                <circle cx="60" cy="60" r="52" fill="none" className="stroke-q-border" strokeWidth="8" />
-                                <circle cx="60" cy="60" r="52" fill="none" stroke={progressColor} strokeWidth="8" strokeLinecap="round"
-                                    strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
-                                    style={{ transition: 'stroke-dashoffset 0.8s ease-out' }} />
-                            </svg>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                {isDone ? (
-                                    <span className="text-xl">🎉</span>
-                                ) : (
-                                    <span className="text-base font-bold text-q-text font-mono">{Math.round(phase.progress)}%</span>
-                                )}
-                            </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h2 className="text-lg font-bold text-q-text truncate">
-                                {isDone ? t('aiWebsiteStudio.generation.websiteCreated') : t('aiWebsiteStudio.generation.creating', { name: businessName || t('aiWebsiteStudio.generation.yourWebsite') })}
-                            </h2>
-                            <p className="text-sm text-q-text-secondary mt-0.5">{phase.currentStep}</p>
-                             {/* Phase steps indicator */}
-                            <div className="flex items-center gap-1 mt-2">
-                                {(['content', 'images', 'finalizing', 'done'] as const).map((p, idx) => {
-                                    const phases = ['content', 'images', 'finalizing', 'done'];
-                                    const currentIdx = phases.indexOf(phase.phase);
-                                    const isActive = idx === currentIdx;
-                                    const isCompleted = idx < currentIdx;
-                                    return (
-                                        <React.Fragment key={p}>
-                                            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${
-                                                isActive ? 'bg-primary/15 text-q-accent ring-1 ring-primary/30' :
-                                                isCompleted ? 'bg-q-success/10 text-q-success/60' :
-                                                'bg-q-surface-overlay/40 text-q-text-secondary/40'
-                                            }`}>
-                                                {isCompleted ? <CheckCircle2 size={10} /> : isActive ? <Loader2 size={10} className="animate-spin" /> : <Circle size={10} />}
-                                                <span className="hidden sm:inline">{t(PHASE_LABELS_KEY[p])}</span>
-                                            </div>
-                                            {idx < 3 && <ChevronRight size={10} className="text-q-text-secondary/20 flex-shrink-0" />}
-                                        </React.Fragment>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* ── Stats Bar ── */}
-                {phase.imagesTotal > 0 && (
-                    <div className="px-6 py-3 bg-q-bg border-b border-q-border flex items-center gap-6 text-xs">
-                        <div className="flex items-center gap-1.5">
-                            <Image size={13} className="text-q-accent" />
-                            <span className="text-q-text-secondary">{t('aiWebsiteStudio.generation.stats.images')}</span>
-                            <span className="font-mono font-bold text-q-text">{phase.imagesCompleted}</span>
-                            <span className="text-q-text-secondary/50">/ {phase.imagesTotal}</span>
-                        </div>
-                        {phase.imagesFailed > 0 && (
-                            <div className="flex items-center gap-1.5">
-                                <X size={13} className="text-q-error" />
-                                <span className="text-q-error/60">{t('aiWebsiteStudio.generation.stats.failed')} {phase.imagesFailed}</span>
-                            </div>
-                        )}
-                        <div className="ml-auto flex items-center gap-1.5">
-                            <span className="text-q-text-secondary/50">{t('aiWebsiteStudio.generation.stats.progress')}</span>
-                            <div className="w-24 h-1.5 bg-q-surface-overlay rounded-full overflow-hidden">
-                                <div className="h-full rounded-full bg-gradient-to-r from-editor-accent to-primary transition-all duration-500"
-                                    style={{ width: `${phase.progress}%` }} />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* ── Content: Timeline + Image Gallery ── */}
-                <div className="flex-1 flex min-h-0 overflow-hidden">
-                    {/* Left: Event Timeline */}
-                    <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
-                        <div className="space-y-2">
-                            {phase.events.map((event, i) => (
-                                <EventRow key={i} event={event} isLatest={i === phase.events.length - 1} />
-                            ))}
-                            <div ref={eventsEndRef} />
-                        </div>
-                    </div>
-
-                    {/* Right: Image Gallery */}
-                    {phase.generatedImages.length > 0 && (
-                        <div className="hidden sm:flex w-[200px] flex-col border-l border-q-border bg-q-bg overflow-y-auto p-3 gap-2 custom-scrollbar">
-                            <span className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider">{t('aiWebsiteStudio.generation.generatedImages')}</span>
-                            {phase.generatedImages.map((img, i) => (
-                                <div key={i} className="rounded-lg overflow-hidden border border-q-border bg-q-surface" style={{ animation: 'aws-fadeIn 0.5s ease' }}>
-                                    <img src={img.url} alt={img.key} className="w-full h-24 object-cover" loading="lazy" />
-                                    <div className="px-2 py-1">
-                                        <span className="text-[9px] text-q-text-secondary truncate block">{img.key}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* ── Footer shimmer ── */}
-                {!isDone && (
-                    <div className="h-1 w-full bg-gradient-to-r from-primary/0 via-primary/40 to-primary/0"
-                        style={{ backgroundSize: '200% 100%', animation: 'aws-shimmer 2s linear infinite' }} />
-                )}
-                {isDone && (
-                    <div className="h-1 w-full bg-gradient-to-r from-q-success/40 via-q-success to-q-success/40" />
-                )}
-            </div>
-        </div>
-    );
-};
-
-// ── Event Row for timeline ──────────────────────────────────────────────
-
-const EVENT_ICONS: Record<GenerationEvent['type'], React.ReactNode> = {
-    start: <Sparkles size={12} className="text-q-accent" />,
-    content: <FileText size={12} className="text-q-accent" />,
-    image_start: <Image size={12} className="text-q-accent" />,
-    image_done: <CheckCircle2 size={12} className="text-q-success" />,
-    image_fail: <X size={12} className="text-q-error" />,
-    assemble: <Package size={12} className="text-q-accent" />,
-    save: <Save size={12} className="text-q-accent" />,
-    done: <PartyPopper size={12} className="text-q-success" />,
-    error: <X size={12} className="text-q-error" />,
-};
-
-const EventRow: React.FC<{ event: GenerationEvent; isLatest: boolean }> = ({ event, isLatest }) => {
-    const time = new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const isImage = event.type === 'image_done' && event.imageUrl;
+    const progressSteps = [
+        t('aiWebsiteStudio.flow.progressSteps.understandingBusiness'),
+        t('aiWebsiteStudio.flow.progressSteps.planningStructure'),
+        t('aiWebsiteStudio.flow.progressSteps.selectingComponents'),
+        t('aiWebsiteStudio.flow.progressSteps.creatingVisualDirection'),
+        t('aiWebsiteStudio.flow.progressSteps.writingContent'),
+        t('aiWebsiteStudio.flow.progressSteps.preparingPreview'),
+        t('aiWebsiteStudio.flow.progressSteps.savingProject'),
+    ];
+    const progressStep = getWebsiteProgressStep(phase, progressSteps.length);
 
     return (
-        <div className={`flex items-start gap-2.5 py-1.5 px-2 rounded-lg transition-colors ${
-            isLatest ? 'bg-q-surface-overlay/20' : '' }`}
-            style={isLatest ? { animation: 'aws-fadeIn 0.3s ease' } : undefined}
-        >
-            <div className="mt-0.5 flex-shrink-0">{EVENT_ICONS[event.type]}</div>
-            <div className="flex-1 min-w-0">
-                <p className={`text-xs leading-relaxed ${event.type === 'error' || event.type === 'image_fail' ? 'text-q-error/80' : 'text-q-text-secondary'}`}>
-                    {event.message}
-                </p>
-                {isImage && (
-                    <img src={event.imageUrl} alt={event.imageKey || 'generated'}
-                        className="mt-1.5 h-16 w-auto rounded-md border border-q-border object-cover sm:hidden"
-                        loading="lazy" />
-                )}
-            </div>
-            <span className="text-[9px] text-q-text-secondary/40 flex-shrink-0 font-mono mt-0.5">{time}</span>
-        </div>
+        <StudioGenerationOverlay
+            phase={phase}
+            title={isDone
+                ? t('aiWebsiteStudio.generation.websiteCreated')
+                : t('aiWebsiteStudio.generation.creating', { name: businessName || t('aiWebsiteStudio.generation.yourWebsite') })}
+            progressLabel={t('studioUX.progress.generationProgress')}
+            progressSteps={progressSteps}
+            currentStep={progressStep}
+            completedSteps={progressStep}
+            eventsLabel={t('studioUX.progress.events')}
+            imagesLabel={t('aiWebsiteStudio.generation.stats.images')}
+            failedLabel={t('aiWebsiteStudio.generation.stats.failed')}
+            generatedImagesLabel={t('aiWebsiteStudio.generation.generatedImages')}
+        />
     );
 };
 

@@ -5,6 +5,7 @@ import {
     critiqueComponentDesign,
     deriveCrossModuleBlueprints,
     deriveEcommerceBlueprintFromBusinessBrief,
+    deriveRestaurantBlueprintFromBusinessBrief,
     deriveStorefrontBlueprintFromBusinessBrief,
     deriveWebsiteEcommerceBlocks,
     selectAiStudioComponents,
@@ -14,6 +15,7 @@ import {
 } from '../aiStudio';
 import type { BusinessBlueprintAdapterOptions } from './adapters';
 import { mergeAiStudioBlueprint } from './mergeAiStudioBlueprint';
+import { applyRenderableSectionVariantSettingsToData } from './renderableSectionVariants';
 
 export interface AiStudioBusinessBlueprintOptions extends BusinessBlueprintAdapterOptions {
     existingBusinessBlueprint?: BusinessBlueprint | null;
@@ -50,6 +52,7 @@ export function createAiStudioBusinessBlueprint(
     const ecommerceBlueprint = deriveEcommerceBlueprintFromBusinessBrief(briefInput);
     const storefrontBlueprint = deriveStorefrontBlueprintFromBusinessBrief(briefInput, ecommerceBlueprint, plan.brandProfile);
     const websiteEcommerceBlocks = deriveWebsiteEcommerceBlocks(briefInput, ecommerceBlueprint, storefrontBlueprint);
+    const restaurantBlueprint = deriveRestaurantBlueprintFromBusinessBrief(briefInput);
     const crossModuleBlueprints = deriveCrossModuleBlueprints(briefInput, ecommerceBlueprint, storefrontBlueprint);
     const componentSelection = selectAiStudioComponents(briefInput, {
         builder: 'website',
@@ -78,6 +81,7 @@ export function createAiStudioBusinessBlueprint(
         ecommerceBlueprint,
         storefrontBlueprint,
         websiteEcommerceBlocks,
+        restaurantBlueprint,
         componentSelectionContext: componentSelection.context,
         componentPlan: componentSelection.componentPlan,
         componentVariantPlan: componentVariantSelection.variants,
@@ -99,11 +103,18 @@ export function attachAiStudioBusinessBlueprint<TProject extends Pick<Project, '
     plan: WebsitePlan,
     options: Omit<AiStudioBusinessBlueprintOptions, 'projectId'> = {},
 ): TProject & { businessBlueprint: BusinessBlueprint } {
+    const businessBlueprint = createAiStudioBusinessBlueprint(plan, {
+        ...options,
+        projectId: project.id,
+    });
+    const data = applyRenderableSectionVariantSettingsToData(
+        project.data,
+        businessBlueprint.websiteBlueprint.sectionBlueprints,
+    );
+
     return {
         ...project,
-        businessBlueprint: createAiStudioBusinessBlueprint(plan, {
-            ...options,
-            projectId: project.id,
-        }),
+        data,
+        businessBlueprint,
     };
 }

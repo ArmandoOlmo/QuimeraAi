@@ -127,7 +127,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   );
 
   const styleTab = (
-    <div className="space-y-4">      <BackgroundImageControl sectionKey="heroSplit" data={data} setNestedData={setNestedData} showBlurControls />
+    <div className="space-y-4">      <BackgroundImageControl sectionKey="heroSplit" data={data} setNestedData={setNestedData} showImageOpacityControl showBlurControls />
       {/* Layout */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">

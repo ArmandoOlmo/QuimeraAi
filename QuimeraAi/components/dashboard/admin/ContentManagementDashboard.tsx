@@ -332,7 +332,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Standardized Header - Same as user CMS */}
- <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center z-20 sticky top-0">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center z-20 sticky top-0">
                     {/* Left Section */}
                     <div className="flex items-center gap-2 sm:gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-10 w-10 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation">

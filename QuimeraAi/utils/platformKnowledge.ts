@@ -181,7 +181,7 @@ export const PLATFORM_FEATURES = `
 
 14. **Asset & Image Library** (Dashboard: /assets | Admin: /admin/images)
     - Central media library for all project images
-    - AI image generation using multiple models (Imagen 4.0, Gemini 3 Pro Image, Nano Banana 2)
+    - AI image generation using Gemini Nano Banana 2 via OpenRouter, with legacy model normalization
     - Image editing and optimization
     - Drag-and-drop upload
     - Organized by project with search and filtering

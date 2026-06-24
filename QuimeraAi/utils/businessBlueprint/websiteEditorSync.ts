@@ -14,6 +14,7 @@ import type {
 import type { WebsitePlan } from '../../types/websitePlan';
 import { createWebsiteEcommerceBlockSeedsFromSections, getWebsiteEcommerceBlockDefinition, validateWebsiteEcommerceBlock } from '../websiteEcommerceBlocks';
 import { createBlueprintModuleState, createBusinessBlueprintFromWebsitePlan, shouldProtectFromRegeneration } from './adapters';
+import { isRetiredDesignSuiteSection } from '../../data/retiredSuites';
 
 export type WebsiteEditorSyncAction =
     | 'component_add'
@@ -105,12 +106,14 @@ const normalizePages = (
     pages: SitePage[] | undefined,
     componentOrder: PageSection[],
 ): WebsiteBlueprint['pages'] => {
+    const sanitizedComponentOrder = componentOrder.filter(section => !isRetiredDesignSuiteSection(section));
     if (Array.isArray(pages) && pages.length > 0) {
         return pages.map(page => ({
             id: page.id,
             title: page.title,
             slug: page.slug,
-            sections: page.sections?.length ? page.sections : componentOrder,
+            sections: (page.sections?.length ? page.sections : sanitizedComponentOrder)
+                .filter(section => !isRetiredDesignSuiteSection(section)),
         }));
     }
 
@@ -118,7 +121,7 @@ const normalizePages = (
         id: 'home',
         title: 'Home',
         slug: '/',
-        sections: componentOrder,
+        sections: sanitizedComponentOrder,
     }];
 };
 
@@ -449,16 +452,30 @@ const buildEcommerceBlocks = (
 
 export function syncWebsiteBlueprintFromEditor(input: WebsiteEditorSyncInput): BusinessBlueprint {
     const now = input.now || new Date().toISOString();
-    const base = createBaseBlueprint(input, now);
+    const componentOrder = input.componentOrder.filter(section => !isRetiredDesignSuiteSection(section));
+    const sectionVisibility = Object.fromEntries(
+        Object.entries(input.sectionVisibility || {}).filter(([section]) => !isRetiredDesignSuiteSection(section))
+    ) as Record<PageSection, boolean>;
+    const pagesInput = input.pages?.map(page => ({
+        ...page,
+        sections: page.sections?.filter(section => !isRetiredDesignSuiteSection(section)),
+    }));
+    const sanitizedInput: WebsiteEditorSyncInput = {
+        ...input,
+        componentOrder,
+        sectionVisibility,
+        pages: pagesInput,
+    };
+    const base = createBaseBlueprint(sanitizedInput, now);
     const existingWebsite = base.websiteBlueprint;
-    const pages = normalizePages(input.pages, input.componentOrder);
-    const sectionBlueprints = buildSectionBlueprints(existingWebsite, input, pages, now);
-    const ecommerceBlocks = buildEcommerceBlocks(existingWebsite, input, now);
-    const hasManualEdit = input.action !== 'save_project';
+    const pages = normalizePages(sanitizedInput.pages, sanitizedInput.componentOrder);
+    const sectionBlueprints = buildSectionBlueprints(existingWebsite, sanitizedInput, pages, now);
+    const ecommerceBlocks = buildEcommerceBlocks(existingWebsite, sanitizedInput, now);
+    const hasManualEdit = sanitizedInput.action !== 'save_project';
 
     return {
         ...base,
-        projectId: base.projectId || input.projectId,
+        projectId: base.projectId || sanitizedInput.projectId,
         updatedAt: now,
         lastSyncedAt: now,
         sourceMap: {
@@ -473,7 +490,7 @@ export function syncWebsiteBlueprintFromEditor(input: WebsiteEditorSyncInput): B
                 generatedBy: base.metadata.generatedBy || 'user',
                 userModified: true,
                 lastEditedAt: now,
-                ...(input.userId ? { lastEditedBy: input.userId } : {}),
+                ...(sanitizedInput.userId ? { lastEditedBy: sanitizedInput.userId } : {}),
             } : {}),
         },
         websiteBlueprint: {
@@ -483,12 +500,12 @@ export function syncWebsiteBlueprintFromEditor(input: WebsiteEditorSyncInput): B
             needsReview: false,
             readiness: ready(),
             pages,
-            sections: input.componentOrder,
-            componentOrder: input.componentOrder,
-            sectionVisibility: input.sectionVisibility,
+            sections: sanitizedInput.componentOrder,
+            componentOrder: sanitizedInput.componentOrder,
+            sectionVisibility: sanitizedInput.sectionVisibility,
             sectionBlueprints,
             ecommerceBlocks,
-            chatbotPlacement: input.componentOrder.includes('chatbot')
+            chatbotPlacement: sanitizedInput.componentOrder.includes('chatbot')
                 ? existingWebsite.chatbotPlacement === 'inline' ? 'both' : 'floating'
                 : existingWebsite.chatbotPlacement || 'none',
             sourceMap: {

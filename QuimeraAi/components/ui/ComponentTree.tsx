@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { PageSection } from '../../types';
+import { isRetiredDesignSuiteSection } from '../../data/retiredSuites';
 import { useTranslation } from 'react-i18next';
 import MobileSearchModal from './MobileSearchModal';
 import {
@@ -338,9 +339,6 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         content: false,
         ecommerce: false,
         ecommerceAdd: false,
-        luminaAdd: false,
-        neonAdd: false,
-        quimeraAdd: false,
         legacyAdd: false,
     });
     const [activeId, setActiveId] = useState<PageSection | null>(null);
@@ -460,42 +458,61 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
     const isComponentEnabled = useCallback((section: PageSection) => componentStatus?.[section] !== false, [componentStatus]);
 
+    const visibleComponentOrder = useMemo(
+        () => componentOrder.filter(section => !isRetiredDesignSuiteSection(section)),
+        [componentOrder]
+    );
+
     // Group sections by category
     const structureSections = useMemo(() => [
         'colors' as PageSection,
         'typography' as PageSection,
-        ...(['header', 'footer'].filter(s => componentOrder.includes(s as PageSection)) as PageSection[]),
-    ], [componentOrder]);
+        ...(['header', 'footer'].filter(s => visibleComponentOrder.includes(s as PageSection)) as PageSection[]),
+    ], [visibleComponentOrder]);
 
     const contentSections = useMemo(() => {
         const seen = new Set<PageSection>();
-        return componentOrder.filter(s => {
+        return visibleComponentOrder.filter(s => {
             if (seen.has(s)) return false;
             seen.add(s);
             return !['header', 'footer', 'typography', 'colors', 'storeSettings', ...ECOMMERCE_SECTION_IDS].includes(s) &&
                 isComponentEnabled(s);
         });
-    }, [componentOrder, isComponentEnabled]);
+    }, [visibleComponentOrder, isComponentEnabled]);
 
     const ecommerceSections = useMemo(() => {
         const seen = new Set<PageSection>();
-        return componentOrder.filter(s => {
+        return visibleComponentOrder.filter(s => {
             if (seen.has(s)) return false;
             seen.add(s);
             return ECOMMERCE_SECTION_IDS.includes(s) &&
                 isComponentEnabled(s);
         });
-    }, [componentOrder, isComponentEnabled]);
+    }, [visibleComponentOrder, isComponentEnabled]);
 
     const filteredSections = useMemo(() => {
         const seen = new Set<PageSection>();
-        return componentOrder.filter(section => {
+        return visibleComponentOrder.filter(section => {
             if (seen.has(section)) return false;
             seen.add(section);
             if (!searchTerm) return true;
             return sectionLabels[section]?.toLowerCase().includes(searchTerm.toLowerCase());
         });
-    }, [componentOrder, searchTerm, sectionLabels]);
+    }, [visibleComponentOrder, searchTerm, sectionLabels]);
+
+    const legacyAddComponents = useMemo(
+        () => availableComponents.filter(section =>
+            !ECOMMERCE_SECTION_IDS.includes(section) &&
+            !isRetiredDesignSuiteSection(section) &&
+            !section.toLowerCase().includes('quimera')
+        ),
+        [availableComponents]
+    );
+
+    const ecommerceAddComponents = useMemo(
+        () => availableComponents.filter(section => ECOMMERCE_SECTION_IDS.includes(section)),
+        [availableComponents]
+    );
 
     // All draggable sections combined for the DnD context (deduplicated)
     const allDraggableSections = useMemo(() =>
@@ -513,11 +530,11 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
         if (!over || active.id === over.id) return;
 
-        const oldIndex = componentOrder.indexOf(active.id as PageSection);
-        const newIndex = componentOrder.indexOf(over.id as PageSection);
+        const oldIndex = visibleComponentOrder.indexOf(active.id as PageSection);
+        const newIndex = visibleComponentOrder.indexOf(over.id as PageSection);
 
         if (oldIndex !== -1 && newIndex !== -1) {
-            const newOrder = arrayMove(componentOrder, oldIndex, newIndex);
+            const newOrder = arrayMove(visibleComponentOrder, oldIndex, newIndex);
             onReorder(newOrder);
         }
     };
@@ -653,7 +670,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                     </div>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
                         {/* Legacy Suite in Add Menu */}
-                        {availableComponents.filter(s => !ECOMMERCE_SECTION_IDS.includes(s) && !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon') && !s.toLowerCase().includes('quimera')).length > 0 && (
+                        {legacyAddComponents.length > 0 && (
                             <div className="mb-1">
                                 <button
                                     onClick={() => setExpandedGroups(prev => ({ ...prev, legacyAdd: !prev.legacyAdd }))}
@@ -667,13 +684,13 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
                                 {expandedGroups.legacyAdd && (
                                     <div className="pl-4 mt-1 space-y-1">
-                                        {availableComponents.filter(s => !ECOMMERCE_SECTION_IDS.includes(s) && !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon') && !s.toLowerCase().includes('quimera')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
+                                        {[...legacyAddComponents].sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
                                             const Icon = sectionIcons[section] || Layout;
                                             return (
                                                 <button
                                                     key={section}
                                                     onClick={() => {
-                                                        onAddComponent(section);
+                                                        if (!isRetiredDesignSuiteSection(section)) onAddComponent(section);
                                                         setShowAddMenu(false);
                                                     }}
                                                     className="w-full flex items-center gap-2 px-2 py-2 rounded-[var(--q-radius-md)] hover:bg-structure-control-hover transition-colors text-left"
@@ -691,7 +708,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                         )}
 
                         {/* Ecommerce Suite in Add Menu */}
-                        {availableComponents.filter(s => ECOMMERCE_SECTION_IDS.includes(s)).length > 0 && (
+                        {ecommerceAddComponents.length > 0 && (
                             <div className="mt-2 pt-2 border-t border-q-border/50">
                                 <button
                                     onClick={() => setExpandedGroups(prev => ({ ...prev, ecommerceAdd: !prev.ecommerceAdd }))}
@@ -705,13 +722,13 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
                                 {expandedGroups.ecommerceAdd && (
                                     <div className="pl-4 mt-1 space-y-1">
-                                        {availableComponents.filter(s => ECOMMERCE_SECTION_IDS.includes(s)).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
+                                        {[...ecommerceAddComponents].sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
                                             const Icon = sectionIcons[section] || ShoppingBag;
                                             return (
                                                 <button
                                                     key={section}
                                                     onClick={() => {
-                                                        onAddComponent(section);
+                                                        if (!isRetiredDesignSuiteSection(section)) onAddComponent(section);
                                                         setShowAddMenu(false);
                                                     }}
                                                     className="w-full flex items-center gap-2 px-2 py-2 rounded-[var(--q-radius-md)] hover:bg-structure-control-hover transition-colors text-left border-l border-transparent hover:border-q-info/50"
@@ -727,120 +744,6 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                 )}
                             </div>
                         )}
-                        {/* Lumina Group in Add Menu */}
-                        {availableComponents.filter(s => s.toLowerCase().includes('lumina')).length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-q-border/50">
-                                <button
-                                    onClick={() => setExpandedGroups(prev => ({ ...prev, luminaAdd: !prev.luminaAdd }))}
-                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-q-success hover:bg-structure-control-hover rounded-[var(--q-radius-md)] transition-colors"
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <Layers size={14} /> Lumina Suite
-                                    </span>
-                                    <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.luminaAdd ? 'rotate-180' : ''}`} />
-                                </button>
-
-                                {expandedGroups.luminaAdd && (
-                                    <div className="pl-4 mt-1 space-y-1">
-                                        {availableComponents.filter(s => s.toLowerCase().includes('lumina')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
-                                            const Icon = sectionIcons[section] || Layout;
-                                            return (
-                                                <button
-                                                    key={section}
-                                                    onClick={() => {
-                                                        onAddComponent(section);
-                                                        setShowAddMenu(false);
-                                                    }}
-                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-[var(--q-radius-md)] hover:bg-structure-control-hover transition-colors text-left border-l border-transparent hover:border-q-success/50"
-                                                >
-                                                    <Icon size={14} className="text-q-success" />
-                                                    <span className="text-sm text-q-text font-medium">
-                                                        {sectionLabels[section]}
-                                                    </span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Neon Group in Add Menu */}
-                        {availableComponents.filter(s => s.toLowerCase().includes('neon')).length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-q-border/50">
-                                <button
-                                    onClick={() => setExpandedGroups(prev => ({ ...prev, neonAdd: !prev.neonAdd }))}
-                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-q-accent hover:bg-structure-control-hover rounded-[var(--q-radius-md)] transition-colors"
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <Layers size={14} /> Neon Suite
-                                    </span>
-                                    <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.neonAdd ? 'rotate-180' : ''}`} />
-                                </button>
-
-                                {expandedGroups.neonAdd && (
-                                    <div className="pl-4 mt-1 space-y-1">
-                                        {availableComponents.filter(s => s.toLowerCase().includes('neon')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
-                                            const Icon = sectionIcons[section] || Layout;
-                                            return (
-                                                <button
-                                                    key={section}
-                                                    onClick={() => {
-                                                        onAddComponent(section);
-                                                        setShowAddMenu(false);
-                                                    }}
-                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-[var(--q-radius-md)] hover:bg-structure-control-hover transition-colors text-left border-l border-transparent hover:border-q-accent/50"
-                                                >
-                                                    <Icon size={14} className="text-q-accent" />
-                                                    <span className="text-sm text-q-text font-medium">
-                                                        {sectionLabels[section]}
-                                                    </span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Quimera Group in Add Menu */}
-                        {availableComponents.filter(s => s.toLowerCase().includes('quimera')).length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-q-border/50">
-                                <button
-                                    onClick={() => setExpandedGroups(prev => ({ ...prev, quimeraAdd: !prev.quimeraAdd }))}
-                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-q-accent hover:bg-structure-control-hover rounded-[var(--q-radius-md)] transition-colors"
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <Layers size={14} /> Quimera Suite
-                                    </span>
-                                    <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.quimeraAdd ? 'rotate-180' : ''}`} />
-                                </button>
-
-                                {expandedGroups.quimeraAdd && (
-                                    <div className="pl-4 mt-1 space-y-1">
-                                        {availableComponents.filter(s => s.toLowerCase().includes('quimera')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
-                                            const Icon = sectionIcons[section] || Layout;
-                                            return (
-                                                <button
-                                                    key={section}
-                                                    onClick={() => {
-                                                        onAddComponent(section);
-                                                        setShowAddMenu(false);
-                                                    }}
-                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-[var(--q-radius-md)] hover:bg-structure-control-hover transition-colors text-left border-l border-transparent hover:border-q-accent/50"
-                                                >
-                                                    <Icon size={14} className="text-q-accent" />
-                                                    <span className="text-sm text-q-text font-medium">
-                                                        {sectionLabels[section]}
-                                                    </span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
                     </div>
                 </div>
             )}
@@ -854,7 +757,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                     onDragEnd={handleDragEnd}
                 >
                     <SortableContext
-                        items={componentOrder}
+                        items={visibleComponentOrder}
                         strategy={verticalListSortingStrategy}
                     >
                         {searchTerm ? (

@@ -2061,13 +2061,13 @@ TEMPLATE #${t.index}: "${t.name}"
                     try {
                         console.log(`🎨 [Onboarding] [${i + 1}/${imageItems.length}] Generating: ${item.promptKey} (${item.aspectRatio})`);
 
-                        // Use Imagen 3.0 for onboarding - it's more reliable for pure image generation
+                        // Use Gemini image generation via OpenRouter for onboarding image generation.
                         // Also specify model explicitly to avoid issues with default model
                         const imageUrl = await generateImage(item.prompt, {
                             aspectRatio: item.aspectRatio,
                             style: item.style,
                             resolution: '1K',
-                            model: 'gemini-3-pro-image-preview', // Use dedicated image model for reliability
+                            model: 'gemini-3.1-flash-image-preview',
                             personGeneration: 'allow_adult', // Allow people in generated images
                             skipSupabase: true, // Bulk mode: skip per-image Supabase writes to avoid resource-exhausted
                         } as any);

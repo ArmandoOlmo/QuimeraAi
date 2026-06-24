@@ -25,7 +25,7 @@ export interface BriefLike {
     suggestedComponents?: PageSection[];
 }
 
-const HEROES: PageSection[] = ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'heroLumina', 'heroNeon'];
+const HEROES: PageSection[] = ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead'];
 const SHELL_SECTIONS = new Set<PageSection>(['colors', 'typography', 'header', 'footer']);
 const PLACEHOLDER_PATTERNS = [/^feature\s*\d+$/i, /^description\s*\d+$/i, /^project\s*\d+$/i, /^great!?$/i, /lorem ipsum/i, /\[GENERATE_/i];
 const ECOMMERCE_COMPONENTS = new Set<PageSection>([
@@ -35,7 +35,7 @@ const ECOMMERCE_COMPONENTS = new Set<PageSection>([
 
 function normalizeIndustry(value?: string): string {
     const industry = (value || '').toLowerCase();
-    if (industry.includes('restaurant') || industry.includes('cafe') || industry.includes('food')) return 'restaurant';
+    if (/\b(restaurant|restaurante|caf[eé]|cafeteria|food|comida|steakhouse|bakery|panader[ií]a|catering|bar|sushi|pizza|brunch|fine dining|casual dining|food truck|menu|reservas?)\b/i.test(industry)) return 'restaurant';
     if (industry.includes('real') || industry.includes('property') || industry.includes('inmobili')) return 'real-estate';
     if (industry.includes('shop') || industry.includes('store') || industry.includes('ecommerce') || industry.includes('retail')) return 'ecommerce';
     if (industry.includes('photo') || industry.includes('portfolio') || industry.includes('creative') || industry.includes('agency') || industry.includes('cultur') || industry.includes('arte') || industry.includes('design')) return 'portfolio';
@@ -100,7 +100,7 @@ function chooseGeneralHero(brief: BriefLike, industry: string, registry: Compone
     if (industry === 'portfolio') return chooseAvailable(registry, ['heroNova', 'heroGallery', 'heroSplit', 'hero']);
     if (industry === 'restaurant') return chooseAvailable(registry, ['heroGallery', 'heroNova', 'hero']);
     if (industry === 'real-estate') return chooseAvailable(registry, ['heroLead', 'heroGallery', 'heroSplit']);
-    if (industry === 'technology') return chooseAvailable(registry, ['heroLumina', 'heroNeon', 'heroWave', 'hero']);
+    if (industry === 'technology') return chooseAvailable(registry, ['heroWave', 'heroSplit', 'heroNova', 'hero']);
     if (booking || ['legal', 'healthcare', 'finance'].includes(industry)) return chooseAvailable(registry, ['heroLead', 'heroSplit', 'hero']);
     if (visual) return chooseAvailable(registry, ['heroNova', 'heroGallery', 'heroSplit', 'hero']);
 
@@ -221,14 +221,14 @@ export function recommendSectionsForBrief(brief: BriefLike, registry: ComponentR
     }
 
     if (industry === 'technology') {
-        const prefersNeon = hasSignal(text, /\b(cyber|web3|gaming|esports|crypto|neon|futuristic|dark)\b/i);
-        const hero = prefersNeon && can('heroNeon') ? 'heroNeon' : can('heroLumina') ? 'heroLumina' : can('heroWave') ? 'heroWave' : 'hero';
-        const suite = hero === 'heroNeon'
-            ? ['featuresNeon', 'pricingNeon', 'testimonialsNeon', 'faqNeon', 'ctaNeon']
-            : hero === 'heroLumina'
-                ? ['featuresLumina', 'pricingLumina', 'testimonialsLumina', 'faqLumina', 'ctaLumina']
-                : ['features', ...(hasPricingSignal(text) ? ['pricing'] : []), 'testimonials', 'faq', 'cta'];
-        return finalizeRecommendedSections(add([hero as PageSection, ...(suite as PageSection[]), 'footer'] as PageSection[]), registry);
+        const hero = chooseAvailable(registry, ['heroWave', 'heroSplit', 'heroNova', 'hero']);
+        const sections: PageSection[] = [hero, 'features'];
+        pushIfAvailable(sections, registry, 'pricing', hasPricingSignal(text));
+        pushIfAvailable(sections, registry, 'testimonials');
+        pushIfAvailable(sections, registry, 'faq');
+        pushIfAvailable(sections, registry, 'cta');
+        pushIfAvailable(sections, registry, 'footer');
+        return finalizeRecommendedSections(sections, registry);
     }
 
     const sections: PageSection[] = [chooseGeneralHero(brief, industry, registry)];

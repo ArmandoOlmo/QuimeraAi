@@ -547,7 +547,7 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                                     animation: 'fade-in-up 0.6s ease-out forwards'
                                 }}
                             >
-                                <div className="w-11 h-11 bg-yellow-500 rounded-xl flex items-center justify-center mb-3 group-hover:bg-yellow-400 transition-colors text-black">
+                                <div className="mb-3 flex text-yellow-400 transition-colors group-hover:text-yellow-300">
                                     {feature.icon}
                                 </div>
                                 <h3 className="font-bold text-base mb-1.5 text-white">

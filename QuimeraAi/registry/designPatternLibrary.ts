@@ -69,7 +69,9 @@ export const designPatternLibrary: DesignPatternEntry[] = [
         recommendedComponents: [
             { componentId: 'hero', layoutVariant: 'editorialOverlay' },
             { componentId: 'imageWithText', layoutVariant: 'imageRight' },
+            { componentId: 'features', layoutVariant: 'editorialMosaic' },
             { componentId: 'gallery', layoutVariant: 'editorialGrid' },
+            { componentId: 'testimonials', layoutVariant: 'editorialMosaic' },
         ],
         antiPatterns: ['Do not repeat centered text sections.', 'Do not use placeholder imagery as the main editorial signal.'],
     }),
@@ -123,7 +125,7 @@ export const designPatternLibrary: DesignPatternEntry[] = [
         bestForPageIntents: ['restaurant_home'],
         recommendedComponents: [
             { componentId: 'hero', layoutVariant: 'editorialOverlay' },
-            { componentId: 'restaurantMenu', layoutVariant: 'editorialMenu' },
+            { componentId: 'restaurantMenu', layoutVariant: 'editorialMosaic' },
             { componentId: 'restaurantReservation', layoutVariant: 'reservationCTA' },
             { componentId: 'restaurantLocation', layoutVariant: 'mapWithHours' },
         ],
@@ -143,7 +145,7 @@ export const designPatternLibrary: DesignPatternEntry[] = [
         recommendedComponents: [
             { componentId: 'hero', layoutVariant: 'editorialOverlay' },
             { componentId: 'gallery', layoutVariant: 'masonry' },
-            { componentId: 'testimonials', layoutVariant: 'singleFeatureQuote' },
+            { componentId: 'testimonials', layoutVariant: 'editorialMosaic' },
         ],
         antiPatterns: ['Do not use ecommerce blocks unless commerce is explicitly enabled.', 'Do not flatten all work into identical cards.'],
     }),
@@ -199,6 +201,7 @@ export const designPatternLibrary: DesignPatternEntry[] = [
             { componentId: 'hero', layoutVariant: 'productSpotlight' },
             { componentId: 'featuredProducts', layoutVariant: 'editorialProductSpotlight' },
             { componentId: 'imageWithText', layoutVariant: 'editorialStatement' },
+            { componentId: 'testimonials', layoutVariant: 'editorialMosaic' },
         ],
         antiPatterns: ['Do not crowd the page with dense grids.', 'Do not use fake scarcity.'],
     }),

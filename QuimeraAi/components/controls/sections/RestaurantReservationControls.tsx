@@ -8,9 +8,10 @@ import ColorControl from '../../ui/ColorControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import {
-  Input, TextArea, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
+  ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, ControlsDeps } from '../ControlsShared';
+import { RestaurantEngineBindingControl } from '../RestaurantEngineBindingControl';
 import { SliderControl } from '../../ui/EditorControlPrimitives';
 import {
   FileText, Layout, Layers, CalendarCheck, Users, SlidersHorizontal
@@ -31,10 +32,12 @@ export const renderRestaurantReservationControlsWithTabs = (deps: ControlsDeps) 
           <CalendarCheck size={14} />
           {t('editor.restaurantReservationSection', 'Reservaciones')}
         </label>
-        <Input
-          label={t('restaurant.reservation.restaurantIdLabel', 'Restaurant ID')}
-          value={rd.restaurantId || ''}
-          onChange={(val) => setNestedData('restaurantReservation.restaurantId', val)}
+        <RestaurantEngineBindingControl
+          data={data}
+          selectedRestaurantId={rd.restaurantId || data?.menu?.restaurantId || data?.map?.restaurantId || ''}
+          manualPath="restaurantReservation.restaurantId"
+          setNestedData={setNestedData}
+          t={t}
         />
         <p className="text-xs text-q-text-secondary mt-1 italic">
           {t('restaurant.reservation.restaurantIdHelp', 'Vincula este formulario a un restaurante creado en el módulo de Restaurantes.')}

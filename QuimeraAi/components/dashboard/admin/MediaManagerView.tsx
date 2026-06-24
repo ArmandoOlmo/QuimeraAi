@@ -56,7 +56,7 @@ export default function MediaManagerView({ onBack }: { onBack?: () => void }) {
 
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
                 {/* Global Header for the Media Manager */}
- <header className="quimera-dashboard-header-bar h-16 px-4 md:px-8 flex flex-col justify-center z-20 sticky top-0 flex-shrink-0">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-16 px-4 md:px-8 flex flex-col justify-center z-20 sticky top-0 flex-shrink-0">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <button

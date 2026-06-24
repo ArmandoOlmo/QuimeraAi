@@ -194,7 +194,7 @@ projects (fila)
 
 | Campo | Uso |
 |-------|-----|
-| `featuresVariant` | classic, modern, bento-premium, bento-overlay, image-overlay, cinematic-gym, neon-glow, press-release |
+| `featuresVariant` | classic, modern, bento-premium, bento-overlay, image-overlay, cinematic-gym, neon-glow, press-release, editorial-mosaic |
 | Encabezado | `title`, `description`, fuentes |
 | Grid | `gridColumns`, `imageHeight`, `imageObjectFit`, `borderRadius` |
 | Overlay variant | `overlayTextAlignment`, `showSectionHeader`, `showNumbering`, `layoutAlignment` |
@@ -214,7 +214,7 @@ projects (fila)
 
 | Campo | Uso |
 |-------|-----|
-| `testimonialsVariant` | classic, minimal-cards, glassmorphism, gradient-glow, neon-border, floating-cards, gradient-shift, neon-glow |
+| `testimonialsVariant` | classic, minimal-cards, glassmorphism, gradient-glow, neon-border, floating-cards, gradient-shift, neon-glow, editorial-mosaic |
 | **items[]** | `quote`, `name`, `title`, `imageUrl` |
 | Tarjetas | `borderRadius`, `cardShadow`, `borderStyle`, `cardPadding`, `cardGlow` |
 
@@ -368,7 +368,7 @@ projects (fila)
 
 | Campo | Uso |
 |-------|-----|
-| `menuVariant` | classic, modern-grid, elegant-list, full-image, text-only |
+| `menuVariant` | classic, modern-grid, elegant-list, full-image, text-only, editorial-mosaic |
 | **items[]** | `name`, `description`, `price`, `imageUrl`, `category`, `isSpecial` |
 | `dataSource` | manual \| restaurant, `restaurantId` |
 | `showCategories`, `showIcon`, `icon` | |

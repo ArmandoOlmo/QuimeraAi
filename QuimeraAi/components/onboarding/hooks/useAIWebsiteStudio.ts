@@ -5,9 +5,9 @@
  * through natural conversation, then generates a complete website from scratch.
  *
  * Models:
- *  - Chat: gemini-3.1-pro-preview (best available)
+ *  - Chat: openai/gpt-5.3-codex via OpenRouter
  *  - Voice: gemini-3.1-flash-live-preview
- *  - Images: gemini-3-pro-image-preview
+ *  - Images: gemini-3.1-flash-image-preview via OpenRouter Images API
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
@@ -27,7 +27,7 @@ import { logApiCall } from '../../../services/apiLoggingService';
 import { Conversation, Role } from '@elevenlabs/client';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { getGoogleGenAI } from '../../../utils/genAiClient';
-import { generateComponentColorMappings, generateHeroWaveGradientColors, readableTextOn } from '../../ui/GlobalStylesControl';
+import { generateComponentColorMappings, generateHeroWaveGradientColors, getSolidShellBackgroundForWhiteText, readableTextOn } from '../../ui/GlobalStylesControl';
 import { generateAiAssistantConfig, GlobalColors as ChatbotGlobalColors } from '../../../utils/chatbotConfigGenerator';
 import { generatePagesFromLegacyProject } from '../../../utils/legacyMigration';
 import { extractHeroImage } from '../../../contexts/project/ProjectContext';
@@ -38,6 +38,7 @@ import { usePlanAccess } from '../../../hooks/usePlanFeatures';
 import { useServiceAvailability } from '../../../hooks/useServiceAvailability';
 import { getAccessibleComponentRegistry, registryToPromptList, filterAccessibleSections } from '../../../data/componentRegistry';
 import type { ComponentAccessContext } from '../../../data/componentRegistry';
+import { isRetiredDesignSuiteSection } from '../../../data/retiredSuites';
 import type { WebsitePlan } from '../../../types/websitePlan';
 import {
     buildAssetPlan,
@@ -50,11 +51,12 @@ import {
 } from '../../../utils/websitePlanEngine';
 import { attachAiStudioBusinessBlueprint } from '../../../utils/businessBlueprint';
 import { createColorBriefFromWebsitePlan } from '../../../utils/colorSystemEngine';
+import { getStudioReadiness } from '../../../utils/studioUX';
 
 // ── Models ──────────────────────────────────────────────────────────────────
-const MODEL_CHAT = 'qwen/qwen3-max';  // Flagship orchestrator — 262K context, 32K output
+const MODEL_CHAT = 'openai/gpt-5.3-codex';
 const MODEL_VOICE = 'gemini-3.1-flash-live-preview';
-const MODEL_IMAGE = 'gemini-3-pro-image-preview';
+const MODEL_IMAGE = 'gemini-3.1-flash-image-preview';
 
 const isDev = import.meta.env.DEV;
 const ELEVENLABS_AGENT_ID = '52ac360bd7d15d8bd5e86b214d14338adc732616468d4dc145ce3d12df400eb5';
@@ -362,8 +364,6 @@ function extractContactDetailsFromText(text: string): ContactInfo {
 const ALL_SECTIONS: PageSection[] = [
     'colors', 'typography', 'header',
     'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
-    'heroLumina', 'featuresLumina', 'ctaLumina', 'portfolioLumina', 'pricingLumina', 'testimonialsLumina', 'faqLumina',
-    'heroNeon', 'testimonialsNeon', 'featuresNeon', 'ctaNeon', 'portfolioNeon', 'pricingNeon', 'faqNeon',
     'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
     'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu', 'realEstateListings',
     'leads', 'newsletter', 'map', 'chatbot', 'cmsFeed', 'signupFloat', 'footer',
@@ -533,7 +533,7 @@ function buildHeaderLinksForOrder(componentOrder: PageSection[], isSpanish: bool
     const links: Array<{ text: string; href: string }> = [{ text: isSpanish ? 'Inicio' : 'Home', href: '/' }];
     const seen = new Set<string>(['/']);
     const hasEcommerce = componentOrder.some(section => ECOMMERCE_SECTIONS.has(section));
-    const heroSections = new Set<PageSection>(['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'heroLumina', 'heroNeon']);
+    const heroSections = new Set<PageSection>(['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead']);
 
     if (hasEcommerce) {
         links.push({ text: isSpanish ? 'Tienda' : 'Shop', href: '/tienda' });
@@ -575,33 +575,26 @@ function buildHeaderLinksForOrder(componentOrder: PageSection[], isSpanish: bool
     return links;
 }
 
-function pickHeaderStyle(brief: BusinessBrief, componentOrder: PageSection[], colors: Record<string, string>): string {
+function pickHeaderStyle(brief: BusinessBrief, componentOrder: PageSection[], _colors: Record<string, string>): string {
     const industry = normalizeDesignIndustry(brief);
     const seed = `${brief.businessName}|${industry}|${componentOrder.join(',')}`;
-    const accentCanUseWhite = readableTextOn(colors.accent || '#000000') === '#ffffff';
 
     if (industry === 'ecommerce') {
-        const options = accentCanUseWhite
-            ? ['floating-pill', 'edge-bordered', 'tabbed', 'segmented-pill', 'floating-shadow']
-            : ['floating-pill', 'edge-bordered', 'tabbed', 'floating-shadow'];
-        return pickFrom(options, seed);
+        return pickFrom(['sticky-solid', 'edge-bordered', 'edge-solid'], seed);
     }
     if (industry === 'restaurant') {
-        return pickFrom(['transparent-blur', 'floating-shadow', 'edge-solid', 'floating-glass'], seed);
+        return pickFrom(['edge-solid', 'sticky-solid', 'edge-bordered'], seed);
     }
     if (industry === 'real-estate') {
-        return pickFrom(['edge-minimal', 'floating-glass', 'edge-bordered', 'floating-shadow'], seed);
+        return pickFrom(['edge-bordered', 'edge-solid', 'sticky-solid'], seed);
     }
     if (industry === 'technology') {
-        const options = accentCanUseWhite
-            ? ['floating-glass', 'floating-pill', 'segmented-pill', 'tabbed']
-            : ['floating-glass', 'floating-pill', 'tabbed', 'edge-minimal'];
-        return pickFrom(options, seed);
+        return pickFrom(['sticky-solid', 'edge-bordered', 'edge-solid'], seed);
     }
     if (industry === 'creative') {
-        return pickFrom(['transparent-bordered', 'floating-glass', 'tabbed', 'floating-pill'], seed);
+        return pickFrom(['edge-bordered', 'sticky-solid', 'edge-solid'], seed);
     }
-    return pickFrom(['edge-minimal', 'floating-shadow', 'floating-pill', 'edge-bordered'], seed);
+    return pickFrom(['sticky-solid', 'edge-solid', 'edge-bordered'], seed);
 }
 
 function getHeaderCtaTarget(componentOrder: PageSection[], hasEcommerce: boolean): string {
@@ -624,20 +617,21 @@ function repairGeneratedWebsiteDesign(
     if (!data || typeof data !== 'object') return;
     const colors = finalTheme?.globalColors || brief.colorPalette || {};
     const hasEcommerce = componentOrder.some(section => ECOMMERCE_SECTIONS.has(section));
-    const style = pickHeaderStyle(brief, componentOrder, colors);
-    const useSurfaceHeader = ['floating-pill', 'floating-glass', 'floating-shadow', 'edge-minimal', 'transparent-bordered', 'transparent-blur', 'tabbed', 'segmented-pill'].includes(style);
-    const headerBackground = useSurfaceHeader ? (colors.surface || colors.background) : (colors.primary || colors.background);
-    const headerText = readableTextOn(headerBackground, colors.heading || colors.text);
-    const buttonBackground = useSurfaceHeader ? (colors.primary || colors.accent) : (colors.secondary || colors.accent || colors.primary);
+    const suggestedStyle = pickHeaderStyle(brief, componentOrder, colors);
+    const solidHeaderStyles = new Set(['sticky-solid', 'edge-solid', 'edge-bordered']);
+    const style = solidHeaderStyles.has(suggestedStyle) ? suggestedStyle : 'sticky-solid';
+    const headerBackground = getSolidShellBackgroundForWhiteText(colors);
+    const headerText = '#ffffff';
+    const buttonBackground = colors.accent || colors.secondary || colors.primary || headerBackground;
 
     if (!data.header || typeof data.header !== 'object') data.header = {};
     data.header = {
         ...data.header,
         style,
-        layout: style === 'tabbed' ? 'classic' : style === 'floating-pill' ? 'minimal' : (data.header.layout || 'classic'),
+        layout: data.header.layout || 'classic',
         isSticky: true,
-        glassEffect: ['floating-glass', 'transparent-blur'].includes(style),
-        height: style === 'floating-pill' ? 72 : style === 'tabbed' || style === 'segmented-pill' ? 86 : 82,
+        glassEffect: false,
+        height: 82,
         logoType: data.header.logoType || 'text',
         logoText: data.header.logoText || brief.businessName || 'Website',
         showCta: true,
@@ -649,17 +643,56 @@ function repairGeneratedWebsiteDesign(
             ...(data.header.colors || {}),
             background: headerBackground,
             text: headerText,
-            accent: useSurfaceHeader ? (colors.primary || headerText) : headerText,
-            border: useSurfaceHeader ? (colors.border || 'transparent') : 'transparent',
+            accent: headerText,
+            border: style === 'edge-bordered' ? (colors.border || 'rgba(255, 255, 255, 0.18)') : 'transparent',
             buttonBackground,
             buttonText: readableTextOn(buttonBackground),
             tabActiveColor: colors.primary || colors.accent,
             tabBorderColor: colors.border,
-            gradientFadeColor: colors.surface || colors.background,
-            gradientDarkColor: colors.surface || colors.background,
+        },
+    };
+
+    if (!data.footer || typeof data.footer !== 'object') data.footer = {};
+    data.footer = {
+        ...data.footer,
+        glassEffect: false,
+        colors: {
+            ...(data.footer.colors || {}),
+            background: headerBackground,
+            border: 'rgba(255, 255, 255, 0.18)',
+            text: '#ffffff',
+            heading: '#ffffff',
+            description: 'rgba(255, 255, 255, 0.82)',
+            linkHover: '#ffffff',
         },
     };
 }
+
+const normalizeRepeatedCornerGradients = (data: any, componentOrder: PageSection[]): void => {
+    let sharedGradient: { color?: string; opacity?: number; size?: number } | null = null;
+
+    for (const section of componentOrder) {
+        const sectionData = data?.[section];
+        const gradient = sectionData?.cornerGradient;
+        if (!gradient?.enabled || gradient.position === 'none') continue;
+
+        if (!sharedGradient) {
+            sharedGradient = {
+                color: gradient.color,
+                opacity: gradient.opacity,
+                size: gradient.size,
+            };
+            continue;
+        }
+
+        sectionData.cornerGradient = {
+            ...gradient,
+            color: sharedGradient.color ?? gradient.color,
+            opacity: sharedGradient.opacity ?? gradient.opacity,
+            size: sharedGradient.size ?? gradient.size,
+        };
+    }
+};
 
 function hasDesignSignal(brief: BusinessBrief, pattern: RegExp): boolean {
     const text = [
@@ -722,11 +755,11 @@ function applyDesignStrategyToGeneratedData(
         const options = industry === 'technology'
             ? ['bento-premium', 'neon-glow', 'press-release']
             : isVisual
-                ? ['image-overlay', 'bento-overlay', 'bento-premium']
-                : ['bento-premium', 'modern', 'press-release'];
+                ? ['image-overlay', 'bento-overlay', 'bento-premium', 'editorial-mosaic']
+                : ['bento-premium', 'modern', 'press-release', 'editorial-mosaic'];
         data.features.featuresVariant = pickFrom(options, `${seed}|features`);
-        data.features.gridColumns = data.features.featuresVariant === 'image-overlay' ? 4 : 3;
-        data.features.imageHeight = data.features.featuresVariant === 'image-overlay' ? 420 : 340;
+        data.features.gridColumns = ['image-overlay', 'editorial-mosaic'].includes(data.features.featuresVariant) ? 4 : 3;
+        data.features.imageHeight = ['image-overlay', 'editorial-mosaic'].includes(data.features.featuresVariant) ? 420 : 340;
         data.features.showSectionHeader = true;
         data.features.enableCardAnimation = true;
     }
@@ -735,10 +768,22 @@ function applyDesignStrategyToGeneratedData(
         const options = industry === 'technology'
             ? ['neon-glow', 'glassmorphism', 'gradient-shift']
             : isPremium
-                ? ['floating-cards', 'glassmorphism', 'minimal-cards']
-                : ['floating-cards', 'gradient-shift', 'minimal-cards'];
+                ? ['floating-cards', 'glassmorphism', 'minimal-cards', 'editorial-mosaic']
+                : ['floating-cards', 'gradient-shift', 'minimal-cards', 'editorial-mosaic'];
         data.testimonials.testimonialsVariant = pickFrom(options, `${seed}|testimonials`);
         data.testimonials.enableCardAnimation = true;
+    }
+
+    if (data.menu && typeof data.menu === 'object') {
+        const options = industry === 'restaurant'
+            ? ['editorial-mosaic', 'full-image', 'modern-grid', 'elegant-list']
+            : isVisual || isPremium
+                ? ['editorial-mosaic', 'full-image', 'modern-grid']
+                : ['modern-grid', 'elegant-list', 'editorial-mosaic'];
+        data.menu.menuVariant = pickFrom(options, `${seed}|menu`);
+        data.menu.gridColumns = data.menu.menuVariant === 'editorial-mosaic' ? 4 : data.menu.gridColumns;
+        data.menu.showSectionHeader = true;
+        data.menu.enableCardAnimation = true;
     }
 
     if (data.faq && typeof data.faq === 'object') {
@@ -777,7 +822,7 @@ function applyDesignStrategyToGeneratedData(
     }
 
     const globalColors = finalTheme?.globalColors || brief.colorPalette;
-    for (const key of ['hero', 'services', 'features', 'testimonials', 'faq', 'leads', 'portfolio', 'slideshow', 'pricing', 'cta']) {
+    for (const key of ['hero', 'services', 'features', 'testimonials', 'menu', 'faq', 'leads', 'portfolio', 'slideshow', 'pricing', 'cta']) {
         if (data[key] && typeof data[key] === 'object') {
             data[key].colors = {
                 ...(data[key].colors || {}),
@@ -895,7 +940,20 @@ export function useAIWebsiteStudio() {
     // ── Computed ─────────────────────────────────────────────────────────────
     const isAccessLoading = isLoadingServices || planAccess.isLoading;
     const shouldBlockGenerationForAccess = isLoadingServices && accessibleComponentRegistry.length === 0;
-    const canGenerate = businessBrief.readinessScore >= 70 && businessBrief.missingFields.length === 0 && !isGenerating && !shouldBlockGenerationForAccess;
+    const studioReadiness = getStudioReadiness({
+        kind: 'website',
+        businessName: businessBrief.businessName,
+        industry: businessBrief.industry,
+        description: businessBrief.description,
+        services: businessBrief.services,
+        websiteGoal: businessBrief.description,
+        designStyle: `${businessBrief.fontPairing?.header || ''} ${businessBrief.fontPairing?.body || ''}`.trim(),
+        contactInfo: businessBrief.contactInfo,
+        suggestedComponents: businessBrief.suggestedComponents,
+        missingFields: businessBrief.missingFields,
+        readinessScore: businessBrief.readinessScore,
+    });
+    const canGenerate = studioReadiness.canGenerate && !isGenerating && !shouldBlockGenerationForAccess;
 
     // ═════════════════════════════════════════════════════════════════════════
     // SYSTEM PROMPT
@@ -924,19 +982,17 @@ CONVERSATION PHASES:
 6. CONFIRMATION — Summarize everything and ask if they're ready to generate
 
 CRITICAL RULES:
-1. Be conversational, warm, and enthusiastic. This is a creative collaboration, not a form.
-2. Ask 1-2 questions at a time, never overwhelm with many questions.
+1. Be conversational and concise. This is a guided studio flow, not a long interview.
+2. Ask one question at a time. If the user provides enough context, summarize and move toward generation instead of continuing the interview.
 3. After EVERY response, include a hidden brief update tag with ALL currently known information:
    <!--BRIEF:{"businessName":"[GENERATE_TEXT]","industry":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]","tagline":"[GENERATE_TEXT]","services":[{"name":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]"}],"contactInfo":{"email":"[GENERATE_TEXT]","phone":"[GENERATE_TEXT]","address":"[GENERATE_TEXT]","city":"[GENERATE_TEXT]","state":"[GENERATE_TEXT]","country":"[GENERATE_TEXT]","businessHours":"[GENERATE_TEXT]","instagram":"[GENERATE_TEXT]","facebook":"[GENERATE_TEXT]","twitter":"[GENERATE_TEXT]","tiktok":"[GENERATE_TEXT]"},"hasEcommerce":false,"colorPalette":{"primary":"#hex","secondary":"#hex","accent":"#hex","background":"#hex","surface":"#hex","text":"#hex"},"fontPairing":{"header":"[FONT_KEY_FROM_GUIDE]","body":"[FONT_KEY_FROM_GUIDE]","button":"[FONT_KEY_FROM_GUIDE]"},"suggestedComponents":["hero","services","features","testimonials","faq","cta","leads","newsletter","map","signupFloat"],"readinessScore":0,"missingFields":["businessName","industry"],"referenceImageContext":""}-->
 4. Update readinessScore progressively: 0-20 (just started), 20-40 (basic info), 40-60 (good detail), 60-80 (almost ready), 80-100 (ready to generate)
 5. For suggestedComponents, pick ONLY from the ACCESSIBLE COMPONENTS list below: ${availableComponentIds}. Never include components that are not listed. Components tied to services like ecommerce, restaurants, real estate, newsletter, chatbot, or CMS are omitted unless the platform service is enabled by Admin AND the current user's plan includes the required feature.
-   - IF THE USER REQUESTS "Lumina Suite", OR if the industry is related to AI, Luxury, Enterprise, or Data, you MUST exclusively use Lumina components (heroLumina, featuresLumina, ctaLumina, portfolioLumina, pricingLumina, testimonialsLumina, faqLumina) instead of the standard ones.
-   - IF THE USER REQUESTS "Neon Suite", OR if the industry is related to Tech, Gaming, Web3, Cyber, or eSports, you MUST exclusively use Neon components (heroNeon, featuresNeon, ctaNeon, portfolioNeon, pricingNeon, testimonialsNeon, faqNeon) instead of the standard ones.
 6. Apply your expert color theory knowledge to choose palettes (see COLOR PALETTES section below)
 7. Apply your expert typography knowledge to choose font pairings (see TYPOGRAPHY section below). ALWAYS include fontPairing in the BRIEF tag using the exact font key strings from the available fonts list (e.g. "playfair-display", "space-grotesk", "inter"). Choose fonts that match the industry personality.
-8. When readinessScore >= 80, you MUST do the following:
+8. When minimum context exists (business name or clear description, industry or inferred industry, services/products or website goal), you MUST do the following:
    a. Summarize all the information gathered in a clear list.
-   b. Tell the user that you have everything you need.
+   b. Tell the user that you can generate now and mark missing non-critical details for review.
    c. Explicitly instruct them to press the **"🚀 Generate Website"** button on the right panel (or on mobile, tap the "Brief" button first).
    d. Warn them that the generation process takes **several minutes** (approximately 3-5 minutes) because the AI needs to generate all the content, create custom images, and assemble everything. Tell them to be patient and NOT close the window.
    e. Example: "¡Tengo todo lo que necesito! Para comenzar, presiona el botón **🚀 Generate Website** en el panel derecho. El proceso toma entre 3-5 minutos porque voy a generar todo el contenido, crear imágenes personalizadas y ensamblar tu sitio completo. ¡No cierres la ventana y verás el progreso en tiempo real!"
@@ -956,7 +1012,7 @@ RULES:
    - realEstateListings = only for property/real estate. Pair with leads.
 - banner is optional. Include it only when it improves the plan.
 - ALWAYS include at least one hero variant.
-- Vary header styles freely: sticky-solid, floating-glass, floating-pill, transparent-blur, edge-minimal, edge-bordered, transparent-gradient-dark, etc.
+- Use solid header styles only: sticky-solid, edge-solid, or edge-bordered. Never use transparent, glass, floating, or gradient headers.
 
 ═══════════════════════════════════════════════════════════
 COLOR THEORY FUNDAMENTALS
@@ -969,8 +1025,13 @@ COLOR THEORY FUNDAMENTALS
 - Dark bg → white/light text  |  Light bg → dark text  |  Min 4.5:1 ratio
 
 **Hard Rules:**
+- Use no more than three non-neutral brand colors total: primary, secondary, and accent. Background, surface, and text roles must stay neutral and must not introduce extra brand hues.
+- Header and footer MUST use the exact same solid dark brand color. Never use white, off-white, pale, transparent, glass, or gradient backgrounds for header/footer.
+- Header and footer typography MUST be white (#ffffff) with WCAG AA contrast.
 - Text over colored backgrounds MUST be white (#ffffff) — critical for nav & hero.
-- Footer bg MUST NEVER be white. Use a solid color or match the header.
+- Text placed directly over images MUST be white (#ffffff) with a dark overlay/scrim strong enough for WCAG AA contrast. If text sits inside an opaque solid panel/card over the image, the panel may use a semantic brand color with readable text.
+- Never request or reuse images only to create blurred/glass/decorative section backgrounds. Use the existing gradient controls instead: cornerGradient, gradientStart/gradientEnd, gradientColors, radial or multi-stop overlays when supported, plus solid semantic colors.
+- Hero variants, banners, menu items, Realty/property components, product/collection heroes, portfolio, slideshow, team, and testimonial portraits remain image-backed when relevant.
 
 Be original with palettes. Use color psychology, modern trends, and brand personality.
 
@@ -1784,6 +1845,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
             pruneUnplannedComponentData(finalData, componentOrder);
             repairGeneratedWebsiteDesign(finalData, finalTheme, componentOrder, brief, isSpanish);
             applyDesignStrategyToGeneratedData(finalData, componentOrder, brief, finalTheme);
+            normalizeRepeatedCornerGradients(finalData, componentOrder);
             const sectionVisibility = buildVisibility(componentOrder.filter(c => !['colors', 'typography', 'header', 'footer'].includes(c)));
 
             // Build menus
@@ -1946,55 +2008,8 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
 
             if (isDev) console.log(`[AIWebsiteStudio] Images: ${completed}/${imageSlots.length} (${failed} failed)`);
 
-            // ══════════════════════════════════════════════════════════════════
-            // PHASE 5.5: Propagate hero images as background to glass sections
-            // ══════════════════════════════════════════════════════════════════
-            const heroImagesForBg: string[] = [];
-
-            if (finalData.hero?.imageUrl) heroImagesForBg.push(finalData.hero.imageUrl);
-            if (finalData.heroSplit?.imageUrl) heroImagesForBg.push(finalData.heroSplit.imageUrl);
-            if (finalData.heroLead?.imageUrl) heroImagesForBg.push(finalData.heroLead.imageUrl);
-            if (finalData.heroLumina?.imageUrl) heroImagesForBg.push(finalData.heroLumina.imageUrl);
-            if (finalData.heroNova?.imageUrl) heroImagesForBg.push(finalData.heroNova.imageUrl);
-
-            if (finalData.heroGallery?.slides && Array.isArray(finalData.heroGallery.slides)) {
-                finalData.heroGallery.slides.forEach((s: any) => { if (s.backgroundImage) heroImagesForBg.push(s.backgroundImage) });
-            }
-            if (finalData.heroWave?.slides && Array.isArray(finalData.heroWave.slides)) {
-                finalData.heroWave.slides.forEach((s: any) => { if (s.backgroundImage) heroImagesForBg.push(s.backgroundImage) });
-            }
-            if (finalData.heroNova?.slides && Array.isArray(finalData.heroNova.slides)) {
-                finalData.heroNova.slides.forEach((s: any) => { if (s.backgroundImage) heroImagesForBg.push(s.backgroundImage) });
-            }
-            if (finalData.heroNeon?.slides && Array.isArray(finalData.heroNeon.slides)) {
-                finalData.heroNeon.slides.forEach((s: any) => { if (s.imageUrl) heroImagesForBg.push(s.imageUrl) });
-            }
-
-            if (heroImagesForBg.length > 0) {
-                const glassBgSections = [
-                    'features', 'services', 'testimonials', 'pricing', 'faq',
-                    'cta', 'leads', 'newsletter', 'video', 'howItWorks',
-                    'featuresLumina', 'ctaLumina', 'portfolioLumina', 'pricingLumina', 'testimonialsLumina', 'faqLumina',
-                    'featuresNeon', 'ctaNeon', 'portfolioNeon', 'pricingNeon', 'testimonialsNeon', 'faqNeon'
-                ];
-                let bgIndex = 0;
-                for (const comp of glassBgSections) {
-                    if (finalData[comp] && typeof finalData[comp] === 'object') {
-                        const isSuite = comp.includes('Lumina') || comp.includes('Neon');
-                        // Use background image if it specifically asked for glassEffect or if it's a Neon/Lumina component which looks good with backgrounds
-                        if (finalData[comp].glassEffect || isSuite) {
-                            const bgImage = heroImagesForBg[bgIndex % heroImagesForBg.length];
-                            finalData[comp].backgroundImageUrl = bgImage;
-                            finalData[comp].imageUrl = bgImage; // Fallback for components that might use imageUrl instead
-                            finalData[comp].backgroundOverlayEnabled = true;
-                            finalData[comp].backgroundOverlayOpacity = 75;
-                            finalData[comp].glassEffect = true;
-                            bgIndex++;
-                        }
-                    }
-                }
-                if (isDev) console.log(`[AIWebsiteStudio] Glass backgrounds set for sections using ${heroImagesForBg.length} hero images sequentially`);
-            }
+            // Decorative glass/blur section backgrounds use gradients and semantic colors.
+            // Hero, banner, menu, Realty, product, portfolio, slideshow, team, and testimonial images stay image-backed.
 
             // ══════════════════════════════════════════════════════════════════
             // PHASE 6: Final project update with images (95-100%)
@@ -2533,7 +2548,7 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
     // ── Features items ─────────────────────────────────────────────────────
     if (componentOrder.includes('features')) {
         if (data.features?.items && Array.isArray(data.features.items)) {
-            data.features.items.slice(0, 3).forEach((item: any, i: number) => {
+            data.features.items.slice(0, 4).forEach((item: any, i: number) => {
                 if (!item.imageUrl) {
                     slots.push({
                         path: `features.items.${i}.imageUrl`,
@@ -2544,6 +2559,20 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
                 }
             });
         }
+    }
+
+    // ── Menu items ─────────────────────────────────────────────────────────
+    if (componentOrder.includes('menu') && data.menu?.items && Array.isArray(data.menu.items)) {
+        data.menu.items.slice(0, 6).forEach((item: any, i: number) => {
+            if (!item.imageUrl) {
+                slots.push({
+                    path: `menu.items.${i}.imageUrl`,
+                    componentType: 'menu',
+                    context: item.name || item.description || `Menu item ${i + 1}`,
+                    aspectRatio: '4:3',
+                });
+            }
+        });
     }
 
     // ── Portfolio items ─────────────────────────────────────────────────────
@@ -2676,7 +2705,7 @@ function buildSmartImagePrompt(brief: BusinessBrief, slot: ImageSlot): string {
         menu: `Commercial food/product photography. Overhead or 45-degree angle, carefully styled, appetizing.`,
         team: `A professional headshot/portrait. Natural expression, clean background, warm lighting.`,
         portfolio: `A portfolio showcase image demonstrating quality work/results.`,
-        cta: `A slightly blurred atmospheric background that works behind text. Moody, ambient.`,
+        cta: `A conversion-focused section visual only when the CTA component explicitly supports an image. Avoid decorative blur-only backgrounds; prefer solid colors and gradient controls for ambient depth.`,
         banner: `A stunning ultra-wide panoramic background image. Cinematic composition, atmospheric depth, dramatic lighting.`,
     };
 
@@ -2753,7 +2782,10 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         ? brief.suggestedComponents
         : ['hero', 'services', 'features', 'testimonials', 'faq', 'cta', 'footer'];
 
-    let filteredComponents = baseComponents.filter(c => !EXCLUDED_COMPONENTS.includes(c));
+    let filteredComponents = baseComponents.filter(c =>
+        !EXCLUDED_COMPONENTS.includes(c) &&
+        !isRetiredDesignSuiteSection(c)
+    );
     
     // Ensure at least one hero variant is always present
     const hasAnyHero = filteredComponents.some(c => c.startsWith('hero'));
@@ -2801,11 +2833,11 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     }
 
 
-    const allHeaderStyles = 'sticky-solid|sticky-transparent|floating|edge-solid|edge-minimal|edge-bordered|floating-pill|floating-glass|floating-shadow|transparent-blur|transparent-bordered|transparent-gradient|transparent-gradient-dark|tabbed|segmented-pill';
+    const solidHeaderStyles = 'sticky-solid|edge-solid|edge-bordered';
 
     componentExamples += `
     "header": {
-      "style": "[SELECT ONE freely. Options: ${allHeaderStyles}]",
+      "style": "[SELECT ONE. Options: ${solidHeaderStyles}]",
       "layout": "[SELECT: minimal|center|stack|classic]",
       "isSticky": true,
       "height": 95,
@@ -2818,11 +2850,8 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         "background": "[GENERATE HEX COLOR MATCHING BRAND OR DARK THEME — NEVER use white #ffffff]",
         "text": "#ffffff",
         "buttonBackground": "${brief.colorPalette.accent}",
-        "buttonText": "[GENERATE HEX COLOR that strongly contrasts with buttonBackground]",
-        "gradientDarkColor": "[IF style IS 'transparent-gradient-dark' THEN generate a DARKER shade of the header background color — NEVER use pure black #000000, ELSE omit]",
-        "gradientFadeColor": "[IF style IS 'transparent-gradient' THEN generate a LIGHTER shade of the header background color — NEVER use pure white #ffffff, ELSE omit]"
+        "buttonText": "[GENERATE HEX COLOR that strongly contrasts with buttonBackground]"
       },
-      "gradientFadeSize": "[IF style IS 'transparent-gradient' OR 'transparent-gradient-dark' THEN SELECT number between 10 and 30 for gradient size, default 15, ELSE omit]",
       "links": ${JSON.stringify(headerLinks)}
     },`;
 
@@ -3012,8 +3041,8 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     } else {
         componentExamples += `
     "${featuresKey}": {
-      "featuresVariant": "[SELECT: classic|modern|bento-premium|bento-overlay|image-overlay]",
-      "gridColumns": "[IF featuresVariant IS 'image-overlay' THEN select 4 ELSE select 2 or 3]",
+      "featuresVariant": "[SELECT: classic|modern|bento-premium|bento-overlay|image-overlay|editorial-mosaic]",
+      "gridColumns": "[IF featuresVariant IS 'image-overlay' OR 'editorial-mosaic' THEN select 4 ELSE select 2 or 3]",
       "title": "${isSpanish ? 'Características' : 'Features'}",
       "imageHeight": 430,
       "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.primary}", "opacity": 15, "size": 35},
@@ -3032,15 +3061,15 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         componentExamples += `
     "menu": {
       "title": "${isSpanish ? 'Nuestro Menú' : 'Our Menu'}",
-      "menuVariant": "text-only",
+      "menuVariant": "[SELECT: classic|modern-grid|elegant-list|full-image|editorial-mosaic]",
       "categories": ["${isSpanish ? 'Entradas' : 'Starters'}", "${isSpanish ? 'Platos Principales' : 'Main Courses'}", "${isSpanish ? 'Postres' : 'Desserts'}"],
       "items": [
-        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]"},
-        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]"},
-        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]"},
-        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]"},
-        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]"},
-        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]"}
+        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"name": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "price": "$...", "category": "[GENERATE_TEXT]", "imageUrl": ""}
       ]
     },`;
     }
@@ -3110,7 +3139,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     "testimonialsLumina": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "luminaAnimation": {"enabled": true}, "testimonials": [{"quote": "[GENERATE_TEXT]", "authorName": "[GENERATE_TEXT]", "authorRole": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "authorName": "[GENERATE_TEXT]", "authorRole": "[GENERATE_TEXT]"}]},`;
     } else {
         componentExamples += `
-    "${testimonialsKey}": {"testimonialsVariant": "[SELECT: classic|minimal-cards|glassmorphism|gradient-glow|neon-border|floating-cards|gradient-shift]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.secondary}", "opacity": 10, "size": 40}, "items": [{"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}]},`;
+    "${testimonialsKey}": {"testimonialsVariant": "[SELECT: classic|minimal-cards|glassmorphism|gradient-glow|neon-border|floating-cards|gradient-shift|editorial-mosaic]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.secondary}", "opacity": 10, "size": 40}, "items": [{"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
     }
 
     const faqKey = filteredComponents.find(c => c.startsWith('faq')) || 'faq';
@@ -3194,6 +3223,15 @@ The color palette above was produced by Quimera Color Expert. Use these exact co
 Do not invent new brand hex colors, do not replace theme.globalColors, and do not make accessibility decisions with new colors.
 If a component needs button text, badge text, overlays, cards, or ecommerce colors, derive them from the provided semantic roles.
 
+CHROME AND IMAGE TEXT RULES:
+- Use no more than three non-neutral brand colors total: primary, secondary, and accent. Background, surface, and text are neutral roles.
+- Header and footer MUST use the same solid dark brand color and white (#ffffff) typography. Never use white, off-white, pale, transparent, glass, or gradient backgrounds for header/footer.
+- Header style MUST be one of: sticky-solid, edge-solid, edge-bordered.
+- Any text placed directly over an image MUST be white (#ffffff) with a dark overlay/scrim strong enough for WCAG AA contrast. If the text is inside an opaque solid panel/card over the image, the panel may use a semantic brand color with readable text.
+- Menu cards using menuVariant "full-image" or "editorial-mosaic" place text over images: all price/title/description/category text over the image MUST be #ffffff, and the background gradient/scrim opacity MUST be strong enough for WCAG AA contrast.
+- Never use generated images only as blurred/glass/decorative section backgrounds. Use the existing gradient controls instead: cornerGradient, gradientStart/gradientEnd, gradientColors, radial or multi-stop overlays when supported, plus solid semantic colors. Do not limit decorative backgrounds to linear gradients.
+- Keep image-backed content for hero sections, banner, menu items, Realty/property components, product/collection heroes, portfolio, slideshow, team, and testimonial portraits.
+
 COMPONENTS TO GENERATE: ${filteredComponents.join(', ')}
 
 LANGUAGE: All content MUST be in ${lang}.
@@ -3219,23 +3257,25 @@ OUTPUT FORMAT: Return a single JSON object with this EXACT structure:
 }
 
 CRITICAL RULES:
-1. For components that support images (hero/heroGallery, banner, features, portfolio, team, testimonials, slideshow), YOU MUST set imageUrl or backgroundImageUrl to an empty string "".
+1. For image-backed components (hero/heroGallery/heroWave/heroNova/heroLead/heroSplit, banner, menu, Realty/property components, product/collection heroes, features, portfolio, team, testimonials, slideshow), YOU MUST set imageUrl, backgroundImage, or backgroundImageUrl to an empty string "" so the image generator can fill it.
 2. Include RICH, detailed, REAL content for EVERY component — no lorem ipsum, no placeholder text.
-3. Each component's items array MUST have the correct number of items with full content. ALL list-based components (features, portfolio, team, testimonials, services, faq) MUST have EXACTLY 3 items.
+3. Each component's items array MUST have the correct number of items with full content. Features MUST have at least 4 items with photos. Portfolio, team, testimonials, services, and faq MUST have EXACTLY 3 items.
 4. For topBar: messages MUST be promotional announcements or call-to-actions. NEVER put address or phone numbers here. Use only these icons: megaphone, tag, gift, truck, percent, sparkles, star, zap, heart, flame.
 5. For heroGallery/heroNeon/heroNova/heroWave: generate EXACTLY 2 slides with real headlines and subheadlines. Each slide must have: headline, subheadline, primaryCta, primaryCtaLink, backgroundImage or imageUrl (empty string "").
-6. For menu: generate at least 6 realistic menu items with real names, descriptions, and prices. TEXT ONLY — NO imageUrl or placeholders.
+6. For menu: generate at least 6 realistic menu items with real names, descriptions, prices, categories, and "imageUrl": "". Use a visual menuVariant: classic, modern-grid, elegant-list, full-image, or editorial-mosaic. Never use text-only.
 7. For header links: the "href" values MUST point to the actual sections on the page using anchors (e.g. "/#services"). Only link to sections that exist in the componentOrder.
-8. For features, portfolio, team, testimonials, and slideshow: generate EXACTLY 3 items. Include "imageUrl": "" (or "backgroundImage": "") in each item.
+8. For features: generate AT LEAST 4 items and include "imageUrl": "" in each item. For portfolio, team, testimonials, and slideshow: generate EXACTLY 3 items and include "imageUrl": "" (or "backgroundImage": "") in each item.
 9. For services: generate EXACTLY 3 items. Use the business's ACTUAL services from the brief (max 3). TEXT ONLY — no imageUrl.
 10. For FAQ: generate EXACTLY 3 relevant questions and answers.
 11. For leads: include proper form fields with labels and placeholders.
 12. For footer: Include real contact info inside the 'contactInfo' object. 'linkColumns' is strictly for page navigation links like 'Inicio' or 'Servicios'.
 13. For howItWorks: generate EXACTLY 3 steps with titles, descriptions, and valid lucide icons.
 14. For properties marked with [SELECT: a|b|c...], you MUST intelligently choose exactly ONE of the provided options based on what best fits the industry's aesthetic. Do not output the brackets.
-15. For header.style: VARY it based on the industry. Examples: restaurants/bars → 'transparent-gradient-dark' or 'edge-solid'; tech/SaaS → 'floating-glass' or 'floating-pill'; fitness/gym → 'sticky-solid' or 'edge-bordered'; luxury/spa → 'transparent-blur' or 'floating-shadow'; professional/corporate → 'edge-minimal' or 'sticky-solid'; creative/portfolio → 'transparent-bordered' or 'floating-glass'. NEVER always pick the same style.
-16. Do not generate arbitrary new hex colors. Use the COLOR PALETTE values as semantic tokens; the application will apply validated component mappings after generation.
-17. For map: use the COMPLETE address including street, city, state, and country. The address field must contain the full location string.
+15. For header.style: choose ONLY a solid style from 'sticky-solid', 'edge-solid', or 'edge-bordered'. Do not use transparent, glass, floating, blur, or gradient header styles.
+16. Header and footer colors must match exactly: same solid dark background, white text, white headings, and no light/white shell backgrounds.
+17. Do not generate arbitrary new hex colors. Use the COLOR PALETTE values as semantic tokens; the application will apply validated component mappings after generation.
+18. For map: use the COMPLETE address including street, city, state, and country. The address field must contain the full location string.
+19. Do not set section-level backgroundImageUrl/imageUrl for decorative glass, blur, or ambient backgrounds outside the allowed image-backed components. Use the component's gradient controls instead: cornerGradient, gradientStart/gradientEnd, gradientColors, radial/multi-stop overlays where supported, and semantic colors.
 
 RESPOND WITH ONLY VALID JSON. NO MARKDOWN, NO BACKTICKS, NO EXPLANATION.`;
 }
@@ -3322,7 +3362,7 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
     if (data.header && typeof data.header === 'object') {
         if (!data.header.logoText) data.header.logoText = brief.businessName || 'My Business';
         if (!data.header.logoType) data.header.logoType = 'text';
-        if (!data.header.style) data.header.style = 'floating-glass';
+        if (!data.header.style) data.header.style = 'sticky-solid';
         if (!data.header.layout) data.header.layout = 'minimal';
         if (data.header.isSticky === undefined) data.header.isSticky = true;
 
@@ -3460,6 +3500,23 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
                 { title: isSpanish ? 'Innovación Constante' : 'Constant Innovation', description: isSpanish ? 'Siempre a la vanguardia con las últimas tendencias y tecnologías.' : 'Always at the forefront with the latest trends and technologies.', icon: 'Star', imageUrl: '' },
             ];
         }
+        const fallbackFeatures = [
+            { title: isSpanish ? 'Calidad Premium' : 'Premium Quality', description: isSpanish ? 'Ofrecemos la más alta calidad en todos nuestros servicios.' : 'We offer the highest quality across all our services.', icon: 'Award', imageUrl: '' },
+            { title: isSpanish ? 'Atención Personalizada' : 'Personalized Attention', description: isSpanish ? 'Cada cliente recibe un trato único y especial.' : 'Every client receives unique and special treatment.', icon: 'Heart', imageUrl: '' },
+            { title: isSpanish ? 'Resultados Garantizados' : 'Guaranteed Results', description: isSpanish ? 'Nos comprometemos con resultados excepcionales.' : 'We commit to exceptional results.', icon: 'CheckCircle', imageUrl: '' },
+            { title: isSpanish ? 'Innovación Constante' : 'Constant Innovation', description: isSpanish ? 'Siempre a la vanguardia con las últimas tendencias y tecnologías.' : 'Always at the forefront with the latest trends and technologies.', icon: 'Star', imageUrl: '' },
+        ];
+        while (data.features.items.length < 4) {
+            data.features.items.push(fallbackFeatures[data.features.items.length]);
+        }
+        data.features.items.slice(0, 4).forEach((item: any, index: number) => {
+            if (!Object.prototype.hasOwnProperty.call(item, 'imageUrl')) {
+                item.imageUrl = '';
+            }
+            if (!item.icon) {
+                item.icon = fallbackFeatures[index]?.icon || 'Star';
+            }
+        });
     }
 
     // Testimonials defaults

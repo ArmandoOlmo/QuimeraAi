@@ -734,6 +734,7 @@ const AgencyLandingPageContent: React.FC = () => {
 
   const sectionBackgroundProps = (sectionData: any) => ({
     backgroundImageUrl: sectionData?.backgroundImageUrl,
+    backgroundImageOpacity: sectionData?.backgroundImageOpacity,
     backgroundColor: sectionData?.colors?.background || sectionData?.backgroundColor,
     backgroundOverlayEnabled: sectionData?.backgroundOverlayEnabled,
     backgroundOverlayOpacity: sectionData?.backgroundOverlayOpacity,

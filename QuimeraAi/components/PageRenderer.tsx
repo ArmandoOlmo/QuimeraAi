@@ -14,6 +14,7 @@ import { PageData, ThemeData, PageSection } from '../types';
 import { DynamicData, PublicProduct, PublicCategory } from '../utils/metaGenerator';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { initialData } from '../data/initialData';
+import { isRetiredDesignSuiteSection } from '../data/retiredSuites';
 import { useTranslation } from 'react-i18next';
 import { resolveI18nSectionData } from '../utils/i18nContent';
 
@@ -370,6 +371,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
         const buttonBorderRadius = theme.buttonBorderRadius || 'xl';
         const sectionBackgroundProps = (data: any) => ({
             backgroundImageUrl: data?.backgroundImageUrl,
+            backgroundImageOpacity: data?.backgroundImageOpacity,
             backgroundColor: data?.colors?.background || data?.backgroundColor,
             backgroundOverlayEnabled: data?.backgroundOverlayEnabled,
             backgroundOverlayOpacity: data?.backgroundOverlayOpacity,
@@ -957,7 +959,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         key={key}
                         storeId={project.id}
                         productSlug={routeParams?.slug}
-                        product={dynamicData?.product}
+                        product={dynamicData?.product as any}
                         colors={{
                             background: globalColors?.background,
                             heading: globalColors?.heading,
@@ -976,7 +978,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         key={key}
                         storeId={project.id}
                         categorySlug={routeParams?.slug}
-                        category={dynamicData?.category}
+                        category={dynamicData?.category as any}
                         title={dynamicData?.category?.name}
                         primaryColor={globalColors?.primary}
                         themeColors={{
@@ -1197,6 +1199,9 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     const seenSections = new Set<string>();
     const shellSections: PageSection[] = ['header', 'footer', 'topBar', 'announcementBar'];
     const visibleSections = page.sections.filter(section => {
+        if (isRetiredDesignSuiteSection(section)) {
+            return false;
+        }
         if (contentOnly && shellSections.includes(section)) {
             return false;
         }

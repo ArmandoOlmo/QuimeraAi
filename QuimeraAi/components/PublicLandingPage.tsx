@@ -34,6 +34,7 @@ import {
 import LanguageSelector from './ui/LanguageSelector';
 import ImageCarousel from './ImageCarousel';
 import { useSafeAppContent } from '../contexts/appContent';
+import { isRetiredDesignSuiteSection } from '../data/retiredSuites';
 import { AppArticle, AppNavItem, DEFAULT_APP_NAVIGATION } from '../types/appContent';
 import { useLandingPlans } from '../hooks/useLandingPlans';
 import { supabase } from '../supabase';
@@ -232,7 +233,10 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
       if (event.data?.type === 'LANDING_EDITOR_UPDATE') {
         console.log('[Preview] Received sections update:', event.data.sections?.length || 0);
-        setPreviewSections(event.data.sections || []);
+        const sections = Array.isArray(event.data.sections)
+          ? event.data.sections.filter((section: PreviewSection) => !isRetiredDesignSuiteSection(section.type))
+          : [];
+        setPreviewSections(sections);
         setSectionsLoaded(true);
       }
 
@@ -275,13 +279,15 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         if (error) throw error;
 
         if (rows && rows.length > 0) {
-          const loadedSections = rows.map(row => ({
-            id: row.id,
-            type: row.type,
-            enabled: row.enabled,
-            order: row.order,
-            data: row.data || {},
-          }));
+          const loadedSections = rows
+            .map(row => ({
+              id: row.id,
+              type: row.type,
+              enabled: row.enabled,
+              order: row.order,
+              data: row.data || {},
+            }))
+            .filter(section => !isRetiredDesignSuiteSection(section.type));
           console.log('[PublicLandingPage] Loaded from Supabase:', loadedSections.length, 'sections');
           setPreviewSections(loadedSections);
         }
@@ -581,7 +587,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
     // Sort sections by their order property, excluding header and footer
     const sortedSections = [...previewSections]
-      .filter(s => s.type !== 'header' && s.type !== 'footer')
+      .filter(s => s.type !== 'header' && s.type !== 'footer' && !isRetiredDesignSuiteSection(s.type))
       .sort((a, b) => a.order - b.order);
 
     return sortedSections;
@@ -763,6 +769,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       <section key={section.id} id={`section-${section.type}`} data-section-id={section.id}>
         <SectionBackground 
           backgroundImageUrl={section.data?.backgroundImageUrl || section.data?.imageUrl} 
+          backgroundImageOpacity={section.data?.backgroundImageOpacity ?? section.data?.bgOpacity}
           backgroundColor={section.data?.colors?.background || section.data?.backgroundColor} 
           backgroundOverlayEnabled={section.data?.backgroundOverlayEnabled} 
           backgroundOverlayOpacity={section.data?.backgroundOverlayOpacity ?? section.data?.overlayOpacity} 

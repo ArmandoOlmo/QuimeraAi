@@ -28,8 +28,13 @@ import {
     getStorefrontCatalogSize,
     getStorefrontCatalogSizeRule,
 } from '../storefrontTheme';
+import { isRetiredDesignSuiteSection } from '../../data/retiredSuites';
 import { createWebsiteEcommerceBlockSeedsFromSections } from '../websiteEcommerceBlocks';
 import { createStarterEcommerceContent } from './starterEcommerceContent';
+import {
+    createRestaurantBlueprintFromWebsitePlan,
+    normalizeRestaurantBlueprint,
+} from './restaurantBlueprint';
 
 export interface BusinessBlueprintAdapterOptions {
     projectId?: string;
@@ -92,7 +97,7 @@ export function createBlueprintModuleState(
 
 function normalizeIndustry(value?: string): string {
     const industry = (value || '').toLowerCase();
-    if (industry.includes('restaurant') || industry.includes('cafe') || industry.includes('food')) return 'restaurant';
+    if (/\b(restaurant|restaurante|caf[eé]|cafeteria|food|comida|steakhouse|bakery|panader[ií]a|catering|bar|sushi|pizza|brunch|fine dining|casual dining|food truck|menu|reservas?)\b/i.test(industry)) return 'restaurant';
     if (industry.includes('real') || industry.includes('property') || industry.includes('inmobili')) return 'real-estate';
     if (industry.includes('fitness') || industry.includes('gym') || industry.includes('wellness')) return 'fitness';
     if (industry.includes('fashion')) return 'fashion';
@@ -103,7 +108,9 @@ function normalizeIndustry(value?: string): string {
 }
 
 function getPlannedSections(plan: WebsitePlan): PageSection[] {
-    return plan.componentPlan.map(item => item.component);
+    return plan.componentPlan
+        .map(item => item.component)
+        .filter(section => !isRetiredDesignSuiteSection(section));
 }
 
 function createWebsiteBlueprint(plan: WebsitePlan, now: string): WebsiteBlueprint {
@@ -289,17 +296,7 @@ function createAppointmentsBlueprint(plan: WebsitePlan, now: string): Appointmen
 }
 
 function createRestaurantBlueprint(plan: WebsitePlan, now: string): RestaurantBlueprint {
-    const isRestaurant = normalizeIndustry(plan.businessProfile.industry) === 'restaurant';
-    return {
-        ...createBlueprintModuleState(now, {
-            enabled: isRestaurant,
-            status: isRestaurant ? 'generated' : 'disabled',
-            needsReview: isRestaurant,
-        }),
-        menuSignals: isRestaurant ? plan.businessProfile.services.map(service => service.name) : [],
-        reservationRules: isRestaurant ? ['party size', 'business hours', 'reservation interval'] : [],
-        ecommerceOffers: isRestaurant ? ['gift cards', 'event tickets', 'catering packages'] : [],
-    };
+    return createRestaurantBlueprintFromWebsitePlan(plan, now);
 }
 
 function createRealEstateBlueprint(plan: WebsitePlan, now: string): RealEstateBlueprint {
@@ -450,7 +447,22 @@ export function isBusinessBlueprint(value: unknown): value is BusinessBlueprint 
 
 export function migrateBusinessBlueprint(value: unknown): BusinessBlueprint | null {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-    if (isBusinessBlueprint(value)) return value;
+    if (isBusinessBlueprint(value)) {
+        const restaurantBlueprint = value.restaurantBlueprint as unknown as Record<string, unknown> | undefined;
+        if (restaurantBlueprint?.profile && !Array.isArray(restaurantBlueprint.ecommerceOffers)) return value;
+
+        return {
+            ...value,
+            restaurantBlueprint: normalizeRestaurantBlueprint(value.restaurantBlueprint, {
+                businessName: value.businessProfile.businessName,
+                industry: value.businessProfile.industry,
+                description: value.businessProfile.description,
+                services: value.businessProfile.services,
+                contactInfo: value.businessProfile.contactInfo,
+                now: value.updatedAt || value.generatedAt,
+            }),
+        };
+    }
     return null;
 }
 

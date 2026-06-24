@@ -11,6 +11,7 @@ import { useAdmin } from '../../../contexts/admin/AdminContext';
 import { generateContent } from '../../../utils/genAiClient';
 import { shouldUseProxy, generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { INDUSTRIES, INDUSTRY_IDS } from '../../../data/industries';
+import { isRetiredDesignSuiteSection } from '../../../data/retiredSuites';
 import CoolorsImporter from '../../ui/CoolorsImporter';
 import { generateComponentColorMappings, generateHeroWaveGradientColors } from '../../ui/GlobalStylesControl';
 import { logApiCall } from '../../../services/apiLoggingService';
@@ -420,6 +421,9 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
             // Build a comprehensive prompt
             const industryList = INDUSTRIES.map(i => i.id).join(', ');
+            const componentList = template.componentOrder
+                ?.filter(component => !isRetiredDesignSuiteSection(component))
+                .join(', ') || 'Standard layout';
 
             // Get dynamic prompt
             const promptTemplate = getPrompt('template-industry-suggestion');
@@ -432,7 +436,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                     .replace('{{description}}', template.description || 'Not provided')
                     .replace('{{colorInfo}}', colorInfo || 'Colors: ' + colors?.join(', '))
                     .replace('{{colorAnalysis}}', colorAnalysis)
-                    .replace('{{components}}', template.componentOrder?.join(', ') || 'Standard layout')
+                    .replace('{{components}}', componentList)
                     .replace('{{industryList}}', industryList);
                 modelToUse = promptTemplate.model;
             } else {
@@ -453,7 +457,7 @@ ${colorInfo || 'Colors: ' + colors?.join(', ')}
 ${colorAnalysis}
 
 **Template Components:**
-${template.componentOrder?.join(', ') || 'Standard layout'}
+${componentList}
 
 **Available Industry IDs (you MUST only use these exact IDs):**
 ${industryList}

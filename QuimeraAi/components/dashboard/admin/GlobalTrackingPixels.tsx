@@ -79,7 +79,7 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-14 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}

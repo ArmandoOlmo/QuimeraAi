@@ -36,9 +36,13 @@ import ThumbnailEditor from '../../ui/ThumbnailEditor';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import TemplateEditorModal from './TemplateEditorModal';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
+import { isRetiredDesignSuiteSection } from '../../../data/retiredSuites';
 import { supabase } from '../../../supabase';
-import { CatalogFilterBar, FilterChipRow } from '../filters';
+import { FilterChipRow } from '../filters';
 import AppSelect from '../../ui/AppSelect';
+import MobileSearchModal from '../../ui/MobileSearchModal';
+import { AppButton, AppIcon } from '../../ui/system';
+import { AppShellTopbar } from '@/src/design-system/components/AppShell';
 
 /**
  * Safely resolves a value that might be a bilingual {en, es} object
@@ -74,6 +78,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
     // Search and Filter States
     const [searchTerm, setSearchTerm] = useState('');
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [filterCategory, setFilterCategory] = useState<string>('all');
     const [filterIndustry, setFilterIndustry] = useState<string>('all');
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'archived'>('all');
@@ -309,209 +314,56 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const activeTemplates = templates.filter(t => !t.isArchived).length;
     const archivedTemplates = templates.filter(t => t.isArchived).length;
     const mostUsedTemplate = getMostUsedTemplate();
+    const hasActiveFilters = Boolean(searchTerm || filterCategory !== 'all' || filterIndustry !== 'all' || filterStatus !== 'all');
 
     return (
         <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-10">
-                    <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-                        {/* Botón hamburguesa para abrir sidebar en móvil */}
-                        <button
+                <AppShellTopbar role="banner" className="admin-dashboard-topbar">
+                    <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
+                        <AppButton
+                            variant="icon"
+                            size="icon-md"
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="h-10 w-10 flex items-center justify-center text-q-text-secondary hover:text-q-text lg:hidden transition-colors flex-shrink-0"
-                            title="Open menu"
+                            className="lg:hidden text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay active:bg-q-surface-overlay touch-manipulation"
+                            aria-label={t('common.openMenu', 'Open menu')}
+                            aria-expanded={isMobileMenuOpen}
                         >
-                            <Menu className="w-5 h-5" />
-                        </button>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                            <LayoutTemplate className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
-                            <h1 className="text-base sm:text-lg font-semibold text-q-text truncate">{t('superadmin.templateManagement.title', 'Templates')}</h1>
-                        </div>
-
-                        {/* Search Bar - Desktop */}
-                        <div className="hidden md:flex items-center gap-2 flex-1 max-w-md bg-q-surface-overlay/40 rounded-lg px-3 py-2">
-                            <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
-                            <input
-                                type="text"
-                                placeholder={t('superadmin.templateManagement.searchPlaceholder', 'Search templates...')}
-                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                            {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            )}
+                            <Menu className="icon-lg" />
+                        </AppButton>
+                        <div className="flex items-center gap-1 sm:gap-2">
+                            <AppIcon icon={LayoutTemplate} size="lg" className="quimera-dashboard-header-icon" strokeWidth={2} />
+                            <h1 className="text-sm sm:text-xl font-semibold sm:font-bold text-q-text">
+                                {t('superadmin.templateManagement.title', 'Templates')}
+                            </h1>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
-                        {/* Back Button - First */}
-                        <HeaderBackButton onClick={onBack} label={t('superadmin.templateManagement.back', 'Back')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
+                    <div className="flex-1" />
 
-                        {/* View Mode Toggle - Mobile */}
-                        <div className="flex sm:hidden items-center gap-0.5 bg-q-surface-overlay/40 rounded-lg p-1">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`p-2 transition-all rounded ${viewMode === 'grid' ? 'text-q-accent bg-q-accent/10' : 'text-q-text-secondary'}`}
-                                title="Grid View"
-                            >
-                                <Grid size={18} />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`p-2 transition-all rounded ${viewMode === 'list' ? 'text-q-accent bg-q-accent/10' : 'text-q-text-secondary'}`}
-                                title="List View"
-                            >
-                                <List size={18} />
-                            </button>
-                        </div>
-
-                        {/* View Mode Toggle - Desktop */}
-                        <div className="hidden sm:flex items-center gap-0.5 bg-q-surface-overlay/40 rounded-lg p-1">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`p-1.5 transition-all ${viewMode === 'grid' ? 'text-q-accent' : 'text-q-text-secondary hover:text-q-text'}`}
-                                title="Grid View"
-                            >
-                                <Grid size={16} />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`p-1.5 transition-all ${viewMode === 'list' ? 'text-q-accent' : 'text-q-text-secondary hover:text-q-text'}`}
-                                title="List View"
-                            >
-                                <List size={16} />
-                            </button>
-                        </div>
-
-                        <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={`flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all ${showFilters ? 'text-q-accent bg-q-accent/10' : 'text-q-text-secondary hover:text-q-text'}`}
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 mr-2.5">
+                        <AppButton
+                            variant="icon"
+                            size="icon-md"
+                            onClick={() => setIsSearchOpen(true)}
+                            className="text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay"
+                            aria-label={t('common.search', 'Search')}
                         >
-                            <Filter className="w-5 h-5 sm:w-4 sm:h-4" />
-                            <span className="hidden lg:inline ml-1.5">{t('superadmin.templateManagement.filters', 'Filters')}</span>
-                        </button>
+                            <Search className="icon-lg" />
+                        </AppButton>
 
-                        <button
-                            onClick={() => setShowAIGenerator(true)}
-                            className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all bg-gradient-to-r from-q-accent/10 to-q-accent text-q-accent hover:from-q-accent/20 hover:to-q-accent border border-q-accent/20"
-                            title="Generar Template con IA"
-                        >
-                            <Sparkles className="w-5 h-5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline ml-1.5">AI Generate</span>
-                        </button>
-
-                        <button onClick={createNewTemplate} className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-q-accent hover:bg-q-accent/10">
-                            <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline ml-1.5">{t('superadmin.templateManagement.new', 'New')}</span>
-                        </button>
+                        <HeaderBackButton onClick={onBack} />
                     </div>
-                </header>
+                </AppShellTopbar>
 
-                {/* Mobile Search */}
-                <div className="md:hidden px-3 py-3 border-b border-q-border bg-q-bg/50">
-                    <div className="flex items-center gap-2 bg-q-surface-overlay/40 rounded-xl px-4 py-2.5">
-                        <Search className="w-5 h-5 text-q-text-secondary flex-shrink-0" />
-                        <input
-                            type="text"
-                            placeholder={t('superadmin.templateManagement.searchPlaceholder', 'Search templates...')}
-                            className="flex-1 bg-transparent outline-none text-base min-w-0"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        {searchTerm && (
-                            <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text p-1 flex-shrink-0">
-                                <X className="w-5 h-5" />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Filters Panel */}
-                {showFilters && (
-                    <div className="px-3 sm:px-6 py-4 border-b border-q-border bg-q-surface/50">
-                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs text-q-text-secondary">{t('superadmin.sortByCategory')}</label>
-                                <AppSelect
-                                    value={filterCategory}
-                                    onChange={(e) => setFilterCategory(e.target.value)}
-                                    className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full"
-                                >
-                                    <option value="all">{t('superadmin.allCategories')}</option>
-                                    {categories.map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
-                                    ))}
-                                </AppSelect>
-                            </div>
-
-                            {/* Industry Filter */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs text-q-text-secondary flex items-center gap-1">
-                                    <Building2 className="w-3 h-3" />
-                                    {t('industries.title')}
-                                </label>
-                                <AppSelect
-                                    value={filterIndustry}
-                                    onChange={(e) => setFilterIndustry(e.target.value)}
-                                    className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full sm:min-w-[160px]"
-                                >
-                                    <option value="all">{t('superadmin.allCategories')}</option>
-                                    {usedIndustries.map(ind => (
-                                        <option key={ind} value={ind}>{getIndustryLabel(ind)}</option>
-                                    ))}
-                                </AppSelect>
-                            </div>
-
-                            <div className="col-span-2 sm:col-span-full flex flex-col gap-1.5">
-                                <label className="text-xs text-q-text-secondary">{t('leads.status')}</label>
-                                <FilterChipRow
-                                    options={[
-                                        { id: 'all', label: t('superadmin.allTemplates'), count: templateStatusCounts.all },
-                                        { id: 'active', label: t('superadmin.activeTemplates'), count: templateStatusCounts.active, color: 'green' },
-                                        { id: 'archived', label: t('superadmin.archivedTemplates'), count: templateStatusCounts.archived, color: 'gray' },
-                                    ]}
-                                    value={filterStatus}
-                                    onChange={(value) => setFilterStatus(value as typeof filterStatus)}
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs text-q-text-secondary">{t('leads.sort')}</label>
-                                <AppSelect
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                    className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full"
-                                >
-                                    <option value="recent">{t('superadmin.sortByRecent')}</option>
-                                    <option value="name">{t('superadmin.sortByName')}</option>
-                                    <option value="usage">{t('superadmin.sortByUsage')}</option>
-                                    <option value="category">{t('superadmin.sortByCategory')}</option>
-                                </AppSelect>
-                            </div>
-
-                            {(searchTerm || filterCategory !== 'all' || filterIndustry !== 'all' || filterStatus !== 'all') && (
-                                <div className="col-span-2 sm:col-span-1 flex items-end">
-                                    <button
-                                        onClick={() => {
-                                            setSearchTerm('');
-                                            setFilterCategory('all');
-                                            setFilterIndustry('all');
-                                            setFilterStatus('all');
-                                        }}
-                                        className="w-full sm:w-auto px-4 py-2.5 sm:py-1.5 rounded-lg text-sm text-q-text-secondary hover:text-q-text bg-q-surface-overlay/30 hover:bg-q-surface-overlay/50 transition-colors"
-                                    >
-                                        {t('superadmin.clearFilters')}
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
+                <MobileSearchModal
+                    isOpen={isSearchOpen}
+                    searchQuery={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    onClose={() => setIsSearchOpen(false)}
+                    placeholder={t('superadmin.templateManagement.searchPlaceholder', 'Search templates...')}
+                />
 
                 <main className="flex-1 p-3 sm:p-6 lg:p-8 overflow-y-auto">
                     {/* Statistics Cards - Responsive Grid */}
@@ -589,11 +441,166 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         </div>
                     </div>
 
-                    {/* Results Header */}
-                    <div className="flex items-center justify-between mb-4">
-                        <p className="text-sm text-q-text-secondary">
-                            {filteredAndSortedTemplates.length} {filteredAndSortedTemplates.length === 1 ? t('superadmin.templateManagement.title', 'template').toLowerCase().slice(0, -1) : t('superadmin.templateManagement.title', 'Templates').toLowerCase()}
-                        </p>
+                    <div className="mb-4 md:mb-6 space-y-3 md:space-y-4">
+                        <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                            <span className="text-xs md:text-sm text-q-text-muted">
+                                {filteredAndSortedTemplates.length}/{templates.length}
+                            </span>
+
+                            <div className="flex-1 min-w-[1rem]" />
+
+                            <div
+                                className="flex items-center gap-1 bg-secondary/40 rounded-lg p-1"
+                                role="group"
+                                aria-label="View mode"
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('grid')}
+                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${
+                                        viewMode === 'grid'
+                                            ? 'text-primary bg-q-bg'
+                                            : 'text-q-text-muted hover:text-foreground'
+                                    }`}
+                                    aria-label={t('superadmin.gridView', 'Grid View')}
+                                    aria-pressed={viewMode === 'grid'}
+                                >
+                                    <Grid size={15} aria-hidden="true" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('list')}
+                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${
+                                        viewMode === 'list'
+                                            ? 'text-primary bg-q-bg'
+                                            : 'text-q-text-muted hover:text-foreground'
+                                    }`}
+                                    aria-label={t('superadmin.listView', 'List View')}
+                                    aria-pressed={viewMode === 'list'}
+                                >
+                                    <List size={15} aria-hidden="true" />
+                                </button>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all ${
+                                    showFilters || hasActiveFilters
+                                        ? 'bg-q-accent/10 text-q-accent'
+                                        : 'bg-secondary/50 text-q-text-muted hover:text-foreground hover:bg-secondary'
+                                }`}
+                                aria-label={t('superadmin.templateManagement.filters', 'Filters')}
+                                title={t('superadmin.templateManagement.filters', 'Filters')}
+                            >
+                                <Filter size={14} aria-hidden="true" />
+                                <span className="hidden sm:inline">{t('superadmin.templateManagement.filters', 'Filters')}</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setShowAIGenerator(true)}
+                                className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-q-text-muted hover:text-foreground hover:bg-secondary"
+                                title={t('superadmin.templateManagement.generateWithAi', 'Generate with AI')}
+                                aria-label={t('superadmin.templateManagement.generateWithAi', 'Generate with AI')}
+                            >
+                                <Sparkles size={14} aria-hidden="true" />
+                                <span className="hidden md:inline">{t('superadmin.templateManagement.generateWithAi', 'Generate with AI')}</span>
+                                <span className="md:hidden">{t('common.assistant.ai', 'AI')}</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={createNewTemplate}
+                                className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-q-accent text-q-text-on-accent hover:bg-q-accent/90"
+                                aria-label={t('superadmin.templateManagement.new', 'New')}
+                                title={t('superadmin.templateManagement.new', 'New')}
+                            >
+                                <Plus size={14} aria-hidden="true" />
+                                <span className="hidden sm:inline">{t('superadmin.templateManagement.new', 'New')}</span>
+                            </button>
+                        </div>
+
+                        {showFilters && (
+                            <div className="rounded-xl border border-q-border bg-q-surface/50 p-4">
+                                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-q-text-secondary">{t('superadmin.sortByCategory')}</label>
+                                        <AppSelect
+                                            value={filterCategory}
+                                            onChange={(e) => setFilterCategory(e.target.value)}
+                                            className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full"
+                                        >
+                                            <option value="all">{t('superadmin.allCategories')}</option>
+                                            {categories.map(cat => (
+                                                <option key={cat} value={cat}>{cat}</option>
+                                            ))}
+                                        </AppSelect>
+                                    </div>
+
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-q-text-secondary flex items-center gap-1">
+                                            <Building2 className="w-3 h-3" />
+                                            {t('industries.title')}
+                                        </label>
+                                        <AppSelect
+                                            value={filterIndustry}
+                                            onChange={(e) => setFilterIndustry(e.target.value)}
+                                            className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full sm:min-w-[160px]"
+                                        >
+                                            <option value="all">{t('superadmin.allCategories')}</option>
+                                            {usedIndustries.map(ind => (
+                                                <option key={ind} value={ind}>{getIndustryLabel(ind)}</option>
+                                            ))}
+                                        </AppSelect>
+                                    </div>
+
+                                    <div className="col-span-2 sm:col-span-full flex flex-col gap-1.5">
+                                        <label className="text-xs text-q-text-secondary">{t('leads.status')}</label>
+                                        <FilterChipRow
+                                            options={[
+                                                { id: 'all', label: t('superadmin.allTemplates'), count: templateStatusCounts.all },
+                                                { id: 'active', label: t('superadmin.activeTemplates'), count: templateStatusCounts.active, color: 'green' },
+                                                { id: 'archived', label: t('superadmin.archivedTemplates'), count: templateStatusCounts.archived, color: 'gray' },
+                                            ]}
+                                            value={filterStatus}
+                                            onChange={(value) => setFilterStatus(value as typeof filterStatus)}
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-q-text-secondary">{t('leads.sort')}</label>
+                                        <AppSelect
+                                            value={sortBy}
+                                            onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                            className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full"
+                                        >
+                                            <option value="recent">{t('superadmin.sortByRecent')}</option>
+                                            <option value="name">{t('superadmin.sortByName')}</option>
+                                            <option value="usage">{t('superadmin.sortByUsage')}</option>
+                                            <option value="category">{t('superadmin.sortByCategory')}</option>
+                                        </AppSelect>
+                                    </div>
+
+                                    {hasActiveFilters && (
+                                        <div className="col-span-2 sm:col-span-1 flex items-end">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSearchTerm('');
+                                                    setFilterCategory('all');
+                                                    setFilterIndustry('all');
+                                                    setFilterStatus('all');
+                                                }}
+                                                className="w-full sm:w-auto px-4 py-2.5 sm:py-1.5 rounded-lg text-sm text-q-text-secondary hover:text-q-text bg-q-surface-overlay/30 hover:bg-q-surface-overlay/50 transition-colors"
+                                            >
+                                                {t('superadmin.clearFilters')}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Templates Grid */}
@@ -875,12 +882,12 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <LayoutTemplate className="w-16 h-16 text-q-text-secondary/40 mb-4" />
                             <h3 className="text-lg font-semibold text-q-text mb-2">{t('superadmin.templateManagement.noTemplates', 'No templates found')}</h3>
                             <p className="text-sm text-q-text-secondary mb-6 max-w-md">
-                                {searchTerm || filterCategory !== 'all' || filterStatus !== 'all'
+                                {hasActiveFilters
                                     ? t('superadmin.templateManagement.noTemplatesDesc', 'Try adjusting your search or filter criteria')
                                     : t('superadmin.createFirstTemplate', 'Get started by creating your first template')
                                 }
                             </p>
-                            {!(searchTerm || filterCategory !== 'all' || filterStatus !== 'all') && (
+                            {!hasActiveFilters && (
                                 <button
                                     onClick={createNewTemplate}
                                     className="flex items-center gap-2 px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent/90 transition-colors"
@@ -919,7 +926,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
             {previewTemplate && (
                 <div className="fixed inset-0 z-50 bg-q-text/80 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setPreviewTemplate(null)}>
                     <div
-                        className="bg-q-surface rounded-t-2xl sm:rounded-2xl w-full sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-auto"
+                        className="flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-2xl bg-q-surface sm:max-h-[90vh] sm:max-w-6xl sm:rounded-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Mobile drag indicator */}
@@ -927,8 +934,8 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <div className="w-10 h-1 bg-q-surface-overlay/60 rounded-full" />
                         </div>
 
-                        <div className="sticky top-0 bg-q-surface border-b border-q-border p-4 sm:p-6 z-10">
-                            <div className="flex justify-between items-start gap-3">
+                        <div className="flex-shrink-0 border-b border-q-border bg-q-surface p-4 sm:p-6">
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
                                         <h2 className="text-xl sm:text-2xl font-bold truncate">{resolveText(previewTemplate.name)}</h2>
@@ -937,16 +944,93 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         )}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => setPreviewTemplate(null)}
-                                    className="p-2.5 sm:p-2 rounded-full hover:bg-q-surface-overlay transition-colors flex-shrink-0 -mt-1 -mr-1"
-                                >
-                                    <X size={22} className="sm:w-6 sm:h-6" />
-                                </button>
+                                <div className="flex min-w-0 items-center gap-2">
+                                    <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
+                                        <button
+                                            onClick={() => {
+                                                loadProject(previewTemplate.id, true);
+                                                setPreviewTemplate(null);
+                                            }}
+                                            className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-q-accent text-q-text-on-accent transition-colors hover:bg-q-accent/90"
+                                            title={t('superadmin.templateManagement.edit', 'Edit')}
+                                            aria-label={t('superadmin.templateManagement.edit', 'Edit')}
+                                        >
+                                            <Edit size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setPreviewTemplate(null);
+                                                setEditingTemplate(previewTemplate);
+                                            }}
+                                            className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-q-accent text-q-text-on-accent transition-colors hover:bg-q-accent/90"
+                                            title={t('industries.title')}
+                                            aria-label={t('industries.title')}
+                                        >
+                                            <Settings2 size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setPreviewTemplate(null);
+                                                setThumbnailEditTemplate(previewTemplate);
+                                            }}
+                                            className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-q-accent text-q-text-on-accent transition-colors hover:bg-q-accent/90"
+                                            title={t('superadmin.templateManagement.thumbnail', 'Thumbnail')}
+                                            aria-label={t('superadmin.templateManagement.thumbnail', 'Thumbnail')}
+                                        >
+                                            <ImageIcon size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                duplicateTemplate(previewTemplate.id);
+                                                setPreviewTemplate(null);
+                                            }}
+                                            className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-q-surface-overlay text-q-text transition-colors hover:bg-q-surface-overlay/80"
+                                            title={t('superadmin.duplicateTemplate')}
+                                            aria-label={t('superadmin.duplicateTemplate')}
+                                        >
+                                            <Copy size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                archiveTemplate(previewTemplate.id, !previewTemplate.isArchived);
+                                                setPreviewTemplate(null);
+                                            }}
+                                            className="inline-flex h-10 flex-shrink-0 items-center justify-center gap-2 rounded-lg bg-q-surface-overlay px-3 text-sm font-medium text-q-text transition-colors hover:bg-q-surface-overlay/80"
+                                            title={previewTemplate.isArchived ? t('superadmin.templateManagement.activate', 'Activate') : t('superadmin.templateManagement.archive', 'Archive')}
+                                            aria-label={previewTemplate.isArchived ? t('superadmin.templateManagement.activate', 'Activate') : t('superadmin.templateManagement.archive', 'Archive')}
+                                        >
+                                            {previewTemplate.isArchived ? <Eye size={18} /> : <EyeOff size={18} />}
+                                            <span className="hidden sm:inline">
+                                                {previewTemplate.isArchived ? t('superadmin.templateManagement.activate', 'Activate') : t('superadmin.templateManagement.archive', 'Archive')}
+                                            </span>
+                                        </button>
+                                        {canDeleteTemplates() && (
+                                            <button
+                                                onClick={() => {
+                                                    setDeleteConfirmTemplate({ id: previewTemplate.id, name: previewTemplate.name });
+                                                }}
+                                                className="inline-flex h-10 flex-shrink-0 items-center justify-center gap-2 rounded-lg bg-q-error/10 px-3 text-sm font-medium text-q-error transition-colors hover:bg-q-error/20"
+                                                title={t('superadmin.templateManagement.delete', 'Delete')}
+                                                aria-label={t('superadmin.templateManagement.delete', 'Delete')}
+                                            >
+                                                <Trash2 size={18} />
+                                                <span className="hidden sm:inline">{t('superadmin.templateManagement.delete', 'Delete')}</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={() => setPreviewTemplate(null)}
+                                        className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-q-text transition-colors hover:bg-q-surface-overlay"
+                                        title={t('common.close')}
+                                        aria-label={t('common.close')}
+                                    >
+                                        <X size={22} className="sm:w-6 sm:h-6" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="p-4 sm:p-6">
+                        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
                             {/* Large Preview Image with Color Swatches */}
                             <div className="mb-4 sm:mb-6 rounded-xl overflow-hidden relative">
                                 {previewTemplate.thumbnailUrl ? (
@@ -1077,7 +1161,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <div className="mb-4 sm:mb-6">
                                 <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">{t('superadmin.templateManagement.metadata.includedSections', 'Included Sections')}</h3>
                                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                                    {previewTemplate.componentOrder.map(section => (
+                                    {previewTemplate.componentOrder.filter(section => !isRetiredDesignSuiteSection(section)).map(section => (
                                         <span key={section} className="bg-q-accent/10 text-q-accent px-2.5 sm:px-3 py-1 rounded-lg sm:rounded text-xs sm:text-sm">
                                             {section}
                                         </span>
@@ -1085,70 +1169,6 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
-                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-q-border">
-                                <button
-                                    onClick={() => {
-                                        loadProject(previewTemplate.id, true);
-                                        setPreviewTemplate(null);
-                                    }}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-accent text-q-text-on-accent rounded-xl sm:rounded-lg hover:bg-q-accent/90 transition-colors text-sm font-medium"
-                                >
-                                    <Edit size={18} />
-                                    <span className="hidden xs:inline">{t('superadmin.templateManagement.edit', 'Edit')}</span>
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setPreviewTemplate(null);
-                                        setEditingTemplate(previewTemplate);
-                                    }}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-accent text-q-text-on-accent rounded-xl sm:rounded-lg hover:bg-q-accent transition-colors text-sm font-medium"
-                                >
-                                    <Settings2 size={18} />
-                                    <span className="hidden xs:inline">{t('industries.title')}</span>
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setPreviewTemplate(null);
-                                        setThumbnailEditTemplate(previewTemplate);
-                                    }}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-accent text-q-text-on-accent rounded-xl sm:rounded-lg hover:bg-q-accent transition-colors text-sm font-medium"
-                                >
-                                    <ImageIcon size={18} />
-                                    <span className="hidden xs:inline">{t('superadmin.templateManagement.thumbnail', 'Thumbnail')}</span>
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        duplicateTemplate(previewTemplate.id);
-                                        setPreviewTemplate(null);
-                                    }}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-surface-overlay text-q-text rounded-xl sm:rounded-lg hover:bg-q-surface-overlay/80 transition-colors text-sm font-medium"
-                                >
-                                    <Copy size={18} />
-                                    <span className="hidden xs:inline">{t('superadmin.duplicateTemplate')}</span>
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        archiveTemplate(previewTemplate.id, !previewTemplate.isArchived);
-                                        setPreviewTemplate(null);
-                                    }}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-surface-overlay text-q-text rounded-xl sm:rounded-lg hover:bg-q-surface-overlay/80 transition-colors text-sm font-medium"
-                                >
-                                    {previewTemplate.isArchived ? <Eye size={18} /> : <EyeOff size={18} />}
-                                    {previewTemplate.isArchived ? t('superadmin.templateManagement.activate', 'Activate') : t('superadmin.templateManagement.archive', 'Archive')}
-                                </button>
-                                {canDeleteTemplates() && (
-                                    <button
-                                        onClick={() => {
-                                            setDeleteConfirmTemplate({ id: previewTemplate.id, name: previewTemplate.name });
-                                        }}
-                                        className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-error/10 text-q-error rounded-xl sm:rounded-lg hover:bg-q-error/20 transition-colors text-sm font-medium"
-                                    >
-                                        <Trash2 size={18} />
-                                        {t('superadmin.templateManagement.delete', 'Delete')}
-                                    </button>
-                                )}
-                            </div>
                         </div>
                     </div>
                 </div>

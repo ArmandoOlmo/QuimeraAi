@@ -823,6 +823,39 @@ html.black {
   border-bottom: 1px solid hsl(var(--header-border));
 }
 
+.admin-dashboard-topbar {
+  height: var(--q-layout-topbar-height) !important;
+  min-height: var(--q-layout-topbar-height) !important;
+  flex-shrink: 0;
+  padding-left: var(--q-space-2) !important;
+  padding-right: var(--q-space-2) !important;
+}
+
+.admin-dashboard-topbar h1 {
+  color: var(--q-color-text-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+
+.admin-dashboard-topbar .quimera-dashboard-header-icon {
+  width: var(--q-icon-lg);
+  height: var(--q-icon-lg);
+}
+
+@media (min-width: 640px) {
+  .admin-dashboard-topbar {
+    padding-left: var(--q-space-6) !important;
+    padding-right: var(--q-space-6) !important;
+  }
+
+  .admin-dashboard-topbar h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.75rem;
+  }
+}
+
 html.dark .quimera-dashboard-header-bar {
   background: color-mix(in srgb, hsl(var(--header)) 82%, var(--q-surface-overlay) 18%);
   border-bottom-color: hsl(var(--header-border));

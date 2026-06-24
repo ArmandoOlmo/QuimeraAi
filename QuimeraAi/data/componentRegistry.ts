@@ -48,7 +48,7 @@ export interface ComponentAccessContext {
     includeAdminOnly?: boolean;
 }
 
-const HERO_COMPONENTS: PageSection[] = ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'heroLumina', 'heroNeon'];
+const HERO_COMPONENTS: PageSection[] = ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead'];
 const ECOMMERCE_SERVICE = { requiredService: 'ecommerce' as const, requiredFeature: 'ecommerceEnabled' as const };
 
 export const QUIMERA_ADMIN_COMPONENTS: PageSection[] = [
@@ -130,29 +130,6 @@ export const componentRegistry: ComponentRegistryItem[] = [
         imageSlots: [{ path: 'heroLead.imageUrl', aspectRatio: '16:9', purpose: 'conversion hero background' }],
         promptHints: 'Split hero with integrated form. Best for lead-generation businesses, consultations, estimates, and appointments.',
     },
-    {
-        id: 'heroLumina',
-        label: 'Hero Lumina',
-        role: 'hero',
-        industries: ['technology', 'consulting', 'finance', 'luxury', 'ai', 'enterprise'],
-        goals: ['authority', 'leads', 'sales'],
-        incompatibleWith: HERO_COMPONENTS.filter(id => id !== 'heroLumina'),
-        imageSlots: [{ path: 'heroLumina.imageUrl', aspectRatio: '16:9', purpose: 'premium glass hero background' }],
-        promptHints: 'Premium glassmorphism hero for luxury, AI, enterprise, and data-led businesses.',
-    },
-    {
-        id: 'heroNeon',
-        label: 'Hero Neon',
-        role: 'hero',
-        industries: ['technology', 'gaming', 'web3', 'cybersecurity', 'esports', 'ai'],
-        goals: ['authority', 'sales'],
-        incompatibleWith: HERO_COMPONENTS.filter(id => id !== 'heroNeon'),
-        imageSlots: [
-            { path: 'heroNeon.slides.0.imageUrl', aspectRatio: '16:9', purpose: 'dark tech hero slide' },
-            { path: 'heroNeon.slides.1.imageUrl', aspectRatio: '16:9', purpose: 'secondary dark tech hero slide' },
-        ],
-        promptHints: 'High-contrast dark hero with neon glow. Use for tech, gaming, cyber, Web3, or futuristic brands.',
-    },
     { id: 'topBar', label: 'Top Bar', role: 'structure', industries: ['all'], goals: ['sales', 'leads'], promptHints: 'Announcement strip for promotions, urgent notices, shipping, booking, or trust messages.' },
     {
         id: 'logoBanner',
@@ -186,10 +163,8 @@ export const componentRegistry: ComponentRegistryItem[] = [
             { path: 'features.items.1.imageUrl', aspectRatio: '4:3', purpose: 'feature card image' },
             { path: 'features.items.2.imageUrl', aspectRatio: '4:3', purpose: 'feature card image' },
         ],
-        promptHints: 'Benefits and differentiators. Use bento or image-overlay variants when visuals matter.',
+        promptHints: 'Benefits and differentiators. Use bento, image-overlay, or editorial-mosaic variants when visuals matter or the page needs a premium magazine-style proof wall.',
     },
-    { id: 'featuresLumina', label: 'Features Lumina', role: 'offer', industries: ['technology', 'luxury', 'enterprise', 'ai'], goals: ['authority', 'sales'], imageSlots: [{ path: 'featuresLumina.features.0.image', aspectRatio: '4:3', purpose: 'lumina feature visual' }], promptHints: 'Premium glass feature suite matching Lumina hero.' },
-    { id: 'featuresNeon', label: 'Features Neon', role: 'offer', industries: ['technology', 'gaming', 'web3', 'cybersecurity'], goals: ['authority', 'sales'], imageSlots: [{ path: 'featuresNeon.features.0.imageUrl', aspectRatio: '4:3', purpose: 'neon feature visual' }], promptHints: 'Dark glow feature suite matching Neon hero.' },
     { id: 'services', label: 'Services', role: 'offer', industries: ['all'], goals: ['leads', 'authority'], promptHints: 'Concrete services or offers. Use real service names from the brief or imported site.' },
     {
         id: 'testimonials',
@@ -198,19 +173,11 @@ export const componentRegistry: ComponentRegistryItem[] = [
         industries: ['all'],
         goals: ['authority', 'leads', 'sales'],
         imageSlots: [{ path: 'testimonials.items.0.imageUrl', aspectRatio: '1:1', purpose: 'customer portrait' }],
-        promptHints: 'Social proof. Use specific customer outcomes when available.',
+        promptHints: 'Social proof. Use specific customer outcomes when available. Use editorial-mosaic for premium, visual, press-like, or portrait-backed testimonial walls.',
     },
-    { id: 'testimonialsLumina', label: 'Testimonials Lumina', role: 'trust', industries: ['technology', 'luxury', 'enterprise', 'ai'], goals: ['authority', 'sales'], imageSlots: [{ path: 'testimonialsLumina.testimonials.0.imageUrl', aspectRatio: '1:1', purpose: 'customer portrait' }], promptHints: 'Premium glass testimonial suite.' },
-    { id: 'testimonialsNeon', label: 'Testimonials Neon', role: 'trust', industries: ['technology', 'gaming', 'web3', 'cybersecurity'], goals: ['authority', 'sales'], imageSlots: [{ path: 'testimonialsNeon.testimonials.0.imageUrl', aspectRatio: '1:1', purpose: 'customer portrait' }], promptHints: 'Dark glow testimonial suite.' },
     { id: 'pricing', label: 'Pricing', role: 'conversion', industries: ['technology', 'consulting', 'fitness-gym', 'education', 'beauty-spa'], goals: ['sales', 'leads'], promptHints: 'Pricing tiers or packages. Use only if pricing or package structure makes sense.' },
-    { id: 'pricingLumina', label: 'Pricing Lumina', role: 'conversion', industries: ['technology', 'luxury', 'enterprise', 'ai'], goals: ['sales'], promptHints: 'Premium glass pricing suite.' },
-    { id: 'pricingNeon', label: 'Pricing Neon', role: 'conversion', industries: ['technology', 'gaming', 'web3', 'cybersecurity'], goals: ['sales'], promptHints: 'Dark glow pricing suite.' },
     { id: 'faq', label: 'FAQ', role: 'trust', industries: ['all'], goals: ['authority', 'leads', 'sales'], promptHints: 'Objection handling and buyer questions. Use specific industry questions.' },
-    { id: 'faqLumina', label: 'FAQ Lumina', role: 'trust', industries: ['technology', 'luxury', 'enterprise', 'ai'], goals: ['authority', 'sales'], promptHints: 'Premium glass FAQ suite.' },
-    { id: 'faqNeon', label: 'FAQ Neon', role: 'trust', industries: ['technology', 'gaming', 'web3', 'cybersecurity'], goals: ['authority', 'sales'], promptHints: 'Dark glow FAQ suite.' },
     { id: 'cta', label: 'CTA', role: 'conversion', industries: ['all'], goals: ['leads', 'bookings', 'sales'], promptHints: 'Strong conversion section with primary and secondary CTA.' },
-    { id: 'ctaLumina', label: 'CTA Lumina', role: 'conversion', industries: ['technology', 'luxury', 'enterprise', 'ai'], goals: ['leads', 'sales'], promptHints: 'Premium glass CTA suite.' },
-    { id: 'ctaNeon', label: 'CTA Neon', role: 'conversion', industries: ['technology', 'gaming', 'web3', 'cybersecurity'], goals: ['leads', 'sales'], promptHints: 'Dark glow CTA suite.' },
     {
         id: 'portfolio',
         label: 'Portfolio',
@@ -224,8 +191,6 @@ export const componentRegistry: ComponentRegistryItem[] = [
         ],
         promptHints: 'Project/work showcase. Use when proof of work matters.',
     },
-    { id: 'portfolioLumina', label: 'Portfolio Lumina', role: 'media', industries: ['technology', 'luxury', 'enterprise', 'ai'], goals: ['portfolio', 'authority'], imageSlots: [{ path: 'portfolioLumina.projects.0.imageUrl', aspectRatio: '4:3', purpose: 'premium portfolio image' }], promptHints: 'Premium glass portfolio suite.' },
-    { id: 'portfolioNeon', label: 'Portfolio Neon', role: 'media', industries: ['technology', 'gaming', 'web3', 'cybersecurity'], goals: ['portfolio', 'authority'], imageSlots: [{ path: 'portfolioNeon.projects.0.imageUrl', aspectRatio: '4:3', purpose: 'neon portfolio image' }], promptHints: 'Dark glow portfolio suite.' },
     {
         id: 'team',
         label: 'Team',
@@ -253,7 +218,23 @@ export const componentRegistry: ComponentRegistryItem[] = [
     { id: 'newsletter', label: 'Newsletter', role: 'conversion', industries: ['education', 'media', 'retail', 'fashion', 'technology'], goals: ['authority', 'sales'], requiredService: 'emailMarketing', requiredFeature: 'emailMarketing', promptHints: 'Email signup. Only suggest when email marketing service and plan access are available.' },
     { id: 'map', label: 'Map', role: 'conversion', industries: ['restaurant', 'healthcare', 'beauty-spa', 'fitness-gym', 'legal', 'real-estate', 'retail'], goals: ['leads', 'bookings', 'restaurant', 'real-estate'], promptHints: 'Location map and contact details. Use only when the business has a physical/service location.' },
     { id: 'signupFloat', label: 'Signup Float', role: 'conversion', industries: ['technology', 'education', 'retail'], goals: ['leads', 'sales'], promptHints: 'Floating signup widget. Use sparingly for campaigns or launches.' },
-    { id: 'menu', label: 'Menu', role: 'industry', industries: ['restaurant', 'cafe', 'food-products'], goals: ['restaurant', 'bookings', 'sales'], requiredService: 'restaurants', promptHints: 'Restaurant or cafe menu section. Only suggest when Restaurants service is available.' },
+    {
+        id: 'menu',
+        label: 'Menu',
+        role: 'industry',
+        industries: ['restaurant', 'cafe', 'food-products'],
+        goals: ['restaurant', 'bookings', 'sales'],
+        requiredService: 'restaurants',
+        imageSlots: [
+            { path: 'menu.items.0.imageUrl', aspectRatio: '4:3', purpose: 'menu item image' },
+            { path: 'menu.items.1.imageUrl', aspectRatio: '4:3', purpose: 'menu item image' },
+            { path: 'menu.items.2.imageUrl', aspectRatio: '4:3', purpose: 'menu item image' },
+            { path: 'menu.items.3.imageUrl', aspectRatio: '4:3', purpose: 'menu item image' },
+            { path: 'menu.items.4.imageUrl', aspectRatio: '4:3', purpose: 'menu item image' },
+            { path: 'menu.items.5.imageUrl', aspectRatio: '4:3', purpose: 'menu item image' },
+        ],
+        promptHints: 'Restaurant or cafe menu section with item photos. Use editorial-mosaic for premium magazine-style dish walls. Only suggest when Restaurants service is available.',
+    },
     { id: 'restaurantReservation', label: 'Restaurant Reservation', role: 'industry', industries: ['restaurant', 'cafe'], goals: ['restaurant', 'bookings'], requiredService: 'restaurants', requiredWith: ['menu'], imageSlots: [{ path: 'restaurantReservation.backgroundImageUrl', aspectRatio: '16:9', purpose: 'restaurant reservation background' }], promptHints: 'Reservation form for restaurants/cafes. Requires Restaurants service availability.' },
     { id: 'realEstateListings', label: 'Real Estate Listings', role: 'industry', industries: ['real-estate'], goals: ['real-estate', 'leads'], requiredService: 'realEstate', requiredFeature: 'realEstateModule', requiredWith: ['leads'], promptHints: 'Property listing section connected to Real Estate OS. Requires service and plan access.' },
     { id: 'separator1', label: 'Separator 1', role: 'structure', industries: ['all'], goals: ['authority'], promptHints: 'Decorative separator for visual rhythm.' },

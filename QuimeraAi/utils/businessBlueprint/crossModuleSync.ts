@@ -13,6 +13,7 @@ import {
     isAiGeneratedCrossModuleDraft,
     isUserModifiedCrossModuleDraft,
 } from './crossModuleSyncIdempotency';
+import { getRestaurantEcommerceOfferKeys } from './restaurantBlueprint';
 
 export interface CrossModuleSyncInput {
     projectId: string;
@@ -182,7 +183,7 @@ function hasRestaurantContext(blueprint: BusinessBlueprint, ecommerceBlueprint: 
         ...(ecommerceBlueprint.categories || []),
         ...(ecommerceBlueprint.productCategories || []),
         ...(blueprint.restaurantBlueprint?.menuSignals || []),
-        ...(blueprint.restaurantBlueprint?.ecommerceOffers || []),
+        ...getRestaurantEcommerceOfferKeys(blueprint.restaurantBlueprint),
     ], [/restaurant|restaurante|cafe|menu|catering|reservation|reserv/i]);
 }
 

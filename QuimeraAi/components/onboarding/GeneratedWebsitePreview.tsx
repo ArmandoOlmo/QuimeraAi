@@ -1,8 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ArrowLeft, Check, Copy, Loader2, RotateCcw, Save, ShoppingBag, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { PageSection, Project, SitePage } from '../../types';
 import PageRenderer from '../PageRenderer';
 import { AppButton, AppCard } from '../ui/system';
+import { isRetiredDesignSuiteSection } from '../../data/retiredSuites';
+import StudioResultSummary from '../studio/StudioResultSummary';
+import { getAiStudioSummary, getAiStudioSummaryCopy } from '../../utils/studioUX';
 
 interface GeneratedWebsitePreviewProps {
     project: Project;
@@ -13,33 +17,23 @@ interface GeneratedWebsitePreviewProps {
     onBackToPlan: () => void;
 }
 
-const HERO_SECTIONS = ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'heroLumina', 'heroNeon'] as const;
+const HERO_SECTIONS = ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead'] as const;
 const NON_CONTENT_SECTIONS = new Set<PageSection>(['colors', 'typography', 'header', 'footer', 'topBar', 'announcementBar', 'storeSettings']);
 
-const SECTION_LABELS: Partial<Record<PageSection, string>> = {
-    services: 'Servicios',
-    features: 'Beneficios',
-    testimonials: 'Testimonios',
-    faq: 'FAQ',
-    cta: 'CTA',
-    leads: 'Contacto',
-    newsletter: 'Newsletter',
-    portfolio: 'Portafolio',
-    pricing: 'Precios',
-    menu: 'Menu',
-    map: 'Ubicacion',
-    howItWorks: 'Proceso',
-    team: 'Equipo',
-    heroLumina: 'Hero',
-    featuresLumina: 'Beneficios',
-    testimonialsLumina: 'Testimonios',
-    faqLumina: 'FAQ',
-    ctaLumina: 'CTA',
-    heroNeon: 'Hero',
-    featuresNeon: 'Beneficios',
-    testimonialsNeon: 'Testimonios',
-    faqNeon: 'FAQ',
-    ctaNeon: 'CTA',
+const SECTION_LABEL_KEYS: Partial<Record<PageSection, string>> = {
+    services: 'aiWebsiteStudio.preview.sections.services',
+    features: 'aiWebsiteStudio.preview.sections.features',
+    testimonials: 'aiWebsiteStudio.preview.sections.testimonials',
+    faq: 'aiWebsiteStudio.preview.sections.faq',
+    cta: 'aiWebsiteStudio.preview.sections.cta',
+    leads: 'aiWebsiteStudio.preview.sections.leads',
+    newsletter: 'aiWebsiteStudio.preview.sections.newsletter',
+    portfolio: 'aiWebsiteStudio.preview.sections.portfolio',
+    pricing: 'aiWebsiteStudio.preview.sections.pricing',
+    menu: 'aiWebsiteStudio.preview.sections.menu',
+    map: 'aiWebsiteStudio.preview.sections.map',
+    howItWorks: 'aiWebsiteStudio.preview.sections.howItWorks',
+    team: 'aiWebsiteStudio.preview.sections.team',
 };
 
 function getHomePage(project: Project): SitePage {
@@ -72,24 +66,25 @@ function getHeroData(project: Project): Record<string, any> {
     return data && typeof data === 'object' ? data : {};
 }
 
-function getSectionLabel(section: PageSection): string {
-    return SECTION_LABELS[section] || section.replace(/([A-Z])/g, ' $1').replace(/^./, char => char.toUpperCase());
+function getSectionLabel(section: PageSection, t: (key: string) => string): string {
+    const key = SECTION_LABEL_KEYS[section];
+    return key ? t(key) : section.replace(/([A-Z])/g, ' $1').replace(/^./, char => char.toUpperCase());
 }
 
-function getProjectSummary(project: Project): string {
+function getProjectSummary(project: Project, t: (key: string, options?: Record<string, unknown>) => string): string {
     const hero = getHeroData(project);
     const brand = project.brandIdentity;
     const contentSections = project.componentOrder
-        .filter(section => !NON_CONTENT_SECTIONS.has(section))
-        .map(getSectionLabel);
+        .filter(section => !NON_CONTENT_SECTIONS.has(section) && !isRetiredDesignSuiteSection(section))
+        .map(section => getSectionLabel(section, t));
 
     return [
-        `Proyecto: ${project.name}`,
-        brand?.industry ? `Industria: ${brand.industry}` : '',
-        brand?.coreValues ? `Brief: ${brand.coreValues}` : '',
-        firstText(hero.headline, hero.title, hero.heading) ? `Hero: ${firstText(hero.headline, hero.title, hero.heading)}` : '',
-        firstText(hero.subheadline, hero.subtitle, hero.description) ? `Mensaje: ${firstText(hero.subheadline, hero.subtitle, hero.description)}` : '',
-        contentSections.length ? `Secciones: ${contentSections.join(', ')}` : '',
+        t('aiWebsiteStudio.preview.copySummary.project', { value: project.name }),
+        brand?.industry ? t('aiWebsiteStudio.preview.copySummary.industry', { value: brand.industry }) : '',
+        brand?.coreValues ? t('aiWebsiteStudio.preview.copySummary.brief', { value: brand.coreValues }) : '',
+        firstText(hero.headline, hero.title, hero.heading) ? t('aiWebsiteStudio.preview.copySummary.hero', { value: firstText(hero.headline, hero.title, hero.heading) }) : '',
+        firstText(hero.subheadline, hero.subtitle, hero.description) ? t('aiWebsiteStudio.preview.copySummary.message', { value: firstText(hero.subheadline, hero.subtitle, hero.description) }) : '',
+        contentSections.length ? t('aiWebsiteStudio.preview.copySummary.sections', { value: contentSections.join(', ') }) : '',
     ].filter(Boolean).join('\n');
 }
 
@@ -118,17 +113,20 @@ export function GeneratedWebsitePreview({
     onRegenerate,
     onBackToPlan,
 }: GeneratedWebsitePreviewProps) {
+    const { t } = useTranslation();
+    const translate = useCallback((key: string, options?: Record<string, unknown>) => t(key, options), [t]);
     const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle');
     const homePage = useMemo(() => getHomePage(project), [project]);
     const hero = useMemo(() => getHeroData(project), [project]);
-    const summary = useMemo(() => getProjectSummary(project), [project]);
+    const summary = useMemo(() => getProjectSummary(project, translate), [project, translate]);
     const ecommerceSummary = useMemo(() => getEcommerceSummary(project), [project]);
+    const studioSummary = useMemo(() => getAiStudioSummary({ generatedProject: project, copy: getAiStudioSummaryCopy(translate) }), [project, translate]);
     const sectionLabels = useMemo(() => (
         project.componentOrder
-            .filter(section => !NON_CONTENT_SECTIONS.has(section))
+            .filter(section => !NON_CONTENT_SECTIONS.has(section) && !isRetiredDesignSuiteSection(section))
             .slice(0, 8)
-            .map(getSectionLabel)
-    ), [project.componentOrder]);
+            .map(section => getSectionLabel(section, translate))
+    ), [project.componentOrder, translate]);
 
     const headline = firstText(hero.headline, hero.title, hero.heading, project.name);
     const subheadline = firstText(hero.subheadline, hero.subtitle, hero.description, project.brandIdentity?.coreValues);
@@ -152,11 +150,11 @@ export function GeneratedWebsitePreview({
                     <div className="min-w-0">
                         <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-q-success/25 bg-q-success/10 px-3 py-1 text-xs font-semibold text-q-success">
                             <Check className="h-3.5 w-3.5" />
-                            Generacion completada
+                            {t('aiWebsiteStudio.preview.completedBadge')}
                         </div>
-                        <h2 className="text-2xl font-bold text-q-text lg:text-3xl">Tu website esta listo</h2>
+                        <h2 className="text-2xl font-bold text-q-text lg:text-3xl">{t('aiWebsiteStudio.preview.title')}</h2>
                         <p className="mt-1 max-w-2xl text-sm text-q-text-secondary">
-                            Revisa el resultado generado antes de guardarlo como proyecto y abrirlo en el editor.
+                            {t('aiWebsiteStudio.preview.description')}
                         </p>
                     </div>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:items-center">
@@ -167,7 +165,7 @@ export function GeneratedWebsitePreview({
                             onClick={onBackToPlan}
                             disabled={isSaving}
                         >
-                            Volver al plan
+                            {t('aiWebsiteStudio.preview.actions.backToPlan')}
                         </AppButton>
                         <AppButton
                             variant="secondary"
@@ -176,7 +174,7 @@ export function GeneratedWebsitePreview({
                             onClick={onRegenerate}
                             disabled={isSaving}
                         >
-                            Regenerar
+                            {t('aiWebsiteStudio.preview.actions.regenerate')}
                         </AppButton>
                         <AppButton
                             variant="ghost"
@@ -185,7 +183,11 @@ export function GeneratedWebsitePreview({
                             onClick={handleCopySummary}
                             disabled={isSaving}
                         >
-                            {copyState === 'copied' ? 'Copiado' : copyState === 'error' ? 'No copiado' : 'Copiar resumen'}
+                            {copyState === 'copied'
+                                ? t('aiWebsiteStudio.preview.actions.copied')
+                                : copyState === 'error'
+                                    ? t('aiWebsiteStudio.preview.actions.copyFailed')
+                                    : t('aiWebsiteStudio.preview.actions.copySummary')}
                         </AppButton>
                         <AppButton
                             variant="primary"
@@ -195,7 +197,7 @@ export function GeneratedWebsitePreview({
                             loading={isSaving}
                             disabled={isSaving}
                         >
-                            Guardar y abrir editor
+                            {t('aiWebsiteStudio.preview.actions.saveAndOpen')}
                         </AppButton>
                     </div>
                 </div>
@@ -209,10 +211,20 @@ export function GeneratedWebsitePreview({
             <div className="flex-1 overflow-y-auto px-4 py-5 custom-scrollbar lg:px-6 lg:py-6">
                 <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
                     <div className="space-y-4">
+                        {studioSummary.result && (
+                            <StudioResultSummary
+                                title={studioSummary.result.title}
+                                subtitle={studioSummary.result.subtitle}
+                                badges={studioSummary.badges}
+                                metrics={studioSummary.result.metrics}
+                                warnings={studioSummary.result.warnings}
+                            />
+                        )}
+
                         <AppCard variant="elevated" className="rounded-xl p-4">
                             <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-q-text">
                                 <Sparkles className="h-4 w-4 text-q-accent" />
-                                Resumen generado
+                                {t('aiWebsiteStudio.preview.generatedSummary')}
                             </div>
                             <h3 className="text-xl font-bold leading-tight text-q-text">{headline}</h3>
                             {subheadline && <p className="mt-2 text-sm leading-relaxed text-q-text-secondary">{subheadline}</p>}
@@ -231,28 +243,28 @@ export function GeneratedWebsitePreview({
                             <AppCard variant="elevated" className="rounded-xl p-4">
                                 <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-q-text">
                                     <ShoppingBag className="h-4 w-4 text-q-accent" />
-                                    Ecommerce sugerido
+                                    {t('aiWebsiteStudio.preview.ecommerce.title')}
                                 </div>
                                 <div className="space-y-2 text-xs text-q-text-secondary">
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>Enabled</span>
-                                        <span className="font-semibold text-q-text">{ecommerceSummary.enabled ? 'Yes' : 'No'}</span>
+                                        <span>{t('aiWebsiteStudio.preview.ecommerce.enabled')}</span>
+                                        <span className="font-semibold text-q-text">{ecommerceSummary.enabled ? t('aiWebsiteStudio.preview.values.yes') : t('aiWebsiteStudio.preview.values.no')}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>Starter drafts</span>
+                                        <span>{t('aiWebsiteStudio.preview.ecommerce.starterDrafts')}</span>
                                         <span className="font-semibold text-q-text">{ecommerceSummary.starterProductCount}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>Storefront preset</span>
+                                        <span>{t('aiWebsiteStudio.preview.ecommerce.storefrontPreset')}</span>
                                         <span className="font-semibold text-q-text">{ecommerceSummary.themePreset}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>Product card</span>
+                                        <span>{t('aiWebsiteStudio.preview.ecommerce.productCard')}</span>
                                         <span className="font-semibold text-q-text">{ecommerceSummary.productCardVariant}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>Needs review</span>
-                                        <span className="font-semibold text-q-text">{ecommerceSummary.needsReview ? 'Yes' : 'No'}</span>
+                                        <span>{t('aiWebsiteStudio.preview.ecommerce.needsReview')}</span>
+                                        <span className="font-semibold text-q-text">{ecommerceSummary.needsReview ? t('aiWebsiteStudio.preview.values.yes') : t('aiWebsiteStudio.preview.values.no')}</span>
                                     </div>
                                 </div>
                                 {ecommerceSummary.categories.length > 0 && (
@@ -268,7 +280,7 @@ export function GeneratedWebsitePreview({
                                     href="/ecommerce"
                                     className="mt-4 inline-flex items-center text-xs font-semibold text-q-accent hover:text-q-accent/80"
                                 >
-                                    Revisar en Ecommerce Suite
+                                    {t('aiWebsiteStudio.preview.ecommerce.reviewInSuite')}
                                 </a>
                             </AppCard>
                         )}

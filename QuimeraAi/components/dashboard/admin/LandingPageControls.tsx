@@ -518,7 +518,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             case 'realEstateListings': return renderRealEstateListingsControlsWithTabs(deps);
             case 'restaurantReservation': return renderRestaurantReservationControlsWithTabs(deps);
 
-            // Lumina Suite
+            // Retired standalone sections retained for legacy landing pages
             case 'heroLumina': return renderHeroLuminaControls(deps);
             case 'featuresLumina': return renderFeaturesLuminaControls(deps);
             case 'ctaLumina': return renderCtaLuminaControls(deps);
@@ -527,7 +527,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             case 'testimonialsLumina': return renderTestimonialsLuminaControls(deps);
             case 'faqLumina': return renderFaqLuminaControls(deps);
 
-            // Neon Suite
+            // Retired standalone sections retained for legacy landing pages
             case 'heroNeon': return renderHeroNeonControls(deps);
             case 'testimonialsNeon': return renderTestimonialsNeonControls(deps);
             case 'featuresNeon': return renderFeaturesNeonControls(deps);

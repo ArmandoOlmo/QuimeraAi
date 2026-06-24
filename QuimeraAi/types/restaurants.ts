@@ -26,6 +26,13 @@ export interface RestaurantSettings {
   taxRate?: number;
   qrMenuEnabled: boolean;
   publicSlug: string;
+  source?: 'ai-studio' | 'manual' | 'imported';
+  syncKey?: string;
+  blueprintId?: string;
+  generatedByAI?: boolean;
+  needsReview?: boolean;
+  userModified?: boolean;
+  lockedFromRegeneration?: boolean;
   createdAt: StoredTimestamp;
   updatedAt: StoredTimestamp;
 }
@@ -48,6 +55,16 @@ export interface RestaurantMenuItem {
   isFeatured: boolean;
   upsellItems: string[];
   aiGenerated: boolean;
+  generatedByAI?: boolean;
+  needsReview?: boolean;
+  userModified?: boolean;
+  lockedFromRegeneration?: boolean;
+  source?: 'ai-studio' | 'manual' | 'imported';
+  blueprintItemId?: string;
+  syncKey?: string;
+  priceSource?: 'user-provided' | 'ai-suggested' | 'unset';
+  publishStatus?: 'not_published' | 'published';
+  availabilityStatus?: 'draft' | 'available' | 'unavailable';
   position: number;
   createdAt: StoredTimestamp;
   updatedAt: StoredTimestamp;
@@ -67,6 +84,10 @@ export interface RestaurantReservation {
   status: RestaurantReservationStatus;
   notes?: string;
   source: RestaurantReservationSource;
+  syncKey?: string;
+  canonicalPath?: string;
+  publicReservationId?: string;
+  needsReview?: boolean;
   createdAt: StoredTimestamp;
   updatedAt: StoredTimestamp;
 }
@@ -101,8 +122,16 @@ export interface RestaurantAnalyticsEvent {
     | 'menu_viewed'
     | 'qr_menu_viewed'
     | 'dish_clicked'
+    | 'category_clicked'
+    | 'call_clicked'
+    | 'map_clicked'
     | 'reservation_started'
     | 'reservation_created'
+    | 'reservation_confirmed'
+    | 'reservation_cancelled'
+    | 'review_request_generated'
+    | 'catering_offer_clicked'
+    | 'gift_card_clicked'
     | 'ai_menu_generated'
     | 'ai_description_generated';
   metadata?: Record<string, unknown>;

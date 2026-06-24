@@ -1,6 +1,8 @@
 import React from 'react';
 import { Menu } from 'lucide-react';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import { AppButton } from '../../ui/system';
+import { AppShellTopbar } from '@/src/design-system/components/AppShell';
 
 interface AdminPageHeaderProps {
   title: React.ReactNode;
@@ -16,9 +18,6 @@ interface AdminPageHeaderProps {
   className?: string;
 }
 
-const adminBackButtonClassName =
-  'border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25';
-
 const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
   title,
   icon,
@@ -33,29 +32,31 @@ const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
   className = '',
 }) => {
   return (
-    <header
-      className={`relative h-14 quimera-dashboard-header-bar flex-shrink-0 flex items-center justify-between px-4 sm:px-6 ${sticky ? `sticky top-0 ${zIndexClassName}` : ''} ${className}`}
+    <AppShellTopbar
+      className={`admin-dashboard-topbar ${sticky ? zIndexClassName : ''} ${className}`}
     >
-      <div className="min-w-0 flex items-center gap-3">
+      <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0 min-w-0">
         {onMenuClick && !hideMenuButton && (
-          <button
+          <AppButton
+            variant="icon"
+            size="icon-md"
             type="button"
             onClick={onMenuClick}
-            className="h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text lg:hidden transition-colors"
+            className="lg:hidden text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay active:bg-q-surface-overlay touch-manipulation"
             title={menuTitle}
             aria-label={menuTitle}
           >
-            <Menu className="w-5 h-5" />
-          </button>
+            <Menu className="icon-lg" />
+          </AppButton>
         )}
 
-        <div className="min-w-0 flex items-center gap-2">
+        <div className="min-w-0 flex items-center gap-1 sm:gap-2">
           {icon && (
-            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center quimera-dashboard-header-icon">
+            <span className="flex flex-shrink-0 items-center justify-center quimera-dashboard-header-icon [&_svg]:icon-lg">
               {icon}
             </span>
           )}
-          <h1 className="truncate text-lg font-semibold text-q-text">{title}</h1>
+          <h1 className="truncate text-sm sm:text-xl font-semibold sm:font-bold text-q-text">{title}</h1>
         </div>
       </div>
 
@@ -65,11 +66,11 @@ const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
         </div>
       )}
 
-      <div className="flex flex-shrink-0 items-center gap-2">
+      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 mr-2.5">
         {rightContent}
-        {onBack && <HeaderBackButton onClick={onBack} className={adminBackButtonClassName} />}
+        {onBack && <HeaderBackButton onClick={onBack} />}
       </div>
-    </header>
+    </AppShellTopbar>
   );
 };
 

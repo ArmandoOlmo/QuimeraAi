@@ -2,6 +2,8 @@ export * from './adapters';
 export * from './aiStudio';
 export * from './syncRules';
 export * from './starterEcommerceContent';
+export * from './restaurantBlueprint';
+export * from './restaurantWebsiteBinding';
 export * from './mergeAiStudioBlueprint';
 export * from './websiteEditorSync';
 export * from './crossModuleSync';
