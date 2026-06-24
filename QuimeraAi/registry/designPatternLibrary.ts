@@ -1,0 +1,363 @@
+import type { ComponentId, PageIntent } from '../types/componentRegistry';
+
+export type DesignPatternSourceType = 'mobbin_reference' | 'internal' | 'design_system';
+
+export interface DesignPatternRecommendedComponent {
+    componentId: ComponentId;
+    layoutVariant: string;
+}
+
+export interface DesignPatternEntry {
+    patternId: string;
+    label: string;
+    sourceType: DesignPatternSourceType;
+    referenceUrls?: string[];
+    designPrinciples: string[];
+    visualTraits: string[];
+    layoutTraits: string[];
+    typographyTraits: string[];
+    spacingTraits: string[];
+    bestForIndustries: string[];
+    bestForPageIntents: PageIntent[];
+    recommendedComponents: DesignPatternRecommendedComponent[];
+    antiPatterns: string[];
+    doNotCopyNotes: string[];
+}
+
+const doNotCopyNotes = [
+    'Use this pattern as an abstract design principle library only.',
+    'Do not copy exact screens, proprietary layouts, brand assets, copy, imagery, or interaction details.',
+    'Translate references into Quimera component and variant choices, then generate original copy and composition.',
+];
+
+const pattern = (entry: Omit<DesignPatternEntry, 'doNotCopyNotes'>): DesignPatternEntry => ({
+    ...entry,
+    doNotCopyNotes,
+});
+
+export const designPatternLibrary: DesignPatternEntry[] = [
+    pattern({
+        patternId: 'clean_saas_editor',
+        label: 'Clean SaaS Editor',
+        sourceType: 'design_system',
+        designPrinciples: ['Prioritize clarity, command surfaces, and visible states.', 'Keep copy compact and hierarchy explicit.'],
+        visualTraits: ['quiet surfaces', 'thin dividers', 'subtle accent color'],
+        layoutTraits: ['split hero', 'feature list', 'process explanation', 'FAQ close'],
+        typographyTraits: ['crisp sans headings', 'short section titles'],
+        spacingTraits: ['consistent vertical rhythm', 'dense but not crowded'],
+        bestForIndustries: ['ai_saas', 'digital_products', 'software'],
+        bestForPageIntents: ['ai_saas_landing'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'splitMediaRight' },
+            { componentId: 'features', layoutVariant: 'bentoGrid' },
+            { componentId: 'process', layoutVariant: 'cardsGrid' },
+            { componentId: 'faq', layoutVariant: 'twoColumn' },
+        ],
+        antiPatterns: ['Do not make every section a card grid.', 'Do not bury the primary CTA after feature copy.'],
+    }),
+    pattern({
+        patternId: 'editorial_split_landing',
+        label: 'Editorial Split Landing',
+        sourceType: 'mobbin_reference',
+        designPrinciples: ['Pair strong imagery with concise narrative blocks.', 'Alternate media direction to create rhythm.'],
+        visualTraits: ['large imagery', 'restrained color', 'editorial contrast'],
+        layoutTraits: ['split hero', 'image/text alternation', 'single-feature proof'],
+        typographyTraits: ['expressive headline scale with readable body copy'],
+        spacingTraits: ['generous section spacing', 'clear image gutters'],
+        bestForIndustries: ['portfolio', 'restaurant', 'premium_retail', 'gallery'],
+        bestForPageIntents: ['portfolio_home', 'gallery_home', 'restaurant_home'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'editorialOverlay' },
+            { componentId: 'imageWithText', layoutVariant: 'imageRight' },
+            { componentId: 'gallery', layoutVariant: 'editorialGrid' },
+        ],
+        antiPatterns: ['Do not repeat centered text sections.', 'Do not use placeholder imagery as the main editorial signal.'],
+    }),
+    pattern({
+        patternId: 'premium_retail_product',
+        label: 'Premium Retail Product',
+        sourceType: 'mobbin_reference',
+        designPrinciples: ['One strong product visual per section.', 'Large headline with restrained copy.', 'Trust cues close to product modules.'],
+        visualTraits: ['high-quality product media', 'restrained contrast', 'polished cards'],
+        layoutTraits: ['product-led hero', 'premium product cards', 'compact trust strip'],
+        typographyTraits: ['confident headlines', 'short body copy'],
+        spacingTraits: ['ample product breathing room', 'clear CTA zones'],
+        bestForIndustries: ['premium_retail', 'electric_bikes', 'fashion', 'beauty', 'luxury'],
+        bestForPageIntents: ['ecommerce_home', 'storefront_home', 'product_detail'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'productSpotlight' },
+            { componentId: 'featuredProducts', layoutVariant: 'premiumCards' },
+            { componentId: 'trustBadges', layoutVariant: 'compactStrip' },
+        ],
+        antiPatterns: ['Do not use generic centered hero for premium product retail.', 'Do not show fake discounts.', 'Do not repeat card grids in every section.'],
+    }),
+    pattern({
+        patternId: 'local_service_trust',
+        label: 'Local Service Trust',
+        sourceType: 'internal',
+        designPrinciples: ['Make service clarity and trust visible before long story copy.', 'Place inquiry CTAs after proof and process.'],
+        visualTraits: ['clear icons', 'local details', 'calm contrast'],
+        layoutTraits: ['split hero', 'service rows', 'trust badges', 'lead form'],
+        typographyTraits: ['plain direct headlines', 'short service labels'],
+        spacingTraits: ['tight service grouping', 'breathing room near forms'],
+        bestForIndustries: ['services', 'local_business', 'fitness', 'beauty'],
+        bestForPageIntents: ['service_landing', 'local_business_home', 'appointment_landing'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'splitMediaRight' },
+            { componentId: 'services', layoutVariant: 'horizontalRows' },
+            { componentId: 'trustBadges', layoutVariant: 'detailedRows' },
+            { componentId: 'leadForm', layoutVariant: 'splitWithForm' },
+        ],
+        antiPatterns: ['Do not lead with vague mission copy.', 'Do not place forms before the visitor understands the offer.'],
+    }),
+    pattern({
+        patternId: 'restaurant_warm_editorial',
+        label: 'Restaurant Warm Editorial',
+        sourceType: 'mobbin_reference',
+        designPrinciples: ['Use food/place imagery as the strongest signal.', 'Make reservation, menu, and location easy to reach.'],
+        visualTraits: ['warm photography', 'soft surfaces', 'ingredient/location cues'],
+        layoutTraits: ['editorial hero', 'menu highlights', 'reservation CTA', 'location map'],
+        typographyTraits: ['warm display headings with compact labels'],
+        spacingTraits: ['large media blocks balanced by compact menu rows'],
+        bestForIndustries: ['restaurant', 'food'],
+        bestForPageIntents: ['restaurant_home'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'editorialOverlay' },
+            { componentId: 'restaurantMenu', layoutVariant: 'editorialMenu' },
+            { componentId: 'restaurantReservation', layoutVariant: 'reservationCTA' },
+            { componentId: 'restaurantLocation', layoutVariant: 'mapWithHours' },
+        ],
+        antiPatterns: ['Do not use generic product grids for restaurants without online ordering.', 'Do not invent delivery or reservation availability.'],
+    }),
+    pattern({
+        patternId: 'gallery_portfolio_editorial',
+        label: 'Gallery Portfolio Editorial',
+        sourceType: 'mobbin_reference',
+        designPrinciples: ['Let work samples lead.', 'Use sparse copy and varied image rhythm.'],
+        visualTraits: ['large work previews', 'neutral chrome', 'quiet CTA'],
+        layoutTraits: ['editorial hero', 'masonry/gallery grid', 'single proof quote'],
+        typographyTraits: ['short expressive labels', 'minimal paragraphs'],
+        spacingTraits: ['generous image gutters', 'clear project grouping'],
+        bestForIndustries: ['portfolio', 'gallery', 'creative_agency'],
+        bestForPageIntents: ['portfolio_home', 'gallery_home'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'editorialOverlay' },
+            { componentId: 'gallery', layoutVariant: 'masonry' },
+            { componentId: 'testimonials', layoutVariant: 'singleFeatureQuote' },
+        ],
+        antiPatterns: ['Do not use ecommerce blocks unless commerce is explicitly enabled.', 'Do not flatten all work into identical cards.'],
+    }),
+    pattern({
+        patternId: 'marketplace_catalog',
+        label: 'Marketplace Catalog',
+        sourceType: 'design_system',
+        designPrinciples: ['Make category discovery faster than brand storytelling.', 'Use compact density after a clear entry hero.'],
+        visualTraits: ['scannable cards', 'clear category labels', 'functional CTAs'],
+        layoutTraits: ['category showcase', 'product carousel', 'compact trust'],
+        typographyTraits: ['short labels', 'clear price and category hierarchy'],
+        spacingTraits: ['consistent grid gaps', 'compact product modules'],
+        bestForIndustries: ['marketplace', 'ecommerce'],
+        bestForPageIntents: ['ecommerce_home', 'storefront_home', 'product_collection'],
+        recommendedComponents: [
+            { componentId: 'categoryShowcase', layoutVariant: 'compactList' },
+            { componentId: 'productCarousel', layoutVariant: 'carousel' },
+            { componentId: 'trustBadges', layoutVariant: 'compactStrip' },
+        ],
+        antiPatterns: ['Do not hide categories behind a long hero.', 'Do not show best sellers without sales data.'],
+    }),
+    pattern({
+        patternId: 'ai_saas_gradient',
+        label: 'AI SaaS Gradient',
+        sourceType: 'design_system',
+        designPrinciples: ['Show capability, trust, and workflow quickly.', 'Use visual energy without sacrificing clarity.'],
+        visualTraits: ['controlled gradient lighting', 'technical panels', 'sharp contrast'],
+        layoutTraits: ['AI hero', 'bento features', 'process', 'pricing/FAQ'],
+        typographyTraits: ['precise headings', 'compact technical captions'],
+        spacingTraits: ['wide hero rhythm', 'tight feature grouping'],
+        bestForIndustries: ['ai_saas', 'software'],
+        bestForPageIntents: ['ai_saas_landing'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'gradientOrb' },
+            { componentId: 'features', layoutVariant: 'bentoGrid' },
+            { componentId: 'process', layoutVariant: 'cardsGrid' },
+            { componentId: 'pricing', layoutVariant: 'pricingCards' },
+        ],
+        antiPatterns: ['Do not make the page only gradients.', 'Do not sacrifice CTA clarity for atmosphere.'],
+    }),
+    pattern({
+        patternId: 'luxury_minimal',
+        label: 'Luxury Minimal',
+        sourceType: 'mobbin_reference',
+        designPrinciples: ['Reduce visual noise and let product/story details breathe.', 'Use fewer but stronger sections.'],
+        visualTraits: ['large negative space', 'subtle borders', 'rich imagery'],
+        layoutTraits: ['product spotlight', 'editorial split', 'single proof'],
+        typographyTraits: ['elegant headline scale', 'restrained copy'],
+        spacingTraits: ['generous vertical space', 'low card density'],
+        bestForIndustries: ['luxury', 'premium_retail', 'fashion', 'beauty'],
+        bestForPageIntents: ['ecommerce_home', 'portfolio_home'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'productSpotlight' },
+            { componentId: 'featuredProducts', layoutVariant: 'editorialProductSpotlight' },
+            { componentId: 'imageWithText', layoutVariant: 'editorialStatement' },
+        ],
+        antiPatterns: ['Do not crowd the page with dense grids.', 'Do not use fake scarcity.'],
+    }),
+    pattern({
+        patternId: 'fitness_energy',
+        label: 'Fitness Energy',
+        sourceType: 'internal',
+        designPrinciples: ['Create momentum with clear programs, gear, and booking paths.', 'Keep trust and action close.'],
+        visualTraits: ['high contrast', 'action imagery', 'strong CTA states'],
+        layoutTraits: ['split hero', 'services/products', 'process', 'booking CTA'],
+        typographyTraits: ['bold concise headlines'],
+        spacingTraits: ['short energetic sections', 'clear rhythm changes'],
+        bestForIndustries: ['fitness', 'electric_bikes'],
+        bestForPageIntents: ['service_landing', 'ecommerce_home', 'appointment_landing'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'splitMediaRight' },
+            { componentId: 'services', layoutVariant: 'cardsGrid' },
+            { componentId: 'appointmentCTA', layoutVariant: 'splitWithCTA' },
+        ],
+        antiPatterns: ['Do not overuse aggressive dark sections.', 'Do not imply booking availability without readiness.'],
+    }),
+    pattern({
+        patternId: 'ecommerce_conversion_home',
+        label: 'Ecommerce Conversion Home',
+        sourceType: 'design_system',
+        designPrinciples: ['Use product/category discovery after the hero.', 'Keep trust cues near product modules.'],
+        visualTraits: ['clear product cards', 'visible CTA route', 'trust strip'],
+        layoutTraits: ['product hero', 'category showcase', 'featured products', 'shop CTA'],
+        typographyTraits: ['short commerce labels', 'clear action copy'],
+        spacingTraits: ['repeatable ecommerce rhythm without monotony'],
+        bestForIndustries: ['ecommerce', 'marketplace', 'premium_retail'],
+        bestForPageIntents: ['ecommerce_home', 'storefront_home'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'productSpotlight' },
+            { componentId: 'categoryShowcase', layoutVariant: 'editorialTiles' },
+            { componentId: 'featuredProducts', layoutVariant: 'grid' },
+            { componentId: 'shopCTA', layoutVariant: 'splitWithCTA' },
+        ],
+        antiPatterns: ['Do not show product grids without catalog data.', 'Do not show best sellers before sales data exists.'],
+    }),
+    pattern({
+        patternId: 'appointment_service_landing',
+        label: 'Appointment Service Landing',
+        sourceType: 'internal',
+        designPrinciples: ['Make the path to booking visible but reviewable.', 'Explain services before the appointment CTA.'],
+        visualTraits: ['trust cues', 'clean forms', 'clear availability notes'],
+        layoutTraits: ['service hero', 'services', 'process', 'appointment CTA'],
+        typographyTraits: ['direct service copy'],
+        spacingTraits: ['CTA breathing room', 'compact process sections'],
+        bestForIndustries: ['services', 'fitness', 'beauty', 'local_business'],
+        bestForPageIntents: ['appointment_landing', 'service_landing'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'splitMediaRight' },
+            { componentId: 'services', layoutVariant: 'processSteps' },
+            { componentId: 'appointmentCTA', layoutVariant: 'splitWithCTA' },
+        ],
+        antiPatterns: ['Do not activate booking checkout without configured availability.'],
+    }),
+    pattern({
+        patternId: 'real_estate_lead_generation',
+        label: 'Real Estate Lead Generation',
+        sourceType: 'internal',
+        designPrinciples: ['Prioritize search/listings and agent trust.', 'Capture buyer/seller intent clearly.'],
+        visualTraits: ['property imagery', 'agent trust cues', 'clean search fields'],
+        layoutTraits: ['search hero', 'listing cards', 'neighborhoods', 'lead form'],
+        typographyTraits: ['market-focused copy', 'clear labels'],
+        spacingTraits: ['large search zone', 'structured listing grids'],
+        bestForIndustries: ['real_estate'],
+        bestForPageIntents: ['real_estate_home'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'imageBackground' },
+            { componentId: 'propertySearch', layoutVariant: 'searchHero' },
+            { componentId: 'realEstateListings', layoutVariant: 'listingCards' },
+            { componentId: 'leadForm', layoutVariant: 'splitWithForm' },
+        ],
+        antiPatterns: ['Do not fabricate listings.', 'Do not imply broker claims without review.'],
+    }),
+    pattern({
+        patternId: 'product_spotlight_landing',
+        label: 'Product Spotlight Landing',
+        sourceType: 'internal',
+        designPrinciples: ['Lead with one product story, then prove and route.', 'Use fewer stronger product modules.'],
+        visualTraits: ['large product media', 'focused CTAs', 'compact trust'],
+        layoutTraits: ['product spotlight hero', 'editorial product section', 'FAQ'],
+        typographyTraits: ['specific product copy'],
+        spacingTraits: ['wide media zones', 'clear product spacing'],
+        bestForIndustries: ['premium_retail', 'electric_bikes', 'digital_products'],
+        bestForPageIntents: ['ecommerce_home', 'product_detail'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'productSpotlight' },
+            { componentId: 'featuredProducts', layoutVariant: 'editorialProductSpotlight' },
+            { componentId: 'faq', layoutVariant: 'accordion' },
+        ],
+        antiPatterns: ['Do not dilute the product story with many unrelated grids.'],
+    }),
+    pattern({
+        patternId: 'modern_local_business',
+        label: 'Modern Local Business',
+        sourceType: 'internal',
+        designPrinciples: ['Show what the business does, where it operates, and how to contact it quickly.'],
+        visualTraits: ['local cues', 'clear service cards', 'simple contact surface'],
+        layoutTraits: ['split hero', 'services', 'trust', 'contact'],
+        typographyTraits: ['plain practical headings'],
+        spacingTraits: ['moderate density', 'clear final CTA'],
+        bestForIndustries: ['local_business', 'services', 'restaurant'],
+        bestForPageIntents: ['local_business_home', 'service_landing', 'restaurant_home'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'splitMediaLeft' },
+            { componentId: 'services', layoutVariant: 'horizontalRows' },
+            { componentId: 'contact', layoutVariant: 'mapRight' },
+        ],
+        antiPatterns: ['Do not hide contact/location details.'],
+    }),
+    pattern({
+        patternId: 'creative_agency_editorial',
+        label: 'Creative Agency Editorial',
+        sourceType: 'mobbin_reference',
+        designPrinciples: ['Show point of view and selected work quickly.', 'Use varied layouts without chaos.'],
+        visualTraits: ['editorial typography', 'work samples', 'sharp contrast'],
+        layoutTraits: ['editorial hero', 'gallery', 'process', 'lead form'],
+        typographyTraits: ['expressive but readable headings'],
+        spacingTraits: ['large showcase moments', 'quiet conversion close'],
+        bestForIndustries: ['creative_agency', 'portfolio', 'gallery'],
+        bestForPageIntents: ['portfolio_home', 'gallery_home'],
+        recommendedComponents: [
+            { componentId: 'hero', layoutVariant: 'editorialOverlay' },
+            { componentId: 'gallery', layoutVariant: 'editorialGrid' },
+            { componentId: 'process', layoutVariant: 'timeline' },
+            { componentId: 'leadForm', layoutVariant: 'inlineForm' },
+        ],
+        antiPatterns: ['Do not copy agency case-study layouts one-to-one.'],
+    }),
+];
+
+export const designPatternLibraryById = designPatternLibrary.reduce<Record<string, DesignPatternEntry>>((acc, pattern) => {
+    acc[pattern.patternId] = pattern;
+    return acc;
+}, {});
+
+export const getDesignPattern = (patternId: string): DesignPatternEntry | undefined => designPatternLibraryById[patternId];
+
+export const getRelevantDesignPatterns = (input: {
+    industry?: string;
+    pageIntent?: PageIntent;
+    limit?: number;
+}): DesignPatternEntry[] => {
+    const industry = (input.industry || '').toLowerCase();
+    const scored = designPatternLibrary.map(pattern => {
+        const industryMatch = pattern.bestForIndustries.some(item => industry.includes(item) || item.includes(industry));
+        const intentMatch = input.pageIntent ? pattern.bestForPageIntents.includes(input.pageIntent) : false;
+        return {
+            pattern,
+            score: (industryMatch ? 2 : 0) + (intentMatch ? 3 : 0),
+        };
+    });
+
+    return scored
+        .filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, input.limit || 3)
+        .map(item => item.pattern);
+};

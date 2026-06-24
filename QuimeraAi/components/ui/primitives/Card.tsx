@@ -10,18 +10,18 @@ import {
 } from "@/utils/cardMotion"
 
 const cardVariants = cva(
-  "rounded-[var(--radius-card)] text-q-text transition-all duration-[var(--q-duration-normal,200ms)]",
+  "rounded-[var(--q-radius-xl)] text-q-text transition-all duration-[var(--q-duration-normal)] ease-[var(--q-ease-standard)]",
   {
     variants: {
       variant: {
-        default: "bg-q-surface border border-border-subtle shadow-[var(--shadow-card)]",
-        glass: "bg-q-surface/90 backdrop-blur-sm border border-border-subtle shadow-[var(--shadow-card)]",
-        elevated: "bg-q-surface-elevated border border-border-subtle shadow-[var(--shadow-elevated)]",
+        default: "bg-q-surface border border-border-subtle shadow-[var(--q-shadow-card)]",
+        glass: "bg-q-surface/90 backdrop-blur-sm border border-border-subtle shadow-[var(--q-shadow-card)]",
+        elevated: "bg-q-surface-elevated border border-border-subtle shadow-[var(--q-shadow-floating-panel)]",
       },
       hover: {
         none: "",
         lift: "hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)] hover:border-q-border",
-        glow: "hover:border-q-accent/45 hover:shadow-[0_10px_28px_rgba(var(--q-accent-rgb),0.14)]",
+        glow: "hover:-translate-y-0.5 hover:border-q-accent/45 hover:shadow-[var(--q-shadow-floating-panel)]",
       }
     },
     defaultVariants: {
@@ -116,7 +116,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-[var(--q-space-6,24px)]", className)}
+    className={cn("flex flex-col space-y-1.5 p-[var(--q-space-6)]", className)}
     {...props}
   />
 ))
@@ -153,7 +153,7 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-[var(--q-space-6,24px)] pt-0", className)} {...props} />
+  <div ref={ref} className={cn("p-[var(--q-space-6)] pt-0", className)} {...props} />
 ))
 CardContent.displayName = "CardContent"
 
@@ -163,7 +163,7 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-[var(--q-space-6,24px)] pt-0", className)}
+    className={cn("flex items-center p-[var(--q-space-6)] pt-0", className)}
     {...props}
   />
 ))

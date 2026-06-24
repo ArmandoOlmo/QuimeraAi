@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion';
+import { cn } from '@/utils';
 import {
   cardMotionHover,
   cardMotionStagger,
@@ -20,16 +21,12 @@ export interface AppCardProps extends Omit<HTMLMotionProps<'div'>, 'onClick'> {
 }
 
 const variantClasses: Record<AppCardVariant, string> = {
-  default: 'border border-border-subtle bg-q-surface text-q-text shadow-[var(--shadow-card)]',
+  default: 'border border-border-subtle bg-q-surface text-q-text shadow-[var(--q-shadow-card)]',
   muted: 'border border-border-subtle bg-q-surface-overlay text-q-text',
-  elevated: 'border border-border-subtle bg-q-surface-elevated text-q-text shadow-[var(--shadow-elevated)]',
+  elevated: 'border border-border-subtle bg-q-surface-elevated text-q-text shadow-[var(--q-shadow-floating-panel)]',
   interactive: 'border border-border-subtle bg-q-surface text-q-text hover:-translate-y-0.5 hover:border-q-border hover:bg-q-surface-elevated hover:shadow-[var(--shadow-card-hover)]',
-  premium: 'border border-q-accent/35 bg-q-surface-elevated text-q-text shadow-[0_14px_34px_rgba(var(--q-accent-rgb),0.12)]',
+  premium: 'border border-q-accent/35 bg-q-surface-elevated text-q-text shadow-[var(--q-shadow-floating-panel)]',
 };
-
-function joinClasses(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ');
-}
 
 export const AppCard = React.forwardRef<HTMLDivElement, AppCardProps>(function AppCard(
   {
@@ -83,8 +80,8 @@ export const AppCard = React.forwardRef<HTMLDivElement, AppCardProps>(function A
       aria-label={ariaLabel}
       onClick={onClick}
       onKeyDown={handleKeyDown}
-      className={joinClasses(
-        'rounded-[var(--radius-card)] p-5 transition-all duration-200 ease-out',
+      className={cn(
+        'rounded-[var(--q-radius-xl)] p-[var(--q-space-5)] transition-all duration-[var(--q-duration-normal)] ease-[var(--q-ease-standard)]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-q-accent/30',
         variantClasses[variant],
         isClickable && 'cursor-pointer select-none',

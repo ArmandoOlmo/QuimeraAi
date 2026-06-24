@@ -2,10 +2,14 @@ import type { BusinessBlueprint } from '../../types/businessBlueprint';
 import type { Project } from '../../types/project';
 import type { WebsitePlan } from '../../types/websitePlan';
 import {
+    critiqueComponentDesign,
     deriveCrossModuleBlueprints,
     deriveEcommerceBlueprintFromBusinessBrief,
     deriveStorefrontBlueprintFromBusinessBrief,
     deriveWebsiteEcommerceBlocks,
+    selectAiStudioComponents,
+    selectComponentVariants,
+    validateComponentPlan,
     type AiStudioBusinessBriefInput,
 } from '../aiStudio';
 import type { BusinessBlueprintAdapterOptions } from './adapters';
@@ -47,6 +51,26 @@ export function createAiStudioBusinessBlueprint(
     const storefrontBlueprint = deriveStorefrontBlueprintFromBusinessBrief(briefInput, ecommerceBlueprint, plan.brandProfile);
     const websiteEcommerceBlocks = deriveWebsiteEcommerceBlocks(briefInput, ecommerceBlueprint, storefrontBlueprint);
     const crossModuleBlueprints = deriveCrossModuleBlueprints(briefInput, ecommerceBlueprint, storefrontBlueprint);
+    const componentSelection = selectAiStudioComponents(briefInput, {
+        builder: 'website',
+        ecommerceBlueprint,
+        storefrontBlueprint,
+    });
+    const componentVariantSelection = selectComponentVariants(
+        componentSelection.componentPlan,
+        componentSelection.context,
+    );
+    const designCritic = critiqueComponentDesign({
+        componentPlan: componentSelection.componentPlan,
+        variantPlan: componentVariantSelection.variants,
+        context: componentSelection.context,
+    });
+    const componentValidation = validateComponentPlan({
+        componentPlan: componentSelection.componentPlan,
+        variantPlan: componentVariantSelection.variants,
+        context: componentSelection.context,
+        existingBusinessBlueprint: options.existingBusinessBlueprint,
+    });
 
     return mergeAiStudioBlueprint({
         existingBusinessBlueprint: options.existingBusinessBlueprint,
@@ -54,6 +78,11 @@ export function createAiStudioBusinessBlueprint(
         ecommerceBlueprint,
         storefrontBlueprint,
         websiteEcommerceBlocks,
+        componentSelectionContext: componentSelection.context,
+        componentPlan: componentSelection.componentPlan,
+        componentVariantPlan: componentVariantSelection.variants,
+        designCritic,
+        componentValidation,
         chatbotBlueprint: crossModuleBlueprints.chatbotBlueprint,
         leadBlueprint: crossModuleBlueprints.leadBlueprint,
         emailMarketingBlueprint: crossModuleBlueprints.emailMarketingBlueprint,

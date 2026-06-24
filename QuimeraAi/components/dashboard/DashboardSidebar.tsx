@@ -6,9 +6,9 @@ import { useUI } from '../../contexts/core/UIContext';
 import { useAdmin } from '../../contexts/admin';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles, Newspaper, Home, Utensils, AlertTriangle } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles, Newspaper, Home, Utensils, AlertTriangle, type LucideIcon } from 'lucide-react';
 import LanguageSelector from '../ui/LanguageSelector';
-import { AppButton } from '../ui/system';
+import { AppButton, AppIcon } from '../ui/system';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import ProjectSwitcher from './ProjectSwitcher';
 import ProgressBar3D from '../ui/ProgressBar3D';
@@ -50,7 +50,7 @@ interface DashboardSidebarProps {
 
 interface NavItemData {
   id: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   label: string;
   view: string;
   route: string;
@@ -433,19 +433,19 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     const isLocked = !isLoadingPlan && !hasAccess && item.requiredFeature;
     const minPlanRequired = isLocked ? getMinPlanForFeature(item.requiredFeature) : '';
     const navItemButtonClasses = [
-      'group relative mb-1 flex items-center rounded-[var(--q-radius-md)] px-3 py-2 transition-all duration-200 touch-manipulation',
+      'group relative mb-1 flex !h-auto items-center rounded-[var(--q-radius-md)] border border-transparent !px-3 !py-2 transition-all duration-200 touch-manipulation',
       'min-h-[40px] md:min-h-[36px] md:px-3 md:py-2',
       'active:scale-[0.98] md:active:scale-100',
-      showExpanded ? 'w-full' : 'mx-auto w-12 justify-center',
+      showExpanded ? 'w-full justify-start' : 'mx-auto w-12 justify-center',
       isLocked
-        ? 'text-q-text-muted/60 hover:bg-sidebar-control-hover hover:shadow-[inset_0_0_0_1px_hsl(var(--sidebar-control-border))]'
+        ? 'text-q-text-muted/60 hover:border-sidebar-control-border hover:bg-sidebar-control-hover'
         : isActive
           ? showExpanded
-            ? 'bg-q-accent text-q-text-on-accent font-semibold shadow-[var(--shadow-card)]'
-            : 'bg-q-accent/18 text-q-text shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--q-accent)_38%,transparent)]'
+            ? '!bg-q-accent text-q-text-on-accent font-semibold shadow-[var(--q-shadow-card)]'
+            : 'border-q-accent/35 !bg-q-accent/18 text-q-text'
           : showExpanded
-            ? 'text-q-text-muted hover:bg-sidebar-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--sidebar-control-border))] active:bg-sidebar-control-active'
-            : 'text-q-text-muted hover:bg-sidebar-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--sidebar-control-border))]',
+            ? 'text-q-text-muted hover:border-sidebar-control-border hover:bg-sidebar-control-hover hover:text-q-text active:bg-sidebar-control-active'
+            : 'text-q-text-muted hover:border-sidebar-control-border hover:bg-sidebar-control-hover hover:text-q-text',
       item.disabled ? 'opacity-50 cursor-not-allowed' : '',
       item.isFixed ? '' : 'cursor-pointer',
     ].filter(Boolean).join(' ');
@@ -498,7 +498,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           ${isMobileOpen ? 'animate-[slideInFromLeft_0.3s_ease-out_forwards]' : ''}
         `}
       >
-        <button
+        <AppButton
+          variant="ghost"
+          size="md"
           onClick={handleNavClick}
           disabled={item.disabled}
           className={navItemButtonClasses}
@@ -513,15 +515,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               {...listeners}
               className={dragHandleClasses}
             >
-              <GripVertical size={16} className="text-q-text-muted" />
+              <AppIcon icon={GripVertical} size="sm" tone="muted" />
             </div>
           )}
 
-          <Icon
-            size={18}
+          <AppIcon
+            icon={Icon}
+            size="md"
             strokeWidth={isActive ? 2.25 : 2}
             className={iconClasses}
-            aria-hidden="true"
           />
 
           {showExpanded && (
@@ -533,7 +535,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           {/* Lock icon for locked features */}
           {isLocked && showExpanded && (
             <div className="flex items-center gap-1 ml-auto">
-              <Lock size={14} className="text-q-text-muted" />
+              <AppIcon icon={Lock} size="xs" tone="muted" />
               <span className="text-[10px] font-semibold text-q-accent uppercase tracking-wider">
                 {minPlanRequired}
               </span>
@@ -543,7 +545,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           {/* Lock icon for collapsed sidebar */}
           {isLocked && !showExpanded && (
             <div className="absolute -top-1 -right-1 w-4 h-4 bg-q-accent rounded-full flex items-center justify-center">
-              <Lock size={10} className="text-primary-foreground" />
+              <AppIcon icon={Lock} size="xs" className="text-primary-foreground" />
             </div>
           )}
 
@@ -551,12 +553,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           {isActive && showExpanded && !isLocked && (
             <div className="md:hidden absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-q-text-on-accent/80" />
           )}
-        </button>
+        </AppButton>
       </div>
     );
   };
 
-  const sidebarSectionButtonClasses = 'w-full flex items-center justify-between px-3 py-2.5 rounded-[var(--q-radius-md)] text-q-text-muted hover:bg-sidebar-control-hover hover:text-q-text hover:shadow-[inset_0_0_0_1px_hsl(var(--sidebar-control-border))] active:bg-sidebar-control-active transition-all duration-200';
+  const sidebarSectionButtonClasses = 'w-full !h-auto justify-between !px-3 !py-2.5 rounded-[var(--q-radius-md)] border border-transparent text-q-text-muted hover:border-sidebar-control-border hover:bg-sidebar-control-hover hover:text-q-text active:bg-sidebar-control-active transition-all duration-200';
   const sidebarSectionIconLabelClasses = 'flex items-center gap-2';
   const sidebarSectionLabelClasses = 'text-xs font-bold uppercase tracking-wider';
   const sidebarSectionChevronClasses = (isSectionCollapsed: boolean) =>
@@ -583,8 +585,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
         relative flex-shrink-0 h-screen z-50
         ${hiddenOnDesktop ? 'md:hidden' : ''}
         ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
-        ${!isMobileOpen && isCollapsed ? 'md:w-[80px]' : ''}
-        ${!isMobileOpen && !isCollapsed ? 'md:w-72' : ''}
+        ${!isMobileOpen && isCollapsed ? 'md:w-[var(--q-layout-sidebar-collapsed-width)]' : ''}
+        ${!isMobileOpen && !isCollapsed ? 'md:w-[var(--q-layout-sidebar-width)]' : ''}
       `}>
         <aside
           ref={sidebarRef}
@@ -630,15 +632,17 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             </div>
 
             {/* Mobile Close Button - Touch optimized (min 44px) */}
-            <button
+            <AppButton
+              variant="icon"
+              size="icon-md"
               onClick={onClose}
-              className="md:hidden flex items-center justify-center w-11 h-11 rounded-full
+              className="md:hidden !h-11 !w-11 !rounded-full
                           text-q-text-muted hover:text-q-text hover:bg-sidebar-control-hover
                           active:scale-95 transition-all touch-manipulation flex-shrink-0"
               aria-label={t('common.close')}
             >
-              <X size={22} aria-hidden="true" />
-            </button>
+              <AppIcon icon={X} size="lg" />
+            </AppButton>
           </div>
 
           {/* Workspace Switcher - Multi-tenant support */}
@@ -710,20 +714,23 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   <>
                     {/* Websites Section - Collapsible Drawer */}
                     <div className="mt-3">
-                      <button
+                      <AppButton
+                        variant="ghost"
+                        size="md"
                         onClick={() => toggleSection('websites')}
                         className={sidebarSectionButtonClasses}
                         aria-expanded={!collapsedSections.websites}
                       >
                         <div className={sidebarSectionIconLabelClasses}>
-                          <Globe size={18} className="flex-shrink-0" />
+                          <AppIcon icon={Globe} size="md" />
                           <span className={sidebarSectionLabelClasses}>{t('dashboard.websitesSection')}</span>
                         </div>
-                        <ChevronDown
-                          size={16}
+                        <AppIcon
+                          icon={ChevronDown}
+                          size="sm"
                           className={sidebarSectionChevronClasses(collapsedSections.websites)}
                         />
-                      </button>
+                      </AppButton>
                       <div
                         className={sidebarNestedListClasses(collapsedSections.websites)}
                       >
@@ -737,20 +744,23 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     {/* Ecommerce Section - Collapsible Drawer (only show if any items accessible) */}
                     {hasAccessibleItems(ecommerceItems) && (
                       <div className="mt-3">
-                        <button
+                        <AppButton
+                          variant="ghost"
+                          size="md"
                           onClick={() => toggleSection('ecommerce')}
                           className={sidebarSectionButtonClasses}
                           aria-expanded={!collapsedSections.ecommerce}
                         >
                           <div className={sidebarSectionIconLabelClasses}>
-                            <ShoppingBag size={18} className="flex-shrink-0" />
+                            <AppIcon icon={ShoppingBag} size="md" />
                             <span className={sidebarSectionLabelClasses}>{t('dashboard.ecommerceSection')}</span>
                           </div>
-                          <ChevronDown
-                            size={16}
+                          <AppIcon
+                            icon={ChevronDown}
+                            size="sm"
                             className={sidebarSectionChevronClasses(collapsedSections.ecommerce)}
                           />
-                        </button>
+                        </AppButton>
                         <div
                           className={sidebarNestedListClasses(collapsedSections.ecommerce)}
                         >
@@ -766,20 +776,23 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     {/* Tools Section - Collapsible Drawer (only show if any items accessible) */}
                     {hasAccessibleItems(toolsItems) && (
                       <div className="mt-3">
-                        <button
+                        <AppButton
+                          variant="ghost"
+                          size="md"
                           onClick={() => toggleSection('tools')}
                           className={sidebarSectionButtonClasses}
                           aria-expanded={!collapsedSections.tools}
                         >
                           <div className={sidebarSectionIconLabelClasses}>
-                            <Wrench size={18} className="flex-shrink-0" />
+                            <AppIcon icon={Wrench} size="md" />
                             <span className={sidebarSectionLabelClasses}>{t('dashboard.toolsSection')}</span>
                           </div>
-                          <ChevronDown
-                            size={16}
+                          <AppIcon
+                            icon={ChevronDown}
+                            size="sm"
                             className={sidebarSectionChevronClasses(collapsedSections.tools)}
                           />
-                        </button>
+                        </AppButton>
                         <div
                           className={sidebarNestedListClasses(collapsedSections.tools)}
                         >
@@ -843,14 +856,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 size="icon-sm"
                 onClick={() => setIsFooterCollapsed(!isFooterCollapsed)}
                 className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 !size-6 !h-6 !w-6 !rounded-full !p-0 !bg-q-surface border border-border-subtle flex items-center justify-center !text-q-text-muted hover:!bg-sidebar-control-hover hover:!text-q-text hover:border-sidebar-control-border transition-all shadow-[var(--shadow-card)]"
-                style={{ height: '24px', minHeight: '24px' }}
                 aria-label={isFooterCollapsed ? t('common.expandFooter', 'Expandir') : t('common.collapseFooter', 'Colapsar')}
                 aria-expanded={!isFooterCollapsed}
               >
-                <ChevronDown
-                  size={14}
+                <AppIcon
+                  icon={ChevronDown}
+                  size="xs"
                   className={`transition-transform duration-200 ${isFooterCollapsed ? 'rotate-180' : 'rotate-0'}`}
-                  aria-hidden="true"
                 />
               </AppButton>
             )}
@@ -869,7 +881,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     aria-label={creditsTitle}
                     data-testid="sidebar-credits-compact"
                   >
-                    <Zap size={16} className="flex-shrink-0 fill-current" aria-hidden="true" />
+                    <AppIcon icon={Zap} size="sm" className="fill-current" />
                     <span className="mt-0.5 max-w-full px-0.5 text-[9px] font-bold leading-none">
                       {isLoadingCredits ? '...' : compactCreditsRemaining}
                     </span>
@@ -882,7 +894,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 ? 'max-h-0 opacity-0 mb-0'
                 : 'max-h-20 opacity-100 mb-3'
                 }`}>
-                <div className="flex items-center justify-between gap-2 bg-sidebar-control p-1.5 rounded-[var(--radius-card-compact)] border border-sidebar-control-border">
+                <div className="flex items-center justify-between gap-2 rounded-[var(--q-radius-md)] border border-sidebar-control-border bg-sidebar-control p-1.5">
                   {/* Theme */}
                   <div className="flex items-center gap-1">
                     <AppButton
@@ -897,7 +909,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       aria-label={t('common.lightMode')}
                       aria-pressed={themeMode === 'light'}
                     >
-                      <Sun size={16} />
+                      <AppIcon icon={Sun} size="sm" />
                     </AppButton>
                     <AppButton
                       variant="icon"
@@ -911,7 +923,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       aria-label={t('common.darkMode')}
                       aria-pressed={themeMode === 'dark'}
                     >
-                      <Moon size={16} />
+                      <AppIcon icon={Moon} size="sm" />
                     </AppButton>
                     <AppButton
                       variant="icon"
@@ -925,7 +937,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       aria-label={t('common.blackMode')}
                       aria-pressed={themeMode === 'black'}
                     >
-                      <Circle size={16} fill="currentColor" />
+                      <AppIcon icon={Circle} size="sm" className="fill-current" />
                     </AppButton>
                   </div>
 
@@ -944,7 +956,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 <div className="px-1" data-testid="sidebar-credits-widget">
                   <div className="flex justify-between items-end mb-2 px-1">
                     <div className="flex items-center gap-1.5">
-                      <Zap size={14} className="text-q-accent fill-q-accent" />
+                      <AppIcon icon={Zap} size="xs" className="text-q-accent fill-q-accent" />
                       <span className="text-xs font-bold text-foreground tracking-wide">
                         {isLoadingCredits ? t('common.loading') : creditsUsage?.plan || t('common.proPlan')}
                       </span>
@@ -983,7 +995,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       variant="danger"
                       size="md"
                       onClick={handlePlanAttentionClick}
-                      className="group mt-2 w-full !h-auto justify-start !whitespace-normal rounded-[var(--radius-card-compact)] border border-q-error/35 !bg-q-error !px-2.5 !py-2 text-left !text-white shadow-sm transition-all duration-200 hover:!opacity-90"
+                      className="group mt-2 w-full !h-auto justify-start !whitespace-normal rounded-[var(--q-radius-md)] border border-q-error/35 !bg-q-error !px-2.5 !py-2 text-left !text-white shadow-sm transition-all duration-200 hover:!opacity-90"
                     >
                       <span className="flex items-center gap-2">
                         <AlertTriangle className="icon-sm flex-shrink-0" />
@@ -1003,19 +1015,22 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
               {/* User Profile Section - Always visible */}
               <div className={`flex items-center ${isCollapsed && !isMobileOpen ? 'justify-center flex-col gap-4' : 'gap-3'}`}>
-                <div
-                  className="relative group cursor-pointer touch-manipulation"
+                <AppButton
+                  variant="icon"
+                  size="icon-md"
+                  className="relative group !h-11 !w-11 md:!h-10 md:!w-10 !rounded-full !p-0 touch-manipulation"
                   onClick={openProfileModal}
+                  aria-label={t('common.profile', 'Perfil')}
                 >
                   {userDocument?.photoURL ? (
                     <img src={userDocument.photoURL} alt="User" className="w-11 h-11 md:w-10 md:h-10 rounded-full object-cover border border-border-subtle group-hover:border-q-border transition-colors" />
                   ) : (
                     <div className="w-11 h-11 md:w-10 md:h-10 rounded-full bg-q-surface-overlay flex items-center justify-center border border-border-subtle group-hover:border-q-border transition-colors">
-                      <UserIcon size={22} className="md:w-5 md:h-5 text-q-text-muted" />
+                      <AppIcon icon={UserIcon} size="lg" tone="muted" />
                     </div>
                   )}
                   <div className="absolute bottom-0 right-0 w-3.5 h-3.5 md:w-3 md:h-3 bg-q-success border-2 border-background rounded-full"></div>
-                </div>
+                </AppButton>
 
                 {(!isCollapsed || isMobileOpen) && (
                   <div className="flex-1 overflow-hidden min-w-0">
@@ -1035,7 +1050,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       className="!h-auto !w-auto !bg-transparent !p-2.5 md:!p-1.5 -mr-1 text-q-text-muted hover:!bg-transparent hover:text-destructive active:text-destructive transition-colors touch-manipulation active:scale-95"
                       aria-label={t('auth.logout')}
                     >
-                      <LogOut size={18} className="md:w-4 md:h-4" aria-hidden="true" />
+                      <AppIcon icon={LogOut} size="md" />
                     </AppButton>
                   )}
                 </div>
@@ -1045,14 +1060,16 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
         </aside>
 
         {/* Desktop Toggle Button - Outside aside for proper z-index */}
-        <button
+        <AppButton
+          variant="icon"
+          size="icon-sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden md:flex absolute top-[16px] -right-3 z-[100] w-6 h-6 bg-q-surface border border-border-subtle rounded-full items-center justify-center text-q-text-muted hover:bg-sidebar-control-hover hover:text-q-text hover:border-sidebar-control-border transition-all shadow-[var(--shadow-card)]"
+          className="hidden md:flex absolute top-4 -right-3 z-[100] !size-6 !rounded-full !bg-q-surface border border-border-subtle text-q-text-muted hover:!bg-sidebar-control-hover hover:text-q-text hover:border-sidebar-control-border shadow-[var(--q-shadow-card)]"
           aria-label={isCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
           aria-expanded={!isCollapsed}
         >
-          {isCollapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronLeft size={14} aria-hidden="true" />}
-        </button>
+          <AppIcon icon={isCollapsed ? ChevronRight : ChevronLeft} size="xs" />
+        </AppButton>
       </div>
     </>
   );

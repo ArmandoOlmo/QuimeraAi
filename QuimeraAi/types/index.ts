@@ -69,6 +69,8 @@ export * from './restaurants';
 
 // AI Website Studio plan contract
 export * from './websitePlan';
+export * from './componentRegistry';
+export * from './componentAnatomy';
 export * from './colorSystem';
 export * from './businessBlueprint';
 export * from './integrationEvents';

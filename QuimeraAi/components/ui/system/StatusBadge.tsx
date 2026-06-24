@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { Badge, type BadgeProps } from '@/src/design-system/components/Feedback';
+import { cn } from '@/utils';
 
 export type StatusBadgeVariant =
   | 'default'
@@ -11,28 +13,9 @@ export type StatusBadgeVariant =
 
 export type StatusBadgeSize = 'sm' | 'md';
 
-export interface StatusBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface StatusBadgeProps extends Omit<BadgeProps, 'variant' | 'size'> {
   variant?: StatusBadgeVariant;
   size?: StatusBadgeSize;
-}
-
-const variantClasses: Record<StatusBadgeVariant, string> = {
-  default: 'border-border-subtle bg-q-surface text-q-text-secondary',
-  success: 'border-q-success/30 bg-q-success/15 text-q-success',
-  warning: 'border-q-warning/35 bg-q-warning/20 text-q-text',
-  danger: 'border-q-error/30 bg-q-error/15 text-q-error',
-  info: 'border-q-info/30 bg-q-info/15 text-q-info',
-  premium: 'border-q-accent/35 bg-q-accent/20 text-q-text dark:text-q-accent black:text-q-accent',
-  muted: 'border-border-subtle bg-q-surface-overlay text-q-text-muted',
-};
-
-const sizeClasses: Record<StatusBadgeSize, string> = {
-  sm: 'h-5 px-2 text-[10px]',
-  md: 'h-6 px-2.5 text-xs',
-};
-
-function joinClasses(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ');
 }
 
 export const StatusBadge = React.forwardRef<HTMLSpanElement, StatusBadgeProps>(function StatusBadge(
@@ -40,18 +23,15 @@ export const StatusBadge = React.forwardRef<HTMLSpanElement, StatusBadgeProps>(f
   ref,
 ) {
   return (
-    <span
+    <Badge
       ref={ref}
-      className={joinClasses(
-        'inline-flex max-w-full items-center rounded-full border font-semibold leading-none',
-        sizeClasses[size],
-        variantClasses[variant],
-        className,
-      )}
+      variant={variant}
+      size={size}
+      className={cn(className)}
       {...props}
     >
-      <span className="truncate">{children}</span>
-    </span>
+      {children}
+    </Badge>
   );
 });
 

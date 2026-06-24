@@ -49,7 +49,6 @@ const Modal: React.FC<ModalProps> = ({
   return createPortal(
     <div
       className={`fixed inset-0 bg-q-text/60 z-[100000] flex items-end sm:items-center justify-center backdrop-blur-sm animate-fade-in ${themeMode}`}
-      style={{ animationDuration: '0.2s' }}
       aria-modal="true"
       role="dialog"
     >
@@ -64,15 +63,14 @@ const Modal: React.FC<ModalProps> = ({
       <div
         className={`
           relative bg-q-surface border border-border-subtle shadow-[var(--shadow-elevated)] w-full
-          flex flex-col overflow-hidden animate-slide-up
+          flex flex-col overflow-hidden animate-slide-up duration-[var(--q-duration-slow)]
           ${fullScreenMobile
             ? 'h-[100dvh] sm:h-auto sm:max-h-[90dvh] rounded-none sm:rounded-[var(--radius-panel)]'
-            : 'max-h-[85dvh] sm:max-h-[90dvh] rounded-t-2xl sm:rounded-[var(--radius-panel)]'
+            : 'max-h-[85dvh] sm:max-h-[90dvh] rounded-t-[var(--q-radius-2xl)] sm:rounded-[var(--radius-panel)]'
           }
           ${maxWidth}
           ${className}
         `}
-        style={{ animationDuration: '0.3s' }}
       >
         {/* Mobile drag indicator */}
         <div className="sm:hidden flex justify-center pt-2 pb-1 flex-shrink-0">

@@ -32,6 +32,7 @@ import {
     dashboardItemVariants,
     getDashboardSectionTransition,
 } from './dashboardMotion';
+import { AppShell, AppShellContent, AppShellMain } from '@/src/design-system/components/AppShell';
 
 // Icons
 import { LayoutGrid, LayoutTemplate, Users, Newspaper } from 'lucide-react';
@@ -119,7 +120,7 @@ const Dashboard: React.FC = () => {
 
     // ─── Render ──────────────────────────────────────────────────────────────
     return (
-        <div className="flex h-screen bg-q-bg text-foreground">
+        <AppShell>
             {/* Skip to content link for accessibility */}
             <a
                 href="#main-content"
@@ -130,7 +131,7 @@ const Dashboard: React.FC = () => {
 
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden relative">
+            <AppShellMain>
                 <DashboardHeader
                     isDashboard={isDashboard}
                     isWebsites={isWebsites}
@@ -144,13 +145,13 @@ const Dashboard: React.FC = () => {
                     onNavigateBack={() => goBack()}
                 />
 
-                <main
+                <AppShellContent
                     id="main-content"
-                    className={`flex-1 overflow-y-auto scroll-smooth ${
+                    className={
                         isDashboard
                             ? 'quimera-dashboard-home-bg'
                             : 'p-3 sm:p-6 lg:p-8'
-                    }`}
+                    }
                     role="main"
                 >
                     {/* ─── Dashboard Home View ─────────────────────────────────── */}
@@ -165,7 +166,7 @@ const Dashboard: React.FC = () => {
                                 {!shouldReduceMotion && (
                                     <motion.div
                                         aria-hidden="true"
-                                        className="pointer-events-none absolute inset-x-0 -top-6 z-0 h-40 rounded-[2rem] bg-gradient-to-r from-transparent via-white/18 to-transparent blur-2xl dark:via-white/10"
+                                        className="pointer-events-none absolute inset-x-0 -top-6 z-0 h-40 rounded-[var(--q-radius-2xl)] bg-gradient-to-r from-transparent via-white/18 to-transparent blur-2xl dark:via-white/10"
                                         initial={{ opacity: 0.55, x: '-18%', y: -20 }}
                                         animate={{ opacity: 0, x: '18%', y: 10 }}
                                         transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}
@@ -242,9 +243,9 @@ const Dashboard: React.FC = () => {
                             )}
                         </div>
                     )}
-                </main>
-            </div>
-        </div>
+                </AppShellContent>
+            </AppShellMain>
+        </AppShell>
     );
 };
 

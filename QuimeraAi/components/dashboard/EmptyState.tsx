@@ -1,5 +1,6 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
+import { AppButton } from '../ui/system';
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -87,22 +88,23 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-4">
         {action && (
-          <button
+          <AppButton
             onClick={action.onClick}
-            className="bg-q-accent text-q-text-on-accent font-bold py-3 px-6 rounded-[var(--q-radius-md)] hover:opacity-90 transition-all inline-flex items-center gap-2"
+            size="lg"
+            leftIcon={action.icon ? <action.icon size={20} /> : undefined}
           >
-            {action.icon && <action.icon size={20} />}
             {action.label}
-          </button>
+          </AppButton>
         )}
 
         {secondaryAction && (
-          <button
+          <AppButton
             onClick={secondaryAction.onClick}
-            className="text-q-accent font-bold hover:underline py-3 px-6"
+            variant="ghost"
+            size="lg"
           >
             {secondaryAction.label}
-          </button>
+          </AppButton>
         )}
       </div>
     </div>

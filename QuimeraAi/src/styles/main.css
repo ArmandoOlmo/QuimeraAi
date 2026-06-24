@@ -1,3 +1,5 @@
+@import "./tokens.css";
+@import "./theme.css";
 @import "tailwindcss" source(none);
 @plugin "@tailwindcss/typography";
 
@@ -794,7 +796,8 @@ html.black {
   --quimera-status-icon-to: #ff9d00;
 }
 
-.quimera-status-card-accent-bg {
+.quimera-status-card-accent-bg,
+.quimera-status-accent-bg {
   background: linear-gradient(
     to bottom right,
     var(--quimera-status-accent-from),
@@ -920,31 +923,38 @@ html.black .group:hover .quimera-status-card-watermark {
   box-shadow: none;
 }
 
-.quimera-status-card-blob {
+.quimera-status-card-blob,
+.quimera-status-accent-blob {
   opacity: 0.3;
 }
 
-html.light .quimera-status-card-blob {
+html.light .quimera-status-card-blob,
+html.light .quimera-status-accent-blob {
   opacity: 0;
 }
 
-html.dark .quimera-status-card-blob {
+html.dark .quimera-status-card-blob,
+html.dark .quimera-status-accent-blob {
   opacity: 0.16;
 }
 
-html.black .quimera-status-card-blob {
+html.black .quimera-status-card-blob,
+html.black .quimera-status-accent-blob {
   opacity: 0.18;
 }
 
-.group:hover .quimera-status-card-blob {
+.group:hover .quimera-status-card-blob,
+.group:hover .quimera-status-accent-blob {
   opacity: 0.38;
 }
 
-html.dark .group:hover .quimera-status-card-blob {
+html.dark .group:hover .quimera-status-card-blob,
+html.dark .group:hover .quimera-status-accent-blob {
   opacity: 0.24;
 }
 
-html.black .group:hover .quimera-status-card-blob {
+html.black .group:hover .quimera-status-card-blob,
+html.black .group:hover .quimera-status-accent-blob {
   opacity: 0.26;
 }
 

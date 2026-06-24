@@ -1,0 +1,42 @@
+.quimera-ds-surface {
+  background: var(--q-color-surface);
+  color: var(--q-color-text-primary);
+  border-color: var(--q-color-border-subtle);
+}
+
+.quimera-ds-panel {
+  background: var(--q-color-surface);
+  border: var(--q-border-panel);
+  border-radius: var(--q-radius-xl);
+  box-shadow: var(--q-shadow-card);
+}
+
+.quimera-ds-focus-ring {
+  outline: none;
+}
+
+.quimera-ds-focus-ring:focus-visible {
+  box-shadow: var(--q-focus-ring);
+}
+
+.quimera-ds-grid {
+  display: grid;
+  gap: var(--q-layout-dashboard-gap);
+}
+
+.quimera-ds-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--q-color-text-muted) 38%, transparent) transparent;
+}
+
+.quimera-ds-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.quimera-ds-scrollbar::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--q-color-text-muted) 30%, transparent);
+  border: 3px solid transparent;
+  border-radius: var(--q-radius-full);
+  background-clip: content-box;
+}

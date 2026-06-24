@@ -12,6 +12,13 @@ import type {
     WebsiteEcommerceBlockSource,
     WebsiteEcommerceBlockType,
 } from './websiteEcommerceBlocks';
+import type { ComponentId } from './componentRegistry';
+import type {
+    ComponentBackgroundOption,
+    ComponentContentDensity,
+    ComponentMediaOption,
+    ComponentMobileBehavior,
+} from './componentAnatomy';
 
 export type {
     ProductCardVariant,
@@ -99,6 +106,18 @@ export interface WebsiteSectionBlueprint extends BlueprintModuleState {
     visible: boolean;
     pageIds?: string[];
     settings?: Record<string, unknown>;
+    componentId?: ComponentId;
+    layoutVariant?: string;
+    styleVariant?: string;
+    activeSlots?: string[];
+    backgroundChoice?: ComponentBackgroundOption;
+    mediaTreatment?: ComponentMediaOption;
+    density?: ComponentContentDensity;
+    mobileBehavior?: ComponentMobileBehavior;
+    designPatternIds?: string[];
+    designScore?: number;
+    designRationale?: string;
+    selectionConfidence?: number;
 }
 
 export interface WebsiteBlueprint extends BlueprintModuleState {

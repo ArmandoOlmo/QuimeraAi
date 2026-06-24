@@ -1,12 +1,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { GripVertical, ChevronDown } from 'lucide-react';
+import { GripVertical, ChevronDown, type LucideIcon } from 'lucide-react';
 import type { DashboardSectionId, DragHandlers } from '../../hooks/useDashboardSections';
+import { AppButton, AppIcon } from '../ui/system';
 
 interface DashboardDraggableSectionProps {
     sectionId: DashboardSectionId;
     title: string;
-    icon: React.ElementType;
+    icon: LucideIcon;
     isCollapsed: boolean;
     onToggleCollapse: () => void;
     wrapperClasses: string;
@@ -48,7 +49,7 @@ const DashboardDraggableSection: React.FC<DashboardDraggableSectionProps> = ({
             tabIndex={0}
         >
             <div className="flex items-center justify-center w-6 h-6 rounded-[var(--q-radius-sm)] hover:bg-q-surface-overlay transition-colors">
-                <GripVertical size={14} className="text-q-text-muted/60" />
+                <AppIcon icon={GripVertical} size="xs" className="text-q-text-muted/60" />
             </div>
         </div>
     );
@@ -63,19 +64,22 @@ const DashboardDraggableSection: React.FC<DashboardDraggableSectionProps> = ({
                 <div className={`flex items-center justify-between ${isCollapsed ? 'mb-0' : 'mb-3 lg:mb-6'}`}>
                     <div className="flex items-center gap-0">
                         {dragHandle}
-                        <button
+                        <AppButton
+                            variant="ghost"
+                            size="md"
                             onClick={onToggleCollapse}
-                            className="text-lg sm:text-2xl font-bold text-foreground flex items-center gap-2 sm:gap-3 hover:text-q-text transition-colors"
+                            className="!h-auto !px-0 !py-0 text-lg sm:text-2xl font-bold text-foreground justify-start hover:!bg-transparent hover:text-q-text transition-colors"
                             aria-expanded={!isCollapsed}
                         >
-                            <Icon className="icon-lg text-q-text-muted" strokeWidth={2} />
+                            <AppIcon icon={Icon} size="lg" tone="muted" strokeWidth={2} />
                             {title}
-                            <ChevronDown
-                                className={`icon-md text-q-text-muted transition-transform duration-300 ${
-                                    isCollapsed ? '-rotate-90' : 'rotate-0'
-                                }`}
+                            <AppIcon
+                                icon={ChevronDown}
+                                size="md"
+                                tone="muted"
+                                className={`transition-transform duration-300 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}
                             />
-                        </button>
+                        </AppButton>
                     </div>
                     {!isCollapsed && rightAction}
                 </div>

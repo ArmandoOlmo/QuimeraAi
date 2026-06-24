@@ -1,8 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { LayoutGrid, Globe, Images, Menu, Search } from 'lucide-react';
+import { LayoutGrid, Globe, Images, Menu, Search, type LucideIcon } from 'lucide-react';
 import MobileSearchModal from '../ui/MobileSearchModal';
 import HeaderBackButton from '../ui/HeaderBackButton';
+import { AppButton, AppIcon } from '../ui/system';
+import { AppShellTopbar } from '@/src/design-system/components/AppShell';
 
 interface DashboardHeaderProps {
     isDashboard: boolean;
@@ -38,7 +40,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     const { t } = useTranslation();
 
     // Header Config
-    let HeaderIcon = LayoutGrid;
+    let HeaderIcon: LucideIcon = LayoutGrid;
     let headerTitle = t('dashboard.title');
 
     if (isWebsites) {
@@ -49,32 +51,30 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         headerTitle = t('dashboard.assets.title');
     }
 
-    const headerClasses = 'quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center justify-between z-20 sticky top-0';
     const leftSectionClasses = 'flex items-center gap-1 sm:gap-4 flex-shrink-0';
-    const mobileMenuButtonClasses = 'lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay active:bg-q-surface-overlay rounded-[var(--q-radius-md)] transition-colors touch-manipulation';
     const titleWrapClasses = 'flex items-center gap-1 sm:gap-2';
     const titleClasses = 'text-sm sm:text-xl font-semibold sm:font-bold text-q-text';
     const rightSectionClasses = 'flex items-center gap-2 sm:gap-3 flex-shrink-0 mr-2.5';
-    const searchButtonClasses = 'h-9 w-9 flex items-center justify-center rounded-[var(--q-radius-md)] text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay transition-colors';
 
     return (
         <>
-            <header
-                className={headerClasses}
+            <AppShellTopbar
                 role="banner"
             >
                 {/* Left Section - Logo & Title */}
                 <div className={leftSectionClasses}>
-                    <button
+                    <AppButton
+                        variant="icon"
+                        size="icon-md"
                         onClick={() => setIsMobileMenuOpen(true)}
-                        className={mobileMenuButtonClasses}
+                        className="lg:hidden text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay active:bg-q-surface-overlay touch-manipulation"
                         aria-label="Open navigation menu"
                         aria-expanded={isMobileMenuOpen}
                     >
                         <Menu className="icon-lg" />
-                    </button>
+                    </AppButton>
                     <div className={titleWrapClasses}>
-                        <HeaderIcon className="icon-lg quimera-dashboard-header-icon" strokeWidth={2} aria-hidden="true" />
+                        <AppIcon icon={HeaderIcon} size="lg" className="quimera-dashboard-header-icon" strokeWidth={2} />
                         <h1 className={titleClasses}>
                             {headerTitle}
                         </h1>
@@ -88,18 +88,20 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 <div className={rightSectionClasses}>
                     {/* Search Icon */}
                     {(isDashboard || isWebsites) && (
-                        <button
+                        <AppButton
+                            variant="icon"
+                            size="icon-md"
                             onClick={() => setShowMobileSearch(true)}
-                            className={searchButtonClasses}
+                            className="text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay"
                             aria-label="Open search"
                         >
                             <Search className="icon-lg" />
-                        </button>
+                        </AppButton>
                     )}
 
                     <HeaderBackButton onClick={onNavigateBack} />
                 </div>
-            </header>
+            </AppShellTopbar>
 
             {/* Search Modal */}
             <MobileSearchModal
