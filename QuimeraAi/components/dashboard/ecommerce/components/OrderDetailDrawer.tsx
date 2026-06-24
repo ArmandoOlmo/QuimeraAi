@@ -26,6 +26,8 @@ import {
     Image as ImageIcon,
     FolderOpen,
     Search,
+    AlertTriangle,
+    ShieldCheck,
 } from 'lucide-react';
 import {
     Address,
@@ -38,7 +40,13 @@ import {
     ProductVariant,
     StoredTimestamp,
 } from '../../../../types/ecommerce';
+import type { EcommerceFulfillmentStatus } from '../../../../types/ecommerceOrders';
 import { timestampToDate } from '../../../../utils/timestampUtils';
+import {
+    canAddTracking,
+    canFulfillOrder,
+    normalizeOrderForAdmin,
+} from '../../../../utils/ecommerce/ecommerceOrderAdminService';
 import AppSelect from '../../../ui/AppSelect';
 import EcommerceImagePicker from './EcommerceImagePicker';
 
@@ -47,10 +55,10 @@ interface OrderDetailDrawerProps {
     products: Product[];
     onClose: () => void;
     onUpdateStatus: (orderId: string, status: OrderStatus) => Promise<void>;
+    onUpdateFulfillmentStatus: (orderId: string, status: FulfillmentStatus) => Promise<void>;
     onAddTracking: (orderId: string, carrier: string, trackingNumber: string, trackingUrl?: string) => Promise<void>;
     onUpdateInternalNotes: (orderId: string, notes: string) => Promise<void>;
     onUpdateOrder: (orderId: string, updates: Partial<Order>) => Promise<void>;
-    onRefundOrder: (orderId: string, amount?: number, reason?: string) => Promise<void>;
 }
 
 type OrderStatusConfig = { color: string; bg: string; label: string };
@@ -73,12 +81,16 @@ const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
     failed: 'Fallido',
     refunded: 'Reembolsado',
     partially_refunded: 'Parcialmente reembolsado',
+    cancelled: 'Cancelado',
 };
 
 const FULFILLMENT_STATUS_LABELS: Record<FulfillmentStatus, string> = {
     unfulfilled: 'Sin preparar',
+    processing: 'Procesando',
     partial: 'Parcial',
+    partially_fulfilled: 'Parcial',
     fulfilled: 'Completado',
+    cancelled: 'Cancelado',
 };
 
 const getStatusConfig = (status: unknown): OrderStatusConfig => {
@@ -230,10 +242,10 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
     products,
     onClose,
     onUpdateStatus,
+    onUpdateFulfillmentStatus,
     onAddTracking,
     onUpdateInternalNotes,
     onUpdateOrder,
-    onRefundOrder,
 }) => {
     const { t } = useTranslation();
     const [isUpdating, setIsUpdating] = useState(false);
@@ -253,24 +265,15 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
     const [internalNotes, setInternalNotes] = useState(order.internalNotes || '');
     const [isSavingNotes, setIsSavingNotes] = useState(false);
     const [notesError, setNotesError] = useState<string | null>(null);
-    const [showRefundForm, setShowRefundForm] = useState(false);
-    const [refundAmount, setRefundAmount] = useState('');
-    const [refundReason, setRefundReason] = useState('requested_by_customer');
-    const [isRefunding, setIsRefunding] = useState(false);
-    const [refundError, setRefundError] = useState<string | null>(null);
 
     useEffect(() => {
         setDraftOrder(prepareDraftOrder(order));
-        setInternalNotes(order.internalNotes || '');
+        setInternalNotes(normalizeOrderForAdmin(order).merchantNotes || order.internalNotes || '');
         setIsEditing(false);
         setSaveError(null);
         setImagePickerItemIndex(null);
         setProductPickerTarget(null);
         setProductSearchTerm('');
-        setShowRefundForm(false);
-        setRefundAmount('');
-        setRefundReason('requested_by_customer');
-        setRefundError(null);
     }, [order]);
 
     const handleStatusChange = async (newStatus: OrderStatus) => {
@@ -293,6 +296,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
 
     const handleAddTracking = async () => {
         if (!trackingData.carrier || !trackingData.trackingNumber) return;
+        if (!canAddTracking(order)) return;
 
         setIsUpdating(true);
         try {
@@ -308,6 +312,15 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
         }
     };
 
+    const handleFulfillmentStatus = async (newStatus: EcommerceFulfillmentStatus) => {
+        setIsUpdating(true);
+        try {
+            await onUpdateFulfillmentStatus(order.id, newStatus as FulfillmentStatus);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
     const handleSaveInternalNotes = async () => {
         setIsSavingNotes(true);
         setNotesError(null);
@@ -318,37 +331,6 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
             setNotesError(message);
         } finally {
             setIsSavingNotes(false);
-        }
-    };
-
-    const handleStartRefund = () => {
-        setRefundAmount(refundableAmount.toFixed(2));
-        setRefundError(null);
-        setShowRefundForm(true);
-    };
-
-    const handleRefundOrder = async () => {
-        const parsedAmount = refundAmount.trim() ? toFiniteNumber(refundAmount) : undefined;
-        if (parsedAmount !== undefined && parsedAmount <= 0) {
-            setRefundError('El monto debe ser mayor que cero');
-            return;
-        }
-        if (parsedAmount !== undefined && parsedAmount - refundableAmount > 0.005) {
-            setRefundError('El monto excede el balance reembolsable');
-            return;
-        }
-
-        setIsRefunding(true);
-        setRefundError(null);
-        try {
-            await onRefundOrder(order.id, parsedAmount, refundReason);
-            setShowRefundForm(false);
-            setRefundAmount('');
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'No se pudo crear el reembolso';
-            setRefundError(message);
-        } finally {
-            setIsRefunding(false);
         }
     };
 
@@ -571,6 +553,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
     };
 
     const displayedOrder = isEditing ? draftOrder : order;
+    const adminOrder = normalizeOrderForAdmin(order);
     const statusConfig = getStatusConfig(displayedOrder.status);
     const orderItems = Array.isArray(displayedOrder.items) ? displayedOrder.items : [];
     const shippingAddress = normalizeAddress(displayedOrder.shippingAddress);
@@ -583,12 +566,16 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
     const refunds = Array.isArray(order.refunds) ? order.refunds : [];
     const refundedAmount = toFiniteNumber(order.refundedAmount);
     const refundableAmount = Math.max(0, toFiniteNumber(order.pricing?.total ?? order.total) - refundedAmount);
-    const hasStripePaymentIntent = Boolean(order.paymentIntentId || order.stripe?.paymentIntentId);
-    const canRefund =
+    const canMarkFulfilled = canFulfillOrder(order);
+    const trackingAllowed = canAddTracking(order);
+    const pricingVersion = String(
+        adminOrder.pricingSnapshot.calculationVersion ||
+        adminOrder.pricingSnapshot.version ||
+        ''
+    );
+    const showRefundFoundationNotice =
         !isEditing &&
-        order.paymentMethod?.toLowerCase() === 'stripe' &&
         ['paid', 'partially_refunded'].includes(order.paymentStatus) &&
-        hasStripePaymentIntent &&
         refundableAmount > 0;
     const currentPickerItem =
         imagePickerItemIndex === null
@@ -889,8 +876,51 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                     <div className="bg-muted/30 rounded-lg p-4">
                         <h3 className="text-sm font-medium text-q-text-muted mb-3 flex items-center gap-2">
                             <Truck size={16} />
-                            {t('ecommerce.tracking', 'Seguimiento')}
+                            Fulfillment y seguimiento
                         </h3>
+
+                        {!isEditing && (
+                            <div className="mb-4 rounded-lg border border-q-border bg-q-surface/40 p-3">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-foreground">
+                                            {FULFILLMENT_STATUS_LABELS[order.fulfillmentStatus] || order.fulfillmentStatus}
+                                        </p>
+                                        <p className="text-xs text-q-text-muted">
+                                            Pago: {PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus}
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleFulfillmentStatus('processing')}
+                                            disabled={isUpdating || order.status === 'cancelled' || order.fulfillmentStatus === 'fulfilled'}
+                                            className="inline-flex items-center gap-2 rounded-lg border border-q-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            <Package size={14} />
+                                            Procesando
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleFulfillmentStatus('fulfilled')}
+                                            disabled={isUpdating || !canMarkFulfilled}
+                                            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            <ShieldCheck size={14} />
+                                            Marcar fulfilled
+                                        </button>
+                                    </div>
+                                </div>
+                                {!canMarkFulfilled && order.fulfillmentStatus !== 'fulfilled' && (
+                                    <p className="mt-3 flex items-start gap-2 rounded-lg border border-q-warning/20 bg-q-warning/10 px-3 py-2 text-xs text-q-warning">
+                                        <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
+                                        <span>
+                                            Solo pedidos pagados y activos pueden marcarse como fulfilled. No se ejecutan refunds, pagos ni cambios de inventario desde esta accion.
+                                        </span>
+                                    </p>
+                                )}
+                            </div>
+                        )}
 
                         {isEditing ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -997,7 +1027,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                     </button>
                                     <button
                                         onClick={handleAddTracking}
-                                        disabled={isUpdating}
+                                        disabled={isUpdating || !trackingAllowed}
                                         className="flex-1 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
                                     >
                                         Guardar
@@ -1005,12 +1035,19 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                 </div>
                             </div>
                         ) : (
-                            <button
-                                onClick={() => setShowTrackingForm(true)}
-                                className="text-sm text-primary hover:opacity-80"
-                            >
-                                + Agregar información de rastreo
-                            </button>
+                            trackingAllowed ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowTrackingForm(true)}
+                                    className="text-sm text-primary hover:opacity-80"
+                                >
+                                    + Agregar información de rastreo
+                                </button>
+                            ) : (
+                                <p className="text-sm text-q-text-muted">
+                                    Tracking bloqueado para pedidos cancelados.
+                                </p>
+                            )
                         )}
                     </div>
 
@@ -1319,6 +1356,12 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                     <span>Total</span>
                                     <span>{formatMoney(total)}</span>
                                 </div>
+                                {pricingVersion && (
+                                    <div className="flex justify-between text-xs text-q-text-muted">
+                                        <span>Pricing snapshot</span>
+                                        <span>{pricingVersion}</span>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -1434,60 +1477,37 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                         ))}
                                     </div>
                                 )}
-                                {canRefund && (
-                                    <div className="mt-4 border-t border-q-border pt-4">
-                                        {showRefundForm ? (
-                                            <div className="space-y-3">
-                                                <input
-                                                    type="number"
-                                                    min="0.01"
-                                                    step="0.01"
-                                                    max={refundableAmount}
-                                                    value={refundAmount}
-                                                    onChange={(event) => setRefundAmount(event.target.value)}
-                                                    className={inputClass}
-                                                />
-                                                <AppSelect
-                                                    value={refundReason}
-                                                    onChange={(event) => setRefundReason(event.target.value)}
-                                                    className={inputClass}
-                                                >
-                                                    <option value="requested_by_customer">Solicitado por cliente</option>
-                                                    <option value="duplicate">Duplicado</option>
-                                                    <option value="fraudulent">Fraudulento</option>
-                                                </AppSelect>
-                                                {refundError && (
-                                                    <p className="text-sm text-q-error">{refundError}</p>
-                                                )}
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => setShowRefundForm(false)}
-                                                        disabled={isRefunding}
-                                                        className="flex-1 px-3 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-sm disabled:opacity-50"
-                                                    >
-                                                        Cancelar
-                                                    </button>
-                                                    <button
-                                                        onClick={handleRefundOrder}
-                                                        disabled={isRefunding}
-                                                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-q-warning text-white rounded-lg text-sm hover:bg-q-warning disabled:opacity-50"
-                                                    >
-                                                        {isRefunding && <Loader2 size={14} className="animate-spin" />}
-                                                        Reembolsar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <button
-                                                onClick={handleStartRefund}
-                                                className="inline-flex items-center gap-2 text-sm text-q-warning hover:text-q-warning"
-                                            >
-                                                <DollarSign size={14} />
-                                                Crear reembolso
-                                            </button>
-                                        )}
+                                {showRefundFoundationNotice && (
+                                    <div className="mt-4 rounded-lg border border-q-warning/20 bg-q-warning/10 px-3 py-2 text-xs text-q-warning">
+                                        Refund foundation: saldo potencial {formatMoney(refundableAmount)}. D4 no ejecuta refunds reales ni llama Stripe Refunds API; manejar manualmente hasta V2.
                                     </div>
                                 )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Timeline */}
+                    <div className="bg-muted/30 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-q-text-muted mb-3 flex items-center gap-2">
+                            <FileText size={16} />
+                            Timeline
+                        </h3>
+                        {adminOrder.timeline.length === 0 ? (
+                            <p className="text-sm text-q-text-muted">Sin eventos registrados.</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {adminOrder.timeline.map((event) => (
+                                    <div key={event.id} className="flex gap-3">
+                                        <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                                <p className="text-sm font-medium text-foreground">{event.message}</p>
+                                                <span className="text-xs text-q-text-muted">{formatDate(event.createdAt)}</span>
+                                            </div>
+                                            <p className="mt-0.5 text-xs uppercase text-q-text-muted">{event.type.replace(/_/g, ' ')}</p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -1547,7 +1567,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                         <div className="bg-muted/30 rounded-lg p-4">
                             <h3 className="text-sm font-medium text-q-text-muted mb-3 flex items-center gap-2">
                                 <FileText size={16} />
-                                {t('ecommerce.internalNotes', 'Notas internas')}
+                                Merchant notes
                             </h3>
                             <textarea
                                 value={internalNotes}
@@ -1562,7 +1582,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                             <div className="mt-3 flex justify-end">
                                 <button
                                     onClick={handleSaveInternalNotes}
-                                    disabled={isSavingNotes || internalNotes === (order.internalNotes || '')}
+                                    disabled={isSavingNotes || internalNotes === adminOrder.merchantNotes}
                                     className="inline-flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50"
                                 >
                                     {isSavingNotes && <Loader2 size={14} className="animate-spin" />}
