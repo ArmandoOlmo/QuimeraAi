@@ -35,11 +35,50 @@ import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
 import { useEcommerceContext } from '../EcommerceContext';
 import { useStripeConnect } from '../hooks/useStripeConnect';
 import { useEmailSettings } from '../../../../hooks/useEmailSettings';
-import { TransactionalEmailSettings, EmailSocialLinks } from '../../../../types/email';
+import {
+    TransactionalEmailSettings,
+    EmailSocialLinks,
+    AppointmentEmailTemplateKey,
+    AppointmentEmailTemplateOverride,
+} from '../../../../types/email';
 import AppSelect from '../../../ui/AppSelect';
 import ColorControl from '../../../ui/ColorControl';
 
 type SettingsTab = 'general' | 'payment' | 'shipping' | 'notifications' | 'email';
+
+const APPOINTMENT_EMAIL_TEMPLATE_KEYS: AppointmentEmailTemplateKey[] = [
+    'appointment_request_received',
+    'appointment_confirmation',
+    'appointment_cancellation',
+    'appointment_follow_up',
+    'appointment_reminder',
+];
+
+const emptyAppointmentTemplateDrafts = (): Record<AppointmentEmailTemplateKey, AppointmentEmailTemplateOverride> =>
+    APPOINTMENT_EMAIL_TEMPLATE_KEYS.reduce((acc, key) => {
+        acc[key] = { enabled: true };
+        return acc;
+    }, {} as Record<AppointmentEmailTemplateKey, AppointmentEmailTemplateOverride>);
+
+const defaultTransactionalEmailSettings = (): TransactionalEmailSettings => ({
+    orderConfirmation: true,
+    orderShipped: true,
+    orderDelivered: true,
+    orderCancelled: true,
+    orderRefunded: true,
+    reviewRequest: true,
+    reviewRequestDelayDays: 3,
+    newOrderNotification: true,
+    lowStockNotification: true,
+    appointments: true,
+    appointmentEmails: true,
+    appointmentRequestReceived: true,
+    appointmentConfirmation: true,
+    appointmentCancellation: true,
+    appointmentFollowUp: true,
+    appointmentReminder: true,
+    appointmentTemplates: {},
+});
 
 const SettingsView: React.FC = () => {
     const { t } = useTranslation();
@@ -979,9 +1018,13 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
         primaryColor: '#4f46e5',
         footerText: '',
     });
+    const [appointmentTemplateDrafts, setAppointmentTemplateDrafts] = useState<Record<AppointmentEmailTemplateKey, AppointmentEmailTemplateOverride>>(
+        emptyAppointmentTemplateDrafts()
+    );
 
     useEffect(() => {
         if (emailSettings) {
+            const appointmentTemplates = emailSettings.transactional?.appointmentTemplates || {};
             setLocalEmailSettings({
                 fromEmail: emailSettings.fromEmail || '',
                 fromName: emailSettings.fromName || '',
@@ -989,6 +1032,10 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                 logoUrl: emailSettings.logoUrl || '',
                 primaryColor: emailSettings.primaryColor || '#4f46e5',
                 footerText: emailSettings.footerText || '',
+            });
+            setAppointmentTemplateDrafts({
+                ...emptyAppointmentTemplateDrafts(),
+                ...appointmentTemplates,
             });
         }
     }, [emailSettings]);
@@ -1006,6 +1053,30 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
             logoUrl: localEmailSettings.logoUrl,
             primaryColor: localEmailSettings.primaryColor,
             footerText: localEmailSettings.footerText,
+        });
+    };
+
+    const handleAppointmentTemplateChange = (
+        flowKey: AppointmentEmailTemplateKey,
+        field: keyof AppointmentEmailTemplateOverride,
+        value: string | boolean,
+    ) => {
+        setAppointmentTemplateDrafts(prev => ({
+            ...prev,
+            [flowKey]: {
+                ...(prev[flowKey] || { enabled: true }),
+                [field]: value,
+            },
+        }));
+    };
+
+    const handleSaveAppointmentTemplates = async () => {
+        await updateSettings({
+            transactional: {
+                ...defaultTransactionalEmailSettings(),
+                ...(emailSettings?.transactional || {}),
+                appointmentTemplates: appointmentTemplateDrafts,
+            },
         });
     };
 
@@ -1246,6 +1317,122 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                         />
                     </label>
                 </div>
+            </div>
+
+            <hr className="border-q-border" />
+
+            {/* Appointment Email Templates */}
+            <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                    <Mail className="text-q-text-muted" size={18} />
+                    <h4 className="text-md font-medium text-foreground">
+                        {t('ecommerce.appointmentEmailTemplates', 'Plantillas de citas')}
+                    </h4>
+                </div>
+                <p className="text-sm text-q-text-muted">
+                    {t('ecommerce.appointmentEmailTemplatesDesc', 'Personaliza los emails transaccionales del Appointments Engine por flujo. Variables: {{title}}, {{name}}, {{start}}, {{end}}, {{timezone}}, {{paymentStatus}}.')}
+                </p>
+
+                <div className="space-y-3">
+                    {APPOINTMENT_EMAIL_TEMPLATE_KEYS.map((flowKey) => {
+                        const draft = appointmentTemplateDrafts[flowKey] || { enabled: true };
+                        return (
+                            <details key={flowKey} className="rounded-lg border border-q-border bg-muted/30">
+                                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
+                                    <div>
+                                        <p className="text-sm font-medium text-foreground">
+                                            {t(`ecommerce.appointmentTemplateFlows.${flowKey}`, flowKey)}
+                                        </p>
+                                        <p className="text-xs text-q-text-muted">
+                                            {draft.subject || t('ecommerce.defaultTemplate', 'Plantilla default')}
+                                        </p>
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        checked={draft.enabled !== false}
+                                        onClick={(event) => event.stopPropagation()}
+                                        onChange={(event) => handleAppointmentTemplateChange(flowKey, 'enabled', event.target.checked)}
+                                        className="h-5 w-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
+                                    />
+                                </summary>
+                                <div className="space-y-3 border-t border-q-border px-4 py-4">
+                                    <div className="grid gap-3 md:grid-cols-2">
+                                        <div>
+                                            <label className="mb-1 block text-sm font-medium text-q-text-muted">
+                                                {t('ecommerce.templateSubject', 'Asunto')}
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={draft.subject || ''}
+                                                onChange={(event) => handleAppointmentTemplateChange(flowKey, 'subject', event.target.value)}
+                                                className="w-full rounded-lg border border-q-border bg-muted/50 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                                placeholder={t('ecommerce.templateSubjectPlaceholder', 'Ej. Tu cita {{title}} está confirmada')}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="mb-1 block text-sm font-medium text-q-text-muted">
+                                                {t('ecommerce.templatePreheader', 'Preheader')}
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={draft.preheader || ''}
+                                                onChange={(event) => handleAppointmentTemplateChange(flowKey, 'preheader', event.target.value)}
+                                                className="w-full rounded-lg border border-q-border bg-muted/50 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                                placeholder={t('ecommerce.templatePreheaderPlaceholder', 'Texto corto antes de abrir el email')}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid gap-3 md:grid-cols-3">
+                                        <textarea
+                                            value={draft.intro || ''}
+                                            onChange={(event) => handleAppointmentTemplateChange(flowKey, 'intro', event.target.value)}
+                                            rows={3}
+                                            className="w-full resize-none rounded-lg border border-q-border bg-muted/50 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            placeholder={t('ecommerce.templateIntro', 'Intro')}
+                                        />
+                                        <textarea
+                                            value={draft.nextStep || ''}
+                                            onChange={(event) => handleAppointmentTemplateChange(flowKey, 'nextStep', event.target.value)}
+                                            rows={3}
+                                            className="w-full resize-none rounded-lg border border-q-border bg-muted/50 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            placeholder={t('ecommerce.templateNextStep', 'Siguiente paso')}
+                                        />
+                                        <textarea
+                                            value={draft.footer || ''}
+                                            onChange={(event) => handleAppointmentTemplateChange(flowKey, 'footer', event.target.value)}
+                                            rows={3}
+                                            className="w-full resize-none rounded-lg border border-q-border bg-muted/50 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            placeholder={t('ecommerce.templateFooter', 'Footer')}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-q-text-muted">
+                                            {t('ecommerce.templateHtml', 'HTML visual')}
+                                        </label>
+                                        <textarea
+                                            value={draft.html || ''}
+                                            onChange={(event) => handleAppointmentTemplateChange(flowKey, 'html', event.target.value)}
+                                            rows={4}
+                                            className="w-full resize-y rounded-lg border border-q-border bg-muted/50 px-3 py-2 font-mono text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            placeholder="<main><h1>{{title}}</h1><p>{{name}} - {{start}}</p></main>"
+                                        />
+                                    </div>
+                                </div>
+                            </details>
+                        );
+                    })}
+                </div>
+
+                <button
+                    onClick={handleSaveAppointmentTemplates}
+                    disabled={isSaving}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50 sm:w-auto"
+                >
+                    {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                    {t('ecommerce.saveAppointmentTemplates', 'Guardar plantillas de citas')}
+                </button>
             </div>
 
             <hr className="border-q-border" />

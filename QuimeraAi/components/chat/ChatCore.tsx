@@ -31,6 +31,12 @@ interface PageContext {
 }
 
 // Appointment data interface for chatbot integration
+export type ChatCoreBookingChannel =
+    | 'chatcore_form'
+    | 'chatcore_ai_confirmation'
+    | 'chatcore_structured_block'
+    | 'chatcore_voice';
+
 export interface ChatAppointmentData {
     title: string;
     description?: string;
@@ -42,6 +48,11 @@ export interface ChatAppointmentData {
     participantPhone?: string;
     linkedLeadId?: string;
     conversationTranscript?: string; // Full chat transcript to include in lead
+    sourceConversationId?: string;
+    bookingChannel?: ChatCoreBookingChannel;
+    generatedByAI?: boolean;
+    locale?: string;
+    metadata?: Record<string, unknown>;
 }
 
 // Simplified appointment info for availability checking
@@ -324,7 +335,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const handleApiError = aiContext?.handleApiError ?? (() => { });
     const projectContext = useSafeProject();
     const activeProject = projectContext?.activeProject ?? project; // Use prop project if context not available
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     // Auto-detect White Label branding on /preview/ routes (where tenant context is unavailable)
     const [autoHidePoweredBy, setAutoHidePoweredBy] = useState(false);
@@ -446,6 +457,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
 
     // Lead tracking ref
     const capturedLeadIdRef = useRef<string | null>(null);
+    const conversationIdRef = useRef<string | null>(null);
     // High intent detected flag (for conversational mode)
     const highIntentDetectedRef = useRef(false);
     const nextStartTimeRef = useRef(0);
@@ -767,6 +779,34 @@ ${suggestAvailableSlots()}
     }, []);
 
     // Function to save final transcript to lead
+    const buildConversationTranscript = (sourceMessages: Message[] = messagesRef.current) => (
+        sourceMessages.map(m => `${m.role === 'user' ? 'Usuario' : config.agentName || 'Asistente'}: ${m.text}`).join('\n')
+    );
+
+    const ensureConversationId = async (participantInfo?: PreChatFormData): Promise<string | undefined> => {
+        const convId = await getOrCreateConversation(participantInfo);
+        if (convId) conversationIdRef.current = convId;
+        return conversationIdRef.current || undefined;
+    };
+
+    const buildChatCoreAppointmentMetadata = (
+        bookingChannel: ChatCoreBookingChannel,
+        extra: Record<string, unknown> = {},
+    ): Record<string, unknown> => ({
+        ...extra,
+        sourceModule: 'chatcore',
+        sourceComponent: 'ChatCore',
+        bookingChannel,
+        chatCore: {
+            bookingChannel,
+            conversationId: conversationIdRef.current,
+            leadId: capturedLeadIdRef.current,
+            messageCount: messagesRef.current.length,
+            isEmbedded,
+            generatedByAI: bookingChannel !== 'chatcore_form',
+        },
+    });
+
     const saveFinalTranscriptToLead = async () => {
         if (capturedLeadIdRef.current && onUpdateLeadTranscript && messages.length > 0) {
             const fullTranscript = messages.map(m => {
@@ -827,7 +867,7 @@ ${suggestAvailableSlots()}
                 : null;
 
             // Create conversation for Inbox with participant info
-            const convId = await getOrCreateConversation({
+            const convId = await ensureConversationId({
                 name: preChatData.name,
                 email: preChatData.email,
                 phone: preChatData.phone,
@@ -908,7 +948,12 @@ ${suggestAvailableSlots()}
             const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
 
             // Generate transcript for the lead
-            const transcriptForLead = messagesRef.current.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
+            const convId = await ensureConversationId({
+                name: appointmentForm.name,
+                email: appointmentForm.email,
+                phone: appointmentForm.phone,
+            });
+            const transcriptForLead = buildConversationTranscript();
 
             console.log('[ChatCore] 📝 Generating transcript for appointment:', {
                 messagesCount: messagesRef.current.length,
@@ -917,8 +962,8 @@ ${suggestAvailableSlots()}
             });
 
             const appointmentData: ChatAppointmentData = {
-                title: `Cita - ${appointmentForm.name} `,
-                description: appointmentForm.notes || `Cita agendada por ${appointmentForm.name} a través del chat`,
+                title: t('chatbotWidget.appointments.formTitle', { name: appointmentForm.name }),
+                description: appointmentForm.notes || t('chatbotWidget.appointments.formDescription', { name: appointmentForm.name }),
                 type: appointmentForm.appointmentType as any,
                 startDate,
                 endDate,
@@ -927,6 +972,14 @@ ${suggestAvailableSlots()}
                 participantPhone: appointmentForm.phone || undefined,
                 linkedLeadId: capturedLeadIdRef.current || undefined,
                 conversationTranscript: transcriptForLead, // Include full chat history
+                sourceConversationId: convId,
+                bookingChannel: 'chatcore_form',
+                generatedByAI: false,
+                locale: i18n.language,
+                metadata: buildChatCoreAppointmentMetadata('chatcore_form', {
+                    formDurationMinutes: durationMinutes,
+                    appointmentType: appointmentForm.appointmentType,
+                }),
             };
 
             console.log('[ChatCore] 📅 Calling onCreateAppointment...');
@@ -935,24 +988,34 @@ ${suggestAvailableSlots()}
 
             if (appointmentId) {
                 console.log('[ChatCore] ✅ Appointment created successfully!');
-                const formattedDate = startDate.toLocaleDateString('es-ES', {
+                const formattedDate = startDate.toLocaleDateString(i18n.language || undefined, {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
                 });
-                const formattedTime = startDate.toLocaleTimeString('es-ES', {
+                const formattedTime = startDate.toLocaleTimeString(i18n.language || undefined, {
                     hour: '2-digit',
                     minute: '2-digit'
                 });
 
                 const durationText = parseInt(appointmentForm.duration) >= 60
-                    ? `${parseInt(appointmentForm.duration) / 60} hora${parseInt(appointmentForm.duration) > 60 ? 's' : ''} `
-                    : `${appointmentForm.duration} minutos`;
+                    ? t('chatbotWidget.appointments.durationHours', {
+                        value: parseInt(appointmentForm.duration) / 60,
+                    })
+                    : t('chatbotWidget.appointments.durationMinutes', {
+                        value: parseInt(appointmentForm.duration),
+                    });
 
                 setMessages(prev => [...prev, {
                     role: 'model',
-                    text: `✅ **¡Cita agendada exitosamente! **\n\n📅 ** Fecha:** ${formattedDate} \n⏰ ** Hora:** ${formattedTime} \n⏱️ ** Duración:** ${durationText} \n👤 ** Nombre:** ${appointmentForm.name} \n📧 ** Email:** ${appointmentForm.email} \n\n¡Te esperamos! Si necesitas cambiar o cancelar tu cita, por favor contáctanos.`
+                    text: t('chatbotWidget.appointments.successMessage', {
+                        date: formattedDate,
+                        time: formattedTime,
+                        duration: durationText,
+                        name: appointmentForm.name,
+                        email: appointmentForm.email,
+                    })
                 }]);
 
                 setShowAppointmentForm(false);
@@ -962,7 +1025,7 @@ ${suggestAvailableSlots()}
             console.error('[ChatCore] Error creating appointment:', error);
             setMessages(prev => [...prev, {
                 role: 'model',
-                text: '⚠️ Hubo un error al agendar la cita. Por favor intenta de nuevo o contáctanos directamente.'
+                text: t('chatbotWidget.appointments.errorMessage')
             }]);
         } finally {
             setIsCreatingAppointment(false);
@@ -1099,11 +1162,12 @@ ${suggestAvailableSlots()}
             extractedDate.setHours(hours, minutes, 0, 0);
 
             // Create appointment with extracted data
-            const transcriptForLead = messagesRef.current.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
+            const convId = await ensureConversationId();
+            const transcriptForLead = buildConversationTranscript();
 
             const appointmentData: ChatAppointmentData = {
-                title: `Cita - ${clientName || 'Cliente'} `,
-                description: `Cita agendada a través del chat.Contexto: ${response.substring(0, 200)} `,
+                title: t('chatbotWidget.appointments.aiTitle', { name: clientName || t('chatbotWidget.appointments.defaultClient') }),
+                description: t('chatbotWidget.appointments.aiDescription', { context: response.substring(0, 200) }),
                 type: 'consultation',
                 startDate: extractedDate,
                 endDate: new Date(extractedDate.getTime() + 60 * 60000),
@@ -1111,6 +1175,14 @@ ${suggestAvailableSlots()}
                 participantEmail: clientEmail || undefined,
                 linkedLeadId: capturedLeadIdRef.current || undefined,
                 conversationTranscript: transcriptForLead,
+                sourceConversationId: convId,
+                bookingChannel: 'chatcore_ai_confirmation',
+                generatedByAI: true,
+                locale: i18n.language,
+                metadata: buildChatCoreAppointmentMetadata('chatcore_ai_confirmation', {
+                    extractedFromResponse: response.substring(0, 500),
+                    extractionConfidence: clientEmail || clientName ? 'medium' : 'low',
+                }),
             };
 
             console.log('[ChatCore] 📅 Attempting to create appointment with data:', {
@@ -1126,13 +1198,13 @@ ${suggestAvailableSlots()}
                 if (appointmentId) {
                     console.log('[ChatCore] 📅 ✅ Appointment created! ID:', appointmentId);
                     return {
-                        cleanedResponse: response + '\n\n✅ **¡Cita registrada en el sistema!**',
+                        cleanedResponse: `${response}\n\n${t('chatbotWidget.appointments.autoRegistered')}`,
                         appointmentCreated: true
                     };
                 } else {
                     console.warn('[ChatCore] ⚠️ onCreateAppointment returned undefined');
                     return {
-                        cleanedResponse: response + '\n\n⚠️ **Hubo un problema al registrar la cita. Por favor, intenta nuevamente.**',
+                        cleanedResponse: `${response}\n\n${t('chatbotWidget.appointments.createRetry')}`,
                         appointmentCreated: false
                     };
                 }
@@ -1180,11 +1252,12 @@ ${suggestAvailableSlots()}
             endDate = new Date(startDate.getTime() + duration * 60000);
         }
 
-        const transcriptForLead = messagesRef.current.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
+        const convId = await ensureConversationId();
+        const transcriptForLead = buildConversationTranscript();
 
         const appointmentData: ChatAppointmentData = {
-            title: data.title || 'Cita desde Chat',
-            description: data.notes || `Cita agendada por ${data.name || 'cliente'} a través del chat`,
+            title: data.title || t('chatbotWidget.appointments.chatTitle'),
+            description: data.notes || t('chatbotWidget.appointments.formDescription', { name: data.name || t('chatbotWidget.appointments.defaultClient') }),
             type: (data.type as any) || 'consultation',
             startDate,
             endDate,
@@ -1193,6 +1266,13 @@ ${suggestAvailableSlots()}
             participantPhone: data.phone,
             linkedLeadId: capturedLeadIdRef.current || undefined,
             conversationTranscript: transcriptForLead,
+            sourceConversationId: convId,
+            bookingChannel: 'chatcore_structured_block',
+            generatedByAI: true,
+            locale: i18n.language,
+            metadata: buildChatCoreAppointmentMetadata('chatcore_structured_block', {
+                structuredBlock: data,
+            }),
         };
 
         try {
@@ -1202,13 +1282,13 @@ ${suggestAvailableSlots()}
             if (appointmentId) {
                 console.log('[ChatCore] 📅 Appointment created:', appointmentId);
                 return {
-                    cleanedResponse: cleanedResponse + '\n\n✅ **¡Cita agendada exitosamente!**',
+                    cleanedResponse: `${cleanedResponse}\n\n${t('chatbotWidget.appointments.createdShort')}`,
                     appointmentCreated: true
                 };
             } else {
                 console.warn('[ChatCore] ⚠️ onCreateAppointment returned undefined');
                 return {
-                    cleanedResponse: cleanedResponse + '\n\n⚠️ **Hubo un problema al agendar la cita. Por favor, intenta nuevamente.**',
+                    cleanedResponse: `${cleanedResponse}\n\n${t('chatbotWidget.appointments.createRetry')}`,
                     appointmentCreated: false
                 };
             }
@@ -1216,7 +1296,7 @@ ${suggestAvailableSlots()}
             console.error('[ChatCore] ❌ Error creating appointment:', error);
             const cleanedResponse = response.replace(appointmentRegex, '').trim();
             return {
-                cleanedResponse: cleanedResponse + '\n\n⚠️ *No se pudo agendar la cita automáticamente. Por favor contacta directamente.*',
+                cleanedResponse: `${cleanedResponse}\n\n${t('chatbotWidget.appointments.directContact')}`,
                 appointmentCreated: false
             };
         }
@@ -1236,7 +1316,7 @@ ${suggestAvailableSlots()}
         setMessages(newMessages);
 
         // Create conversation and save messages for Inbox
-        const convId = await getOrCreateConversation();
+        const convId = await ensureConversationId();
         if (convId) {
             // Save previous messages (like welcome message) if this is the first user message
             const previousModelMessages = messages.filter(m => m.role === 'model');
@@ -1509,7 +1589,7 @@ ${suggestAvailableSlots()}
         } catch (error) {
             setIsConnecting(false);
             console.error("ElevenLabs connection error:", error);
-            alert("Error al iniciar sesión de voz.");
+            alert(t('chatbotWidget.sessionError'));
         }
     };
 
@@ -1552,7 +1632,7 @@ ${suggestAvailableSlots()}
             // Add a separator message to indicate voice conversation
             setMessages(prev => [
                 ...prev,
-                { role: 'model', text: '🎙️ **Transcripción de llamada de voz:**', isVoiceMessage: true },
+                { role: 'model', text: t('chatbotWidget.appointments.voiceTranscriptHeader'), isVoiceMessage: true },
                 ...voiceMessages
             ]);
 
@@ -1567,7 +1647,7 @@ ${suggestAvailableSlots()}
             // If no transcription available, add a note
             setMessages(prev => [
                 ...prev,
-                { role: 'model', text: '🎙️ *Llamada de voz finalizada* (transcripción no disponible)', isVoiceMessage: true }
+                { role: 'model', text: t('chatbotWidget.appointments.voiceEndedNoTranscript'), isVoiceMessage: true }
             ]);
         }
 
@@ -1676,18 +1756,31 @@ ${suggestAvailableSlots()}
 
                 const endDate = new Date(startDate.getTime() + 60 * 60000); // 1 hour
 
-                const transcriptForLead = messagesRef.current.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
+                const convId = await ensureConversationId({
+                    name: nameMatch?.[1]?.trim() || t('chatbotWidget.appointments.voiceClient'),
+                    email: emailMatch?.[1] || '',
+                    phone: '',
+                });
+                const transcriptForLead = [buildConversationTranscript(), fullConversation].filter(Boolean).join('\n\n');
 
                 const appointmentData: ChatAppointmentData = {
-                    title: `Cita por voz - ${nameMatch?.[1]?.trim() || 'Cliente'} `,
-                    description: `Cita agendada durante llamada de voz`,
+                    title: t('chatbotWidget.appointments.voiceTitle', { name: nameMatch?.[1]?.trim() || t('chatbotWidget.appointments.voiceClient') }),
+                    description: t('chatbotWidget.appointments.voiceDescription'),
                     type: 'consultation',
                     startDate,
                     endDate,
-                    participantName: nameMatch?.[1]?.trim() || 'Cliente de llamada',
+                    participantName: nameMatch?.[1]?.trim() || t('chatbotWidget.appointments.voiceClient'),
                     participantEmail: emailMatch?.[1] || '',
                     linkedLeadId: capturedLeadIdRef.current || undefined,
                     conversationTranscript: transcriptForLead,
+                    sourceConversationId: convId,
+                    bookingChannel: 'chatcore_voice',
+                    generatedByAI: true,
+                    locale: i18n.language,
+                    metadata: buildChatCoreAppointmentMetadata('chatcore_voice', {
+                        voiceTranscript: fullConversation,
+                        extractionConfidence: emailMatch?.[1] ? 'medium' : 'low',
+                    }),
                 };
 
                 try {
@@ -1696,7 +1789,10 @@ ${suggestAvailableSlots()}
                         console.log('[ChatCore] 🎙️📅 ✅ Voice appointment created:', appointmentId);
                         setMessages(prev => [...prev, {
                             role: 'model',
-                            text: `✅ ** Cita registrada desde llamada de voz **\n📅 ${startDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })} \n⏰ ${startDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} `,
+                            text: t('chatbotWidget.appointments.voiceRegistered', {
+                                date: startDate.toLocaleDateString(i18n.language || undefined, { weekday: 'long', day: 'numeric', month: 'long' }),
+                                time: startDate.toLocaleTimeString(i18n.language || undefined, { hour: '2-digit', minute: '2-digit' }),
+                            }),
                             isVoiceMessage: true
                         }]);
                     }
@@ -1948,13 +2044,13 @@ ${suggestAvailableSlots()}
                                     {msg.role === 'model' ? (
                                         <ReactMarkdown
                                             components={{
-                                                p: ({ node, ...props }) => <p className="mb-4 last:mb-0 leading-relaxed" {...props} />,
-                                                ul: ({ node, ...props }) => <ul className="mb-4 last:mb-0 list-disc pl-5 space-y-2" {...props} />,
-                                                ol: ({ node, ...props }) => <ol className="mb-4 last:mb-0 list-decimal pl-5 space-y-2" {...props} />,
-                                                li: ({ node, ...props }) => <li className="mb-1" {...props} />,
-                                                strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
-                                                em: ({ node, ...props }) => <em className="italic" {...props} />,
-                                                code: ({ node, className, ...props }) => {
+                                                p: ({ node, ...props }: any) => <p className="mb-4 last:mb-0 leading-relaxed" {...props} />,
+                                                ul: ({ node, ...props }: any) => <ul className="mb-4 last:mb-0 list-disc pl-5 space-y-2" {...props} />,
+                                                ol: ({ node, ...props }: any) => <ol className="mb-4 last:mb-0 list-decimal pl-5 space-y-2" {...props} />,
+                                                li: ({ node, ...props }: any) => <li className="mb-1" {...props} />,
+                                                strong: ({ node, ...props }: any) => <strong className="font-semibold" {...props} />,
+                                                em: ({ node, ...props }: any) => <em className="italic" {...props} />,
+                                                code: ({ node, className, ...props }: any) => {
                                                     const isInline = !className?.includes('language-');
                                                     return isInline ? (
                                                         <code className="bg-black/10 px-1.5 py-0.5 rounded text-xs font-mono" {...props} />
@@ -1962,12 +2058,12 @@ ${suggestAvailableSlots()}
                                                         <code className="block bg-black/10 p-2 rounded my-2 text-xs font-mono overflow-x-auto" {...props} />
                                                     );
                                                 },
-                                                a: ({ node, ...props }) => <a className="underline hover:opacity-80" target="_blank" rel="noopener noreferrer" {...props} />,
-                                                h1: ({ node, ...props }) => <h1 className="text-base font-bold mb-3 mt-4 first:mt-0" {...props} />,
-                                                h2: ({ node, ...props }) => <h2 className="text-sm font-bold mb-3 mt-4 first:mt-0" {...props} />,
-                                                h3: ({ node, ...props }) => <h3 className="text-xs font-bold mb-2 mt-3 first:mt-0" {...props} />,
-                                                blockquote: ({ node, ...props }) => <blockquote className="border-l-2 border-current pl-3 italic my-4 opacity-80" {...props} />,
-                                                hr: ({ node, ...props }) => <hr className="my-4 border-current opacity-20" {...props} />,
+                                                a: ({ node, ...props }: any) => <a className="underline hover:opacity-80" target="_blank" rel="noopener noreferrer" {...props} />,
+                                                h1: ({ node, ...props }: any) => <h1 className="text-base font-bold mb-3 mt-4 first:mt-0" {...props} />,
+                                                h2: ({ node, ...props }: any) => <h2 className="text-sm font-bold mb-3 mt-4 first:mt-0" {...props} />,
+                                                h3: ({ node, ...props }: any) => <h3 className="text-xs font-bold mb-2 mt-3 first:mt-0" {...props} />,
+                                                blockquote: ({ node, ...props }: any) => <blockquote className="border-l-2 border-current pl-3 italic my-4 opacity-80" {...props} />,
+                                                hr: ({ node, ...props }: any) => <hr className="my-4 border-current opacity-20" {...props} />,
                                             }}
                                         >
                                             {toPlainText(msg.text)}
@@ -2070,7 +2166,7 @@ ${suggestAvailableSlots()}
                                     borderColor: isConnecting ? appearance.colors?.inputBorder : (appearance.colors?.accentColor + '40'),
                                     opacity: isConnecting ? 0.5 : 1
                                 }}
-                                title="Start Real-time Voice"
+                                title={t('chatbotWidget.startVoice')}
                             >
                                 {isConnecting ? <Loader2 size={16} className="animate-spin" /> : <Mic size={16} />}
                             </button>
@@ -2112,7 +2208,7 @@ ${suggestAvailableSlots()}
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-sm font-bold flex items-center gap-2 shrink-0" style={{ color: appearance.colors?.botTextColor }}>
                                 <Calendar size={18} className="shrink-0" style={{ color: appearance.colors?.primaryColor }} />
-                                Agendar Cita
+                                {t('landingChatbot.appointmentForm.title')}
                             </h3>
                             <button
                                 onClick={() => setShowAppointmentForm(false)}
@@ -2125,7 +2221,7 @@ ${suggestAvailableSlots()}
                         <form onSubmit={handleAppointmentFormSubmit} className="space-y-3">
                             <div>
                                 <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
-                                    Nombre *
+                                    {t('landingChatbot.appointmentForm.name')} *
                                 </label>
                                 <input
                                     type="text"
@@ -2145,7 +2241,7 @@ ${suggestAvailableSlots()}
 
                             <div>
                                 <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
-                                    Email *
+                                    {t('landingChatbot.appointmentForm.email')} *
                                 </label>
                                 <input
                                     type="email"
@@ -2165,7 +2261,7 @@ ${suggestAvailableSlots()}
 
                             <div>
                                 <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
-                                    Teléfono
+                                    {t('landingChatbot.appointmentForm.phone')}
                                 </label>
                                 <input
                                     type="tel"
@@ -2185,7 +2281,7 @@ ${suggestAvailableSlots()}
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
                                     <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
-                                        Fecha *
+                                        {t('landingChatbot.appointmentForm.date')} *
                                     </label>
                                     <input
                                         type="date"
@@ -2204,7 +2300,7 @@ ${suggestAvailableSlots()}
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
-                                        Hora *
+                                        {t('landingChatbot.appointmentForm.time')} *
                                     </label>
                                     <input
                                         type="time"
@@ -2225,7 +2321,7 @@ ${suggestAvailableSlots()}
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
                                     <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
-                                        Duración
+                                        {t('landingChatbot.appointmentForm.duration')}
                                     </label>
                                     <AppSelect
                                         value={appointmentForm.duration}
@@ -2248,7 +2344,7 @@ ${suggestAvailableSlots()}
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
-                                        Tipo
+                                        {t('landingChatbot.appointmentForm.type')}
                                     </label>
                                     <AppSelect
                                         value={appointmentForm.appointmentType}
@@ -2273,7 +2369,7 @@ ${suggestAvailableSlots()}
 
                             <div>
                                 <label className="block text-[10px] font-medium mb-1" style={{ color: appearance.colors?.botTextColor }}>
-                                    Notas
+                                    {t('landingChatbot.appointmentForm.notes')}
                                 </label>
                                 <textarea
                                     value={appointmentForm.notes}

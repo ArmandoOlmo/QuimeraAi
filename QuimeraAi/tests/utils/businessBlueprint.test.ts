@@ -110,6 +110,48 @@ function buildRealEstatePlan(properties: WebsitePlan['contentMap']['properties']
     };
 }
 
+function buildAppointmentsPlan(): WebsitePlan {
+    return {
+        source: 'chat',
+        generationMode: 'from-scratch',
+        businessProfile: {
+            businessName: 'Quimera Wellness',
+            industry: 'Beauty spa and wellness appointments',
+            description: 'Clients book consultations, paid deposit sessions, and follow up appointments online or through ChatCore.',
+            tagline: 'Book smarter wellness care',
+            services: [
+                { name: 'Initial consultation', description: 'A review session before treatment.' },
+                { name: 'Paid deposit treatment session', description: 'Requires a reviewed deposit before the booking is confirmed.' },
+            ],
+            contactInfo: { city: 'San Juan', country: 'Puerto Rico', email: 'hello@example.com' },
+            hasEcommerce: true,
+        },
+        brandProfile: {
+            colors: {
+                primary: '#0f766e',
+                secondary: '#111827',
+                accent: '#f59e0b',
+                background: '#f8fafc',
+                surface: '#ffffff',
+                text: '#111827',
+            },
+            visualStyle: 'clean service studio',
+        },
+        contentMap: {
+            pages: [],
+            products: [],
+        },
+        componentPlan: [
+            { component: 'heroLead', reason: 'Lead capture for appointment intent', confidence: 0.9 },
+            { component: 'leads', reason: 'Public booking entry point', confidence: 0.9 },
+            { component: 'chatbot', reason: 'ChatCore appointment assistant', confidence: 0.88 },
+            { component: 'footer', reason: 'Footer navigation', confidence: 0.8 },
+        ],
+        assetPlan: [],
+        qualityGoals: ['canonical appointment engine'],
+    };
+}
+
 describe('businessBlueprint adapters', () => {
     it('creates a versioned business blueprint from a WebsitePlan', () => {
         const blueprint = createBusinessBlueprintFromWebsitePlan(buildEcommercePlan(), {
@@ -223,6 +265,45 @@ describe('businessBlueprint adapters', () => {
             'projectGlobalColors',
             'storefrontTheme',
         ]);
+    });
+
+    it('creates an Appointments Engine V2 blueprint with ChatCore and cross-module contracts', () => {
+        const blueprint = createBusinessBlueprintFromWebsitePlan(buildAppointmentsPlan(), {
+            now: '2026-06-19T12:00:00.000Z',
+        });
+        const appointments = blueprint.appointmentsBlueprint;
+
+        expect(appointments.enabled).toBe(true);
+        expect(appointments.needsReview).toBe(true);
+        expect(appointments.engineVersion).toBe('v2');
+        expect(appointments.sourceOfTruth).toBe('project_appointments');
+        expect(appointments.legacyReadOnlySources).toEqual(expect.arrayContaining([
+            'users/{userId}/projects/{projectId}/appointments',
+            'users/{userId}/projects/{projectId}/blockedDates',
+        ]));
+        expect(appointments.availability.blockedTimeSource).toBe('project_appointment_blocks');
+        expect(appointments.chatcore).toMatchObject({
+            enabled: true,
+            source: 'ChatCore',
+            status: 'draft',
+        });
+        expect(appointments.chatcore.intentNames).toEqual(expect.arrayContaining(['appointment.request', 'appointment.prepare']));
+        expect(appointments.crm).toMatchObject({
+            enabled: true,
+            leadLinking: 'create_or_link',
+            taskStrategy: 'follow_up_after_completed',
+        });
+        expect(appointments.emailMarketing.flowTypes).toEqual(expect.arrayContaining(['appointment_confirmation', 'appointment_reminder']));
+        expect(appointments.analytics.eventNames).toEqual(expect.arrayContaining(['appointment_requested', 'appointment_confirmed']));
+        expect(appointments.ecommerce).toMatchObject({
+            enabled: true,
+            paymentMode: 'deposit',
+        });
+        expect(appointments.aiPreparation).toMatchObject({
+            enabled: true,
+            usesLinkedLeads: true,
+        });
+        expect(appointments.websiteBuilderBlocks.map(block => block.componentId)).toEqual(expect.arrayContaining(['appointmentCTA', 'publicBookingForm']));
     });
 
     it('recognizes current blueprints and ignores unknown schema shapes', () => {

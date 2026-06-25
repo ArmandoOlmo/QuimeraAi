@@ -86,6 +86,7 @@ const Slideshow = lazy(() => import('./Slideshow'));
 const Pricing = lazy(() => import('./Pricing'));
 const Faq = lazy(() => import('./Faq'));
 const Leads = lazy(() => import('./Leads'));
+const AppointmentBooking = lazy(() => import('./AppointmentBooking'));
 const Newsletter = lazy(() => import('./Newsletter'));
 const CTASection = lazy(() => import('./CTASection'));
 const Portfolio = lazy(() => import('./Portfolio'));
@@ -1359,7 +1360,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         type: 'static',
         sections: ['header', 'propertyDetail', 'footer'],
         sectionData: {
-          realEstateListings: realtyRouteData,
+          realEstateListings: realtyRouteData as any,
         },
         seo: { title: 'Property Detail' },
         showInNavigation: false,
@@ -1386,7 +1387,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         type: 'static',
         sections: ['header', 'propertyDirectory', 'footer'],
         sectionData: {
-          realEstateListings: realtyRouteData,
+          realEstateListings: realtyRouteData as any,
         },
         seo: { title: 'Listados', description: 'Explora propiedades disponibles' },
         showInNavigation: true,
@@ -2091,7 +2092,27 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       case 'faq':
         return withBackground(<Faq {...compData} borderRadius={borderRadius} />);
       case 'leads':
-        return withBackground(<Leads {...compData} cardBorderRadius={compData.cardBorderRadius || borderRadius} inputBorderRadius={compData.inputBorderRadius || 'md'} buttonBorderRadius={compData.buttonBorderRadius || buttonBorderRadius} />);
+        return withBackground(
+          <Leads
+            {...compData}
+            cardBorderRadius={compData.cardBorderRadius || borderRadius}
+            inputBorderRadius={compData.inputBorderRadius || 'md'}
+            buttonBorderRadius={compData.buttonBorderRadius || buttonBorderRadius}
+            projectId={storeProjectId || undefined}
+            ownerId={project?.userId || undefined}
+          />
+        );
+      case 'appointmentBooking':
+        return withBackground(
+          <AppointmentBooking
+            {...compData}
+            cardBorderRadius={compData.cardBorderRadius || borderRadius}
+            inputBorderRadius={compData.inputBorderRadius || 'md'}
+            buttonBorderRadius={compData.buttonBorderRadius || buttonBorderRadius}
+            projectId={storeProjectId || undefined}
+            ownerId={project?.userId || undefined}
+          />
+        );
       case 'realEstateListings':
         return withBackground(
           <RealEstateListingsSection

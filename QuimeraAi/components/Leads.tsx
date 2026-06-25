@@ -1,12 +1,14 @@
 
 import React, { useState } from 'react';
-import { LeadsData, PaddingSize, BorderRadiusSize, FontSize, LeadsVariant, CornerGradientConfig } from '../types';
+import { LeadsData, PaddingSize, BorderRadiusSize, FontSize, LeadsVariant, CornerGradientConfig, Lead } from '../types';
 import { useSafeEditor } from '../contexts/EditorContext';
 import { CheckCircle2, Mail, Phone, User, Loader2 } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { useTranslation } from 'react-i18next';
 import CornerGradient from './ui/CornerGradient';
 import { hexToRgba } from '../utils/colorUtils';
+
+const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || 'https://quimera.ai/api/widget').replace(/\/$/, '');
 
 const paddingYClasses: Record<PaddingSize, string> = {
   none: 'py-0',
@@ -50,6 +52,7 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
 
 interface LeadsProps extends LeadsData {
   projectId?: string;
+  ownerId?: string;
   leadsVariant?: LeadsVariant;
   cardBorderRadius?: BorderRadiusSize;
   buttonBorderRadius?: BorderRadiusSize;
@@ -75,13 +78,17 @@ const Leads: React.FC<LeadsProps> = ({
   inputBorderRadius = 'md',
   titleFontSize = 'md',
   descriptionFontSize = 'md',
-  cornerGradient
+  cornerGradient,
+  projectId,
+  ownerId
 }) => {
   const { t } = useTranslation();
   // Use safe versions for public preview compatibility
   const editorContext = useSafeEditor();
   const addLead = editorContext?.addLead;
   const activeProject = editorContext?.activeProject;
+  const resolvedProjectId = projectId || activeProject?.id;
+  const widgetApiProjectId = ownerId && resolvedProjectId ? `${ownerId}_${resolvedProjectId}` : resolvedProjectId;
 
   // Get design tokens with primary color
   const { getColor } = useDesignTokens();
@@ -152,7 +159,7 @@ const Leads: React.FC<LeadsProps> = ({
 
       if (hasHighIntent) leadScore += 20;
 
-      await addLead({
+      const leadPayload: Omit<Lead, 'id' | 'createdAt' | 'projectId'> = {
         name: formData.name,
         email: formData.email,
         company: formData.company,
@@ -171,7 +178,25 @@ const Leads: React.FC<LeadsProps> = ({
           defaultValue: `Lead capturado desde formulario de contacto.\n\nMensaje:\n{{message}}`,
           message: formData.message
         })
-      });
+      };
+
+      if (addLead) {
+        await addLead(leadPayload);
+      } else if (widgetApiProjectId) {
+        const response = await fetch(`${WIDGET_API_BASE_URL}/${encodeURIComponent(widgetApiProjectId)}/leads`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...leadPayload,
+            sourceComponent: 'Leads',
+            sourceModule: 'website-builder',
+            publicSubmissionId: `lead-form:${Date.now()}`,
+          }),
+        });
+        if (!response.ok) throw new Error(t('leads.errorMessage'));
+      } else {
+        throw new Error(t('leads.publicCaptureProjectRequired'));
+      }
 
       setSubmitStatus('success');
       setFormData({ name: '', email: '', company: '', message: '' });

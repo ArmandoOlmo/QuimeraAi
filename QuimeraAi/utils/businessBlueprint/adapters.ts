@@ -107,6 +107,58 @@ function normalizeIndustry(value?: string): string {
     return industry || 'services';
 }
 
+function buildAppointmentSignalText(plan: WebsitePlan): string {
+    const profile = plan.businessProfile as WebsitePlan['businessProfile'] & {
+        subIndustry?: string;
+        targetAudience?: string;
+        goals?: string[];
+    };
+
+    return [
+        profile.businessName,
+        profile.industry,
+        profile.subIndustry,
+        profile.description,
+        profile.tagline,
+        profile.targetAudience,
+        ...(profile.goals || []),
+        ...profile.services.flatMap(service => [service.name, service.description]),
+    ].filter(Boolean).join(' ').toLowerCase();
+}
+
+function hasAppointmentSignal(plan: WebsitePlan, sections: PageSection[]): boolean {
+    const text = buildAppointmentSignalText(plan);
+    const industry = normalizeIndustry(plan.businessProfile.industry);
+
+    return sections.some(section => ['restaurantReservation', 'leads', 'chatbot'].includes(section))
+        || /\b(appointment|appointments|booking|bookings|reservation|reservations|reserve|schedule|scheduled|consultation|consult|session|class|demo|call|tour|cita|citas|agenda|agendar|programar|reserva|reservas|reservar|reservacion|reservaci[oó]n|consulta|sesion|sesi[oó]n|clase|llamada|tour)\b/i.test(text)
+        || ['restaurant', 'fitness', 'beauty', 'real-estate'].includes(industry);
+}
+
+function toBlueprintId(prefix: string, value: string, index: number): string {
+    const slug = value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+        .slice(0, 48);
+
+    return `${prefix}-${slug || index + 1}`;
+}
+
+function defaultAppointmentWeeklyHours() {
+    return [
+        { day: 'monday', enabled: true, startTime: '09:00', endTime: '17:00' },
+        { day: 'tuesday', enabled: true, startTime: '09:00', endTime: '17:00' },
+        { day: 'wednesday', enabled: true, startTime: '09:00', endTime: '17:00' },
+        { day: 'thursday', enabled: true, startTime: '09:00', endTime: '17:00' },
+        { day: 'friday', enabled: true, startTime: '09:00', endTime: '17:00' },
+        { day: 'saturday', enabled: false, startTime: '09:00', endTime: '13:00' },
+        { day: 'sunday', enabled: false, startTime: '09:00', endTime: '13:00' },
+    ];
+}
+
 function getPlannedSections(plan: WebsitePlan): PageSection[] {
     return plan.componentPlan
         .map(item => item.component)
@@ -282,16 +334,167 @@ function createMediaBlueprint(plan: WebsitePlan, now: string): MediaBlueprint {
 }
 
 function createAppointmentsBlueprint(plan: WebsitePlan, now: string): AppointmentsBlueprint {
-    const wantsBooking = getPlannedSections(plan).some(section => section === 'restaurantReservation' || section === 'leads');
+    const sections = getPlannedSections(plan);
+    const wantsBooking = hasAppointmentSignal(plan, sections);
+    const serviceNames = plan.businessProfile.services
+        .map(service => service.name.trim())
+        .filter(Boolean);
+    const serviceTypes = serviceNames.length > 0 ? serviceNames : (wantsBooking ? ['General appointment'] : []);
+    const hasPublicBookingBlock = sections.some(section => section === 'restaurantReservation' || section === 'leads');
+    const hasChatCoreSurface = sections.includes('chatbot');
+    const hasEcommerce = Boolean(plan.businessProfile.hasEcommerce);
+    const paidBookingTypes = serviceTypes.filter(service => /\b(paid|deposit|prepaid|pago|dep[oó]sito|prepago)\b/i.test(service));
+
     return {
         ...createBlueprintModuleState(now, {
             enabled: wantsBooking,
             status: wantsBooking ? 'generated' : 'disabled',
-            readiness: wantsBooking ? ready(['Availability is not configured yet.']) : ready(),
+            needsReview: wantsBooking,
+            readiness: wantsBooking
+                ? ready([
+                    'Availability, buffers, confirmation rules, and reminders must be reviewed before publishing booking.',
+                    'ChatCore booking intents must confirm date, time, service, contact, and consent before creating a canonical appointment.',
+                    ...(hasEcommerce ? ['Deposits and paid booking products must be mapped before collecting appointment payments.'] : []),
+                ])
+                : ready([], ['No appointment or booking signal was detected in this business blueprint.']),
+            sourceMap: {
+                services: 'websitePlan.businessProfile.services',
+                websiteSections: 'websitePlan.componentPlan',
+                chatcore: 'chatbotBlueprint.eventIntents',
+                crm: 'leadBlueprint',
+                ecommerce: 'ecommerceBlueprint',
+            },
         }),
-        serviceTypes: plan.businessProfile.services.map(service => service.name),
-        paidBookingTypes: [],
-        availabilityStatus: 'not_configured',
+        engineVersion: 'v2',
+        sourceOfTruth: 'project_appointments',
+        legacyReadOnlySources: [
+            'users/{userId}/projects/{projectId}/appointments',
+            'users/{userId}/projects/{projectId}/blockedDates',
+            'widget_public_appointments_legacy_payloads',
+        ],
+        serviceTypes,
+        paidBookingTypes,
+        services: serviceTypes.map((name, index) => ({
+            id: toBlueprintId('appointment-service', name, index),
+            name,
+            description: plan.businessProfile.services.find(service => service.name === name)?.description,
+            durationMinutes: 60,
+            bufferBeforeMinutes: 0,
+            bufferAfterMinutes: 15,
+            paymentMode: paidBookingTypes.includes(name) ? 'deposit' : 'none',
+            currency: hasEcommerce ? 'USD' : undefined,
+            needsReview: true,
+            sourceMap: {
+                name: `websitePlan.businessProfile.services.${index}.name`,
+                description: `websitePlan.businessProfile.services.${index}.description`,
+            },
+        })),
+        availabilityStatus: wantsBooking ? 'draft' : 'not_configured',
+        availability: {
+            weeklyHours: defaultAppointmentWeeklyHours(),
+            blockedTimeSource: 'project_appointment_blocks',
+            minimumNoticeMinutes: 120,
+            maxAdvanceDays: 60,
+            intervalMinutes: 30,
+            capacityPerSlot: 1,
+        },
+        bookingRules: {
+            confirmationMode: 'manual',
+            cancellationPolicy: 'Draft policy required before publishing public booking.',
+            reschedulePolicy: 'Draft policy required before publishing public booking.',
+            reminders: [
+                { channel: 'email', offsetMinutes: 1440, templateKey: 'appointment_reminder_24h' },
+                { channel: 'chatcore', offsetMinutes: 120, templateKey: 'appointment_reminder_2h' },
+            ],
+            leadRequiredFields: ['name', 'email'],
+        },
+        publicBooking: {
+            enabled: wantsBooking && hasPublicBookingBlock,
+            status: hasPublicBookingBlock ? 'draft' : 'not_configured',
+            needsReview: true,
+            routeStrategy: hasPublicBookingBlock ? 'widget_api' : 'disabled',
+            componentIds: sections
+                .filter(section => section === 'restaurantReservation' || section === 'leads')
+                .map(section => `${section}-booking-entry`),
+            events: ['lead_created', 'appointment_requested'],
+        },
+        chatcore: {
+            enabled: wantsBooking,
+            status: hasChatCoreSurface || wantsBooking ? 'draft' : 'not_configured',
+            needsReview: true,
+            source: 'ChatCore',
+            intentNames: ['appointment.request', 'appointment.reschedule', 'appointment.cancel', 'appointment.prepare'],
+            events: ['appointment_requested', 'lead_created'],
+            notes: [
+                'ChatCore must create appointments through the canonical appointment engine only.',
+                'Chat transcript and correlation identifiers should be stored in appointment metadata.',
+            ],
+        },
+        crm: {
+            enabled: wantsBooking,
+            status: wantsBooking ? 'draft' : 'not_configured',
+            needsReview: true,
+            leadLinking: 'create_or_link',
+            pipelineStage: 'appointment_requested',
+            taskStrategy: 'follow_up_after_completed',
+            events: ['lead_created', 'appointment_requested', 'appointment_completed'],
+        },
+        emailMarketing: {
+            enabled: wantsBooking,
+            status: wantsBooking ? 'draft' : 'not_configured',
+            needsReview: true,
+            flowTypes: ['appointment_confirmation', 'appointment_reminder', 'appointment_follow_up'],
+            events: ['email_flow_queued', 'email_sent'],
+        },
+        analytics: {
+            enabled: wantsBooking,
+            status: wantsBooking ? 'draft' : 'not_configured',
+            needsReview: false,
+            eventNames: ['appointment_requested', 'appointment_confirmed', 'appointment_completed', 'appointment_cancelled'],
+            events: ['appointment_requested', 'appointment_confirmed', 'appointment_completed', 'appointment_cancelled'],
+        },
+        googleCalendar: {
+            enabled: wantsBooking,
+            status: 'not_configured',
+            needsReview: true,
+            syncDirection: 'export_only',
+            events: ['appointment_confirmed', 'appointment_updated', 'appointment_cancelled'],
+        },
+        ecommerce: {
+            enabled: wantsBooking && hasEcommerce,
+            status: wantsBooking && hasEcommerce ? 'draft' : 'not_configured',
+            needsReview: wantsBooking && hasEcommerce,
+            paymentMode: paidBookingTypes.length > 0 ? 'deposit' : 'none',
+            depositProductStrategy: paidBookingTypes.length > 0 ? 'per_service' : 'none',
+            events: ['payment_succeeded', 'payment_failed', 'order_created'],
+        },
+        aiPreparation: {
+            enabled: wantsBooking,
+            status: wantsBooking ? 'draft' : 'not_configured',
+            needsReview: true,
+            enabledByDefault: true,
+            usesLinkedLeads: true,
+            promptContext: [
+                'appointment details',
+                'linked lead profile',
+                'lead activity timeline',
+                'ChatCore transcript',
+                'project business blueprint',
+            ],
+            events: ['content_generated', 'content_review_requested'],
+        },
+        websiteBuilderBlocks: [
+            ...(hasPublicBookingBlock ? [{
+                componentId: 'appointmentCTA',
+                purpose: 'appointment_cta' as const,
+                status: 'draft' as const,
+            }] : []),
+            ...(wantsBooking ? [{
+                componentId: 'publicBookingForm',
+                purpose: 'public_booking_form' as const,
+                status: 'needs_review' as const,
+            }] : []),
+        ],
     };
 }
 

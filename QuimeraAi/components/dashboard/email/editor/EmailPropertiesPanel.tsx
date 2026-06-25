@@ -108,7 +108,7 @@ const EmailPropertiesPanel: React.FC = () => {
             
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
-                <div className="quimera-clean-controls p-4">
+                <div data-editor-controls-surface="email" className="quimera-clean-controls p-4">
                     {activeTab === 'style' ? (
                         <>
                             {/* Style Sub-Tabs Header (Only if block is selected) */}
@@ -268,7 +268,7 @@ const NoBlockStyleSelected: React.FC = () => {
     const { t } = useTranslation();
     return (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="bg-q-surface/50 rounded-full p-6 mb-4">
+            <div className="bg-q-surface/50 rounded-[var(--editor-control-radius)] p-5 mb-4">
                 <Palette size={32} className="text-q-text-secondary" />
             </div>
             <h3 className="text-lg font-semibold text-q-text mb-2">
@@ -282,7 +282,6 @@ const NoBlockStyleSelected: React.FC = () => {
 };
 
 export default EmailPropertiesPanel;
-
 
 
 

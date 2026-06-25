@@ -1599,7 +1599,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                             </span>
                                         </h2>
                                     </div>
-                                    <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">
+                                    <div data-editor-controls-surface="template-structure" className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">
                                         <LandingPageControls
                                             key={currentStructureSection.id}
                                             section={currentStructureSection}
@@ -1621,7 +1621,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                             {t('landingEditor.editSection', 'Editar')}: <span>{t(`landingEditor.components.${currentSection!.type}`, currentSection!.type)}</span>
                                         </h2>
                                     </div>
-                                    <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">
+                                    <div data-editor-controls-surface="template-section" className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">
                                         <LandingPageControls
                                             section={currentSection!}
                                             onUpdateSection={updateSectionData}
@@ -1641,7 +1641,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
             {/* Add Component Modal */}
             {showAddComponent && (
                 <div className="fixed inset-0 bg-q-text/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md shadow-xl">
+                    <div className="bg-q-surface rounded-[var(--editor-control-modal-radius)] border border-q-border w-full max-w-md shadow-xl">
                         <div className="p-4 border-b border-q-border flex items-center justify-between">
                             <h3 className="font-semibold">{t('landingEditor.addComponent', 'Añadir componente')}</h3>
 	                            <button
@@ -1690,7 +1690,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     <div className="flex justify-end gap-3">
                         <button
                             onClick={() => setShowResetConfirm(false)}
-                            className="px-4 py-2 rounded-lg hover:bg-secondary transition-colors"
+                            className="px-4 py-2 rounded-[var(--editor-control-radius)] hover:bg-secondary transition-colors"
                         >
                             {t('common.cancel', 'Cancelar')}
                         </button>
@@ -1702,7 +1702,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                 setPreviewKey(prev => prev + 1);
                                 setShowResetConfirm(false);
                             }}
-                            className="px-4 py-2 rounded-lg bg-q-accent hover:bg-q-accent text-q-text-on-accent transition-colors"
+                            className="px-4 py-2 rounded-[var(--editor-control-radius)] bg-q-accent hover:bg-q-accent text-q-text-on-accent transition-colors"
                         >
                             {t('landingEditor.discardChanges', 'Descartar')}
                         </button>
@@ -1724,13 +1724,13 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     <div className="flex justify-end gap-3">
                         <button
                             onClick={() => setSectionToDelete(null)}
-                            className="px-4 py-2 rounded-lg hover:bg-secondary transition-colors"
+                            className="px-4 py-2 rounded-[var(--editor-control-radius)] hover:bg-secondary transition-colors"
                         >
                             {t('common.cancel', 'Cancelar')}
                         </button>
                         <button
                             onClick={confirmDeleteSection}
-                            className="px-4 py-2 rounded-lg bg-q-error hover:bg-q-error text-white transition-colors"
+                            className="px-4 py-2 rounded-[var(--editor-control-radius)] bg-q-error hover:bg-q-error text-white transition-colors"
                         >
                             {t('common.delete', 'Eliminar')}
                         </button>

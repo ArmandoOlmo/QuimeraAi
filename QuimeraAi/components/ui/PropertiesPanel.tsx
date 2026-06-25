@@ -26,7 +26,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     if (!activeSection) {
         return (
             <div className="h-full flex flex-col items-center justify-center bg-q-bg p-8 text-center">
-                <div className="bg-q-surface/50 rounded-full p-6 mb-4">
+                <div className="bg-q-surface/50 rounded-[var(--editor-control-radius)] p-5 mb-4">
                     <Settings size={32} className="text-q-text-secondary" />
                 </div>
                 <h3 className="text-lg font-semibold text-q-text mb-2">
@@ -82,7 +82,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
-                <div data-tab={activeTab} className="quimera-clean-controls p-4">
+                <div data-tab={activeTab} data-editor-controls-surface="properties" className="quimera-clean-controls p-4">
                     {children}
                 </div>
             </div>
@@ -114,7 +114,6 @@ export const withTabOrganization = (
 };
 
 export default PropertiesPanel;
-
 
 
 

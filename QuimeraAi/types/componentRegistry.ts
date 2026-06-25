@@ -82,6 +82,7 @@ export type ComponentId =
     | 'shopCTA'
     | 'leadForm'
     | 'appointmentCTA'
+    | 'publicBookingForm'
     | 'gallery'
     | 'imageWithText'
     | 'pricing'

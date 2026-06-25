@@ -1,6 +1,12 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
+import {
+  createAppointmentFromChat,
+  createAppointmentFromPublicBooking,
+  getAvailableAppointmentSlots,
+  getAppointmentsByProject,
+} from '../../services/appointments/appointmentEngineService';
 
 type ProjectRow = {
   id: string;
@@ -84,6 +90,50 @@ function normalizeNumber(value: unknown): number | undefined {
     if (Number.isFinite(parsed)) return parsed;
   }
   return undefined;
+}
+
+function normalizeMetadata(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => key.length <= 80)
+      .slice(0, 40),
+  );
+}
+
+function parseDateParam(value: string | null | undefined): Date | undefined {
+  if (!value) return undefined;
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T00:00:00`)
+    : new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function getProjectBusinessBlueprint(project: ProjectRow): Record<string, any> | null {
+  const data = project.data || {};
+  return data.businessBlueprint || data.data?.businessBlueprint || null;
+}
+
+function getProjectAppointmentsBlueprint(project: ProjectRow): Record<string, any> | null {
+  return getProjectBusinessBlueprint(project)?.appointmentsBlueprint || null;
+}
+
+function normalizeWeeklyHours(value: unknown) {
+  if (!Array.isArray(value)) return undefined;
+  return value
+    .map((rule) => ({
+      day: normalizeString(rule?.day, 20) || '',
+      enabled: rule?.enabled === true,
+      startTime: normalizeString(rule?.startTime, 10) || '09:00',
+      endTime: normalizeString(rule?.endTime, 10) || '17:00',
+    }))
+    .filter(rule => rule.day);
 }
 
 async function readJson(req: IncomingMessage & { body?: any }): Promise<Record<string, any>> {
@@ -170,7 +220,12 @@ async function resolveTenantId(project: ProjectRow): Promise<string> {
   return data.id;
 }
 
-async function loadProject(parsed: ParsedProjectParam, req: IncomingMessage, requirePublic = true): Promise<ProjectRow> {
+async function loadProject(
+  parsed: ParsedProjectParam,
+  req: IncomingMessage,
+  requirePublic = true,
+  options: { requireAssistant?: boolean } = {},
+): Promise<ProjectRow> {
   const { data, error } = await getSupabaseAdmin()
     .from('projects')
     .select('id, tenant_id, user_id, name, status, published_at, data, theme, brand_identity, component_order, section_visibility, pages, menus, ai_assistant_config')
@@ -188,7 +243,10 @@ async function loadProject(parsed: ParsedProjectParam, req: IncomingMessage, req
   if (requirePublic) {
     const authUserId = await getAuthenticatedUserId(req);
     const canAccessDraft = authUserId && project.user_id === authUserId;
-    if (!canAccessDraft && (!isPublished(project) || !isAssistantActive(project))) {
+    if (!canAccessDraft && !isPublished(project)) {
+      throw Object.assign(new Error('Widget is not available for this project.'), { status: 404 });
+    }
+    if (!canAccessDraft && options.requireAssistant && !isAssistantActive(project)) {
       throw Object.assign(new Error('Widget is not available for this project.'), { status: 404 });
     }
   }
@@ -246,7 +304,7 @@ function publicProject(project: ProjectRow): Record<string, any> {
 }
 
 async function handleGetWidget(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam): Promise<void> {
-  const project = await loadProject(parsed, req);
+  const project = await loadProject(parsed, req, true, { requireAssistant: true });
   const config = sanitizeAssistantConfig(project.ai_assistant_config);
   send(res, 200, { config, project: publicProject(project) });
 }
@@ -256,26 +314,79 @@ async function handleListAppointments(req: IncomingMessage, res: ServerResponse,
   const now = new Date();
   const rangeEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
-  const { data, error } = await getSupabaseAdmin()
-    .from('project_appointments')
-    .select('id, start_date, end_date, status')
-    .eq('project_id', project.id)
-    .gte('start_date', now.toISOString())
-    .lte('start_date', rangeEnd.toISOString())
-    .neq('status', 'cancelled')
-    .order('start_date', { ascending: true })
-    .limit(100);
-
-  if (error) throw error;
+  const appointments = await getAppointmentsByProject(getSupabaseAdmin(), project.id, {
+    startDate: now,
+    endDate: rangeEnd,
+    limit: 100,
+  });
 
   send(res, 200, {
-    appointments: (data || []).map((item: any) => ({
+    appointments: appointments.map((item) => ({
       id: item.id,
       title: 'Reservado',
-      startDate: item.start_date,
-      endDate: item.end_date,
+      startDate: new Date(item.startDate.seconds * 1000).toISOString(),
+      endDate: new Date(item.endDate.seconds * 1000).toISOString(),
       status: item.status || 'scheduled',
     })),
+  });
+}
+
+async function handleListAvailability(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam): Promise<void> {
+  const project = await loadProject(parsed, req);
+  const url = new URL(req.url || '/', 'http://localhost');
+  const appointmentsBlueprint = getProjectAppointmentsBlueprint(project);
+  const availability = appointmentsBlueprint?.availability || {};
+  const bookingRules = appointmentsBlueprint?.bookingRules || {};
+
+  const queryDate = parseDateParam(url.searchParams.get('date'));
+  const startDate = parseDateParam(url.searchParams.get('startDate')) || queryDate || new Date();
+  const days = Math.min(Math.max(normalizeNumber(url.searchParams.get('days')) || (queryDate ? 1 : 14), 1), 60);
+  const endDate = parseDateParam(url.searchParams.get('endDate')) || addDays(startDate, days);
+  const durationMinutes = normalizeNumber(url.searchParams.get('durationMinutes'))
+    || normalizeNumber(url.searchParams.get('duration'))
+    || normalizeNumber(appointmentsBlueprint?.services?.[0]?.durationMinutes)
+    || 60;
+  const intervalMinutes = normalizeNumber(url.searchParams.get('intervalMinutes'))
+    || normalizeNumber(availability.intervalMinutes)
+    || 30;
+  const minimumNoticeMinutes = normalizeNumber(url.searchParams.get('minimumNoticeMinutes'))
+    || normalizeNumber(availability.minimumNoticeMinutes)
+    || 120;
+  const maxSlots = normalizeNumber(url.searchParams.get('maxSlots')) || 48;
+
+  const slots = await getAvailableAppointmentSlots(getSupabaseAdmin(), project.id, {
+    startDate,
+    endDate,
+    durationMinutes,
+    intervalMinutes,
+    minimumNoticeMinutes,
+    weeklyHours: normalizeWeeklyHours(availability.weeklyHours),
+    maxSlots,
+  });
+
+  send(res, 200, {
+    projectId: project.id,
+    sourceOfTruth: 'project_appointments',
+    blockedTimeSource: 'project_appointment_blocks',
+    durationMinutes,
+    intervalMinutes,
+    minimumNoticeMinutes,
+    timezone: availability.timezone || 'UTC',
+    confirmationMode: bookingRules.confirmationMode || 'manual',
+    slots,
+    services: Array.isArray(appointmentsBlueprint?.services)
+      ? appointmentsBlueprint.services.map((service: Record<string, any>) => ({
+        id: service.id,
+        name: service.name,
+        durationMinutes: service.durationMinutes,
+        paymentMode: service.paymentMode || 'none',
+        depositAmount: service.depositAmount,
+        prepaidAmount: service.prepaidAmount,
+        paymentAmount: service.paymentAmount,
+        currency: service.currency,
+        ecommerceProductId: service.ecommerceProductId || service.depositProductId,
+      }))
+      : [],
   });
 }
 
@@ -294,6 +405,10 @@ async function handleCreateLead(req: IncomingMessage, res: ServerResponse, parse
     aiAnalysis: normalizeString(body.aiAnalysis, 5000),
     recommendedAction: normalizeString(body.recommendedAction, 2000),
     aiScore: normalizeNumber(body.aiScore),
+    sourceComponent: normalizeString(body.sourceComponent, 120),
+    sourceModule: normalizeString(body.sourceModule, 120),
+    publicSubmissionId: normalizeString(body.publicSubmissionId, 120),
+    correlationId: normalizeString(body.correlationId, 120),
     widgetSource: 'public-widget-api',
   };
 
@@ -342,68 +457,61 @@ async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse
     throw Object.assign(new Error('Appointments must be scheduled for a future time.'), { status: 400 });
   }
 
-  const startIso = startDate.toISOString();
-  const endIso = endDate.toISOString();
-  const overlap = await getSupabaseAdmin()
-    .from('project_appointments')
-    .select('id')
-    .eq('project_id', project.id)
-    .neq('status', 'cancelled')
-    .lt('start_date', endIso)
-    .gt('end_date', startIso)
-    .limit(1)
-    .maybeSingle();
+  const source = normalizeString(body.source, 80) === 'chatbot' ? 'chatbot' : 'public_booking';
+  const bookingChannel = normalizeString(body.bookingChannel, 120);
+  const createAppointment = source === 'chatbot' ? createAppointmentFromChat : createAppointmentFromPublicBooking;
+  const result = await createAppointment(getSupabaseAdmin(), {
+    tenantId,
+    projectId: project.id,
+    title: normalizeString(body.title, 250) || (source === 'chatbot' ? 'Cita desde Chatbot' : 'Reserva desde sitio web'),
+    description: normalizeString(body.description, 5000) || '',
+    type: normalizeString(body.type, 80) || 'consultation',
+    status: 'scheduled',
+    priority: 'medium',
+    startDate,
+    endDate,
+    timezone: normalizeString(body.timezone, 120) || 'UTC',
+    organizerId: project.user_id,
+    organizerName: project.name,
+    participantName: normalizeString(body.participantName, 200),
+    participantEmail: normalizeString(body.participantEmail, 320),
+    participantPhone: normalizeString(body.participantPhone, 80),
+    linkedLeadId: normalizeString(body.linkedLeadId, 80),
+    conversationTranscript: normalizeString(body.conversationTranscript, 20000),
+    sourceComponent: normalizeString(body.sourceComponent, 120) || (source === 'chatbot' ? 'ChatCore' : 'PublicBooking'),
+    sourceModule: normalizeString(body.sourceModule, 120) || (source === 'chatbot' ? 'chatcore' : 'website-builder'),
+    sourceConversationId: normalizeString(body.sourceConversationId, 120),
+    publicSubmissionId: normalizeString(body.publicSubmissionId, 120),
+    idempotencyKey: normalizeString(body.idempotencyKey, 240) || `${source}:${project.id}:${normalizeString(body.participantEmail, 320) || normalizeString(body.participantName, 200) || 'guest'}:${startDate.toISOString()}`,
+    bookingServiceId: normalizeString(body.bookingServiceId, 120),
+    ecommerceProductId: normalizeString(body.ecommerceProductId, 120),
+    ecommerceOrderId: normalizeString(body.ecommerceOrderId, 120),
+    paymentStatus: normalizeString(body.paymentStatus, 120),
+    locale: normalizeString(body.locale, 16),
+    createdBy: project.user_id,
+    createdBySystem: true,
+    generatedByAI: body.generatedByAI === true || Boolean(bookingChannel && bookingChannel !== 'chatcore_form'),
+    needsReview: source !== 'chatbot',
+    tags: source === 'chatbot' ? ['chatbot', 'chatcore', 'appointment-scheduled'] : ['public-booking', 'appointment'],
+    metadata: {
+      ...normalizeMetadata(body.metadata),
+      bookingChannel,
+      widgetApi: true,
+      clientIp: getClientIp(req),
+      userAgent: req.headers['user-agent'] || null,
+    },
+  });
 
-  if (overlap.error) throw overlap.error;
-  if (overlap.data) {
-    throw Object.assign(new Error('The selected appointment time is no longer available.'), { status: 409 });
-  }
-
-  const participantName = normalizeString(body.participantName, 200);
-  const participantEmail = normalizeString(body.participantEmail, 320);
-  const participantPhone = normalizeString(body.participantPhone, 80);
-  const participants = participantName || participantEmail || participantPhone
-    ? [{
-        id: `participant_${Date.now()}`,
-        name: participantName || 'Cliente',
-        email: participantEmail || '',
-        phone: participantPhone || '',
-        role: 'attendee',
-        status: 'pending',
-        isRequired: true,
-      }]
-    : [];
-
-  const { data, error } = await getSupabaseAdmin()
-    .from('project_appointments')
-    .insert({
-      tenant_id: tenantId,
-      project_id: project.id,
-      title: normalizeString(body.title, 250) || 'Cita desde Chatbot',
-      description: normalizeString(body.description, 5000) || '',
-      type: normalizeString(body.type, 80) || 'consultation',
-      status: 'scheduled',
-      priority: 'medium',
-      start_date: startIso,
-      end_date: endIso,
-      timezone: normalizeString(body.timezone, 120) || 'UTC',
-      organizer_id: project.user_id,
-      organizer_name: project.name,
-      participants,
-      location: { type: 'virtual' },
-      reminders: [
-        { id: `reminder_1_${Date.now()}`, type: 'email', minutes: 60, sent: false },
-        { id: `reminder_2_${Date.now()}`, type: 'email', minutes: 1440, sent: false },
-      ],
-      linked_lead_ids: normalizeString(body.linkedLeadId, 80) ? [String(body.linkedLeadId)] : [],
-      tags: ['chatbot', 'auto-scheduled'],
-      created_by: project.user_id,
-    })
-    .select('id')
-    .single();
-
-  if (error) throw error;
-  send(res, 201, { appointmentId: data.id });
+  send(res, result.duplicate ? 200 : 201, {
+    appointmentId: result.appointmentId,
+    projectId: project.id,
+    leadId: result.leadId,
+    duplicate: result.duplicate,
+    ecommerceOrderId: result.appointment.ecommerceOrderId,
+    paymentStatus: result.appointment.paymentStatus,
+    paymentRequired: Boolean(result.appointment.ecommerceOrderId && result.appointment.paymentStatus && result.appointment.paymentStatus !== 'paid'),
+    warnings: result.warnings,
+  });
 }
 
 async function handleCreateConversation(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam): Promise<void> {
@@ -567,6 +675,7 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
 
     if (req.method === 'GET' && !resource) return await handleGetWidget(req, res, parsed);
     if (req.method === 'GET' && resource === 'appointments') return await handleListAppointments(req, res, parsed);
+    if (req.method === 'GET' && resource === 'availability') return await handleListAvailability(req, res, parsed);
     if (req.method === 'POST' && resource === 'leads') return await handleCreateLead(req, res, parsed);
     if (req.method === 'POST' && resource === 'appointments') return await handleCreateAppointment(req, res, parsed);
     if (req.method === 'POST' && resource === 'conversations' && !id) return await handleCreateConversation(req, res, parsed);

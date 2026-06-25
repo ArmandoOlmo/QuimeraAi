@@ -23,6 +23,14 @@ const defaultTransactionalSettings: TransactionalEmailSettings = {
     reviewRequestDelayDays: 3,
     newOrderNotification: true,
     lowStockNotification: true,
+    appointments: true,
+    appointmentEmails: true,
+    appointmentRequestReceived: true,
+    appointmentConfirmation: true,
+    appointmentCancellation: true,
+    appointmentFollowUp: true,
+    appointmentReminder: true,
+    appointmentTemplates: {},
 };
 
 const defaultMarketingSettings: MarketingEmailSettings = {

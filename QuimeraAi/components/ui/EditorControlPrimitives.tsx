@@ -9,10 +9,10 @@ import { ChevronDown, Check, ArrowUpLeft, ArrowUp, ArrowUpRight, ArrowLeft, Circ
 import { mergeI18nValue } from '../../utils/i18nContent';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 
-export const controlFieldClass = 'mb-4';
+export const controlFieldClass = 'mb-3';
 export const controlLabelClass = 'editor-control-label block text-[var(--editor-control-label-size)] leading-[var(--editor-control-label-leading)] font-bold text-q-text-secondary mb-2';
 export const controlInputClass = 'w-full min-h-[var(--editor-control-input-height)] bg-[var(--editor-control-input-bg)] border border-[var(--editor-control-border)] rounded-[var(--editor-control-radius)] px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-[var(--editor-control-focus-ring)] focus:border-q-accent/70 transition-all placeholder:text-q-text-secondary/50';
-export const controlTextareaClass = `${controlInputClass} resize-y min-h-[92px] leading-6`;
+export const controlTextareaClass = `${controlInputClass} resize-y min-h-[84px] leading-6`;
 export const controlSegmentClass = 'flex bg-[var(--editor-control-surface-muted)] rounded-[var(--editor-control-radius)] border border-[var(--editor-control-border)] p-1';
 export const controlSegmentButtonClass = (selected: boolean) => `flex-1 min-h-8 px-2 py-1.5 text-xs font-semibold rounded-[var(--editor-control-radius-sm)] transition-colors ${
   selected ? 'bg-q-accent text-q-text-on-accent shadow-sm' : 'text-q-text-secondary hover:text-q-text hover:bg-q-surface/80'
@@ -265,7 +265,7 @@ export const Select = ({ label, options, groups, value, onChange, className, noM
 };
 
 export const ToggleControl = ({ label, checked, onChange }: { label?: string, checked: boolean, onChange: (checked: boolean) => void }) => (
-  <div className={`flex items-center ${label ? 'justify-between gap-4 rounded-[var(--editor-control-radius)] py-2.5 mb-1' : ''}`}>
+  <div data-editor-control-row className={`flex items-center ${label ? 'justify-between gap-3 rounded-[var(--editor-control-radius)] py-2 mb-1' : ''}`}>
     {label && <label className={controlLabelClass.replace('block ', '').replace('mb-2', 'mb-0')}>{label}</label>}
     <button
       type="button"
@@ -279,7 +279,7 @@ export const ToggleControl = ({ label, checked, onChange }: { label?: string, ch
     >
       <span
         aria-hidden="true"
-        className={`${checked ? 'translate-x-5' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-q-surface shadow-sm ring-0 transition duration-200 ease-in-out`}
+        className={`${checked ? 'quimera-editor-switch-knob-on translate-x-5' : 'quimera-editor-switch-knob-off translate-x-0'} quimera-editor-switch-knob pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-q-surface shadow-sm ring-0 transition duration-200 ease-in-out`}
       />
     </button>
   </div>

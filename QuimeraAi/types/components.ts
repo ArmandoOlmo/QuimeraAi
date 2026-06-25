@@ -949,6 +949,49 @@ export interface LeadsData extends SectionBackgroundFields {
 }
 
 // =============================================================================
+// APPOINTMENT BOOKING
+// =============================================================================
+export interface AppointmentBookingData extends SectionBackgroundFields {
+    title?: string;
+    subtitle?: string;
+    description?: string;
+    serviceLabel?: string;
+    dateLabel?: string;
+    slotLabel?: string;
+    namePlaceholder?: string;
+    emailPlaceholder?: string;
+    phonePlaceholder?: string;
+    messagePlaceholder?: string;
+    buttonText?: string;
+    successMessage?: string;
+    noSlotsMessage?: string;
+    durationMinutes?: number;
+    paddingY?: PaddingSize;
+    paddingX?: PaddingSize;
+    cardBorderRadius?: BorderRadiusSize;
+    inputBorderRadius?: BorderRadiusSize;
+    buttonBorderRadius?: BorderRadiusSize;
+    colors?: {
+        background?: string;
+        accent?: string;
+        borderColor?: string;
+        text?: string;
+        heading?: string;
+        description?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+        cardBackground?: string;
+        inputBackground?: string;
+        inputText?: string;
+        inputBorder?: string;
+        inputPlaceholder?: string;
+    };
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
 // NEWSLETTER
 // =============================================================================
 export interface NewsletterData extends SectionBackgroundFields {
@@ -2707,6 +2750,7 @@ export interface PageData {
     pricing: PricingData;
     faq: FaqData;
     leads: LeadsData;
+    appointmentBooking?: AppointmentBookingData;
     newsletter: NewsletterData;
     cta: CtaData;
     portfolio: PortfolioData;

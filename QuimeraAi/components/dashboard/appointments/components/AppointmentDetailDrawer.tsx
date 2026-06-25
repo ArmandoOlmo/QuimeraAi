@@ -39,6 +39,7 @@ import {
 import {
     Appointment,
     AppointmentStatus,
+    Lead,
     APPOINTMENT_TYPE_CONFIGS,
     APPOINTMENT_STATUS_CONFIGS,
     APPOINTMENT_PRIORITY_CONFIGS,
@@ -74,6 +75,7 @@ interface AppointmentDetailDrawerProps {
     onAddNote?: (content: string) => Promise<void>;
     onUpdateAiInsights?: (insights: any) => Promise<void>;
     isGeneratingAi?: boolean;
+    linkedLeads?: Lead[];
 }
 
 type TabId = 'details' | 'participants' | 'notes' | 'ai';
@@ -131,6 +133,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
     onAddNote,
     onUpdateAiInsights,
     isGeneratingAi,
+    linkedLeads,
 }) => {
     const { t, i18n } = useTranslation();
     const [activeTab, setActiveTab] = useState<TabId>('details');
@@ -730,6 +733,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                     {activeTab === 'ai' && onUpdateAiInsights && (
                         <AIPreparationPanel
                             appointment={appointment}
+                            linkedLeads={linkedLeads}
                             onInsightsGenerated={onUpdateAiInsights}
                         />
                     )}
@@ -781,5 +785,4 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
 };
 
 export default AppointmentDetailDrawer;
-
 

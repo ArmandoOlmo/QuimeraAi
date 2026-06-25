@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Appointment,
     AppointmentStatus,
@@ -27,8 +28,18 @@ import {
     getUpcomingAppointments,
     findConflicts,
     calculateDuration,
+    dateToTimestamp,
 } from '../utils/appointmentHelpers';
-import { mapAppointmentFromDb, mapAppointmentToDb } from '../utils/dbMapping';
+import {
+    cancelAppointmentCanonical,
+    completeAppointmentCanonical,
+    confirmAppointmentCanonical,
+    createAppointmentCanonical,
+    getAppointmentsByProject,
+    markNoShowCanonical,
+    updateAppointmentCanonical,
+} from '../../../../services/appointments/appointmentEngineService';
+import { buildAppointmentEngineAnalytics } from '../../../../services/appointments/appointmentAnalyticsService';
 
 // =============================================================================
 // TYPES
@@ -115,6 +126,7 @@ const DEFAULT_SORT: AppointmentSortOptions = {
 // =============================================================================
 
 export const useAppointments = (): UseAppointmentsReturn => {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { activeProjectId } = useProject();
     const tenantContext = useSafeTenant();
@@ -138,24 +150,18 @@ export const useAppointments = (): UseAppointmentsReturn => {
         if (!user || !activeProjectId) return;
         
         try {
-            const { data, error } = await supabase
-                .from('project_appointments')
-                .select('*')
-                .eq('project_id', activeProjectId)
-                .order('start_date', { ascending: true });
-
-            if (error) throw error;
-
-            const appointmentsData: Appointment[] = (data || []).map(row => mapAppointmentFromDb(row));
+            const appointmentsData = await getAppointmentsByProject(supabase, activeProjectId, {
+                includeCancelled: true,
+            });
             setAppointments(appointmentsData);
             setError(null);
         } catch (err: any) {
             console.error('[useAppointments] Error fetching appointments:', err);
-            setError(err.message || 'Error al cargar las citas');
+            setError(err.message || t('appointments.errors.loadAppointments'));
         } finally {
             setIsLoading(false);
         }
-    }, [user, activeProjectId]);
+    }, [user, activeProjectId, t]);
 
     useEffect(() => {
         if (!user) {
@@ -167,7 +173,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
         if (!activeProjectId) {
             setAppointments([]);
             setIsLoading(false);
-            setError('Selecciona un proyecto para ver las citas');
+            setError(t('appointments.errors.selectProject'));
             return;
         }
 
@@ -243,7 +249,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
         }
         
         // Sort
-        return sortByStartDate(result, sortOptions.direction);
+        return sortByStartDate(result, sortOptions.direction === 'asc');
     }, [appointments, filters, sortOptions]);
     
     // ==========================================================================
@@ -251,26 +257,24 @@ export const useAppointments = (): UseAppointmentsReturn => {
     // ==========================================================================
     
     const createAppointment = async (data: Partial<Appointment>): Promise<Appointment> => {
-        if (!user || !activeProjectId) throw new Error('Usuario o proyecto no disponible');
+        if (!user || !activeProjectId) throw new Error(t('appointments.errors.userOrProjectUnavailable'));
 
         try {
-            const newAppointmentData = {
-                ...mapAppointmentToDb(data, currentTenantId || undefined, activeProjectId),
-                organizer_id: user.id,
-                created_by: user.id,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            };
-
-            const { data: insertedData, error } = await supabase
-                .from('project_appointments')
-                .insert([newAppointmentData])
-                .select('*')
-                .single();
-
-            if (error) throw error;
-            
-            const newAppointment = mapAppointmentFromDb(insertedData);
+            const result = await createAppointmentCanonical(supabase, {
+                ...(data as any),
+                tenantId: currentTenantId || data.tenantId,
+                projectId: activeProjectId,
+                organizerId: data.organizerId || user.id,
+                organizerName: data.organizerName || (user.user_metadata?.full_name || user.user_metadata?.name || user.email || ''),
+                organizerEmail: data.organizerEmail || user.email || '',
+                createdBy: user.id,
+                updatedBy: user.id,
+                source: data.source || 'dashboard',
+                sourceModule: data.sourceModule || 'appointments',
+                sourceComponent: data.sourceComponent || 'AppointmentsDashboard',
+                createOrLinkLead: true,
+            });
+            const newAppointment = result.appointment;
             setAppointments(prev => [...prev, newAppointment]);
             return newAppointment;
         } catch (error) {
@@ -280,21 +284,13 @@ export const useAppointments = (): UseAppointmentsReturn => {
     };
     
     const updateAppointment = async (id: string, data: Partial<Appointment>): Promise<void> => {
-        if (!user || !activeProjectId) throw new Error('Usuario o proyecto no disponible');
+        if (!user || !activeProjectId) throw new Error(t('appointments.errors.userOrProjectUnavailable'));
 
         try {
-            const updateData = {
-                ...mapAppointmentToDb(data),
-                updated_by: user.id,
-                updated_at: new Date().toISOString()
-            };
-
-            const { error } = await supabase
-                .from('project_appointments')
-                .update(updateData)
-                .eq('id', id);
-
-            if (error) throw error;
+            await updateAppointmentCanonical(supabase, id, {
+                ...data,
+                updatedBy: user.id,
+            });
             
             // Optimistic update done via realtime channel
         } catch (error) {
@@ -304,7 +300,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
     };
     
     const deleteAppointment = async (id: string): Promise<void> => {
-        if (!user || !activeProjectId) throw new Error('Usuario o proyecto no disponible');
+        if (!user || !activeProjectId) throw new Error(t('appointments.errors.userOrProjectUnavailable'));
 
         try {
             const { error } = await supabase
@@ -332,28 +328,15 @@ export const useAppointments = (): UseAppointmentsReturn => {
     };
     
     const confirmAppointment = async (id: string): Promise<void> => {
-        await updateStatus(id, 'confirmed');
+        if (!user) throw new Error(t('appointments.errors.userNotLoggedIn'));
+        await confirmAppointmentCanonical(supabase, id, user.id);
     };
     
     const cancelAppointment = async (id: string, reason?: string): Promise<void> => {
-        if (!user) throw new Error('User not logged in');
+        if (!user) throw new Error(t('appointments.errors.userNotLoggedIn'));
         
         try {
-            const updateData: any = {
-                status: 'cancelled',
-                cancelled_at: new Date().toISOString(),
-                cancelled_by: user.id,
-                updated_by: user.id,
-                updated_at: new Date().toISOString()
-            };
-            if (reason) updateData.cancelled_reason = reason;
-
-            const { error } = await supabase
-                .from('project_appointments')
-                .update(updateData)
-                .eq('id', id);
-
-            if (error) throw error;
+            await cancelAppointmentCanonical(supabase, id, reason, user.id);
         } catch (error) {
             console.error('[useAppointments] Error cancelling appointment:', error);
             throw error;
@@ -361,35 +344,23 @@ export const useAppointments = (): UseAppointmentsReturn => {
     };
     
     const completeAppointment = async (id: string, outcome?: string, notes?: string): Promise<void> => {
-        if (!user) throw new Error('User not logged in');
+        if (!user) throw new Error(t('appointments.errors.userNotLoggedIn'));
         
         const apt = appointments.find(a => a.id === id);
-        if (!apt) throw new Error('Cita no encontrada');
+        if (!apt) throw new Error(t('appointments.errors.notFound'));
         
         // Calculate duration if not provided
         const duration = apt.actualDuration || calculateDuration(
-            new Date(apt.startDate.seconds * 1000),
-            new Date(apt.endDate.seconds * 1000)
+            apt.startDate,
+            apt.endDate
         );
         
         try {
-            const updateData: any = {
-                status: 'completed',
-                completed_at: new Date().toISOString(),
-                actual_duration: duration,
-                updated_by: user.id,
-                updated_at: new Date().toISOString()
-            };
-            
-            if (outcome) updateData.outcome = outcome;
-            if (notes) updateData.outcome_notes = notes;
-
-            const { error } = await supabase
-                .from('project_appointments')
-                .update(updateData)
-                .eq('id', id);
-
-            if (error) throw error;
+            await completeAppointmentCanonical(supabase, id, outcome, notes);
+            await updateAppointmentCanonical(supabase, id, {
+                actualDuration: duration,
+                updatedBy: user.id,
+            });
         } catch (error) {
             console.error('[useAppointments] Error completing appointment:', error);
             throw error;
@@ -397,7 +368,8 @@ export const useAppointments = (): UseAppointmentsReturn => {
     };
     
     const markNoShow = async (id: string): Promise<void> => {
-        await updateStatus(id, 'no_show');
+        if (!user) throw new Error(t('appointments.errors.userNotLoggedIn'));
+        await markNoShowCanonical(supabase, id, user.id);
     };
     
     // ==========================================================================
@@ -406,11 +378,11 @@ export const useAppointments = (): UseAppointmentsReturn => {
     
     const addParticipant = async (appointmentId: string, participant: AppointmentParticipant): Promise<void> => {
         const apt = appointments.find(a => a.id === appointmentId);
-        if (!apt) throw new Error('Cita no encontrada');
+        if (!apt) throw new Error(t('appointments.errors.notFound'));
         
         const currentParticipants = apt.participants || [];
         if (currentParticipants.some(p => p.id === participant.id || p.email === participant.email)) {
-            throw new Error('El participante ya está en la cita');
+            throw new Error(t('appointments.errors.participantAlreadyAdded'));
         }
         
         const updatedParticipants = [...currentParticipants, participant];
@@ -419,7 +391,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
     
     const removeParticipant = async (appointmentId: string, participantId: string): Promise<void> => {
         const apt = appointments.find(a => a.id === appointmentId);
-        if (!apt) throw new Error('Cita no encontrada');
+        if (!apt) throw new Error(t('appointments.errors.notFound'));
         
         const updatedParticipants = (apt.participants || []).filter(p => p.id !== participantId);
         await updateAppointment(appointmentId, { participants: updatedParticipants });
@@ -431,7 +403,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
         status: 'accepted' | 'declined' | 'tentative'
     ): Promise<void> => {
         const apt = appointments.find(a => a.id === appointmentId);
-        if (!apt) throw new Error('Cita no encontrada');
+        if (!apt) throw new Error(t('appointments.errors.notFound'));
         
         const updatedParticipants = (apt.participants || []).map(p => {
             if (p.id === participantId) {
@@ -449,7 +421,11 @@ export const useAppointments = (): UseAppointmentsReturn => {
     
     const checkConflicts = useCallback((start: Date, end: Date, excludeId?: string): Appointment[] => {
         // Find appointments that overlap with the given time range
-        return findConflicts(appointments, start, end, excludeId);
+        return findConflicts(appointments, {
+            id: excludeId || '__candidate__',
+            startDate: dateToTimestamp(start),
+            endDate: dateToTimestamp(end),
+        });
     }, [appointments]);
     
     // ==========================================================================
@@ -486,7 +462,8 @@ export const useAppointments = (): UseAppointmentsReturn => {
         const total = appointments.length;
         const totalPast = appointments.filter(a => new Date(a.startDate.seconds * 1000) < now).length || 1; // prevent div by 0
         
-        // Build base analytics (simplified for demo)
+        const engine = buildAppointmentEngineAnalytics(appointments);
+
         return {
             totalAppointments: total,
             completedAppointments: completed,
@@ -538,7 +515,9 @@ export const useAppointments = (): UseAppointmentsReturn => {
                 appointmentsChange: total - lastMonthAppointments.length,
                 completionRateChange: 0, // Need to calc last month completion
                 avgDurationChange: 0,
-            }
+            },
+
+            engine,
         };
     }, [appointments, upcomingAppointments]);
     

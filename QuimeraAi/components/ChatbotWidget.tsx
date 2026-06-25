@@ -8,18 +8,7 @@ import { Lead, AiAssistantConfig } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from './chat/ChatCore';
 import { supabase } from '../supabase';
-// Lazy-loaded compatibility data helpers used by appointment/chat persistence.
-let _dataModules: any = null;
-let _dataLoadPromise: Promise<any> | null = null;
-function getDataModules(): Promise<any> {
-    if (_dataModules) return Promise.resolve(_dataModules);
-    if (!_dataLoadPromise) {
-        _dataLoadPromise = import('@/utils/compatData')
-            .then(mod => { _dataModules = mod; return mod; })
-            .catch(() => null);
-    }
-    return _dataLoadPromise;
-}
+import { createAppointmentFromChat, getAppointmentsByProject } from '../services/appointments/appointmentEngineService';
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import { useSafeTenant } from '../contexts/tenant';
 import { useRouter } from '../hooks/useRouter';
@@ -71,8 +60,9 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const authContext = useSafeAuth();
     const user = authContext?.user || null;
     const tenantContext = useSafeTenant();
+    const currentTenantId = tenantContext?.currentTenant?.id || null;
     const hasWhiteLabelBranding = !!(tenantContext?.currentTenant?.branding?.companyName || tenantContext?.currentTenant?.branding?.logoUrl);
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     const activeProject = editorContext?.activeProject || projectContext?.activeProject || standaloneProject || null;
     const data = editorContext?.data || projectContext?.data || standaloneProject?.data;
@@ -306,42 +296,21 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     return;
                 }
 
-                const dataHelpers = await getDataModules();
-                if (!dataHelpers) {
-                    console.warn('[ChatbotWidget] Data helpers unavailable, skipping appointment load');
-                    return;
-                }
-                const appointmentsRef = dataHelpers.collection(dataHelpers.db, 'users', user.id, 'projects', activeProject.id, 'appointments');
-                const q = dataHelpers.query(appointmentsRef, dataHelpers.orderBy('startDate', 'asc'));
-                const snapshot = await dataHelpers.getDocs(q);
-
-                const appointmentSlots: AppointmentSlot[] = [];
                 const now = new Date();
-
-                snapshot.forEach((docSnap: any) => {
-                    const data = docSnap.data();
-                    const startDate = parseAppointmentDate(data.startDate);
-                    const endDate = parseAppointmentDate(data.endDate, new Date(startDate.getTime() + 60 * 60000));
-
-                    // Only include future appointments
-                    if (
-                        startDate >= now &&
-                        !Number.isNaN(startDate.getTime()) &&
-                        !Number.isNaN(endDate.getTime()) &&
-                        data.status !== 'cancelled'
-                    ) {
-                        appointmentSlots.push({
-                            id: docSnap.id,
-                            title: data.title || 'Cita',
-                            startDate,
-                            endDate,
-                            status: data.status || 'scheduled'
-                        });
-                    }
-                });
+                const rangeEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+                const appointmentSlots: AppointmentSlot[] = (await getAppointmentsByProject(supabase, activeProject.id, {
+                    startDate: now,
+                    endDate: rangeEnd,
+                })).map((item) => ({
+                    id: item.id,
+                    title: item.title || 'Reservado',
+                    startDate: parseAppointmentDate(item.startDate),
+                    endDate: parseAppointmentDate(item.endDate),
+                    status: item.status || 'scheduled',
+                }));
 
                 setAppointments(appointmentSlots);
-                console.log('[ChatbotWidget] 📅 Loaded appointments:', appointmentSlots.length);
+                console.log('[ChatbotWidget] 📅 Loaded canonical appointments:', appointmentSlots.length);
             } catch (error) {
                 console.error('[ChatbotWidget] Error loading appointments:', error);
             }
@@ -485,107 +454,43 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         // If user is authenticated and matches ownerId (e.g. inside Editor)
         if (user && user.id === ownerId) {
             try {
-                const dataHelpers = await getDataModules();
-                if (!dataHelpers) {
-                    console.warn('[ChatbotWidget] Data helpers unavailable, falling back to API for appointment creation');
-                    // Fall through to API fallback below
-                } else {
-                // Convert dates to timestamp objects
-                const dateToTimestamp = (date: Date) => ({
-                    seconds: Math.floor(date.getTime() / 1000),
-                    nanoseconds: 0
-                });
-
-                const now = dateToTimestamp(new Date());
-
-                // Build participant if we have contact info
-                const participants = [];
-                if (appointmentData.participantName || appointmentData.participantEmail) {
-                    participants.push({
-                        id: `participant_${Date.now()}`,
-                        name: appointmentData.participantName || 'Cliente',
-                        email: appointmentData.participantEmail || '',
-                        phone: appointmentData.participantPhone || '',
-                        role: 'attendee',
-                        status: 'pending',
-                        isRequired: true,
-                    });
-                }
-
-                // Create the appointment document
-                const appointmentDoc = {
+                const result = await createAppointmentFromChat(supabase, {
+                    projectId,
+                    tenantId: currentTenantId,
                     title: appointmentData.title,
-                    description: appointmentData.description || '',
+                    description: appointmentData.description,
                     type: appointmentData.type || 'consultation',
-                    status: 'scheduled',
-                    priority: 'medium',
-                    startDate: dateToTimestamp(appointmentData.startDate),
-                    endDate: dateToTimestamp(appointmentData.endDate),
+                    startDate: appointmentData.startDate,
+                    endDate: appointmentData.endDate,
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                     organizerId: user.id,
                     organizerName: (user.user_metadata?.full_name || user.user_metadata?.name || user.email || '') as string,
                     organizerEmail: user.email || '',
-                    participants,
-                    location: { type: 'virtual' },
-                    reminders: [
-                        { id: `reminder_1_${Date.now()}`, type: 'email', minutes: 60, sent: false },
-                        { id: `reminder_2_${Date.now()}`, type: 'email', minutes: 1440, sent: false }
-                    ],
-                    attachments: [],
-                    notes: [],
-                    followUpActions: [],
-                    aiPrepEnabled: true,
-                    linkedLeadIds: appointmentData.linkedLeadId ? [appointmentData.linkedLeadId] : [],
-                    tags: ['chatbot', 'auto-scheduled'],
-                    createdAt: now,
+                    participantName: appointmentData.participantName,
+                    participantEmail: appointmentData.participantEmail,
+                    participantPhone: appointmentData.participantPhone,
+                    linkedLeadId: appointmentData.linkedLeadId,
+                    conversationTranscript: appointmentData.conversationTranscript,
+                    sourceConversationId: appointmentData.sourceConversationId,
+                    idempotencyKey: `chatbot:${projectId}:${appointmentData.participantEmail || appointmentData.participantName || 'guest'}:${appointmentData.startDate.toISOString()}`,
                     createdBy: user.id,
-                    projectId: projectId,
-                };
-
-                // Save to Supabase: users/{userId}/projects/{projectId}/appointments
-                const appointmentsRef = dataHelpers.collection(dataHelpers.db, 'users', ownerId, 'projects', projectId, 'appointments');
-                const docRef = await dataHelpers.addDoc(appointmentsRef, appointmentDoc);
-
-                console.log('[ChatbotWidget] ✅ Appointment created via Supabase:', docRef.id);
-
-                // Also create a lead if we have contact info and no lead was captured yet
-                if (appointmentData.participantEmail || appointmentData.participantName) {
-                    try {
-                        const leadData = {
-                            name: appointmentData.participantName || 'Cliente desde Chat',
-                            email: appointmentData.participantEmail,
-                            phone: appointmentData.participantPhone,
-                            source: 'chatbot-widget' as const,
-                            status: 'new' as const,
-                            message: `Cita agendada: ${appointmentData.title}`,
-                            tags: ['chatbot', 'appointment-scheduled'],
-                            notes: `Cita programada para ${appointmentData.startDate.toLocaleDateString()} a las ${appointmentData.startDate.toLocaleTimeString()}`
-                        };
-
-                        if (addLead) {
-                            const leadId = await addLead(leadData as Omit<Lead, 'id' | 'createdAt' | 'projectId'>);
-                            console.log('[ChatbotWidget] ✅ Lead created from appointment via context:', leadId);
-                        } else {
-                            // Write directly to Supabase since we are the owner
-                            const leadsRef = dataHelpers.collection(dataHelpers.db, 'users', ownerId, 'projects', projectId, 'leads');
-                            const leadDocRef = await dataHelpers.addDoc(leadsRef, {
-                                ...leadData,
-                                createdAt: now,
-                                createdBy: user.id,
-                                projectId: projectId
-                            });
-                            console.log('[ChatbotWidget] ✅ Lead created from appointment via Supabase:', leadDocRef.id);
-                        }
-                        setLeadCaptured(true);
-                    } catch (e) {
-                        console.error('[ChatbotWidget] ❌ Error creating lead from appointment:', e);
-                    }
-                }
-
-                return docRef.id;
-                } // end fb block
+                    createdBySystem: true,
+                    generatedByAI: appointmentData.generatedByAI,
+                    locale: i18n.language,
+                    tags: ['chatbot', 'appointment-scheduled'],
+                    metadata: {
+                        ...(appointmentData.metadata || {}),
+                        ownerId,
+                        widgetMode: standaloneProject ? 'standalone' : 'editor',
+                        locale: i18n.language,
+                        bookingChannel: appointmentData.bookingChannel,
+                    },
+                });
+                if (result.leadId) setLeadCaptured(true);
+                console.log('[ChatbotWidget] ✅ Canonical appointment created:', result.appointmentId);
+                return result.appointmentId;
             } catch (error) {
-                console.error('[ChatbotWidget] ❌ Error creating appointment via Supabase:', error);
+                console.error('[ChatbotWidget] ❌ Error creating canonical appointment:', error);
                 return undefined;
             }
         }
@@ -603,7 +508,21 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 participantName: appointmentData.participantName,
                 participantEmail: appointmentData.participantEmail,
                 participantPhone: appointmentData.participantPhone,
-                linkedLeadId: appointmentData.linkedLeadId
+                linkedLeadId: appointmentData.linkedLeadId,
+                conversationTranscript: appointmentData.conversationTranscript,
+                sourceConversationId: appointmentData.sourceConversationId,
+                source: 'chatbot',
+                sourceComponent: 'ChatCore',
+                sourceModule: 'chatcore',
+                locale: i18n.language,
+                generatedByAI: appointmentData.generatedByAI,
+                bookingChannel: appointmentData.bookingChannel,
+                metadata: {
+                    ...(appointmentData.metadata || {}),
+                    bookingChannel: appointmentData.bookingChannel,
+                    widgetMode: standaloneProject ? 'standalone' : 'editor',
+                },
+                idempotencyKey: `chatbot:${projectId}:${appointmentData.participantEmail || appointmentData.participantName || 'guest'}:${appointmentData.startDate.toISOString()}`
             };
 
             let authHeaders: Record<string, string> = {
@@ -628,25 +547,9 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             if (response.ok) {
                 const data = await response.json();
                 console.log('[ChatbotWidget] ✅ Appointment saved successfully via API:', data.appointmentId);
-                
-                // If the user submits an appointment via API, mark lead as captured
-                // AND actually call handleLeadCapture to save the lead to the DB!
-                if (appointmentData.participantName || appointmentData.participantEmail) {
-                    try {
-                        await handleLeadCapture({
-                            name: appointmentData.participantName || 'Cliente desde Chat',
-                            email: appointmentData.participantEmail,
-                            phone: appointmentData.participantPhone,
-                            message: `Cita agendada: ${appointmentData.title}`,
-                            tags: ['chatbot', 'appointment-scheduled'],
-                            notes: `Cita programada para ${appointmentData.startDate.toLocaleDateString()} a las ${appointmentData.startDate.toLocaleTimeString()}`
-                        });
-                    } catch (e) {
-                        console.error('[ChatbotWidget] Error capturing lead during appointment fallback:', e);
-                    }
+                if (data.leadId || appointmentData.participantName || appointmentData.participantEmail) {
                     setLeadCaptured(true);
                 }
-                
                 return data.appointmentId;
             } else {
                 console.error('[ChatbotWidget] ❌ API Error for appointment:', await response.text());

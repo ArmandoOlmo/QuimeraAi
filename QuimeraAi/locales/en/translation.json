@@ -165,6 +165,106 @@
     "downloadCalendar": "Download calendar (.ics)",
     "copyDetails": "Copy details to share",
     "appointments": "Appointments",
+    "analyticsEngine": {
+      "eyebrow": "Canonical Appointments Engine",
+      "title": "Booking analytics",
+      "description": "Live funnel from project appointments, ChatCore, public booking, CRM, Email and Ecommerce metadata.",
+      "chatCoreBookings": "ChatCore",
+      "chatCoreHint": "AI booked",
+      "publicBookings": "Public",
+      "publicHint": "Website",
+      "linkedLeads": "Linked leads",
+      "paidBookings": "Paid/deposit",
+      "events": "Events",
+      "eventHint": "Runtime",
+      "confirmationRate": "Confirm rate",
+      "confirmationHint": "Requested to confirmed",
+      "funnelTitle": "Canonical funnel",
+      "funnelDescription": "Requested, confirmed and outcome events from the appointment metadata stream.",
+      "sourcesTitle": "Source mix",
+      "sourcesDescription": "Where bookings entered the engine.",
+      "noSources": "No source data yet.",
+      "funnel": {
+        "requested": "Requested",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "noShow": "No show"
+      },
+      "sources": {
+        "chatcore": "ChatCore",
+        "public_booking": "Public booking",
+        "dashboard": "Dashboard",
+        "google_calendar": "Google Calendar",
+        "website-builder": "Website Builder",
+        "appointments": "Appointments"
+      }
+    },
+    "readiness": {
+      "eyebrow": "Engine health",
+      "title": "Appointments readiness",
+      "score": "{{ready}}/{{total}} ready",
+      "states": {
+        "ready": "Ready",
+        "review": "Review",
+        "action": "Action"
+      },
+      "items": {
+        "canonicalSource": {
+          "title": "Canonical store",
+          "ready": "New bookings write to project_appointments."
+        },
+        "availability": {
+          "title": "Availability",
+          "ready": "Availability is configured in the appointments blueprint.",
+          "review": "Availability exists as a draft and needs merchant review.",
+          "action": "Configure business hours, notice rules and slot intervals."
+        },
+        "publicBooking": {
+          "title": "Public booking",
+          "ready": "Website bookings are entering the canonical engine.",
+          "review": "Public booking exists but still needs review before publishing.",
+          "action": "Enable the Website Builder booking block or widget API."
+        },
+        "chatcore": {
+          "title": "ChatCore",
+          "ready": "ChatCore is connected to canonical booking metadata.",
+          "review": "Enable booking intents and availability instructions in ChatCore.",
+          "action": "Enable booking intents and availability instructions in ChatCore."
+        },
+        "crm": {
+          "title": "CRM pipeline",
+          "ready": "Appointments are linked to CRM lead context.",
+          "review": "Review lead linking, tags and follow-up task rules.",
+          "action": "Review lead linking, tags and follow-up task rules."
+        },
+        "emailMarketing": {
+          "title": "Email flows",
+          "ready": "Appointment email flows are configured.",
+          "review": "Appointment email drafts exist but need sender/template review.",
+          "action": "Configure sender, provider and appointment templates."
+        },
+        "googleCalendar": {
+          "title": "Google Calendar",
+          "ready": "Project calendar sync is connected.",
+          "review": "Google Calendar is configured but needs connection or reconnect.",
+          "action": "Configure server-side OAuth credentials and webhook URL."
+        },
+        "ecommerce": {
+          "title": "Paid bookings",
+          "ready": "Paid or deposit bookings are linked to Ecommerce orders.",
+          "review": "Payment drafts exist but need checkout readiness review.",
+          "action": "Configure payment products or disable paid booking for this project."
+        },
+        "legacyBlockedDates": {
+          "title": "Legacy blocks",
+          "ready": "No unmigrated legacy blocked dates are visible.",
+          "review": "{{count}} legacy block still needs migration.",
+          "review_plural": "{{count}} legacy blocks still need migration.",
+          "action": "Migrate legacy blocked dates into project_appointment_blocks."
+        }
+      }
+    },
     "yesterday": "Yesterday",
     "types": {
       "meeting": "Meeting",
@@ -332,7 +432,28 @@
       "created": "Block created successfully",
       "deleted": "Block deleted",
       "error": "Error saving block",
-      "blockTime": "Block time"
+      "blockTime": "Block time",
+      "migratedTitle": "Migrated block",
+      "migrationTitle": "Legacy blocked dates detected",
+      "migrationDesc": "{{count}} legacy blocked date is still being read from the old project path. Migrate it to the canonical Appointments Engine source.",
+      "migrationDesc_plural": "{{count}} legacy blocked dates are still being read from the old project path. Migrate them to the canonical Appointments Engine source.",
+      "migrateLegacy": "Migrate legacy blocks",
+      "migratingLegacy": "Migrating...",
+      "migrationSuccess": "Migrated legacy blocks: {{count}}. Skipped: {{skipped}}.",
+      "migrationError": "Could not migrate legacy blocked dates.",
+      "legacyEditRequired": "This legacy block must be migrated before it can be edited.",
+      "legacyDeleteRequired": "This legacy block must be migrated before it can be deleted."
+    },
+    "errors": {
+      "loadAppointments": "Error loading appointments.",
+      "loadBlockedDates": "Error loading blocked dates.",
+      "selectProject": "Select a project to view appointments.",
+      "userOrProjectUnavailable": "User or project unavailable.",
+      "userNotLoggedIn": "User is not authenticated.",
+      "unauthenticated": "User is not authenticated.",
+      "noProjectSelected": "No project selected.",
+      "notFound": "Appointment not found.",
+      "participantAlreadyAdded": "The participant is already in the appointment."
     },
     "google": {
       "syncAutoDesc": "Sync your appointments automatically",
@@ -341,7 +462,7 @@
       "autoGoogleMeet": "Create Google Meet automatically",
       "connecting": "Connecting...",
       "connectWithGoogle": "Connect with Google Calendar",
-      "oauthSecure": "We use OAuth 2.0 for a secure connection",
+      "oauthSecure": "OAuth 2.0 with encrypted project-level sync",
       "synced": "Synced",
       "pending": "Pending",
       "error": "Error",
@@ -361,8 +482,8 @@
       "syncButton": "Synced",
       "googleButton": "Google",
       "errorInitApi": "Error initializing Google API",
-      "notConfigured": "Google Calendar is not configured. Add VITE_GOOGLE_CLIENT_ID to your .env.local file",
-      "allowPopups": "Please allow popups to connect with Google Calendar",
+      "notConfigured": "Google Calendar is not configured for server-side sync.",
+      "allowPopups": "Complete the secure Google authorization redirect to connect Google Calendar",
       "syncCompleteWithErrors": "Sync completed with {{count}} errors",
       "errorSyncCalendar": "Error syncing with Google Calendar",
       "connectFirst": "Please connect with Google Calendar first"
@@ -866,7 +987,29 @@
     "preChatEmail": "Your email",
     "preChatPhone": "Phone (optional)",
     "preChatStart": "Start Chat",
-    "preChatSkip": "Continue without registration"
+    "preChatSkip": "Continue without registration",
+    "appointments": {
+      "defaultClient": "Client",
+      "formTitle": "Appointment - {{name}}",
+      "formDescription": "Appointment scheduled by {{name}} through ChatCore.",
+      "aiTitle": "Appointment - {{name}}",
+      "aiDescription": "Appointment scheduled through ChatCore. Context: {{context}}",
+      "chatTitle": "Appointment from ChatCore",
+      "voiceTitle": "Voice appointment - {{name}}",
+      "voiceClient": "Voice caller",
+      "voiceDescription": "Appointment scheduled during a ChatCore voice call.",
+      "durationHours": "{{value}} hours",
+      "durationMinutes": "{{value}} minutes",
+      "successMessage": "✅ **Appointment scheduled successfully**\n\n📅 **Date:** {{date}}\n⏰ **Time:** {{time}}\n⏱️ **Duration:** {{duration}}\n👤 **Name:** {{name}}\n📧 **Email:** {{email}}\n\nWe'll see you then. Contact us if you need to change or cancel the appointment.",
+      "errorMessage": "⚠️ There was an error scheduling the appointment. Please try again or contact us directly.",
+      "autoRegistered": "✅ **Appointment registered in the system.**",
+      "createdShort": "✅ **Appointment scheduled successfully.**",
+      "createRetry": "⚠️ **There was a problem registering the appointment. Please try again.**",
+      "directContact": "⚠️ *The appointment could not be scheduled automatically. Please contact us directly.*",
+      "voiceTranscriptHeader": "🎙️ **Voice call transcript:**",
+      "voiceEndedNoTranscript": "🎙️ *Voice call ended* (transcript unavailable)",
+      "voiceRegistered": "✅ **Appointment registered from voice call**\n📅 {{date}}\n⏰ {{time}}"
+    }
   },
   "cms": {
     "content": "Content",
@@ -3349,6 +3492,25 @@
     "discounts": "Discounts",
     "analytics": "Analytics",
     "settings": "Settings",
+    "appointmentEmailTemplates": "Appointment templates",
+    "appointmentEmailTemplatesDesc": "Customize Appointments Engine transactional emails by flow. Variables: title, name, start, end, timezone, paymentStatus.",
+    "defaultTemplate": "Default template",
+    "templateSubject": "Subject",
+    "templateSubjectPlaceholder": "Example: Your {{title}} appointment is confirmed",
+    "templatePreheader": "Preheader",
+    "templatePreheaderPlaceholder": "Short text shown before opening the email",
+    "templateIntro": "Intro",
+    "templateNextStep": "Next step",
+    "templateFooter": "Footer",
+    "templateHtml": "Visual HTML",
+    "saveAppointmentTemplates": "Save appointment templates",
+    "appointmentTemplateFlows": {
+      "appointment_request_received": "Request received",
+      "appointment_confirmation": "Confirmation",
+      "appointment_cancellation": "Cancellation",
+      "appointment_follow_up": "Follow-up",
+      "appointment_reminder": "Reminder"
+    },
     "crossModuleSync": {
       "title": "Connect ecommerce with Quimera Suite",
       "subtitle": "Create reviewable drafts for Chatbot, CRM, Email Marketing, Analytics, Appointments, Ecommerce offers, and Finance without activating automations.",
@@ -8049,9 +8211,91 @@
           "description": "Commercial space in a high-traffic area, with a flexible floor plan and strong visibility. Ready for a boutique, showroom, creative office or light food concept.",
           "address": "151 Loíza Street",
           "city": "Santurce"
-        }
+    }
+  },
+  "appointmentBooking": {
+    "title": "Book an appointment",
+    "description": "Choose an available time and we will send your request to the team.",
+    "serviceLabel": "Service",
+    "defaultService": "General appointment",
+    "dateLabel": "Date",
+    "slotLabel": "Available time",
+    "loadingSlots": "Loading times...",
+    "noSlots": "No times are available for this date.",
+    "nameLabel": "Name",
+    "emailLabel": "Email",
+    "phoneLabel": "Phone",
+    "messageLabel": "Message",
+    "namePlaceholder": "Full name",
+    "emailPlaceholder": "email@example.com",
+    "phonePlaceholder": "Phone",
+    "messagePlaceholder": "Tell us what we should prepare for the appointment",
+    "buttonText": "Request appointment",
+    "successMessage": "Request received. We will contact you to confirm the appointment.",
+    "confirmation": "Request linked to CRM",
+    "reviewNotice": "Confirmation depends on final availability",
+    "paymentNotice": "Payment due at booking: {{amount}}",
+    "paymentRedirecting": "Opening secure checkout...",
+    "emailSubjects": {
+      "appointment_request_received": "Appointment request received: {{title}}",
+      "appointment_confirmation": "Appointment confirmed: {{title}}",
+      "appointment_cancellation": "Appointment cancelled: {{title}}",
+      "appointment_follow_up": "Follow up for your appointment: {{title}}",
+      "appointment_reminder": "Appointment reminder: {{title}}"
+    },
+    "emailBodies": {
+      "labels": {
+        "greeting": "Hi {{name}},",
+        "fallbackName": "there",
+        "appointment": "Appointment",
+        "starts": "Starts",
+        "ends": "Ends",
+        "timezone": "Timezone",
+        "details": "Details",
+        "payment": "Payment",
+        "noEndTime": "End time to be confirmed",
+        "replyHelp": "Reply to this email if you need to update the appointment details."
       },
-      "leads": {
+      "appointment_request_received": {
+        "preheader": "We received your appointment request.",
+        "intro": "We received your appointment request.",
+        "nextStep": "The team will review availability and confirm the final time.",
+        "footer": "You will receive another message once the appointment is confirmed."
+      },
+      "appointment_confirmation": {
+        "preheader": "Your appointment is confirmed.",
+        "intro": "Your appointment is confirmed.",
+        "nextStep": "The team will be ready with the appointment context and linked CRM notes.",
+        "footer": "Please arrive on time or reply if you need to reschedule."
+      },
+      "appointment_cancellation": {
+        "preheader": "Your appointment has been cancelled.",
+        "intro": "Your appointment has been cancelled.",
+        "nextStep": "Reply to this email if you want to request a new time.",
+        "footer": "No further action is required unless you want to reschedule."
+      },
+      "appointment_follow_up": {
+        "preheader": "Follow up for your appointment.",
+        "intro": "Thanks for attending your appointment.",
+        "nextStep": "The team can continue the conversation from the linked CRM record.",
+        "footer": "Reply with any questions or next steps you want us to track."
+      },
+      "appointment_reminder": {
+        "preheader": "Reminder for your upcoming appointment.",
+        "intro": "This is a reminder for your upcoming appointment.",
+        "nextStep": "The team has the appointment context prepared.",
+        "footer": "Reply to this email if you need to update the time."
+      }
+    },
+    "errors": {
+      "availability": "Availability could not be loaded.",
+      "submit": "The appointment request could not be sent.",
+      "payment": "The appointment was created, but secure checkout could not be opened.",
+      "projectRequired": "Public booking requires a configured project.",
+      "slotRequired": "Select an available time."
+    }
+  },
+  "leads": {
         "sofia": {
           "name": "Sofia Rivera",
           "message": "Interested in seeing the unit this week and confirming maintenance costs."
@@ -9728,6 +9972,7 @@
     "successMessage": "Thank you for contacting us. We will respond shortly.",
     "errorMessage": "There was an error sending the message. Please try again.",
     "leadCapturedNote": "Lead captured from contact form.\n\nMessage:\n{{message}}",
+    "publicCaptureProjectRequired": "Public lead capture requires a configured project.",
     "nameLabel": "Full Name *",
     "emailLabel": "Email *",
     "companyLabel": "Company",

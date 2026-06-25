@@ -691,6 +691,12 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
 
   await incrementDiscountUsageForPaidOrder(order.id, paidAt);
   await updateCustomerAccountStatsForPaidOrder(paidOrder, paidAt);
+  await syncAppointmentPaymentFromOrder(paidOrder, {
+    paymentStatus: "paid",
+    paymentIntentId: paymentIntent.id,
+    chargeId: chargeId || null,
+    occurredAt: paidAt,
+  });
 
   try {
     const emailResults = await sendPaidOrderTransactionalEmails({
@@ -812,6 +818,114 @@ async function commitInventoryReservationsForPaidOrder(order: any, paymentIntent
   }, paidAt);
 
   return true;
+}
+
+function readAppointmentOrderContext(order: any) {
+  const data = order?.data || {};
+  const metadata = order?.metadata || {};
+  const firstItem = Array.isArray(order?.items) ? order.items[0] || {} : Array.isArray(data.items) ? data.items[0] || {} : {};
+  const triggeredBy = data.triggeredBy || metadata.triggeredBy;
+  const sourceModule = data.sourceModule || metadata.sourceModule;
+  const appointmentId = data.appointmentId || metadata.appointmentId || firstItem.appointmentId || null;
+
+  return {
+    isAppointmentEngineOrder: triggeredBy === "appointments-engine" && sourceModule === "appointments" && Boolean(appointmentId),
+    appointmentId,
+    projectId: order?.project_id || data.projectId || metadata.projectId || null,
+    paymentMode: String(data.paymentMode || metadata.paymentMode || firstItem.paymentMode || "").toLowerCase(),
+    correlationId: data.correlationId || metadata.correlationId || null,
+  };
+}
+
+function appointmentPaymentStatusForOrder(paymentStatus: "paid" | "failed", paymentMode?: string | null) {
+  const mode = String(paymentMode || "").toLowerCase();
+  if (paymentStatus === "paid") {
+    if (mode === "deposit") return "deposit_paid";
+    if (mode === "prepaid") return "prepaid_paid";
+    return "paid";
+  }
+
+  if (mode === "deposit") return "deposit_failed";
+  if (mode === "prepaid") return "prepaid_failed";
+  return "payment_failed";
+}
+
+async function syncAppointmentPaymentFromOrder(order: any, input: {
+  paymentStatus: "paid" | "failed";
+  paymentIntentId: string;
+  chargeId?: string | null;
+  occurredAt: string;
+  failureCode?: string | null;
+  failureMessage?: string | null;
+}) {
+  const context = readAppointmentOrderContext(order);
+  if (!context.isAppointmentEngineOrder || !context.appointmentId) return;
+
+  let query = supabase
+    .from("project_appointments")
+    .select("metadata")
+    .eq("id", context.appointmentId);
+  if (context.projectId) query = query.eq("project_id", context.projectId);
+
+  const { data: appointment, error: loadError } = await query.maybeSingle();
+  if (loadError) throw loadError;
+  if (!appointment) return;
+
+  const metadata = appointment.metadata || {};
+  const analytics = metadata.analytics || {};
+  const existingEvents = Array.isArray(analytics.events) ? analytics.events : [];
+  const eventName = input.paymentStatus === "paid" ? "appointment_payment_succeeded" : "appointment_payment_failed";
+  const nextPaymentStatus = appointmentPaymentStatusForOrder(input.paymentStatus, context.paymentMode);
+  const nextMetadata = {
+    ...metadata,
+    ecommerceOrderId: order.id,
+    paymentStatus: nextPaymentStatus,
+    stripePaymentIntentId: input.paymentIntentId,
+    stripeChargeId: input.chargeId || metadata.stripeChargeId,
+    paymentReconciliation: {
+      provider: "stripe",
+      orderId: order.id,
+      paymentIntentId: input.paymentIntentId,
+      chargeId: input.chargeId || null,
+      status: input.paymentStatus,
+      paymentMode: context.paymentMode,
+      failureCode: input.failureCode || null,
+      failureMessage: input.failureMessage || null,
+      reconciledAt: input.occurredAt,
+    },
+    analytics: {
+      ...analytics,
+      lastEventName: eventName,
+      lastEventAt: input.occurredAt,
+      events: [
+        ...existingEvents,
+        {
+          eventName,
+          sourceModule: "ecommerce",
+          entityType: "appointment",
+          entityId: context.appointmentId,
+          createdAt: input.occurredAt,
+          correlationId: context.correlationId || metadata.correlationId,
+          paymentStatus: nextPaymentStatus,
+        },
+      ].slice(-50),
+    },
+  };
+
+  const update = supabase
+    .from("project_appointments")
+    .update({
+      ecommerce_order_id: order.id,
+      payment_status: nextPaymentStatus,
+      metadata: nextMetadata,
+      updated_at: input.occurredAt,
+    })
+    .eq("id", context.appointmentId);
+
+  const { error } = context.projectId
+    ? await update.eq("project_id", context.projectId)
+    : await update;
+  if (error) throw error;
 }
 
 async function releaseInventoryReservationsForOrder(
@@ -1313,6 +1427,21 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
     failedAt,
     nextStatus === "cancelled" ? "payment_intent_cancelled" : "payment_intent_failed",
   );
+
+  await syncAppointmentPaymentFromOrder({
+    ...order,
+    status: nextStatus,
+    payment_status: "failed",
+    payment_intent_id: paymentIntent.id,
+    stripe_payment_intent_id: paymentIntent.id,
+    data: updatePayload.data,
+  }, {
+    paymentStatus: "failed",
+    paymentIntentId: paymentIntent.id,
+    occurredAt: failedAt,
+    failureCode: paymentIntent.last_payment_error?.code || null,
+    failureMessage: paymentIntent.last_payment_error?.message || null,
+  });
 
   try {
     const emailResult = await sendPaymentFailedTransactionalEmail({

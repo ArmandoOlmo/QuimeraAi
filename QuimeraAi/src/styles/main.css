@@ -91,20 +91,24 @@ html.light {
   --q-space-6: 1.5rem;
   --q-duration-fast: 150ms;
   --q-duration-normal: 200ms;
-  --editor-control-radius: var(--q-radius-md);
-  --editor-control-radius-sm: var(--q-radius-sm);
+  --editor-control-radius: var(--q-radius-sm);
+  --editor-control-radius-sm: 0.25rem;
   --editor-control-field-gap: 0.5rem;
-  --editor-control-group-gap: 1rem;
-  --editor-control-panel-pad: 1rem;
+  --editor-control-group-gap: 0.75rem;
+  --editor-control-panel-pad: 0.75rem;
+  --editor-control-section-pad: 0.75rem;
   --editor-control-input-height: 2.5rem;
   --editor-control-label-size: 0.6875rem;
   --editor-control-label-leading: 1rem;
   --editor-control-body-size: 0.875rem;
   --editor-control-caption-size: 0.75rem;
+  --editor-control-modal-radius: 0.625rem;
+  --editor-control-sheet-radius: 0.75rem;
   --editor-control-border: color-mix(in srgb, var(--q-border) 78%, transparent);
   --editor-control-border-strong: color-mix(in srgb, var(--q-border-strong) 70%, var(--q-border));
   --editor-control-surface: color-mix(in srgb, var(--q-surface) 76%, var(--q-bg) 24%);
   --editor-control-surface-muted: color-mix(in srgb, var(--q-surface-overlay) 82%, var(--q-bg) 18%);
+  --editor-control-section-bg: color-mix(in srgb, var(--q-surface) 42%, transparent);
   --editor-control-input-bg: color-mix(in srgb, var(--q-bg) 84%, var(--q-surface) 16%);
   --editor-control-focus-ring: color-mix(in srgb, var(--q-accent) 28%, transparent);
 
@@ -1720,6 +1724,31 @@ body {
   --control-gap: var(--editor-control-group-gap);
   --control-field-gap: var(--editor-control-field-gap);
   color: var(--q-text);
+  font-size: var(--editor-control-body-size);
+}
+
+.quimera-clean-controls :where(.space-y-6)> :not([hidden])~ :not([hidden]) {
+  margin-top: 0.875rem;
+}
+
+.quimera-clean-controls :where(.space-y-4)> :not([hidden])~ :not([hidden]) {
+  margin-top: 0.75rem;
+}
+
+.quimera-clean-controls :where(.space-y-3)> :not([hidden])~ :not([hidden]) {
+  margin-top: 0.625rem;
+}
+
+.quimera-clean-controls :where(.rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl):not(.quimera-preserve-radius) {
+  border-radius: var(--control-radius);
+}
+
+.quimera-clean-controls :is(button, a)[class*="rounded-full"]:not(.quimera-editor-switch):not([role="switch"]):not([class*="h-5"][class*="w-9"]):not([class*="h-5"][class*="w-10"]):not([class*="h-6"][class*="w-11"]):not([class*="h-6"][class*="w-12"]) {
+  border-radius: var(--control-radius);
+}
+
+.quimera-clean-controls :is(span, div)[class*="rounded-full"][class*="px-"] {
+  border-radius: var(--control-radius);
 }
 
 .quimera-clean-controls :is(label, .editor-control-label) {
@@ -1762,6 +1791,9 @@ body {
   border-color: var(--editor-control-border);
   border-radius: var(--control-radius);
   background: var(--editor-control-surface-muted);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .quimera-clean-controls [data-editor-control-tab] {
@@ -1773,45 +1805,61 @@ body {
   animation: fadeIn 160ms ease-out;
 }
 
-.quimera-clean-controls .bg-q-surface\/50.p-4.rounded-lg.border.border-q-border,
-.quimera-clean-controls .bg-q-surface\/50.p-3.rounded-lg.border.border-q-border,
-.quimera-clean-controls .bg-q-surface\/50.rounded-lg.p-4.border.border-q-border,
-.quimera-clean-controls .bg-q-surface\/50.rounded-lg.p-3.border.border-q-border {
-  background: transparent;
-  border-width: 0 0 1px;
-  border-color: color-mix(in srgb, var(--q-border) 58%, transparent);
-  border-radius: 0;
-  padding: 0 0 var(--editor-control-panel-pad);
+.quimera-clean-controls :where([data-editor-control-group],
+[class*="bg-q-surface/50"][class*="border"][class*="p-4"],
+[class*="bg-q-surface/50"][class*="border"][class*="p-3"],
+[class*="bg-[var(--editor-control-surface-muted)]"][class*="border"][class*="p-4"],
+[class*="bg-[var(--editor-control-surface-muted)]"][class*="border"][class*="p-3"]) {
+  background: var(--editor-control-section-bg);
+  border: 1px solid var(--editor-control-border);
+  border-radius: var(--control-radius);
+  padding: var(--editor-control-section-pad);
   box-shadow: none;
 }
 
-.quimera-clean-controls .bg-q-surface\/50.rounded-xl.p-4.border.border-q-border\/50,
-.quimera-clean-controls .bg-q-surface\/50.rounded-xl.p-3.border.border-q-border\/50 {
-  background: transparent;
-  border-width: 0 0 1px;
+.quimera-clean-controls :where([data-editor-control-group],
+[class*="bg-q-surface/50"][class*="border"][class*="p-4"],
+[class*="bg-q-surface/50"][class*="border"][class*="p-3"],
+[class*="bg-[var(--editor-control-surface-muted)]"][class*="border"][class*="p-4"],
+[class*="bg-[var(--editor-control-surface-muted)]"][class*="border"][class*="p-3"]):not(:last-child) {
+  margin-bottom: var(--control-gap);
+}
+
+.quimera-clean-controls :where([data-editor-control-group],
+[class*="bg-q-surface/50"][class*="border"][class*="p-4"],
+[class*="bg-q-surface/50"][class*="border"][class*="p-3"],
+[class*="bg-[var(--editor-control-surface-muted)]"][class*="border"][class*="p-4"],
+[class*="bg-[var(--editor-control-surface-muted)]"][class*="border"][class*="p-3"]) :where([class*="bg-q-bg/50"][class*="p-3"],
+[class*="bg-q-bg"][class*="p-1"],
+[class*="bg-q-surface/50"][class*="border"][class*="p-4"],
+[class*="bg-q-surface/50"][class*="border"][class*="p-3"]) {
+  background: color-mix(in srgb, var(--q-bg) 54%, transparent);
   border-color: color-mix(in srgb, var(--q-border) 58%, transparent);
-  border-radius: 0;
-  padding: 0 0 var(--editor-control-panel-pad);
-  box-shadow: none;
+  border-radius: var(--control-radius-sm);
+  padding: 0.625rem;
 }
 
-.quimera-clean-controls .bg-q-surface\/50.p-4.rounded-lg.border.border-q-border:last-child,
-.quimera-clean-controls .bg-q-surface\/50.p-3.rounded-lg.border.border-q-border:last-child,
-.quimera-clean-controls .bg-q-surface\/50.rounded-lg.p-4.border.border-q-border:last-child,
-.quimera-clean-controls .bg-q-surface\/50.rounded-lg.p-3.border.border-q-border:last-child {
-  border-bottom-width: 0;
-  padding-bottom: 0;
+.quimera-clean-controls :where(.grid[class*="gap-2"]) {
+  gap: 0.5rem;
 }
 
-.quimera-clean-controls .bg-q-surface\/50.rounded-xl.p-4.border.border-q-border\/50:last-child,
-.quimera-clean-controls .bg-q-surface\/50.rounded-xl.p-3.border.border-q-border\/50:last-child {
-  border-bottom-width: 0;
-  padding-bottom: 0;
+.quimera-clean-controls :where(.grid[class*="gap-3"], .flex[class*="gap-3"]) {
+  gap: 0.625rem;
 }
 
 .quimera-clean-controls label svg,
 .quimera-clean-controls button svg {
   stroke-width: 1.8;
+}
+
+.editor-controls-modal {
+  border-radius: var(--editor-control-modal-radius) !important;
+}
+
+@media (max-width: 639px) {
+  .editor-controls-modal {
+    border-radius: 0 !important;
+  }
 }
 
 .editing-section>section {

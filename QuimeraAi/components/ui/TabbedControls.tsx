@@ -54,7 +54,7 @@ const TabbedControls: React.FC<TabbedControlsProps> = ({
     if (!tabs.length) return null;
 
     return (
-        <div className="space-y-4">
+        <div data-editor-tabs-shell className="space-y-3">
             {/* Tab Selector */}
             {tabs.length > 1 && (
                 <div
@@ -74,7 +74,7 @@ const TabbedControls: React.FC<TabbedControlsProps> = ({
                                 data-editor-control-tab
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
-                                    flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-[var(--editor-control-radius-sm)] text-xs font-bold transition-all
+                                    flex-1 min-h-9 flex items-center justify-center gap-2 px-3 py-1.5 rounded-[var(--editor-control-radius-sm)] text-xs font-bold transition-all
                                     ${isActive
                                         ? 'bg-q-surface text-q-accent shadow-sm ring-1 ring-[var(--editor-control-border)]'
                                         : 'text-q-text-secondary hover:text-q-text hover:bg-q-surface/70'

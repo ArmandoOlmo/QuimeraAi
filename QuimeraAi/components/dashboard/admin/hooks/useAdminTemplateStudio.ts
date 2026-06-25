@@ -15,7 +15,6 @@ import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useProject } from '../../../../contexts/project';
 import { useEditor } from '../../../../contexts/EditorContext';
 import { useAdmin } from '../../../../contexts/admin';
-import { useUI } from '../../../../contexts/core/UIContext';
 import { useSafeTenant } from '../../../../contexts/tenant';
 import { useTranslation } from 'react-i18next';
 import {
@@ -554,10 +553,9 @@ const createUuid = (): string => {
 
 export function useAdminTemplateStudio(onSuccess?: () => void) {
     const { user } = useAuth();
-    const { refreshProjects } = useProject();
+    const { refreshProjects, loadProject } = useProject();
     const { generateImage } = useEditor();
     const { getPrompt } = useAdmin();
-    const { setIsOnboardingOpen } = useUI();
     const tenantContext = useSafeTenant();
     const { t, i18n } = useTranslation();
     const currentTenantId = tenantContext?.currentTenant?.id || null;
@@ -1479,7 +1477,6 @@ Remember: You are building a REUSABLE TEMPLATE DRAFT. Every component needs real
 
             addEvent('done', t('aiTemplateStudio.generation.events.templateDraftCreated'));
             setGenerationPhase(prev => prev ? { ...prev, phase: 'done', progress: 100, currentStep: t('aiTemplateStudio.generation.steps.templateDraftCreated') } : prev);
-            setGeneratedTemplate(fullProject as Project);
 
             if (isDev) console.log('[AdminTemplateStudio] Template draft created successfully!');
 
@@ -1488,6 +1485,8 @@ Remember: You are building a REUSABLE TEMPLATE DRAFT. Every component needs real
                 images: completed,
             });
             setMessages(prev => [...prev, { role: 'model', text: successMsg, timestamp: Date.now() }]);
+            await loadProject(finalProjectId, true, true, fullProject as Project);
+            if (onSuccess) onSuccess();
 
         } catch (error) {
             console.error('[AdminTemplateStudio] Generation failed:', error);
@@ -1500,7 +1499,7 @@ Remember: You are building a REUSABLE TEMPLATE DRAFT. Every component needs real
             isGeneratingRef.current = false;
             setIsGenerating(false);
         }
-    }, [businessBrief, user, currentTenantId, t, generateImage, refreshProjects, i18n.language, onSuccess]);
+    }, [businessBrief, user, currentTenantId, t, generateImage, refreshProjects, loadProject, i18n.language, onSuccess]);
 
     const closeTemplateResult = useCallback(() => {
         setGenerationPhase(null);

@@ -574,7 +574,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
     return (
         <ProjectContext.Provider value={{ activeProject: mockActiveProject } as any}>
-            {renderControls()}
+            <div data-editor-controls-surface="template-controls">
+                {renderControls()}
+            </div>
         </ProjectContext.Provider>
     );
 };

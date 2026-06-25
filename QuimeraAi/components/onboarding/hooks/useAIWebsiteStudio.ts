@@ -955,6 +955,39 @@ export function useAIWebsiteStudio() {
     });
     const canGenerate = studioReadiness.canGenerate && !isGenerating && !shouldBlockGenerationForAccess;
 
+    const saveProjectAndOpenEditor = useCallback(async (project: Project): Promise<boolean> => {
+        if (isSavingGeneratedProjectRef.current) return false;
+
+        isSavingGeneratedProjectRef.current = true;
+        setIsSavingGeneratedProject(true);
+        setGeneratedProjectSaveError(null);
+
+        try {
+            await Promise.race([
+                addNewProject(project),
+                new Promise<void>((_, reject) => setTimeout(() => reject(new Error('Final save timeout')), 30000)),
+            ]);
+
+            loadProject(project.id, false, true, project);
+            setGeneratedProject(null);
+            setGenerationPhase(null);
+            setIsOnboardingOpen(false);
+            regenerationBusinessBlueprintRef.current = null;
+            return true;
+        } catch (finalSaveErr) {
+            console.warn('[AIWebsiteStudio] Final save failed:', finalSaveErr);
+            setGeneratedProjectSaveError(
+                finalSaveErr instanceof Error
+                    ? finalSaveErr.message
+                    : 'Failed to save the website to the database. Please try again.'
+            );
+            return false;
+        } finally {
+            isSavingGeneratedProjectRef.current = false;
+            setIsSavingGeneratedProject(false);
+        }
+    }, [addNewProject, loadProject, setIsOnboardingOpen]);
+
     // ═════════════════════════════════════════════════════════════════════════
     // SYSTEM PROMPT
     // ═════════════════════════════════════════════════════════════════════════
@@ -2014,8 +2047,8 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
             // ══════════════════════════════════════════════════════════════════
             // PHASE 6: Final project update with images (95-100%)
             // ══════════════════════════════════════════════════════════════════
-            addEvent('save', `Preparing final preview with ${completed} images...`);
-            setGenerationPhase(prev => prev ? { ...prev, phase: 'finalizing', progress: 95, currentStep: 'Preparing final preview...' } : prev);
+            addEvent('save', `Saving website with ${completed} images...`);
+            setGenerationPhase(prev => prev ? { ...prev, phase: 'finalizing', progress: 95, currentStep: 'Saving and opening editor...' } : prev);
 
             // Build the complete project object
             const fullProject = attachAiStudioBusinessBlueprint({
@@ -2050,16 +2083,19 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
                 });
             }
 
-            setGeneratedProject(fullProject);
-            addEvent('done', 'Website preview ready!');
-            setGenerationPhase(prev => prev ? { ...prev, phase: 'done', progress: 100, currentStep: 'Website preview ready!' } : prev);
+            addEvent('done', 'Opening website editor...');
+            setGenerationPhase(prev => prev ? { ...prev, phase: 'done', progress: 100, currentStep: 'Opening website editor...' } : prev);
 
-            if (isDev) console.log('[AIWebsiteStudio] Website preview ready.');
+            if (isDev) console.log('[AIWebsiteStudio] Website ready. Saving and opening editor.');
 
-            const successMsg = isSpanish
-                ? `Tu website esta listo para revisar. Generamos ${Object.keys(finalData).length} secciones y ${completed} imagenes.`
-                : `Your website is ready to review. We generated ${Object.keys(finalData).length} sections and ${completed} images.`;
-            setMessages(prev => [...prev, { role: 'model', text: successMsg, timestamp: Date.now() }]);
+            const openedEditor = await saveProjectAndOpenEditor(fullProject);
+            if (!openedEditor) {
+                setGeneratedProject(fullProject);
+                const successMsg = isSpanish
+                    ? `Tu website esta listo, pero no se pudo abrir automaticamente. Generamos ${Object.keys(finalData).length} secciones y ${completed} imagenes.`
+                    : `Your website is ready, but it could not open automatically. We generated ${Object.keys(finalData).length} sections and ${completed} images.`;
+                setMessages(prev => [...prev, { role: 'model', text: successMsg, timestamp: Date.now() }]);
+            }
 
         } catch (error) {
             console.error('[AIWebsiteStudio] Generation failed:', error);
@@ -2073,7 +2109,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
             isGeneratingRef.current = false;
             setIsGenerating(false);
         }
-    }, [businessBrief, websitePlan, accessibleComponentRegistry, shouldBlockGenerationForAccess, user, currentTenantId, t, generateImage, i18n.language]);
+    }, [businessBrief, websitePlan, accessibleComponentRegistry, shouldBlockGenerationForAccess, user, currentTenantId, t, generateImage, i18n.language, saveProjectAndOpenEditor]);
 
     const startGeneration = useCallback(() => {
         if (!user || isGeneratingRef.current || shouldBlockGenerationForAccess) return;
@@ -2207,35 +2243,9 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
     }, [accessibleComponentRegistry, commitWebsitePlanToBrief, shouldBlockGenerationForAccess, runGeneration]);
 
     const saveGeneratedProjectAndOpenEditor = useCallback(async () => {
-        if (!generatedProject || isSavingGeneratedProjectRef.current) return;
-
-        isSavingGeneratedProjectRef.current = true;
-        setIsSavingGeneratedProject(true);
-        setGeneratedProjectSaveError(null);
-
-        try {
-            await Promise.race([
-                addNewProject(generatedProject),
-                new Promise<void>((_, reject) => setTimeout(() => reject(new Error('Final save timeout')), 30000)),
-            ]);
-
-            loadProject(generatedProject.id, false, true, generatedProject);
-            setGeneratedProject(null);
-            setGenerationPhase(null);
-            setIsOnboardingOpen(false);
-            regenerationBusinessBlueprintRef.current = null;
-        } catch (finalSaveErr) {
-            console.warn('[AIWebsiteStudio] Final save failed:', finalSaveErr);
-            setGeneratedProjectSaveError(
-                finalSaveErr instanceof Error
-                    ? finalSaveErr.message
-                    : 'Failed to save the website to the database. Please try again.'
-            );
-        } finally {
-            isSavingGeneratedProjectRef.current = false;
-            setIsSavingGeneratedProject(false);
-        }
-    }, [addNewProject, generatedProject, loadProject, setIsOnboardingOpen]);
+        if (!generatedProject) return;
+        await saveProjectAndOpenEditor(generatedProject);
+    }, [generatedProject, saveProjectAndOpenEditor]);
 
     const regenerateGeneratedWebsite = useCallback(async () => {
         if (isGeneratingRef.current || isSavingGeneratedProjectRef.current) return;

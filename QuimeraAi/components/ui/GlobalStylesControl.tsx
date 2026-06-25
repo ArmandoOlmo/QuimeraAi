@@ -859,24 +859,6 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
         setSelectedPaletteId(null); // Clear palette selection when custom color is picked
     };
 
-    const handleReapplyWebsiteColors = async () => {
-        const colors = normalizeGlobalColors(globalColors);
-        setIsApplying(true);
-        try {
-            setTheme(prev => ({
-                ...prev,
-                globalColors: colors,
-                pageBackground: colors.background,
-                paletteColors: getWebsitePaletteColors(colors),
-            }));
-            await applyPaletteToAllComponents(colors);
-        } catch (error) {
-            console.error('Error re-applying website colors:', error);
-        } finally {
-            setIsApplying(false);
-        }
-    };
-
     /**
      * Aplica los colores de la paleta a todos los componentes
      * Actualiza tanto componentStyles como data para asegurar que los colores se apliquen
@@ -1180,22 +1162,6 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 <CoolorsImporter onPaletteGenerated={handleCoolorsPaletteGenerated} />
                             </div>
                         )}
-                    </div>
-
-                    {/* Re-apply website colors button */}
-                    <div className="order-2">
-                        <button
-                            onClick={handleReapplyWebsiteColors}
-                            disabled={isApplying}
-                            className="w-full py-2.5 px-3 bg-gradient-to-r from-q-accent to-q-accent hover:from-q-accent hover:to-q-accent border border-q-accent/30 rounded-lg text-sm font-medium text-q-accent flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                        >
-                            {isApplying ? (
-                                <Loader2 size={14} className="animate-spin" />
-                            ) : (
-                                <Sparkles size={14} />
-                            )}
-                            {t('editor.controls.globalStyles.reapplyColors', 'Reaplicar colores a todos los componentes')}
-                        </button>
                     </div>
 
                     {/* Quimera Color Expert Section */}

@@ -53,6 +53,7 @@ import Video from './Video';
 import Slideshow from './Slideshow';
 import Portfolio from './Portfolio';
 import Leads from './Leads';
+import AppointmentBooking from './AppointmentBooking';
 import Newsletter from './Newsletter';
 import HowItWorks from './HowItWorks';
 import Footer from './Footer';
@@ -621,6 +622,21 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                             cardBorderRadius={mergedData.leads?.cardBorderRadius || cardBorderRadius}
                             buttonBorderRadius={mergedData.leads?.buttonBorderRadius || buttonBorderRadius}
                             projectId={project.id}
+                            ownerId={(project as any).userId}
+                        />
+                    </SectionBackground>
+                );
+
+            case 'appointmentBooking':
+                return (
+                    <SectionBackground backgroundImageUrl={mergedData.appointmentBooking?.backgroundImageUrl} backgroundColor={mergedData.appointmentBooking?.colors?.background} backgroundOverlayEnabled={mergedData.appointmentBooking?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.appointmentBooking?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.appointmentBooking?.backgroundOverlayColor} backgroundPosition={mergedData.appointmentBooking?.backgroundPosition}>
+                        <AppointmentBooking
+                            key={key}
+                            {...(mergedData.appointmentBooking || {})}
+                            cardBorderRadius={mergedData.appointmentBooking?.cardBorderRadius || cardBorderRadius}
+                            buttonBorderRadius={mergedData.appointmentBooking?.buttonBorderRadius || buttonBorderRadius}
+                            projectId={project.id}
+                            ownerId={(project as any).userId}
                         />
                     </SectionBackground>
                 );

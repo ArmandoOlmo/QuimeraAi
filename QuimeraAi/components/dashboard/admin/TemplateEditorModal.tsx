@@ -889,7 +889,7 @@ Name:`;
     const displayColors = paletteColors.length > 0 ? paletteColors : templateColors;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-4xl">
+        <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-4xl" className="editor-controls-modal">
             {/* Compact Header */}
             <div className="px-5 py-4 border-b border-q-border flex justify-between items-center bg-q-bg">
                 <div className="flex items-center gap-3">
@@ -910,7 +910,7 @@ Name:`;
             </div>
 
             <form onSubmit={handleSubmit}>
-                <div className="quimera-clean-controls p-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                <div data-editor-controls-surface="template-modal" className="quimera-clean-controls p-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
                     {error && (
                         <p className="bg-q-error/10 text-q-error text-sm p-2.5 rounded-lg mb-4">
                             {error}
