@@ -6,6 +6,7 @@
 import { 
     AiAssistantConfig, 
     FAQItem, 
+    KnowledgeDocument,
     ChatAppearanceConfig,
     ChatColorScheme,
     ChatBrandingConfig,
@@ -32,6 +33,14 @@ export interface GlobalColors {
     surface: string;
     text: string;
     border: string;
+}
+
+interface ChatCoreKnowledgeInput {
+    businessProfile: string;
+    productsServices: string;
+    policiesContact: string;
+    specialInstructions: string;
+    faqs: FAQItem[];
 }
 
 // =============================================================================
@@ -403,17 +412,30 @@ export const generateAiAssistantConfig = (
     globalColors: GlobalColors
 ): AiAssistantConfig => {
     const { businessName, industry, hasEcommerce, language } = progress;
+    const businessProfile = generateBusinessProfile(progress);
+    const productsServices = formatServices(progress.services);
+    const policiesContact = formatContactInfo(progress.contactInfo);
+    const specialInstructions = generateSpecialInstructions(industry, hasEcommerce || false, language);
+    const faqs = generateIndustryFAQs(industry, hasEcommerce || false, language);
     
     return {
         agentName: `Asistente de ${businessName}`,
         tone: determineTone(industry),
         languages: language === 'es' ? 'Spanish, English' : 'English, Spanish',
-        businessProfile: generateBusinessProfile(progress),
-        productsServices: formatServices(progress.services),
-        policiesContact: formatContactInfo(progress.contactInfo),
-        specialInstructions: generateSpecialInstructions(industry, hasEcommerce || false, language),
-        faqs: generateIndustryFAQs(industry, hasEcommerce || false, language),
-        knowledgeDocuments: [],
+        businessProfile,
+        productsServices,
+        policiesContact,
+        specialInstructions,
+        faqs,
+        knowledgeDocuments: [
+            generateChatCoreKnowledgeDocument(progress, {
+                businessProfile,
+                productsServices,
+                policiesContact,
+                specialInstructions,
+                faqs,
+            }),
+        ],
         knowledgeLinks: [],
         widgetColor: globalColors.primary,
         isActive: true,
@@ -434,6 +456,44 @@ export const generateAiAssistantConfig = (
         appearance: generateChatAppearance(globalColors, industry, language),
         enableLiveVoice: false,
         voiceName: 'Zephyr',
+    };
+};
+
+export const generateChatCoreKnowledgeDocument = (
+    progress: OnboardingProgress,
+    input: ChatCoreKnowledgeInput
+): KnowledgeDocument => {
+    const { businessName, industry, description, tagline, language, hasEcommerce, storeSetup } = progress;
+    const isSpanish = language === 'es';
+    const title = isSpanish ? 'Conocimiento del proyecto para ChatCore' : 'ChatCore project knowledge';
+    const sections = [
+        `# ${title}`,
+        `${isSpanish ? 'Negocio' : 'Business'}: ${businessName || 'Untitled project'}`,
+        `${isSpanish ? 'Industria' : 'Industry'}: ${industry || 'general'}`,
+        description ? `${isSpanish ? 'Descripcion' : 'Description'}: ${description}` : '',
+        tagline ? `${isSpanish ? 'Tagline' : 'Tagline'}: ${tagline}` : '',
+        hasEcommerce ? `${isSpanish ? 'Ecommerce' : 'Ecommerce'}: ${storeSetup?.storeName || businessName || 'enabled'}` : '',
+        input.businessProfile ? `\n## ${isSpanish ? 'Perfil del negocio' : 'Business profile'}\n${input.businessProfile}` : '',
+        input.productsServices ? `\n## ${isSpanish ? 'Productos y servicios' : 'Products and services'}\n${input.productsServices}` : '',
+        input.policiesContact ? `\n## ${isSpanish ? 'Contacto y politicas' : 'Contact and policies'}\n${input.policiesContact}` : '',
+        input.faqs.length > 0
+            ? `\n## FAQs\n${input.faqs.map((faq, index) => `Q${index + 1}: ${faq.question}\nA${index + 1}: ${faq.answer}`).join('\n\n')}`
+            : '',
+        input.specialInstructions ? `\n## ${isSpanish ? 'Instrucciones operativas' : 'Operating instructions'}\n${input.specialInstructions}` : '',
+        `\n## ${isSpanish ? 'Origen' : 'Source'}\n${isSpanish
+            ? 'Generado automaticamente por AI Studio al crear el proyecto. Revisar y ajustar antes de usarlo como fuente final de politicas, precios o disponibilidad.'
+            : 'Generated automatically by AI Studio when creating the project. Review and adjust before using it as the final source for policies, pricing, or availability.'
+        }`,
+    ].filter(Boolean);
+    const content = sections.join('\n');
+
+    return {
+        id: 'ai-studio-chatcore-project-knowledge',
+        name: `${businessName || 'Project'} - ChatCore project knowledge`,
+        content,
+        extractedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+        fileType: 'text/markdown',
+        size: content.length,
     };
 };
 
@@ -481,7 +541,6 @@ const isColorDark = (hexColor: string): boolean => {
     
     return luminance < 0.5;
 };
-
 
 
 
