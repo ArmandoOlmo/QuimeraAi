@@ -50,13 +50,14 @@ Production currently needs these Appointments Engine runtime variables:
 - Configured: `CRON_SECRET`
 - Configured: `SUPABASE_URL` or `VITE_SUPABASE_URL`
 - Configured: `SUPABASE_SERVICE_ROLE_KEY`
-- Configured: `GOOGLE_CALENDAR_CLIENT_ID` via `VITE_GOOGLE_CLIENT_ID`
+- Configured: `GOOGLE_CALENDAR_CLIENT_ID`
+- Configured: `VITE_GOOGLE_CLIENT_ID`
 - Configured: `GOOGLE_CALENDAR_REDIRECT_URI`
 - Configured: `GOOGLE_CALENDAR_OAUTH_STATE_SECRET` through `CRON_SECRET` fallback
 - Configured: `GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY`
 - Configured: `GOOGLE_CALENDAR_WEBHOOK_URL`
 - Configured: `APP_BASE_URL` and `VITE_PUBLIC_APP_URL`
-- Missing external secret: `GOOGLE_CALENDAR_CLIENT_SECRET`
+- Configured: `GOOGLE_CALENDAR_CLIENT_SECRET`
 - Missing external secret: `RESEND_API_KEY`
 - Missing sender identity: `APPOINTMENT_EMAIL_FROM` or `RESEND_FROM_EMAIL`
 - Missing external secret: `STRIPE_SECRET_KEY`
