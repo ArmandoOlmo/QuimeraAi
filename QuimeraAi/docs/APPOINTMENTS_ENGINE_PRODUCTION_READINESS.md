@@ -37,6 +37,7 @@ Current linked-project status:
 - Verified canonical tables, metadata columns, Google Calendar server-only grants, explicit deny RLS policies, and fixed `search_path` for `is_project_appointments_member`.
 - Deployed Supabase Edge Function `stripe-webhook` version 11 so appointment payment reconciliation is active in the Ecommerce webhook path.
 - Configured Supabase Edge Function secrets for Stripe payment reconciliation: `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
+- Configured Supabase Edge Function secret `RESEND_API_KEY` for transactional email delivery.
 
 Current deployment guardrail:
 
@@ -60,8 +61,8 @@ Production currently needs these Appointments Engine runtime variables:
 - Configured: `APP_BASE_URL` and `VITE_PUBLIC_APP_URL`
 - Configured: `GOOGLE_CALENDAR_CLIENT_SECRET`
 - Configured: `STRIPE_SECRET_KEY`
-- Missing external secret: `RESEND_API_KEY`
-- Missing sender identity: `APPOINTMENT_EMAIL_FROM` or `RESEND_FROM_EMAIL`
+- Configured: `RESEND_API_KEY`
+- Configured: `APPOINTMENT_EMAIL_FROM`
 
 Optional runtime tuning:
 
