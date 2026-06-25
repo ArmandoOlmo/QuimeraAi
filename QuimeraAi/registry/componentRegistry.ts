@@ -70,6 +70,7 @@ const entry = (input: {
     selectionGuidance?: string[];
     antiPatterns?: string[];
     confidenceThreshold?: number;
+    aiSelection?: ComponentRegistryEntry['aiSelection'];
     dataAccess?: ComponentDataAccess;
     renderTargets?: ComponentRegistryEntry['renderTargets'];
 }): ComponentRegistryEntry => ({
@@ -87,7 +88,7 @@ const entry = (input: {
     mobilePriority: 'medium',
     visualDensity: 'balanced',
     allowedSources: commonSources,
-    aiSelection: {
+    aiSelection: input.aiSelection || {
         canSelect: true,
         selectionGuidance: input.selectionGuidance || [],
         antiPatterns: input.antiPatterns || [],
@@ -263,16 +264,32 @@ export const componentRegistry: ComponentRegistryEntry[] = [
         label: 'Appointment CTA',
         description: 'Booking or appointment-oriented conversion block.',
         family: 'appointment_block',
-        implementationStatus: 'metadata_only',
-        visualSupportNotes: 'Uses the existing leads section as a safe fallback; appointment-specific visual controls are not fully rendered yet.',
+        implementationStatus: 'rendered',
+        visualSupportNotes: 'Renders a public booking form backed by canonical appointment availability and widget API booking writes.',
         compatibleIndustries: ['services', 'local_business', 'fitness', 'beauty', 'restaurant', 'electric_bikes'],
         pageIntents: ['appointment_landing', 'service_landing', 'local_business_home', 'ecommerce_home'],
         conversionRoles: ['booking', 'lead_capture'],
         requiredModules: ['booking'],
         optionalModules: ['appointments'],
         fallbackComponentId: 'leadForm',
-        renderTargets: { websiteSection: 'leads' },
-        selectionGuidance: ['Use for test rides, consultations, repairs, classes, reservations, or service calls. Fall back to leadForm when appointment readiness is missing.'],
+        renderTargets: { websiteSection: 'appointmentBooking' },
+        selectionGuidance: ['Use for test rides, consultations, repairs, classes, reservations, or service calls when public booking should create canonical appointment requests. Fall back to leadForm when appointment readiness is missing.'],
+    }),
+    entry({
+        id: 'publicBookingForm',
+        label: 'Public Booking Form',
+        description: 'Public availability picker and appointment request form backed by the canonical Appointments Engine.',
+        family: 'appointment_block',
+        implementationStatus: 'rendered',
+        visualSupportNotes: 'Fetches public availability from the widget API and creates canonical appointment requests with linked lead metadata.',
+        compatibleIndustries: ['services', 'local_business', 'fitness', 'beauty', 'restaurant', 'electric_bikes'],
+        pageIntents: ['appointment_landing', 'service_landing', 'local_business_home'],
+        conversionRoles: ['booking', 'lead_capture'],
+        requiredModules: ['booking'],
+        optionalModules: ['appointments'],
+        fallbackComponentId: 'leadForm',
+        renderTargets: { websiteSection: 'appointmentBooking' },
+        selectionGuidance: ['Use when a page needs an actual public booking form with available time slots and canonical appointment creation.'],
     }),
     entry({
         id: 'contact',

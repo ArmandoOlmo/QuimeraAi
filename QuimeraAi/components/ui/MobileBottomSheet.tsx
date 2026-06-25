@@ -145,7 +145,7 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
                 onMouseLeave={handleMouseLeave}
             >
                 <div
-                    className="bg-q-surface rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden"
+                    className="bg-q-surface rounded-t-[var(--editor-control-sheet-radius)] shadow-2xl max-h-[85vh] flex flex-col overflow-hidden"
                     style={{
                         boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.25)',
                     }}

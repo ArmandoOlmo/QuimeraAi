@@ -1,0 +1,749 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+import {
+    createResendEcommerceEmailProvider,
+    type EcommerceEmailProvider,
+} from '../../utils/ecommerce/ecommerceEmailService.ts';
+import type { AppointmentEmailFlowType } from './appointmentEventService';
+
+type SupabaseLike = Pick<SupabaseClient, 'from'>;
+type Locale = 'en' | 'es';
+
+export type AppointmentEmailLogStatus = 'queued' | 'scheduled' | 'sent' | 'skipped' | 'failed';
+
+export interface AppointmentEmailLogRow {
+    id?: string | null;
+    project_id?: string | null;
+    store_id?: string | null;
+    user_id?: string | null;
+    type?: string | null;
+    template_id?: string | null;
+    recipient_email?: string | null;
+    recipient_name?: string | null;
+    subject?: string | null;
+    status?: AppointmentEmailLogStatus | string | null;
+    provider?: string | null;
+    provider_message_id?: string | null;
+    error_message?: string | null;
+    error_code?: string | null;
+    order_id?: string | null;
+    lead_id?: string | null;
+    metadata?: Record<string, unknown> | null;
+    sent_at?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+}
+
+export interface AppointmentEmailDeliveryOptions {
+    limit?: number;
+    now?: string | Date;
+    provider?: EcommerceEmailProvider;
+    resendApiKey?: string | null;
+    defaultFromEmail?: string;
+}
+
+export interface AppointmentEmailDeliveryResult {
+    logId?: string;
+    flowType?: AppointmentEmailFlowType;
+    status: 'sent' | 'skipped' | 'failed' | 'deferred' | 'ignored';
+    recipientEmail?: string;
+    reason?: string;
+    providerMessageId?: string;
+}
+
+export interface AppointmentEmailDeliverySummary {
+    processed: number;
+    sent: number;
+    skipped: number;
+    failed: number;
+    deferred: number;
+    ignored: number;
+    results: AppointmentEmailDeliveryResult[];
+}
+
+interface AppointmentEmailSettings {
+    exists: boolean;
+    enabled: boolean;
+    provider: string;
+    apiKeyConfigured: boolean;
+    fromEmail?: string;
+    fromName?: string;
+    replyTo?: string;
+    primaryColor: string;
+    footerText?: string;
+    transactional: Record<string, unknown>;
+    appointmentTemplates: Record<string, AppointmentEmailTemplateOverride>;
+}
+
+interface AppointmentEmailTemplateOverride {
+    enabled?: boolean;
+    subject?: string;
+    preheader?: string;
+    intro?: string;
+    nextStep?: string;
+    footer?: string;
+    html?: string;
+    text?: string;
+    primaryColor?: string;
+}
+
+const DEFAULT_FROM_EMAIL = 'Quimera Ai <no-reply@quimera.ai>';
+const DEFAULT_PRIMARY_COLOR = '#4f46e5';
+const DEFAULT_LIMIT = 25;
+
+const APPOINTMENT_EMAIL_FLOWS = new Set<AppointmentEmailFlowType>([
+    'appointment_request_received',
+    'appointment_confirmation',
+    'appointment_cancellation',
+    'appointment_follow_up',
+    'appointment_reminder',
+]);
+
+const FLOW_SETTING_KEYS: Record<AppointmentEmailFlowType, string[]> = {
+    appointment_request_received: ['appointmentRequestReceived', 'appointment_request_received'],
+    appointment_confirmation: ['appointmentConfirmation', 'appointment_confirmation'],
+    appointment_cancellation: ['appointmentCancellation', 'appointment_cancellation'],
+    appointment_follow_up: ['appointmentFollowUp', 'appointment_follow_up'],
+    appointment_reminder: ['appointmentReminder', 'appointment_reminder'],
+};
+
+const SUBJECTS: Record<Locale, Record<AppointmentEmailFlowType, string>> = {
+    en: {
+        appointment_request_received: 'Appointment request received: {{title}}',
+        appointment_confirmation: 'Appointment confirmed: {{title}}',
+        appointment_cancellation: 'Appointment cancelled: {{title}}',
+        appointment_follow_up: 'Follow up for your appointment: {{title}}',
+        appointment_reminder: 'Appointment reminder: {{title}}',
+    },
+    es: {
+        appointment_request_received: 'Solicitud de cita recibida: {{title}}',
+        appointment_confirmation: 'Cita confirmada: {{title}}',
+        appointment_cancellation: 'Cita cancelada: {{title}}',
+        appointment_follow_up: 'Seguimiento de tu cita: {{title}}',
+        appointment_reminder: 'Recordatorio de cita: {{title}}',
+    },
+};
+
+const EMAIL_COPY: Record<Locale, {
+    labels: Record<string, string>;
+    flows: Record<AppointmentEmailFlowType, { preheader: string; intro: string; nextStep: string; footer: string }>;
+}> = {
+    en: {
+        labels: {
+            greeting: 'Hi {{name}},',
+            fallbackName: 'there',
+            appointment: 'Appointment',
+            starts: 'Starts',
+            ends: 'Ends',
+            timezone: 'Timezone',
+            details: 'Details',
+            payment: 'Payment',
+            noEndTime: 'End time to be confirmed',
+            replyHelp: 'Reply to this email if you need to update the appointment details.',
+        },
+        flows: {
+            appointment_request_received: {
+                preheader: 'We received your appointment request.',
+                intro: 'We received your appointment request.',
+                nextStep: 'The team will review availability and confirm the final time.',
+                footer: 'You will receive another message once the appointment is confirmed.',
+            },
+            appointment_confirmation: {
+                preheader: 'Your appointment is confirmed.',
+                intro: 'Your appointment is confirmed.',
+                nextStep: 'The team will be ready with the appointment context and linked CRM notes.',
+                footer: 'Please arrive on time or reply if you need to reschedule.',
+            },
+            appointment_cancellation: {
+                preheader: 'Your appointment has been cancelled.',
+                intro: 'Your appointment has been cancelled.',
+                nextStep: 'Reply to this email if you want to request a new time.',
+                footer: 'No further action is required unless you want to reschedule.',
+            },
+            appointment_follow_up: {
+                preheader: 'Follow up for your appointment.',
+                intro: 'Thanks for attending your appointment.',
+                nextStep: 'The team can continue the conversation from the linked CRM record.',
+                footer: 'Reply with any questions or next steps you want us to track.',
+            },
+            appointment_reminder: {
+                preheader: 'Reminder for your upcoming appointment.',
+                intro: 'This is a reminder for your upcoming appointment.',
+                nextStep: 'The team has the appointment context prepared.',
+                footer: 'Reply to this email if you need to update the time.',
+            },
+        },
+    },
+    es: {
+        labels: {
+            greeting: 'Hola {{name}},',
+            fallbackName: 'equipo',
+            appointment: 'Cita',
+            starts: 'Comienza',
+            ends: 'Termina',
+            timezone: 'Zona horaria',
+            details: 'Detalles',
+            payment: 'Pago',
+            noEndTime: 'Hora de cierre por confirmar',
+            replyHelp: 'Responde a este email si necesitas actualizar los detalles de la cita.',
+        },
+        flows: {
+            appointment_request_received: {
+                preheader: 'Recibimos tu solicitud de cita.',
+                intro: 'Recibimos tu solicitud de cita.',
+                nextStep: 'El equipo revisará la disponibilidad y confirmará el horario final.',
+                footer: 'Recibirás otro mensaje cuando la cita quede confirmada.',
+            },
+            appointment_confirmation: {
+                preheader: 'Tu cita está confirmada.',
+                intro: 'Tu cita está confirmada.',
+                nextStep: 'El equipo tendrá listo el contexto de la cita y las notas vinculadas del CRM.',
+                footer: 'Llega a tiempo o responde si necesitas reprogramar.',
+            },
+            appointment_cancellation: {
+                preheader: 'Tu cita fue cancelada.',
+                intro: 'Tu cita fue cancelada.',
+                nextStep: 'Responde a este email si quieres solicitar un nuevo horario.',
+                footer: 'No necesitas hacer nada mas a menos que quieras reprogramar.',
+            },
+            appointment_follow_up: {
+                preheader: 'Seguimiento de tu cita.',
+                intro: 'Gracias por asistir a tu cita.',
+                nextStep: 'El equipo puede continuar la conversación desde el registro vinculado del CRM.',
+                footer: 'Responde con cualquier pregunta o próximo paso que quieras que registremos.',
+            },
+            appointment_reminder: {
+                preheader: 'Recordatorio para tu próxima cita.',
+                intro: 'Este es un recordatorio de tu próxima cita.',
+                nextStep: 'El equipo tiene preparado el contexto de la cita.',
+                footer: 'Responde a este email si necesitas actualizar el horario.',
+            },
+        },
+    },
+};
+
+export function createResendAppointmentEmailProvider(apiKey?: string | null): EcommerceEmailProvider | undefined {
+    return createResendEcommerceEmailProvider(apiKey);
+}
+
+export async function processAppointmentEmailLogs(
+    client: SupabaseLike,
+    options: AppointmentEmailDeliveryOptions = {},
+): Promise<AppointmentEmailDeliverySummary> {
+    const now = toIso(options.now);
+    const limit = normalizeLimit(options.limit);
+    const provider = options.provider || createResendAppointmentEmailProvider(options.resendApiKey);
+    const summary: AppointmentEmailDeliverySummary = {
+        processed: 0,
+        sent: 0,
+        skipped: 0,
+        failed: 0,
+        deferred: 0,
+        ignored: 0,
+        results: [],
+    };
+
+    const { data, error } = await client
+        .from('email_logs')
+        .select('*')
+        .in('status', ['queued', 'scheduled'])
+        .eq('provider', 'resend')
+        .contains('metadata', { triggeredBy: 'appointments-engine', sourceModule: 'appointments' })
+        .limit(limit);
+
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? data as AppointmentEmailLogRow[] : [];
+    for (const row of rows) {
+        summary.processed += 1;
+        const result = await processAppointmentEmailLog(client, row, {
+            now,
+            provider,
+            defaultFromEmail: options.defaultFromEmail || DEFAULT_FROM_EMAIL,
+        });
+        summary.results.push(result);
+        summary[result.status] += 1;
+    }
+
+    return summary;
+}
+
+async function processAppointmentEmailLog(
+    client: SupabaseLike,
+    row: AppointmentEmailLogRow,
+    options: {
+        now: string;
+        provider?: EcommerceEmailProvider;
+        defaultFromEmail: string;
+    },
+): Promise<AppointmentEmailDeliveryResult> {
+    const metadata = normalizeRecord(row.metadata);
+    const flowType = normalizeFlowType(row.type || row.template_id);
+    const baseResult = {
+        logId: row.id || undefined,
+        flowType,
+        recipientEmail: normalizeEmail(row.recipient_email),
+    };
+
+    if (!flowType) {
+        return { ...baseResult, status: 'ignored', reason: 'Unsupported appointment email flow' };
+    }
+
+    if (!isAppointmentEngineLog(metadata)) {
+        return { ...baseResult, status: 'ignored', reason: 'Email log is not owned by Appointments Engine' };
+    }
+
+    if (isFutureScheduledLog(row, metadata, options.now)) {
+        return { ...baseResult, status: 'deferred', reason: 'Scheduled send time has not arrived' };
+    }
+
+    const recipientEmail = normalizeEmail(row.recipient_email);
+    if (!isValidEmail(recipientEmail)) {
+        await markEmailLog(client, row, {
+            status: 'skipped',
+            error_message: 'Missing or invalid recipient email',
+            error_code: 'invalid_recipient',
+            metadata: withDeliveryMetadata(metadata, options.now, 'skipped'),
+        });
+        return { ...baseResult, status: 'skipped', reason: 'Missing or invalid recipient email' };
+    }
+
+    try {
+        const settings = await getAppointmentEmailSettings(client, row.project_id || row.store_id);
+        const decision = shouldSendAppointmentEmail(flowType, settings, options.provider);
+        if (!decision.shouldSend) {
+            if (decision.retryable) {
+                await markEmailLog(client, row, {
+                    error_message: decision.reason,
+                    error_code: decision.errorCode,
+                    metadata: withDeliveryMetadata(metadata, options.now, 'deferred'),
+                });
+                return {
+                    ...baseResult,
+                    status: 'deferred',
+                    reason: decision.reason,
+                };
+            }
+
+            await markEmailLog(client, row, {
+                status: 'skipped',
+                error_message: decision.reason,
+                error_code: decision.errorCode,
+                metadata: withDeliveryMetadata(metadata, options.now, 'skipped'),
+            });
+            return {
+                ...baseResult,
+                status: 'skipped',
+                reason: decision.reason,
+            };
+        }
+
+        const rendered = renderAppointmentEmail({
+            row,
+            flowType,
+            settings,
+            defaultFromEmail: options.defaultFromEmail,
+        });
+
+        const providerResult = await options.provider!.send({
+            from: resolveFrom(settings, options.defaultFromEmail),
+            replyTo: settings.replyTo,
+            to: [recipientEmail],
+            subject: rendered.subject,
+            html: rendered.html,
+            text: rendered.text,
+        });
+
+        await markEmailLog(client, row, {
+            status: 'sent',
+            subject: rendered.subject,
+            sent_at: options.now,
+            provider_message_id: providerResult.providerMessageId || null,
+            error_message: null,
+            error_code: null,
+            metadata: withDeliveryMetadata(metadata, options.now, 'sent', {
+                providerMessageId: providerResult.providerMessageId,
+                bodyKey: `appointmentBooking.emailBodies.${flowType}`,
+            }),
+        });
+
+        return {
+            ...baseResult,
+            status: 'sent',
+            providerMessageId: providerResult.providerMessageId,
+        };
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        await markEmailLog(client, row, {
+            status: 'failed',
+            error_message: message,
+            error_code: 'provider_send_failed',
+            metadata: withDeliveryMetadata(metadata, options.now, 'failed'),
+        });
+        return { ...baseResult, status: 'failed', reason: message };
+    }
+}
+
+async function getAppointmentEmailSettings(client: SupabaseLike, projectId?: string | null): Promise<AppointmentEmailSettings> {
+    if (!projectId) return normalizeEmailSettings(null);
+
+    const { data, error } = await client
+        .from('email_settings')
+        .select('*')
+        .or(`project_id.eq.${projectId},store_id.eq.${projectId}`)
+        .limit(1)
+        .maybeSingle();
+
+    if (error) throw error;
+    return normalizeEmailSettings(data);
+}
+
+function shouldSendAppointmentEmail(
+    flowType: AppointmentEmailFlowType,
+    settings: AppointmentEmailSettings,
+    provider?: EcommerceEmailProvider,
+): { shouldSend: boolean; reason?: string; errorCode?: string; retryable?: boolean } {
+    if (!settings.exists || !settings.enabled) {
+        return {
+            shouldSend: false,
+            reason: 'Email settings are not configured',
+            errorCode: 'email_settings_missing',
+        };
+    }
+
+    if (settings.provider !== 'resend') {
+        return {
+            shouldSend: false,
+            reason: `Unsupported email provider: ${settings.provider}`,
+            errorCode: 'unsupported_provider',
+        };
+    }
+
+    if (!settings.apiKeyConfigured) {
+        return {
+            shouldSend: false,
+            reason: 'Email provider is not configured',
+            errorCode: 'email_provider_unconfigured',
+        };
+    }
+
+    if (!provider) {
+        return {
+            shouldSend: false,
+            reason: 'Email provider sender is not available in this runtime',
+            errorCode: 'email_provider_missing',
+            retryable: true,
+        };
+    }
+
+    const transactional = settings.transactional || {};
+    if (transactional.appointments === false || transactional.appointmentEmails === false) {
+        return {
+            shouldSend: false,
+            reason: 'Appointment emails are disabled',
+            errorCode: 'appointment_emails_disabled',
+        };
+    }
+
+    const disabled = FLOW_SETTING_KEYS[flowType].some(key => transactional[key] === false);
+    if (disabled) {
+        return {
+            shouldSend: false,
+            reason: `${flowType} is disabled`,
+            errorCode: 'appointment_email_flow_disabled',
+        };
+    }
+
+    if (settings.appointmentTemplates[flowType]?.enabled === false) {
+        return {
+            shouldSend: false,
+            reason: `${flowType} template is disabled`,
+            errorCode: 'appointment_email_template_disabled',
+        };
+    }
+
+    return { shouldSend: true };
+}
+
+function renderAppointmentEmail(input: {
+    row: AppointmentEmailLogRow;
+    flowType: AppointmentEmailFlowType;
+    settings: AppointmentEmailSettings;
+    defaultFromEmail: string;
+}): { subject: string; html: string; text: string } {
+    const metadata = normalizeRecord(input.row.metadata);
+    const locale = normalizeLocale(metadata.locale);
+    const copy = EMAIL_COPY[locale];
+    const flow = copy.flows[input.flowType];
+    const title = readAppointmentTitle(input.row, metadata, locale);
+    const name = input.row.recipient_name || copy.labels.fallbackName;
+    const timezone = stringOrUndefined(metadata.timezone);
+    const startDate = stringOrUndefined(metadata.startDate);
+    const endDate = stringOrUndefined(metadata.endDate);
+    const paymentStatus = stringOrUndefined(metadata.paymentStatus);
+    const ecommerceOrderId = stringOrUndefined(metadata.ecommerceOrderId || input.row.order_id);
+    const template = input.settings.appointmentTemplates[input.flowType] || {};
+    const details = [
+        `${copy.labels.appointment}: ${title}`,
+        startDate ? `${copy.labels.starts}: ${formatDateTime(startDate, locale, timezone)}` : '',
+        endDate ? `${copy.labels.ends}: ${formatDateTime(endDate, locale, timezone)}` : `${copy.labels.ends}: ${copy.labels.noEndTime}`,
+        timezone ? `${copy.labels.timezone}: ${timezone}` : '',
+        paymentStatus ? `${copy.labels.payment}: ${paymentStatus}${ecommerceOrderId ? ` (${ecommerceOrderId})` : ''}` : '',
+    ].filter(Boolean);
+    const variables = {
+        title,
+        name,
+        start: startDate ? formatDateTime(startDate, locale, timezone) : '',
+        end: endDate ? formatDateTime(endDate, locale, timezone) : copy.labels.noEndTime,
+        timezone: timezone || '',
+        paymentStatus: paymentStatus || '',
+        ecommerceOrderId: ecommerceOrderId || '',
+        flowType: input.flowType,
+        projectName: stringOrUndefined(metadata.projectName) || '',
+    };
+    const subject = input.row.subject
+        || renderTemplateString(template.subject, variables)
+        || SUBJECTS[locale][input.flowType].replace('{{title}}', title);
+    const preheader = renderTemplateString(template.preheader, variables) || flow.preheader;
+    const intro = renderTemplateString(template.intro, variables) || flow.intro;
+    const nextStep = renderTemplateString(template.nextStep, variables) || flow.nextStep;
+    const footer = renderTemplateString(template.footer, variables) || flow.footer;
+    const text = [
+        renderTemplateString(template.text, variables) || preheader,
+        '',
+        copy.labels.greeting.replace('{{name}}', name),
+        intro,
+        nextStep,
+        '',
+        `${copy.labels.details}:`,
+        ...details.map(line => `- ${line}`),
+        '',
+        copy.labels.replyHelp,
+        footer,
+        input.settings.footerText || '',
+    ].filter(Boolean).join('\n');
+    const customHtml = renderTemplateString(template.html, variables);
+
+    return {
+        subject,
+        text,
+        html: customHtml || renderSimpleHtml({
+            subject,
+            preheader,
+            body: text,
+            primaryColor: template.primaryColor || input.settings.primaryColor,
+        }),
+    };
+}
+
+async function markEmailLog(
+    client: SupabaseLike,
+    row: AppointmentEmailLogRow,
+    patch: Partial<AppointmentEmailLogRow>,
+): Promise<void> {
+    if (!row.id) return;
+    const { error } = await client
+        .from('email_logs')
+        .update({
+            ...patch,
+            updated_at: patch.updated_at || new Date().toISOString(),
+        })
+        .eq('id', row.id);
+    if (error) throw error;
+}
+
+function normalizeEmailSettings(row: Record<string, unknown> | null | undefined): AppointmentEmailSettings {
+    const data = normalizeRecord(row);
+    return {
+        exists: Boolean(row),
+        enabled: Boolean(row),
+        provider: String(data.provider || 'resend'),
+        apiKeyConfigured: data.api_key_configured === true || data.apiKeyConfigured === true,
+        fromEmail: normalizeEmail(data.from_email || data.fromEmail),
+        fromName: stringOrUndefined(data.from_name || data.fromName),
+        replyTo: normalizeEmail(data.reply_to || data.replyTo),
+        primaryColor: stringOrUndefined(data.primary_color || data.primaryColor) || DEFAULT_PRIMARY_COLOR,
+        footerText: stringOrUndefined(data.footer_text || data.footerText),
+        transactional: normalizeRecord(data.transactional),
+        appointmentTemplates: normalizeAppointmentTemplates(normalizeRecord(data.transactional).appointmentTemplates),
+    };
+}
+
+function resolveFrom(settings: AppointmentEmailSettings, defaultFromEmail: string): string {
+    const fromEmail = settings.fromEmail || defaultFromEmail;
+    if (!settings.fromEmail) return defaultFromEmail;
+    return settings.fromName ? `${settings.fromName} <${fromEmail}>` : fromEmail;
+}
+
+function isAppointmentEngineLog(metadata: Record<string, unknown>): boolean {
+    return metadata.triggeredBy === 'appointments-engine' && metadata.sourceModule === 'appointments';
+}
+
+function isFutureScheduledLog(
+    row: AppointmentEmailLogRow,
+    metadata: Record<string, unknown>,
+    now: string,
+): boolean {
+    if (row.status !== 'scheduled') return false;
+    const sendAt = stringOrUndefined(metadata.sendAt);
+    if (!sendAt) return false;
+    return new Date(sendAt).getTime() > new Date(now).getTime();
+}
+
+function withDeliveryMetadata(
+    metadata: Record<string, unknown>,
+    at: string,
+    status: string,
+    extra: Record<string, unknown> = {},
+): Record<string, unknown> {
+    return {
+        ...metadata,
+        delivery: {
+            ...normalizeRecord(metadata.delivery),
+            ...extra,
+            provider: 'resend',
+            status,
+            processedAt: at,
+        },
+    };
+}
+
+function normalizeFlowType(value?: string | null): AppointmentEmailFlowType | undefined {
+    if (!value) return undefined;
+    return APPOINTMENT_EMAIL_FLOWS.has(value as AppointmentEmailFlowType)
+        ? value as AppointmentEmailFlowType
+        : undefined;
+}
+
+function normalizeAppointmentTemplates(value: unknown): Record<string, AppointmentEmailTemplateOverride> {
+    const templates = normalizeRecord(value);
+    return Object.fromEntries(
+        Object.entries(templates).map(([key, template]) => {
+            const data = normalizeRecord(template);
+            return [key, {
+                enabled: data.enabled !== false,
+                subject: stringOrUndefined(data.subject),
+                preheader: stringOrUndefined(data.preheader),
+                intro: stringOrUndefined(data.intro),
+                nextStep: stringOrUndefined(data.nextStep),
+                footer: stringOrUndefined(data.footer),
+                html: stringOrUndefined(data.html),
+                text: stringOrUndefined(data.text),
+                primaryColor: stringOrUndefined(data.primaryColor),
+            }];
+        })
+    );
+}
+
+function renderTemplateString(value: unknown, variables: Record<string, string>): string {
+    const template = stringOrUndefined(value);
+    if (!template) return '';
+    return template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key) => variables[key] || '');
+}
+
+function readAppointmentTitle(
+    row: AppointmentEmailLogRow,
+    metadata: Record<string, unknown>,
+    locale: Locale,
+): string {
+    const i18n = normalizeRecord(metadata.i18n);
+    const params = normalizeRecord(i18n.params);
+    return stringOrUndefined(metadata.title)
+        || stringOrUndefined(params.title)
+        || stringOrUndefined(metadata.appointmentTitle)
+        || SUBJECTS[locale].appointment_reminder.replace('{{title}}', '').trim()
+        || 'Appointment';
+}
+
+function renderSimpleHtml(input: {
+    subject: string;
+    preheader: string;
+    body: string;
+    primaryColor: string;
+}): string {
+    const paragraphs = input.body
+        .split('\n')
+        .map(line => line.trim())
+        .map(line => {
+            if (!line) return '<br />';
+            if (line.startsWith('- ')) return `<li>${escapeHtml(line.slice(2))}</li>`;
+            return `<p>${escapeHtml(line)}</p>`;
+        })
+        .join('\n');
+
+    return [
+        '<!doctype html>',
+        '<html>',
+        '<body style="margin:0;background:#f6f7fb;font-family:Arial,Helvetica,sans-serif;color:#111827;">',
+        `<span style="display:none;max-height:0;overflow:hidden;">${escapeHtml(input.preheader)}</span>`,
+        '<main style="max-width:640px;margin:0 auto;padding:32px 16px;">',
+        '<section style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:28px;">',
+        `<div style="width:40px;height:4px;background:${escapeHtml(input.primaryColor)};border-radius:999px;margin-bottom:20px;"></div>`,
+        `<h1 style="font-size:22px;line-height:1.3;margin:0 0 18px;">${escapeHtml(input.subject)}</h1>`,
+        paragraphs.replace(/<\/li>\n<li>/g, '</li><li>'),
+        '</section>',
+        '</main>',
+        '</body>',
+        '</html>',
+    ].join('');
+}
+
+function formatDateTime(value: string, locale: Locale, timezone?: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    try {
+        return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+            timeZone: timezone || undefined,
+        }).format(date);
+    } catch (_error) {
+        return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+        }).format(date);
+    }
+}
+
+function toIso(value?: string | Date): string {
+    if (!value) return new Date().toISOString();
+    if (value instanceof Date) return value.toISOString();
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+}
+
+function normalizeLimit(value?: number): number {
+    if (!Number.isFinite(value)) return DEFAULT_LIMIT;
+    return Math.max(1, Math.min(100, Math.floor(value || DEFAULT_LIMIT)));
+}
+
+function normalizeLocale(value: unknown): Locale {
+    if (typeof value !== 'string') return 'es';
+    return value.toLowerCase().split('-')[0] === 'en' ? 'en' : 'es';
+}
+
+function normalizeRecord(value: unknown): Record<string, unknown> {
+    return value && typeof value === 'object' && !Array.isArray(value)
+        ? value as Record<string, unknown>
+        : {};
+}
+
+function normalizeEmail(value: unknown): string {
+    return typeof value === 'string' ? value.trim().toLowerCase() : '';
+}
+
+function isValidEmail(value: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function stringOrUndefined(value: unknown): string | undefined {
+    return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function escapeHtml(value: unknown): string {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}

@@ -237,9 +237,6 @@ export interface GoogleCalendarSync {
 }
 
 export interface GoogleCalendarConfig {
-    accessToken?: string;
-    refreshToken?: string;
-    expiresAt?: number;
     calendarId: string;
     calendarName?: string;
     syncEnabled: boolean;
@@ -358,6 +355,25 @@ export interface Appointment {
     // Tenant/Project scope
     tenantId?: string;
     projectId?: string;
+
+    // Canonical Appointments Engine metadata
+    source?: 'dashboard' | 'public_booking' | 'chatbot' | 'website_lead_form' | 'realty' | 'restaurant' | 'ecommerce' | 'import' | 'google_calendar' | (string & {});
+    sourceComponent?: string;
+    sourceModule?: string;
+    sourceConversationId?: string;
+    sourceLeadId?: string;
+    publicSubmissionId?: string;
+    syncKey?: string;
+    idempotencyKey?: string;
+    createdBySystem?: boolean;
+    needsReview?: boolean;
+    generatedByAI?: boolean;
+    correlationId?: string;
+    bookingServiceId?: string;
+    ecommerceProductId?: string;
+    ecommerceOrderId?: string;
+    paymentStatus?: string;
+    metadata?: Record<string, unknown>;
 }
 
 
@@ -392,6 +408,38 @@ export interface AppointmentSortOptions {
 // =============================================================================
 // ANALYTICS
 // =============================================================================
+
+export interface AppointmentEngineAnalytics {
+    totalEvents: number;
+    requestedCount: number;
+    confirmedCount: number;
+    completedCount: number;
+    cancelledCount: number;
+    noShowCount: number;
+    needsReviewCount: number;
+    aiPreparedCount: number;
+    chatCoreBookings: number;
+    publicBookings: number;
+    dashboardBookings: number;
+    googleCalendarImports: number;
+    linkedLeadCount: number;
+    paidBookingCount: number;
+    depositPendingCount: number;
+    confirmationRate: number;
+    completionRateFromRequests: number;
+    leadLinkRate: number;
+    paidBookingRate: number;
+    sourceBreakdown: Record<string, number>;
+    eventBreakdown: Record<string, number>;
+    paymentStatusBreakdown: Record<string, number>;
+    funnel: {
+        requested: number;
+        confirmed: number;
+        completed: number;
+        cancelled: number;
+        noShow: number;
+    };
+}
 
 export interface AppointmentAnalytics {
     // Overview
@@ -439,6 +487,9 @@ export interface AppointmentAnalytics {
         completionRateChange: number;
         avgDurationChange: number;
     };
+
+    // Canonical Appointments Engine
+    engine?: AppointmentEngineAnalytics;
 }
 
 // =============================================================================
@@ -623,6 +674,9 @@ export interface BlockedDate {
     createdAt: { seconds: number; nanoseconds: number };
     createdBy: string;
     projectId?: string;
+    tenantId?: string;
+    source?: string;
+    metadata?: Record<string, unknown>;
 }
 
 // =============================================================================
@@ -634,4 +688,3 @@ export const DEFAULT_REMINDERS: Omit<AppointmentReminder, 'id' | 'sent' | 'sentA
     { type: 'email', minutesBefore: 60, enabled: true },   // 1 hora antes
     { type: 'push', minutesBefore: 15, enabled: true },    // 15 min antes
 ];
-

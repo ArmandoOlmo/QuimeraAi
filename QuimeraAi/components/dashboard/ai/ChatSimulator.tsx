@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AiAssistantConfig, Lead, Project } from '../../../types';
 import { useCRM } from '../../../contexts/crm';
 import { useAuth } from '../../../contexts/core/AuthContext';
+import { useSafeTenant } from '../../../contexts/tenant';
 import { getDefaultAppearanceConfig } from '../../../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from '../../chat/ChatCore';
-import { db, collection, addDoc, getDocs, query, orderBy } from '@/utils/compatData';
+import { supabase } from '../../../supabase';
+import { createAppointmentFromChat, getAppointmentsByProject } from '../../../services/appointments/appointmentEngineService';
 
 interface ChatSimulatorProps {
     config: AiAssistantConfig;
@@ -12,8 +15,11 @@ interface ChatSimulatorProps {
 }
 
 const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
+    const { i18n } = useTranslation();
     const { addLead, updateLead } = useCRM();
     const { user } = useAuth();
+    const tenantContext = useSafeTenant();
+    const currentTenantId = tenantContext?.currentTenant?.id || null;
     const [appointments, setAppointments] = useState<AppointmentSlot[]>([]);
 
     // Use project.id from props (more reliable than activeProjectId)
@@ -28,33 +34,20 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
             if (!user || !projectId) return;
 
             try {
-                const targetUserId = project?.userId || user.id;
-                const appointmentsRef = collection(db, 'users', targetUserId, 'projects', projectId, 'appointments');
-                const q = query(appointmentsRef, orderBy('startDate', 'asc'));
-                const snapshot = await getDocs(q);
-
-                const appointmentSlots: AppointmentSlot[] = [];
                 const now = new Date();
-
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const startDate = data.startDate?.seconds
-                        ? new Date(data.startDate.seconds * 1000)
-                        : new Date();
-                    const endDate = data.endDate?.seconds
-                        ? new Date(data.endDate.seconds * 1000)
-                        : new Date(startDate.getTime() + 60 * 60000);
-
-                    if (startDate >= now && data.status !== 'cancelled') {
-                        appointmentSlots.push({
-                            id: doc.id,
-                            title: data.title || 'Cita',
-                            startDate,
-                            endDate,
-                            status: data.status || 'scheduled'
-                        });
-                    }
+                const rangeEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+                const canonicalAppointments = await getAppointmentsByProject(supabase, projectId, {
+                    startDate: now,
+                    endDate: rangeEnd,
                 });
+
+                const appointmentSlots: AppointmentSlot[] = canonicalAppointments.map((appointment) => ({
+                    id: appointment.id,
+                    title: appointment.title || 'Cita',
+                    startDate: new Date(appointment.startDate.seconds * 1000),
+                    endDate: new Date(appointment.endDate.seconds * 1000),
+                    status: appointment.status || 'scheduled'
+                }));
 
                 setAppointments(appointmentSlots);
             } catch (error) {
@@ -83,14 +76,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
         } as Omit<Lead, 'id' | 'createdAt' | 'projectId'>;
 
         try {
-            const targetUserId = project?.userId || user?.id;
-            if (targetUserId && projectId) {
-                const leadsRef = collection(db, 'users', targetUserId, 'projects', projectId, 'leads');
-                const docRef = await addDoc(leadsRef, fullLeadData);
-                console.log('[ChatSimulator] ✅ Lead created directly with ID:', docRef.id);
-                return docRef.id;
-            } else if (addLead) {
-                // Fallback to CRM context
+            if (addLead) {
                 const leadId = await addLead(fullLeadData);
                 console.log('[ChatSimulator] ✅ Lead created via context with ID:', leadId);
                 return leadId;
@@ -122,106 +108,42 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
             console.log('[ChatSimulator] 📅 Starting appointment creation...');
             console.log('[ChatSimulator] 📅 Appointment data received:', JSON.stringify(appointmentData, null, 2));
 
-            const dateToTimestamp = (date: Date) => ({
-                seconds: Math.floor(date.getTime() / 1000),
-                nanoseconds: 0
-            });
-
-            const now = dateToTimestamp(new Date());
-
-            const participants = [];
-            if (appointmentData.participantName || appointmentData.participantEmail) {
-                participants.push({
-                    id: `participant_${Date.now()}`,
-                    name: appointmentData.participantName || 'Cliente',
-                    email: appointmentData.participantEmail || '',
-                    phone: appointmentData.participantPhone || '',
-                    role: 'attendee',
-                    status: 'pending',
-                    isRequired: true,
-                });
-            }
-
-            // Build appointment document - ensure no undefined values
-            const appointmentDoc: Record<string, any> = {
+            const result = await createAppointmentFromChat(supabase, {
+                projectId,
+                tenantId: currentTenantId,
                 title: appointmentData.title || 'Cita desde Chat',
                 description: appointmentData.description || '',
                 type: appointmentData.type || 'consultation',
-                status: 'scheduled',
-                priority: 'medium',
-                startDate: dateToTimestamp(appointmentData.startDate),
-                endDate: dateToTimestamp(appointmentData.endDate),
+                startDate: appointmentData.startDate,
+                endDate: appointmentData.endDate,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 organizerId: user.id,
-                organizerName: user.displayName || '',
+                organizerName: (user as any).displayName || user.email || '',
                 organizerEmail: user.email || '',
-                participants,
-                location: { type: 'virtual' },
-                reminders: [
-                    { id: `reminder_1_${Date.now()}`, type: 'email', minutes: 60, sent: false },
-                    { id: `reminder_2_${Date.now()}`, type: 'email', minutes: 1440, sent: false }
-                ],
-                attachments: [],
-                notes: [],
-                followUpActions: [],
-                aiPrepEnabled: true,
-                linkedLeadIds: [],
+                participantName: appointmentData.participantName,
+                participantEmail: appointmentData.participantEmail,
+                participantPhone: appointmentData.participantPhone,
+                linkedLeadId: appointmentData.linkedLeadId,
+                conversationTranscript: appointmentData.conversationTranscript,
+                sourceConversationId: appointmentData.sourceConversationId,
                 tags: ['quimera-chat', 'auto-scheduled'],
-                createdAt: now,
                 createdBy: user.id,
-                projectId: projectId,
-            };
+                sourceComponent: 'ChatSimulator',
+                sourceModule: 'chatcore',
+                generatedByAI: appointmentData.generatedByAI,
+                idempotencyKey: `chat-simulator:${projectId}:${appointmentData.participantEmail || appointmentData.participantName || 'guest'}:${appointmentData.startDate.toISOString()}`,
+                locale: i18n.language,
+                metadata: {
+                    ...(appointmentData.metadata || {}),
+                    simulated: true,
+                    projectName: project.name,
+                    locale: i18n.language,
+                    bookingChannel: appointmentData.bookingChannel,
+                },
+            });
 
-            // Only add linkedLeadId if it exists
-            if (appointmentData.linkedLeadId) {
-                appointmentDoc.linkedLeadIds = [appointmentData.linkedLeadId];
-            }
-
-            console.log('[ChatSimulator] 📅 Appointment document to save:', JSON.stringify(appointmentDoc, null, 2));
-
-            const targetUserId = project?.userId || user.id;
-            const appointmentPath = `users/${targetUserId}/projects/${projectId}/appointments`;
-            console.log('[ChatSimulator] 📍 Saving appointment to path:', appointmentPath);
-
-            const appointmentsRef = collection(db, 'users', targetUserId, 'projects', projectId, 'appointments');
-            const docRef = await addDoc(appointmentsRef, appointmentDoc);
-
-            console.log('[ChatSimulator] ✅ Appointment created:', docRef.id, 'at path:', docRef.path);
-
-            // Create lead if contact info provided (in separate try/catch so it doesn't affect appointment)
-            if (appointmentData.participantEmail || appointmentData.participantName) {
-                try {
-                    const leadData: any = {
-                        name: appointmentData.participantName || 'Cliente desde Chat',
-                        source: 'quimera-chat',
-                        status: 'new',
-                        message: `Cita agendada: ${appointmentData.title}`,
-                        tags: ['quimera-chat', 'appointment-scheduled'],
-                        notes: `Cita programada para ${appointmentData.startDate.toLocaleDateString()}`,
-                    };
-                    // Only add conversationTranscript if it has content
-                    if (appointmentData.conversationTranscript && appointmentData.conversationTranscript.length > 0) {
-                        leadData.conversationTranscript = appointmentData.conversationTranscript;
-                    }
-                    // Only add email/phone if they have values (Supabase doesn't accept undefined)
-                    if (appointmentData.participantEmail) leadData.email = appointmentData.participantEmail;
-                    if (appointmentData.participantPhone) leadData.phone = appointmentData.participantPhone;
-
-                    console.log('[ChatSimulator] 📝 Creating lead from appointment with transcript:', {
-                        hasTranscript: !!appointmentData.conversationTranscript,
-                        transcriptLength: appointmentData.conversationTranscript?.length || 0
-                    });
-
-                    const targetUserId = project?.userId || user.id;
-                    const leadsRef = collection(db, 'users', targetUserId, 'projects', projectId, 'leads');
-                    await addDoc(leadsRef, leadData);
-                    console.log('[ChatSimulator] ✅ Lead created directly for appointment with transcript');
-                } catch (leadError) {
-                    console.error('[ChatSimulator] ⚠️ Error creating lead (appointment still created):', leadError);
-                }
-            }
-
-            return docRef.id;
+            console.log('[ChatSimulator] ✅ Canonical appointment created:', result.appointmentId);
+            return result.appointmentId;
         } catch (error) {
             console.error('[ChatSimulator] ❌ Error creating appointment:', error);
             return undefined;

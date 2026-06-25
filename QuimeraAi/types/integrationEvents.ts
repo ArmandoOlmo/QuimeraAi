@@ -6,6 +6,7 @@ export type IntegrationEventModule =
     | 'storefront-builder'
     | 'ecommerce'
     | 'chatbot'
+    | 'chatcore'
     | 'crm'
     | 'email-marketing'
     | 'media-ai'

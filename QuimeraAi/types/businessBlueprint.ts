@@ -254,10 +254,113 @@ export interface MediaBlueprint extends BlueprintModuleState {
     brandAssetNeeds: string[];
 }
 
+export type AppointmentBlueprintSource =
+    | 'dashboard'
+    | 'public_booking'
+    | 'chatbot'
+    | 'chatcore'
+    | 'lead'
+    | 'crm'
+    | 'vertical_module'
+    | 'google_calendar'
+    | 'ecommerce'
+    | 'email_marketing';
+
+export type AppointmentPaymentMode = 'none' | 'deposit' | 'prepaid';
+export type AppointmentConfirmationMode = 'manual' | 'auto';
+
+export interface AppointmentServiceBlueprint {
+    id: string;
+    name: string;
+    description?: string;
+    durationMinutes: number;
+    bufferBeforeMinutes: number;
+    bufferAfterMinutes: number;
+    paymentMode: AppointmentPaymentMode;
+    depositAmount?: number;
+    currency?: string;
+    ecommerceProductId?: string;
+    needsReview: boolean;
+    sourceMap?: BlueprintSourceMap;
+}
+
+export interface AppointmentAvailabilityBlueprint {
+    timezone?: string;
+    weeklyHours: Array<{
+        day: string;
+        enabled: boolean;
+        startTime: string;
+        endTime: string;
+    }>;
+    blockedTimeSource: 'project_appointment_blocks';
+    minimumNoticeMinutes: number;
+    maxAdvanceDays: number;
+    intervalMinutes: number;
+    capacityPerSlot: number;
+}
+
+export interface AppointmentBookingRulesBlueprint {
+    confirmationMode: AppointmentConfirmationMode;
+    cancellationPolicy: string;
+    reschedulePolicy: string;
+    reminders: Array<{ channel: 'email' | 'sms' | 'chatcore'; offsetMinutes: number; templateKey?: string }>;
+    leadRequiredFields: string[];
+}
+
+export interface AppointmentIntegrationBlueprint {
+    enabled: boolean;
+    status: 'not_configured' | 'draft' | 'configured';
+    needsReview: boolean;
+    events?: IntegrationEventType[];
+    notes?: string[];
+}
+
 export interface AppointmentsBlueprint extends BlueprintModuleState {
+    engineVersion: 'v2';
+    sourceOfTruth: 'project_appointments';
+    legacyReadOnlySources: string[];
     serviceTypes: string[];
     paidBookingTypes: string[];
+    services: AppointmentServiceBlueprint[];
     availabilityStatus: 'not_configured' | 'draft' | 'configured';
+    availability: AppointmentAvailabilityBlueprint;
+    bookingRules: AppointmentBookingRulesBlueprint;
+    publicBooking: AppointmentIntegrationBlueprint & {
+        routeStrategy: 'website_block' | 'widget_api' | 'disabled';
+        componentIds: string[];
+    };
+    chatcore: AppointmentIntegrationBlueprint & {
+        intentNames: string[];
+        source: 'ChatCore';
+    };
+    crm: AppointmentIntegrationBlueprint & {
+        leadLinking: 'create_or_link';
+        pipelineStage?: string;
+        taskStrategy: 'follow_up_after_completed' | 'none';
+    };
+    emailMarketing: AppointmentIntegrationBlueprint & {
+        flowTypes: string[];
+    };
+    analytics: AppointmentIntegrationBlueprint & {
+        eventNames: string[];
+    };
+    googleCalendar: AppointmentIntegrationBlueprint & {
+        syncDirection: 'export_only' | 'two_way';
+    };
+    ecommerce: AppointmentIntegrationBlueprint & {
+        paymentMode: AppointmentPaymentMode;
+        depositProductStrategy: 'per_service' | 'shared_product' | 'none';
+    };
+    aiPreparation: AppointmentIntegrationBlueprint & {
+        enabledByDefault: boolean;
+        usesLinkedLeads: boolean;
+        promptContext: string[];
+    };
+    websiteBuilderBlocks: Array<{
+        componentId: string;
+        purpose: 'appointment_cta' | 'public_booking_form' | 'availability_preview';
+        status: 'draft' | 'configured' | 'needs_review';
+    }>;
 }
 
 export type RestaurantBlueprintDraftStatus = 'draft' | 'needs_review' | 'configured' | 'disabled';

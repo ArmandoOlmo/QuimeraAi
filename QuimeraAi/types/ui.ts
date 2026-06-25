@@ -44,7 +44,7 @@ export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' 
 export type PageSection =
     // Original sections
     | 'hero' | 'heroSplit' | 'heroGallery' | 'heroWave' | 'heroNova' | 'heroLead' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta'
-    | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'newsletter'
+    | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'appointmentBooking' | 'newsletter'
     | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'colors' | 'map'
     | 'menu' | 'banner' | 'topBar' | 'logoBanner' | 'products' | 'cmsFeed' | 'signupFloat'
     | 'separator1' | 'separator2' | 'separator3' | 'separator4' | 'separator5'

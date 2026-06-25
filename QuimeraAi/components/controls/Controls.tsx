@@ -619,7 +619,7 @@ const Controls: React.FC = () => {
     }
   };
 
-  const saveButtonClass = `w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
+  const saveButtonClass = `w-full py-2.5 px-4 rounded-[var(--editor-control-radius)] font-medium text-sm transition-all flex items-center justify-center gap-2 ${
     saveStatus === 'saved' ? 'bg-green-500 text-white'
     : saveStatus === 'saving' ? 'bg-q-accent/70 text-q-text-on-accent cursor-wait'
     : 'bg-q-accent text-q-text-on-accent hover:opacity-90'
@@ -740,7 +740,7 @@ const Controls: React.FC = () => {
 
       {/* Right Panel: Properties - Desktop */}
       {activeSection && isDesktop && (
-        <div className={`${isControlsPanelOpen ? 'w-80 lg:w-96' : 'w-0 overflow-hidden'} border-l border-q-border bg-q-surface/50 flex flex-col overflow-hidden flex-shrink-0 order-last hidden md:flex transition-all duration-300`}>
+        <div data-editor-controls-surface="web" className={`${isControlsPanelOpen ? 'w-80 lg:w-96' : 'w-0 overflow-hidden'} border-l border-q-border bg-q-surface/50 flex flex-col overflow-hidden flex-shrink-0 order-last hidden md:flex transition-all duration-300`}>
           <div className="p-4 border-b border-q-border flex items-center justify-between">
             <h2 className="font-semibold text-sm flex items-center gap-2">
               <Settings size={16} className="text-q-accent" />
@@ -752,7 +752,7 @@ const Controls: React.FC = () => {
               <X size={18} />
             </button>
           </div>
-          <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">{renderActiveSectionControls()}</div>
+          <div data-editor-controls-scroll className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">{renderActiveSectionControls()}</div>
           <div className="p-4 border-t border-q-border flex-shrink-0">
             <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
               <Check size={16} /> {saveButtonText}
@@ -766,7 +766,7 @@ const Controls: React.FC = () => {
         onClose={() => { onSectionSelect(null as any); setIsSidebarOpen(true); }}
         title={activeSection ? getSectionLabel(activeSection) : ''}
         subtitle={t('landingEditor.editSection', 'Editar sección')}>
-        <div className="quimera-clean-controls p-4">{renderActiveSectionControls()}</div>
+        <div data-editor-controls-surface="web-mobile" className="quimera-clean-controls p-4">{renderActiveSectionControls()}</div>
         <div className="sticky bottom-0 p-4 border-t border-q-border bg-q-surface flex-shrink-0">
           <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
             <Check size={16} /> {saveButtonText}
@@ -805,7 +805,7 @@ const Controls: React.FC = () => {
       <TabletSlidePanel isOpen={isTablet && !!activeSection}
         onClose={() => { onSectionSelect(null as any); setIsSidebarOpen(true); }}
         title={activeSection ? getSectionLabel(activeSection) : ''} position="left">
-        <div className="quimera-clean-controls p-4">{renderActiveSectionControls()}</div>
+        <div data-editor-controls-surface="web-tablet" className="quimera-clean-controls p-4">{renderActiveSectionControls()}</div>
         <div className="sticky bottom-0 p-4 border-t border-q-border bg-q-surface flex-shrink-0">
           <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
             <Check size={16} /> {saveButtonText}

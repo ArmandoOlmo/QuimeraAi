@@ -62,6 +62,36 @@ export interface TransactionalEmailSettings {
     // Admin notifications
     newOrderNotification: boolean;
     lowStockNotification: boolean;
+
+    // Appointments Engine transactional emails
+    appointments?: boolean;
+    appointmentEmails?: boolean;
+    appointmentRequestReceived?: boolean;
+    appointmentConfirmation?: boolean;
+    appointmentCancellation?: boolean;
+    appointmentFollowUp?: boolean;
+    appointmentReminder?: boolean;
+    appointmentTemplates?: Partial<Record<AppointmentEmailTemplateKey, AppointmentEmailTemplateOverride>>;
+}
+
+export type AppointmentEmailTemplateKey =
+    | 'appointment_request_received'
+    | 'appointment_confirmation'
+    | 'appointment_cancellation'
+    | 'appointment_follow_up'
+    | 'appointment_reminder';
+
+export interface AppointmentEmailTemplateOverride {
+    enabled?: boolean;
+    subject?: string;
+    preheader?: string;
+    intro?: string;
+    nextStep?: string;
+    footer?: string;
+    html?: string;
+    text?: string;
+    primaryColor?: string;
+    updatedAt?: string;
 }
 
 export interface MarketingEmailSettings {
@@ -928,7 +958,6 @@ export const DEFAULT_BLOCK_STYLES: Record<EmailBlockType, EmailBlockStyles> = {
         fontSize: 'sm',
     },
 };
-
 
 
 

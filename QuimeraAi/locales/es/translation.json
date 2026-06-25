@@ -166,6 +166,106 @@
     "downloadCalendar": "Descargar calendario (.ics)",
     "copyDetails": "Copiar detalles para compartir",
     "appointments": "Citas",
+    "analyticsEngine": {
+      "eyebrow": "Appointments Engine canónico",
+      "title": "Analíticas de reservas",
+      "description": "Funnel en vivo desde citas del proyecto, ChatCore, booking público, CRM, Email y metadata de Ecommerce.",
+      "chatCoreBookings": "ChatCore",
+      "chatCoreHint": "Reservas AI",
+      "publicBookings": "Públicas",
+      "publicHint": "Website",
+      "linkedLeads": "Leads vinculados",
+      "paidBookings": "Pagadas/depósito",
+      "events": "Eventos",
+      "eventHint": "Runtime",
+      "confirmationRate": "Confirmación",
+      "confirmationHint": "Solicitadas a confirmadas",
+      "funnelTitle": "Funnel canónico",
+      "funnelDescription": "Eventos solicitados, confirmados y resultados desde el stream de metadata de citas.",
+      "sourcesTitle": "Mezcla de fuentes",
+      "sourcesDescription": "Dónde entraron las reservas al engine.",
+      "noSources": "Todavía no hay datos de fuentes.",
+      "funnel": {
+        "requested": "Solicitadas",
+        "confirmed": "Confirmadas",
+        "completed": "Completadas",
+        "cancelled": "Canceladas",
+        "noShow": "No presentadas"
+      },
+      "sources": {
+        "chatcore": "ChatCore",
+        "public_booking": "Booking público",
+        "dashboard": "Dashboard",
+        "google_calendar": "Google Calendar",
+        "website-builder": "Website Builder",
+        "appointments": "Citas"
+      }
+    },
+    "readiness": {
+      "eyebrow": "Salud del engine",
+      "title": "Preparación de citas",
+      "score": "{{ready}}/{{total}} listo",
+      "states": {
+        "ready": "Listo",
+        "review": "Revisión",
+        "action": "Acción"
+      },
+      "items": {
+        "canonicalSource": {
+          "title": "Fuente canónica",
+          "ready": "Las nuevas reservas escriben en project_appointments."
+        },
+        "availability": {
+          "title": "Disponibilidad",
+          "ready": "La disponibilidad está configurada en el blueprint de citas.",
+          "review": "La disponibilidad existe como draft y necesita revisión del negocio.",
+          "action": "Configura horarios, reglas de aviso e intervalos de slots."
+        },
+        "publicBooking": {
+          "title": "Booking público",
+          "ready": "Las reservas del website entran al engine canónico.",
+          "review": "El booking público existe pero necesita revisión antes de publicarse.",
+          "action": "Activa el bloque de booking del Website Builder o el widget API."
+        },
+        "chatcore": {
+          "title": "ChatCore",
+          "ready": "ChatCore está conectado a metadata canónica de reservas.",
+          "review": "Activa intents de booking e instrucciones de disponibilidad en ChatCore.",
+          "action": "Activa intents de booking e instrucciones de disponibilidad en ChatCore."
+        },
+        "crm": {
+          "title": "Pipeline CRM",
+          "ready": "Las citas están vinculadas al contexto de leads CRM.",
+          "review": "Revisa reglas de vinculación, tags y tareas de seguimiento.",
+          "action": "Revisa reglas de vinculación, tags y tareas de seguimiento."
+        },
+        "emailMarketing": {
+          "title": "Flujos de email",
+          "ready": "Los flujos de email de citas están configurados.",
+          "review": "Hay drafts de email de citas, pero falta revisar remitente o templates.",
+          "action": "Configura remitente, proveedor y templates de citas."
+        },
+        "googleCalendar": {
+          "title": "Google Calendar",
+          "ready": "La sincronización del calendario del proyecto está conectada.",
+          "review": "Google Calendar está configurado, pero necesita conexión o reconexión.",
+          "action": "Configura credenciales OAuth server-side y webhook URL."
+        },
+        "ecommerce": {
+          "title": "Booking pagado",
+          "ready": "Las reservas pagadas o con depósito están vinculadas a órdenes Ecommerce.",
+          "review": "Existen drafts de pago, pero falta revisar readiness de checkout.",
+          "action": "Configura productos de pago o desactiva booking pagado en este proyecto."
+        },
+        "legacyBlockedDates": {
+          "title": "Bloqueos legacy",
+          "ready": "No hay fechas bloqueadas legacy pendientes visibles.",
+          "review": "{{count}} bloqueo legacy todavía necesita migración.",
+          "review_plural": "{{count}} bloqueos legacy todavía necesitan migración.",
+          "action": "Migra fechas bloqueadas legacy hacia project_appointment_blocks."
+        }
+      }
+    },
     "types": {
       "meeting": "Reunión",
       "call": "Llamada",
@@ -332,7 +432,28 @@
       "created": "Bloqueo creado exitosamente",
       "deleted": "Bloqueo eliminado",
       "error": "Error al guardar el bloqueo",
-      "blockTime": "Bloquear horario"
+      "blockTime": "Bloquear horario",
+      "migratedTitle": "Bloqueo migrado",
+      "migrationTitle": "Fechas bloqueadas legacy detectadas",
+      "migrationDesc": "{{count}} fecha bloqueada legacy todavía se lee desde la ruta antigua del proyecto. Mígrala a la fuente canónica de Appointments Engine.",
+      "migrationDesc_plural": "{{count}} fechas bloqueadas legacy todavía se leen desde la ruta antigua del proyecto. Mígralas a la fuente canónica de Appointments Engine.",
+      "migrateLegacy": "Migrar bloqueos legacy",
+      "migratingLegacy": "Migrando...",
+      "migrationSuccess": "Bloqueos legacy migrados: {{count}}. Omitidos: {{skipped}}.",
+      "migrationError": "No se pudieron migrar las fechas bloqueadas legacy.",
+      "legacyEditRequired": "Este bloqueo legacy debe migrarse antes de editarse.",
+      "legacyDeleteRequired": "Este bloqueo legacy debe migrarse antes de eliminarse."
+    },
+    "errors": {
+      "loadAppointments": "Error al cargar las citas.",
+      "loadBlockedDates": "Error al cargar las fechas bloqueadas.",
+      "selectProject": "Selecciona un proyecto para ver las citas.",
+      "userOrProjectUnavailable": "Usuario o proyecto no disponible.",
+      "userNotLoggedIn": "Usuario no autenticado.",
+      "unauthenticated": "Usuario no autenticado.",
+      "noProjectSelected": "No hay proyecto seleccionado.",
+      "notFound": "Cita no encontrada.",
+      "participantAlreadyAdded": "El participante ya está en la cita."
     },
     "google": {
       "syncAutoDesc": "Sincroniza tus citas automáticamente",
@@ -341,7 +462,7 @@
       "autoGoogleMeet": "Crear Google Meet automáticamente",
       "connecting": "Conectando...",
       "connectWithGoogle": "Conectar con Google Calendar",
-      "oauthSecure": "Usamos OAuth 2.0 para una conexión segura",
+      "oauthSecure": "OAuth 2.0 con sincronización cifrada por proyecto",
       "synced": "Sincronizado",
       "pending": "Pendiente",
       "error": "Error",
@@ -361,8 +482,8 @@
       "syncButton": "Sincronizado",
       "googleButton": "Google",
       "errorInitApi": "Error al inicializar Google API",
-      "notConfigured": "Google Calendar no está configurado. Agrega VITE_GOOGLE_CLIENT_ID a tu archivo .env.local",
-      "allowPopups": "Por favor, permite las ventanas emergentes para conectar con Google Calendar",
+      "notConfigured": "Google Calendar no está configurado para sincronización server-side.",
+      "allowPopups": "Completa la redirección segura de autorización de Google para conectar Google Calendar",
       "syncCompleteWithErrors": "Sincronización completada con {{count}} errores",
       "errorSyncCalendar": "Error al sincronizar con Google Calendar",
       "connectFirst": "Primero conecta con Google Calendar"
@@ -857,16 +978,38 @@
     "listening": "Escuchando...",
     "voicePrompt": "Habla con naturalidad. Estoy escuchando en",
     "endCall": "Finalizar Llamada",
-    "noProjectSelected": "Please select a project to use the chatbot",
-    "rateLimitError": "Too many requests. Please wait a moment and try again.",
-    "configError": "Service temporarily unavailable. Please try again later.",
+    "noProjectSelected": "Selecciona un proyecto para usar el chatbot",
+    "rateLimitError": "Demasiadas solicitudes. Espera un momento e intenta de nuevo.",
+    "configError": "Servicio temporalmente no disponible. Intenta de nuevo más tarde.",
     "preChatTitle": "¡Hola!",
     "preChatSubtitle": "Cuéntanos sobre ti",
     "preChatName": "Tu nombre",
     "preChatEmail": "Tu email",
     "preChatPhone": "Teléfono (opcional)",
     "preChatStart": "Iniciar Chat",
-    "preChatSkip": "Continuar sin registro"
+    "preChatSkip": "Continuar sin registro",
+    "appointments": {
+      "defaultClient": "Cliente",
+      "formTitle": "Cita - {{name}}",
+      "formDescription": "Cita agendada por {{name}} a través de ChatCore.",
+      "aiTitle": "Cita - {{name}}",
+      "aiDescription": "Cita agendada a través de ChatCore. Contexto: {{context}}",
+      "chatTitle": "Cita desde ChatCore",
+      "voiceTitle": "Cita por voz - {{name}}",
+      "voiceClient": "Cliente de llamada",
+      "voiceDescription": "Cita agendada durante una llamada de voz de ChatCore.",
+      "durationHours": "{{value}} horas",
+      "durationMinutes": "{{value}} minutos",
+      "successMessage": "✅ **Cita agendada exitosamente**\n\n📅 **Fecha:** {{date}}\n⏰ **Hora:** {{time}}\n⏱️ **Duración:** {{duration}}\n👤 **Nombre:** {{name}}\n📧 **Email:** {{email}}\n\n¡Te esperamos! Si necesitas cambiar o cancelar tu cita, por favor contáctanos.",
+      "errorMessage": "⚠️ Hubo un error al agendar la cita. Por favor intenta de nuevo o contáctanos directamente.",
+      "autoRegistered": "✅ **Cita registrada en el sistema.**",
+      "createdShort": "✅ **Cita agendada exitosamente.**",
+      "createRetry": "⚠️ **Hubo un problema al registrar la cita. Por favor intenta nuevamente.**",
+      "directContact": "⚠️ *No se pudo agendar la cita automáticamente. Por favor contacta directamente.*",
+      "voiceTranscriptHeader": "🎙️ **Transcripción de llamada de voz:**",
+      "voiceEndedNoTranscript": "🎙️ *Llamada de voz finalizada* (transcripción no disponible)",
+      "voiceRegistered": "✅ **Cita registrada desde llamada de voz**\n📅 {{date}}\n⏰ {{time}}"
+    }
   },
   "cms": {
     "content": "Contenido",
@@ -3349,6 +3492,25 @@
     "discounts": "Descuentos",
     "analytics": "Analíticas",
     "settings": "Configuración",
+    "appointmentEmailTemplates": "Plantillas de citas",
+    "appointmentEmailTemplatesDesc": "Personaliza los emails transaccionales del Appointments Engine por flujo. Variables: title, name, start, end, timezone, paymentStatus.",
+    "defaultTemplate": "Plantilla default",
+    "templateSubject": "Asunto",
+    "templateSubjectPlaceholder": "Ejemplo: Tu cita {{title}} está confirmada",
+    "templatePreheader": "Preheader",
+    "templatePreheaderPlaceholder": "Texto corto antes de abrir el email",
+    "templateIntro": "Intro",
+    "templateNextStep": "Siguiente paso",
+    "templateFooter": "Footer",
+    "templateHtml": "HTML visual",
+    "saveAppointmentTemplates": "Guardar plantillas de citas",
+    "appointmentTemplateFlows": {
+      "appointment_request_received": "Solicitud recibida",
+      "appointment_confirmation": "Confirmación",
+      "appointment_cancellation": "Cancelación",
+      "appointment_follow_up": "Seguimiento",
+      "appointment_reminder": "Recordatorio"
+    },
     "crossModuleSync": {
       "title": "Conectar ecommerce con Quimera Suite",
       "subtitle": "Crea drafts revisables para Chatbot, CRM, Email Marketing, Analytics, Appointments, ofertas Ecommerce y Finance sin activar automatizaciones.",
@@ -8049,9 +8211,91 @@
           "description": "Espacio comercial en zona de alto movimiento, con planta flexible y excelente visibilidad. Preparado para boutique, showroom, oficina creativa o concepto gastronómico ligero.",
           "address": "151 Calle Loíza",
           "city": "Santurce"
-        }
+    }
+  },
+  "appointmentBooking": {
+    "title": "Reserva una cita",
+    "description": "Elige un horario disponible y enviaremos tu solicitud al equipo.",
+    "serviceLabel": "Servicio",
+    "defaultService": "Cita general",
+    "dateLabel": "Fecha",
+    "slotLabel": "Horario disponible",
+    "loadingSlots": "Cargando horarios...",
+    "noSlots": "No hay horarios disponibles para esta fecha.",
+    "nameLabel": "Nombre",
+    "emailLabel": "Email",
+    "phoneLabel": "Telefono",
+    "messageLabel": "Mensaje",
+    "namePlaceholder": "Nombre completo",
+    "emailPlaceholder": "email@ejemplo.com",
+    "phonePlaceholder": "Telefono",
+    "messagePlaceholder": "Cuéntanos qué necesitas preparar para la cita",
+    "buttonText": "Solicitar cita",
+    "successMessage": "Solicitud recibida. Te contactaremos para confirmar la cita.",
+    "confirmation": "Solicitud vinculada al CRM",
+    "reviewNotice": "Confirmación sujeta a disponibilidad final",
+    "paymentNotice": "Pago requerido al reservar: {{amount}}",
+    "paymentRedirecting": "Abriendo checkout seguro...",
+    "emailSubjects": {
+      "appointment_request_received": "Solicitud de cita recibida: {{title}}",
+      "appointment_confirmation": "Cita confirmada: {{title}}",
+      "appointment_cancellation": "Cita cancelada: {{title}}",
+      "appointment_follow_up": "Seguimiento de tu cita: {{title}}",
+      "appointment_reminder": "Recordatorio de cita: {{title}}"
+    },
+    "emailBodies": {
+      "labels": {
+        "greeting": "Hola {{name}},",
+        "fallbackName": "equipo",
+        "appointment": "Cita",
+        "starts": "Comienza",
+        "ends": "Termina",
+        "timezone": "Zona horaria",
+        "details": "Detalles",
+        "payment": "Pago",
+        "noEndTime": "Hora de cierre por confirmar",
+        "replyHelp": "Responde a este email si necesitas actualizar los detalles de la cita."
       },
-      "leads": {
+      "appointment_request_received": {
+        "preheader": "Recibimos tu solicitud de cita.",
+        "intro": "Recibimos tu solicitud de cita.",
+        "nextStep": "El equipo revisará la disponibilidad y confirmará el horario final.",
+        "footer": "Recibirás otro mensaje cuando la cita quede confirmada."
+      },
+      "appointment_confirmation": {
+        "preheader": "Tu cita está confirmada.",
+        "intro": "Tu cita está confirmada.",
+        "nextStep": "El equipo tendrá listo el contexto de la cita y las notas vinculadas del CRM.",
+        "footer": "Llega a tiempo o responde si necesitas reprogramar."
+      },
+      "appointment_cancellation": {
+        "preheader": "Tu cita fue cancelada.",
+        "intro": "Tu cita fue cancelada.",
+        "nextStep": "Responde a este email si quieres solicitar un nuevo horario.",
+        "footer": "No necesitas hacer nada más a menos que quieras reprogramar."
+      },
+      "appointment_follow_up": {
+        "preheader": "Seguimiento de tu cita.",
+        "intro": "Gracias por asistir a tu cita.",
+        "nextStep": "El equipo puede continuar la conversación desde el registro vinculado del CRM.",
+        "footer": "Responde con cualquier pregunta o próximo paso que quieras que registremos."
+      },
+      "appointment_reminder": {
+        "preheader": "Recordatorio para tu próxima cita.",
+        "intro": "Este es un recordatorio de tu próxima cita.",
+        "nextStep": "El equipo tiene preparado el contexto de la cita.",
+        "footer": "Responde a este email si necesitas actualizar el horario."
+      }
+    },
+    "errors": {
+      "availability": "No se pudo cargar la disponibilidad.",
+      "submit": "No se pudo enviar la solicitud de cita.",
+      "payment": "La cita fue creada, pero no se pudo abrir el checkout seguro.",
+      "projectRequired": "La reserva pública requiere un proyecto configurado.",
+      "slotRequired": "Selecciona un horario disponible."
+    }
+  },
+  "leads": {
         "sofia": {
           "name": "Sofía Rivera",
           "message": "Interesada en ver la unidad esta semana y confirmar costos de mantenimiento."
@@ -9659,6 +9903,7 @@
     "successMessage": "Gracias por contactarnos. Te responderemos pronto.",
     "errorMessage": "Hubo un error al enviar el mensaje. Por favor intenta nuevamente.",
     "leadCapturedNote": "Lead capturado desde formulario de contacto.\n\nMensaje:\n{{message}}",
+    "publicCaptureProjectRequired": "La captación pública de leads requiere un proyecto configurado.",
     "nameLabel": "Nombre completo *",
     "emailLabel": "Email *",
     "companyLabel": "Empresa",

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MessageSquare, X } from 'lucide-react';
 import { AiAssistantConfig, Project, ChatAppearanceConfig } from '../../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../../utils/chatThemes';
@@ -22,6 +23,7 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [appointments, setAppointments] = useState<AppointmentSlot[]>([]);
+    const { i18n } = useTranslation();
     const encodedProjectId = encodeURIComponent(projectId);
 
     // Load configuration from API
@@ -126,22 +128,24 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                     participantEmail: appointmentData.participantEmail,
                     participantPhone: appointmentData.participantPhone,
                     linkedLeadId: appointmentData.linkedLeadId,
+                    conversationTranscript: appointmentData.conversationTranscript,
+                    sourceConversationId: appointmentData.sourceConversationId,
+                    source: 'chatbot',
+                    sourceComponent: 'ChatCore',
+                    sourceModule: 'chatcore',
+                    generatedByAI: appointmentData.generatedByAI,
+                    bookingChannel: appointmentData.bookingChannel,
+                    locale: appointmentData.locale || i18n.language,
+                    metadata: {
+                        ...(appointmentData.metadata || {}),
+                        embeddedWidget: true,
+                        bookingChannel: appointmentData.bookingChannel,
+                    },
                 }),
             });
 
             if (!response.ok) return undefined;
             const payload = await response.json();
-
-            if (appointmentData.participantName || appointmentData.participantEmail) {
-                await handleLeadCapture({
-                    name: appointmentData.participantName || 'Cliente desde Chat',
-                    email: appointmentData.participantEmail,
-                    phone: appointmentData.participantPhone,
-                    message: `Cita agendada: ${appointmentData.title}`,
-                    tags: ['embedded-widget', 'appointment-scheduled'],
-                    notes: `Cita programada para ${appointmentData.startDate.toLocaleDateString()} a las ${appointmentData.startDate.toLocaleTimeString()}`,
-                });
-            }
 
             return payload.appointmentId;
         } catch (err) {
@@ -242,7 +246,6 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
 };
 
 export default EmbedWidget;
-
 
 
 

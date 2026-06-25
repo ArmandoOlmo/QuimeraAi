@@ -509,6 +509,11 @@ const extractMeetUrl = (conferenceData?: GoogleCalendarEvent['conferenceData']):
     return videoEntry?.uri;
 };
 
+const buildGoogleSyncKey = (event: GoogleCalendarEvent, calendarId: string): string | undefined => {
+    const eventKey = event.id || event.iCalUID;
+    return eventKey ? `google_calendar:${calendarId}:${eventKey}` : undefined;
+};
+
 /**
  * Map Quimera appointment status to Google event status
  */
@@ -828,7 +833,10 @@ export const getCalendarEvent = async (
  * Convert a Google Calendar event to a full Quimera Appointment (partial)
  * Enhanced version with full field mapping
  */
-export const googleEventToAppointment = (event: GoogleCalendarEvent): Partial<Appointment> => {
+export const googleEventToAppointment = (
+    event: GoogleCalendarEvent,
+    calendarId: string = 'primary',
+): Partial<Appointment> => {
     // Parse dates — handle both all-day and timed events
     const isAllDay = !!event.start.date && !event.start.dateTime;
     let startSeconds: number;
@@ -854,6 +862,7 @@ export const googleEventToAppointment = (event: GoogleCalendarEvent): Partial<Ap
     const quimeraType = extProps.quimeraType || 'video_call';
     const quimeraPriority = extProps.quimeraPriority || 'medium';
     const quimeraStatus = extProps.quimeraStatus || 'scheduled';
+    const syncKey = buildGoogleSyncKey(event, calendarId);
 
     // Parse description — extract user text and tags
     const { userDescription, tags: descTags } = parseGoogleDescription(event.description);
@@ -933,10 +942,36 @@ export const googleEventToAppointment = (event: GoogleCalendarEvent): Partial<Ap
         googleSync: {
             enabled: true,
             googleEventId: event.id,
+            googleCalendarId: calendarId,
             syncStatus: 'synced',
             htmlLink: event.htmlLink,
             iCalUID: event.iCalUID,
             etag: event.etag,
+        },
+        source: 'google_calendar',
+        sourceModule: 'appointments',
+        sourceComponent: 'GoogleCalendar',
+        syncKey,
+        idempotencyKey: syncKey,
+        createdBySystem: true,
+        needsReview: true,
+        metadata: {
+            source: 'google_calendar',
+            sourceModule: 'appointments',
+            sourceComponent: 'GoogleCalendar',
+            syncKey,
+            googleCalendar: {
+                calendarId,
+                eventId: event.id,
+                iCalUID: event.iCalUID,
+                etag: event.etag,
+                htmlLink: event.htmlLink,
+                status: event.status,
+                created: event.created,
+                updated: event.updated,
+                creatorEmail: event.creator?.email,
+                organizerEmail: event.organizer?.email,
+            },
         },
     };
 };
@@ -1075,12 +1110,18 @@ export const importGoogleEvents = async (
             }
 
             // Google event was modified — pull changes into Quimera
-            const partialUpdate = googleEventToAppointment(gEvent);
+            const partialUpdate = googleEventToAppointment(gEvent, calendarId);
             
             // Don't override certain Quimera-only fields
             delete partialUpdate.type; // Preserve Quimera type unless from extendedProperties
             delete partialUpdate.priority;
             delete partialUpdate.status;
+            delete partialUpdate.source;
+            delete partialUpdate.sourceModule;
+            delete partialUpdate.sourceComponent;
+            delete partialUpdate.idempotencyKey;
+            delete partialUpdate.createdBySystem;
+            delete partialUpdate.needsReview;
 
             // Restore type/priority/status from extendedProperties if they exist
             const extProps = gEvent.extendedProperties?.private;
@@ -1094,7 +1135,7 @@ export const importGoogleEvents = async (
             });
         } else {
             // New event from Google — import into Quimera
-            const newApt = googleEventToAppointment(gEvent);
+            const newApt = googleEventToAppointment(gEvent, calendarId);
             newEvents.push(newApt);
         }
     }

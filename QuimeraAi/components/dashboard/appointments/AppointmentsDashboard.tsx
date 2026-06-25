@@ -48,9 +48,11 @@ import {
     BlockedDate,
     AppointmentStatus,
     AppointmentFilters,
+    GoogleCalendarConfig,
     APPOINTMENT_TYPE_CONFIGS,
     APPOINTMENT_STATUS_CONFIGS,
 } from '../../../types';
+import { supabase } from '../../../supabase';
 
 // Import components
 import { AppointmentCard } from './components/AppointmentCard';
@@ -60,6 +62,8 @@ import { GoogleCalendarConnect } from './components/GoogleCalendarConnect';
 import { AIPreparationPanel } from './components/AIPreparationPanel';
 import { CalendarToolbar } from './components/CalendarToolbar';
 import { BlockDateModal } from './components/BlockDateModal';
+import { AppointmentAnalyticsPanel } from './components/AppointmentAnalyticsPanel';
+import { AppointmentEngineReadinessPanel } from './components/AppointmentEngineReadinessPanel';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 
@@ -72,20 +76,6 @@ import { AppointmentsListView } from './views/AppointmentsListView';
 // Import hooks
 import { useAppointments } from './hooks/useAppointments';
 import { useBlockedDates } from './hooks/useBlockedDates';
-
-// Import Google Calendar service
-import {
-    loadGoogleApiScripts,
-    initializeGapiClient,
-    initializeTokenClient,
-    requestAuthorization,
-    revokeAccess,
-    isAuthenticated,
-    getSavedConnectionState,
-    syncAppointmentToGoogle,
-    getCalendarEvents,
-    importGoogleEvents,
-} from '../../../utils/googleCalendarService';
 
 // =============================================================================
 // TYPES
@@ -154,10 +144,36 @@ const AppointmentsDashboard: React.FC = () => {
     // Blocked dates state
     const {
         blockedDates,
+        legacyBlockedDates,
+        hasLegacyBlockedDates,
+        isMigratingLegacyBlockedDates,
         createBlockedDate,
         updateBlockedDate,
         deleteBlockedDate,
+        migrateLegacyBlockedDates,
     } = useBlockedDates();
+    const [legacyMigrationNotice, setLegacyMigrationNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    const selectedAppointmentLinkedLeads = useMemo(() => {
+        if (!selectedAppointment) return [];
+
+        const linkedLeadIds = new Set<string>([
+            ...(selectedAppointment.linkedLeadIds || []),
+            selectedAppointment.sourceLeadId || '',
+            ...(selectedAppointment.participants || [])
+                .map(participant => participant.leadId || '')
+                .filter(Boolean),
+        ].filter(Boolean));
+
+        if (linkedLeadIds.size === 0) return [];
+
+        return leads.filter(lead => linkedLeadIds.has(lead.id));
+    }, [leads, selectedAppointment]);
+    const appointmentsBlueprint = useMemo(() => (
+        effectiveProject?.businessBlueprint?.appointmentsBlueprint
+        || (effectiveProject?.data as any)?.businessBlueprint?.appointmentsBlueprint
+        || null
+    ), [effectiveProject]);
     const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
     const [editingBlock, setEditingBlock] = useState<BlockedDate | null>(null);
     const [blockModalInitialDate, setBlockModalInitialDate] = useState<Date | undefined>();
@@ -167,6 +183,190 @@ const AppointmentsDashboard: React.FC = () => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [pendingDeleteAppointment, setPendingDeleteAppointment] = useState<Appointment | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Google Calendar state: canonical server-side sync, scoped by project
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [googleError, setGoogleError] = useState<string | null>(null);
+    const [lastSyncTime, setLastSyncTime] = useState<Date | undefined>();
+    const [syncStatus, setSyncStatus] = useState<'synced' | 'pending' | 'error' | 'not_synced'>('not_synced');
+    const [googleConfig, setGoogleConfig] = useState<GoogleCalendarConfig | undefined>();
+    const [googleConfigured, setGoogleConfigured] = useState(true);
+
+    const getSupabaseAccessToken = useCallback(async () => {
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) throw new Error(t('appointments.errors.unauthenticated'));
+        return token;
+    }, [t]);
+
+    const callGoogleCalendarApi = useCallback(async <T,>(path: string, options: RequestInit = {}): Promise<T> => {
+        const token = await getSupabaseAccessToken();
+        const response = await fetch(path, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+                ...(options.headers || {}),
+            },
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(payload?.error || t('appointments.google.errorSyncCalendar'));
+        }
+        return payload as T;
+    }, [getSupabaseAccessToken, t]);
+
+    const refreshGoogleCalendarStatus = useCallback(async () => {
+        if (!effectiveProjectId || !user) {
+            setIsGoogleConnected(false);
+            setGoogleConfig(undefined);
+            setSyncStatus('not_synced');
+            setLastSyncTime(undefined);
+            return;
+        }
+
+        try {
+            const status = await callGoogleCalendarApi<{
+                configured: boolean;
+                connected: boolean;
+                calendarId: string;
+                calendarName?: string;
+                syncEnabled: boolean;
+                syncStatus?: 'synced' | 'pending' | 'error' | 'not_synced';
+                lastSyncAt?: string | null;
+                lastError?: string | null;
+            }>(`/api/appointments/google/status?projectId=${encodeURIComponent(effectiveProjectId)}`);
+
+            setGoogleConfigured(status.configured);
+            setIsGoogleConnected(status.connected);
+            setSyncStatus(status.syncStatus || (status.connected ? 'pending' : 'not_synced'));
+            setGoogleError(status.lastError || null);
+            setGoogleConfig({
+                calendarId: status.calendarId || 'primary',
+                calendarName: status.calendarName,
+                syncEnabled: status.syncEnabled,
+            });
+            setLastSyncTime(status.lastSyncAt ? new Date(status.lastSyncAt) : undefined);
+        } catch (error: any) {
+            setGoogleError(error.message || t('appointments.google.errorSyncCalendar'));
+            setIsGoogleConnected(false);
+            setSyncStatus('error');
+        }
+    }, [callGoogleCalendarApi, effectiveProjectId, t, user]);
+
+    useEffect(() => {
+        refreshGoogleCalendarStatus();
+    }, [refreshGoogleCalendarStatus]);
+
+    const handleGoogleConnect = useCallback(async () => {
+        if (!effectiveProjectId) {
+            const message = t('appointments.errors.noProjectSelected');
+            setGoogleError(message);
+            throw new Error(message);
+        }
+        if (!googleConfigured) {
+            const message = t('appointments.google.notConfigured');
+            setGoogleError(message);
+            throw new Error(message);
+        }
+
+        setIsGoogleLoading(true);
+        setGoogleError(null);
+
+        try {
+            const result = await callGoogleCalendarApi<{ authorizationUrl: string }>('/api/appointments/google/oauth/start', {
+                method: 'POST',
+                body: JSON.stringify({
+                    projectId: effectiveProjectId,
+                    calendarId: googleConfig?.calendarId || 'primary',
+                    returnUrl: window.location.href,
+                }),
+            });
+            window.location.href = result.authorizationUrl;
+        } catch (error: any) {
+            const message = error.message || t('appointments.google.errorConnect');
+            setGoogleError(message);
+            setIsGoogleConnected(false);
+            throw new Error(message);
+        } finally {
+            setIsGoogleLoading(false);
+        }
+    }, [callGoogleCalendarApi, effectiveProjectId, googleConfig?.calendarId, googleConfigured, t]);
+
+    const handleGoogleDisconnect = useCallback(async () => {
+        if (!effectiveProjectId) return;
+
+        setIsGoogleLoading(true);
+        setGoogleError(null);
+        try {
+            await callGoogleCalendarApi('/api/appointments/google/status', {
+                method: 'DELETE',
+                body: JSON.stringify({
+                    projectId: effectiveProjectId,
+                    calendarId: googleConfig?.calendarId || 'primary',
+                }),
+            });
+            setIsGoogleConnected(false);
+            setGoogleConfig(undefined);
+            setSyncStatus('not_synced');
+            setLastSyncTime(undefined);
+        } catch (error: any) {
+            const message = error.message || t('appointments.google.errorDisconnect');
+            setGoogleError(message);
+            throw new Error(message);
+        } finally {
+            setIsGoogleLoading(false);
+        }
+    }, [callGoogleCalendarApi, effectiveProjectId, googleConfig?.calendarId, t]);
+
+    const runGoogleCalendarSync = useCallback(async (options: { silent?: boolean } = {}) => {
+        if (!effectiveProjectId) {
+            setGoogleError(t('appointments.errors.noProjectSelected'));
+            return;
+        }
+        if (!isGoogleConnected) {
+            if (!options.silent) setGoogleError(t('appointments.google.connectFirst'));
+            return;
+        }
+
+        if (!options.silent) setIsGoogleLoading(true);
+        setGoogleError(null);
+        setSyncStatus('pending');
+
+        try {
+            const result = await callGoogleCalendarApi<{
+                summary?: { errors?: string[] };
+            }>('/api/appointments/google/sync', {
+                method: 'POST',
+                body: JSON.stringify({
+                    projectId: effectiveProjectId,
+                    calendarId: googleConfig?.calendarId || 'primary',
+                }),
+            });
+
+            await refresh();
+            await refreshGoogleCalendarStatus();
+
+            const errors = result.summary?.errors || [];
+            if (errors.length) {
+                setSyncStatus('error');
+                setGoogleError(t('appointments.google.syncCompleteWithErrors', { count: errors.length }));
+            } else {
+                setSyncStatus('synced');
+                setLastSyncTime(new Date());
+            }
+        } catch (error: any) {
+            setGoogleError(error.message || t('appointments.google.errorSyncCalendar'));
+            setSyncStatus('error');
+            if (!options.silent) throw error;
+        } finally {
+            if (!options.silent) setIsGoogleLoading(false);
+        }
+    }, [callGoogleCalendarApi, effectiveProjectId, googleConfig?.calendarId, isGoogleConnected, refresh, refreshGoogleCalendarStatus, t]);
+
+    const handleGoogleSync = useCallback(async () => {
+        await runGoogleCalendarSync();
+    }, [runGoogleCalendarSync]);
 
     // Handler for project selection
     const handleProjectSelect = (projectId: string) => {
@@ -212,6 +412,26 @@ const AppointmentsDashboard: React.FC = () => {
         setIsCreateModalOpen(true);
     }, []);
 
+    const handleMigrateLegacyBlockedDates = useCallback(async () => {
+        setLegacyMigrationNotice(null);
+        try {
+            const result = await migrateLegacyBlockedDates();
+            setLegacyMigrationNotice({
+                type: 'success',
+                text: t('appointments.blockedDates.migrationSuccess', {
+                    count: result.migrated,
+                    skipped: result.skipped,
+                }),
+            });
+        } catch (err) {
+            console.error('[AppointmentsDashboard] Error migrating legacy blockedDates:', err);
+            setLegacyMigrationNotice({
+                type: 'error',
+                text: t('appointments.blockedDates.migrationError'),
+            });
+        }
+    }, [migrateLegacyBlockedDates, t]);
+
     const handleCreateAppointment = useCallback(async (data: Partial<Appointment>) => {
         let createdAppointment: Appointment | null = null;
 
@@ -227,30 +447,9 @@ const AppointmentsDashboard: React.FC = () => {
         // Auto-sync to Google Calendar if connected
         if (isGoogleConnected && createdAppointment) {
             try {
-                console.log('🔄 Auto-syncing to Google Calendar...');
-
-                const syncResult = await syncAppointmentToGoogle(createdAppointment, 'primary', true);
-
-                if (syncResult.syncStatus === 'synced') {
-                    // Check if Google created a Meet link we should save back
-                    const meetUrl = (syncResult as any)._meetUrl;
-                    const updates: Partial<Appointment> = { googleSync: syncResult };
-                    if (meetUrl && !createdAppointment.location?.meetingUrl) {
-                        updates.location = {
-                            ...createdAppointment.location,
-                            type: 'virtual',
-                            meetingUrl: meetUrl,
-                            platform: 'google_meet',
-                        };
-                    }
-                    await updateAppointment(createdAppointment.id, updates);
-                    console.log('✅ Auto-synced to Google Calendar!' + (meetUrl ? ' (Meet link saved)' : ''));
-                } else {
-                    console.warn('⚠️ Sync completed with status:', syncResult.syncStatus);
-                }
+                await runGoogleCalendarSync({ silent: true });
             } catch (syncError) {
-                console.error('⚠️ Error auto-syncing to Google:', syncError);
-                // Don't fail the creation, just log the sync error
+                console.error('[AppointmentsDashboard] Error auto-syncing Google Calendar:', syncError);
             }
         }
 
@@ -258,7 +457,7 @@ const AppointmentsDashboard: React.FC = () => {
         setCreateModalInitialDate(undefined);
         setCreateModalInitialHour(undefined);
         setEditingAppointment(null);
-    }, [createAppointment, updateAppointment, editingAppointment, isGoogleConnected]);
+    }, [createAppointment, updateAppointment, editingAppointment, isGoogleConnected, runGoogleCalendarSync]);
 
     const handleEditAppointment = useCallback(() => {
         if (selectedAppointment) {
@@ -336,252 +535,6 @@ const AppointmentsDashboard: React.FC = () => {
         setIsGeneratingAiPrep(false);
         // Note: Don't update local state manually - Supabase onSnapshot will handle it
     }, [selectedAppointment, updateAppointment]);
-
-    // Google Calendar state
-    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-    const [googleError, setGoogleError] = useState<string | null>(null);
-    const [lastSyncTime, setLastSyncTime] = useState<Date | undefined>();
-    const [syncStatus, setSyncStatus] = useState<'synced' | 'pending' | 'error' | 'not_synced'>('not_synced');
-
-    // Check if Google Client ID is configured
-    const hasGoogleCredentials = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-    // Initialize Google API on mount
-    useEffect(() => {
-        if (!hasGoogleCredentials) return;
-
-        const initGoogle = async () => {
-            try {
-                console.log('🔄 Initializing Google Calendar API...');
-                await loadGoogleApiScripts();
-                await initializeGapiClient();
-                initializeTokenClient(
-                    (token) => {
-                        console.log('✅ Token received via callback');
-                        setIsGoogleConnected(true);
-                        setGoogleError(null);
-                    },
-                    (error) => {
-                        console.error('❌ Token error:', error.message);
-                        setGoogleError(error.message);
-                        setIsGoogleConnected(false);
-                    }
-                );
-
-                // Check if was previously connected — but only trust it if there's an actual token
-                const wasConnected = getSavedConnectionState();
-                if (isAuthenticated()) {
-                    console.log('📌 Restoring connection: token is still valid');
-                    setIsGoogleConnected(true);
-                } else if (wasConnected) {
-                    // Token expired but user was previously connected
-                    // Try silent re-auth using prompt: ''
-                    console.log('📌 Previous connection detected, attempting silent re-auth...');
-                    try {
-                        const token = await requestAuthorization();
-                        if (token) {
-                            console.log('✅ Silent re-auth successful');
-                            setIsGoogleConnected(true);
-                        } else {
-                            console.log('⚠️ Silent re-auth failed, user needs to re-connect');
-                            setIsGoogleConnected(false);
-                        }
-                    } catch (reAuthError: any) {
-                        console.log('⚠️ Silent re-auth failed:', reAuthError.message);
-                        // Don't show error, just mark as disconnected
-                        setIsGoogleConnected(false);
-                    }
-                }
-
-                console.log('✅ Google Calendar API initialized');
-            } catch (error: any) {
-                console.error('❌ Error initializing Google API:', error);
-                setGoogleError(t('appointments.google.errorInitApi'));
-            }
-        };
-
-        initGoogle();
-    }, [hasGoogleCredentials]);
-
-    // Google Calendar handlers
-    const handleGoogleConnect = useCallback(async () => {
-        if (!hasGoogleCredentials) {
-            setGoogleError(t('appointments.google.notConfigured'));
-            return;
-        }
-
-        setIsGoogleLoading(true);
-        setGoogleError(null);
-
-        try {
-            console.log('🔗 Connecting to Google Calendar...');
-            // Force consent on explicit connect to ensure fresh permissions
-            const token = await requestAuthorization(true);
-            console.log('✅ Connected! Token received:', token ? 'Yes' : 'No');
-            setIsGoogleConnected(true);
-            setGoogleError(null);
-        } catch (error: any) {
-            console.error('❌ Error connecting to Google:', error);
-            // Check for popup blocked
-            if (error.message?.includes('popup')) {
-                setGoogleError(t('appointments.google.allowPopups'));
-            } else {
-                setGoogleError(error.message || t('appointments.google.errorConnect'));
-            }
-            setIsGoogleConnected(false);
-        } finally {
-            setIsGoogleLoading(false);
-        }
-    }, [hasGoogleCredentials]);
-
-    const handleGoogleDisconnect = useCallback(async () => {
-        setIsGoogleLoading(true);
-        try {
-            revokeAccess();
-            setIsGoogleConnected(false);
-            setGoogleError(null);
-        } catch (error: any) {
-            setGoogleError(error.message);
-        } finally {
-            setIsGoogleLoading(false);
-        }
-    }, []);
-
-    const handleGoogleSync = useCallback(async () => {
-        if (!isGoogleConnected) {
-            setGoogleError(t('appointments.google.connectFirst'));
-            return;
-        }
-
-        setIsGoogleLoading(true);
-        setGoogleError(null);
-        setSyncStatus('pending');
-
-        try {
-            // Ensure we have a valid token before syncing
-            if (!isAuthenticated()) {
-                console.log('🔐 Token expired, re-authenticating before sync...');
-                try {
-                    await requestAuthorization();
-                    console.log('✅ Re-authenticated successfully');
-                } catch (authError: any) {
-                    console.error('❌ Re-auth failed:', authError);
-                    setIsGoogleConnected(false);
-                    setSyncStatus('error');
-                    setGoogleError(t('appointments.google.connectFirst'));
-                    setIsGoogleLoading(false);
-                    return;
-                }
-            }
-
-            let pushSyncedCount = 0;
-            let pushErrorCount = 0;
-
-            // ═══════════════════════════════════════════════════
-            // PHASE 1: PUSH — Quimera → Google Calendar
-            // ═══════════════════════════════════════════════════
-            console.log('🔄 Phase 1: Pushing Quimera appointments to Google Calendar...');
-            console.log(`📊 Total appointments to push: ${appointments.length}`);
-
-            for (const appointment of appointments) {
-                try {
-                    console.log(`📤 Pushing: ${appointment.title}`);
-                    const syncResult = await syncAppointmentToGoogle(appointment, 'primary', true);
-
-                    if (syncResult.syncStatus === 'synced') {
-                        // Check if Google created a Meet link
-                        const meetUrl = (syncResult as any)._meetUrl;
-                        const updates: Partial<Appointment> = { googleSync: syncResult };
-                        if (meetUrl && !appointment.location?.meetingUrl) {
-                            updates.location = {
-                                ...appointment.location,
-                                type: 'virtual',
-                                meetingUrl: meetUrl,
-                                platform: 'google_meet',
-                            };
-                        }
-                        await updateAppointment(appointment.id, updates);
-                        pushSyncedCount++;
-                        console.log(`✅ Pushed: ${appointment.title}`);
-                    } else {
-                        pushErrorCount++;
-                        console.error(`❌ Error pushing: ${appointment.title}`, syncResult.errorMessage);
-                    }
-                } catch (err: any) {
-                    pushErrorCount++;
-                    console.error(`❌ Error pushing appointment ${appointment.title}:`, err);
-                    if (err?.message?.includes('Not authenticated')) {
-                        console.error('🔑 Auth issue detected. Token may have expired.');
-                        setIsGoogleConnected(false);
-                        setSyncStatus('error');
-                        setGoogleError(t('appointments.google.connectFirst'));
-                        setIsGoogleLoading(false);
-                        return;
-                    }
-                }
-            }
-
-            // ═══════════════════════════════════════════════════
-            // PHASE 2: PULL — Google Calendar → Quimera
-            // ═══════════════════════════════════════════════════
-            console.log('🔄 Phase 2: Pulling Google Calendar events into Quimera...');
-
-            let pullNewCount = 0;
-            let pullUpdatedCount = 0;
-
-            try {
-                const importResult = await importGoogleEvents(appointments, 'primary', 30, 90);
-
-                // Create new appointments from Google events
-                for (const newEvent of importResult.newEvents) {
-                    try {
-                        await createAppointment(newEvent);
-                        pullNewCount++;
-                        console.log(`📥 Imported: ${newEvent.title}`);
-                    } catch (createErr) {
-                        console.error(`❌ Error importing: ${newEvent.title}`, createErr);
-                    }
-                }
-
-                // Update existing appointments with Google changes
-                for (const update of importResult.updatedEvents) {
-                    try {
-                        await updateAppointment(update.appointmentId, update.updates);
-                        pullUpdatedCount++;
-                        console.log(`🔄 Updated from Google: ${update.updates.title || update.appointmentId}`);
-                    } catch (updateErr) {
-                        console.error(`❌ Error updating: ${update.appointmentId}`, updateErr);
-                    }
-                }
-
-                console.log(`📊 Pull results: ${pullNewCount} imported, ${pullUpdatedCount} updated, ${importResult.stats.unchanged} unchanged`);
-            } catch (pullError: any) {
-                console.error('❌ Error during pull phase:', pullError);
-                // Don't fail the entire sync for pull errors
-            }
-
-            await refresh();
-
-            // ═══════════════════════════════════════════════════
-            // PHASE 3: Report results
-            // ═══════════════════════════════════════════════════
-            const totalErrors = pushErrorCount;
-            if (totalErrors > 0) {
-                setGoogleError(t('appointments.google.syncCompleteWithErrors', { count: totalErrors }));
-                setSyncStatus('error');
-            } else {
-                console.log(`✅ Bidirectional sync complete! Pushed: ${pushSyncedCount}, Imported: ${pullNewCount}, Updated: ${pullUpdatedCount}`);
-                setSyncStatus('synced');
-                setLastSyncTime(new Date());
-            }
-        } catch (error: any) {
-            console.error('❌ Sync error:', error);
-            setGoogleError(error.message || t('appointments.google.errorSyncCalendar'));
-            setSyncStatus('error');
-        } finally {
-            setIsGoogleLoading(false);
-        }
-    }, [isGoogleConnected, appointments, updateAppointment, createAppointment, refresh, t]);
 
     // Search filter
     const displayedAppointments = useMemo(() => {
@@ -718,6 +671,16 @@ const AppointmentsDashboard: React.FC = () => {
                     }}
                 />
 
+                <AppointmentAnalyticsPanel analytics={analytics} />
+                <AppointmentEngineReadinessPanel
+                    analytics={analytics}
+                    appointmentsBlueprint={appointmentsBlueprint}
+                    googleConfigured={googleConfigured}
+                    googleConnected={isGoogleConnected}
+                    hasLegacyBlockedDates={hasLegacyBlockedDates}
+                    legacyBlockedDateCount={legacyBlockedDates.length}
+                />
+
                 {/* Filters Panel */}
                 {showFilters && (
                     <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-q-border bg-secondary/20 animate-slide-down overflow-x-auto">
@@ -805,6 +768,44 @@ const AppointmentsDashboard: React.FC = () => {
                     </div>
                 )}
 
+                {hasLegacyBlockedDates && (
+                    <div className="px-3 sm:px-6 py-3 border-b border-q-border bg-q-warning/10">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-start gap-3 min-w-0">
+                                <AlertCircle className="w-5 h-5 text-q-warning shrink-0 mt-0.5" />
+                                <div className="min-w-0">
+                                    <p className="text-sm font-semibold text-foreground">
+                                        {t('appointments.blockedDates.migrationTitle')}
+                                    </p>
+                                    <p className="text-xs text-q-text-muted">
+                                        {t('appointments.blockedDates.migrationDesc', { count: legacyBlockedDates.length })}
+                                    </p>
+                                    {legacyMigrationNotice && (
+                                        <p className={`mt-1 text-xs ${legacyMigrationNotice.type === 'error' ? 'text-q-error' : 'text-q-success'}`}>
+                                            {legacyMigrationNotice.text}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleMigrateLegacyBlockedDates}
+                                disabled={isMigratingLegacyBlockedDates}
+                                className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-q-warning px-3 text-xs font-semibold text-q-bg transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {isMigratingLegacyBlockedDates ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Upload className="w-4 h-4" />
+                                )}
+                                {isMigratingLegacyBlockedDates
+                                    ? t('appointments.blockedDates.migratingLegacy')
+                                    : t('appointments.blockedDates.migrateLegacy')}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Main Content */}
                 <main className="flex-1 flex min-h-0">
                     {/* Calendar/List View */}
@@ -883,6 +884,7 @@ const AppointmentsDashboard: React.FC = () => {
                         <div className="w-80 border-l border-q-border p-4 overflow-y-auto bg-q-bg animate-slide-in-right hidden lg:block">
                             <GoogleCalendarConnect
                                 isConnected={isGoogleConnected}
+                                config={googleConfig}
                                 onConnect={handleGoogleConnect}
                                 onDisconnect={handleGoogleDisconnect}
                                 onSync={handleGoogleSync}
@@ -925,6 +927,7 @@ const AppointmentsDashboard: React.FC = () => {
                 onAddNote={handleAddNote}
                 onUpdateAiInsights={handleUpdateAiInsights}
                 isGeneratingAi={isGeneratingAiPrep}
+                linkedLeads={selectedAppointmentLinkedLeads}
             />
 
             {/* Block Date Modal */}
@@ -967,4 +970,3 @@ const AppointmentsDashboard: React.FC = () => {
 };
 
 export default AppointmentsDashboard;
-

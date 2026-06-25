@@ -6,6 +6,14 @@
     {
       "path": "/api/mcp/jobs/run",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/appointments/jobs/run",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/appointments/google/jobs/run",
+      "schedule": "*/15 * * * *"
     }
   ],
   "rewrites": [

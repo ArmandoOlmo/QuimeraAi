@@ -1731,7 +1731,7 @@ const StorefrontEditorView: React.FC = () => {
 
     if (!projectId || !project) {
         return (
-            <div className="rounded-lg border border-q-border bg-q-surface p-6 text-sm text-q-text-muted">
+            <div className="rounded-[var(--editor-control-radius)] border border-q-border bg-q-surface p-6 text-sm text-q-text-muted">
                 {t('ecommerce.storefrontEditor.noProject', 'Selecciona un proyecto para editar su storefront.')}
             </div>
         );
@@ -1791,7 +1791,7 @@ const StorefrontEditorView: React.FC = () => {
     );
 
     const renderTemplateControls = () => (
-        <div className="space-y-4">
+        <div data-editor-controls-surface="storefront-template" className="space-y-4">
             <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
                 <div className="mb-4 flex items-center justify-between gap-3">
                     <div>
@@ -2584,7 +2584,7 @@ const StorefrontEditorView: React.FC = () => {
     };
 
     return (
-        <div className="-m-3 flex h-[calc(100vh-7rem)] min-h-[720px] flex-col overflow-hidden bg-q-bg sm:-m-6 lg:-m-8">
+        <div data-storefront-editor-shell className="-m-3 flex h-[calc(100vh-7rem)] min-h-[720px] flex-col overflow-hidden bg-q-bg sm:-m-6 lg:-m-8">
             <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 px-3 lg:px-4 flex items-center justify-between gap-3 z-20">
                 <div className="flex min-w-0 items-center gap-3">
                     <LayoutTemplate className="h-5 w-5 quimera-dashboard-header-icon" strokeWidth={2} />
@@ -2596,7 +2596,7 @@ const StorefrontEditorView: React.FC = () => {
                             {t('ecommerce.storefrontEditor.title', 'Editor de tienda online')}
                         </p>
                     </div>
-                    <span className={`hidden rounded-full px-2.5 py-1 text-xs font-semibold md:inline-flex ${
+                    <span className={`hidden rounded-[var(--editor-control-radius)] px-2.5 py-1 text-xs font-semibold md:inline-flex ${
                         templateState === 'published'
                             ? 'bg-q-success/15 text-q-success'
                             : 'bg-q-accent/15 text-q-accent'
@@ -2608,7 +2608,7 @@ const StorefrontEditorView: React.FC = () => {
                 </div>
 
                 <div className="hidden md:flex absolute left-1/2 -translate-x-1/2">
-                    <div className="flex items-center gap-1 rounded-lg bg-secondary/50 p-1">
+                    <div className="flex items-center gap-1 rounded-[var(--editor-control-radius)] bg-secondary/50 p-1">
                         {([
                             ['desktop', Monitor, t('ecommerce.storefrontEditor.desktop', 'Escritorio')],
                             ['tablet', Tablet, t('ecommerce.storefrontEditor.tablet', 'Tablet')],
@@ -2618,7 +2618,7 @@ const StorefrontEditorView: React.FC = () => {
                                 key={mode}
                                 type="button"
                                 onClick={() => setPreviewMode(mode)}
-                                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                                className={`flex items-center gap-2 rounded-[var(--editor-control-radius-sm)] px-3 py-1.5 text-sm font-medium transition-all ${
                                     previewMode === mode
                                         ? 'bg-primary text-primary-foreground'
                                         : 'text-q-text-muted hover:bg-q-bg/50 hover:text-foreground'
@@ -2635,7 +2635,7 @@ const StorefrontEditorView: React.FC = () => {
                     <button
                         type="button"
                         onClick={refreshPreview}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg text-q-text-muted transition-colors hover:bg-secondary/50 hover:text-foreground"
+                        className="flex h-9 w-9 items-center justify-center rounded-[var(--editor-control-radius)] text-q-text-muted transition-colors hover:bg-secondary/50 hover:text-foreground"
                         aria-label={t('ecommerce.storefrontEditor.refreshPreview', 'Actualizar preview')}
                         title={t('ecommerce.storefrontEditor.refreshPreview', 'Actualizar preview')}
                     >
@@ -2645,7 +2645,7 @@ const StorefrontEditorView: React.FC = () => {
                         href={storefrontUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="hidden h-9 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-q-text-muted transition-colors hover:bg-secondary/50 hover:text-foreground sm:inline-flex"
+                        className="hidden h-9 items-center justify-center gap-2 rounded-[var(--editor-control-radius)] px-3 text-sm font-medium text-q-text-muted transition-colors hover:bg-secondary/50 hover:text-foreground sm:inline-flex"
                     >
                         <ExternalLink size={16} />
                         <span>{t('ecommerce.storefrontEditor.openStorefront', 'Abrir tienda')}</span>
@@ -2654,7 +2654,7 @@ const StorefrontEditorView: React.FC = () => {
                         type="button"
                         onClick={() => saveTemplate('draft')}
                         disabled={isBusy}
-                        className="flex h-9 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-q-text-muted transition-colors hover:bg-secondary/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-9 items-center justify-center gap-2 rounded-[var(--editor-control-radius)] px-3 text-sm font-medium text-q-text-muted transition-colors hover:bg-secondary/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {isSavingTemplate ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                         <span className="hidden sm:inline">{t('common.save', 'Guardar')}</span>
@@ -2663,7 +2663,7 @@ const StorefrontEditorView: React.FC = () => {
                         type="button"
                         onClick={() => saveTemplate('published')}
                         disabled={isBusy}
-                        className="quimera-guide-cta flex h-9 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                        className="quimera-guide-cta flex h-9 items-center justify-center gap-2 rounded-[var(--editor-control-radius)] px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <CheckCircle2 size={16} />
                         <span className="hidden sm:inline">{t('ecommerce.storefrontEditor.publishTemplate', 'Publicar')}</span>
@@ -2687,7 +2687,7 @@ const StorefrontEditorView: React.FC = () => {
                     <div className="border-b border-q-border p-3">
                         <button
                             type="button"
-                            className="flex h-10 w-full items-center justify-between rounded-lg border border-q-border bg-q-bg px-3 text-left text-sm font-medium text-foreground"
+                            className="flex h-10 w-full items-center justify-between rounded-[var(--editor-control-radius)] border border-q-border bg-q-bg px-3 text-left text-sm font-medium text-foreground"
                         >
                             <span className="flex min-w-0 items-center gap-2">
                                 <LayoutTemplate size={15} />
@@ -2794,7 +2794,7 @@ const StorefrontEditorView: React.FC = () => {
 
                 <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-muted/30 p-3 sm:p-4">
                     <div
-                        className="mx-auto flex h-full w-full flex-col overflow-hidden rounded-xl border border-q-border bg-q-surface shadow-2xl transition-all duration-300"
+                        className="mx-auto flex h-full w-full flex-col overflow-hidden rounded-[var(--editor-control-modal-radius)] border border-q-border bg-q-surface shadow-2xl transition-all duration-300"
                         style={{
                             width: previewWidths[previewMode],
                             maxWidth: '100%',
@@ -2807,7 +2807,7 @@ const StorefrontEditorView: React.FC = () => {
                                 <span className="h-3 w-3 rounded-full bg-q-success" />
                             </div>
                             <div className="flex flex-1 items-center justify-center px-4">
-                                <div className="flex w-full max-w-md items-center justify-center truncate rounded-full border border-q-border/50 bg-secondary/50 px-4 py-1 text-center text-xs text-q-text-muted sm:text-sm">
+                                <div className="flex w-full max-w-md items-center justify-center truncate rounded-[var(--editor-control-radius)] border border-q-border/50 bg-secondary/50 px-4 py-1 text-center text-xs text-q-text-muted sm:text-sm">
                                     <span className="opacity-50">https://quimera.ai/</span>
                                     <span className="font-medium text-foreground">{String(previewDisplayName).toLowerCase().replace(/\s+/g, '-')}</span>
                                 </div>
@@ -2832,7 +2832,7 @@ const StorefrontEditorView: React.FC = () => {
                 <button
                     type="button"
                     onClick={() => setIsControlsPanelOpen(prev => !prev)}
-                    className={`absolute top-1/2 z-30 -translate-y-1/2 overflow-hidden rounded-lg border border-q-border bg-q-surface p-2 shadow-lg transition-all duration-300 hover:bg-accent ${
+                    className={`absolute top-1/2 z-30 -translate-y-1/2 overflow-hidden rounded-[var(--editor-control-radius)] border border-q-border bg-q-surface p-2 shadow-lg transition-all duration-300 hover:bg-accent ${
                         isControlsPanelOpen
                             ? 'right-[calc(20rem-18px)] lg:right-[calc(24rem-18px)]'
                             : 'right-0 rounded-r-none'
@@ -2842,7 +2842,7 @@ const StorefrontEditorView: React.FC = () => {
                     {isControlsPanelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
                 </button>
 
-                <aside className={`${isControlsPanelOpen ? 'w-80 lg:w-96' : 'w-0'} editor-theme flex flex-shrink-0 flex-col overflow-hidden border-l border-q-border bg-q-bg transition-all duration-300`}>
+                <aside data-editor-controls-surface="storefront" className={`${isControlsPanelOpen ? 'w-80 lg:w-96' : 'w-0'} editor-theme flex flex-shrink-0 flex-col overflow-hidden border-l border-q-border bg-q-bg transition-all duration-300`}>
                     <div className="flex h-14 flex-shrink-0 items-center justify-between border-b border-q-border px-4">
                         <h3 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-q-text">
                             <ActiveEditorIcon size={16} className="flex-shrink-0 text-q-accent" />
@@ -2851,7 +2851,7 @@ const StorefrontEditorView: React.FC = () => {
                             </span>
                         </h3>
                     </div>
-                    <div className="quimera-clean-controls min-h-0 flex-1 overflow-y-auto p-4">
+                    <div data-editor-controls-scroll className="quimera-clean-controls min-h-0 flex-1 overflow-y-auto p-4">
                         {renderActiveControls()}
                     </div>
                 </aside>
