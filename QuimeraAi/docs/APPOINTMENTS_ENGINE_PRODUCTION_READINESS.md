@@ -61,6 +61,7 @@ Production currently needs these Appointments Engine runtime variables:
 - Configured: `APP_BASE_URL` and `VITE_PUBLIC_APP_URL`
 - Configured: `GOOGLE_CALENDAR_CLIENT_SECRET`
 - Configured: `STRIPE_SECRET_KEY`
+- Configured: `VITE_STRIPE_PUBLISHABLE_KEY`
 - Configured: `RESEND_API_KEY`
 - Configured: `APPOINTMENT_EMAIL_FROM`
 - Configured: `RESEND_FROM_EMAIL`
@@ -81,7 +82,7 @@ The Appointments Engine shares production dependencies with Ecommerce and Email 
 - Ecommerce transactional emails: Supabase `stripe-webhook` is active and Supabase `RESEND_API_KEY` plus `EMAIL_FROM` are configured.
 - Ecommerce payments: Supabase `stripe-api`, `stripe-webhook`, and `create-store-checkout-intent` are active. Vercel/Supabase `STRIPE_SECRET_KEY` and Supabase `STRIPE_WEBHOOK_SECRET` are configured.
 - Ecommerce customer auth redirects: Supabase `APP_URL` and `STORE_AUTH_REDIRECT_URL` are configured.
-- Stripe publishable key: `VITE_STRIPE_PUBLISHABLE_KEY` is not configured globally. Current production data has no Stripe-enabled store settings, so this is not blocking inactive stores. Before enabling card checkout or agency payment links, configure `VITE_STRIPE_PUBLISHABLE_KEY` in Vercel or save `stripe_publishable_key` per store.
+- Stripe publishable key: `VITE_STRIPE_PUBLISHABLE_KEY` is configured in Vercel Production, the Appointments Engine PR preview branch, and Cloudflare Workers Builds. Current production data has no Stripe-enabled store settings, but global Stripe Elements fallback is now available for ecommerce checkout and agency payment links.
 
 ## Runtime gates
 
