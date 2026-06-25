@@ -9,7 +9,7 @@ import {
     ArrowRight, Menu, MessageSquare, PackageSearch, Palette,
     Languages, Search, FileText, FolderOpen,
     Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper, Layout,
-    Loader2, DollarSign, Globe, UserPlus, CalendarDays, Mail, ServerCog
+    Loader2, DollarSign, Globe, UserPlus, CalendarDays, Mail, ServerCog, Workflow
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import MobileSearchModal from '../ui/MobileSearchModal';
@@ -47,6 +47,7 @@ const SubdomainManagement = React.lazy(() => import('./admin/SubdomainManagement
 const AdminLeadsDashboard = React.lazy(() => import('./admin/AdminLeadsDashboard'));
 const AdminAppointmentsDashboard = React.lazy(() => import('./admin/AdminAppointmentsDashboard'));
 const AdminEmailHub = React.lazy(() => import('./admin/AdminEmailHub'));
+const AdminRealtyEngineControl = React.lazy(() => import('./admin/AdminRealtyEngineControl'));
 
 const NEW_BADGE_WINDOW_DAYS = 30;
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
@@ -256,6 +257,7 @@ const SuperAdminDashboard = () => {
         { id: 'subscriptions', title: t('superadmin.subscriptions'), description: t('superadmin.subscriptionsDesc'), icon: <Sparkles size={24} />, category: 'core', route: ROUTES.ADMIN_SUBSCRIPTIONS, newSince: RECENT_FEATURE_RELEASE_DATE, allowedRoles: ['owner', 'superadmin'] },
         { id: 'service-availability', title: t('serviceAvailability.title', 'Disponibilidad de Servicios'), description: t('serviceAvailability.description', 'Control global de servicios de la plataforma'), icon: <Settings size={24} />, category: 'core', route: ROUTES.ADMIN_SERVICE_AVAILABILITY, newSince: RECENT_FEATURE_RELEASE_DATE, allowedRoles: ['owner', 'superadmin'] },
         { id: 'subdomains', title: t('superadmin.subdomainManagement', 'Gestión de Subdominios'), description: t('superadmin.subdomainManagementDesc', 'Administrar subdominios de usuarios, agencias y tenants'), icon: <Globe size={24} />, category: 'core', route: ROUTES.ADMIN_SUBDOMAINS, newSince: RECENT_FEATURE_RELEASE_DATE, allowedRoles: ['owner', 'superadmin'] },
+        { id: 'realty-engine', title: t('superadmin.realtyEngine.cardTitle'), description: t('superadmin.realtyEngine.cardDescription'), icon: <Workflow size={24} />, category: 'core', route: ROUTES.ADMIN_REALTY_ENGINE, newSince: RECENT_FEATURE_RELEASE_DATE, allowedRoles: ['owner', 'superadmin', 'admin'] },
 
         // Content Management
         { id: 'news', title: t('superadmin.news.title', 'Noticias y Novedades'), description: t('superadmin.newsDesc', 'Gestionar noticias y actualizaciones para el dashboard'), icon: <Newspaper size={24} />, category: 'content', route: ROUTES.ADMIN_NEWS, newSince: RECENT_FEATURE_RELEASE_DATE, allowedRoles: ['owner', 'superadmin', 'admin'] },
@@ -381,6 +383,7 @@ const SuperAdminDashboard = () => {
             case 'landing-editor': return <LandingPageEditor onBack={handleBack} />;
             case 'service-availability': return <ServiceAvailabilityControl onBack={handleBack} />;
             case 'subdomains': return <SubdomainManagement onBack={handleBack} />;
+            case 'realty-engine': return <AdminRealtyEngineControl onBack={handleBack} />;
             case 'finances': return <FinancialDashboard onBack={handleBack} />;
             case 'admin-leads': return (
                 <div className="flex h-screen bg-q-bg text-foreground">

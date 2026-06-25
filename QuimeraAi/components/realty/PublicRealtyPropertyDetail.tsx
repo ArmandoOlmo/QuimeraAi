@@ -23,10 +23,20 @@ import {
     Star,
 } from 'lucide-react';
 import type { ThemeData } from '../../types';
-import type { PropertyOpenHouse, RealtyImage, RealtyListingsSectionData, RealtyProperty } from '../../types/realty';
+import type { LeadType, PropertyOpenHouse, RealtyImage, RealtyListingsSectionData, RealtyProperty } from '../../types/realty';
 import { supabase } from '../../supabase';
 import { usePublicRealtyListings } from '../../hooks/usePublicRealtyListings';
-import { formatRealtyPrice, mapPropertyOpenHouseRow, REALTY_LEAD_SOURCE, resolveRealtyWebsiteColors } from '../../utils/realty';
+import { formatRealtyPrice, mapPropertyOpenHouseRow, resolveRealtyWebsiteColors } from '../../utils/realty';
+import {
+    getRealtyRouteSegments,
+    resolveRealtyDetailPath,
+    resolveRealtyDirectoryRoute,
+} from '../../utils/realtyWebsiteRoutes';
+import {
+    createOpenHouseRegistrationLead,
+    createPropertyInquiryLead,
+    createShowingRequestLead,
+} from '../../services/realty/realtyLeadPipelineService';
 
 interface PublicRealtyPropertyDetailProps {
     projectId: string;
@@ -215,18 +225,19 @@ const getPropertyImage = (property: RealtyProperty) =>
 const getLocationLabel = (property: RealtyProperty) =>
     [property.addressLine1 || property.address, property.city, property.state].filter(Boolean).join(', ');
 
-const getPreviewBasePath = () => {
+const getPreviewBasePath = (data?: RealtyListingsSectionData) => {
     const pathname = window.location.pathname;
     if (!pathname.startsWith('/preview/')) return '';
     const parts = pathname.replace('/preview/', '').split('/').filter(Boolean);
+    const routeSegments = new Set([...previewLogicalRouteSegments, ...getRealtyRouteSegments(data)]);
     if (parts.length === 0) return '/preview';
     if (parts.length === 1) return `/preview/${parts[0]}`;
-    if (previewLogicalRouteSegments.has(parts[1])) return `/preview/${parts[0]}`;
+    if (routeSegments.has(parts[1])) return `/preview/${parts[0]}`;
     return `/preview/${parts[0]}/${parts[1]}`;
 };
 
-const navigateTo = (path: string) => {
-    const fullPath = `${getPreviewBasePath()}${path}`;
+const navigateTo = (path: string, data?: RealtyListingsSectionData) => {
+    const fullPath = `${getPreviewBasePath(data)}${path}`;
     window.history.pushState(null, '', fullPath);
     window.dispatchEvent(new PopStateEvent('popstate'));
 };
@@ -258,9 +269,22 @@ const PublicRealtyPropertyDetail: React.FC<PublicRealtyPropertyDetailProps> = ({
     const [selectedOpenHouseId, setSelectedOpenHouseId] = useState('');
     const [openHouseForm, setOpenHouseForm] = useState({ name: '', email: '', phone: '', message: '' });
     const [openHouseStatus, setOpenHouseStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+    const [showingForm, setShowingForm] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        preferredDate: '',
+        preferredTime: '',
+        leadType: 'buyer' as LeadType,
+        budget: '',
+        financingStatus: '',
+        message: '',
+        consentAccepted: false,
+    });
+    const [showingStatus, setShowingStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
-    const goListings = () => onNavigateToListings ? onNavigateToListings() : navigateTo('/listados');
-    const goProperty = (slug: string) => onNavigateToProperty ? onNavigateToProperty(slug) : navigateTo(`/listados/${slug}`);
+    const goListings = () => onNavigateToListings ? onNavigateToListings() : navigateTo(resolveRealtyDirectoryRoute(data), data);
+    const goProperty = (slug: string) => onNavigateToProperty ? onNavigateToProperty(slug) : navigateTo(resolveRealtyDetailPath(data, slug), data);
     const selectedOpenHouse = openHouses.find(item => item.id === selectedOpenHouseId) || openHouses[0];
 
     useEffect(() => {
@@ -307,34 +331,20 @@ const PublicRealtyPropertyDetail: React.FC<PublicRealtyPropertyDetailProps> = ({
         try {
             const propertyOwnerId = property.userId || property.createdBy || ownerId;
             if (!propertyOwnerId) throw new Error('Missing owner for Realty lead.');
-            const leadMetadata = {
-                realtyLead: true,
-                realtyPropertyId: property.id,
-                realtyPropertyTitle: property.title,
-                realtyPropertySlug: property.slug,
-                propertyId: property.id,
-                propertyTitle: property.title,
-                propertySlug: property.slug,
-                message: form.message,
+            await createPropertyInquiryLead({
+                property,
+                ownerId: propertyOwnerId,
+                projectId,
                 sourceComponent: 'realty-property-detail',
-            };
-
-            const { error } = await supabase.from('property_leads').insert({
-                user_id: propertyOwnerId,
-                tenant_id: property.tenantId || null,
-                project_id: projectId,
-                property_id: property.id,
-                name: form.name,
-                email: form.email,
-                phone: form.phone || null,
-                message: form.message || t('realty.detail.defaultLeadMessage', { title: property.title }),
-                stage: 'new',
-                lead_type: 'buyer',
-                budget: property.price || null,
-                source: REALTY_LEAD_SOURCE,
-                metadata: leadMetadata,
+                contact: {
+                    name: form.name,
+                    email: form.email,
+                    phone: form.phone,
+                    message: form.message || t('realty.detail.defaultLeadMessage', { title: property.title }),
+                    leadType: 'buyer',
+                    budget: property.price || null,
+                },
             });
-            if (error) throw error;
             setStatus('saved');
             setForm({ name: '', email: '', phone: '', message: '' });
         } catch (err) {
@@ -350,41 +360,75 @@ const PublicRealtyPropertyDetail: React.FC<PublicRealtyPropertyDetailProps> = ({
         try {
             const propertyOwnerId = property.userId || property.createdBy || ownerId;
             if (!propertyOwnerId) throw new Error('Missing owner for Realty open house lead.');
-            const leadMetadata = {
-                realtyLead: true,
-                realtyPropertyId: property.id,
-                realtyPropertyTitle: property.title,
-                realtyPropertySlug: property.slug,
-                propertyId: property.id,
-                propertyTitle: property.title,
-                propertySlug: property.slug,
-                openHouseId: selectedOpenHouse.id,
-                openHouseStartsAt: selectedOpenHouse.startsAt,
-                message: openHouseForm.message,
+            await createOpenHouseRegistrationLead({
+                property,
+                ownerId: propertyOwnerId,
+                projectId,
                 sourceComponent: 'realty-open-house',
-            };
-
-            const { error } = await supabase.from('property_leads').insert({
-                user_id: propertyOwnerId,
-                tenant_id: property.tenantId || null,
-                project_id: projectId,
-                property_id: property.id,
-                name: openHouseForm.name,
-                email: openHouseForm.email,
-                phone: openHouseForm.phone || null,
-                message: openHouseForm.message || t('realty.detail.openHouseDefaultMessage', { title: property.title }),
-                stage: 'new',
-                lead_type: 'buyer',
-                budget: property.price || null,
-                source: 'open_house',
-                metadata: leadMetadata,
+                contact: {
+                    name: openHouseForm.name,
+                    email: openHouseForm.email,
+                    phone: openHouseForm.phone,
+                    message: openHouseForm.message || t('realty.detail.openHouseDefaultMessage', { title: property.title }),
+                    leadType: 'buyer',
+                    budget: property.price || null,
+                },
+                openHouse: {
+                    openHouseId: selectedOpenHouse.id,
+                    openHouseStartsAt: selectedOpenHouse.startsAt,
+                },
             });
-            if (error) throw error;
             setOpenHouseStatus('saved');
             setOpenHouseForm({ name: '', email: '', phone: '', message: '' });
         } catch (err) {
             console.error('[PublicRealtyPropertyDetail] open house registration failed', err);
             setOpenHouseStatus('error');
+        }
+    };
+
+    const submitShowingRequest = async (event: React.FormEvent) => {
+        event.preventDefault();
+        if (!property || !showingForm.name || !showingForm.email) return;
+        setShowingStatus('saving');
+        try {
+            const propertyOwnerId = property.userId || property.createdBy || ownerId;
+            if (!propertyOwnerId) throw new Error('Missing owner for Realty showing request.');
+            await createShowingRequestLead({
+                property,
+                ownerId: propertyOwnerId,
+                projectId,
+                sourceComponent: 'realty-showing-request',
+                contact: {
+                    name: showingForm.name,
+                    email: showingForm.email,
+                    phone: showingForm.phone,
+                    message: showingForm.message || t('realty.detail.showingDefaultMessage', { title: property.title }),
+                    leadType: showingForm.leadType,
+                    budget: showingForm.budget,
+                },
+                showing: {
+                    preferredDate: showingForm.preferredDate,
+                    preferredTime: showingForm.preferredTime,
+                    financingStatus: showingForm.financingStatus,
+                    consentAccepted: showingForm.consentAccepted,
+                },
+            });
+            setShowingStatus('saved');
+            setShowingForm({
+                name: '',
+                email: '',
+                phone: '',
+                preferredDate: '',
+                preferredTime: '',
+                leadType: 'buyer',
+                budget: '',
+                financingStatus: '',
+                message: '',
+                consentAccepted: false,
+            });
+        } catch (err) {
+            console.error('[PublicRealtyPropertyDetail] showing request failed', err);
+            setShowingStatus('error');
         }
     };
 
@@ -642,10 +686,59 @@ const PublicRealtyPropertyDetail: React.FC<PublicRealtyPropertyDetailProps> = ({
                                 <DetailTextarea value={form.message} onChange={event => setForm(prev => ({ ...prev, message: event.target.value }))} placeholder={t('realty.detail.messagePlaceholder')} rows={4} />
                                 <DetailButton type="submit" disabled={status === 'saving'} variant="primary" radiusClass={buttonRadius} className="w-full">
                                     <Send size={16} />
-                                    {status === 'saving' ? t('realty.detail.sending') : t('realty.detail.sendLead')}
+                                    {status === 'saving' ? t('realty.detail.sending') : (data.leadCtaText || t('realty.detail.sendLead'))}
                                 </DetailButton>
                                 {status === 'saved' && <StatusMessage status="success">{t('realty.detail.sent')}</StatusMessage>}
                                 {status === 'error' && <StatusMessage status="error">{t('realty.detail.sendError')}</StatusMessage>}
+                            </form>
+                        </DetailPanel>
+
+                        <DetailPanel radiusClass={cardRadius} className="p-5" id="realty-showing-request">
+                            <div className="flex items-start gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[var(--realty-accent-soft)] text-[var(--realty-accent)]">
+                                    <CalendarDays size={19} />
+                                </div>
+                                <div>
+                                    <h2 className="font-header text-xl font-bold text-[var(--realty-heading)]">{t('realty.detail.showingTitle')}</h2>
+                                    <p className="mt-1 text-sm leading-6 text-[var(--realty-muted)]">{t('realty.detail.showingSubtitle')}</p>
+                                </div>
+                            </div>
+                            <form onSubmit={submitShowingRequest} className="mt-5 space-y-3">
+                                <DetailInput required value={showingForm.name} onChange={event => setShowingForm(prev => ({ ...prev, name: event.target.value }))} placeholder={t('realty.leads.name')} />
+                                <DetailInput icon={Mail} required type="email" value={showingForm.email} onChange={event => setShowingForm(prev => ({ ...prev, email: event.target.value }))} placeholder={t('realty.leads.email')} />
+                                <DetailInput icon={Phone} value={showingForm.phone} onChange={event => setShowingForm(prev => ({ ...prev, phone: event.target.value }))} placeholder={t('realty.leads.phone')} />
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <DetailInput icon={CalendarDays} type="date" value={showingForm.preferredDate} onChange={event => setShowingForm(prev => ({ ...prev, preferredDate: event.target.value }))} aria-label={t('realty.detail.preferredDate')} />
+                                    <DetailInput icon={Clock} type="time" value={showingForm.preferredTime} onChange={event => setShowingForm(prev => ({ ...prev, preferredTime: event.target.value }))} aria-label={t('realty.detail.preferredTime')} />
+                                </div>
+                                <select
+                                    className={detailInputClass}
+                                    value={showingForm.leadType}
+                                    onChange={event => setShowingForm(prev => ({ ...prev, leadType: event.target.value as LeadType }))}
+                                    aria-label={t('realty.detail.clientType')}
+                                >
+                                    {(['buyer', 'seller', 'renter', 'investor'] as LeadType[]).map(type => (
+                                        <option key={type} value={type}>{t(`realty.leadTypes.${type}`, { defaultValue: type })}</option>
+                                    ))}
+                                </select>
+                                <DetailInput icon={DollarSign} inputMode="numeric" value={showingForm.budget} onChange={event => setShowingForm(prev => ({ ...prev, budget: event.target.value }))} placeholder={t('realty.detail.budgetPlaceholder')} />
+                                <DetailInput value={showingForm.financingStatus} onChange={event => setShowingForm(prev => ({ ...prev, financingStatus: event.target.value }))} placeholder={t('realty.detail.financingStatusPlaceholder')} />
+                                <DetailTextarea value={showingForm.message} onChange={event => setShowingForm(prev => ({ ...prev, message: event.target.value }))} placeholder={t('realty.detail.showingMessagePlaceholder')} rows={3} />
+                                <label className="flex items-start gap-2 text-xs leading-5 text-[var(--realty-muted)]">
+                                    <input
+                                        type="checkbox"
+                                        checked={showingForm.consentAccepted}
+                                        onChange={event => setShowingForm(prev => ({ ...prev, consentAccepted: event.target.checked }))}
+                                        className="mt-1 h-4 w-4 rounded border-[var(--realty-border-soft)] text-[var(--realty-accent)]"
+                                    />
+                                    <span>{t('realty.detail.showingConsent')}</span>
+                                </label>
+                                <DetailButton type="submit" disabled={showingStatus === 'saving'} variant="primary" radiusClass={buttonRadius} className="w-full">
+                                    <Send size={16} />
+                                    {showingStatus === 'saving' ? t('realty.detail.sending') : (data.showingRequestCtaText || t('realty.detail.requestShowing'))}
+                                </DetailButton>
+                                {showingStatus === 'saved' && <StatusMessage status="success">{t('realty.detail.showingRequested')}</StatusMessage>}
+                                {showingStatus === 'error' && <StatusMessage status="error">{t('realty.detail.showingRequestError')}</StatusMessage>}
                             </form>
                         </DetailPanel>
 

@@ -1100,25 +1100,34 @@ const AiCrossModuleSyncPrompt: React.FC<AiCrossModuleSyncPromptProps> = ({
                         </span>
                         <div className="min-w-0">
                             <h3 className="text-base font-bold text-foreground">
-                                {t('ecommerce.crossModuleSync.title', 'Conectar ecommerce con Quimera Suite')}
+                                {t('ecommerce.crossModuleSync.title')}
                             </h3>
                             <p className="text-sm text-q-text-muted">
-                                {t('ecommerce.crossModuleSync.subtitle', 'Crea drafts revisables para Chatbot, CRM, Email Marketing y Analytics sin activar automatizaciones.')}
+                                {t('ecommerce.crossModuleSync.subtitle')}
                             </p>
                         </div>
                     </div>
-                    <div className="grid gap-2 text-xs font-semibold text-q-text-muted sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid gap-2 text-xs font-semibold text-q-text-muted sm:grid-cols-2 xl:grid-cols-7">
                         <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1">
-                            {t('ecommerce.crossModuleSync.chatbot', 'Chatbot knowledge drafts')}
+                            {t('ecommerce.crossModuleSync.chatbot')}
                         </span>
                         <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1">
-                            {t('ecommerce.crossModuleSync.crm', 'CRM/Lead tags')}
+                            {t('ecommerce.crossModuleSync.crm')}
                         </span>
                         <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1">
-                            {t('ecommerce.crossModuleSync.email', 'Email marketing drafts')}
+                            {t('ecommerce.crossModuleSync.email')}
                         </span>
                         <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1">
-                            {t('ecommerce.crossModuleSync.analytics', 'Analytics event definitions')}
+                            {t('ecommerce.crossModuleSync.analytics')}
+                        </span>
+                        <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1">
+                            {t('ecommerce.crossModuleSync.appointments')}
+                        </span>
+                        <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1">
+                            {t('ecommerce.crossModuleSync.offers')}
+                        </span>
+                        <span className="rounded-md border border-q-border/60 bg-q-bg/50 px-2.5 py-1">
+                            {t('ecommerce.crossModuleSync.finance')}
                         </span>
                     </div>
                 </div>
@@ -1131,7 +1140,7 @@ const AiCrossModuleSyncPrompt: React.FC<AiCrossModuleSyncPromptProps> = ({
                         className="inline-flex items-center justify-center gap-2 rounded-lg border border-q-border bg-q-surface px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-60"
                     >
                         {action === 'preview' ? <RefreshCw size={16} className="animate-spin" /> : <Eye size={16} />}
-                        {t('ecommerce.crossModuleSync.preview', 'Ver preview')}
+                        {t('ecommerce.crossModuleSync.preview')}
                     </button>
                     <button
                         type="button"
@@ -1140,14 +1149,14 @@ const AiCrossModuleSyncPrompt: React.FC<AiCrossModuleSyncPromptProps> = ({
                         className="quimera-guide-cta inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-60"
                     >
                         {action === 'create' ? <RefreshCw size={16} className="animate-spin" /> : <PackageCheck size={16} />}
-                        {t('ecommerce.crossModuleSync.createDrafts', 'Crear drafts de integración')}
+                        {t('ecommerce.crossModuleSync.createDrafts')}
                     </button>
                     <button
                         type="button"
                         onClick={dismissPrompt}
                         disabled={isBusy || isSynced}
                         className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-q-border bg-q-surface text-q-text-muted transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60"
-                        aria-label={t('ecommerce.crossModuleSync.dismiss', 'Omitir')}
+                        aria-label={t('ecommerce.crossModuleSync.dismiss')}
                     >
                         {action === 'dismiss' ? <RefreshCw size={16} className="animate-spin" /> : <X size={16} />}
                     </button>
@@ -1163,32 +1172,45 @@ const AiCrossModuleSyncPrompt: React.FC<AiCrossModuleSyncPromptProps> = ({
 
             {summary && (
                 <div className="mt-4 rounded-lg border border-q-border/70 bg-q-bg/50 p-3">
-                    <div className="grid gap-3 text-sm text-q-text-muted sm:grid-cols-4">
+                    <div className="grid gap-3 text-sm text-q-text-muted sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
                         <div>
-                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.chatbotShort', 'Chatbot')}</p>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.chatbotShort')}</p>
                             <p className="mt-1 font-semibold text-foreground">{summary.chatbotDrafts}</p>
                         </div>
                         <div>
-                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.crmShort', 'CRM')}</p>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.crmShort')}</p>
                             <p className="mt-1 font-semibold text-foreground">{summary.leadDrafts}</p>
                         </div>
                         <div>
-                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.emailShort', 'Email')}</p>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.emailShort')}</p>
                             <p className="mt-1 font-semibold text-foreground">{summary.emailDrafts}</p>
                         </div>
                         <div>
-                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.analyticsShort', 'Analytics')}</p>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.analyticsShort')}</p>
                             <p className="mt-1 font-semibold text-foreground">{summary.analyticsDrafts}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.appointmentsShort')}</p>
+                            <p className="mt-1 font-semibold text-foreground">{summary.appointmentDrafts}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.offersShort')}</p>
+                            <p className="mt-1 font-semibold text-foreground">{summary.ecommerceDrafts}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-q-text-muted">{t('ecommerce.crossModuleSync.financeShort')}</p>
+                            <p className="mt-1 font-semibold text-foreground">{summary.financeDrafts}</p>
                         </div>
                     </div>
                     <p className="mt-3 text-xs leading-5 text-q-text-muted">
                         {summary.dryRun
-                            ? t('ecommerce.crossModuleSync.previewNote', 'Preview local: no escribe en base de datos.')
-                            : t('ecommerce.crossModuleSync.applyNote', '{{created}} drafts guardados en el blueprint; {{skipped}} omitidos por idempotencia.', {
+                            ? t('ecommerce.crossModuleSync.previewNote')
+                            : t('ecommerce.crossModuleSync.applyNote', {
                                 created: summary.created,
                                 skipped: summary.skipped,
                             })}
                     </p>
+                    <p className="mt-2 text-xs leading-5 text-q-text-muted">{t('ecommerce.crossModuleSync.noRuntime')}</p>
                 </div>
             )}
         </section>

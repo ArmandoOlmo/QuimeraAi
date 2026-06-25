@@ -322,8 +322,7 @@ function reasonFor(componentId: ComponentId, context: ComponentSelectionContext)
 export function selectComponentsForPage(context: ComponentSelectionContext): ComponentPlan {
     const pageIntent = context.pageIntent || 'website_home';
     const preferredOrder = intentOrder[pageIntent] || intentOrder.website_home;
-    const candidates = getComponentsForBuilder(context.builder)
-        .filter(component => component.aiSelection.canSelect)
+    const builderComponents = getComponentsForBuilder(context.builder)
         .sort((a, b) => {
             const aIndex = preferredOrder.indexOf(a.id);
             const bIndex = preferredOrder.indexOf(b.id);
@@ -332,6 +331,7 @@ export function selectComponentsForPage(context: ComponentSelectionContext): Com
             if (bIndex === -1) return -1;
             return aIndex - bIndex;
         });
+    const candidates = builderComponents.filter(component => component.aiSelection.canSelect);
     const selected: SelectedComponentPlanItem[] = [];
     const optional: ComponentPlan['optionalComponents'] = [];
     const rejected: RejectedComponentPlanItem[] = [];
@@ -370,6 +370,19 @@ export function selectComponentsForPage(context: ComponentSelectionContext): Com
             });
         }
     });
+
+    builderComponents
+        .filter(component => !component.aiSelection.canSelect && preferredOrder.includes(component.id))
+        .forEach(component => {
+            const scoreBreakdown = scoreComponent(component.id, context);
+            rejected.push({
+                componentId: component.id,
+                reason: `${component.id} is blocked by registry readiness and must not be selected automatically.`,
+                score: scoreBreakdown.total,
+                scoreBreakdown,
+            });
+            warnings.push(`${component.id} is ${component.implementationStatus} and was kept out of the rendered component plan.`);
+        });
 
     if (!selected.some(item => item.componentId === 'hero') && context.builder === 'website') {
         const scoreBreakdown = scoreComponent('hero', context);

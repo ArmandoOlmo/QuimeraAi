@@ -17,6 +17,11 @@ import { initialData } from '../data/initialData';
 import { isRetiredDesignSuiteSection } from '../data/retiredSuites';
 import { useTranslation } from 'react-i18next';
 import { resolveI18nSectionData } from '../utils/i18nContent';
+import {
+    matchRealtyDetailRoute,
+    resolveRealtyDetailPath,
+    resolveRealtyDirectoryRoute,
+} from '../utils/realtyWebsiteRoutes';
 
 // Import section components
 import Header from './Header';
@@ -1111,28 +1116,31 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 );
 
             case 'propertyDetail': {
-                const propertySlug = page.slug?.replace('/listados/', '').replace(/\/$/, '') || '';
+                const realtyData = mergedData.realEstateListings;
+                const propertySlug = matchRealtyDetailRoute(page.slug || '', realtyData) || '';
                 return (
                     <PropertyDetailSection
                         key={key}
                         projectId={project.id}
                         ownerId={project.userId}
                         propertySlug={propertySlug}
+                        data={realtyData}
                         theme={theme}
                         globalColors={globalColors as Record<string, string>}
                         onNavigateToListings={() => {
                             if (onNavigate) {
-                                onNavigate('/listados');
+                                onNavigate(resolveRealtyDirectoryRoute(realtyData));
                                 return;
                             }
-                            window.location.href = '/listados';
+                            window.location.href = resolveRealtyDirectoryRoute(realtyData);
                         }}
                         onNavigateToProperty={(slug) => {
+                            const detailPath = resolveRealtyDetailPath(realtyData, slug);
                             if (onNavigate) {
-                                onNavigate(`/listados/${slug}`);
+                                onNavigate(detailPath);
                                 return;
                             }
-                            window.location.href = `/listados/${slug}`;
+                            window.location.href = detailPath;
                         }}
                     />
                 );

@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { REALTY_DEFAULT_DIRECTORY_ROUTE } from '../utils/realtyWebsiteRoutes';
 
 export const REALTY_LISTINGS_SECTION_ID = 'realEstateListings';
 export const REALTY_LISTINGS_ANCHOR = `/#${REALTY_LISTINGS_SECTION_ID}`;
-export const REALTY_LISTINGS_PATH = '/listados';
+export const REALTY_LISTINGS_PATH = REALTY_DEFAULT_DIRECTORY_ROUTE;
 
 export const useRealtyWebsiteNavigation = () => {
     const { t } = useTranslation();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Eye, Layout, Palette, Type , Layers } from 'lucide-react';
+import { Building2, Eye, Layout, Link2, Palette, Type , Layers } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
 import AnimationControls from '../../ui/AnimationControls';
 import TabbedControls from '../../ui/TabbedControls';
@@ -57,6 +57,18 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
           onChange={(val) => setNestedData('realEstateListings.buttonText', val)}
           placeholder={t('realEstate.websiteListings.requestInfo')}
         />
+        <I18nInput
+          label={t('realEstate.websiteListings.controls.leadCtaText')}
+          value={sectionData.leadCtaText || ''}
+          onChange={(val) => setNestedData('realEstateListings.leadCtaText', val)}
+          placeholder={t('realEstate.websiteListings.controls.leadCtaPlaceholder')}
+        />
+        <I18nInput
+          label={t('realEstate.websiteListings.controls.showingRequestCtaText')}
+          value={sectionData.showingRequestCtaText || ''}
+          onChange={(val) => setNestedData('realEstateListings.showingRequestCtaText', val)}
+          placeholder={t('realEstate.websiteListings.controls.showingRequestCtaPlaceholder')}
+        />
       </div>
 
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
@@ -69,6 +81,26 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
           label={t('realEstate.websiteListings.controls.featuredOnly')}
           checked={sectionData.featuredOnly === true}
           onChange={(v) => setNestedData('realEstateListings.featuredOnly', v)}
+        />
+      </div>
+
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <SectionHeader
+          icon={Link2}
+          title={t('realEstate.websiteListings.controls.routes')}
+          description={t('realEstate.websiteListings.controls.routesHelp')}
+        />
+        <Input
+          label={t('realEstate.websiteListings.controls.directoryRoute')}
+          value={sectionData.directoryRoute || '/listados'}
+          onChange={(event) => setNestedData('realEstateListings.directoryRoute', event.target.value)}
+          placeholder="/listados"
+        />
+        <Input
+          label={t('realEstate.websiteListings.controls.detailRoutePattern')}
+          value={sectionData.detailRoutePattern || '/listados/:slug'}
+          onChange={(event) => setNestedData('realEstateListings.detailRoutePattern', event.target.value)}
+          placeholder="/listados/:slug"
         />
       </div>
     </div>

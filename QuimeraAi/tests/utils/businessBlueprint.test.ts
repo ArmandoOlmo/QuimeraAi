@@ -4,6 +4,7 @@ import {
     BUSINESS_BLUEPRINT_SCHEMA_VERSION,
     BUSINESS_BLUEPRINT_VERSION,
 } from '../../types/businessBlueprint';
+import type { BusinessBlueprint } from '../../types/businessBlueprint';
 import type { WebsitePlan } from '../../types/websitePlan';
 import {
     attachAiStudioBusinessBlueprint,
@@ -67,6 +68,48 @@ function buildEcommercePlan(): WebsitePlan {
     };
 }
 
+function buildRealEstatePlan(properties: WebsitePlan['contentMap']['properties'] = []): WebsitePlan {
+    return {
+        source: 'chat',
+        generationMode: 'from-scratch',
+        businessProfile: {
+            businessName: 'Isla Realtor',
+            industry: 'Real estate realtor in Puerto Rico',
+            description: 'Luxury real estate advisor focused on buyer leads, seller leads, open houses, showings, and digital guides.',
+            tagline: 'Premium properties in Puerto Rico',
+            services: [
+                { name: 'Buyer representation', description: 'Guidance for qualified buyers.' },
+                { name: 'Seller valuation', description: 'Property valuation and seller lead intake.' },
+            ],
+            contactInfo: { city: 'San Juan', country: 'Puerto Rico', email: 'hello@example.com', phone: '787-000-0000' },
+            hasEcommerce: true,
+        },
+        brandProfile: {
+            colors: {
+                primary: '#0f766e',
+                secondary: '#111827',
+                accent: '#c084fc',
+                background: '#f8fafc',
+                surface: '#ffffff',
+                text: '#111827',
+            },
+            visualStyle: 'premium editorial',
+        },
+        contentMap: {
+            pages: [],
+            properties,
+        },
+        componentPlan: [
+            { component: 'heroLead', reason: 'Lead capture hero for real estate', confidence: 0.9 },
+            { component: 'realEstateListings', reason: 'Show approved listings from Realty Engine', confidence: 0.92 },
+            { component: 'leads', reason: 'Capture buyer and seller leads', confidence: 0.88 },
+            { component: 'footer', reason: 'Navigation footer', confidence: 0.8 },
+        ],
+        assetPlan: [],
+        qualityGoals: ['draft-safe real estate engine'],
+    };
+}
+
 describe('businessBlueprint adapters', () => {
     it('creates a versioned business blueprint from a WebsitePlan', () => {
         const blueprint = createBusinessBlueprintFromWebsitePlan(buildEcommercePlan(), {
@@ -83,6 +126,57 @@ describe('businessBlueprint adapters', () => {
         expect(blueprint.tenantId).toBe('tenant_123');
         expect(blueprint.status).toBe('generated');
         expect(blueprint.sourceMap.businessName).toBe('websitePlan.businessProfile.businessName');
+    });
+
+    it('creates a complete RealEstateBlueprint V2 with draft guardrails', () => {
+        const blueprint = createBusinessBlueprintFromWebsitePlan(buildRealEstatePlan([
+            {
+                title: 'Condado Ocean View',
+                description: 'Merchant-provided listing draft with real property data supplied by the user.',
+                price: 1250000,
+                city: 'San Juan',
+                propertyType: 'condo',
+                transactionType: 'sale',
+                bedrooms: 3,
+                bathrooms: 2,
+            },
+        ]), {
+            now: '2026-06-19T12:00:00.000Z',
+        });
+        const realty = blueprint.realEstateBlueprint;
+
+        expect(realty.enabled).toBe(true);
+        expect(realty.status).toBe('needs_review');
+        expect(realty.agentProfile.licenseNumber).toBe('');
+        expect(realty.publicDirectory.route).toBe('/listados');
+        expect(realty.propertyPages.routePattern).toBe('/listados/:slug');
+        expect(realty.showingRequests.status).toBe('needs_review');
+        expect(realty.showingRequests.appointmentIntegrationEnabled).toBe(false);
+        expect(realty.leadFunnels.showingRequestEnabled).toBe(true);
+        expect(realty.chatbot.intents).toContain('showing_request');
+        expect(realty.emailMarketing.flows).toContain('new_property_inquiry');
+        expect(realty.analytics.events).toContain('property_view');
+        expect(realty.ecommerceOffers.buyerGuides).toMatchObject({ status: 'needs_review', priceSource: 'unset' });
+        expect(realty.integrations.crmTags).toContain('realty');
+        expect(realty.engineArtifacts.map(item => item.key)).toEqual(expect.arrayContaining(['directory', 'showing_requests', 'crm_pipeline', 'analytics']));
+        expect(realty.listingDrafts[0]).toMatchObject({
+            title: 'Condado Ocean View',
+            status: 'needs_review',
+            publicEnabled: false,
+            needsReview: true,
+            generatedByAI: true,
+            priceSource: 'user-provided',
+        });
+    });
+
+    it('does not invent listing drafts when the real estate brief has no property data', () => {
+        const blueprint = createBusinessBlueprintFromWebsitePlan(buildRealEstatePlan(), {
+            now: '2026-06-19T12:00:00.000Z',
+        });
+
+        expect(blueprint.realEstateBlueprint.listingDrafts).toEqual([]);
+        expect(blueprint.realEstateBlueprint.publicDirectory.needsReview).toBe(true);
+        expect(blueprint.realEstateBlueprint.agentProfile.complianceNotes.length).toBeGreaterThan(0);
     });
 
     it('marks ecommerce starter content as reviewable draft infrastructure', () => {
@@ -139,6 +233,41 @@ describe('businessBlueprint adapters', () => {
         expect(migrateBusinessBlueprint(blueprint)).toBe(blueprint);
         expect(migrateBusinessBlueprint({ schemaVersion: 999, blueprintVersion: '0.1.0' })).toBeNull();
         expect(migrateBusinessBlueprint(null)).toBeNull();
+    });
+
+    it('migrates legacy RealEstateBlueprint data to V2 defaults without losing legacy fields', () => {
+        const base = createBusinessBlueprintFromWebsitePlan(buildRealEstatePlan(), {
+            now: '2026-06-19T12:00:00.000Z',
+        });
+        const legacyBlueprint: BusinessBlueprint = {
+            ...base,
+            realEstateBlueprint: {
+                enabled: true,
+                status: 'generated',
+                needsReview: true,
+                readiness: { isReady: true, blockers: [], warnings: [] },
+                metadata: {
+                    generatedBy: 'ai',
+                    userModified: true,
+                    lockedFromRegeneration: true,
+                    generatedAt: '2026-06-19T12:00:00.000Z',
+                },
+                sourceMap: { legacy: 'test' },
+                listingTypes: ['legacy sale listings'],
+                leadTypes: ['legacy buyer'],
+                digitalProducts: ['legacy buyer guide'],
+            } as any,
+        };
+
+        const migrated = migrateBusinessBlueprint(legacyBlueprint);
+
+        expect(migrated?.realEstateBlueprint.agentProfile).toBeDefined();
+        expect(migrated?.realEstateBlueprint.publicDirectory.route).toBe('/listados');
+        expect(migrated?.realEstateBlueprint.listingTypes).toEqual(['legacy sale listings']);
+        expect(migrated?.realEstateBlueprint.leadTypes).toEqual(['legacy buyer']);
+        expect(migrated?.realEstateBlueprint.digitalProducts).toEqual(['legacy buyer guide']);
+        expect(migrated?.realEstateBlueprint.metadata.userModified).toBe(true);
+        expect(migrated?.realEstateBlueprint.metadata.lockedFromRegeneration).toBe(true);
     });
 
     it('protects user-modified or locked modules from regeneration', () => {

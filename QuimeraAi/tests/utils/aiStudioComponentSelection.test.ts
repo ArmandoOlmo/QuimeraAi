@@ -125,7 +125,16 @@ describe('AI Component Selection + Design Intelligence Layer', () => {
         expect(componentRegistry.some(component => component.family === 'restaurant_block')).toBe(true);
         expect(componentRegistry.some(component => component.family === 'real_estate_block')).toBe(true);
         expect(getComponentDefinition('propertySearch')?.implementationStatus).toBe('planned');
+        expect(getComponentDefinition('propertySearch')?.aiSelection.canSelect).toBe(false);
         expect(getComponentDefinition('about')?.implementationStatus).toBe('metadata_only');
+        expect(getComponentDefinition('realEstateListings')).toMatchObject({
+            implementationStatus: 'rendered',
+            dataAccess: {
+                canonicalSystem: 'real-estate-engine',
+                presentationOwner: 'website-builder',
+                writes: [],
+            },
+        });
     });
 
     it('maps required anatomy variants, slots, and mobile behavior for initial components', () => {
@@ -284,7 +293,7 @@ describe('AI Component Selection + Design Intelligence Layer', () => {
         }));
     });
 
-    it('does not mount planned or metadata-only selections as rendered website sections', () => {
+    it('keeps planned or metadata-only real estate blocks out of rendered selections', () => {
         const input: AiStudioBusinessBriefInput = {
             businessName: 'Isla Homes',
             industry: 'Real estate realtor',
@@ -310,8 +319,17 @@ describe('AI Component Selection + Design Intelligence Layer', () => {
             options: { now },
         });
 
-        expect(selectedIds(result)).toContain('propertySearch');
-        expect(result.validation.issues.map(issue => issue.code)).toContain('planned_component');
+        expect(selectedIds(result)).not.toContain('propertySearch');
+        expect(selectedIds(result)).toContain('realEstateListings');
+        expect(result.selection.componentPlan.rejectedComponents).toContainEqual(expect.objectContaining({
+            componentId: 'propertySearch',
+            reason: expect.stringContaining('blocked by registry readiness'),
+        }));
+        expect(result.selection.componentPlan.rejectedComponents).toContainEqual(expect.objectContaining({
+            componentId: 'neighborhoods',
+            reason: expect.stringContaining('blocked by registry readiness'),
+        }));
+        expect(result.validation.issues.map(issue => issue.code)).not.toContain('planned_component');
         expect(merged.websiteBlueprint.sections).not.toContain('propertyDirectory');
     });
 
@@ -406,7 +424,11 @@ describe('AI Component Selection + Design Intelligence Layer', () => {
             now,
         });
         expect(realEstate.selection.componentPlan.pageIntent).toBe('real_estate_home');
-        expect(selectedIds(realEstate)).toEqual(expect.arrayContaining(['propertySearch', 'realEstateListings', 'leadForm']));
+        expect(selectedIds(realEstate)).toEqual(expect.arrayContaining(['realEstateListings', 'leadForm']));
+        expect(selectedIds(realEstate)).not.toContain('propertySearch');
+        expect(realEstate.selection.componentPlan.rejectedComponents).toContainEqual(expect.objectContaining({
+            componentId: 'propertySearch',
+        }));
 
         [...saas.variants.variants, ...localService.variants.variants, ...realEstate.variants.variants].forEach(variant => {
             const anatomy = getComponentAnatomy(variant.componentId);

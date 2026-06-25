@@ -6,6 +6,11 @@ import type { RealtyListingsSectionData, RealtyProperty } from '../../types/real
 import { usePublicRealtyListings } from '../../hooks/usePublicRealtyListings';
 import { formatRealtyPrice, resolveRealtyWebsiteColors } from '../../utils/realty';
 import { getAnimationClass, getAnimationDelay } from '../../utils/animations';
+import {
+    getRealtyRouteSegments,
+    resolveRealtyDetailPath,
+    resolveRealtyDirectoryRoute,
+} from '../../utils/realtyWebsiteRoutes';
 
 interface PublicRealtyListingsSectionProps {
     data?: RealtyListingsSectionData;
@@ -44,18 +49,19 @@ const radiusClasses: Record<string, string> = {
 
 const previewLogicalRouteSegments = new Set(['listados', 'blog', 'tienda', 'producto', 'categoria', 'carrito', 'checkout', 'pedido']);
 
-const getPreviewBasePath = () => {
+const getPreviewBasePath = (data?: RealtyListingsSectionData) => {
     const pathname = window.location.pathname;
     if (!pathname.startsWith('/preview/')) return '';
     const parts = pathname.replace('/preview/', '').split('/').filter(Boolean);
+    const routeSegments = new Set([...previewLogicalRouteSegments, ...getRealtyRouteSegments(data)]);
     if (parts.length === 0) return '/preview';
     if (parts.length === 1) return `/preview/${parts[0]}`;
-    if (previewLogicalRouteSegments.has(parts[1])) return `/preview/${parts[0]}`;
+    if (routeSegments.has(parts[1])) return `/preview/${parts[0]}`;
     return `/preview/${parts[0]}/${parts[1]}`;
 };
 
-const navigateTo = (path: string) => {
-    const fullPath = `${getPreviewBasePath()}${path}`;
+const navigateTo = (path: string, data?: RealtyListingsSectionData) => {
+    const fullPath = `${getPreviewBasePath(data)}${path}`;
     window.history.pushState(null, '', fullPath);
     window.dispatchEvent(new PopStateEvent('popstate'));
 };
@@ -81,10 +87,10 @@ const PropertyCard = ({
 }) => {
     const { t } = useTranslation();
     const image = property.images?.[0]?.url;
-    const detailPath = `/listados/${property.slug}`;
+    const detailPath = resolveRealtyDetailPath(data, property.slug);
     const animationClass = getAnimationClass(data.animationType || 'fade-in-up', data.enableCardAnimation !== false);
 
-    const go = () => onNavigate ? onNavigate(detailPath) : navigateTo(detailPath);
+    const go = () => onNavigate ? onNavigate(detailPath) : navigateTo(detailPath, data);
 
     return (
         <article
@@ -189,6 +195,9 @@ const PublicRealtyListingsSection: React.FC<PublicRealtyListingsSectionProps> = 
     const buttonRadius = radiusClasses[data.buttonBorderRadius || theme?.buttonBorderRadius || 'md'] || radiusClasses.md;
     const paddingY = paddingYClasses[data.paddingY || 'lg'] || paddingYClasses.lg;
     const paddingX = paddingXClasses[data.paddingX || 'md'] || paddingXClasses.md;
+    const directoryRoute = resolveRealtyDirectoryRoute(data);
+    const emptyCtaTarget = data.buttonLink || directoryRoute;
+    const handleNavigate = (href: string) => onNavigate ? onNavigate(href) : navigateTo(href, data);
 
     return (
         <section
@@ -213,7 +222,7 @@ const PublicRealtyListingsSection: React.FC<PublicRealtyListingsSectionProps> = 
                     </div>
                     <button
                         type="button"
-                        onClick={() => onNavigate ? onNavigate('/listados') : navigateTo('/listados')}
+                        onClick={() => handleNavigate(directoryRoute)}
                         className={`inline-flex items-center justify-center gap-2 border px-4 py-2 text-sm font-semibold font-button transition-opacity hover:opacity-80 ${buttonRadius}`}
                         style={{ borderColor: colors.border, color: colors.accent }}
                     >
@@ -230,7 +239,20 @@ const PublicRealtyListingsSection: React.FC<PublicRealtyListingsSectionProps> = 
                     </div>
                 ) : listings.length === 0 ? (
                     <div className={`border p-8 text-center ${cardRadius}`} style={{ borderColor: colors.border, backgroundColor: colors.cardBackground }}>
-                        <p className="font-body" style={{ color: colors.textMuted }}>{t('realty.website.empty')}</p>
+                        <p className="font-header text-xl font-bold" style={{ color: colors.cardHeading }}>
+                            {data.emptyStateTitle || t('realty.website.emptyTitle')}
+                        </p>
+                        <p className="mx-auto mt-3 max-w-2xl font-body text-sm leading-6" style={{ color: colors.textMuted }}>
+                            {data.emptyStateDescription || t('realty.website.empty')}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => handleNavigate(emptyCtaTarget)}
+                            className={`mt-5 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold font-button transition-opacity hover:opacity-90 ${buttonRadius}`}
+                            style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
+                        >
+                            {data.emptyStateButtonText || t('realty.website.emptyCta')}
+                        </button>
                     </div>
                 ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -254,7 +276,7 @@ const PublicRealtyListingsSection: React.FC<PublicRealtyListingsSectionProps> = 
                     <div className="mt-10 text-center">
                         <button
                             type="button"
-                            onClick={() => onNavigate ? onNavigate('/listados') : navigateTo('/listados')}
+                            onClick={() => handleNavigate(directoryRoute)}
                             className={`inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold font-button transition-opacity hover:opacity-90 ${buttonRadius}`}
                             style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText }}
                         >

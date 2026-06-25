@@ -3349,6 +3349,30 @@
     "discounts": "Discounts",
     "analytics": "Analytics",
     "settings": "Settings",
+    "crossModuleSync": {
+      "title": "Connect ecommerce with Quimera Suite",
+      "subtitle": "Create reviewable drafts for Chatbot, CRM, Email Marketing, Analytics, Appointments, Ecommerce offers, and Finance without activating automations.",
+      "chatbot": "Chatbot knowledge drafts",
+      "crm": "CRM/Lead tags",
+      "email": "Email marketing drafts",
+      "analytics": "Analytics event definitions",
+      "appointments": "Appointment drafts",
+      "offers": "Ecommerce offer drafts",
+      "finance": "Finance revenue drafts",
+      "preview": "Preview",
+      "createDrafts": "Create integration drafts",
+      "dismiss": "Dismiss",
+      "chatbotShort": "Chatbot",
+      "crmShort": "CRM",
+      "emailShort": "Email",
+      "analyticsShort": "Analytics",
+      "appointmentsShort": "Appointments",
+      "offersShort": "Offers",
+      "financeShort": "Finance",
+      "previewNote": "Local preview: no database writes.",
+      "applyNote": "{{created}} drafts stored in the blueprint; {{skipped}} skipped by idempotency.",
+      "noRuntime": "No email, payment, appointment, chatbot, or analytics runtime is activated."
+    },
     "productsTotal": "products total",
     "categoriesTotal": "categorías en total",
     "ordersTotal": "orders total",
@@ -6764,6 +6788,7 @@
     "selectProject": "Select a project to manage the realty suite.",
     "selectProperty": "Select property",
     "tabs": {
+      "engine": "Engine",
       "overview": "Overview",
       "properties": "Properties",
       "leads": "Leads",
@@ -6771,6 +6796,442 @@
       "openHouses": "Open Houses",
       "ai": "AI",
       "settings": "Settings"
+    },
+    "areas": {
+      "workspace": {
+        "navLabel": "Realtor workspace",
+        "navDescription": "Daily project work.",
+        "label": "User area",
+        "title": "Realtor workspace",
+        "description": "This is the operating area for realtors and brokerages creating their project. It focuses on listings, leads, open houses, campaigns, and AI listing content without exposing platform control actions.",
+        "points": {
+          "listings": {
+            "title": "Listings",
+            "description": "Create, edit, review, and publish project properties."
+          },
+          "leads": {
+            "title": "Leads",
+            "description": "Manage inquiries, showing requests, and CRM status."
+          },
+          "content": {
+            "title": "Content",
+            "description": "Use AI copy, campaigns, and open house tools for this project."
+          }
+        }
+      },
+      "control": {
+        "navLabel": "Admin control",
+        "navDescription": "Draft engine and module controls.",
+        "label": "Admin area",
+        "title": "Realty control area",
+        "description": "This area is restricted to admins. It controls draft generation, imports, cross-module sync, monetization drafts, and module activation for the selected project.",
+        "points": {
+          "drafts": {
+            "title": "Draft generation",
+            "description": "Create reviewable drafts from BusinessBlueprint and AI Studio."
+          },
+          "imports": {
+            "title": "Imports",
+            "description": "Stage CSV, IDX, MLS, API, and external feed listings."
+          },
+          "settings": {
+            "title": "Module controls",
+            "description": "Control project flags, public directory access, and AI availability."
+          }
+        }
+      }
+    },
+    "engine": {
+      "title": "Real Estate Engine",
+      "subtitle": "Draft-safe operating layer generated from AI Studio and connected to Quimera modules.",
+      "readiness": "Readiness",
+      "needsReview": "Needs review",
+      "draft": "Draft",
+      "configured": "Configured",
+      "disabled": "Disabled",
+      "protected": "Protected",
+      "safeDraft": "Safe draft",
+      "preserveUserEdits": "Preserve user edits",
+      "guardrails": "Guardrails",
+      "opportunities": "Monetization opportunities",
+      "artifacts": "Engine artifacts",
+      "modules": "Connected modules",
+      "syncPreview": "Sync preview",
+      "safeGeneration": "Generated items stay safe to review before activation.",
+      "needsReviewCount": "Needs review",
+      "protectedCount": "Protected artifacts",
+      "connectedArtifacts": "Connected artifacts",
+      "reviewSignals": "Review signals",
+      "connectedModules": "Quimera module map",
+      "openModule": "Open",
+      "noOpportunities": "No monetization opportunities yet.",
+      "artifactPipeline": "AI Studio generation pipeline",
+      "noAutoPublish": "AI-generated Realty data stays draft/needsReview until reviewed.",
+      "noOverwrite": "User-modified or locked artifacts are protected from regeneration.",
+      "noRuntimeActivation": "Emails, payments, appointments, chatbot knowledge, and analytics tracking are not activated automatically.",
+      "realtyDraftSync": "Realty blueprint drafts",
+      "realtyDraftSyncDescription": "Create reviewable Realty drafts from the RealEstateBlueprint without publishing listings or activating automations.",
+      "previewRealtyDrafts": "Preview Realty drafts",
+      "createRealtyDrafts": "Create Realty drafts",
+      "realtyPreviewNote": "Preview only. No Realty rows or project metadata were saved.",
+      "realtyApplyNote": "{{created}} Realty drafts prepared and {{skipped}} protected items skipped.",
+      "realtyNoRuntimeSync": "Listings stay draft/private, campaigns stay draft, open house settings do not invent dates, and payments, appointments, emails, chatbot publishing, and analytics remain inactive.",
+      "realtyDraftSyncMissingBlueprint": "A RealEstateBlueprint is required before Realty can create draft records.",
+      "realtyDraftSyncMissingUser": "A user is required before Realty can create draft records.",
+      "realtyDraftStatus": {
+        "not_started": "Not started",
+        "previewed": "Previewed",
+        "synced_draft": "Drafts created",
+        "dismissed": "Dismissed"
+      },
+      "realtyDraftModules": {
+        "profiles": "Agent/Brokerage profile",
+        "listings": "Listing drafts",
+        "campaigns": "Campaign drafts",
+        "openHouses": "Open house settings",
+        "website": "Website settings"
+      },
+      "realtyDraftShort": {
+        "profiles": "Profiles",
+        "listings": "Listings",
+        "campaigns": "Campaigns",
+        "openHouses": "Open houses",
+        "website": "Website"
+      },
+      "import": {
+        "title": "Import / IDX staging",
+        "description": "Stage external listings from CSV, MLS, IDX, URL, API, or manual rows as private review drafts.",
+        "sourceType": "Source type",
+        "sourceName": "Source name",
+        "sourceNamePlaceholder": "MLS staging feed, CSV export, IDX adapter",
+        "savedSource": "Saved source",
+        "newSource": "New source",
+        "providerName": "Provider",
+        "providerNamePlaceholder": "MLS provider, IDX vendor, API partner",
+        "feedUrl": "Feed URL",
+        "feedUrlPlaceholder": "https://example.com/feed.csv",
+        "syncMode": "Sync mode",
+        "saveSource": "Save source",
+        "updateSource": "Update source",
+        "sourceSaved": "Import source saved for review. Live sync remains inactive.",
+        "recentJobs": "Recent import jobs",
+        "payload": "JSON or CSV rows",
+        "payloadPlaceholder": "Paste a JSON array/object or CSV with headers like title, price, address, city, property_type...",
+        "loadSample": "Load sample",
+        "preview": "Preview import drafts",
+        "create": "Create review drafts",
+        "noAutoPublish": "No auto-publish",
+        "safeNote": "This staging area does not connect a live feed. Created listings stay draft/private and require review.",
+        "previewNote": "Preview only. No property rows were saved.",
+        "applyNote": "{{created}} imported listing draft(s) created for review.",
+        "noRuntimeSync": "Public directory, email, chatbot, appointments, analytics, and payments remain inactive until reviewed in their owner modules.",
+        "emptyPreview": "Paste a feed export and preview it before creating review drafts.",
+        "untitled": "Untitled listing",
+        "missingLocation": "Missing location",
+        "needsReview": "Needs review",
+        "possibleDuplicate": "Possible duplicate",
+        "status": {
+          "not_started": "Not started",
+          "previewed": "Previewed",
+          "synced_draft": "Drafts created",
+          "dismissed": "Dismissed"
+        },
+        "sources": {
+          "manual": "Manual",
+          "csv": "CSV",
+          "imported-url": "Imported URL",
+          "mls": "MLS",
+          "idx": "IDX",
+          "api": "API",
+          "external-feed": "External feed"
+        },
+        "syncModes": {
+          "manual": "Manual",
+          "scheduled": "Scheduled draft",
+          "webhook": "Webhook draft",
+          "disabled": "Disabled"
+        },
+        "jobStatus": {
+          "draft": "Draft",
+          "mapping_required": "Mapping required",
+          "ready_for_review": "Ready for review",
+          "completed": "Completed",
+          "failed": "Failed",
+          "cancelled": "Cancelled"
+        },
+        "summary": {
+          "staged": "Staged",
+          "ready": "Ready",
+          "duplicates": "Duplicates",
+          "warnings": "Warnings",
+          "created": "Created"
+        },
+        "warnings": {
+          "missing_title": "Missing title",
+          "missing_price": "Missing price",
+          "missing_location": "Missing location",
+          "missing_external_id": "Missing external ID",
+          "possible_duplicate": "Possible duplicate"
+        },
+        "errors": {
+          "emptyPayload": "Paste JSON or CSV rows before previewing.",
+          "parseError": "Could not parse the import payload. Use a JSON array/object or CSV with headers.",
+          "emptyRows": "No listing rows were found in the payload.",
+          "missingProject": "Select an active project before staging imported listings.",
+          "missingUser": "A user is required before creating imported listing drafts."
+        }
+      },
+      "integrationDrafts": "Integration drafts",
+      "integrationDraftsDescription": "Preview or create draft-safe handoffs for CRM, Chatbot, Email, Analytics, Appointments, Ecommerce, and Finance.",
+      "previewDrafts": "Preview drafts",
+      "createIntegrationDrafts": "Create drafts",
+      "previewNote": "Preview only. No project data was saved and no runtime module was activated.",
+      "applyNote": "{{created}} drafts prepared and {{skipped}} protected items skipped.",
+      "noRuntimeSync": "Stripe products, prices, checkout sessions, payment links, calendar slots, email sends, chatbot publishing, ledger entries, and analytics tracking stay inactive.",
+      "syncMissingBlueprint": "A BusinessBlueprint is required before Realty can prepare integration drafts.",
+      "syncMissingUser": "A user is required before Realty can prepare integration drafts.",
+      "syncStatus": {
+        "not_started": "Not started",
+        "previewed": "Previewed",
+        "synced_draft": "Drafts created",
+        "dismissed": "Dismissed"
+      },
+      "syncModules": {
+        "chatbot": "Chatbot knowledge",
+        "crm": "CRM / Leads",
+        "email": "Email Marketing",
+        "analytics": "Analytics",
+        "appointments": "Appointments",
+        "offers": "Offers",
+        "finance": "Finance"
+      },
+      "syncShort": {
+        "chatbot": "Chatbot",
+        "crm": "CRM",
+        "email": "Email",
+        "analytics": "Analytics",
+        "appointments": "Appointments",
+        "offers": "Offers",
+        "finance": "Finance"
+      },
+      "chatbotKnowledge": {
+        "title": "Chatbot knowledge review queue",
+        "description": "Realty-generated knowledge sources for profile, listings, showings, lead qualification, and compliance. Review in Chatbot before publishing.",
+        "draftCount": "{{count}} draft",
+        "draftCount_plural": "{{count}} drafts",
+        "needsReview": "Needs review",
+        "reviewedListings": "Reviewed public",
+        "draftListings": "Draft listings",
+        "blockerPrefix": "Blocker:",
+        "moreBlockers": "+{{count}} more blockers",
+        "noRuntime": "No chatbot knowledge is published from this queue. Quimera Chat remains the owner of runtime activation.",
+        "types": {
+          "profile": "Profile",
+          "listing_summary": "Listings",
+          "showing_and_open_house": "Showings",
+          "lead_qualification": "Lead qualification",
+          "compliance_guardrails": "Compliance"
+        }
+      },
+      "offers": {
+        "title": "Realty Offers",
+        "description": "Create reviewable Ecommerce and Finance drafts for paid guides, reports, consultations, listing promotions, courses, downloads, and open house tickets.",
+        "preview": "Preview offers",
+        "create": "Create offer drafts",
+        "previewNote": "Preview only. No Ecommerce product, Stripe product, price, checkout session, payment link, or Finance ledger entry was created.",
+        "applyNote": "{{created}} offer/finance drafts prepared and {{skipped}} protected items skipped.",
+        "noRuntimeSync": "Ecommerce owns product publishing, pricing, taxes, checkout, payments, orders, and refunds. Realty only stores draft-safe handoffs.",
+        "empty": "No Realty offers are available from this BusinessBlueprint yet.",
+        "noStripeProduct": "No Stripe product",
+        "moreBlockers": "+{{count}} more blockers",
+        "metrics": {
+          "drafts": "Draft products",
+          "missingPrice": "Missing price",
+          "paymentBlockers": "Payment blockers",
+          "taxBlockers": "Tax blockers",
+          "savedDrafts": "Saved drafts"
+        },
+        "types": {
+          "buyer_guides": "Buyer guide",
+          "seller_guides": "Seller guide",
+          "market_reports": "Market report",
+          "consultation_packages": "Buyer consultation package",
+          "valuation_packages": "Seller valuation package",
+          "premium_listing_packages": "Premium listing promotion",
+          "courses": "Real estate course",
+          "digital_downloads": "Downloadable checklist",
+          "open_house_tickets": "Open house ticket",
+          "digital_products": "Digital product"
+        },
+        "categories": {
+          "buyer_guides": "Real estate guides",
+          "seller_guides": "Real estate guides",
+          "market_reports": "Market intelligence",
+          "consultation_packages": "Consultations",
+          "valuation_packages": "Consultations",
+          "premium_listing_packages": "Listing promotions",
+          "courses": "Education",
+          "digital_downloads": "Digital downloads",
+          "open_house_tickets": "Open houses",
+          "digital_products": "Digital products"
+        },
+        "descriptions": {
+          "buyer_guides": "Reviewable buyer guide digital product generated from Realty AI Studio context.",
+          "seller_guides": "Reviewable seller guide digital product for seller education and lead capture.",
+          "market_reports": "Draft market report offer for reviewed neighborhood, pricing, and inventory insights.",
+          "consultation_packages": "Draft paid consultation package that requires availability, scope, and payment review.",
+          "valuation_packages": "Draft seller valuation package with reviewed disclaimers, intake fields, and pricing required.",
+          "premium_listing_packages": "Draft premium listing package for reviewed featured placement, campaign scope, and reporting.",
+          "courses": "Draft real estate education product that needs curriculum, access, refunds, and compliance review.",
+          "digital_downloads": "Draft downloadable checklist or template that must be reviewed before storefront display.",
+          "open_house_tickets": "Draft open house ticket or registration product for capacity-controlled events when applicable.",
+          "digital_products": "Draft digital product generated from Realty monetization signals."
+        },
+        "blockers": {
+          "payment_not_configured": "Payment provider is not configured for checkout.",
+          "tax_not_configured": "Tax handling is not configured for this offer.",
+          "needs_merchant_review": "Merchant review is required before publishing.",
+          "missing_product_description": "Product description needs review before publishing.",
+          "missing_price": "Price is missing or still only AI-suggested.",
+          "offer_disabled": "Offer is disabled in the RealEstateBlueprint.",
+          "checkout_disabled": "Checkout remains disabled by design until Ecommerce approves the product."
+        },
+        "priceSource": {
+          "user-provided": "User price",
+          "ai-suggested": "AI-suggested",
+          "imported": "Imported",
+          "unset": "Price unset"
+        }
+      },
+      "status": {
+        "draft": "Draft",
+        "needs_review": "Needs review",
+        "configured": "Configured",
+        "disabled": "Disabled"
+      },
+      "regeneration": {
+        "safe_draft": "Safe draft",
+        "preserve_user_edits": "Preserve edits",
+        "locked": "Locked"
+      },
+      "moduleLabels": {
+        "business-blueprint": "BusinessBlueprint",
+        "website-builder": "Website Builder",
+        "crm-leads": "CRM / Leads",
+        "campaign-automation": "Campaigns + Email",
+        "appointments-open-houses": "Appointments + Open Houses",
+        "commerce-finance": "Ecommerce + Finance"
+      },
+      "moduleDescriptions": {
+        "business-blueprint": "Real estate generation contract used by AI Studio.",
+        "website-builder": "Routes, agent profile, listing pages, and lead capture pages stay in Website Builder review.",
+        "crm-leads": "Realty leads sync into CRM with draft-safe funnel metadata.",
+        "campaign-automation": "Campaign and email automation drafts are prepared for listing and lead follow-up.",
+        "appointments-open-houses": "Showing requests and open house registrations route toward Appointments review.",
+        "commerce-finance": "Digital products, consultations, valuation packages, and revenue tracking stay reviewable."
+      },
+      "artifactLabels": {
+        "business_blueprint": "BusinessBlueprint",
+        "website": "Website",
+        "profile": "Agent/Brokerage profile",
+        "listings": "Listings",
+        "property_pages": "Property pages",
+        "directory": "Public directory",
+        "open_houses": "Open houses",
+        "showing_requests": "Showing requests",
+        "lead_funnels": "Lead funnels",
+        "campaigns": "Campaigns",
+        "chatbot_knowledge": "Chatbot knowledge",
+        "email_automations": "Email automations",
+        "crm_pipeline": "CRM pipeline",
+        "appointments": "Appointments",
+        "ecommerce_products": "Digital products",
+        "finance": "Finance",
+        "analytics": "Analytics",
+        "monetization": "Monetization"
+      },
+      "artifactDescriptions": {
+        "business_blueprint": "Real estate source of truth for AI Studio generation.",
+        "website": "Website, profile, listing, and lead pages generated as drafts.",
+        "profile": "Public identity, license, contact, CTA, and trust content.",
+        "listings": "Inventory, draft states, quality scoring, and public flags.",
+        "property_pages": "Public detail pages with SEO, media, FAQ, and lead capture.",
+        "directory": "Searchable listing directory for active public properties.",
+        "open_houses": "Open house scheduling and public registrations.",
+        "showing_requests": "Appointment-ready showing requests from listing CTAs.",
+        "lead_funnels": "Buyer, seller, renter, investor, and lead magnet funnels.",
+        "campaigns": "Just listed, open house, price drop, and nurture campaigns.",
+        "chatbot_knowledge": "Reviewed knowledge for listings, FAQs, qualification, and showing flow.",
+        "email_automations": "Follow-up, confirmation, guide delivery, and nurture flows.",
+        "crm_pipeline": "Pipeline stages and tags connected to Quimera Leads.",
+        "appointments": "Private showings, consultations, and open house booking types.",
+        "ecommerce_products": "Buyer guides, reports, consultations, deposits, and paid products.",
+        "finance": "Revenue sources for consultations, products, promotions, and referrals.",
+        "analytics": "Events and dashboards for listings, leads, campaigns, bookings, and revenue.",
+        "monetization": "Reviewable revenue opportunities for agents and brokerages."
+      },
+      "metricLabels": {
+        "status": "Status",
+        "routes": "Routes",
+        "profile": "Profile",
+        "properties": "Properties",
+        "quality": "Quality",
+        "public": "Public",
+        "directory": "Directory",
+        "openHouses": "Open houses",
+        "requests": "Requests",
+        "leads": "Leads",
+        "sources": "Sources",
+        "campaigns": "Campaigns",
+        "drafts": "Drafts",
+        "knowledgeDrafts": "Knowledge drafts",
+        "flows": "Flows",
+        "offers": "Offers",
+        "revenueSources": "Revenue sources",
+        "events": "Events"
+      },
+      "metricValues": {
+        "on": "On",
+        "off": "Off"
+      },
+      "profileTypes": {
+        "agent": "Agent",
+        "brokerage": "Brokerage"
+      },
+      "messages": {
+        "businessBlueprintNeedsReview": "BusinessBlueprint still needs review.",
+        "blueprintDisabled": "Real estate blueprint is not enabled.",
+        "websiteReview": "Website drafts should be reviewed in Website Builder before publishing.",
+        "profileReview": "Agent or brokerage profile needs license/contact review.",
+        "createListingDraft": "Create at least one listing draft.",
+        "publishReviewedListing": "Publish at least one reviewed listing to generate public detail pages.",
+        "directoryNeedsListings": "Directory needs reviewed public listings.",
+        "directoryDisabled": "Public directory is disabled.",
+        "noOpenHouse": "No open house draft exists yet.",
+        "confirmAvailability": "Confirm appointment availability before enabling automated showing confirmations.",
+        "noLeads": "No real estate leads have been captured yet.",
+        "generateCampaignDraft": "Generate at least one campaign draft for a listing.",
+        "chatbotDraft": "Chatbot knowledge stays draft-only until reviewed in Quimera Chat.",
+        "emailDraft": "Email automations are not sent until reviewed and activated in Email Marketing.",
+        "commerceReview": "Digital products and offers need pricing, payments, and fulfillment review.",
+        "financeDraft": "Finance tracking is a draft until payment sources are connected.",
+        "analyticsDraft": "Analytics event definitions are drafted; runtime tracking still needs implementation review.",
+        "moduleDisabled": "Realty module is disabled.",
+        "guardrailDraft": "AI Studio outputs remain draft or needsReview until a user reviews them.",
+        "guardrailProtected": "User-modified or locked artifacts are preserved during regeneration.",
+        "guardrailNoActivation": "No email send, chatbot publishing, payment product, appointment automation, or analytics tracking is activated automatically.",
+        "guardrailRls": "Realty leads are routed through existing Supabase/RLS-backed lead sync instead of frontend service credentials.",
+        "opportunityFeaturedListing": "Featured listing promotion",
+        "opportunityNurture": "Seller and buyer nurture sequences",
+        "opportunityOpenHouse": "Open house retargeting campaign",
+        "opportunityBuyerConsultation": "Paid buyer consultation",
+        "opportunitySellerValuation": "Seller valuation package",
+        "opportunityNeighborhoodReport": "Neighborhood report",
+        "opportunityInvestmentSession": "Investment advisory session",
+        "opportunityBuyerGuide": "Buyer guide",
+        "opportunitySellerConsultation": "Seller consultation",
+        "opportunityInvestmentChecklist": "Investment checklist"
+      }
     },
   "metrics": {
     "properties": "Properties",
@@ -6788,10 +7249,48 @@
       "noProjectDesc": "Select or create a website before enabling Realty.",
       "noAccess": "Realty is not available",
       "noAccessDesc": "The module is disabled by plan, service, tenant, project, or permissions.",
+      "noControlAccess": "Realty control is restricted",
+      "noControlAccessDesc": "The Engine and module settings are admin controls. Realtor users should work from Overview, Properties, Leads, Campaigns, Open Houses, and AI.",
       "noProperties": "No properties",
       "noPropertiesDesc": "Create your first property to publish it in the directory.",
       "noLeads": "No leads",
       "noLeadsDesc": "Leads submitted from listings will appear here."
+    },
+    "workspaceOverview": {
+      "label": "Realtor workspace",
+      "title": "Project operating center",
+      "subtitle": "Manage the visible real estate workflow for this project: listings, lead follow-up, campaigns, open houses, and AI-assisted listing content.",
+      "project": "Active project",
+      "mapLabel": "Workspace map",
+      "mapTitle": "What each area does",
+      "userScope": "User scope only",
+      "actions": {
+        "properties": {
+          "title": "Properties",
+          "description": "Create listing records, review imported drafts, score quality, and publish reviewed public pages.",
+          "cta": "Open properties"
+        },
+        "leads": {
+          "title": "Leads",
+          "description": "Track inquiries, showing requests, CRM sync status, and follow-up actions.",
+          "cta": "Open leads"
+        },
+        "campaigns": {
+          "title": "Campaigns",
+          "description": "Prepare listing campaigns, copy blocks, and scheduled marketing drafts for the project.",
+          "cta": "Open campaigns"
+        },
+        "openHouses": {
+          "title": "Open houses",
+          "description": "Create events, manage registration settings, and update open house status.",
+          "cta": "Open open houses"
+        },
+        "ai": {
+          "title": "AI content",
+          "description": "Generate, save, and apply listing copy while keeping the user in control of edits.",
+          "cta": "Open AI"
+        }
+      }
     },
     "overview": {
       "recentProperties": "Recent properties",
@@ -6800,6 +7299,50 @@
     "properties": {
       "create": "New property",
       "edit": "Edit property"
+    },
+    "importReview": {
+      "title": "Imported listing review",
+      "description": "Review staged CSV, MLS, IDX, API, and external feed drafts before they can be published.",
+      "reviewCard": "Import review",
+      "total": "Imported",
+      "pending": "Pending",
+      "approved": "Approved",
+      "source": "Source",
+      "externalId": "External ID",
+      "duplicateLabel": "Duplicate review",
+      "warningsLabel": "Review signals",
+      "sourceUnknown": "Unknown source",
+      "externalIdMissing": "No external ID",
+      "blockedPublish": "Imported listings stay private until the import review is approved.",
+      "approvedNote": "Import review is approved. Publishing still requires the normal listing checklist.",
+      "publishBlockedBadge": "Review first",
+      "duplicateMatches": "{{count}} duplicate match(es)",
+      "status": {
+        "draft": "Draft import",
+        "needs_review": "Needs import review",
+        "approved": "Import approved",
+        "rejected": "Import rejected"
+      },
+      "duplicateStatus": {
+        "none": "No duplicate",
+        "possible_duplicate": "Possible duplicate",
+        "confirmed_duplicate": "Confirmed duplicate",
+        "not_duplicate": "Not duplicate"
+      },
+      "actions": {
+        "openEditor": "Review",
+        "approve": "Approve import",
+        "reject": "Reject import",
+        "reopen": "Reopen review"
+      },
+      "messages": {
+        "approved": "Imported listing approved. It remains private until you publish it.",
+        "rejected": "Imported listing rejected and archived.",
+        "needs_review": "Imported listing moved back to review."
+      },
+      "errors": {
+        "approveBeforePublish": "Approve the imported listing review before publishing it."
+      }
     },
     "editor": {
       "propertyEditor": "Property editor",
@@ -6913,10 +7456,11 @@
     "leadStatus": {
       "new": "New",
       "contacted": "Contacted",
-      "qualified": "Showing scheduled",
+      "qualified": "Qualified",
       "negotiation": "Offer made",
       "won": "Closed",
       "showing_scheduled": "Showing scheduled",
+      "completed": "Completed",
       "offer_made": "Offer made",
       "closed": "Closed",
       "lost": "Lost"
@@ -6925,7 +7469,37 @@
       "name": "Name",
       "email": "Email",
       "phone": "Phone",
-      "property": "Property"
+      "property": "Property",
+      "crmSynced": "CRM synced",
+      "draftEvents": "{{count}} draft event",
+      "draftEvents_plural": "{{count}} draft events",
+      "pipelineStats": {
+        "total": "Total leads",
+        "new": "New leads",
+        "showingRequests": "Showing requests",
+        "crmSynced": "CRM synced"
+      },
+      "sources": {
+        "property_inquiry": "Property inquiry",
+        "open_house_registration": "Open house",
+        "showing_request": "Showing request"
+      },
+      "actions": {
+        "confirmShowing": "Confirm",
+        "markCompleted": "Complete",
+        "followUp": "Follow-up",
+        "appointment": "Appointment",
+        "emailDraftReady": "Email follow-up remains a draft until it is reviewed in Email Marketing.",
+        "appointmentDraftReady": "Appointment creation remains a draft until availability is confirmed."
+      }
+    },
+    "leadTypes": {
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "renter": "Renter",
+      "investor": "Investor",
+      "agent": "Agent",
+      "other": "Other"
     },
     "campaigns": {
       "create": "Create campaign",
@@ -7111,6 +7685,7 @@
   },
     "settings": {
       "title": "Module activation",
+      "description": "Admin controls for project-level Realty activation, AI availability, and public directory access.",
       "moduleEnabled": "Realty enabled for this project",
       "aiEnabled": "AI enabled",
       "publicDirectoryEnabled": "Public directory enabled",
@@ -7124,7 +7699,9 @@
       "demo": "Demo",
       "viewAll": "View all listings",
       "viewDetails": "View details",
-      "empty": "There are no published properties yet."
+      "emptyTitle": "Listings are not public yet",
+      "empty": "Publish reviewed properties from Realty Engine to show them here. Drafts and listings that need review stay private.",
+      "emptyCta": "Request property information"
     },
     "directory": {
       "title": "Property directory",
@@ -7213,6 +7790,19 @@
       "sendError": "The request could not be sent.",
       "related": "Related properties",
       "defaultLeadMessage": "I am interested in receiving information about {{title}}.",
+      "showingTitle": "Schedule a showing",
+      "showingSubtitle": "Request a private tour and the team will confirm availability.",
+      "preferredDate": "Preferred date",
+      "preferredTime": "Preferred time",
+      "clientType": "Client type",
+      "budgetPlaceholder": "Budget",
+      "financingStatusPlaceholder": "Financing status",
+      "showingMessagePlaceholder": "Preferred timing, questions, or qualification details...",
+      "showingConsent": "I agree to be contacted about this showing request.",
+      "requestShowing": "Request showing",
+      "showingRequested": "Showing request received.",
+      "showingRequestError": "The showing request could not be sent.",
+      "showingDefaultMessage": "I want to schedule a showing for {{title}}.",
       "openHouseTitle": "Open House",
       "openHouseSubtitle": "Reserve your spot to tour this property.",
       "openHouseMessagePlaceholder": "I want to register for the open house...",
@@ -7489,9 +8079,17 @@
       "empty": "No active published properties yet.",
       "controls": {
         "buttonText": "Button text",
+        "leadCtaText": "Lead CTA text",
+        "leadCtaPlaceholder": "Request information",
+        "showingRequestCtaText": "Showing request CTA text",
+        "showingRequestCtaPlaceholder": "Request a showing",
         "source": "Listings source",
         "sourceHelp": "This component loads active published properties from Quimera Real Estate OS.",
         "featuredOnly": "Show featured only",
+        "routes": "Public routes",
+        "routesHelp": "Website Builder controls the presentation routes only. Listing data still comes from Realty Engine.",
+        "directoryRoute": "Directory route",
+        "detailRoutePattern": "Property detail route",
         "maxItems": "Listing count",
         "cardContent": "Card content",
         "showPrice": "Show price",
@@ -13378,6 +13976,93 @@
     "platformAppointmentsDesc": "Manage platform-scheduled appointments",
     "emailMarketing": "Email Marketing Hub",
     "emailMarketingDesc": "Centralized management of campaigns, audiences, automations, and AI Email Studio",
+    "realtyEngine": {
+      "cardTitle": "Realty Engine Control",
+      "cardDescription": "Separate app-level Realty controls from realtor project workspaces.",
+      "title": "Realty Engine Control",
+      "badge": "Super Admin area",
+      "heading": "Realty Engine control map",
+      "subtitle": "This panel documents what belongs to the platform admin layer, what belongs to project admins, and what remains in the realtor user workspace.",
+      "ruleTitle": "Separation rule",
+      "ruleDescription": "Super Admin controls the Quimera app. Project admins control draft generation and module flags. Realtor users operate their listings, leads, campaigns, open houses, and AI content.",
+      "appControls": {
+        "label": "App-level control",
+        "title": "What Super Admin controls",
+        "description": "These controls affect the platform behavior, global guardrails, service availability, templates, prompts, and monetization rules used by Realty across Quimera.",
+        "items": {
+          "availability": {
+            "title": "Global availability",
+            "description": "Turn Realty access on or off by service, plan, tenant, and platform policy."
+          },
+          "prompts": {
+            "title": "AI prompts and guardrails",
+            "description": "Define global AI instructions, compliance limits, no-auto-publish rules, and safe generation behavior."
+          },
+          "templates": {
+            "title": "Templates and design system",
+            "description": "Control Realty website sections, listing page patterns, directory layouts, and Design Star alignment."
+          },
+          "integrations": {
+            "title": "Integration policy",
+            "description": "Define how Realty may connect with CRM, Chatbot, Email, Appointments, Analytics, Ecommerce, Finance, IDX, MLS, APIs, and external feeds."
+          },
+          "payments": {
+            "title": "Stripe and monetization rules",
+            "description": "Set product, checkout, finance, tax, and payment guardrails before project-level drafts can become live offers."
+          },
+          "analytics": {
+            "title": "Platform analytics",
+            "description": "Monitor usage, adoption, generated assets, review queues, conversion signals, and module health."
+          }
+        }
+      },
+      "projectControls": {
+        "label": "Project admin control",
+        "title": "What the Realty control area does",
+        "description": "These actions belong to admins working inside a selected project. They prepare drafts and connections, but they should not appear in the common realtor workspace.",
+        "items": {
+          "engine": {
+            "title": "Engine and blueprint drafts",
+            "description": "Convert BusinessBlueprint and AI Studio output into reviewable Realty drafts."
+          },
+          "imports": {
+            "title": "Import staging",
+            "description": "Prepare CSV, IDX, MLS, API, and external-feed listing drafts with review and duplicate checks."
+          },
+          "sync": {
+            "title": "Cross-module sync",
+            "description": "Prepare CRM, Chatbot, Email, Analytics, Appointments, Ecommerce, and Finance drafts without runtime activation."
+          },
+          "settings": {
+            "title": "Module settings",
+            "description": "Enable Realty, AI, and public directory flags for the selected project."
+          }
+        }
+      },
+      "userWorkspace": {
+        "label": "Realtor user workspace",
+        "title": "What the realtor user sees",
+        "description": "This is the day-to-day product area for realtors and brokerages. It should be clear, operational, and free from app administration controls.",
+        "items": {
+          "listings": {
+            "title": "Properties and listings",
+            "description": "Create, edit, score, publish, and manage project properties."
+          },
+          "leads": {
+            "title": "Leads and showings",
+            "description": "Review inquiries, showing requests, CRM status, and follow-up actions."
+          },
+          "openHouses": {
+            "title": "Open houses",
+            "description": "Create open houses, manage schedules, registration, and status."
+          },
+          "campaigns": {
+            "title": "Campaigns and AI copy",
+            "description": "Generate listing content, prepare campaigns, and apply copy to project assets."
+          }
+        }
+      }
+    },
     "settings": {
       "models": "Models"
     },

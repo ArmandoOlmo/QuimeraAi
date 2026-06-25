@@ -160,6 +160,7 @@ export const ROUTES = {
   ADMIN_SERVICE_AVAILABILITY: '/admin/service-availability',
   ADMIN_FINANCES: '/admin/finances',
   ADMIN_SUBDOMAINS: '/admin/subdomains',
+  ADMIN_REALTY_ENGINE: '/admin/realty-engine',
   ADMIN_DIAGNOSE: '/admin/diagnose',
   ADMIN_LEADS: '/admin/leads',
   ADMIN_APPOINTMENTS: '/admin/appointments',
@@ -1093,6 +1094,17 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_REALTY_ENGINE,
+    view: 'superadmin',
+    adminView: 'realty-engine',
+    type: 'admin',
+    title: 'Realty Engine Control',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'admin'],
     parent: ROUTES.SUPERADMIN,
   }
 ];

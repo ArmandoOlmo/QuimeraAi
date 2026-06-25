@@ -102,7 +102,7 @@ CREATE POLICY "Owners can manage order items" ON public.store_order_items
         EXISTS (
             SELECT 1
             FROM public.store_orders o
-            WHERE o.id = store_order_items.order_id::text
+            WHERE o.id::text = store_order_items.order_id::text
               AND public.is_project_owner_or_tenant(o.project_id)
         )
     )
@@ -110,7 +110,7 @@ CREATE POLICY "Owners can manage order items" ON public.store_order_items
         EXISTS (
             SELECT 1
             FROM public.store_orders o
-            WHERE o.id = store_order_items.order_id::text
+            WHERE o.id::text = store_order_items.order_id::text
               AND public.is_project_owner_or_tenant(o.project_id)
         )
     );
@@ -154,7 +154,7 @@ CREATE POLICY "Public can insert reviews" ON public.store_reviews
         AND EXISTS (
             SELECT 1
             FROM public.store_products sp
-            WHERE sp.id = store_reviews.product_id
+            WHERE sp.id::text = store_reviews.product_id::text
               AND sp.project_id = store_reviews.project_id
               AND sp.status = 'active'
         )

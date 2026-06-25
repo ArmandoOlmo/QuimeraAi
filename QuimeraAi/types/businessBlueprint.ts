@@ -391,10 +391,392 @@ export interface RestaurantBlueprint extends BlueprintModuleState {
     legacyEcommerceOffers: string[];
 }
 
+export type RealEstateBlueprintDraftStatus = 'draft' | 'needs_review' | 'configured' | 'disabled';
+export type RealEstateListingDraftStatus = 'draft' | 'needs_review' | 'active' | 'archived';
+export type RealEstateCampaignDraftStatus = 'draft' | 'needs_review' | 'scheduled' | 'active' | 'archived';
+export type RealEstatePriceSource = 'user-provided' | 'ai-suggested' | 'imported' | 'unset';
+export type RealEstateTransactionType = 'sale' | 'rent' | 'lease';
+export type RealEstatePropertyType = 'house' | 'condo' | 'apartment' | 'townhouse' | 'land' | 'commercial';
+export type RealEstateCampaignType =
+    | 'just_listed'
+    | 'open_house'
+    | 'price_drop'
+    | 'luxury_showcase'
+    | 'investment_opportunity'
+    | 'rental_available'
+    | 'seller_lead_magnet'
+    | 'social'
+    | 'email'
+    | 'ads';
+export type RealEstateCampaignChannel = 'social' | 'email' | 'sms' | 'ads' | 'landing';
+export type RealEstateShowingAvailabilitySource = 'manual' | 'appointments' | 'calendar' | 'unset';
+export type RealEstateConfirmationMode = 'manual' | 'auto';
+export type RealEstateAveragePriceSource = 'manual' | 'imported' | 'ai-suggested' | 'unset';
+export type RealEstateImportSource = 'manual' | 'csv' | 'imported-url' | 'mls' | 'idx' | 'api' | 'external-feed';
+
+export type RealEstateEngineArtifactKey =
+    | 'business_blueprint'
+    | 'website'
+    | 'profile'
+    | 'listings'
+    | 'property_pages'
+    | 'directory'
+    | 'open_houses'
+    | 'showing_requests'
+    | 'lead_funnels'
+    | 'campaigns'
+    | 'chatbot_knowledge'
+    | 'email_automations'
+    | 'crm_pipeline'
+    | 'appointments'
+    | 'ecommerce_products'
+    | 'finance'
+    | 'analytics'
+    | 'monetization';
+
+export interface RealEstateEngineArtifactBlueprint {
+    id: string;
+    key: RealEstateEngineArtifactKey;
+    module: IntegrationEventModule;
+    title: string;
+    description: string;
+    status: RealEstateBlueprintDraftStatus;
+    needsReview: boolean;
+    generatedByAI: boolean;
+    userModified: boolean;
+    lockedFromRegeneration?: boolean;
+    sourceMap: BlueprintSourceMap;
+    dependencies?: string[];
+    analyticsEvents?: IntegrationEventType[];
+    draftRefs?: string[];
+}
+
+export interface RealEstateWebsiteRoutesBlueprint {
+    profile: string;
+    directory: string;
+    propertyDetail: string;
+    openHouses: string;
+}
+
+export interface RealEstateAgentProfileBlueprint {
+    name: string;
+    email: string;
+    phone: string;
+    photoUrl?: string;
+    licenseNumber?: string;
+    brokerageName?: string;
+    brokerageLogoUrl?: string;
+    bio: string;
+    specialties: string[];
+    serviceAreas: string[];
+    languages: string[];
+    website?: string;
+    socialLinks: Record<string, string>;
+    complianceNotes: string[];
+    sourceMap: BlueprintSourceMap;
+    readiness: BlueprintReadiness;
+}
+
+export interface RealEstateBrokerageProfileBlueprint {
+    name: string;
+    licenseNumber?: string;
+    address: string;
+    phone: string;
+    email: string;
+    logoUrl?: string;
+    brandStyle?: string;
+    officeLocations: string[];
+    teamMembers: Array<{ name: string; role?: string; email?: string; phone?: string; photoUrl?: string }>;
+    sourceMap: BlueprintSourceMap;
+    readiness: BlueprintReadiness;
+}
+
+export interface RealEstateListingDraftBlueprint {
+    id: string;
+    title: string;
+    slug: string;
+    descriptionShort: string;
+    descriptionLong: string;
+    price?: number;
+    currency: string;
+    priceSource: RealEstatePriceSource;
+    transactionType: RealEstateTransactionType;
+    propertyType: RealEstatePropertyType;
+    address: string;
+    city: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
+    bedrooms?: number;
+    bathrooms?: number;
+    halfBathrooms?: number;
+    area?: number;
+    areaUnit: 'sqft' | 'sqm';
+    lotSize?: number;
+    parkingSpaces?: number;
+    yearBuilt?: number;
+    hoaFee?: number;
+    taxes?: number;
+    amenities: string[];
+    features: string[];
+    highlights: string[];
+    imagePrompts: string[];
+    images: string[];
+    videoUrl?: string;
+    virtualTourUrl?: string;
+    isFeatured: boolean;
+    status: RealEstateListingDraftStatus;
+    publicEnabled: boolean;
+    needsReview: boolean;
+    generatedByAI: boolean;
+    userModified: boolean;
+    lockedFromRegeneration?: boolean;
+    listingScore?: number;
+    sourceMap: BlueprintSourceMap;
+}
+
+export interface RealEstateLeadFunnelBlueprint {
+    buyerLeadEnabled: boolean;
+    sellerLeadEnabled: boolean;
+    renterLeadEnabled: boolean;
+    investorLeadEnabled: boolean;
+    valuationCtaEnabled: boolean;
+    buyerGuideEnabled: boolean;
+    sellerGuideEnabled: boolean;
+    contactFormEnabled: boolean;
+    propertyInquiryEnabled: boolean;
+    openHouseRegistrationEnabled: boolean;
+    showingRequestEnabled: boolean;
+    leadTags: string[];
+    leadSources: string[];
+    crmPipelineStages: string[];
+    needsReview: boolean;
+    readiness: BlueprintReadiness;
+}
+
+export interface RealEstateShowingRequestBlueprint {
+    enabled: boolean;
+    status: RealEstateBlueprintDraftStatus;
+    availabilitySource: RealEstateShowingAvailabilitySource;
+    preferredDateEnabled: boolean;
+    preferredTimeEnabled: boolean;
+    buyerQualificationFields: string[];
+    financingStatusField: boolean;
+    budgetField: boolean;
+    assignedAgentStrategy: string;
+    confirmationMode: RealEstateConfirmationMode;
+    remindersEnabled: boolean;
+    appointmentIntegrationEnabled: boolean;
+    needsReview: boolean;
+    readiness: BlueprintReadiness;
+}
+
+export interface RealEstateOpenHouseBlueprint {
+    enabled: boolean;
+    defaultDurationMinutes: number;
+    registrationEnabled: boolean;
+    capacityEnabled: boolean;
+    reminderFlowEnabled: boolean;
+    followUpFlowEnabled: boolean;
+    status: Extract<RealEstateBlueprintDraftStatus, 'draft' | 'needs_review' | 'configured'>;
+    needsReview: boolean;
+    readiness: BlueprintReadiness;
+}
+
+export interface RealEstateCampaignItemBlueprint {
+    id: string;
+    type: RealEstateCampaignType;
+    title: string;
+    targetAudience: string;
+    channels: RealEstateCampaignChannel[];
+    status: RealEstateCampaignDraftStatus;
+    generatedByAI: boolean;
+    userModified: boolean;
+    sourceMap: BlueprintSourceMap;
+}
+
+export interface RealEstateCampaignBlueprint {
+    campaigns: RealEstateCampaignItemBlueprint[];
+}
+
+export interface RealEstatePublicDirectoryBlueprint {
+    enabled: boolean;
+    route: '/listados';
+    filtersEnabled: boolean;
+    searchEnabled: boolean;
+    mapViewEnabled: boolean;
+    gridViewEnabled: boolean;
+    listViewEnabled: boolean;
+    savedSearchEnabled: boolean;
+    compareListingsEnabled: boolean;
+    featuredListingsEnabled: boolean;
+    mortgageCalculatorEnabled: boolean;
+    stickyCtaEnabled: boolean;
+    seoEnabled: boolean;
+    schemaEnabled: boolean;
+    status: RealEstateBlueprintDraftStatus;
+    needsReview: boolean;
+    readiness: BlueprintReadiness;
+}
+
+export interface RealEstatePropertyPageBlueprint {
+    enabled: boolean;
+    routePattern: '/listados/:slug';
+    galleryEnabled: boolean;
+    virtualTourEnabled: boolean;
+    mapEnabled: boolean;
+    contactFormEnabled: boolean;
+    showingRequestEnabled: boolean;
+    openHouseRegistrationEnabled: boolean;
+    relatedListingsEnabled: boolean;
+    documentsGateEnabled: boolean;
+    mortgageCalculatorEnabled: boolean;
+    schemaEnabled: boolean;
+    stickyMobileCtaEnabled: boolean;
+    status: RealEstateBlueprintDraftStatus;
+    needsReview: boolean;
+}
+
+export interface RealEstateNeighborhoodItemBlueprint {
+    name: string;
+    city: string;
+    description: string;
+    highlights: string[];
+    averagePriceSource: RealEstateAveragePriceSource;
+    listingFilter: Record<string, unknown>;
+    status: Extract<RealEstateBlueprintDraftStatus, 'draft' | 'needs_review'>;
+    generatedByAI: boolean;
+    needsReview: boolean;
+}
+
+export interface RealEstateNeighborhoodBlueprint {
+    enabled: boolean;
+    neighborhoods: RealEstateNeighborhoodItemBlueprint[];
+}
+
+export interface RealEstateChatbotBlueprint {
+    knowledgeSources: string[];
+    supportedQuestions: string[];
+    intents: Array<
+        | 'property_inquiry'
+        | 'showing_request'
+        | 'open_house_registration'
+        | 'buyer_lead'
+        | 'seller_lead'
+        | 'renter_lead'
+        | 'investor_lead'
+        | 'valuation_request'
+        | 'financing_question'
+        | 'neighborhood_question'
+        | 'agent_handoff'
+    >;
+}
+
+export interface RealEstateEmailMarketingBlueprint {
+    flows: Array<
+        | 'new_property_inquiry'
+        | 'showing_request_confirmation'
+        | 'showing_reminder'
+        | 'open_house_registration'
+        | 'open_house_reminder'
+        | 'post_showing_follow_up'
+        | 'new_listing_alert'
+        | 'price_drop_alert'
+        | 'seller_valuation_follow_up'
+        | 'buyer_guide_delivery'
+        | 'seller_guide_delivery'
+        | 'inactive_buyer_nurture'
+        | 'agent_new_lead_alert'
+    >;
+}
+
+export interface RealEstateAnalyticsBlueprint {
+    events: Array<
+        | 'property_view'
+        | 'listing_search'
+        | 'filter_used'
+        | 'property_saved'
+        | 'property_shared'
+        | 'gallery_opened'
+        | 'virtual_tour_clicked'
+        | 'map_clicked'
+        | 'contact_started'
+        | 'lead_submitted'
+        | 'showing_requested'
+        | 'open_house_registered'
+        | 'campaign_generated'
+        | 'ai_listing_generated'
+        | 'valuation_requested'
+    >;
+}
+
+export interface RealEstateEcommerceOfferItemBlueprint {
+    enabled: boolean;
+    status: RealEstateBlueprintDraftStatus;
+    ecommerceProductDraftId?: string;
+    priceSource: RealEstatePriceSource;
+    needsReview: boolean;
+}
+
+export interface RealEstateEcommerceOfferBlueprint {
+    buyerGuides: RealEstateEcommerceOfferItemBlueprint;
+    sellerGuides: RealEstateEcommerceOfferItemBlueprint;
+    marketReports: RealEstateEcommerceOfferItemBlueprint;
+    consultationPackages: RealEstateEcommerceOfferItemBlueprint;
+    valuationPackages: RealEstateEcommerceOfferItemBlueprint;
+    premiumListingPackages: RealEstateEcommerceOfferItemBlueprint;
+    courses: RealEstateEcommerceOfferItemBlueprint;
+    digitalDownloads: RealEstateEcommerceOfferItemBlueprint;
+}
+
+export interface RealEstateIntegrationBlueprint {
+    crmTags: string[];
+    crmLeadSources: string[];
+    crmPipelineStages: string[];
+    emailFlows: string[];
+    chatbotKnowledgeSources: string[];
+    analyticsEvents: string[];
+    financeRevenueSources: string[];
+    automationFlows: string[];
+    appointmentIntegration: boolean;
+}
+
 export interface RealEstateBlueprint extends BlueprintModuleState {
+    profileType: 'agent' | 'brokerage' | 'team' | 'developer';
+    agentProfile: RealEstateAgentProfileBlueprint;
+    brokerageProfile: RealEstateBrokerageProfileBlueprint;
+    listingDrafts: RealEstateListingDraftBlueprint[];
+    websiteRoutes: RealEstateWebsiteRoutesBlueprint;
     listingTypes: string[];
     leadTypes: string[];
+    pageTypes: string[];
+    leadFunnels: RealEstateLeadFunnelBlueprint;
+    showingRequests: RealEstateShowingRequestBlueprint;
+    openHouses: RealEstateOpenHouseBlueprint;
+    campaigns: RealEstateCampaignBlueprint;
+    publicDirectory: RealEstatePublicDirectoryBlueprint;
+    propertyPages: RealEstatePropertyPageBlueprint;
+    neighborhoods: RealEstateNeighborhoodBlueprint;
+    chatbot: RealEstateChatbotBlueprint;
+    emailMarketing: RealEstateEmailMarketingBlueprint;
+    analytics: RealEstateAnalyticsBlueprint;
+    ecommerceOffers: RealEstateEcommerceOfferBlueprint;
+    integrations: RealEstateIntegrationBlueprint;
+    campaignTypes: string[];
+    chatbotKnowledge: string[];
+    emailAutomations: Array<{ type: string; status: RealEstateBlueprintDraftStatus; triggerEvent?: IntegrationEventType; needsReview: boolean }>;
+    crmPipelineStages: string[];
+    analyticsEvents: IntegrationEventType[];
     digitalProducts: string[];
+    monetizationOffers: string[];
+    financeRevenueSources: string[];
+    engineArtifacts: RealEstateEngineArtifactBlueprint[];
+    importArchitecture?: {
+        sources: RealEstateImportSource[];
+        duplicateMatchKeys: string[];
+        defaultStatus: 'draft';
+        needsReview: true;
+    };
 }
 
 export interface FinanceBlueprint extends BlueprintModuleState {
@@ -420,7 +802,7 @@ export interface AutomationBlueprint extends BlueprintModuleState {
 
 export type CrossModuleSyncStatus = 'not_started' | 'previewed' | 'synced_draft' | 'dismissed';
 export type CrossModuleSyncModuleStatus = 'not_started' | 'previewed' | 'synced_draft' | 'skipped';
-export type CrossModuleSyncModule = 'chatbot' | 'leads' | 'emailMarketing' | 'analytics';
+export type CrossModuleSyncModule = 'chatbot' | 'leads' | 'emailMarketing' | 'analytics' | 'appointments' | 'ecommerce' | 'finance';
 
 export interface CrossModuleSyncDraft {
     id: string;
@@ -459,6 +841,9 @@ export interface CrossModuleSyncReadiness {
     leadTagsReady: boolean;
     emailFlowsReady: boolean;
     analyticsReady: boolean;
+    appointmentsReady?: boolean;
+    ecommerceOffersReady?: boolean;
+    financeReady?: boolean;
     needsMerchantReview: boolean;
 }
 
@@ -470,6 +855,9 @@ export interface CrossModuleSyncState {
     leads?: CrossModuleSyncModuleState;
     emailMarketing?: CrossModuleSyncModuleState;
     analytics?: CrossModuleSyncModuleState;
+    appointments?: CrossModuleSyncModuleState;
+    ecommerce?: CrossModuleSyncModuleState;
+    finance?: CrossModuleSyncModuleState;
     warnings: string[];
     readiness: CrossModuleSyncReadiness;
 }

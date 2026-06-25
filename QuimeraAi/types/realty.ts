@@ -5,7 +5,7 @@ export type ISODateString = string;
 export type PropertyStatus = 'draft' | 'active' | 'pending' | 'sold' | 'archived';
 export type PropertyType = 'house' | 'condo' | 'apartment' | 'townhouse' | 'land' | 'commercial';
 export type TransactionType = 'sale' | 'rent' | 'lease';
-export type LeadStage = LeadStatus | 'showing_scheduled' | 'offer_made' | 'closed';
+export type LeadStage = LeadStatus | 'showing_scheduled' | 'completed' | 'offer_made' | 'closed';
 export type LeadType = 'buyer' | 'seller' | 'renter' | 'investor' | 'agent' | 'other';
 export type CampaignType =
     | 'just_listed'
@@ -25,7 +25,7 @@ export type RealtyCampaignStatus = 'draft' | 'scheduled' | 'active' | 'completed
 export type RealtyOpenHouseStatus = 'scheduled' | 'active' | 'completed' | 'cancelled';
 export type RealtyPropertyStatus = PropertyStatus;
 export type RealtyPropertyType = PropertyType;
-export type RealtyLeadStatus = LeadStatus;
+export type RealtyLeadStatus = LeadStage;
 export type RealtyAiTone =
     | 'luxury'
     | 'family'
@@ -38,6 +38,12 @@ export type RealtyAiTone =
     | 'new_development';
 export type RealtyAiLanguage = 'es' | 'en';
 export type RealtyListingGrade = 'excellent' | 'good' | 'needs_work' | 'poor';
+export type RealtyImportSource = 'manual' | 'csv' | 'imported-url' | 'mls' | 'idx' | 'api' | 'external-feed';
+export type RealtyImportSyncMode = 'manual' | 'scheduled' | 'webhook' | 'disabled';
+export type RealtyImportJobStatus = 'draft' | 'mapping_required' | 'ready_for_review' | 'completed' | 'failed' | 'cancelled';
+export type RealtyExternalListingReviewStatus = 'draft' | 'needs_review' | 'approved' | 'rejected';
+export type RealtyDuplicateReviewStatus = 'none' | 'possible_duplicate' | 'confirmed_duplicate' | 'not_duplicate';
+export type RealtyDuplicateMatchKey = 'externalId' | 'slug' | 'address' | 'projectId' | 'title' | 'price';
 
 export interface RealtyFaqItem {
     question: string;
@@ -82,6 +88,89 @@ export interface RealtyListingScore {
     missingRequired: string[];
     missingRecommended: string[];
     recommendations: string[];
+}
+
+export interface RealtyImportSourceConfig {
+    id: string;
+    tenantId?: string | null;
+    projectId: string;
+    userId?: string | null;
+    sourceType: RealtyImportSource;
+    name: string;
+    providerName?: string;
+    feedUrl?: string;
+    uploadedFileName?: string;
+    externalAccountId?: string;
+    syncMode: RealtyImportSyncMode;
+    enabled: boolean;
+    status: 'draft' | 'needs_review' | 'configured' | 'disabled';
+    lastRunAt?: ISODateString | null;
+    metadata?: Record<string, unknown>;
+    createdAt?: ISODateString;
+    updatedAt?: ISODateString;
+}
+
+export interface RealtyImportMapping {
+    sourceField: string;
+    targetField: keyof RealtyProperty | 'externalId' | 'rawPayload' | 'metadata';
+    required?: boolean;
+    transform?: 'string' | 'number' | 'boolean' | 'date' | 'array' | 'json';
+    fallback?: unknown;
+}
+
+export interface RealtyImportJob {
+    id: string;
+    tenantId?: string | null;
+    projectId: string;
+    userId?: string | null;
+    sourceId?: string | null;
+    sourceType: RealtyImportSource;
+    status: RealtyImportJobStatus;
+    mapping: RealtyImportMapping[];
+    totalRows: number;
+    draftCount: number;
+    duplicateCount: number;
+    errorCount: number;
+    needsReview: true;
+    noAutoPublish: true;
+    startedAt?: ISODateString | null;
+    completedAt?: ISODateString | null;
+    metadata?: Record<string, unknown>;
+    createdAt: ISODateString;
+    updatedAt: ISODateString;
+}
+
+export interface RealtyDuplicateMatch {
+    existingPropertyId: string;
+    confidence: number;
+    matchKeys: RealtyDuplicateMatchKey[];
+    reason: string;
+    existingSlug?: string;
+    existingTitle?: string;
+    existingExternalId?: string;
+    existingSourceType?: RealtyImportSource | string;
+}
+
+export interface RealtyExternalListingDraft extends Omit<Partial<RealtyProperty>, 'status' | 'publicEnabled'> {
+    externalId?: string;
+    importJobId?: string;
+    sourceType: RealtyImportSource;
+    sourceName?: string;
+    sourceUrl?: string;
+    syncKey: string;
+    status: 'draft';
+    importReviewStatus: RealtyExternalListingReviewStatus;
+    duplicateReviewStatus: RealtyDuplicateReviewStatus;
+    duplicateMatches: RealtyDuplicateMatch[];
+    publicEnabled: false;
+    needsReview: true;
+    noAutoPublish: true;
+    generatedByAI: false;
+    userModified: false;
+    lockedFromRegeneration: false;
+    rawPayload?: Record<string, unknown>;
+    sourceMap: Record<string, string>;
+    reviewWarnings: string[];
 }
 
 export type RealtyPermissionKey =
@@ -383,6 +472,13 @@ export interface RealtyListingsSectionData {
     subtitle?: string;
     buttonText?: string;
     buttonLink?: string;
+    directoryRoute?: string;
+    detailRoutePattern?: string;
+    leadCtaText?: string;
+    showingRequestCtaText?: string;
+    emptyStateTitle?: string;
+    emptyStateDescription?: string;
+    emptyStateButtonText?: string;
     maxItems?: number;
     featuredOnly?: boolean;
     showPrice?: boolean;

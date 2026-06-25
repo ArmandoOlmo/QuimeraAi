@@ -48,6 +48,8 @@ CREATE TABLE IF NOT EXISTS public.store_stock_notifications (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE public.store_stock_notifications ADD COLUMN IF NOT EXISTS store_id UUID REFERENCES public.projects(id) ON DELETE CASCADE;
+
 CREATE INDEX IF NOT EXISTS store_stock_notifications_store_id_idx ON public.store_stock_notifications(store_id);
 CREATE INDEX IF NOT EXISTS store_stock_notifications_email_idx ON public.store_stock_notifications(email);
 

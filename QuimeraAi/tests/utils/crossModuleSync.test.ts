@@ -116,6 +116,9 @@ function allDrafts(blueprint: BusinessBlueprint): CrossModuleSyncDraft[] {
         ...(sync?.leads?.drafts || []),
         ...(sync?.emailMarketing?.drafts || []),
         ...(sync?.analytics?.drafts || []),
+        ...(sync?.appointments?.drafts || []),
+        ...(sync?.ecommerce?.drafts || []),
+        ...(sync?.finance?.drafts || []),
     ];
 }
 
@@ -181,8 +184,38 @@ describe('cross-module ecommerce draft sync', () => {
         const result = runApply(businessBlueprint);
 
         expect(result.chatbotDrafts.some(draft => /real estate|consultation|guide/i.test(`${draft.name} ${draft.content}`))).toBe(true);
-        expect(result.leadDrafts.map(draft => draft.name)).toContain('real-estate-consultation');
+        expect(result.chatbotDrafts.map(draft => draft.metadata?.knowledgeType)).toEqual(expect.arrayContaining([
+            'profile',
+            'listing_summary',
+            'showing_and_open_house',
+            'lead_qualification',
+            'compliance_guardrails',
+        ]));
+        expect(result.chatbotDrafts.filter(draft => draft.metadata?.realEstateEngine === true).every(draft => draft.metadata?.chatbotPublished === false)).toBe(true);
+        expect(result.chatbotDrafts.filter(draft => draft.metadata?.realEstateEngine === true).every(draft => draft.metadata?.noRuntimeActivated === true)).toBe(true);
+        expect(result.leadDrafts.map(draft => draft.name)).toEqual(expect.arrayContaining(['real-estate-consultation', 'realty-website', 'showing-request']));
+        expect(result.leadDrafts.filter(draft => draft.itemType === 'pipeline_stage').map(draft => draft.metadata?.pipelineStage)).toEqual(expect.arrayContaining(['new', 'contacted', 'qualified']));
+        expect(result.leadDrafts.map(draft => draft.metadata?.eventName)).toEqual(expect.arrayContaining(['realty_showing_requested', 'realty_open_house_registered']));
         expect(result.emailDrafts.map(draft => draft.metadata?.flowType)).toContain('consultation_guide_follow_up');
+        expect(result.analyticsDrafts.map(draft => draft.metadata?.eventName)).toEqual(expect.arrayContaining(['property_view', 'lead_submitted', 'showing_requested', 'open_house_registered', 'realty_monetization_offer_previewed']));
+        expect(result.analyticsDrafts.filter(draft => ['property_view', 'showing_requested'].includes(String(draft.metadata?.eventName))).every(draft => draft.metadata?.realEstateEngine === true)).toBe(true);
+        expect(result.appointmentDrafts.map(draft => draft.metadata?.appointmentKind)).toEqual(expect.arrayContaining(['private_showing', 'buyer_consultation', 'seller_valuation', 'open_house_registration']));
+        expect(result.ecommerceDrafts.map(draft => draft.metadata?.offerType)).toEqual(expect.arrayContaining(['buyer_guides', 'seller_guides', 'market_reports', 'consultation_packages', 'valuation_packages', 'premium_listing_packages', 'courses', 'digital_downloads', 'open_house_tickets']));
+        expect(result.financeDrafts.map(draft => draft.metadata?.revenueSource)).toEqual(expect.arrayContaining(['consultation payments', 'digital real estate products', 'listing promotion fees', 'referral fees']));
+        expect(result.appointmentDrafts.every(draft => draft.metadata?.appointmentIntegrationEnabled === false || draft.metadata?.registrationEnabled === false)).toBe(true);
+        expect(result.ecommerceDrafts.every(draft => (draft.metadata?.productDraft as { status?: string } | undefined)?.status === 'draft')).toBe(true);
+        expect(result.ecommerceDrafts.every(draft => (draft.metadata?.productDraft as { publishStatus?: string } | undefined)?.publishStatus === 'not_published')).toBe(true);
+        expect(result.ecommerceDrafts.every(draft => ((draft.metadata?.readinessBlockerCodes as string[] | undefined) || []).includes('checkout_disabled'))).toBe(true);
+        expect(result.ecommerceDrafts.every(draft => draft.metadata?.stripeProductCreated === false)).toBe(true);
+        expect(result.ecommerceDrafts.every(draft => draft.metadata?.stripePriceCreated === false)).toBe(true);
+        expect(result.ecommerceDrafts.every(draft => draft.metadata?.stripeCheckoutSessionCreated === false)).toBe(true);
+        expect(result.ecommerceDrafts.every(draft => draft.metadata?.stripePaymentLinkCreated === false)).toBe(true);
+        expect(result.ecommerceDrafts.every(draft => draft.metadata?.checkoutEnabled === false)).toBe(true);
+        expect(result.ecommerceDrafts.every(draft => draft.metadata?.recommendedStripeSurface === 'checkout_sessions')).toBe(true);
+        expect(result.financeDrafts.every(draft => draft.metadata?.stripeConfigured === false)).toBe(true);
+        expect(result.businessBlueprint.crossModuleSync?.appointments?.refs.length).toBeGreaterThan(0);
+        expect(result.businessBlueprint.crossModuleSync?.ecommerce?.refs.length).toBeGreaterThan(0);
+        expect(result.businessBlueprint.crossModuleSync?.finance?.refs.length).toBeGreaterThan(0);
         expect(result.leadDrafts.map(draft => draft.name)).not.toContain('gift-card');
         expect(result.emailDrafts.map(draft => draft.metadata?.flowType)).not.toContain('gift_card_confirmation');
     });
@@ -235,7 +268,7 @@ describe('cross-module ecommerce draft sync', () => {
         expect(sync?.leads?.refs.length).toBeGreaterThan(0);
         expect(sync?.emailMarketing?.refs.length).toBeGreaterThan(0);
         expect(sync?.analytics?.refs.length).toBeGreaterThan(0);
-        expect(sync?.readiness).toEqual({
+        expect(sync?.readiness).toMatchObject({
             chatbotReady: true,
             leadTagsReady: true,
             emailFlowsReady: true,
@@ -296,6 +329,8 @@ describe('cross-module ecommerce draft sync', () => {
         const emailDrafts = result.businessBlueprint.crossModuleSync?.emailMarketing?.drafts || [];
         const leadDrafts = result.businessBlueprint.crossModuleSync?.leads?.drafts || [];
         const analyticsDrafts = result.businessBlueprint.crossModuleSync?.analytics?.drafts || [];
+        const ecommerceDrafts = result.businessBlueprint.crossModuleSync?.ecommerce?.drafts || [];
+        const financeDrafts = result.businessBlueprint.crossModuleSync?.finance?.drafts || [];
 
         expectDraftOnlyGuardrails(drafts);
         expect(emailDrafts.every(draft => draft.metadata?.automationActive === false)).toBe(true);
@@ -304,6 +339,9 @@ describe('cross-module ecommerce draft sync', () => {
         expect(leadDrafts.every(draft => draft.itemType !== 'lead_record')).toBe(true);
         expect(analyticsDrafts.every(draft => draft.metadata?.runtimeInstrumented === false)).toBe(true);
         expect(analyticsDrafts.every(draft => draft.metadata?.eventEmitted === false)).toBe(true);
+        expect(ecommerceDrafts.every(draft => draft.metadata?.stripeProductCreated !== true)).toBe(true);
+        expect(ecommerceDrafts.every(draft => draft.metadata?.stripeCheckoutSessionCreated !== true)).toBe(true);
+        expect(financeDrafts.every(draft => draft.metadata?.ledgerEntryCreated !== true)).toBe(true);
         expect(result.summary.noRuntimeActivated).toBe(true);
     });
 });

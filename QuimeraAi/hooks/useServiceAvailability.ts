@@ -4,8 +4,6 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { doc, getDoc, setDoc, onSnapshot, collection, addDoc, query, orderBy, limit, getDocs } from '@/utils/compatData';
-import { db } from '@/utils/compatData';
 import { supabase } from '../supabase';
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import {
@@ -18,13 +16,6 @@ import {
     canRoleAccessService,
     PLATFORM_SERVICES,
 } from '../types/serviceAvailability';
-
-// =============================================================================
-// CONSTANTS
-// =============================================================================
-
-const SETTINGS_DOC_PATH = 'globalSettings/serviceAvailability';
-const AUDIT_LOG_COLLECTION = 'globalSettings/serviceAvailability/auditLog';
 
 // =============================================================================
 // HOOK
@@ -76,7 +67,9 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
                     .eq('id', 'serviceAvailability')
                     .maybeSingle();
 
-                if (!error && data?.config) {
+                if (error) throw error;
+
+                if (data?.config) {
                     setAvailability(data.config as GlobalServiceAvailability);
                 } else {
                     setAvailability(null);
@@ -146,20 +139,24 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
         }
 
         try {
-            console.log('[ServiceAvailability] Starting update:', {
-                serviceId,
-                newStatus,
-                userId: user.id,
-                userEmail: user.email,
-                userRole: userDocument?.role
-            });
+            if (import.meta.env.DEV) {
+                console.log('[ServiceAvailability] Starting update:', {
+                    serviceId,
+                    newStatus,
+                    userId: user.id,
+                    userEmail: user.email,
+                    userRole: userDocument?.role
+                });
+            }
 
             // Get current state for audit log
-            const { data: currentSnap } = await supabase
+            const { data: currentSnap, error: currentError } = await supabase
                 .from('settings')
                 .select('config')
                 .eq('id', 'serviceAvailability')
                 .maybeSingle();
+
+            if (currentError) throw currentError;
 
             let currentAvailability: GlobalServiceAvailability;
 
@@ -199,11 +196,17 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
                 });
 
             if (updateError) throw updateError;
-            console.log('[ServiceAvailability] Main document saved successfully');
+            setAvailability(updatedConfig as GlobalServiceAvailability);
+
+            if (import.meta.env.DEV) {
+                console.log('[ServiceAvailability] Main document saved successfully');
+            }
 
             // Create audit log entry
             try {
-                console.log('[ServiceAvailability] Attempting to write audit log...');
+                if (import.meta.env.DEV) {
+                    console.log('[ServiceAvailability] Attempting to write audit log...');
+                }
                 
                 await supabase.from('service_audit_logs').insert({
                     service_id: serviceId,
@@ -214,7 +217,9 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
                     user_email: user.email || 'unknown'
                 });
 
-                console.log('[ServiceAvailability] Audit log saved successfully');
+                if (import.meta.env.DEV) {
+                    console.log('[ServiceAvailability] Audit log saved successfully');
+                }
                 await refreshAuditLog();
             } catch (auditErr) {
                 console.warn('[ServiceAvailability] Audit log write failed (non-critical):', auditErr);

@@ -470,8 +470,18 @@ export const componentRegistry: ComponentRegistryEntry[] = [
         pageIntents: ['real_estate_home'],
         conversionRoles: ['lead_capture', 'catalog_discovery'],
         requiredModules: ['realEstate'],
-        dataRequirements: [data('listingsCount', 'Listings or listing drafts', 'realEstateBlueprint.listingTypes', 1, false)],
+        dataRequirements: [data('listingsCount', 'Published Realty Engine listings or reviewable listing drafts', 'realEstateBlueprint.listingDrafts', 1, false)],
+        allowedSources: ['businessBlueprint', 'realEstateBlueprint', 'realtyEngine'],
+        dataAccess: access(['realEstateBlueprint.listingDrafts', 'realtyProperties', 'publicRealtyListings'], 'real-estate-engine', 'website-builder'),
         renderTargets: { websiteSection: 'realEstateListings' },
+        selectionGuidance: [
+            'Use as the only rendered Realty homepage block until propertySearch and neighborhoods have render-ready implementations.',
+            'The block reads active public listings from Realty Engine; Website Builder may configure presentation, routes, and CTAs only.',
+        ],
+        antiPatterns: [
+            'Do not store listing rows in Website Builder data.',
+            'Do not publish draft or needs-review listings through AI Studio.',
+        ],
     }),
     entry({
         id: 'propertySearch',
@@ -484,7 +494,14 @@ export const componentRegistry: ComponentRegistryEntry[] = [
         pageIntents: ['real_estate_home'],
         conversionRoles: ['lead_capture', 'catalog_discovery'],
         requiredModules: ['realEstate'],
+        fallbackComponentId: 'realEstateListings',
         renderTargets: { websiteSection: 'propertyDirectory' },
+        aiSelection: {
+            canSelect: false,
+            selectionGuidance: ['Keep as planning metadata until a dedicated rendered search block is available.'],
+            antiPatterns: ['Do not mount propertyDirectory as a homepage search section.'],
+            confidenceThreshold: 1,
+        },
     }),
     entry({
         id: 'neighborhoods',
@@ -497,7 +514,14 @@ export const componentRegistry: ComponentRegistryEntry[] = [
         pageIntents: ['real_estate_home'],
         conversionRoles: ['education', 'trust'],
         requiredModules: ['realEstate'],
+        fallbackComponentId: 'realEstateListings',
         renderTargets: { websiteSection: 'features' },
+        aiSelection: {
+            canSelect: false,
+            selectionGuidance: ['Keep as planning metadata until dedicated neighborhood cards are implemented.'],
+            antiPatterns: ['Do not invent neighborhood or market data as public proof.'],
+            confidenceThreshold: 1,
+        },
     }),
     entry({
         id: 'footer',

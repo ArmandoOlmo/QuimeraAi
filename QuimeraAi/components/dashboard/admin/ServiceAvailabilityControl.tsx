@@ -257,11 +257,26 @@ const ServiceCard: React.FC<{
     );
 };
 
+const getAuditLogDate = (timestamp: ServiceAuditEntry['timestamp']) => {
+    if (typeof timestamp === 'string') {
+        return new Date(timestamp);
+    }
+
+    if (timestamp?.seconds) {
+        return new Date(timestamp.seconds * 1000);
+    }
+
+    return null;
+};
+
 // Audit Log Entry
 const AuditLogEntry: React.FC<{ entry: ServiceAuditEntry }> = ({ entry }) => {
     const { t } = useTranslation();
     const service = PLATFORM_SERVICES.find(s => s.id === entry.serviceId);
-    const date = new Date(entry.timestamp.seconds * 1000);
+    const date = getAuditLogDate(entry.timestamp);
+    const formattedDate = date && !Number.isNaN(date.getTime())
+        ? `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
+        : t('common.unknownDate', 'Fecha desconocida');
 
     return (
         <div className="flex items-start gap-4 py-3 border-b border-q-border last:border-0">
@@ -281,7 +296,7 @@ const AuditLogEntry: React.FC<{ entry: ServiceAuditEntry }> = ({ entry }) => {
                 <div className="flex items-center gap-3 mt-1 text-xs text-q-text-secondary">
                     <span>{entry.userEmail}</span>
                     <span>•</span>
-                    <span>{date.toLocaleDateString()} {date.toLocaleTimeString()}</span>
+                    <span>{formattedDate}</span>
                 </div>
                 {entry.reason && (
                     <p className="text-sm text-q-text-secondary mt-1 italic">

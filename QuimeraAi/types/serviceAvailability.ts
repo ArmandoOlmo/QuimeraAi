@@ -89,7 +89,7 @@ export interface ServiceConfig {
  */
 export interface GlobalServiceAvailability {
     services: Record<PlatformServiceId, ServiceConfig>;
-    lastUpdated: { seconds: number; nanoseconds: number };
+    lastUpdated: { seconds: number; nanoseconds: number } | string;
     updatedBy: string;
 }
 
@@ -109,7 +109,7 @@ export interface ServiceAuditEntry {
     reason?: string;
     userId: string;
     userEmail: string;
-    timestamp: { seconds: number; nanoseconds: number };
+    timestamp: { seconds: number; nanoseconds: number } | string;
 }
 
 // =============================================================================

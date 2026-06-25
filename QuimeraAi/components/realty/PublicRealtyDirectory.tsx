@@ -25,6 +25,7 @@ import type { RealtyListingsSectionData, RealtyProperty, RealtyPropertyType, Tra
 import { usePublicRealtyListings, type PublicRealtySort } from '../../hooks/usePublicRealtyListings';
 import { formatRealtyPrice, realtyPropertyTypes, resolveRealtyWebsiteColors } from '../../utils/realty';
 import { getAnimationClass, getAnimationDelay } from '../../utils/animations';
+import { getRealtyRouteSegments, resolveRealtyDetailPath } from '../../utils/realtyWebsiteRoutes';
 import AppSelect from '../ui/AppSelect';
 
 interface PublicRealtyDirectoryProps {
@@ -196,20 +197,21 @@ const DirectoryChip = ({ children, variant = 'outline', className }: DirectoryCh
     </span>
 );
 
-const getPreviewBasePath = () => {
+const getPreviewBasePath = (data?: RealtyListingsSectionData) => {
     if (typeof window === 'undefined') return '';
     const pathname = window.location.pathname;
     if (!pathname.startsWith('/preview/')) return '';
     const parts = pathname.replace('/preview/', '').split('/').filter(Boolean);
+    const routeSegments = new Set([...previewLogicalRouteSegments, ...getRealtyRouteSegments(data)]);
     if (parts.length === 0) return '/preview';
     if (parts.length === 1) return `/preview/${parts[0]}`;
-    if (previewLogicalRouteSegments.has(parts[1])) return `/preview/${parts[0]}`;
+    if (routeSegments.has(parts[1])) return `/preview/${parts[0]}`;
     return `/preview/${parts[0]}/${parts[1]}`;
 };
 
-const navigateTo = (path: string) => {
+const navigateTo = (path: string, data?: RealtyListingsSectionData) => {
     if (typeof window === 'undefined') return;
-    const fullPath = `${getPreviewBasePath()}${path}`;
+    const fullPath = `${getPreviewBasePath(data)}${path}`;
     window.history.pushState(null, '', fullPath);
     window.dispatchEvent(new PopStateEvent('popstate'));
 };
@@ -355,10 +357,10 @@ const PublicRealtyDirectory: React.FC<PublicRealtyDirectoryProps> = ({
     }, []);
 
     const goToProperty = useCallback((property: RealtyProperty) => {
-        const path = `/listados/${property.slug}`;
+        const path = resolveRealtyDetailPath(data, property.slug);
         if (onNavigate) onNavigate(path);
-        else navigateTo(path);
-    }, [onNavigate]);
+        else navigateTo(path, data);
+    }, [data, onNavigate]);
 
     const featuredProperties = useMemo(
         () => properties.filter(property => property.isFeatured).slice(0, 3),

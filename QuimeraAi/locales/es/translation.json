@@ -3349,6 +3349,30 @@
     "discounts": "Descuentos",
     "analytics": "Analíticas",
     "settings": "Configuración",
+    "crossModuleSync": {
+      "title": "Conectar ecommerce con Quimera Suite",
+      "subtitle": "Crea drafts revisables para Chatbot, CRM, Email Marketing, Analytics, Appointments, ofertas Ecommerce y Finance sin activar automatizaciones.",
+      "chatbot": "Drafts de knowledge para Chatbot",
+      "crm": "Tags CRM/Leads",
+      "email": "Drafts de Email Marketing",
+      "analytics": "Definiciones de eventos Analytics",
+      "appointments": "Drafts de citas",
+      "offers": "Drafts de ofertas Ecommerce",
+      "finance": "Drafts de ingresos Finance",
+      "preview": "Ver preview",
+      "createDrafts": "Crear drafts de integración",
+      "dismiss": "Omitir",
+      "chatbotShort": "Chatbot",
+      "crmShort": "CRM",
+      "emailShort": "Email",
+      "analyticsShort": "Analytics",
+      "appointmentsShort": "Citas",
+      "offersShort": "Ofertas",
+      "financeShort": "Finance",
+      "previewNote": "Preview local: no escribe en base de datos.",
+      "applyNote": "{{created}} drafts guardados en el blueprint; {{skipped}} omitidos por idempotencia.",
+      "noRuntime": "No se activa runtime de email, pagos, citas, chatbot ni analytics."
+    },
     "productsTotal": "productos en total",
     "categoriesTotal": "categorías en total",
     "ordersTotal": "pedidos en total",
@@ -6764,13 +6788,450 @@
     "selectProject": "Selecciona un proyecto para gestionar la suite inmobiliaria.",
     "selectProperty": "Seleccionar propiedad",
     "tabs": {
+      "engine": "Motor",
       "overview": "Resumen",
       "properties": "Propiedades",
       "leads": "Leads",
       "campaigns": "Campañas",
-      "openHouses": "Open Houses",
-      "ai": "AI",
+      "openHouses": "Open houses",
+      "ai": "IA",
       "settings": "Configuración"
+    },
+    "areas": {
+      "workspace": {
+        "navLabel": "Workspace del realtor",
+        "navDescription": "Trabajo diario del proyecto.",
+        "label": "Área de usuario",
+        "title": "Workspace del realtor",
+        "description": "Esta es el área operativa para realtors y brokerages que crean su proyecto. Se enfoca en listings, leads, open houses, campañas y contenido de IA sin exponer acciones de control de plataforma.",
+        "points": {
+          "listings": {
+            "title": "Listings",
+            "description": "Crear, editar, revisar y publicar propiedades del proyecto."
+          },
+          "leads": {
+            "title": "Leads",
+            "description": "Gestionar inquiries, showing requests y estado de CRM."
+          },
+          "content": {
+            "title": "Contenido",
+            "description": "Usar AI copy, campañas y herramientas de open house para este proyecto."
+          }
+        }
+      },
+      "control": {
+        "navLabel": "Control Admin",
+        "navDescription": "Motor de drafts y controles del módulo.",
+        "label": "Área admin",
+        "title": "Área de control Realty",
+        "description": "Esta área está restringida a admins. Controla generación de drafts, imports, sincronización cross-module, drafts de monetización y activación del módulo para el proyecto seleccionado.",
+        "points": {
+          "drafts": {
+            "title": "Generación de drafts",
+            "description": "Crear drafts revisables desde BusinessBlueprint y AI Studio."
+          },
+          "imports": {
+            "title": "Imports",
+            "description": "Preparar listings desde CSV, IDX, MLS, API y feeds externos."
+          },
+          "settings": {
+            "title": "Controles del módulo",
+            "description": "Controlar flags del proyecto, acceso al directorio público y disponibilidad de IA."
+          }
+        }
+      }
+    },
+    "engine": {
+      "title": "Real Estate Engine",
+      "subtitle": "Capa operativa segura en draft, generada desde AI Studio y conectada a los módulos de Quimera.",
+      "readiness": "Preparación",
+      "needsReview": "Requiere revisión",
+      "draft": "Borrador",
+      "configured": "Configurado",
+      "disabled": "Deshabilitado",
+      "protected": "Protegido",
+      "safeDraft": "Draft seguro",
+      "preserveUserEdits": "Preservar ediciones del usuario",
+      "guardrails": "Guardrails",
+      "opportunities": "Oportunidades de monetización",
+      "artifacts": "Artefactos del engine",
+      "modules": "Módulos conectados",
+      "syncPreview": "Preview de sincronización",
+      "safeGeneration": "Los elementos generados quedan seguros para revisión antes de activarse.",
+      "needsReviewCount": "Requieren revisión",
+      "protectedCount": "Artefactos protegidos",
+      "connectedArtifacts": "Artefactos conectados",
+      "reviewSignals": "Señales de revisión",
+      "connectedModules": "Mapa de módulos Quimera",
+      "openModule": "Abrir",
+      "noOpportunities": "Aún no hay oportunidades de monetización.",
+      "artifactPipeline": "Pipeline de generación de AI Studio",
+      "noAutoPublish": "La data Realty generada por AI queda draft/needsReview hasta revisión.",
+      "noOverwrite": "Los artefactos editados por usuario o bloqueados están protegidos de regeneración.",
+      "noRuntimeActivation": "Emails, pagos, citas, knowledge del chatbot y tracking analytics no se activan automáticamente.",
+      "realtyDraftSync": "Drafts desde blueprint Realty",
+      "realtyDraftSyncDescription": "Crea drafts revisables de Realty desde el RealEstateBlueprint sin publicar listings ni activar automatizaciones.",
+      "previewRealtyDrafts": "Previsualizar drafts Realty",
+      "createRealtyDrafts": "Crear drafts Realty",
+      "realtyPreviewNote": "Solo preview. No se guardaron filas de Realty ni metadata del proyecto.",
+      "realtyApplyNote": "{{created}} drafts Realty preparados y {{skipped}} elementos protegidos omitidos.",
+      "realtyNoRuntimeSync": "Los listings quedan draft/privados, las campañas quedan draft, los open house settings no inventan fechas, y pagos, citas, emails, publicación de chatbot y analytics permanecen inactivos.",
+      "realtyDraftSyncMissingBlueprint": "Se requiere un RealEstateBlueprint antes de crear registros draft de Realty.",
+      "realtyDraftSyncMissingUser": "Se requiere un usuario antes de crear registros draft de Realty.",
+      "realtyDraftStatus": {
+        "not_started": "Sin iniciar",
+        "previewed": "Previsualizado",
+        "synced_draft": "Drafts creados",
+        "dismissed": "Descartado"
+      },
+      "realtyDraftModules": {
+        "profiles": "Perfil de agente/brokerage",
+        "listings": "Drafts de listings",
+        "campaigns": "Drafts de campañas",
+        "openHouses": "Settings de open houses",
+        "website": "Settings del website"
+      },
+      "realtyDraftShort": {
+        "profiles": "Perfiles",
+        "listings": "Listings",
+        "campaigns": "Campañas",
+        "openHouses": "Open houses",
+        "website": "Website"
+      },
+      "import": {
+        "title": "Staging de Import / IDX",
+        "description": "Prepara listings externos desde CSV, MLS, IDX, URL, API o filas manuales como drafts privados para revisión.",
+        "sourceType": "Tipo de fuente",
+        "sourceName": "Nombre de fuente",
+        "sourceNamePlaceholder": "Feed MLS staging, export CSV, adaptador IDX",
+        "savedSource": "Fuente guardada",
+        "newSource": "Nueva fuente",
+        "providerName": "Proveedor",
+        "providerNamePlaceholder": "Proveedor MLS, vendor IDX, partner API",
+        "feedUrl": "URL del feed",
+        "feedUrlPlaceholder": "https://example.com/feed.csv",
+        "syncMode": "Modo de sync",
+        "saveSource": "Guardar fuente",
+        "updateSource": "Actualizar fuente",
+        "sourceSaved": "Fuente de import guardada para revisión. El sync en vivo sigue inactivo.",
+        "recentJobs": "Jobs de import recientes",
+        "payload": "Filas JSON o CSV",
+        "payloadPlaceholder": "Pega un array/objeto JSON o CSV con headers como title, price, address, city, property_type...",
+        "loadSample": "Cargar ejemplo",
+        "preview": "Previsualizar drafts importados",
+        "create": "Crear drafts revisables",
+        "noAutoPublish": "Sin auto-publicación",
+        "safeNote": "Esta área de staging no conecta feeds en vivo. Los listings creados quedan draft/privados y requieren revisión.",
+        "previewNote": "Solo preview. No se guardaron filas de propiedades.",
+        "applyNote": "{{created}} draft(s) de listing importado creados para revisión.",
+        "noRuntimeSync": "Directorio público, email, chatbot, citas, analytics y pagos permanecen inactivos hasta revisión en sus módulos owner.",
+        "emptyPreview": "Pega un export de feed y previsualízalo antes de crear drafts revisables.",
+        "untitled": "Listing sin título",
+        "missingLocation": "Ubicación faltante",
+        "needsReview": "Requiere revisión",
+        "possibleDuplicate": "Posible duplicado",
+        "status": {
+          "not_started": "Sin iniciar",
+          "previewed": "Previsualizado",
+          "synced_draft": "Drafts creados",
+          "dismissed": "Descartado"
+        },
+        "sources": {
+          "manual": "Manual",
+          "csv": "CSV",
+          "imported-url": "URL importada",
+          "mls": "MLS",
+          "idx": "IDX",
+          "api": "API",
+          "external-feed": "Feed externo"
+        },
+        "syncModes": {
+          "manual": "Manual",
+          "scheduled": "Scheduled draft",
+          "webhook": "Webhook draft",
+          "disabled": "Deshabilitado"
+        },
+        "jobStatus": {
+          "draft": "Draft",
+          "mapping_required": "Mapping requerido",
+          "ready_for_review": "Listo para revisión",
+          "completed": "Completado",
+          "failed": "Fallido",
+          "cancelled": "Cancelado"
+        },
+        "summary": {
+          "staged": "Staged",
+          "ready": "Listos",
+          "duplicates": "Duplicados",
+          "warnings": "Warnings",
+          "created": "Creados"
+        },
+        "warnings": {
+          "missing_title": "Falta título",
+          "missing_price": "Falta precio",
+          "missing_location": "Falta ubicación",
+          "missing_external_id": "Falta ID externo",
+          "possible_duplicate": "Posible duplicado"
+        },
+        "errors": {
+          "emptyPayload": "Pega filas JSON o CSV antes de previsualizar.",
+          "parseError": "No se pudo leer el payload de importación. Usa un array/objeto JSON o CSV con headers.",
+          "emptyRows": "No se encontraron filas de listings en el payload.",
+          "missingProject": "Selecciona un proyecto activo antes de preparar listings importados.",
+          "missingUser": "Se requiere un usuario antes de crear drafts de listings importados."
+        }
+      },
+      "integrationDrafts": "Drafts de integración",
+      "integrationDraftsDescription": "Previsualiza o crea handoffs seguros en draft para CRM, Chatbot, Email, Analytics, Appointments, Ecommerce y Finance.",
+      "previewDrafts": "Previsualizar drafts",
+      "createIntegrationDrafts": "Crear drafts",
+      "previewNote": "Solo preview. No se guardó data del proyecto ni se activó ningún módulo runtime.",
+      "applyNote": "{{created}} drafts preparados y {{skipped}} elementos protegidos omitidos.",
+      "noRuntimeSync": "Productos, precios, checkout sessions, payment links de Stripe, slots de calendario, envíos de email, publicación de chatbot, ledger entries y tracking analytics permanecen inactivos.",
+      "syncMissingBlueprint": "Se requiere un BusinessBlueprint antes de preparar drafts de integración Realty.",
+      "syncMissingUser": "Se requiere un usuario antes de preparar drafts de integración Realty.",
+      "syncStatus": {
+        "not_started": "Sin iniciar",
+        "previewed": "Previsualizado",
+        "synced_draft": "Drafts creados",
+        "dismissed": "Descartado"
+      },
+      "syncModules": {
+        "chatbot": "Knowledge del chatbot",
+        "crm": "CRM / Leads",
+        "email": "Email Marketing",
+        "analytics": "Analytics",
+        "appointments": "Appointments",
+        "offers": "Ofertas",
+        "finance": "Finance"
+      },
+      "syncShort": {
+        "chatbot": "Chatbot",
+        "crm": "CRM",
+        "email": "Email",
+        "analytics": "Analytics",
+        "appointments": "Appointments",
+        "offers": "Ofertas",
+        "finance": "Finance"
+      },
+      "chatbotKnowledge": {
+        "title": "Cola de revisión de knowledge del chatbot",
+        "description": "Fuentes de knowledge generadas por Realty para perfil, listings, showings, cualificación de leads y compliance. Revisa en Chatbot antes de publicar.",
+        "draftCount": "{{count}} draft",
+        "draftCount_plural": "{{count}} drafts",
+        "needsReview": "Needs review",
+        "reviewedListings": "Públicos revisados",
+        "draftListings": "Listings draft",
+        "blockerPrefix": "Blocker:",
+        "moreBlockers": "+{{count}} blockers más",
+        "noRuntime": "No se publica knowledge del chatbot desde esta cola. Quimera Chat sigue siendo owner de la activación runtime.",
+        "types": {
+          "profile": "Perfil",
+          "listing_summary": "Listings",
+          "showing_and_open_house": "Showings",
+          "lead_qualification": "Cualificación",
+          "compliance_guardrails": "Compliance"
+        }
+      },
+      "offers": {
+        "title": "Ofertas Realty",
+        "description": "Crea drafts revisables de Ecommerce y Finance para guías pagas, reportes, consultas, promociones de listings, cursos, descargas y tickets de open house.",
+        "preview": "Previsualizar ofertas",
+        "create": "Crear drafts de ofertas",
+        "previewNote": "Solo preview. No se creó ningún producto Ecommerce, producto Stripe, precio, checkout session, payment link ni ledger entry de Finance.",
+        "applyNote": "{{created}} drafts de ofertas/finance preparados y {{skipped}} elementos protegidos omitidos.",
+        "noRuntimeSync": "Ecommerce es owner de publicación de productos, pricing, taxes, checkout, pagos, órdenes y refunds. Realty solo guarda handoffs seguros en draft.",
+        "empty": "Aún no hay ofertas Realty disponibles desde este BusinessBlueprint.",
+        "noStripeProduct": "Sin producto Stripe",
+        "moreBlockers": "+{{count}} blockers más",
+        "metrics": {
+          "drafts": "Productos draft",
+          "missingPrice": "Precio faltante",
+          "paymentBlockers": "Blockers de pago",
+          "taxBlockers": "Blockers de tax",
+          "savedDrafts": "Drafts guardados"
+        },
+        "types": {
+          "buyer_guides": "Guía para compradores",
+          "seller_guides": "Guía para sellers",
+          "market_reports": "Reporte de mercado",
+          "consultation_packages": "Paquete de consulta para compradores",
+          "valuation_packages": "Paquete de valoración para sellers",
+          "premium_listing_packages": "Promoción premium de listing",
+          "courses": "Curso inmobiliario",
+          "digital_downloads": "Checklist descargable",
+          "open_house_tickets": "Ticket de open house",
+          "digital_products": "Producto digital"
+        },
+        "categories": {
+          "buyer_guides": "Guías inmobiliarias",
+          "seller_guides": "Guías inmobiliarias",
+          "market_reports": "Inteligencia de mercado",
+          "consultation_packages": "Consultas",
+          "valuation_packages": "Consultas",
+          "premium_listing_packages": "Promociones de listings",
+          "courses": "Educación",
+          "digital_downloads": "Descargas digitales",
+          "open_house_tickets": "Open houses",
+          "digital_products": "Productos digitales"
+        },
+        "descriptions": {
+          "buyer_guides": "Producto digital revisable de guía para compradores generado desde el contexto Realty de AI Studio.",
+          "seller_guides": "Producto digital revisable de guía para sellers orientado a educación y captura de leads.",
+          "market_reports": "Draft de reporte de mercado para insights revisados de vecindario, pricing e inventario.",
+          "consultation_packages": "Draft de paquete de consulta paga que requiere revisión de disponibilidad, alcance y pagos.",
+          "valuation_packages": "Draft de paquete de valoración para sellers con disclaimers, intake y pricing por revisar.",
+          "premium_listing_packages": "Draft de paquete premium de listing para revisar ubicación destacada, alcance de campaña y reporting.",
+          "courses": "Draft de producto educativo inmobiliario que requiere revisión de currículo, acceso, refunds y compliance.",
+          "digital_downloads": "Draft de checklist o template descargable que debe revisarse antes de mostrarse en storefront.",
+          "open_house_tickets": "Draft de ticket o registro de open house para eventos con capacidad cuando aplique.",
+          "digital_products": "Draft de producto digital generado desde señales de monetización Realty."
+        },
+        "blockers": {
+          "payment_not_configured": "El proveedor de pagos no está configurado para checkout.",
+          "tax_not_configured": "El manejo de taxes no está configurado para esta oferta.",
+          "needs_merchant_review": "Se requiere revisión del merchant antes de publicar.",
+          "missing_product_description": "La descripción del producto requiere revisión antes de publicar.",
+          "missing_price": "El precio falta o sigue siendo solo sugerido por IA.",
+          "offer_disabled": "La oferta está deshabilitada en el RealEstateBlueprint.",
+          "checkout_disabled": "Checkout permanece deshabilitado por diseño hasta que Ecommerce apruebe el producto."
+        },
+        "priceSource": {
+          "user-provided": "Precio del usuario",
+          "ai-suggested": "Sugerido por IA",
+          "imported": "Importado",
+          "unset": "Precio sin definir"
+        }
+      },
+      "status": {
+        "draft": "Borrador",
+        "needs_review": "Requiere revisión",
+        "configured": "Configurado",
+        "disabled": "Deshabilitado"
+      },
+      "regeneration": {
+        "safe_draft": "Draft seguro",
+        "preserve_user_edits": "Preservar ediciones",
+        "locked": "Bloqueado"
+      },
+      "moduleLabels": {
+        "business-blueprint": "BusinessBlueprint",
+        "website-builder": "Website Builder",
+        "crm-leads": "CRM / Leads",
+        "campaign-automation": "Campañas + Email",
+        "appointments-open-houses": "Citas + Open houses",
+        "commerce-finance": "Ecommerce + Finance"
+      },
+      "moduleDescriptions": {
+        "business-blueprint": "Contrato de generación inmobiliaria usado por AI Studio.",
+        "website-builder": "Rutas, perfil, páginas de listings y páginas de captura quedan en revisión dentro de Website Builder.",
+        "crm-leads": "Los leads Realty sincronizan con CRM usando metadata de funnels segura en draft.",
+        "campaign-automation": "Los drafts de campañas y automatizaciones de email quedan listos para seguimiento de listings y leads.",
+        "appointments-open-houses": "Showing requests y registros de open houses se enrutan hacia revisión en Appointments.",
+        "commerce-finance": "Productos digitales, consultas, paquetes de valoración y tracking de ingresos quedan revisables."
+      },
+      "artifactLabels": {
+        "business_blueprint": "BusinessBlueprint",
+        "website": "Website",
+        "profile": "Perfil de agente/brokerage",
+        "listings": "Listings",
+        "property_pages": "Páginas de propiedad",
+        "directory": "Directorio público",
+        "open_houses": "Open houses",
+        "showing_requests": "Showing requests",
+        "lead_funnels": "Lead funnels",
+        "campaigns": "Campañas",
+        "chatbot_knowledge": "Knowledge del chatbot",
+        "email_automations": "Automatizaciones de email",
+        "crm_pipeline": "Pipeline CRM",
+        "appointments": "Citas",
+        "ecommerce_products": "Productos digitales",
+        "finance": "Finance",
+        "analytics": "Analytics",
+        "monetization": "Monetización"
+      },
+      "artifactDescriptions": {
+        "business_blueprint": "Fuente de verdad inmobiliaria para generación desde AI Studio.",
+        "website": "Website, perfil, listings y páginas de leads generados como drafts.",
+        "profile": "Identidad pública, licencia, contacto, CTA y contenido de confianza.",
+        "listings": "Inventario, estados draft, scoring de calidad y flags públicos.",
+        "property_pages": "Páginas públicas de detalle con SEO, media, FAQ y captura de leads.",
+        "directory": "Directorio searchable de listings activos y públicos.",
+        "open_houses": "Programación de open houses y registros públicos.",
+        "showing_requests": "Showing requests listos para citas desde CTAs de listings.",
+        "lead_funnels": "Funnels para compradores, vendedores, renters, inversionistas y lead magnets.",
+        "campaigns": "Campañas de just listed, open house, price drop y nurture.",
+        "chatbot_knowledge": "Knowledge revisado para listings, FAQs, cualificación y flujo de showings.",
+        "email_automations": "Flujos de follow-up, confirmación, entrega de guías y nurture.",
+        "crm_pipeline": "Etapas de pipeline y tags conectados a Quimera Leads.",
+        "appointments": "Showing privados, consultas y tipos de reserva para open houses.",
+        "ecommerce_products": "Guías, reportes, consultas, depósitos y productos pagos.",
+        "finance": "Fuentes de ingreso para consultas, productos, promociones y referrals.",
+        "analytics": "Eventos y dashboards para listings, leads, campañas, reservas e ingresos.",
+        "monetization": "Oportunidades de ingresos revisables para agentes y brokerages."
+      },
+      "metricLabels": {
+        "status": "Estado",
+        "routes": "Rutas",
+        "profile": "Perfil",
+        "properties": "Propiedades",
+        "quality": "Calidad",
+        "public": "Público",
+        "directory": "Directorio",
+        "openHouses": "Open houses",
+        "requests": "Requests",
+        "leads": "Leads",
+        "sources": "Fuentes",
+        "campaigns": "Campañas",
+        "drafts": "Drafts",
+        "knowledgeDrafts": "Drafts de knowledge",
+        "flows": "Flujos",
+        "offers": "Ofertas",
+        "revenueSources": "Fuentes de ingreso",
+        "events": "Eventos"
+      },
+      "metricValues": {
+        "on": "Activo",
+        "off": "Inactivo"
+      },
+      "profileTypes": {
+        "agent": "Agente",
+        "brokerage": "Brokerage"
+      },
+      "messages": {
+        "businessBlueprintNeedsReview": "El BusinessBlueprint todavía requiere revisión.",
+        "blueprintDisabled": "El blueprint inmobiliario no está habilitado.",
+        "websiteReview": "Los drafts del website deben revisarse en Website Builder antes de publicar.",
+        "profileReview": "El perfil de agente o brokerage requiere revisión de licencia y contacto.",
+        "createListingDraft": "Crea al menos un draft de listing.",
+        "publishReviewedListing": "Publica al menos un listing revisado para generar páginas públicas de detalle.",
+        "directoryNeedsListings": "El directorio necesita listings públicos revisados.",
+        "directoryDisabled": "El directorio público está deshabilitado.",
+        "noOpenHouse": "Aún no existe un draft de open house.",
+        "confirmAvailability": "Confirma disponibilidad antes de activar confirmaciones automáticas de showings.",
+        "noLeads": "Aún no se han capturado leads inmobiliarios.",
+        "generateCampaignDraft": "Genera al menos un draft de campaña para un listing.",
+        "chatbotDraft": "El knowledge del chatbot queda en draft hasta revisión en Quimera Chat.",
+        "emailDraft": "Las automatizaciones de email no se envían hasta revisarse y activarse en Email Marketing.",
+        "commerceReview": "Productos digitales y ofertas requieren revisión de pricing, pagos y fulfillment.",
+        "financeDraft": "Finance queda en draft hasta conectar fuentes de pago.",
+        "analyticsDraft": "Los eventos de Analytics están en draft; el tracking runtime requiere revisión.",
+        "moduleDisabled": "El módulo Realty está deshabilitado.",
+        "guardrailDraft": "Los outputs de AI Studio quedan en draft o needsReview hasta revisión del usuario.",
+        "guardrailProtected": "Los artefactos editados o bloqueados por usuario se preservan durante regeneración.",
+        "guardrailNoActivation": "No se activan automáticamente envíos de email, publicación de chatbot, productos de pago, automatizaciones de citas ni tracking analytics.",
+        "guardrailRls": "Los leads Realty se enrutan por la sincronización existente respaldada por Supabase/RLS, no por credenciales frontend.",
+        "opportunityFeaturedListing": "Promoción de listing destacado",
+        "opportunityNurture": "Secuencias nurture para sellers y buyers",
+        "opportunityOpenHouse": "Campaña de retargeting para open house",
+        "opportunityBuyerConsultation": "Consulta paga para compradores",
+        "opportunitySellerValuation": "Paquete de valoración para sellers",
+        "opportunityNeighborhoodReport": "Reporte de vecindario",
+        "opportunityInvestmentSession": "Sesión de asesoría para inversionistas",
+        "opportunityBuyerGuide": "Guía para compradores",
+        "opportunitySellerConsultation": "Consulta para sellers",
+        "opportunityInvestmentChecklist": "Checklist de inversión"
+      }
     },
   "metrics": {
     "properties": "Propiedades",
@@ -6788,10 +7249,48 @@
       "noProjectDesc": "Selecciona o crea un website antes de activar Realty.",
       "noAccess": "Realty no está disponible",
       "noAccessDesc": "El módulo está desactivado por plan, servicio, tenant, proyecto o permisos.",
+      "noControlAccess": "El control de Realty está restringido",
+      "noControlAccessDesc": "El Motor y la configuración del módulo son controles admin. Los usuarios realtor deben trabajar desde Resumen, Propiedades, Leads, Campañas, Open houses e IA.",
       "noProperties": "Sin propiedades",
       "noPropertiesDesc": "Crea tu primera propiedad para publicarla en el directorio.",
       "noLeads": "Sin leads",
       "noLeadsDesc": "Los leads enviados desde los listings aparecerán aquí."
+    },
+    "workspaceOverview": {
+      "label": "Workspace del realtor",
+      "title": "Centro operativo del proyecto",
+      "subtitle": "Gestiona el flujo inmobiliario visible de este proyecto: listings, seguimiento de leads, campañas, open houses y contenido de listings asistido por IA.",
+      "project": "Proyecto activo",
+      "mapLabel": "Mapa del workspace",
+      "mapTitle": "Qué hace cada área",
+      "userScope": "Solo alcance de usuario",
+      "actions": {
+        "properties": {
+          "title": "Propiedades",
+          "description": "Crear registros de listings, revisar drafts importados, medir calidad y publicar páginas públicas revisadas.",
+          "cta": "Abrir propiedades"
+        },
+        "leads": {
+          "title": "Leads",
+          "description": "Dar seguimiento a inquiries, showing requests, estado de CRM y acciones de follow-up.",
+          "cta": "Abrir leads"
+        },
+        "campaigns": {
+          "title": "Campañas",
+          "description": "Preparar campañas de listings, bloques de copy y drafts de marketing programados para el proyecto.",
+          "cta": "Abrir campañas"
+        },
+        "openHouses": {
+          "title": "Open houses",
+          "description": "Crear eventos, gestionar opciones de registro y actualizar el estado de cada open house.",
+          "cta": "Abrir open houses"
+        },
+        "ai": {
+          "title": "Contenido IA",
+          "description": "Generar, guardar y aplicar copy de listings manteniendo al usuario en control de las ediciones.",
+          "cta": "Abrir IA"
+        }
+      }
     },
     "overview": {
       "recentProperties": "Propiedades recientes",
@@ -6800,6 +7299,50 @@
     "properties": {
       "create": "Nueva propiedad",
       "edit": "Editar propiedad"
+    },
+    "importReview": {
+      "title": "Revisión de listing importado",
+      "description": "Revisa los drafts de CSV, MLS, IDX, API y feeds externos antes de permitir publicación.",
+      "reviewCard": "Revisión de import",
+      "total": "Importados",
+      "pending": "Pendientes",
+      "approved": "Aprobados",
+      "source": "Fuente",
+      "externalId": "ID externo",
+      "duplicateLabel": "Revisión de duplicado",
+      "warningsLabel": "Señales de revisión",
+      "sourceUnknown": "Fuente desconocida",
+      "externalIdMissing": "Sin ID externo",
+      "blockedPublish": "Los listings importados permanecen privados hasta aprobar la revisión de import.",
+      "approvedNote": "La revisión de import está aprobada. La publicación todavía requiere el checklist normal del listing.",
+      "publishBlockedBadge": "Revisar primero",
+      "duplicateMatches": "{{count}} match(es) de duplicado",
+      "status": {
+        "draft": "Import en draft",
+        "needs_review": "Requiere revisión de import",
+        "approved": "Import aprobado",
+        "rejected": "Import rechazado"
+      },
+      "duplicateStatus": {
+        "none": "Sin duplicado",
+        "possible_duplicate": "Posible duplicado",
+        "confirmed_duplicate": "Duplicado confirmado",
+        "not_duplicate": "No es duplicado"
+      },
+      "actions": {
+        "openEditor": "Revisar",
+        "approve": "Aprobar import",
+        "reject": "Rechazar import",
+        "reopen": "Reabrir revisión"
+      },
+      "messages": {
+        "approved": "Listing importado aprobado. Permanece privado hasta que lo publiques.",
+        "rejected": "Listing importado rechazado y archivado.",
+        "needs_review": "Listing importado devuelto a revisión."
+      },
+      "errors": {
+        "approveBeforePublish": "Aprueba la revisión del listing importado antes de publicarlo."
+      }
     },
     "editor": {
       "propertyEditor": "Editor de propiedad",
@@ -6913,10 +7456,11 @@
     "leadStatus": {
       "new": "Nuevo",
       "contacted": "Contactado",
-      "qualified": "Visita programada",
+      "qualified": "Calificado",
       "negotiation": "Oferta enviada",
       "won": "Cerrado",
       "showing_scheduled": "Visita programada",
+      "completed": "Completado",
       "offer_made": "Oferta enviada",
       "closed": "Cerrado",
       "lost": "Perdido"
@@ -6925,7 +7469,37 @@
       "name": "Nombre",
       "email": "Email",
       "phone": "Teléfono",
-      "property": "Propiedad"
+      "property": "Propiedad",
+      "crmSynced": "CRM sincronizado",
+      "draftEvents": "{{count}} evento draft",
+      "draftEvents_plural": "{{count}} eventos draft",
+      "pipelineStats": {
+        "total": "Total de leads",
+        "new": "Leads nuevos",
+        "showingRequests": "Showing requests",
+        "crmSynced": "CRM sincronizado"
+      },
+      "sources": {
+        "property_inquiry": "Inquiry de propiedad",
+        "open_house_registration": "Open house",
+        "showing_request": "Showing request"
+      },
+      "actions": {
+        "confirmShowing": "Confirmar",
+        "markCompleted": "Completar",
+        "followUp": "Follow-up",
+        "appointment": "Cita",
+        "emailDraftReady": "El follow-up de email queda como draft hasta revisarlo en Email Marketing.",
+        "appointmentDraftReady": "La cita queda como draft hasta confirmar disponibilidad."
+      }
+    },
+    "leadTypes": {
+      "buyer": "Comprador",
+      "seller": "Vendedor",
+      "renter": "Arrendatario",
+      "investor": "Inversionista",
+      "agent": "Agente",
+      "other": "Otro"
     },
     "campaigns": {
       "create": "Crear campaña",
@@ -7111,6 +7685,7 @@
   },
     "settings": {
       "title": "Activación del módulo",
+      "description": "Controles admin para la activación de Realty en el proyecto, disponibilidad de IA y acceso al directorio público.",
       "moduleEnabled": "Realty habilitado para este proyecto",
       "aiEnabled": "AI habilitada",
       "publicDirectoryEnabled": "Directorio público habilitado",
@@ -7124,7 +7699,9 @@
       "demo": "Demo",
       "viewAll": "Ver todos los listings",
       "viewDetails": "Ver detalles",
-      "empty": "Todavía no hay propiedades publicadas."
+      "emptyTitle": "Los listings aún no son públicos",
+      "empty": "Publica propiedades revisadas desde Realty Engine para mostrarlas aquí. Los drafts y listings que requieren revisión se mantienen privados.",
+      "emptyCta": "Solicitar información"
     },
     "directory": {
       "title": "Directorio de propiedades",
@@ -7213,6 +7790,19 @@
       "sendError": "No se pudo enviar la solicitud.",
       "related": "Propiedades relacionadas",
       "defaultLeadMessage": "Me interesa recibir información sobre {{title}}.",
+      "showingTitle": "Agendar showing",
+      "showingSubtitle": "Solicita una visita privada y el equipo confirmará disponibilidad.",
+      "preferredDate": "Fecha preferida",
+      "preferredTime": "Hora preferida",
+      "clientType": "Tipo de cliente",
+      "budgetPlaceholder": "Presupuesto",
+      "financingStatusPlaceholder": "Estado de financiamiento",
+      "showingMessagePlaceholder": "Horario ideal, preguntas o detalles de cualificación...",
+      "showingConsent": "Acepto que me contacten sobre este showing request.",
+      "requestShowing": "Solicitar showing",
+      "showingRequested": "Showing request recibido.",
+      "showingRequestError": "No se pudo enviar el showing request.",
+      "showingDefaultMessage": "Quiero agendar un showing para {{title}}.",
       "openHouseTitle": "Open House",
       "openHouseSubtitle": "Reserva tu espacio para visitar esta propiedad.",
       "openHouseMessagePlaceholder": "Quiero registrarme para el open house...",
@@ -7489,9 +8079,17 @@
       "empty": "No hay propiedades activas publicadas todavía.",
       "controls": {
         "buttonText": "Texto del botón",
+        "leadCtaText": "Texto del CTA de lead",
+        "leadCtaPlaceholder": "Solicitar información",
+        "showingRequestCtaText": "Texto del CTA de showing",
+        "showingRequestCtaPlaceholder": "Solicitar showing",
         "source": "Fuente de listados",
         "sourceHelp": "Este componente carga propiedades activas publicadas desde Quimera Real Estate OS.",
         "featuredOnly": "Mostrar solo destacadas",
+        "routes": "Rutas públicas",
+        "routesHelp": "Website Builder controla solo las rutas de presentación. La data de listings sigue viniendo de Realty Engine.",
+        "directoryRoute": "Ruta del directorio",
+        "detailRoutePattern": "Ruta del detalle de propiedad",
         "maxItems": "Cantidad de listados",
         "cardContent": "Contenido de la tarjeta",
         "showPrice": "Mostrar precio",
@@ -13392,6 +13990,93 @@
     "platformAppointmentsDesc": "Gestionar citas agendadas a nivel de plataforma",
     "emailMarketing": "Email Marketing Hub",
     "emailMarketingDesc": "Gestión centralizada de campañas, audiencias, automatizaciones y AI Email Studio",
+    "realtyEngine": {
+      "cardTitle": "Control de Realty Engine",
+      "cardDescription": "Separa controles globales de Realty del workspace de proyecto del realtor.",
+      "title": "Control de Realty Engine",
+      "badge": "Área Super Admin",
+      "heading": "Mapa de control de Realty Engine",
+      "subtitle": "Este panel documenta qué pertenece a la capa admin de la plataforma, qué pertenece a admins del proyecto y qué se mantiene en el workspace del usuario realtor.",
+      "ruleTitle": "Regla de separación",
+      "ruleDescription": "Super Admin controla la app Quimera. Los admins del proyecto controlan generación de drafts y flags del módulo. Los usuarios realtor operan listings, leads, campañas, open houses y contenido de IA.",
+      "appControls": {
+        "label": "Control global de app",
+        "title": "Qué controla Super Admin",
+        "description": "Estos controles afectan el comportamiento de la plataforma, guardrails globales, disponibilidad de servicios, templates, prompts y reglas de monetización usadas por Realty en Quimera.",
+        "items": {
+          "availability": {
+            "title": "Disponibilidad global",
+            "description": "Activar o desactivar Realty por servicio, plan, tenant y política de plataforma."
+          },
+          "prompts": {
+            "title": "Prompts y guardrails de IA",
+            "description": "Definir instrucciones globales de IA, límites de compliance, reglas no-auto-publish y generación segura."
+          },
+          "templates": {
+            "title": "Templates y design system",
+            "description": "Controlar secciones de websites Realty, patrones de páginas de listing, layouts de directorio y alineación con Design Star."
+          },
+          "integrations": {
+            "title": "Política de integraciones",
+            "description": "Definir cómo Realty puede conectar con CRM, Chatbot, Email, Appointments, Analytics, Ecommerce, Finance, IDX, MLS, APIs y feeds externos."
+          },
+          "payments": {
+            "title": "Reglas de Stripe y monetización",
+            "description": "Definir guardrails de productos, checkout, finance, taxes y pagos antes de convertir drafts del proyecto en ofertas activas."
+          },
+          "analytics": {
+            "title": "Analytics de plataforma",
+            "description": "Monitorear uso, adopción, assets generados, colas de revisión, señales de conversión y salud del módulo."
+          }
+        }
+      },
+      "projectControls": {
+        "label": "Control admin del proyecto",
+        "title": "Qué hace el área de control Realty",
+        "description": "Estas acciones pertenecen a admins dentro de un proyecto seleccionado. Preparan drafts y conexiones, pero no deben aparecer en el workspace común del realtor.",
+        "items": {
+          "engine": {
+            "title": "Motor y drafts desde blueprint",
+            "description": "Convertir BusinessBlueprint y AI Studio en drafts revisables de Realty."
+          },
+          "imports": {
+            "title": "Import staging",
+            "description": "Preparar drafts de listings desde CSV, IDX, MLS, API y feeds externos con revisión y detección de duplicados."
+          },
+          "sync": {
+            "title": "Sincronización cross-module",
+            "description": "Preparar drafts de CRM, Chatbot, Email, Analytics, Appointments, Ecommerce y Finance sin activar runtime."
+          },
+          "settings": {
+            "title": "Configuración del módulo",
+            "description": "Activar flags de Realty, IA y directorio público para el proyecto seleccionado."
+          }
+        }
+      },
+      "userWorkspace": {
+        "label": "Workspace del usuario realtor",
+        "title": "Qué ve el usuario realtor",
+        "description": "Esta es el área diaria de producto para realtors y brokerages. Debe ser clara, operativa y libre de controles de administración de la app.",
+        "items": {
+          "listings": {
+            "title": "Propiedades y listings",
+            "description": "Crear, editar, medir calidad, publicar y gestionar propiedades del proyecto."
+          },
+          "leads": {
+            "title": "Leads y showings",
+            "description": "Revisar inquiries, showing requests, estado de CRM y acciones de seguimiento."
+          },
+          "openHouses": {
+            "title": "Open houses",
+            "description": "Crear open houses, gestionar horarios, registros y estados."
+          },
+          "campaigns": {
+            "title": "Campañas y AI copy",
+            "description": "Generar contenido de listings, preparar campañas y aplicar copy a assets del proyecto."
+          }
+        }
+      }
+    },
     "settings": {
       "models": "Models"
     },

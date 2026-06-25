@@ -2761,6 +2761,13 @@ export interface PageData {
         buttonText?: string;
         buttonLink?: string;
         leadLink?: string;
+        directoryRoute?: string;
+        detailRoutePattern?: string;
+        leadCtaText?: string;
+        showingRequestCtaText?: string;
+        emptyStateTitle?: string;
+        emptyStateDescription?: string;
+        emptyStateButtonText?: string;
         maxItems?: number;
         featuredOnly?: boolean;
         showPrice?: boolean;

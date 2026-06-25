@@ -7,6 +7,13 @@ import type {
     RealtyAiGeneration,
     RealtyCampaignStatus,
     RealtyImage,
+    RealtyImportJob,
+    RealtyImportJobStatus,
+    RealtyImportMapping,
+    RealtyImportSource,
+    RealtyImportSourceConfig,
+    RealtyImportSyncMode,
+    RealtyLeadStatus,
     RealtyListingScore,
     RealtyLead,
     RealtyModuleFlags,
@@ -30,7 +37,7 @@ export const REALTY_LEAD_SOURCE = 'realty-website';
 
 export const realtyPropertyTypes: RealtyPropertyType[] = ['house', 'condo', 'apartment', 'townhouse', 'land', 'commercial'];
 export const realtyPropertyStatuses: RealtyPropertyStatus[] = ['draft', 'active', 'pending', 'sold', 'archived'];
-export const realtyLeadStatuses: LeadStatus[] = ['new', 'contacted', 'qualified', 'negotiation', 'won', 'lost'];
+export const realtyLeadStatuses: RealtyLeadStatus[] = ['new', 'contacted', 'qualified', 'showing_scheduled', 'completed', 'offer_made', 'closed', 'lost'];
 export const realtyCampaignTypes: CampaignType[] = [
     'just_listed',
     'open_house',
@@ -43,6 +50,10 @@ export const realtyCampaignTypes: CampaignType[] = [
 ];
 export const realtyCampaignStatuses: RealtyCampaignStatus[] = ['draft', 'scheduled', 'active', 'completed', 'archived'];
 export const realtyOpenHouseStatuses: RealtyOpenHouseStatus[] = ['scheduled', 'active', 'completed', 'cancelled'];
+export const realtyImportSources: RealtyImportSource[] = ['manual', 'csv', 'imported-url', 'mls', 'idx', 'api', 'external-feed'];
+export const realtyImportSyncModes: RealtyImportSyncMode[] = ['manual', 'scheduled', 'webhook', 'disabled'];
+export const realtyImportSourceStatuses: RealtyImportSourceConfig['status'][] = ['draft', 'needs_review', 'configured', 'disabled'];
+export const realtyImportJobStatuses: RealtyImportJobStatus[] = ['draft', 'mapping_required', 'ready_for_review', 'completed', 'failed', 'cancelled'];
 
 export const toRealtySlug = (value: string): string =>
     value
@@ -233,7 +244,35 @@ const normalizeOpenHouseStatus = (value: unknown): RealtyOpenHouseStatus => {
     return (realtyOpenHouseStatuses as string[]).includes(status) ? status as RealtyOpenHouseStatus : 'scheduled';
 };
 
-export const normalizeRealtyLeadStatus = (status: unknown): LeadStatus => normalizeLeadStatus(status);
+const normalizeImportSource = (value: unknown): RealtyImportSource => {
+    const source = String(value || 'manual').toLowerCase();
+    return (realtyImportSources as string[]).includes(source) ? source as RealtyImportSource : 'manual';
+};
+
+const normalizeImportSyncMode = (value: unknown): RealtyImportSyncMode => {
+    const mode = String(value || 'manual').toLowerCase();
+    return (realtyImportSyncModes as string[]).includes(mode) ? mode as RealtyImportSyncMode : 'manual';
+};
+
+const normalizeImportSourceStatus = (value: unknown): RealtyImportSourceConfig['status'] => {
+    const status = String(value || 'draft').toLowerCase();
+    return (realtyImportSourceStatuses as string[]).includes(status) ? status as RealtyImportSourceConfig['status'] : 'draft';
+};
+
+const normalizeImportJobStatus = (value: unknown): RealtyImportJobStatus => {
+    const status = String(value || 'draft').toLowerCase();
+    return (realtyImportJobStatuses as string[]).includes(status) ? status as RealtyImportJobStatus : 'draft';
+};
+
+const normalizeImportMapping = (value: unknown): RealtyImportMapping[] =>
+    Array.isArray(value)
+        ? value.filter((item): item is RealtyImportMapping => isRecord(item) && typeof item.sourceField === 'string' && typeof item.targetField === 'string')
+        : [];
+
+export const normalizeRealtyLeadStatus = (status: unknown): RealtyLeadStatus => {
+    const normalized = String(status || 'new');
+    return (realtyLeadStatuses as string[]).includes(normalized) ? normalized as RealtyLeadStatus : normalizeLeadStatus(normalized);
+};
 
 export const isRealtyCrmLead = (lead: Pick<Lead, 'source' | 'tags' | 'metadata'>): boolean => {
     const metadata = isRecord(lead.metadata) ? lead.metadata : {};
@@ -695,6 +734,96 @@ export const mapRealtyAiGenerationToRow = (
     prompt: generation.prompt,
     output: generation.output,
     metadata: generation.metadata || {},
+    updated_at: new Date().toISOString(),
+});
+
+export const mapRealtyImportSourceRow = (row: any): RealtyImportSourceConfig => ({
+    id: row.id,
+    userId: row.user_id ?? null,
+    tenantId: row.tenant_id ?? null,
+    projectId: row.project_id || '',
+    sourceType: normalizeImportSource(row.source_type),
+    name: row.name || '',
+    providerName: row.provider_name || '',
+    feedUrl: row.feed_url || '',
+    uploadedFileName: row.uploaded_file_name || '',
+    externalAccountId: row.external_account_id || '',
+    syncMode: normalizeImportSyncMode(row.sync_mode),
+    enabled: Boolean(row.enabled),
+    status: normalizeImportSourceStatus(row.status),
+    lastRunAt: row.last_run_at || null,
+    metadata: isRecord(row.metadata) ? row.metadata : {},
+    createdAt: resolveRowTimestamp(row.created_at),
+    updatedAt: resolveRowTimestamp(row.updated_at || row.created_at),
+});
+
+export const mapRealtyImportSourceToRow = (
+    source: Partial<RealtyImportSourceConfig>,
+    userId: string,
+    projectId: string,
+    tenantId?: string | null
+) => ({
+    user_id: userId,
+    tenant_id: tenantId || source.tenantId || null,
+    project_id: projectId,
+    source_type: normalizeImportSource(source.sourceType),
+    name: source.name || 'Realty import source',
+    provider_name: source.providerName || null,
+    feed_url: source.feedUrl || null,
+    uploaded_file_name: source.uploadedFileName || null,
+    external_account_id: source.externalAccountId || null,
+    sync_mode: normalizeImportSyncMode(source.syncMode),
+    enabled: Boolean(source.enabled),
+    status: normalizeImportSourceStatus(source.status),
+    last_run_at: source.lastRunAt || null,
+    metadata: source.metadata || {},
+    updated_at: new Date().toISOString(),
+});
+
+export const mapRealtyImportJobRow = (row: any): RealtyImportJob => ({
+    id: row.id,
+    userId: row.user_id ?? null,
+    tenantId: row.tenant_id ?? null,
+    projectId: row.project_id || '',
+    sourceId: row.source_id ?? null,
+    sourceType: normalizeImportSource(row.source_type),
+    status: normalizeImportJobStatus(row.status),
+    mapping: normalizeImportMapping(row.mapping),
+    totalRows: Number(row.total_rows || 0),
+    draftCount: Number(row.draft_count || 0),
+    duplicateCount: Number(row.duplicate_count || 0),
+    errorCount: Number(row.error_count || 0),
+    needsReview: true,
+    noAutoPublish: true,
+    startedAt: row.started_at || null,
+    completedAt: row.completed_at || null,
+    metadata: isRecord(row.metadata) ? row.metadata : {},
+    createdAt: resolveRowTimestamp(row.created_at),
+    updatedAt: resolveRowTimestamp(row.updated_at || row.created_at),
+});
+
+export const mapRealtyImportJobToRow = (
+    job: Partial<RealtyImportJob>,
+    userId: string,
+    projectId: string,
+    tenantId?: string | null
+) => ({
+    user_id: userId,
+    tenant_id: tenantId || job.tenantId || null,
+    project_id: projectId,
+    source_id: job.sourceId || null,
+    source_type: normalizeImportSource(job.sourceType),
+    status: normalizeImportJobStatus(job.status),
+    mapping: Array.isArray(job.mapping) ? job.mapping : [],
+    total_rows: Math.max(0, Number(job.totalRows || 0)),
+    draft_count: Math.max(0, Number(job.draftCount || 0)),
+    duplicate_count: Math.max(0, Number(job.duplicateCount || 0)),
+    error_count: Math.max(0, Number(job.errorCount || 0)),
+    needs_review: true,
+    no_auto_publish: true,
+    started_at: job.startedAt || null,
+    completed_at: job.completedAt || null,
+    metadata: job.metadata || {},
     updated_at: new Date().toISOString(),
 });
 

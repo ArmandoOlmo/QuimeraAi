@@ -5,6 +5,8 @@ import type {
     PropertyOpenHouse,
     RealtyAiGeneration,
     RealtyCampaignStatus,
+    RealtyImportJob,
+    RealtyImportSourceConfig,
     RealtyLead,
     RealtyMediaUploadResult,
     RealtyModuleFlags,
@@ -21,6 +23,10 @@ import {
     mapPropertyLeadRow,
     mapRealtyAiGenerationRow,
     mapRealtyAiGenerationToRow,
+    mapRealtyImportJobRow,
+    mapRealtyImportJobToRow,
+    mapRealtyImportSourceRow,
+    mapRealtyImportSourceToRow,
     mapRealtyMediaToRow,
     mapRealtyPropertyRow,
     mapRealtyPropertyToRow,
@@ -88,6 +94,8 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
     const [campaigns, setCampaigns] = useState<PropertyCampaign[]>([]);
     const [openHouses, setOpenHouses] = useState<PropertyOpenHouse[]>([]);
     const [aiGenerations, setAiGenerations] = useState<RealtyAiGeneration[]>([]);
+    const [importSources, setImportSources] = useState<RealtyImportSourceConfig[]>([]);
+    const [importJobs, setImportJobs] = useState<RealtyImportJob[]>([]);
     const [flags, setFlags] = useState<RealtyModuleFlags>(DEFAULT_REALTY_FLAGS);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -111,6 +119,8 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
             setCampaigns([]);
             setOpenHouses([]);
             setAiGenerations([]);
+            setImportSources([]);
+            setImportJobs([]);
             setIsLoading(false);
             return;
         }
@@ -119,7 +129,7 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         setError(null);
 
         try {
-            const [propertiesResult, leadsResult, campaignsResult, openHousesResult, aiResult, projectResult] = await Promise.all([
+            const [propertiesResult, leadsResult, campaignsResult, openHousesResult, aiResult, projectResult, importSourcesResult, importJobsResult] = await Promise.all([
                 supabase
                     .from('properties')
                     .select('*')
@@ -150,10 +160,24 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
                     .order('created_at', { ascending: false })
                     .limit(50),
                 supabase.from('projects').select('data, tenant_id').eq('id', projectId).maybeSingle(),
+                supabase
+                    .from('realty_import_sources')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('updated_at', { ascending: false })
+                    .limit(100),
+                supabase
+                    .from('realty_import_jobs')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('created_at', { ascending: false })
+                    .limit(100),
             ]);
 
             const tableError = [propertiesResult.error, leadsResult.error, campaignsResult.error, openHousesResult.error, aiResult.error, projectResult.error].find(Boolean);
             if (tableError) throw tableError;
+            if (importSourcesResult.error && !isMissingTableError(importSourcesResult.error)) throw importSourcesResult.error;
+            if (importJobsResult.error && !isMissingTableError(importJobsResult.error)) throw importJobsResult.error;
 
             const propertyRows = propertiesResult.data || [];
             const propertyIds = propertyRows.map((property: any) => property.id).filter(Boolean);
@@ -181,6 +205,8 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
             setCampaigns((campaignsResult.data || []).map(mapPropertyCampaignRow));
             setOpenHouses((openHousesResult.data || []).map(mapPropertyOpenHouseRow));
             setAiGenerations((aiResult.data || []).map(mapRealtyAiGenerationRow));
+            setImportSources(importSourcesResult.error ? [] : (importSourcesResult.data || []).map(mapRealtyImportSourceRow));
+            setImportJobs(importJobsResult.error ? [] : (importJobsResult.data || []).map(mapRealtyImportJobRow));
             setFlags(resolveProjectFlags((projectResult.data as any)?.data));
         } catch (err: any) {
             if (isMissingTableError(err)) {
@@ -189,6 +215,8 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
                 setCampaigns([]);
                 setOpenHouses([]);
                 setAiGenerations([]);
+                setImportSources([]);
+                setImportJobs([]);
             } else {
                 console.error('[useRealtySuite] Error loading Realty Suite:', err);
                 setError(formatRealtySupabaseError(err, 'Error loading Realty Suite'));
@@ -373,6 +401,7 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
                 updatedAt: new Date().toISOString(),
             }, images);
             await loadAll();
+            return savedId;
         } catch (err: any) {
             setError(formatRealtySupabaseError(err, 'Error saving Realty property'));
             throw err;
@@ -390,6 +419,105 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
             publicEnabled: status === 'active',
         });
     }, [properties, saveProperty]);
+
+    const saveImportSource = useCallback(async (source: Partial<RealtyImportSourceConfig>) => {
+        if (!projectId) return undefined;
+        if (!userId) throw new Error('User is required to save Realty import sources.');
+
+        setIsSaving(true);
+        setError(null);
+        try {
+            const resolvedTenantId = await resolveTenantId();
+            const row = mapRealtyImportSourceToRow(source, userId, projectId, resolvedTenantId);
+            let savedId = source.id || '';
+
+            if (source.id) {
+                const { data, error: updateError } = await supabase
+                    .from('realty_import_sources')
+                    .update(row)
+                    .eq('id', source.id)
+                    .select('id')
+                    .single();
+                if (updateError) throw updateError;
+                savedId = data?.id || source.id;
+            } else {
+                const { data, error: insertError } = await supabase
+                    .from('realty_import_sources')
+                    .insert({ ...row, created_at: new Date().toISOString() })
+                    .select('id')
+                    .single();
+                if (insertError) throw insertError;
+                savedId = data?.id || '';
+            }
+
+            await loadAll();
+            return savedId;
+        } catch (err: any) {
+            setError(formatRealtySupabaseError(err, 'Error saving Realty import source'));
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [loadAll, projectId, resolveTenantId, userId]);
+
+    const deleteImportSource = useCallback(async (sourceId: string) => {
+        setIsSaving(true);
+        setError(null);
+        try {
+            const { error: deleteError } = await supabase.from('realty_import_sources').delete().eq('id', sourceId);
+            if (deleteError) throw deleteError;
+            await loadAll();
+        } catch (err: any) {
+            setError(formatRealtySupabaseError(err, 'Error deleting Realty import source'));
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [loadAll]);
+
+    const saveImportJob = useCallback(async (job: Partial<RealtyImportJob>) => {
+        if (!projectId) return undefined;
+        if (!userId) throw new Error('User is required to save Realty import jobs.');
+
+        setIsSaving(true);
+        setError(null);
+        try {
+            const resolvedTenantId = await resolveTenantId();
+            const row = mapRealtyImportJobToRow(job, userId, projectId, resolvedTenantId);
+            let savedId = job.id || '';
+
+            if (job.id) {
+                const { data, error: updateError } = await supabase
+                    .from('realty_import_jobs')
+                    .update(row)
+                    .eq('id', job.id)
+                    .select('id')
+                    .single();
+                if (updateError) throw updateError;
+                savedId = data?.id || job.id;
+            } else {
+                const { data, error: insertError } = await supabase
+                    .from('realty_import_jobs')
+                    .insert({ ...row, created_at: new Date().toISOString() })
+                    .select('id')
+                    .single();
+                if (insertError) throw insertError;
+                savedId = data?.id || '';
+            }
+
+            await loadAll();
+            return savedId;
+        } catch (err: any) {
+            if (isMissingTableError(err)) {
+                console.warn('[useRealtySuite] Realty import jobs table is not available yet:', err);
+                return undefined;
+            }
+            setError(formatRealtySupabaseError(err, 'Error saving Realty import job'));
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [loadAll, projectId, resolveTenantId, userId]);
 
     const deleteProperty = useCallback(async (propertyId: string) => {
         setIsSaving(true);
@@ -583,6 +711,8 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         campaigns,
         openHouses,
         aiGenerations,
+        importSources,
+        importJobs,
         flags,
         isLoading,
         isSaving,
@@ -592,6 +722,9 @@ export const useRealtySuite = ({ projectId, tenantId, userId }: UseRealtySuiteOp
         saveProperty,
         uploadPropertyMedia,
         updatePropertyStatus,
+        saveImportSource,
+        deleteImportSource,
+        saveImportJob,
         deleteProperty,
         updateLeadStatus,
         saveCampaign,

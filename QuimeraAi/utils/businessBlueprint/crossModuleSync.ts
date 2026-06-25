@@ -14,6 +14,11 @@ import {
     isUserModifiedCrossModuleDraft,
 } from './crossModuleSyncIdempotency';
 import { getRestaurantEcommerceOfferKeys } from './restaurantBlueprint';
+import {
+    buildRealtyMonetizationOfferDrafts,
+    REALTY_MONETIZATION_BLOCKER_MESSAGES,
+} from '../realtyMonetization';
+import { buildRealtyChatbotKnowledgeDrafts } from '../realtyChatbotKnowledge';
 
 export interface CrossModuleSyncInput {
     projectId: string;
@@ -30,6 +35,9 @@ export interface CrossModuleSyncInput {
         syncLeads?: boolean;
         syncEmailMarketing?: boolean;
         syncAnalytics?: boolean;
+        syncAppointments?: boolean;
+        syncEcommerce?: boolean;
+        syncFinance?: boolean;
         overwriteExisting?: boolean;
     };
 }
@@ -53,6 +61,9 @@ export interface CrossModuleSyncSummary {
     leadDrafts: number;
     emailDrafts: number;
     analyticsDrafts: number;
+    appointmentDrafts: number;
+    ecommerceDrafts: number;
+    financeDrafts: number;
     needsMerchantReview: true;
     noRuntimeActivated: true;
 }
@@ -62,6 +73,9 @@ export interface CrossModuleSyncResult {
     leadDrafts: CrossModuleSyncDraft[];
     emailDrafts: CrossModuleSyncDraft[];
     analyticsDrafts: CrossModuleSyncDraft[];
+    appointmentDrafts: CrossModuleSyncDraft[];
+    ecommerceDrafts: CrossModuleSyncDraft[];
+    financeDrafts: CrossModuleSyncDraft[];
     skippedItems: CrossModuleSyncSkippedItem[];
     warnings: string[];
     errors: string[];
@@ -71,6 +85,9 @@ export interface CrossModuleSyncResult {
         leads: string[];
         emailMarketing: string[];
         analytics: string[];
+        appointments: string[];
+        ecommerce: string[];
+        finance: string[];
     };
     businessBlueprint: BusinessBlueprint;
 }
@@ -105,6 +122,9 @@ const SAFE_WRITER_WARNINGS = [
     'CRM lead tags, sources, and events are stored in businessBlueprint.crossModuleSync; no lead records are created.',
     'Email marketing flow drafts are stored in businessBlueprint.crossModuleSync; no campaigns, schedules, or sends are activated.',
     'Analytics event definitions are stored in businessBlueprint.crossModuleSync; no runtime tracking is instrumented.',
+    'Appointment drafts are stored in businessBlueprint.crossModuleSync; no calendar slots, reminders, or confirmations are created.',
+    'Real estate ecommerce offer drafts are stored in businessBlueprint.crossModuleSync; no Stripe product, payment link, checkout session, or price is created.',
+    'Finance revenue-source drafts are stored in businessBlueprint.crossModuleSync; no ledger, payout, tax, or payment-provider configuration is changed.',
 ];
 
 const LEAD_TAGS = [
@@ -327,6 +347,18 @@ function createChatbotDrafts(input: CrossModuleSyncInput): CrossModuleSyncDraft[
         }));
     }
 
+    if (shouldCreateRealEstateSyncDrafts(input)) {
+        buildRealtyChatbotKnowledgeDrafts(blueprint).forEach(knowledgeDraft => {
+            drafts.push(createDraft(input, 'chatbot', 'knowledge_source', knowledgeDraft.name, {
+                description: knowledgeDraft.description,
+                content: knowledgeDraft.content,
+                variablesNeeded: knowledgeDraft.variablesNeeded,
+                readinessBlockers: knowledgeDraft.readinessBlockers,
+                metadata: knowledgeDraft.metadata,
+            }));
+        });
+    }
+
     if (hasServicesContext(blueprint, ecommerceBlueprint)) {
         drafts.push(createDraft(input, 'chatbot', 'knowledge_source', 'Appointments and services draft', {
             description: 'Draft source for appointment, package, deposit, and add-on questions.',
@@ -341,9 +373,15 @@ function createChatbotDrafts(input: CrossModuleSyncInput): CrossModuleSyncDraft[
 function createLeadDrafts(input: CrossModuleSyncInput): CrossModuleSyncDraft[] {
     const blueprint = input.businessBlueprint;
     const ecommerceBlueprint = input.ecommerceBlueprint || blueprint.ecommerceBlueprint;
+    const realty = blueprint.realEstateBlueprint;
+    const shouldSyncRealty = shouldCreateRealEstateSyncDrafts(input);
     const tags = [
         ...LEAD_TAGS,
         ...(blueprint.leadBlueprint?.leadTags || []),
+        ...(shouldSyncRealty ? [
+            ...(realty?.integrations?.crmTags || []),
+            ...(realty?.leadFunnels?.leadTags || []),
+        ] : []),
         ...(hasGiftCards(ecommerceBlueprint) ? ['gift-card'] : []),
         ...(hasServicesContext(blueprint, ecommerceBlueprint) ? ['service-inquiry'] : []),
         ...(hasRestaurantContext(blueprint, ecommerceBlueprint) ? ['restaurant-catering'] : []),
@@ -352,13 +390,28 @@ function createLeadDrafts(input: CrossModuleSyncInput): CrossModuleSyncDraft[] {
     const sources = [
         ...LEAD_SOURCES,
         ...(blueprint.leadBlueprint?.leadSources || []),
+        ...(shouldSyncRealty ? [
+            ...(realty?.integrations?.crmLeadSources || []),
+            ...(realty?.leadFunnels?.leadSources || []),
+        ] : []),
     ];
     const events = [
         ...LEAD_EVENT_DEFINITIONS,
         ...(blueprint.leadBlueprint?.activityTimelineEvents || []),
+        ...(shouldSyncRealty ? [
+            'realty_property_inquiry',
+            'realty_showing_requested',
+            'realty_open_house_registered',
+            'realty_seller_valuation_requested',
+        ] : []),
     ];
+    const pipelineStages = shouldSyncRealty ? uniqueValues([
+        ...(realty?.crmPipelineStages || []),
+        ...(realty?.integrations?.crmPipelineStages || []),
+        ...(realty?.leadFunnels?.crmPipelineStages || []),
+    ], 24) : [];
 
-    return [
+    const leadDrafts = [
         ...uniqueValues(tags).map(tag => createDraft(input, 'leads', 'tag', tag, {
             description: `Draft CRM tag definition for ${tag}.`,
             readinessBlockers: ['CRM tags need merchant review before automation rules use them.'],
@@ -367,12 +420,26 @@ function createLeadDrafts(input: CrossModuleSyncInput): CrossModuleSyncDraft[] {
             description: `Draft lead source definition for ${source}.`,
             readinessBlockers: ['Lead source routing is inactive until reviewed.'],
         })),
+        ...pipelineStages.map(stage => createDraft(input, 'leads', 'pipeline_stage', stage, {
+            description: `Draft Realty CRM pipeline stage for ${stage}.`,
+            readinessBlockers: ['CRM pipeline stages must be reviewed before routing or automation uses them.'],
+            metadata: {
+                realEstateEngine: true,
+                pipelineStage: stage,
+                crmRuntimeUpdated: false,
+            },
+        })),
         ...uniqueValues(events).map(eventName => createDraft(input, 'leads', 'activity_event_definition', eventName, {
             description: `Draft lead activity event definition for ${eventName}.`,
             readinessBlockers: ['No lead activities are created by this draft definition.'],
-            metadata: { eventName },
+            metadata: {
+                eventName,
+                realEstateEngine: shouldSyncRealty && eventName.startsWith('realty_'),
+            },
         })),
     ];
+
+    return leadDrafts;
 }
 
 function createEmailFlowDraft(
@@ -435,13 +502,162 @@ function createEmailDrafts(input: CrossModuleSyncInput): CrossModuleSyncDraft[] 
 }
 
 function createAnalyticsDrafts(input: CrossModuleSyncInput): CrossModuleSyncDraft[] {
-    return ANALYTICS_EVENTS.map(eventName => createDraft(input, 'analytics', 'event_definition', eventName, {
+    const realty = input.businessBlueprint.realEstateBlueprint;
+    const shouldSyncRealty = shouldCreateRealEstateSyncDrafts(input);
+    const eventNames = uniqueValues([
+        ...ANALYTICS_EVENTS,
+        ...(shouldSyncRealty ? [
+            ...(realty?.analytics?.events || []),
+            ...(realty?.analyticsEvents || []),
+            ...(realty?.integrations?.analyticsEvents || []),
+            'realty_property_page_viewed',
+            'realty_lead_pipeline_event_recorded',
+            'realty_monetization_offer_previewed',
+        ] : []),
+    ], 90);
+
+    return eventNames.map(eventName => createDraft(input, 'analytics', 'event_definition', eventName, {
         description: `Draft analytics event definition for ${eventName}.`,
         readinessBlockers: ['Runtime event tracking is not instrumented by this draft definition.'],
         metadata: {
             eventName,
+            realEstateEngine: shouldSyncRealty && (
+                eventName.startsWith('realty_')
+                || (realty?.analytics?.events || []).includes(eventName as any)
+                || (realty?.analyticsEvents || []).includes(eventName as any)
+                || (realty?.integrations?.analyticsEvents || []).includes(eventName)
+            ),
             runtimeInstrumented: false,
             eventEmitted: false,
+        },
+    }));
+}
+
+function shouldCreateRealEstateSyncDrafts(input: CrossModuleSyncInput): boolean {
+    const blueprint = input.businessBlueprint;
+    const ecommerceBlueprint = input.ecommerceBlueprint || blueprint.ecommerceBlueprint;
+    return Boolean(blueprint.realEstateBlueprint?.enabled || hasRealEstateContext(blueprint, ecommerceBlueprint));
+}
+
+function createAppointmentDrafts(input: CrossModuleSyncInput): CrossModuleSyncDraft[] {
+    if (!shouldCreateRealEstateSyncDrafts(input)) return [];
+    const realty = input.businessBlueprint.realEstateBlueprint;
+    const route = realty?.websiteRoutes?.propertyDetail || realty?.propertyPages?.routePattern || '/listados/:slug';
+    const drafts = [
+        createDraft(input, 'appointments', 'booking_type', 'Private showing request draft', {
+            description: 'Draft appointment type for private property showing requests from listing pages.',
+            triggerType: 'showing_request',
+            content: `Source route: ${route}. Confirmation mode: manual review before scheduling.`,
+            variablesNeeded: ['leadName', 'leadEmail', 'propertySlug', 'preferredDate', 'agentAvailability'],
+            readinessBlockers: [
+                'Agent availability must be configured before showing requests can auto-confirm.',
+                'No calendar slot, reminder, or confirmation is created by this draft.',
+            ],
+            metadata: {
+                realEstateEngine: true,
+                appointmentKind: 'private_showing',
+                availabilitySource: realty?.showingRequests?.availabilitySource || 'unset',
+                confirmationMode: realty?.showingRequests?.confirmationMode || 'manual',
+                appointmentIntegrationEnabled: false,
+                calendarConnected: false,
+                remindersActive: false,
+                confirmationSent: false,
+            },
+        }),
+        createDraft(input, 'appointments', 'booking_type', 'Buyer consultation draft', {
+            description: 'Draft appointment type for buyer qualification and consultation requests.',
+            triggerType: 'buyer_consultation_request',
+            content: 'Buyer consultation remains inactive until availability, intake fields, and disclosures are reviewed.',
+            variablesNeeded: ['leadName', 'leadEmail', 'budget', 'desiredArea', 'timeline'],
+            readinessBlockers: ['Consultation availability and intake rules must be reviewed.'],
+            metadata: {
+                realEstateEngine: true,
+                appointmentKind: 'buyer_consultation',
+                appointmentIntegrationEnabled: false,
+                calendarConnected: false,
+                remindersActive: false,
+                confirmationSent: false,
+            },
+        }),
+        createDraft(input, 'appointments', 'booking_type', 'Seller valuation consultation draft', {
+            description: 'Draft appointment type for seller valuation and listing intake.',
+            triggerType: 'seller_valuation_request',
+            content: 'Seller valuation consultation is draft-only until valuation disclaimers and intake fields are approved.',
+            variablesNeeded: ['leadName', 'leadEmail', 'propertyAddress', 'timeline', 'estimatedValue'],
+            readinessBlockers: ['Seller valuation disclaimers and availability need review.'],
+            metadata: {
+                realEstateEngine: true,
+                appointmentKind: 'seller_valuation',
+                appointmentIntegrationEnabled: false,
+                calendarConnected: false,
+                remindersActive: false,
+                confirmationSent: false,
+            },
+        }),
+    ];
+
+    if (realty?.openHouses?.enabled !== false) {
+        drafts.push(createDraft(input, 'appointments', 'registration_type', 'Open house registration draft', {
+            description: 'Draft registration flow for open house attendees.',
+            triggerType: 'open_house_registration',
+            content: 'Open house registration remains inactive until capacity, dates, location, and follow-up rules are reviewed.',
+            variablesNeeded: ['leadName', 'leadEmail', 'propertySlug', 'openHouseDate', 'partySize'],
+            readinessBlockers: ['Open house dates, capacity, and follow-up rules must be reviewed.'],
+            metadata: {
+                realEstateEngine: true,
+                appointmentKind: 'open_house_registration',
+                registrationEnabled: false,
+                capacityReviewed: false,
+                remindersActive: false,
+                confirmationSent: false,
+            },
+        }));
+    }
+
+    return drafts;
+}
+
+function createRealEstateEcommerceDrafts(input: CrossModuleSyncInput): CrossModuleSyncDraft[] {
+    if (!shouldCreateRealEstateSyncDrafts(input)) return [];
+
+    return buildRealtyMonetizationOfferDrafts(input.businessBlueprint).map(offer => createDraft(input, 'ecommerce', 'digital_product_offer', offer.name, {
+        description: `Draft real estate ecommerce offer for ${offer.title}.`,
+        content: 'Offer is draft-only until pricing, fulfillment, checkout, refunds, taxes, and disclosures are reviewed.',
+        variablesNeeded: ['offerTitle', 'price', 'fulfillmentMethod', 'refundPolicy', 'taxRules'],
+        readinessBlockers: offer.readinessBlockers.map(blocker => REALTY_MONETIZATION_BLOCKER_MESSAGES[blocker]),
+        metadata: offer.metadata,
+    }));
+}
+
+function createFinanceDrafts(input: CrossModuleSyncInput): CrossModuleSyncDraft[] {
+    if (!shouldCreateRealEstateSyncDrafts(input)) return [];
+    const realty = input.businessBlueprint.realEstateBlueprint;
+    const sources = uniqueValues([
+        ...(realty?.financeRevenueSources || []),
+        'consultation payments',
+        'digital real estate products',
+        'listing promotion fees',
+        'referral fees',
+    ], 12);
+
+    return sources.map(source => createDraft(input, 'finance', 'revenue_source', source, {
+        description: `Draft finance revenue source for ${source}.`,
+        content: 'Revenue source is a planning draft until payments, taxes, recognition, payouts, and reporting are reviewed.',
+        variablesNeeded: ['revenueSource', 'paymentProvider', 'taxCategory', 'reportingCategory'],
+        readinessBlockers: [
+            'Finance tracking requires reviewed payment sources, tax handling, and reporting categories.',
+            'No ledger entry, payout, Stripe configuration, invoice, or tax rule is created by this draft.',
+        ],
+        metadata: {
+            realEstateEngine: true,
+            revenueSource: source,
+            paymentProvider: 'stripe',
+            stripeConfigured: false,
+            ledgerEntryCreated: false,
+            payoutConfigured: false,
+            taxReviewed: false,
+            revenueRecognitionReviewed: false,
+            reportingActive: false,
         },
     }));
 }
@@ -518,11 +734,15 @@ function buildResult(input: CrossModuleSyncInput, dryRun: boolean): CrossModuleS
         leads: input.options?.syncLeads !== false,
         emailMarketing: input.options?.syncEmailMarketing !== false,
         analytics: input.options?.syncAnalytics !== false,
+        appointments: input.options?.syncAppointments !== false,
+        ecommerce: input.options?.syncEcommerce !== false,
+        finance: input.options?.syncFinance !== false,
     };
     const now = input.now || new Date().toISOString();
     const plans: ModulePlan[] = [];
     const disabledSkipped: CrossModuleSyncSkippedItem[] = [];
     const addPlan = (module: CrossModuleSyncModule, candidates: CrossModuleSyncDraft[], enabled: boolean) => {
+        if (candidates.length === 0) return;
         if (!enabled) {
             disabledSkipped.push(...candidates.map(candidate => ({
                 module,
@@ -541,12 +761,18 @@ function buildResult(input: CrossModuleSyncInput, dryRun: boolean): CrossModuleS
     addPlan('leads', createLeadDrafts(input), enabledOptions.leads);
     addPlan('emailMarketing', createEmailDrafts(input), enabledOptions.emailMarketing);
     addPlan('analytics', createAnalyticsDrafts(input), enabledOptions.analytics);
+    addPlan('appointments', createAppointmentDrafts(input), enabledOptions.appointments);
+    addPlan('ecommerce', createRealEstateEcommerceDrafts(input), enabledOptions.ecommerce);
+    addPlan('finance', createFinanceDrafts(input), enabledOptions.finance);
 
     const planFor = (module: CrossModuleSyncModule): ModulePlan | undefined => plans.find(plan => plan.module === module);
     const chatbotPlan = planFor('chatbot');
     const leadsPlan = planFor('leads');
     const emailPlan = planFor('emailMarketing');
     const analyticsPlan = planFor('analytics');
+    const appointmentsPlan = planFor('appointments');
+    const ecommercePlan = planFor('ecommerce');
+    const financePlan = planFor('finance');
     const skippedItems = [...plans.flatMap(plan => plan.skipped), ...disabledSkipped];
     const accepted = plans.flatMap(plan => plan.accepted);
     const warnings = [...SAFE_WRITER_WARNINGS];
@@ -566,6 +792,9 @@ function buildResult(input: CrossModuleSyncInput, dryRun: boolean): CrossModuleS
         leadDrafts: leadsPlan?.accepted.length || 0,
         emailDrafts: emailPlan?.accepted.length || 0,
         analyticsDrafts: analyticsPlan?.accepted.length || 0,
+        appointmentDrafts: appointmentsPlan?.accepted.length || 0,
+        ecommerceDrafts: ecommercePlan?.accepted.length || 0,
+        financeDrafts: financePlan?.accepted.length || 0,
         needsMerchantReview: true,
         noRuntimeActivated: true,
     };
@@ -583,12 +812,18 @@ function buildResult(input: CrossModuleSyncInput, dryRun: boolean): CrossModuleS
             leads: leadsPlan?.nextState || blueprint.crossModuleSync?.leads,
             emailMarketing: emailPlan?.nextState || blueprint.crossModuleSync?.emailMarketing,
             analytics: analyticsPlan?.nextState || blueprint.crossModuleSync?.analytics,
+            appointments: appointmentsPlan?.nextState || blueprint.crossModuleSync?.appointments,
+            ecommerce: ecommercePlan?.nextState || blueprint.crossModuleSync?.ecommerce,
+            finance: financePlan?.nextState || blueprint.crossModuleSync?.finance,
             warnings,
             readiness: {
                 chatbotReady: Boolean(chatbotPlan?.nextState.refs.length || blueprint.crossModuleSync?.chatbot?.refs.length),
                 leadTagsReady: Boolean(leadsPlan?.nextState.refs.length || blueprint.crossModuleSync?.leads?.refs.length),
                 emailFlowsReady: Boolean(emailPlan?.nextState.refs.length || blueprint.crossModuleSync?.emailMarketing?.refs.length),
                 analyticsReady: Boolean(analyticsPlan?.nextState.refs.length || blueprint.crossModuleSync?.analytics?.refs.length),
+                appointmentsReady: Boolean(appointmentsPlan?.nextState.refs.length || blueprint.crossModuleSync?.appointments?.refs.length),
+                ecommerceOffersReady: Boolean(ecommercePlan?.nextState.refs.length || blueprint.crossModuleSync?.ecommerce?.refs.length),
+                financeReady: Boolean(financePlan?.nextState.refs.length || blueprint.crossModuleSync?.finance?.refs.length),
                 needsMerchantReview: true,
             },
         },
@@ -599,6 +834,9 @@ function buildResult(input: CrossModuleSyncInput, dryRun: boolean): CrossModuleS
         leadDrafts: leadsPlan?.accepted || [],
         emailDrafts: emailPlan?.accepted || [],
         analyticsDrafts: analyticsPlan?.accepted || [],
+        appointmentDrafts: appointmentsPlan?.accepted || [],
+        ecommerceDrafts: ecommercePlan?.accepted || [],
+        financeDrafts: financePlan?.accepted || [],
         skippedItems,
         warnings,
         errors,
@@ -608,6 +846,9 @@ function buildResult(input: CrossModuleSyncInput, dryRun: boolean): CrossModuleS
             leads: leadsPlan?.nextState.refs || blueprint.crossModuleSync?.leads?.refs || [],
             emailMarketing: emailPlan?.nextState.refs || blueprint.crossModuleSync?.emailMarketing?.refs || [],
             analytics: analyticsPlan?.nextState.refs || blueprint.crossModuleSync?.analytics?.refs || [],
+            appointments: appointmentsPlan?.nextState.refs || blueprint.crossModuleSync?.appointments?.refs || [],
+            ecommerce: ecommercePlan?.nextState.refs || blueprint.crossModuleSync?.ecommerce?.refs || [],
+            finance: financePlan?.nextState.refs || blueprint.crossModuleSync?.finance?.refs || [],
         },
         businessBlueprint: nextBusinessBlueprint,
     };

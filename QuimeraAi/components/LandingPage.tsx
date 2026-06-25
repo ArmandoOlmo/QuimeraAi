@@ -58,6 +58,12 @@ import RealEstateListingsSection from './realty/PublicRealtyListingsSection';
 import PropertyDirectoryPage from './realty/PublicRealtyDirectoryPage';
 import RestaurantReservation from './RestaurantReservation';
 import PropertyDetailSection from './realty/PublicRealtyPropertyDetail';
+import {
+  matchRealtyDetailRoute,
+  matchRealtyDirectoryRoute,
+  resolveRealtyDetailPath,
+  resolveRealtyDirectoryRoute,
+} from '../utils/realtyWebsiteRoutes';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData, ThemeData } from '../types';
 import { fontStacks, loadGoogleFonts, loadGoogleFontsSync, resolveFontFamily } from '../utils/fontLoader';
 import { initialData } from '../data/initialData';
@@ -337,15 +343,15 @@ const LandingPageContent: React.FC = () => {
         return;
       }
 
-      // Property detail routing inside the editor preview canvas.
-      if (path.startsWith('/listados/') && path !== '/listados/' && path !== '/listados') {
-        const slug = path.replace('/listados/', '').replace(/\/$/, '');
-        setActivePropertySlug(slug);
+      const realtyRouteData = data.realEstateListings;
+      const realtyDetailSlug = matchRealtyDetailRoute(path, realtyRouteData);
+      if (realtyDetailSlug) {
+        setActivePropertySlug(realtyDetailSlug);
         window.scrollTo(0, 0);
         return;
       }
 
-      if (path === '/listados' || path === '/listados/') {
+      if (matchRealtyDirectoryRoute(path, realtyRouteData)) {
         setActivePage(null);
         setShowRealtyDirectory(true);
         window.scrollTo(0, 0);
@@ -450,7 +456,7 @@ const LandingPageContent: React.FC = () => {
       window.removeEventListener('hashchange', handleNavigation);
       window.removeEventListener('popstate', handleNavigation);
     };
-  }, [cmsPosts, isLoadingCMS, pages, setActivePage]);
+  }, [cmsPosts, data.realEstateListings, isLoadingCMS, pages, setActivePage]);
 
   const scrollPreviewToTop = useCallback(() => {
     if (previewRef?.current) {
@@ -765,20 +771,20 @@ const LandingPageContent: React.FC = () => {
       return;
     }
 
-    // Real estate property detail: in editor/dashboard preview, route into the real public preview URL
-    // so the user stays inside the same editor canvas.
-    if (href.startsWith('/listados/') && href !== '/listados/' && href !== '/listados') {
-      const slug = href.replace('/listados/', '').replace(/\/$/, '');
+    const realtyRouteData = data.realEstateListings;
+    const realtyDetailSlug = matchRealtyDetailRoute(href, realtyRouteData);
+    if (realtyDetailSlug) {
       setShowRealtyDirectory(false);
-      setActivePropertySlug(slug);
+      setActivePropertySlug(realtyDetailSlug);
       window.scrollTo(0, 0);
       return;
     }
 
-    if (href === '/listados' || href === '/listados/') {
+    if (matchRealtyDirectoryRoute(href, realtyRouteData)) {
+      const directoryRoute = resolveRealtyDirectoryRoute(realtyRouteData);
       setActivePage(null);
       setShowRealtyDirectory(true);
-      window.history.pushState({}, '', '/listados');
+      window.history.pushState({}, '', directoryRoute);
       scrollPreviewToTop();
       return;
     }
@@ -810,7 +816,7 @@ const LandingPageContent: React.FC = () => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [activePage, activeProjectId, cmsPosts, handleNavigateToCategory, handleNavigateToCheckout, handleNavigateToProduct, handleNavigateToStore, handleViewAllProducts, isEditorMode, navigateInsideEditorStorefront, pages, scrollPreviewToTop, setActivePage]);
+  }, [activePage, activeProjectId, cmsPosts, data.realEstateListings, handleNavigateToCategory, handleNavigateToCheckout, handleNavigateToProduct, handleNavigateToStore, handleViewAllProducts, isEditorMode, navigateInsideEditorStorefront, pages, scrollPreviewToTop, setActivePage]);
 
   // Check if we're showing a store view
   const isStoreViewActive = storeView.type !== 'none';
@@ -1855,12 +1861,14 @@ const LandingPageContent: React.FC = () => {
             projectId={activeProjectId}
             ownerId={activeProject?.userId || undefined}
             propertySlug={activePropertySlug}
+            data={mergedRealEstateListingsData || data.realEstateListings}
             theme={theme}
             globalColors={theme.globalColors}
             onNavigateHome={handleBackToHome}
-            onNavigateToListings={() => handleLinkNavigation('/listados')}
+            onNavigateToListings={() => handleLinkNavigation(resolveRealtyDirectoryRoute(mergedRealEstateListingsData || data.realEstateListings))}
             onNavigateToProperty={(slug) => {
               setActivePropertySlug(slug);
+              window.history.pushState({}, '', resolveRealtyDetailPath(mergedRealEstateListingsData || data.realEstateListings, slug));
               window.scrollTo(0, 0);
             }}
           />

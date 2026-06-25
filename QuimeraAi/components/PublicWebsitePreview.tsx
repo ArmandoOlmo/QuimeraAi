@@ -22,7 +22,14 @@ import { getSafeImageUrl, isLegacyStorageUrl } from '../utils/imageUrlHelper';
 import { getBootBackgroundColor } from '../utils/bootBackground';
 import SectionBackground from './ui/SectionBackground';
 import { usePublicRealtyListings } from '../hooks/usePublicRealtyListings';
-import { RealtyProperty } from '../types/realty';
+import type { RealtyListingsSectionData, RealtyProperty } from '../types/realty';
+import {
+  REALTY_DEFAULT_ROUTE_SEGMENTS,
+  matchRealtyDetailRoute,
+  matchRealtyDirectoryRoute,
+  resolveRealtyDetailPath,
+  resolveRealtyDirectoryRoute,
+} from '../utils/realtyWebsiteRoutes';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
 
@@ -117,6 +124,7 @@ const FaqLumina = lazy(() => import('./FaqLumina'));
 const StorefrontApp = lazy(() => import('./ecommerce/StorefrontApp'));
 
 const PREVIEW_LOGICAL_ROUTE_SEGMENTS = new Set([
+  ...REALTY_DEFAULT_ROUTE_SEGMENTS,
   'listados',
   'blog',
   'tienda',
@@ -133,6 +141,7 @@ const resolvePreviewBaseFromPath = (pathname: string): string => {
   if (parts.length === 0) return '/preview';
   if (parts.length === 1) return `/preview/${parts[0]}`;
   if (PREVIEW_LOGICAL_ROUTE_SEGMENTS.has(parts[1])) return `/preview/${parts[0]}`;
+  if (UUID_RE.test(parts[0]) && !UUID_RE.test(parts[1])) return `/preview/${parts[0]}`;
   return `/preview/${parts[0]}/${parts[1]}`;
 };
 
@@ -436,6 +445,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       // One-part preview with a subroute: /preview/projectId/listados/:slug
       if (parts.length >= 2 && PREVIEW_LOGICAL_ROUTE_SEGMENTS.has(parts[1])) {
         console.log('[PublicWebsitePreview] Parsed projectId from pathname with subroute:', { projectId: parts[0], logicalRoute: parts.slice(1).join('/') });
+        return { userId: null, projectId: parts[0] };
+      }
+      if (parts.length >= 2 && UUID_RE.test(parts[0]) && !UUID_RE.test(parts[1])) {
+        console.log('[PublicWebsitePreview] Parsed UUID projectId from pathname with custom subroute:', { projectId: parts[0], logicalRoute: parts.slice(1).join('/') });
         return { userId: null, projectId: parts[0] };
       }
       // Two parts: /preview/userId/projectId
@@ -787,6 +800,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     loadProject();
   }, [propProjectId, propUserId]);
 
+  const getRealtyListingsRouteData = useCallback((): RealtyListingsSectionData => (
+    ((project?.data as any)?.realEstateListings || {}) as RealtyListingsSectionData
+  ), [project?.data]);
+
   // Handle routing for articles, store and sections
   // Supports both real paths (/tienda, /blog/slug) and anchor scrolling (/#features)
   useEffect(() => {
@@ -1005,20 +1022,23 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return;
       }
 
-      // Property detail routing: /listados/:slug
-      if (path.startsWith('/listados/') && path !== '/listados/' && path !== '/listados') {
-        const slug = path.replace('/listados/', '').replace(/\/$/, '');
+      const realtyRouteData = getRealtyListingsRouteData();
+      const realtyDetailSlug = matchRealtyDetailRoute(path, realtyRouteData);
+      if (realtyDetailSlug) {
+        const detailPath = resolveRealtyDetailPath(realtyRouteData, realtyDetailSlug);
         const now = new Date().toISOString();
         setActivePost(null);
         setStoreView({ type: 'none' });
         setActiveCategorySlug(null);
         setActivePage({
-          id: `page-property-detail-${slug}`,
+          id: `page-property-detail-${realtyDetailSlug}`,
           title: 'Property Detail',
-          slug: `/listados/${slug}`,
+          slug: detailPath,
           type: 'static',
           sections: ['header', 'propertyDetail', 'footer'],
-          sectionData: {},
+          sectionData: {
+            realEstateListings: realtyRouteData,
+          },
           seo: { title: 'Property Detail' },
           showInNavigation: false,
           createdAt: now,
@@ -1028,18 +1048,19 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return;
       }
 
-      if (path === '/listados' || path === '/listados/') {
+      if (matchRealtyDirectoryRoute(path, realtyRouteData)) {
+        const directoryRoute = resolveRealtyDirectoryRoute(realtyRouteData);
         const now = new Date().toISOString();
         setActivePost(null);
         setStoreView({ type: 'none' });
         setActivePage({
           id: 'page-real-estate-listings-runtime',
           title: 'Listados',
-          slug: '/listados',
+          slug: directoryRoute,
           type: 'static',
           sections: ['header', 'propertyDirectory', 'footer'],
           sectionData: {
-            realEstateListings: (project?.data as any)?.realEstateListings,
+            realEstateListings: realtyRouteData,
           },
           seo: { title: 'Listados', description: 'Explora propiedades disponibles' },
           showInNavigation: true,
@@ -1100,7 +1121,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       window.removeEventListener('hashchange', handleNavigation);
       window.removeEventListener('popstate', handleNavigation);
     };
-  }, [cmsPosts, project, getLogicalPath]);
+  }, [cmsPosts, project, getLogicalPath, getRealtyListingsRouteData]);
 
   // Universal navigation handler for Header links
   const handleLinkNavigation = useCallback(async (href: string) => {
@@ -1326,16 +1347,20 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       return;
     }
 
-    if (href.startsWith('/listados/') && href !== '/listados/' && href !== '/listados') {
-      const slug = href.replace('/listados/', '').replace(/\/$/, '');
+    const realtyRouteData = getRealtyListingsRouteData();
+    const realtyDetailSlug = matchRealtyDetailRoute(href, realtyRouteData);
+    if (realtyDetailSlug) {
+      const detailPath = resolveRealtyDetailPath(realtyRouteData, realtyDetailSlug);
       const now = new Date().toISOString();
       const runtimePage: SitePage = {
-        id: `page-property-detail-${slug}`,
+        id: `page-property-detail-${realtyDetailSlug}`,
         title: 'Property Detail',
-        slug: `/listados/${slug}`,
+        slug: detailPath,
         type: 'static',
         sections: ['header', 'propertyDetail', 'footer'],
-        sectionData: {},
+        sectionData: {
+          realEstateListings: realtyRouteData,
+        },
         seo: { title: 'Property Detail' },
         showInNavigation: false,
         createdAt: now,
@@ -1345,22 +1370,23 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       setStoreView({ type: 'none' });
       setActiveCategorySlug(null);
       setActivePage(runtimePage);
-      updateBrowserUrl(`/listados/${slug}`);
-      updatePageSEO({ title: 'Property Detail', type: 'website', path: `/listados/${slug}` });
+      updateBrowserUrl(detailPath);
+      updatePageSEO({ title: 'Property Detail', type: 'website', path: detailPath });
       window.scrollTo(0, 0);
       return;
     }
 
-    if (href === '/listados' || href === '/listados/') {
+    if (matchRealtyDirectoryRoute(href, realtyRouteData)) {
+      const directoryRoute = resolveRealtyDirectoryRoute(realtyRouteData);
       const now = new Date().toISOString();
       const runtimePage: SitePage = {
         id: 'page-real-estate-listings-runtime',
         title: 'Listados',
-        slug: '/listados',
+        slug: directoryRoute,
         type: 'static',
         sections: ['header', 'propertyDirectory', 'footer'],
         sectionData: {
-          realEstateListings: (project?.data as any)?.realEstateListings,
+          realEstateListings: realtyRouteData,
         },
         seo: { title: 'Listados', description: 'Explora propiedades disponibles' },
         showInNavigation: true,
@@ -1371,8 +1397,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       setActivePost(null);
       setStoreView({ type: 'none' });
       setActivePage(runtimePage);
-      updateBrowserUrl('/listados');
-      updatePageSEO({ title: 'Listados', description: 'Explora propiedades disponibles', type: 'website', path: '/listados' });
+      updateBrowserUrl(directoryRoute);
+      updatePageSEO({ title: 'Listados', description: 'Explora propiedades disponibles', type: 'website', path: directoryRoute });
       window.scrollTo(0, 0);
       return;
     }
@@ -1420,7 +1446,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     } else {
       console.warn('[PublicWebsitePreview] No page or element found for href:', href);
     }
-  }, [cmsPosts, project, activePost, activePage, storeView, updateBrowserUrl, updatePageSEO]);
+  }, [cmsPosts, project, activePost, activePage, storeView, getRealtyListingsRouteData, updateBrowserUrl, updatePageSEO]);
 
   const handleEcommerceNavigate = useCallback((href: string) => {
     const storefrontHref = resolveWebsiteStorefrontHref(href) || href;
@@ -1707,11 +1733,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
   const currentPropertyForChatbot = useMemo<RealtyProperty | null>(() => {
     const currentPath = getLogicalPath(window.location.pathname);
-    const isPropertyDetail = currentPath.startsWith('/listados/') && currentPath !== '/listados/' && currentPath !== '/listados';
-    if (!isPropertyDetail) return null;
-    const slug = currentPath.replace('/listados/', '').replace(/\/$/, '');
+    const slug = matchRealtyDetailRoute(currentPath, getRealtyListingsRouteData());
+    if (!slug) return null;
     return chatbotRealEstateProperties.find(property => property.slug === slug) || null;
-  }, [activePage?.slug, chatbotRealEstateProperties, getLogicalPath]);
+  }, [activePage?.slug, chatbotRealEstateProperties, getLogicalPath, getRealtyListingsRouteData]);
 
   // Loading state — invisible placeholder, SSR skeleton already provides the visual loading
   if (loading) {
@@ -1995,16 +2020,18 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
     if (key === 'propertyDetail') {
       const currentPath = getLogicalPath(window.location.pathname);
-      const propertySlug = currentPath.startsWith('/listados/') ? currentPath.replace('/listados/', '').replace(/\/$/, '') : '';
+      const realtyData = mergedData.realEstateListings as RealtyListingsSectionData | undefined;
+      const propertySlug = matchRealtyDetailRoute(currentPath, realtyData) || '';
       return (
         <PropertyDetailSection
           projectId={storeProjectId || ''}
           ownerId={project?.userId || undefined}
           propertySlug={propertySlug}
+          data={realtyData}
           theme={theme}
           globalColors={theme?.globalColors as Record<string, string> | undefined}
-          onNavigateToListings={() => handleLinkNavigation('/listados')}
-          onNavigateToProperty={(slug) => handleLinkNavigation(`/listados/${slug}`)}
+          onNavigateToListings={() => handleLinkNavigation(resolveRealtyDirectoryRoute(realtyData))}
+          onNavigateToProperty={(slug) => handleLinkNavigation(resolveRealtyDetailPath(realtyData, slug))}
         />
       );
     }
@@ -2070,7 +2097,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           <RealEstateListingsSection
             data={compData}
             projectId={storeProjectId || null}
-            isPreviewMode={false}
+            isPreviewMode={isEditorPreviewRoute}
             theme={theme}
             globalColors={theme?.globalColors as Record<string, string> | undefined}
             onNavigate={handleLinkNavigation}

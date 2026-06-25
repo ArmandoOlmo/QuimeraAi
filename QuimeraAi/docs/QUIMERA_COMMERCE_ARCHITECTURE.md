@@ -80,6 +80,12 @@ automationBlueprint
 | Revenue, refunds, fees, payouts, tax reporting | Finance |
 | Analytics events and dashboards | Analytics |
 
+## Real Estate Commerce Boundary
+
+EN: The Real Estate Engine may suggest buyer guides, seller guides, market reports, consultation packages, valuation packages, premium listing packages, courses, digital downloads, and open house tickets. These suggestions must stay draft/needsReview. Realty may store a draft `productDraft` handoff in `businessBlueprint.crossModuleSync`, but Ecommerce Engine remains the canonical owner of product rows, variants, prices, checkout, payments, taxes, discounts, orders, and refunds. Realty must not create Stripe products, prices, payment links, checkout sessions, or publishable storefront products.
+
+ES: El Real Estate Engine puede sugerir buyer guides, seller guides, market reports, paquetes de consulta, paquetes de valoracion, premium listing packages, cursos, descargas digitales y tickets de open house. Estas sugerencias deben permanecer draft/needsReview. Realty puede guardar un handoff `productDraft` en `businessBlueprint.crossModuleSync`, pero Ecommerce Engine sigue siendo el owner canonico de filas de producto, variantes, precios, checkout, pagos, impuestos, descuentos, ordenes y refunds. Realty no debe crear productos Stripe, precios, payment links, checkout sessions ni productos publicables en storefront.
+
 ## Builder Ownership
 
 Website Builder edits presentation:
