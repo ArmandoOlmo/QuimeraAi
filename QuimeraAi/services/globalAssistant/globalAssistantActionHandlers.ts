@@ -42,6 +42,13 @@ const readString = (value: unknown): string | undefined => {
     return text || undefined;
 };
 
+const readDisplayText = (value: unknown): string | undefined => {
+    const direct = readString(value);
+    if (direct) return direct;
+    const record = asRecord(value);
+    return readString(record.es) || readString(record.en) || readString(record.value) || readString(record.label);
+};
+
 const readNumber = (value: unknown): number | undefined => {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
     if (typeof value === 'string' && value.trim()) {
@@ -211,6 +218,56 @@ const requireObject = (input: Record<string, unknown>, key: string): Record<stri
     asRecord(input[key]);
 
 const noValidationErrors = () => ({ valid: true, errors: [] });
+
+const findProjectSnapshot = (
+    projectId: string | null,
+    context?: AssistantContextSnapshot,
+): Record<string, unknown> => {
+    const projects = asArray(context?.snapshot?.availableProjects);
+    return asRecord(projects.find(project => asRecord(project).id === projectId));
+};
+
+const createNavigationHandler = (
+    view: string,
+    options: {
+        label: string;
+        requiresProject?: boolean;
+        adminView?: string;
+        moduleItem?: string;
+    },
+): HandlerPatch => ({
+    validate: input => ({
+        valid: !options.requiresProject || Boolean(readString(input.projectId)),
+        errors: !options.requiresProject || readString(input.projectId)
+            ? []
+            : [`${options.label} requires a projectId before navigation.`],
+    }),
+    execute: async (input, { action, context }) => {
+        const projectId = readString(input.projectId) || action.projectId || context?.project.projectId || null;
+        const project = findProjectSnapshot(projectId, context);
+        return {
+            afterSnapshot: {
+                navigation: {
+                    type: 'view',
+                    view,
+                    adminView: options.adminView || null,
+                    moduleItem: options.moduleItem || null,
+                    projectId,
+                    projectName: readDisplayText(project.name) || context?.project.projectName || null,
+                    actionType: action.actionType,
+                    module: action.module,
+                    sourceModule: 'global-assistant',
+                    sourceComponent: 'OperatingLayer',
+                    message: options.label,
+                },
+            },
+            diff: {
+                opened: [options.adminView ? `${view}.${options.adminView}` : view],
+                projectId,
+            },
+        };
+    },
+});
 
 const getAssistantUserId = (
     action: AssistantAction,
@@ -1223,6 +1280,15 @@ const createRealtyOpenHouseHandler = (deps: GlobalAssistantActionHandlerDependen
 });
 
 const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDependencies) => HandlerPatch> = {
+    open_project: () => createNavigationHandler('editor', { label: 'Open project in Website Builder.', requiresProject: true }),
+    switch_project: () => createNavigationHandler('dashboard', { label: 'Switch active project context.', requiresProject: true }),
+    open_website_builder: () => createNavigationHandler('editor', { label: 'Open Website Builder.', requiresProject: true }),
+    open_storefront_builder: () => createNavigationHandler('ecommerce', { label: 'Open Storefront Builder.', requiresProject: true, moduleItem: 'storefront' }),
+    open_orders: () => createNavigationHandler('ecommerce', { label: 'Open ecommerce orders.', requiresProject: true, moduleItem: 'orders' }),
+    open_email_hub: () => createNavigationHandler('email', { label: 'Open Email Hub.', requiresProject: true }),
+    open_calendar: () => createNavigationHandler('appointments', { label: 'Open appointments calendar.', requiresProject: true }),
+    open_chatbot_dashboard: () => createNavigationHandler('ai-assistant', { label: 'Open ChatCore dashboard.', requiresProject: true }),
+    open_tenant: () => createNavigationHandler('superadmin', { label: 'Open tenant in Super Admin.', adminView: 'tenants' }),
     create_email_campaign: createEmailCampaignHandler,
     create_audience: createEmailAudienceHandler,
     create_email_automation: createEmailAutomationHandler,

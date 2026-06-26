@@ -15,6 +15,7 @@ export interface ChatbotBusinessActionOptions {
     sourceSurface?: string;
     sourceModule?: string;
     chatbotEngineContext?: ChatbotEngineSurfaceContext;
+    conversationId?: string | null;
     consent?: boolean;
     marketingConsent?: boolean;
 }
@@ -41,6 +42,144 @@ export interface HumanHandoffResult {
     leadId?: string | null;
 }
 
+export interface RestaurantReservationRequest {
+    restaurantId: string;
+    customerName?: string;
+    name?: string;
+    customerEmail?: string;
+    email?: string;
+    customerPhone?: string;
+    phone?: string;
+    date: string;
+    time: string;
+    partySize: number;
+    tablePreference?: string;
+    notes?: string;
+    message?: string;
+    conversationId?: string;
+    consent?: boolean;
+    idempotencyKey?: string;
+    metadata?: Record<string, unknown>;
+}
+
+export interface RestaurantReservationResult {
+    reservationId?: string;
+    status: string;
+    leadId?: string | null;
+    duplicate: boolean;
+}
+
+export interface RealtyLeadRequest {
+    propertyId: string;
+    openHouseId?: string;
+    name?: string;
+    customerName?: string;
+    email?: string;
+    customerEmail?: string;
+    phone?: string;
+    customerPhone?: string;
+    message?: string;
+    notes?: string;
+    preferredDate?: string;
+    budget?: number;
+    conversationId?: string;
+    consent?: boolean;
+    idempotencyKey?: string;
+    metadata?: Record<string, unknown>;
+}
+
+export interface RealtyLeadResult {
+    propertyLeadId?: string | null;
+    crmLeadId?: string | null;
+    pipelineEventType?: string;
+    duplicate: boolean;
+}
+
+export interface EmailAudienceSubscriptionRequest {
+    audienceId: string;
+    email: string;
+    name?: string;
+    leadId?: string;
+    customerId?: string;
+    marketingConsent: boolean;
+    consentSource?: string;
+    consent?: boolean;
+    idempotencyKey?: string;
+    metadata?: Record<string, unknown>;
+}
+
+export interface EmailAudienceSubscriptionResult {
+    audienceId: string;
+    email: string;
+    staticMemberCount?: number;
+}
+
+export interface EmailFollowUpDraftRequest {
+    email?: string;
+    recipientEmail?: string;
+    name?: string;
+    recipientName?: string;
+    leadId?: string;
+    customerId?: string;
+    conversationId?: string;
+    subject?: string;
+    html?: string;
+    text?: string;
+    sourceEvent?: string;
+    marketingConsent: boolean;
+    consentSource?: string;
+    consent?: boolean;
+    idempotencyKey?: string;
+    metadata?: Record<string, unknown>;
+}
+
+export interface EmailFollowUpDraftResult {
+    email: string;
+    emailLogId?: string;
+    duplicate: boolean;
+    status: string;
+    reviewRequired: boolean;
+    reviewQueueUrl?: string;
+}
+
+export interface FinanceQuoteRequestItem {
+    description?: string;
+    quantity?: number;
+    unitPrice?: number;
+    taxRate?: number;
+}
+
+export interface FinanceQuoteRequest {
+    customerName?: string;
+    customerEmail?: string;
+    customerAddress?: string;
+    description?: string;
+    message?: string;
+    amount?: number;
+    currency?: string;
+    items?: FinanceQuoteRequestItem[];
+    dueDate?: string;
+    paymentTerms?: string;
+    leadId?: string;
+    conversationId?: string;
+    sourceEvent?: string;
+    consent?: boolean;
+    idempotencyKey?: string;
+    metadata?: Record<string, unknown>;
+}
+
+export interface FinanceQuoteResult {
+    invoiceId?: string;
+    invoiceNumber?: string;
+    duplicate: boolean;
+    status: string;
+    total: number;
+    currency: string;
+    reviewRequired: boolean;
+    paymentCreated: boolean;
+    paymentLinkCreated: boolean;
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> => (
     Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 );
@@ -62,8 +201,9 @@ export const useChatbotBusinessActions = (
         ...payload,
         sourceSurface,
         sourceModule,
+        conversationId: typeof payload.conversationId === 'string' ? payload.conversationId : options.conversationId || undefined,
         consent: typeof payload.consent === 'boolean' ? payload.consent : options.consent,
-        marketingConsent: options.marketingConsent,
+        marketingConsent: typeof payload.marketingConsent === 'boolean' ? payload.marketingConsent : options.marketingConsent,
         chatbotEngineContext: options.chatbotEngineContext,
         metadata: {
             sourceSurface,
@@ -71,7 +211,7 @@ export const useChatbotBusinessActions = (
             chatbotEngineContext: options.chatbotEngineContext,
             ...(isRecord(payload.metadata) ? payload.metadata : {}),
         },
-    }), [sourceSurface, sourceModule, options.consent, options.marketingConsent, options.chatbotEngineContext]);
+    }), [sourceSurface, sourceModule, options.conversationId, options.consent, options.marketingConsent, options.chatbotEngineContext]);
 
     const callWidgetApi = useCallback(async <T,>(path: string, payload: Record<string, unknown> = {}): Promise<T> => {
         if (!projectId) {
@@ -149,8 +289,110 @@ export const useChatbotBusinessActions = (
             : 'I am connecting you with the human team. I marked this conversation for attention in the inbox.';
     }, [isSpanish]);
 
+    const requestRestaurantReservation = useCallback(async (
+        input: RestaurantReservationRequest,
+    ): Promise<RestaurantReservationResult | null> => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            return await callWidgetApi<RestaurantReservationResult>('/restaurant-reservations', input as unknown as Record<string, unknown>);
+        } catch (err: any) {
+            setError(err.message || (isSpanish ? 'Error al crear la reserva del restaurante.' : 'Error creating restaurant reservation.'));
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [callWidgetApi, isSpanish]);
+
+    const requestRealtyShowing = useCallback(async (
+        input: RealtyLeadRequest,
+    ): Promise<RealtyLeadResult | null> => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            return await callWidgetApi<RealtyLeadResult>('/realty-showings', input as unknown as Record<string, unknown>);
+        } catch (err: any) {
+            setError(err.message || (isSpanish ? 'Error al crear la solicitud de propiedad.' : 'Error creating real estate request.'));
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [callWidgetApi, isSpanish]);
+
+    const registerOpenHouse = useCallback(async (
+        input: RealtyLeadRequest,
+    ): Promise<RealtyLeadResult | null> => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            return await callWidgetApi<RealtyLeadResult>('/open-house-registrations', input as unknown as Record<string, unknown>);
+        } catch (err: any) {
+            setError(err.message || (isSpanish ? 'Error al registrar el open house.' : 'Error registering open house.'));
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [callWidgetApi, isSpanish]);
+
+    const subscribeEmailAudience = useCallback(async (
+        input: EmailAudienceSubscriptionRequest,
+    ): Promise<EmailAudienceSubscriptionResult | null> => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            return await callWidgetApi<EmailAudienceSubscriptionResult>('/email-audience-subscriptions', input as unknown as Record<string, unknown>);
+        } catch (err: any) {
+            setError(err.message || (isSpanish ? 'Error al suscribir el contacto.' : 'Error subscribing contact.'));
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [callWidgetApi, isSpanish]);
+
+    const queueEmailFollowUpDraft = useCallback(async (
+        input: EmailFollowUpDraftRequest,
+    ): Promise<EmailFollowUpDraftResult | null> => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            return await callWidgetApi<EmailFollowUpDraftResult>('/email-follow-up-drafts', input as unknown as Record<string, unknown>);
+        } catch (err: any) {
+            setError(err.message || (isSpanish ? 'Error al crear el borrador de seguimiento.' : 'Error creating follow-up draft.'));
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [callWidgetApi, isSpanish]);
+
+    const createFinanceQuoteRequest = useCallback(async (
+        input: FinanceQuoteRequest,
+    ): Promise<FinanceQuoteResult | null> => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            return await callWidgetApi<FinanceQuoteResult>('/finance/quote-requests', input as unknown as Record<string, unknown>);
+        } catch (err: any) {
+            setError(err.message || (isSpanish ? 'Error al crear el borrador financiero.' : 'Error creating finance draft.'));
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [callWidgetApi, isSpanish]);
+
     return {
         requestHumanHandoff,
+        requestRestaurantReservation,
+        requestRealtyShowing,
+        registerOpenHouse,
+        subscribeEmailAudience,
+        queueEmailFollowUpDraft,
+        createFinanceQuoteRequest,
         formatHumanHandoffResponse,
         isLoading,
         error,

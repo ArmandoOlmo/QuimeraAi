@@ -86,6 +86,11 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         const request = aiPrompt.trim();
         const route = routeDashboardAssistantEntry(request);
 
+        if (route.destination === 'none') {
+            setAiPrompt('');
+            return;
+        }
+
         if (route.destination === 'ai_studio') {
             handleOpenAIStudio(route.forwardPromptToAiStudio ? request : undefined);
         } else {

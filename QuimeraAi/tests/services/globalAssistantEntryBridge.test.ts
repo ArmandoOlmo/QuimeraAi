@@ -7,6 +7,14 @@ import {
 } from '../../services/globalAssistant/globalAssistantEntryBridge.ts';
 
 describe('globalAssistantEntryBridge', () => {
+    it('ignores empty dashboard submissions instead of opening AI Studio implicitly', () => {
+        expect(routeDashboardAssistantEntry('   ')).toEqual({
+            destination: 'none',
+            reason: 'empty_dashboard_request_ignored',
+            forwardPromptToAiStudio: false,
+        });
+    });
+
     it('routes dashboard requests to the Global Assistant by default', () => {
         expect(routeDashboardAssistantEntry('Crea un website para un restaurante con menu y citas')).toMatchObject({
             destination: 'global_assistant',

@@ -273,6 +273,78 @@ describe('Global Assistant default action handlers', () => {
         expect(products[0].data.metadata.globalAssistant.actionType).toBe('create_product');
     });
 
+    it('applies safe navigation handlers without mutating module data', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime([], ['websiteBuilder']);
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Abre el Website Builder',
+            enabledServices: [],
+            enabledFeatures: ['websiteBuilder'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['open_website_builder']);
+        expect(planned.plan.requiresConfirmation).toBe(false);
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+
+        expect(applied.task.status).toBe('completed');
+        expect(applied.actions[0].afterSnapshot).toMatchObject({
+            navigation: {
+                type: 'view',
+                view: 'editor',
+                projectId: 'project-1',
+                actionType: 'open_website_builder',
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+            },
+        });
+        expect(fakeSupabase.rowsByTable.projects || []).toHaveLength(0);
+    });
+
+    it('requires confirmation before switching to another resolved project', async () => {
+        const { runtime, context } = buildRuntime([], []);
+        const projectAwareContext = {
+            ...context,
+            snapshot: {
+                ...context.snapshot,
+                availableProjects: [
+                    activeProject,
+                    {
+                        id: 'project-2',
+                        name: { es: 'Clinica Mar', en: 'Ocean Clinic' },
+                        status: 'Draft',
+                        tenantId: 'tenant-1',
+                        userId: 'user-1',
+                    },
+                ],
+            },
+        };
+        const planned = await runtime.planRequest({
+            context: projectAwareContext,
+            request: 'Cambia al proyecto Clinica Mar',
+            enabledServices: [],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['switch_project']);
+        expect(planned.plan.requiresConfirmation).toBe(true);
+        expect(planned.task.status).toBe('waiting_for_confirmation');
+        expect(planned.plan.actions[0].input).toMatchObject({ projectId: 'project-2' });
+
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: projectAwareContext });
+
+        expect(applied.task.status).toBe('completed');
+        expect(applied.actions[0].afterSnapshot).toMatchObject({
+            navigation: {
+                view: 'dashboard',
+                projectId: 'project-2',
+                projectName: 'Clinica Mar',
+                actionType: 'switch_project',
+            },
+        });
+    });
+
     it('blocks appointment plans until required schedule fields are structured', async () => {
         const { runtime, context } = buildRuntime(['appointments'], []);
         const planned = await runtime.planRequest({

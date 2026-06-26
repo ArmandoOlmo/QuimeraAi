@@ -5,6 +5,7 @@ import type {
     AssistantModuleTarget,
     AssistantSafetyLevel,
 } from '../../types/globalAssistant';
+import { resolveProjectByNameOrId } from './globalAssistantProjectResolver';
 
 const normalize = (value: string): string =>
     value
@@ -43,10 +44,10 @@ const inferModule = (text: string, context: AssistantContextSnapshot): Assistant
     if (includesAny(text, ['ecommerce', 'producto', 'products', 'pedido', 'order', 'precio', 'inventario', 'discount'])) return 'ecommerce';
     if (includesAny(text, ['email', 'audiencia', 'audience', 'automation', 'automatizacion', 'automacion'])) return 'emailMarketing';
     if (includesAny(text, ['lead', 'crm', 'prospecto', 'follow up'])) return 'crm';
-    if (includesAny(text, ['cita', 'appointment', 'agenda', 'reserva', 'calendar'])) return 'appointments';
     if (includesAny(text, ['restaurant', 'restaurante', 'menu', 'dish', 'catering'])) return 'restaurants';
     if (includesAny(text, ['realty', 'real estate', 'propiedad', 'listing', 'open house'])) return 'realEstate';
     if (includesAny(text, ['bio page', 'biopage', 'link in bio'])) return 'bioPage';
+    if (includesAny(text, ['cita', 'appointment', 'agenda', 'reserva', 'calendar'])) return 'appointments';
     if (includesAny(text, ['analytics', 'metricas', 'reporte', 'report'])) return 'analytics';
     if (includesAny(text, ['finance', 'finanzas', 'invoice', 'factura', 'gasto'])) return 'finance';
     if (includesAny(text, ['imagen', 'image', 'video', 'asset', 'media'])) return 'media';
@@ -93,23 +94,34 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
         return ['configure_availability'];
     }
 
-    if (module === 'bioPage' && intent === 'create') {
+    if (module === 'bioPage' && ['create', 'edit', 'schedule'].includes(intent)) {
         if (includesAny(text, ['block', 'bloque', 'section', 'seccion', 'link', 'cta'])) return ['add_bio_block'];
         return ['create_bio_page'];
     }
 
-    if (module === 'restaurants' && intent === 'create') {
+    if (module === 'restaurants' && ['create', 'schedule'].includes(intent)) {
         if (includesAny(text, ['catering', 'evento privado', 'private event', 'banquete'])) return ['create_catering_offer'];
         if (includesAny(text, ['campaign', 'campana', 'promo', 'marketing', 'instagram'])) return ['generate_restaurant_campaign'];
         if (includesAny(text, ['reserva', 'reservation', 'booking', 'flow', 'flujo'])) return ['create_reservation_flow'];
         return ['create_menu_item'];
     }
 
-    if (module === 'realEstate' && intent === 'create') {
+    if (module === 'realEstate' && ['create', 'schedule'].includes(intent)) {
         if (includesAny(text, ['open house', 'casa abierta'])) return ['create_open_house'];
         if (includesAny(text, ['campaign', 'campana', 'marketing', 'social', 'ads', 'anuncio'])) return ['generate_realty_campaign'];
         if (includesAny(text, ['showing', 'visita', 'tour'])) return ['create_showing_request_flow'];
         return ['create_listing'];
+    }
+
+    if (module === 'aiStudio' && intent === 'create') {
+        return ['create_project_from_prompt'];
+    }
+
+    if (module === 'project' && ['open', 'edit'].includes(intent)) {
+        if (includesAny(text, ['cambia proyecto', 'cambia al proyecto', 'cambiar proyecto', 'switch project', 'switch to project'])) {
+            return ['switch_project'];
+        }
+        if (intent === 'open') return ['open_project', 'switch_project'];
     }
 
     const map: Partial<Record<AssistantModuleTarget, Partial<Record<AssistantIntentCategory, string[]>>>> = {
@@ -198,21 +210,33 @@ export function routeAssistantIntent(request: string, context: AssistantContextS
     const actionCandidates = actionCandidatesFor(intent, module, text);
     const requiresProject = !['admin', 'tenant', 'user'].includes(module);
     const missingProject = requiresProject && !context.project.projectId && !['project', 'aiStudio'].includes(module);
+    const availableProjects = Array.isArray(context.snapshot?.availableProjects)
+        ? context.snapshot.availableProjects as any[]
+        : [];
+    const projectResolution = module === 'project'
+        ? resolveProjectByNameOrId(availableProjects, request)
+        : {
+            projectId: context.project.projectId,
+            ambiguous: false,
+            matches: [],
+        };
 
     return {
         intent,
         module,
         confidence: actionCandidates.length > 0 ? 0.72 : 0.45,
         projectResolution: {
-            projectId: context.project.projectId,
-            requiresProjectSwitch: false,
-            ambiguous: false,
+            projectId: projectResolution.projectId || context.project.projectId,
+            requiresProjectSwitch: Boolean(projectResolution.projectId && projectResolution.projectId !== context.project.projectId),
+            ambiguous: projectResolution.ambiguous,
         },
         actionCandidates,
-        requiresClarification: missingProject || actionCandidates.length === 0,
-        clarifyingQuestion: missingProject
-            ? 'Which project should I use for this request?'
-            : actionCandidates.length === 0
+        requiresClarification: missingProject || actionCandidates.length === 0 || projectResolution.ambiguous,
+        clarifyingQuestion: projectResolution.ambiguous
+            ? 'Which matching project should I use?'
+            : missingProject
+                ? 'Which project should I use for this request?'
+                : actionCandidates.length === 0
                 ? 'Which module or action should I target?'
                 : undefined,
         safetyLevel,

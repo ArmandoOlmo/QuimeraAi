@@ -121,9 +121,14 @@ export function buildExecutionPlan(input: BuildExecutionPlanInput): AssistantExe
     const previews: AssistantExecutionPreview[] = [];
     const approvals: AssistantApprovalRequest[] = [];
     const blockers: string[] = [];
+    const intentBlockers = intent.requiresClarification
+        ? [`Clarification required: ${intent.clarifyingQuestion || 'More information is needed before planning this request.'}`]
+        : [];
 
     for (const definition of input.actionDefinitions) {
-        const projectId = context.project.projectId;
+        const projectId = definition.module === 'project'
+            ? input.intent.projectResolution.projectId || context.project.projectId
+            : context.project.projectId;
         const actionInput: Record<string, unknown> = {
             request: input.request,
             ...(projectId ? { projectId } : {}),
@@ -136,6 +141,7 @@ export function buildExecutionPlan(input: BuildExecutionPlanInput): AssistantExe
             enabledFeatures: input.enabledFeatures,
         });
         const actionBlockers = [
+            ...intentBlockers,
             ...permission.reasons,
             ...permission.missingPermissions.map(permission => `Missing permission: ${permission}.`),
             ...(requiresProjectContext(definition)

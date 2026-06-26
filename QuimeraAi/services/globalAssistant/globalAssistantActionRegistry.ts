@@ -68,7 +68,7 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
     action('project', 'switch_project', 'Switch the assistant context to another project.', objectSchema({
         projectId: stringSchema('Project id to switch to.'),
         reason: stringSchema('Why the switch is needed.'),
-    }, ['projectId']), 'medium', { mutatesData: false, previewSupported: true, rollbackSupported: false }),
+    }, ['projectId']), 'medium', { mutatesData: false, previewSupported: true, rollbackSupported: false, requiresConfirmation: true }),
     action('project', 'search_projects', 'Search projects available to the current user or tenant.', objectSchema({
         query: stringSchema('Project search query.'),
     }, ['query']), 'low', { mutatesData: false, previewSupported: false, rollbackSupported: false }),

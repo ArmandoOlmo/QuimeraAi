@@ -2,13 +2,16 @@ import { describe, expect, it } from 'vitest';
 import {
     SupabaseGlobalAssistantAuditRepository,
     SupabaseGlobalAssistantMemoryAdapter,
+    SupabaseGlobalAssistantRuntimePersistence,
     SupabaseGlobalAssistantTaskRepository,
     fromAssistantMemoryRow,
     toAssistantActionRow,
+    toAssistantContextSnapshotRow,
     toAssistantMemoryRow,
     toAssistantRuntimeEventRow,
     toAssistantTaskRow,
 } from '../../services/globalAssistant/globalAssistantSupabaseStore.ts';
+import { resolveCurrentAssistantContext } from '../../services/globalAssistant/globalAssistantContextResolver.ts';
 import type {
     AssistantAction,
     AssistantRuntimeEvent,
@@ -246,5 +249,49 @@ describe('globalAssistantSupabaseStore', () => {
         expect(await tasks.getTask(task.id)).toMatchObject({ id: task.id, status: 'waiting_for_confirmation' });
         expect(await audit.listActionLogs({ projectId: memory.projectId })).toHaveLength(1);
         expect(await audit.listEvents({ taskId: task.id })).toHaveLength(1);
+    });
+
+    it('persists runtime snapshots, tasks, action logs, and events through one adapter', async () => {
+        const fake = new FakeSupabase();
+        const persistence = new SupabaseGlobalAssistantRuntimePersistence(fake as any);
+        const context = resolveCurrentAssistantContext({
+            userId: memory.userId,
+            tenantId: memory.tenantId,
+            role: 'owner',
+            activeProject: {
+                id: memory.projectId!,
+                name: 'Casa Luna',
+                status: 'Draft',
+                tenantId: memory.tenantId!,
+                userId: memory.userId!,
+            },
+            activeRoute: '/dashboard/email',
+            currentSurface: 'dashboard',
+            snapshot: { entrySource: 'dashboard_welcome' },
+        });
+        const runtimeEvent: AssistantRuntimeEvent = {
+            id: 'asst_evt_1',
+            type: 'assistant_request_started',
+            userId: memory.userId,
+            tenantId: memory.tenantId,
+            projectId: memory.projectId,
+            taskId: task.id,
+            metadata: { request: task.request },
+            createdAt: '2026-06-26T12:00:01.000Z',
+        };
+
+        await persistence.recordContextSnapshot!(context);
+        await persistence.upsertTask!(task);
+        await persistence.recordAction!(action as any);
+        await persistence.recordEvent!(runtimeEvent);
+
+        expect(fake.tables.assistant_context_snapshots[0]).toMatchObject(toAssistantContextSnapshotRow(context));
+        expect(fake.tables.assistant_tasks[0]).toMatchObject({ id: task.id, project_id: task.projectId });
+        expect(fake.tables.assistant_actions[0]).toMatchObject({ id: action.id, action_type: action.actionType });
+        expect(fake.tables.assistant_runtime_events[0]).toMatchObject({
+            id: runtimeEvent.id,
+            type: runtimeEvent.type,
+            created_at: runtimeEvent.createdAt,
+        });
     });
 });

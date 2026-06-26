@@ -17,7 +17,7 @@ export interface GlobalAssistantEntryPayload {
 }
 
 export interface DashboardAssistantEntryRoute {
-    destination: 'global_assistant' | 'ai_studio';
+    destination: 'global_assistant' | 'ai_studio' | 'none';
     reason: string;
     forwardPromptToAiStudio: boolean;
 }
@@ -61,8 +61,8 @@ export function routeDashboardAssistantEntry(request: string): DashboardAssistan
 
     if (!text) {
         return {
-            destination: 'ai_studio',
-            reason: 'empty_dashboard_request_opens_creation_studio',
+            destination: 'none',
+            reason: 'empty_dashboard_request_ignored',
             forwardPromptToAiStudio: false,
         };
     }

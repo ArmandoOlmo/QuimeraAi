@@ -1,8 +1,10 @@
 import type {
     AssistantAction,
+    AssistantActionLog,
     AssistantContextSnapshot,
     AssistantExecutionPlan,
     AssistantRollbackSnapshot,
+    AssistantRuntimeEvent,
     AssistantTask,
     GlobalAssistantMemory,
 } from '../../types/globalAssistant';
@@ -24,6 +26,10 @@ import {
     globalAssistantAuditService,
     type GlobalAssistantAuditService,
 } from './globalAssistantAuditService';
+import {
+    SupabaseGlobalAssistantMemoryAdapter,
+    SupabaseGlobalAssistantRuntimePersistence,
+} from './globalAssistantSupabaseStore';
 
 export interface GlobalAssistantRuntimeRequest {
     request: string;
@@ -66,6 +72,13 @@ export interface AssistantLifecycleResult {
     actions: AssistantAction[];
 }
 
+export interface GlobalAssistantRuntimePersistence {
+    recordContextSnapshot?: (context: AssistantContextSnapshot) => Promise<void> | void;
+    upsertTask?: (task: AssistantTask) => Promise<void> | void;
+    recordAction?: (action: AssistantActionLog) => Promise<void> | void;
+    recordEvent?: (event: AssistantRuntimeEvent) => Promise<void> | void;
+}
+
 const nowIso = () => new Date().toISOString();
 
 const createId = (prefix: string) => {
@@ -90,15 +103,19 @@ const buildDefaultBeforeSnapshot = (action: AssistantAction): Record<string, unk
 const readResultRecord = (value: unknown): Record<string, unknown> => asRecord(value);
 
 export class GlobalAssistantRuntime {
+    private readonly pendingPersistence: Promise<void>[] = [];
+
     constructor(
         private readonly registry: GlobalAssistantActionRegistry = globalAssistantActionRegistry,
         private readonly memoryService: GlobalAssistantMemoryService = new GlobalAssistantMemoryService(),
         private readonly taskService: GlobalAssistantTaskService = globalAssistantTaskService,
         private readonly auditService: GlobalAssistantAuditService = globalAssistantAuditService,
+        private readonly persistence?: GlobalAssistantRuntimePersistence,
     ) {}
 
     async planRequest(input: GlobalAssistantRuntimeRequest): Promise<GlobalAssistantRuntimeResult> {
-        this.auditService.recordEvent({
+        this.recordContextSnapshot(input.context);
+        this.recordEvent({
             type: 'assistant_request_started',
             userId: input.context.actor.userId,
             tenantId: input.context.tenant.tenantId,
@@ -112,7 +129,7 @@ export class GlobalAssistantRuntime {
             limit: 12,
         });
 
-        this.auditService.recordEvent({
+        this.recordEvent({
             type: 'assistant_memory_loaded',
             userId: input.context.actor.userId,
             tenantId: input.context.tenant.tenantId,
@@ -123,7 +140,7 @@ export class GlobalAssistantRuntime {
         const intent = routeAssistantIntent(input.request, input.context);
         const model = selectModelForIntent(intent);
 
-        this.auditService.recordEvent({
+        this.recordEvent({
             type: 'assistant_intent_classified',
             userId: input.context.actor.userId,
             tenantId: input.context.tenant.tenantId,
@@ -153,15 +170,16 @@ export class GlobalAssistantRuntime {
             intent,
             plan,
         });
+        this.recordTask(task);
 
         plan.taskId = task.id;
         plan.actions.forEach(action => {
             action.taskId = task.id;
-            this.auditService.recordAction(action);
+            this.recordAction(action);
         });
 
         if (plan.previews.length > 0) {
-            this.auditService.recordEvent({
+            this.recordEvent({
                 type: 'assistant_action_previewed',
                 userId: input.context.actor.userId,
                 tenantId: input.context.tenant.tenantId,
@@ -170,6 +188,7 @@ export class GlobalAssistantRuntime {
                 metadata: { actionIds: plan.actions.map(action => action.id) },
             });
         }
+        await this.flushPersistence();
 
         return {
             context: input.context,
@@ -197,13 +216,13 @@ export class GlobalAssistantRuntime {
                 status: action.status === 'planned' ? 'previewed' : action.status,
                 updatedAt: timestamp,
             };
-            this.auditService.recordAction(nextAction, {
+            this.recordAction(nextAction, {
                 metadata: {
                     confirmedBy: input.confirmedBy ?? action.userId,
                     lifecycle: 'confirmed',
                 },
             });
-            this.auditService.recordEvent({
+            this.recordEvent({
                 type: 'assistant_action_confirmed',
                 userId: nextAction.userId,
                 tenantId: nextAction.tenantId,
@@ -238,6 +257,7 @@ export class GlobalAssistantRuntime {
             status: allRequiredActionsConfirmed ? 'running' : 'waiting_for_confirmation',
             errors: [],
         });
+        this.recordTask(nextTask);
 
         return { task: nextTask, plan: nextPlan, actions };
     }
@@ -309,7 +329,7 @@ export class GlobalAssistantRuntime {
                     },
                 };
                 nextActions.push(nextAction);
-                this.auditService.recordAction(nextAction);
+                this.recordAction(nextAction);
                 if (nextAction.metadata?.rollbackSupported === true || definition.rollbackSupported) {
                     this.auditService.recordRollbackSnapshot({
                         id: createId('asst_rollback'),
@@ -320,7 +340,7 @@ export class GlobalAssistantRuntime {
                         createdAt: timestamp,
                     });
                 }
-                this.auditService.recordEvent({
+                this.recordEvent({
                     type: 'assistant_action_applied',
                     userId: nextAction.userId,
                     tenantId: nextAction.tenantId,
@@ -355,6 +375,8 @@ export class GlobalAssistantRuntime {
                 ? { applied: false, errors }
                 : { applied: true, actionIds: nextActions.filter(action => selectedIds.has(action.id)).map(action => action.id) },
         });
+        this.recordTask(nextTask);
+        await this.flushPersistence();
 
         return { task: nextTask, plan: nextPlan, actions: nextActions };
     }
@@ -403,8 +425,8 @@ export class GlobalAssistantRuntime {
             actions,
             updatedAt: timestamp,
         };
-        this.auditService.recordAction(rolledBackAction);
-        this.auditService.recordEvent({
+        this.recordAction(rolledBackAction);
+        this.recordEvent({
             type: 'assistant_action_rolled_back',
             userId: rolledBackAction.userId,
             tenantId: rolledBackAction.tenantId,
@@ -428,6 +450,8 @@ export class GlobalAssistantRuntime {
                 rolledBackActionId: rolledBackAction.id,
             },
         });
+        this.recordTask(nextTask);
+        await this.flushPersistence();
 
         return { task: nextTask, plan: nextPlan, actions };
     }
@@ -454,8 +478,8 @@ export class GlobalAssistantRuntime {
                 error,
             },
         };
-        this.auditService.recordAction(failedAction, { error });
-        this.auditService.recordEvent({
+        this.recordAction(failedAction, { error });
+        this.recordEvent({
             type: 'assistant_action_failed',
             userId: failedAction.userId,
             tenantId: failedAction.tenantId,
@@ -497,7 +521,7 @@ export class GlobalAssistantRuntime {
             sourceEntityId: action.id,
             importance: 0.7,
         });
-        this.auditService.recordEvent({
+        this.recordEvent({
             type: 'assistant_memory_updated',
             userId: action.userId,
             tenantId: action.tenantId,
@@ -511,6 +535,43 @@ export class GlobalAssistantRuntime {
             },
         });
     }
+
+    private recordContextSnapshot(context: AssistantContextSnapshot): void {
+        this.queuePersistence(this.persistence?.recordContextSnapshot?.(context));
+    }
+
+    private recordTask(task: AssistantTask): void {
+        this.queuePersistence(this.persistence?.upsertTask?.(task));
+    }
+
+    private recordAction(action: AssistantAction, metadata: Partial<AssistantActionLog> = {}): AssistantActionLog {
+        const log = this.auditService.recordAction(action, metadata);
+        this.queuePersistence(this.persistence?.recordAction?.(log));
+        return log;
+    }
+
+    private recordEvent(event: Omit<AssistantRuntimeEvent, 'id' | 'createdAt'>): AssistantRuntimeEvent {
+        const nextEvent = this.auditService.recordEvent(event);
+        this.queuePersistence(this.persistence?.recordEvent?.(nextEvent));
+        return nextEvent;
+    }
+
+    private queuePersistence(work: Promise<void> | void | undefined): void {
+        if (!work) return;
+        this.pendingPersistence.push(Promise.resolve(work));
+    }
+
+    private async flushPersistence(): Promise<void> {
+        const pending = this.pendingPersistence.splice(0);
+        if (pending.length === 0) return;
+        await Promise.all(pending);
+    }
 }
 
-export const globalAssistantRuntime = new GlobalAssistantRuntime();
+export const globalAssistantRuntime = new GlobalAssistantRuntime(
+    globalAssistantActionRegistry,
+    new GlobalAssistantMemoryService(new SupabaseGlobalAssistantMemoryAdapter(undefined, { failOpen: true })),
+    globalAssistantTaskService,
+    globalAssistantAuditService,
+    new SupabaseGlobalAssistantRuntimePersistence(undefined, { failOpen: true }),
+);

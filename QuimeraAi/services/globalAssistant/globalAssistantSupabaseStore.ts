@@ -8,6 +8,7 @@ import type {
     GlobalAssistantMemory,
 } from '../../types/globalAssistant';
 import type { GlobalAssistantMemoryAdapter } from './globalAssistantMemoryService';
+import type { GlobalAssistantRuntimePersistence } from './globalAssistantRuntime';
 
 type SupabaseClientLike = {
     from: (table: string) => any;
@@ -15,10 +16,25 @@ type SupabaseClientLike = {
 
 type AnyRecord = Record<string, any>;
 
+export interface SupabaseGlobalAssistantStoreOptions {
+    failOpen?: boolean;
+    onError?: (error: unknown, operation: string) => void;
+}
+
 const asRecord = (value: unknown): Record<string, unknown> =>
     value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 
 const asArray = (value: unknown): any[] => Array.isArray(value) ? value : [];
+
+const handleStoreError = (
+    error: unknown,
+    operation: string,
+    options: SupabaseGlobalAssistantStoreOptions,
+): void => {
+    options.onError?.(error, operation);
+    if (!options.failOpen) throw error;
+    console.warn(`[GlobalAssistantSupabaseStore] ${operation} failed:`, error);
+};
 
 export function toAssistantMemoryRow(memory: GlobalAssistantMemory): AnyRecord {
     return {
@@ -251,61 +267,78 @@ export function toAssistantContextSnapshotRow(context: AssistantContextSnapshot)
 }
 
 export class SupabaseGlobalAssistantMemoryAdapter implements GlobalAssistantMemoryAdapter {
-    constructor(private readonly client: SupabaseClientLike = defaultSupabase) {}
+    constructor(
+        private readonly client: SupabaseClientLike = defaultSupabase,
+        private readonly options: SupabaseGlobalAssistantStoreOptions = {},
+    ) {}
 
     async upsertMemory(memory: GlobalAssistantMemory): Promise<GlobalAssistantMemory> {
-        const { data, error } = await this.client
-            .from('assistant_memories')
-            .upsert(toAssistantMemoryRow(memory))
-            .select('*')
-            .single();
-        if (error) throw error;
+        try {
+            const { data, error } = await this.client
+                .from('assistant_memories')
+                .upsert(toAssistantMemoryRow(memory))
+                .select('*')
+                .single();
+            if (error) throw error;
 
-        const items = memory.items || [];
-        if (items.length > 0) {
-            const { error: itemError } = await this.client
-                .from('assistant_memory_items')
-                .upsert(items.map(toAssistantMemoryItemRow));
-            if (itemError) throw itemError;
+            const items = memory.items || [];
+            if (items.length > 0) {
+                const { error: itemError } = await this.client
+                    .from('assistant_memory_items')
+                    .upsert(items.map(toAssistantMemoryItemRow));
+                if (itemError) throw itemError;
+            }
+
+            return fromAssistantMemoryRow(data, items.map(toAssistantMemoryItemRow));
+        } catch (error) {
+            handleStoreError(error, 'upsertMemory', this.options);
+            return memory;
         }
-
-        return fromAssistantMemoryRow(data, items.map(toAssistantMemoryItemRow));
     }
 
     async listMemories(): Promise<GlobalAssistantMemory[]> {
-        const { data, error } = await this.client
-            .from('assistant_memories')
-            .select('*')
-            .order('updated_at', { ascending: false });
-        if (error) throw error;
+        try {
+            const { data, error } = await this.client
+                .from('assistant_memories')
+                .select('*')
+                .order('updated_at', { ascending: false });
+            if (error) throw error;
 
-        const rows = Array.isArray(data) ? data : [];
-        const ids = rows.map(row => row.id).filter(Boolean);
-        if (ids.length === 0) return [];
+            const rows = Array.isArray(data) ? data : [];
+            const ids = rows.map(row => row.id).filter(Boolean);
+            if (ids.length === 0) return [];
 
-        const { data: itemData, error: itemError } = await this.client
-            .from('assistant_memory_items')
-            .select('*')
-            .in('memory_id', ids)
-            .order('updated_at', { ascending: false });
-        if (itemError) throw itemError;
+            const { data: itemData, error: itemError } = await this.client
+                .from('assistant_memory_items')
+                .select('*')
+                .in('memory_id', ids)
+                .order('updated_at', { ascending: false });
+            if (itemError) throw itemError;
 
-        const itemsByMemory = new Map<string, AnyRecord[]>();
-        for (const item of Array.isArray(itemData) ? itemData : []) {
-            const list = itemsByMemory.get(item.memory_id) || [];
-            list.push(item);
-            itemsByMemory.set(item.memory_id, list);
+            const itemsByMemory = new Map<string, AnyRecord[]>();
+            for (const item of Array.isArray(itemData) ? itemData : []) {
+                const list = itemsByMemory.get(item.memory_id) || [];
+                list.push(item);
+                itemsByMemory.set(item.memory_id, list);
+            }
+
+            return rows.map(row => fromAssistantMemoryRow(row, itemsByMemory.get(row.id) || []));
+        } catch (error) {
+            handleStoreError(error, 'listMemories', this.options);
+            return [];
         }
-
-        return rows.map(row => fromAssistantMemoryRow(row, itemsByMemory.get(row.id) || []));
     }
 
     async deleteMemory(memoryId: string): Promise<void> {
-        const { error } = await this.client
-            .from('assistant_memories')
-            .delete()
-            .eq('id', memoryId);
-        if (error) throw error;
+        try {
+            const { error } = await this.client
+                .from('assistant_memories')
+                .delete()
+                .eq('id', memoryId);
+            if (error) throw error;
+        } catch (error) {
+            handleStoreError(error, 'deleteMemory', this.options);
+        }
     }
 }
 
@@ -364,7 +397,7 @@ export class SupabaseGlobalAssistantAuditRepository {
         return fromAssistantActionRow(data);
     }
 
-    async recordEvent(event: Omit<AssistantRuntimeEvent, 'id' | 'createdAt'>): Promise<AssistantRuntimeEvent> {
+    async recordEvent(event: AssistantRuntimeEvent | Omit<AssistantRuntimeEvent, 'id' | 'createdAt'>): Promise<AssistantRuntimeEvent> {
         const { data, error } = await this.client
             .from('assistant_runtime_events')
             .insert(toAssistantRuntimeEventRow(event))
@@ -412,5 +445,52 @@ export class SupabaseGlobalAssistantContextRepository {
             .from('assistant_context_snapshots')
             .upsert(toAssistantContextSnapshotRow(context));
         if (error) throw error;
+    }
+}
+
+export class SupabaseGlobalAssistantRuntimePersistence implements GlobalAssistantRuntimePersistence {
+    private readonly tasks: SupabaseGlobalAssistantTaskRepository;
+    private readonly audit: SupabaseGlobalAssistantAuditRepository;
+    private readonly contexts: SupabaseGlobalAssistantContextRepository;
+
+    constructor(
+        client: SupabaseClientLike = defaultSupabase,
+        private readonly options: SupabaseGlobalAssistantStoreOptions = {},
+    ) {
+        this.tasks = new SupabaseGlobalAssistantTaskRepository(client);
+        this.audit = new SupabaseGlobalAssistantAuditRepository(client);
+        this.contexts = new SupabaseGlobalAssistantContextRepository(client);
+    }
+
+    async recordContextSnapshot(context: AssistantContextSnapshot): Promise<void> {
+        try {
+            await this.contexts.recordContextSnapshot(context);
+        } catch (error) {
+            handleStoreError(error, 'recordContextSnapshot', this.options);
+        }
+    }
+
+    async upsertTask(task: AssistantTask): Promise<void> {
+        try {
+            await this.tasks.upsertTask(task);
+        } catch (error) {
+            handleStoreError(error, 'upsertTask', this.options);
+        }
+    }
+
+    async recordAction(action: AssistantActionLog): Promise<void> {
+        try {
+            await this.audit.recordAction(action);
+        } catch (error) {
+            handleStoreError(error, 'recordAction', this.options);
+        }
+    }
+
+    async recordEvent(event: AssistantRuntimeEvent): Promise<void> {
+        try {
+            await this.audit.recordEvent(event);
+        } catch (error) {
+            handleStoreError(error, 'recordEvent', this.options);
+        }
     }
 }

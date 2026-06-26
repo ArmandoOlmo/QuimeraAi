@@ -40,6 +40,7 @@ import {
     formatGlobalAssistantPlanMessage,
     listEnabledPlatformServices,
     resolveGlobalAssistantAppContext,
+    shouldAutoApplyOperatingLayerPlan,
     shouldContinueAfterRuntimePlan,
 } from '../../services/globalAssistant/globalAssistantCommandCenter';
 import {
@@ -48,6 +49,7 @@ import {
 } from '../../services/globalAssistant/globalAssistantConfirmation';
 import { globalAssistantRuntime, type AssistantLifecycleResult } from '../../services/globalAssistant/globalAssistantRuntime';
 import type { AssistantContextSnapshot } from '../../types/globalAssistant';
+import type { AdminView, View } from '../../types/ui';
 // ... existing imports ...
 
 // --- Types ---
@@ -62,6 +64,34 @@ interface PendingOperatingLayerTask {
     context: AssistantContextSnapshot;
     actionLabels: string[];
 }
+
+interface OperatingLayerNavigation {
+    type?: string;
+    view?: string | null;
+    adminView?: string | null;
+    moduleItem?: string | null;
+    projectId?: string | null;
+    projectName?: string | null;
+    message?: string | null;
+}
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+    value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+
+const readString = (value: unknown): string | null => {
+    const text = typeof value === 'string' ? value.trim() : '';
+    return text || null;
+};
+
+const findOperatingLayerNavigation = (result: AssistantLifecycleResult): OperatingLayerNavigation | null => {
+    for (const action of result.actions) {
+        const lifecycleResult = asRecord(action.metadata?.result);
+        const afterSnapshot = asRecord(lifecycleResult.afterSnapshot ?? action.afterSnapshot);
+        const navigation = asRecord(afterSnapshot.navigation);
+        if (readString(navigation.view)) return navigation as OperatingLayerNavigation;
+    }
+    return null;
+};
 
 const isSpanishLocale = (locale?: string | null) => (locale || '').toLowerCase().startsWith('es');
 
@@ -1079,7 +1109,7 @@ const GlobalAiAssistant: React.FC = () => {
 
     const { user } = useAuth();
     const { view, setView, onSectionSelect: uiOnSectionSelect, onSectionItemSelect } = useUI();
-    const { navigate, path } = useRouter();
+    const { navigate, navigateToEditor, navigateToView, path } = useRouter();
     const {
         projects,
         addNewProject,
@@ -1149,6 +1179,8 @@ const GlobalAiAssistant: React.FC = () => {
     const onSectionItemSelectRef = useRef(onSectionItemSelect);
     const setViewRef = useRef(setView);
     const navigateRef = useRef(navigate);
+    const navigateToEditorRef = useRef(navigateToEditor);
+    const navigateToViewRef = useRef(navigateToView);
     const setAdminViewRef = useRef(setAdminView);
     const setThemeModeRef = useRef(setThemeMode);
     const setThemeRef = useRef(setTheme);
@@ -1197,6 +1229,8 @@ const GlobalAiAssistant: React.FC = () => {
     useEffect(() => { onSectionItemSelectRef.current = onSectionItemSelect; }, [onSectionItemSelect]);
     useEffect(() => { setViewRef.current = setView; }, [setView]);
     useEffect(() => { navigateRef.current = navigate; }, [navigate]);
+    useEffect(() => { navigateToEditorRef.current = navigateToEditor; }, [navigateToEditor]);
+    useEffect(() => { navigateToViewRef.current = navigateToView; }, [navigateToView]);
     useEffect(() => { setAdminViewRef.current = setAdminView; }, [setAdminView]);
     useEffect(() => { setThemeModeRef.current = setThemeMode; }, [setThemeMode]);
     useEffect(() => { setThemeRef.current = setTheme; }, [setTheme]);
@@ -3442,6 +3476,44 @@ const GlobalAiAssistant: React.FC = () => {
         });
     };
 
+    const applyOperatingLayerNavigation = async (result: AssistantLifecycleResult): Promise<string | null> => {
+        const navigation = findOperatingLayerNavigation(result);
+        if (!navigation) return null;
+
+        const targetProjectId = readString(navigation.projectId);
+        const targetView = readString(navigation.view) as View | null;
+        const adminView = readString(navigation.adminView) as AdminView | null;
+        const projectName = readString(navigation.projectName);
+        const moduleItem = readString(navigation.moduleItem);
+
+        if (targetProjectId && activeProjectRef.current?.id !== targetProjectId) {
+            const project = projectsRef.current.find(entry => entry.id === targetProjectId);
+            await Promise.resolve(loadProjectRef.current(targetProjectId));
+            if (project) {
+                activeProjectRef.current = project;
+                dataRef.current = project.data;
+            }
+        }
+
+        if (targetView === 'editor') {
+            const projectId = targetProjectId || activeProjectRef.current?.id;
+            if (!projectId) return 'No project is available to open in the Website Builder.';
+            setViewRef.current('editor');
+            navigateToEditorRef.current(projectId);
+        } else if (targetView) {
+            if (targetView === 'superadmin' && adminView) {
+                setAdminViewRef.current(adminView);
+            }
+            setViewRef.current(targetView);
+            navigateToViewRef.current(targetView, adminView || undefined);
+        }
+
+        const baseMessage = readString(navigation.message) || `Opened ${targetView || 'requested view'}.`;
+        const projectSuffix = projectName ? ` Project: ${projectName}.` : '';
+        const itemSuffix = moduleItem ? ` Target: ${moduleItem}.` : '';
+        return `${baseMessage}${projectSuffix}${itemSuffix}`;
+    };
+
     const processTextRequest = async (request: string, entry?: GlobalAssistantEntryPayload) => {
         const userMsg = request.trim();
         if (!userMsg) return;
@@ -3480,10 +3552,11 @@ const GlobalAiAssistant: React.FC = () => {
                         taskId: pendingOperatingLayer.taskId,
                         context: pendingOperatingLayer.context,
                     });
+                    const navigationMessage = await applyOperatingLayerNavigation(applied);
                     setPendingOperatingLayerTask(null);
                     setMessages(prev => [...prev, {
                         role: 'model',
-                        text: formatOperatingLayerApplyMessage(applied, i18n.language),
+                        text: navigationMessage || formatOperatingLayerApplyMessage(applied, i18n.language),
                     }]);
                     setIsThinking(false);
                     return;
@@ -3496,6 +3569,20 @@ const GlobalAiAssistant: React.FC = () => {
                         role: 'model',
                         text: formatGlobalAssistantPlanMessage(operatingLayerPlan, i18n.language),
                     }]);
+
+                    if (shouldAutoApplyOperatingLayerPlan(operatingLayerPlan)) {
+                        const applied = await globalAssistantRuntime.applyTask({
+                            taskId: operatingLayerPlan.task.id,
+                            context: operatingLayerPlan.context,
+                        });
+                        const navigationMessage = await applyOperatingLayerNavigation(applied);
+                        setMessages(prev => [...prev, {
+                            role: 'model',
+                            text: navigationMessage || formatOperatingLayerApplyMessage(applied, i18n.language),
+                        }]);
+                        setIsThinking(false);
+                        return;
+                    }
 
                     if (!shouldContinueAfterRuntimePlan(operatingLayerPlan)) {
                         setIsThinking(false);

@@ -5,6 +5,7 @@ import {
     formatGlobalAssistantPlanMessage,
     listEnabledPlatformServices,
     resolveGlobalAssistantAppContext,
+    shouldAutoApplyOperatingLayerPlan,
     shouldContinueAfterRuntimePlan,
 } from '../../services/globalAssistant/globalAssistantCommandCenter.ts';
 
@@ -131,6 +132,42 @@ describe('globalAssistantCommandCenter', () => {
             plan: {
                 ...baseResult.plan,
                 status: 'blocked',
+            },
+        } as unknown as GlobalAssistantRuntimeResult)).toBe(false);
+    });
+
+    it('auto-applies only safe navigation plans', () => {
+        const navigationResult = {
+            plan: {
+                status: 'draft',
+                requiresConfirmation: false,
+                actions: [
+                    {
+                        actionType: 'open_email_hub',
+                        metadata: { mutatesData: false },
+                    },
+                ],
+            },
+        } as unknown as GlobalAssistantRuntimeResult;
+
+        expect(shouldAutoApplyOperatingLayerPlan(navigationResult)).toBe(true);
+        expect(shouldAutoApplyOperatingLayerPlan({
+            ...navigationResult,
+            plan: {
+                ...navigationResult.plan,
+                requiresConfirmation: true,
+            },
+        } as unknown as GlobalAssistantRuntimeResult)).toBe(false);
+        expect(shouldAutoApplyOperatingLayerPlan({
+            ...navigationResult,
+            plan: {
+                ...navigationResult.plan,
+                actions: [
+                    {
+                        actionType: 'create_email_campaign',
+                        metadata: { mutatesData: true },
+                    },
+                ],
             },
         } as unknown as GlobalAssistantRuntimeResult)).toBe(false);
     });

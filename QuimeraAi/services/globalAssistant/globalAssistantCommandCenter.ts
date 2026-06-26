@@ -114,6 +114,27 @@ export function shouldContinueAfterRuntimePlan(result: GlobalAssistantRuntimeRes
         && result.plan.safetyLevel === 'low';
 }
 
+const AUTO_APPLY_NAVIGATION_ACTIONS = new Set([
+    'open_project',
+    'open_website_builder',
+    'open_storefront_builder',
+    'open_orders',
+    'open_email_hub',
+    'open_calendar',
+    'open_chatbot_dashboard',
+    'open_tenant',
+]);
+
+export function shouldAutoApplyOperatingLayerPlan(result: GlobalAssistantRuntimeResult): boolean {
+    if (result.plan.status === 'blocked' || result.plan.requiresConfirmation) return false;
+    if (result.plan.actions.length === 0) return false;
+
+    return result.plan.actions.every(action =>
+        action.metadata?.mutatesData !== true
+        && AUTO_APPLY_NAVIGATION_ACTIONS.has(action.actionType)
+    );
+}
+
 export function formatGlobalAssistantPlanMessage(
     result: GlobalAssistantRuntimeResult,
     locale?: string | null,

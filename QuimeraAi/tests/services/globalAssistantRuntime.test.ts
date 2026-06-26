@@ -3,8 +3,14 @@ import { GlobalAssistantActionRegistry } from '../../services/globalAssistant/gl
 import { GlobalAssistantAuditService } from '../../services/globalAssistant/globalAssistantAuditService.ts';
 import { resolveCurrentAssistantContext } from '../../services/globalAssistant/globalAssistantContextResolver.ts';
 import { GlobalAssistantMemoryService } from '../../services/globalAssistant/globalAssistantMemoryService.ts';
-import { GlobalAssistantRuntime } from '../../services/globalAssistant/globalAssistantRuntime.ts';
+import { GlobalAssistantRuntime, type GlobalAssistantRuntimePersistence } from '../../services/globalAssistant/globalAssistantRuntime.ts';
 import { GlobalAssistantTaskService } from '../../services/globalAssistant/globalAssistantTaskService.ts';
+import type {
+    AssistantActionLog,
+    AssistantContextSnapshot,
+    AssistantRuntimeEvent,
+    AssistantTask,
+} from '../../types/globalAssistant.ts';
 
 const activeProject = {
     id: 'project-1',
@@ -24,6 +30,30 @@ const buildRuntime = () => {
         memoryService,
         auditService,
         runtime: new GlobalAssistantRuntime(registry, memoryService, taskService, auditService),
+    };
+};
+
+const buildRuntimeWithPersistence = () => {
+    const registry = new GlobalAssistantActionRegistry();
+    const memoryService = new GlobalAssistantMemoryService();
+    const taskService = new GlobalAssistantTaskService();
+    const auditService = new GlobalAssistantAuditService();
+    const persisted = {
+        contexts: [] as AssistantContextSnapshot[],
+        tasks: [] as AssistantTask[],
+        actions: [] as AssistantActionLog[],
+        events: [] as AssistantRuntimeEvent[],
+    };
+    const persistence: GlobalAssistantRuntimePersistence = {
+        recordContextSnapshot: async context => { persisted.contexts.push(context); },
+        upsertTask: async task => { persisted.tasks.push(task); },
+        recordAction: async action => { persisted.actions.push(action); },
+        recordEvent: async event => { persisted.events.push(event); },
+    };
+
+    return {
+        persisted,
+        runtime: new GlobalAssistantRuntime(registry, memoryService, taskService, auditService, persistence),
     };
 };
 
@@ -91,5 +121,35 @@ describe('GlobalAssistantRuntime', () => {
         expect(result.plan.status).toBe('blocked');
         expect(result.task.status).toBe('failed');
         expect(result.plan.blockers.join(' ')).toContain('Project-scoped action requires a projectId');
+    });
+
+    it('flushes context, task, action, and event persistence before planRequest resolves', async () => {
+        const { runtime, persisted } = buildRuntimeWithPersistence();
+        const context = resolveCurrentAssistantContext({
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            role: 'member',
+            activeProject,
+            activeRoute: '/dashboard/email',
+            activeServices: ['emailMarketing'],
+            featureFlags: ['emailMarketing'],
+        });
+
+        const result = await runtime.planRequest({
+            context,
+            request: 'Crea una campana de email para reservas',
+            enabledServices: ['emailMarketing'],
+            enabledFeatures: ['emailMarketing'],
+        });
+
+        expect(persisted.contexts.map(entry => entry.id)).toContain(context.id);
+        expect(persisted.tasks.map(entry => entry.id)).toContain(result.task.id);
+        expect(persisted.actions.map(entry => entry.taskId)).toContain(result.task.id);
+        expect(persisted.events.map(entry => entry.type)).toEqual([
+            'assistant_request_started',
+            'assistant_memory_loaded',
+            'assistant_intent_classified',
+            'assistant_action_previewed',
+        ]);
     });
 });
