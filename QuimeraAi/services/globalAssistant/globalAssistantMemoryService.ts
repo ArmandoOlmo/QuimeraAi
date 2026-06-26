@@ -156,6 +156,9 @@ export class GlobalAssistantMemoryService {
         const memories = await this.adapter.listMemories();
         const now = Date.now();
         const searchText = query.text?.toLowerCase().trim();
+        const searchTokens = searchText
+            ? searchText.split(/\s+/).filter(token => token.length > 2)
+            : [];
 
         return memories
             .filter(memory => {
@@ -172,7 +175,7 @@ export class GlobalAssistantMemoryService {
 
                 if (!searchText) return true;
                 const haystack = `${memory.title} ${memory.summary} ${JSON.stringify(memory.data)}`.toLowerCase();
-                return haystack.includes(searchText);
+                return haystack.includes(searchText) || searchTokens.some(token => haystack.includes(token));
             })
             .sort((a, b) => b.importance - a.importance || b.updatedAt.localeCompare(a.updatedAt))
             .slice(0, query.limit || 20);

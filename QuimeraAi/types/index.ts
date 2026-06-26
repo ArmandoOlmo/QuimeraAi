@@ -18,6 +18,7 @@ export * from './features';
 
 // AI Assistant Types
 export * from './ai-assistant';
+export * from './globalAssistant';
 
 // Navigation Types
 export * from './navigation';

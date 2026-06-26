@@ -2,6 +2,7 @@ import type {
     AssistantContextSnapshot,
     AssistantExecutionPlan,
     AssistantTask,
+    GlobalAssistantMemory,
 } from '../../types/globalAssistant';
 import {
     globalAssistantActionRegistry,
@@ -11,7 +12,6 @@ import { buildExecutionPlan } from './globalAssistantExecutionEngine';
 import { routeAssistantIntent } from './globalAssistantIntentRouter';
 import {
     GlobalAssistantMemoryService,
-    type MemoryQuery,
 } from './globalAssistantMemoryService';
 import { selectModelForIntent } from './globalAssistantModelRouter';
 import {
@@ -35,7 +35,7 @@ export interface GlobalAssistantRuntimeResult {
     context: AssistantContextSnapshot;
     task: AssistantTask;
     plan: AssistantExecutionPlan;
-    memoryUsed: MemoryQuery extends { limit?: number } ? Awaited<ReturnType<GlobalAssistantMemoryService['queryRelevantMemory']>> : never;
+    memoryUsed: GlobalAssistantMemory[];
     modelId: string;
 }
 

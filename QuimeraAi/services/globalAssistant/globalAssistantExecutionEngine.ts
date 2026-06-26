@@ -10,6 +10,24 @@ import type {
 import { checkActionPermission, assertProjectActionContext } from './globalAssistantPermissionService';
 
 const nowIso = () => new Date().toISOString();
+const PROJECT_SCOPED_MODULES = new Set([
+    'businessBlueprint',
+    'website',
+    'storefront',
+    'ecommerce',
+    'appointments',
+    'restaurants',
+    'realEstate',
+    'bioPage',
+    'crm',
+    'emailMarketing',
+    'chatbot',
+    'analytics',
+    'finance',
+]);
+
+const requiresProjectContext = (definition: AssistantActionDefinition): boolean =>
+    PROJECT_SCOPED_MODULES.has(definition.module) || Boolean(definition.inputSchema.required?.includes('projectId'));
 
 const createId = (prefix: string) => {
     const randomId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -51,6 +69,7 @@ const createAction = (
         safetyLevel: definition.safetyLevel,
         previewSupported: definition.previewSupported,
         rollbackSupported: definition.rollbackSupported,
+        mutatesData: definition.mutatesData,
     },
     createdAt: nowIso(),
 });
@@ -114,10 +133,12 @@ export function buildExecutionPlan(input: BuildExecutionPlanInput): AssistantExe
         const actionBlockers = [
             ...permission.reasons,
             ...permission.missingPermissions.map(permission => `Missing permission: ${permission}.`),
-            ...assertProjectActionContext(context, actionInput.projectId as string | undefined),
+            ...(requiresProjectContext(definition)
+                ? assertProjectActionContext(context, actionInput.projectId as string | undefined)
+                : []),
         ];
 
-        if (!permission.allowed) {
+        if (actionBlockers.length > 0) {
             blockers.push(...actionBlockers.map(reason => `${definition.actionType}: ${reason}`));
         }
 
