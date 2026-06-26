@@ -6,7 +6,7 @@ import type {
     AssistantContextSnapshot,
     AssistantRollbackSnapshot,
 } from '../../types/globalAssistant';
-import { createAppointmentCanonical, type CanonicalAppointmentInput } from '../appointments/appointmentEngineService';
+import { createAppointmentCanonical, timestampFromIso, type CanonicalAppointmentInput } from '../appointments/appointmentEngineService';
 import {
     applyChatbotBlueprintToProjectData,
     updateProjectChatbotSurfaceDeployment,
@@ -26,6 +26,7 @@ import type {
     ChatbotKnowledgeSourceBlueprint,
     ChatbotKnowledgeSourceType,
     ChatbotKnowledgeVisibility,
+    BusinessBlueprint,
 } from '../../types/businessBlueprint';
 import type { PropertyCampaign, PropertyOpenHouse, RealtyProperty } from '../../types/realty';
 import { migrateBusinessBlueprint, syncWebsiteBlueprintFromEditor } from '../../utils/businessBlueprint';
@@ -2688,6 +2689,12 @@ const createLeadHandler = (deps: GlobalAssistantActionHandlerDependencies): Hand
         const request = readString(input.request);
         const now = getNow(deps);
         const name = readString(lead.name) || titleFromRequest(request, 'AI lead draft');
+        const customerRequestSummary = buildCustomerRequestSummary(
+            input,
+            action,
+            context,
+            readString(lead.notes) || readString(lead.message) || request || name,
+        );
         const row = await insertRow(client, 'leads', {
             tenant_id: tenantId,
             project_id: projectId,
@@ -2698,11 +2705,13 @@ const createLeadHandler = (deps: GlobalAssistantActionHandlerDependencies): Hand
             source: 'quimera-chat',
             status: readString(lead.status) || 'new',
             value: readNumber(lead.value) ?? 0,
-            notes: readString(lead.notes) || request || '',
+            notes: readString(lead.notes) || customerRequestSummary || request || '',
             tags: [...asArray(lead.tags).map(String), 'global-assistant'],
             custom_data: {
                 ...asRecord(lead.customData || lead.custom_data),
                 ...buildBaseMetadata(input, action, context),
+                customerRequest: request || readString(lead.message) || null,
+                customerRequestSummary,
                 needsReview: true,
             },
             created_at: now,
@@ -2982,6 +2991,11 @@ const buildLeadUpdatePatch = (
     const aiScore = readNumber(updates.aiScore);
     if (aiScore !== undefined) setCustomValue('aiScore', aiScore);
     if (updates.customFields !== undefined) setCustomValue('customFields', asArray(updates.customFields));
+    const customerRequestSummary = buildCustomerRequestSummary(input, action, context, notes);
+    if (customerRequestSummary) {
+        setCustomValue('customerRequestSummary', customerRequestSummary);
+        setCustomValue('customerRequest', readString(input.request) || readString(updates.message) || readString(updates.notes) || null);
+    }
 
     patch.custom_data = nextCustomData;
     return { patch, changedFields: Array.from(new Set(changedFields)) };
@@ -3155,6 +3169,34 @@ const mergeAssistantMetadata = (
             ...asRecord(base.globalAssistant),
         },
     };
+};
+
+const buildCustomerRequestSummary = (
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context?: AssistantContextSnapshot,
+    fallback?: string,
+): string => {
+    const request = readString(input.request)
+        || readString(input.message)
+        || readString(input.customerRequest)
+        || fallback
+        || '';
+    if (!request) return '';
+    const lines = [
+        'Customer request / Solicitud del cliente:',
+        request,
+        '',
+        `Action / Accion: ${action.actionType}`,
+        `Module / Modulo: ${action.module}`,
+        `Project / Proyecto: ${action.projectId || context?.project.projectId || ''}`,
+    ];
+    const activeEntity = [
+        readString(context?.activeEntityType),
+        readString(context?.activeEntityId),
+    ].filter(Boolean).join(':');
+    if (activeEntity) lines.push(`Context / Contexto: ${activeEntity}`);
+    return lines.filter(Boolean).join('\n').slice(0, 6000);
 };
 
 const readProductTextUpdate = (updates: Record<string, unknown>, keys: string[]): string | undefined => {
@@ -3986,10 +4028,13 @@ const buildAppointmentCreateInput = (
         || readString(appointment.organizer_id)
         || action.userId
         || context?.actor.userId;
+    const explicitNotes = readString(appointment.notes ?? appointment.notas ?? input.notes ?? input.notas);
+    const customerRequestSummary = buildCustomerRequestSummary(input, action, context, explicitNotes || request);
     return {
         ...appointment,
         title: readString(appointment.title) || readString(input.title) || titleFromRequest(request, 'AI appointment draft'),
         description: readString(appointment.description) || readString(input.description) || request || '',
+        notes: explicitNotes || customerRequestSummary || request || null,
         startDate: range.startDate,
         endDate: range.endDate,
         participantName: readString(appointment.participantName ?? appointment.participant_name ?? input.participantName ?? input.participant_name),
@@ -4043,6 +4088,38 @@ const readAppointmentTextUpdate = (updates: Record<string, unknown>, keys: strin
     return undefined;
 };
 
+const normalizeAppointmentNotes = (value: unknown): Record<string, unknown>[] => {
+    if (Array.isArray(value)) return value.map(asRecord).filter(note => Object.keys(note).length > 0);
+    const text = readString(value);
+    if (!text) return [];
+    return [{
+        id: 'legacy-note',
+        content: text,
+        createdAt: timestampFromIso(),
+        createdBy: 'system',
+        isPrivate: false,
+    }];
+};
+
+const appendAssistantAppointmentNote = (
+    currentRow: Record<string, unknown>,
+    content: string,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+): Record<string, unknown>[] => [
+    ...normalizeAppointmentNotes(currentRow.notes),
+    {
+        id: `assistant-note-${action.id}`,
+        content,
+        createdAt: timestampFromIso(now),
+        createdBy: getAssistantUserId(action, context),
+        isPrivate: false,
+        aiGenerated: true,
+        pinned: true,
+    },
+];
+
 const buildAppointmentUpdatePatch = (
     currentRow: Record<string, unknown>,
     updates: Record<string, unknown>,
@@ -4068,8 +4145,14 @@ const buildAppointmentUpdatePatch = (
 
     const title = readAppointmentTextUpdate(updates, ['title', 'titulo']);
     if (title !== undefined) setValue('title', title);
-    const description = readAppointmentTextUpdate(updates, ['description', 'descripcion', 'notes', 'notas']);
+    const description = readAppointmentTextUpdate(updates, ['description', 'descripcion']);
     if (description !== undefined) setValue('description', description);
+    const note = readAppointmentTextUpdate(updates, ['notes', 'notas']);
+    if (note !== undefined) {
+        const noteSummary = buildCustomerRequestSummary(input, action, context, note) || note;
+        setValue('notes', appendAssistantAppointmentNote(currentRow, noteSummary, action, context, now));
+        nextMetadata.customerRequestSummary = noteSummary;
+    }
     const type = readAppointmentTextUpdate(updates, ['type', 'tipo']);
     if (type !== undefined) setValue('type', type);
     const priority = readAppointmentTextUpdate(updates, ['priority', 'prioridad']);
@@ -4830,7 +4913,7 @@ const updateProjectData = async (
     return result?.data || { projectId, data };
 };
 
-const rollbackChatbotProjectData = (
+const rollbackProjectDataSnapshot = (
     deps: GlobalAssistantActionHandlerDependencies,
     label: string,
 ): HandlerPatch['rollback'] => async (_input, { snapshot }) => {
@@ -4851,6 +4934,25 @@ const rollbackChatbotProjectData = (
         diff: {
             restored: [`projects.${projectId}.data`],
         },
+    };
+};
+
+const applyBusinessBlueprintToProjectData = (
+    projectDataInput: unknown,
+    businessBlueprint: BusinessBlueprint,
+): Record<string, unknown> => {
+    const projectData = asRecord(projectDataInput);
+    const nestedData = asRecord(projectData.data);
+
+    return {
+        ...projectData,
+        businessBlueprint,
+        ...(nestedData.businessBlueprint ? {
+            data: {
+                ...nestedData,
+                businessBlueprint,
+            },
+        } : {}),
     };
 };
 
@@ -4995,7 +5097,7 @@ const createChatbotKnowledgeHandler = (
             },
         };
     },
-    rollback: rollbackChatbotProjectData(deps, 'ChatCore knowledge'),
+    rollback: rollbackProjectDataSnapshot(deps, 'ChatCore knowledge'),
 });
 
 const chatbotSurfaceDeploymentKeys: ChatbotSurfaceDeploymentKey[] = [
@@ -5146,7 +5248,7 @@ const createChatbotTestHandler = (deps: GlobalAssistantActionHandlerDependencies
             },
         };
     },
-    rollback: rollbackChatbotProjectData(deps, 'ChatCore Test Lab'),
+    rollback: rollbackProjectDataSnapshot(deps, 'ChatCore Test Lab'),
 });
 
 const createDeployChatbotToSurfaceHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
@@ -5198,7 +5300,7 @@ const createDeployChatbotToSurfaceHandler = (deps: GlobalAssistantActionHandlerD
             },
         };
     },
-    rollback: rollbackChatbotProjectData(deps, 'ChatCore deployment'),
+    rollback: rollbackProjectDataSnapshot(deps, 'ChatCore deployment'),
 });
 
 const normalizeInvoiceItems = (
@@ -5540,6 +5642,120 @@ const resolveRestaurant = async (
 const normalizeStringArray = (value: unknown): string[] =>
     asArray(value).map(String).map(item => item.trim()).filter(Boolean);
 
+const getContextRestaurantMenuItemId = (context?: AssistantContextSnapshot): string | undefined => {
+    const entityType = normalizeForSearch(context?.activeEntityType || '').replace(/\s+/g, '_');
+    if (!context?.activeEntityId) return undefined;
+    if (['restaurant_menu_item', 'menu_item', 'restaurant_dish', 'dish'].includes(entityType)) {
+        return context.activeEntityId;
+    }
+    return undefined;
+};
+
+const getTargetRestaurantMenuItemId = (
+    input: Record<string, unknown>,
+    context?: AssistantContextSnapshot,
+): string => {
+    const updates = requireObject(input, 'updates');
+    const item = requireObject(input, 'item');
+    const itemId = readString(input.itemId)
+        || readString(input.item_id)
+        || readString(input.menuItemId)
+        || readString(input.menu_item_id)
+        || readString(input.targetId)
+        || readString(updates.itemId)
+        || readString(updates.item_id)
+        || readString(item.id)
+        || getContextRestaurantMenuItemId(context);
+    if (!itemId) throw new Error('itemId is required or the active context must point to a restaurant menu item.');
+    return itemId;
+};
+
+const loadRestaurantMenuItemRow = async (
+    client: SupabaseClientLike,
+    restaurantId: string,
+    itemId: string,
+): Promise<Record<string, unknown>> => {
+    const result = await selectSingle(client.from('restaurant_menu_items').select('*').eq('id', itemId).eq('restaurant_id', restaurantId));
+    if (result?.error) throw result.error;
+    const row = asRecord(result?.data);
+    if (!readString(row.id)) {
+        throw new Error(`restaurant_menu_items.${itemId} was not found for restaurant ${restaurantId}.`);
+    }
+    return cloneRecord(row);
+};
+
+const updateRestaurantMenuItemRow = async (
+    client: SupabaseClientLike,
+    restaurantId: string,
+    itemId: string,
+    patch: Record<string, unknown>,
+): Promise<Record<string, unknown>> => {
+    const result = await selectSingle(client.from('restaurant_menu_items').update(patch).eq('id', itemId).eq('restaurant_id', restaurantId));
+    if (result?.error) throw result.error;
+    const row = asRecord(result?.data);
+    if (!readString(row.id)) {
+        throw new Error(`restaurant_menu_items.${itemId} could not be updated for restaurant ${restaurantId}.`);
+    }
+    return row;
+};
+
+const buildRestaurantMenuItemUpdatePatch = (
+    currentRow: Record<string, unknown>,
+    updates: Record<string, unknown>,
+    input: Record<string, unknown>,
+    now: string,
+): { patch: Record<string, unknown>; changedFields: string[] } => {
+    const patch: Record<string, unknown> = { updated_at: now };
+    const changedFields: string[] = [];
+    const setValue = (column: string, value: unknown) => {
+        patch[column] = value;
+        changedFields.push(column);
+    };
+
+    const name = readString(updates.name ?? updates.nombre ?? updates.title);
+    if (name !== undefined) setValue('name', name);
+    const description = readString(updates.description ?? updates.descripcion ?? updates.copy);
+    if (description !== undefined) setValue('description', description);
+    const category = readString(updates.category ?? updates.categoria);
+    if (category !== undefined) setValue('category', category || 'Specials');
+    const price = readNumber(updates.price ?? updates.precio);
+    if (price !== undefined) setValue('price', price);
+    const currency = readString(updates.currency ?? updates.moneda);
+    if (currency !== undefined) setValue('currency', (currency || readString(currentRow.currency) || 'USD').toUpperCase());
+    const imageUrl = readString(updates.imageUrl ?? updates.image_url);
+    if (imageUrl !== undefined) setValue('image_url', imageUrl || null);
+    if (Array.isArray(updates.dietaryTags) || Array.isArray(updates.dietary_tags)) {
+        setValue('dietary_tags', normalizeStringArray(updates.dietaryTags ?? updates.dietary_tags));
+    }
+    if (Array.isArray(updates.allergens)) setValue('allergens', normalizeStringArray(updates.allergens));
+    if (Array.isArray(updates.ingredients)) setValue('ingredients', normalizeStringArray(updates.ingredients));
+    const preparationTime = readNumber(updates.preparationTime ?? updates.preparation_time);
+    if (preparationTime !== undefined) setValue('preparation_time', preparationTime);
+    const isAvailable = readBoolean(updates.isAvailable ?? updates.is_available ?? updates.available ?? updates.disponible);
+    if (isAvailable !== undefined) setValue('is_available', isAvailable);
+    const isFeatured = readBoolean(updates.isFeatured ?? updates.is_featured ?? updates.featured);
+    if (isFeatured !== undefined) setValue('is_featured', isFeatured);
+    if (Array.isArray(updates.upsellItems) || Array.isArray(updates.upsell_items)) {
+        setValue('upsell_items', normalizeStringArray(updates.upsellItems ?? updates.upsell_items));
+    }
+    const position = readNumber(updates.position);
+    if (position !== undefined) setValue('position', position);
+
+    const request = normalizeForSearch(readString(input.request) || '');
+    if (isAvailable === undefined && /\b(no disponible|unavailable|oculta|hide|desactiva)\b/.test(request)) {
+        setValue('is_available', false);
+    } else if (isAvailable === undefined && /\b(disponible|available|mostrar|show|activa)\b/.test(request)) {
+        setValue('is_available', true);
+    }
+
+    if (changedFields.length === 0 && readString(input.request)) {
+        setValue('description', readString(input.request) || readString(currentRow.description) || '');
+    }
+    setValue('ai_generated', true);
+
+    return { patch, changedFields: Array.from(new Set(changedFields.filter(field => field !== 'updated_at'))) };
+};
+
 const createRestaurantMenuItemHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
     validate: noValidationErrors,
     execute: async (input, { action, context }) => {
@@ -5578,6 +5794,142 @@ const createRestaurantMenuItemHandler = (deps: GlobalAssistantActionHandlerDepen
         };
     },
     rollback: rollbackCreatedRow('restaurant_menu_items', deps),
+});
+
+const updateRestaurantMenuHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const itemId = readString(input.itemId)
+            || readString(input.item_id)
+            || readString(input.menuItemId)
+            || readString(input.menu_item_id)
+            || readString(input.targetId);
+        return {
+            valid: Boolean(itemId),
+            errors: itemId ? [] : ['itemId is required before updating a restaurant menu item.'],
+        };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const restaurant = await resolveRestaurant(client, input, action, context, projectId);
+        const itemId = getTargetRestaurantMenuItemId(input, context);
+        const now = getNow(deps);
+        const currentRow = await loadRestaurantMenuItemRow(client, restaurant.id, itemId);
+        const previousRow = cloneRecord(currentRow);
+        const updates = {
+            ...requireObject(input, 'updates'),
+            ...requireObject(input, 'item'),
+        };
+        const { patch, changedFields } = buildRestaurantMenuItemUpdatePatch(currentRow, updates, input, now);
+        const row = await updateRestaurantMenuItemRow(client, restaurant.id, itemId, patch);
+        return {
+            beforeSnapshot: { table: 'restaurant_menu_items', id: itemId, restaurantId: restaurant.id, row: previousRow },
+            afterSnapshot: { table: 'restaurant_menu_items', id: itemId, restaurantId: restaurant.id, row },
+            diff: {
+                updated: changedFields.map(field => `restaurant_menu_items.${itemId}.${field}`),
+                reviewRequired: true,
+                rollback: 'restore_previous_restaurant_menu_item_snapshot',
+            },
+        };
+    },
+    rollback: async (_input, { snapshot }) => {
+        const before = asRecord(snapshot.beforeSnapshot);
+        const row = asRecord(before.row);
+        const itemId = readString(before.id) || readString(row.id);
+        const restaurantId = readString(before.restaurantId) || readString(row.restaurant_id);
+        if (!itemId || !restaurantId || !Object.keys(row).length) {
+            throw new Error('Cannot rollback restaurant menu item: previous row snapshot was not recorded.');
+        }
+        const { id: _id, ...restorePatch } = row;
+        const restored = await updateRestaurantMenuItemRow(getClient(deps), restaurantId, itemId, restorePatch);
+        return {
+            afterSnapshot: {
+                table: 'restaurant_menu_items',
+                id: itemId,
+                restaurantId,
+                row: restored,
+                restored: true,
+            },
+            diff: {
+                restored: [`restaurant_menu_items.${itemId}`],
+            },
+        };
+    },
+});
+
+const buildRestaurantReservationFlowPatch = (
+    currentRow: Record<string, unknown>,
+    flow: Record<string, unknown>,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+): { patch: Record<string, unknown>; changedFields: string[] } => {
+    const patch: Record<string, unknown> = { updated_at: now };
+    const changedFields: string[] = [];
+    const setValue = (column: string, value: unknown) => {
+        patch[column] = value;
+        changedFields.push(column);
+    };
+
+    const enabled = readBoolean(flow.enabled ?? flow.reservationEnabled ?? flow.reservation_enabled);
+    setValue('reservation_enabled', enabled ?? Boolean(currentRow.reservation_enabled));
+    const maxPartySize = readNumber(flow.maxPartySize ?? flow.max_party_size);
+    if (maxPartySize !== undefined) setValue('max_party_size', maxPartySize);
+    else if (currentRow.max_party_size === undefined || currentRow.max_party_size === null) setValue('max_party_size', 8);
+    const interval = readNumber(flow.reservationInterval ?? flow.reservation_interval ?? flow.interval);
+    if (interval !== undefined) setValue('reservation_interval', interval);
+    else if (currentRow.reservation_interval === undefined || currentRow.reservation_interval === null) setValue('reservation_interval', 30);
+    const duration = readNumber(flow.averageTableDuration ?? flow.average_table_duration ?? flow.duration);
+    if (duration !== undefined) setValue('average_table_duration', duration);
+    else if (currentRow.average_table_duration === undefined || currentRow.average_table_duration === null) setValue('average_table_duration', 90);
+    const hours = readString(flow.hours ?? flow.horario);
+    if (hours !== undefined) setValue('hours', hours);
+    const languages = normalizeStringArray(flow.languagesEnabled ?? flow.languages_enabled);
+    if (languages.length > 0) setValue('languages_enabled', languages);
+
+    const existingSettings = asRecord(currentRow.settings);
+    const settings = mergeAssistantMetadata(existingSettings, input, action, context);
+    settings.reservationFlowDraft = {
+        ...asRecord(existingSettings.reservationFlowDraft),
+        prompt: readString(input.request) || 'AI restaurant reservation flow',
+        status: 'needs_review',
+        generatedAt: now,
+        generatedByAI: true,
+        needsReview: true,
+        noAutoConfirm: true,
+        confirmationMode: readString(flow.confirmationMode ?? flow.confirmation_mode) || 'manual',
+        tablePreferences: normalizeStringArray(flow.tablePreferences ?? flow.table_preferences),
+        cancellationPolicy: readString(flow.cancellationPolicy ?? flow.cancellation_policy) || '',
+    };
+    setValue('settings', settings);
+
+    return { patch, changedFields: Array.from(new Set(changedFields.filter(field => field !== 'updated_at'))) };
+};
+
+const createRestaurantReservationFlowHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const restaurant = await resolveRestaurant(client, input, action, context, projectId);
+        const now = getNow(deps);
+        const currentRow = cloneRecord(restaurant.row);
+        const flow = requireObject(input, 'flow');
+        const { patch, changedFields } = buildRestaurantReservationFlowPatch(currentRow, flow, input, action, context, now);
+        const row = await updateProjectScopedRow(client, 'restaurants', projectId, restaurant.id, patch);
+        return {
+            beforeSnapshot: { table: 'restaurants', id: restaurant.id, projectId, row: currentRow },
+            afterSnapshot: { table: 'restaurants', id: restaurant.id, projectId, row },
+            diff: {
+                updated: changedFields.map(field => `restaurants.${restaurant.id}.${field}`),
+                reviewRequired: true,
+                noAutoConfirm: true,
+                rollback: 'restore_previous_restaurant_settings_snapshot',
+            },
+        };
+    },
+    rollback: rollbackUpdatedProjectScopedRow('restaurants', deps),
 });
 
 const createRestaurantMarketingOutputHandler = (
@@ -5684,6 +6036,377 @@ const createRealtyListingHandler = (deps: GlobalAssistantActionHandlerDependenci
         };
     },
     rollback: rollbackCreatedRow('properties', deps),
+});
+
+const realtyListingStatuses = new Set(['draft', 'active', 'pending', 'sold', 'archived']);
+const realtyTransactionTypes = new Set(['sale', 'rent', 'lease']);
+const realtyPropertyTypeValues = new Set(['house', 'condo', 'apartment', 'townhouse', 'land', 'commercial']);
+
+const getContextRealtyListingId = (context?: AssistantContextSnapshot): string | undefined => {
+    const entityType = normalizeForSearch(context?.activeEntityType || '').replace(/\s+/g, '_');
+    if (!context?.activeEntityId) return undefined;
+    if (['realty_property', 'real_estate_property', 'property', 'listing', 'realty_listing'].includes(entityType)) {
+        return context.activeEntityId;
+    }
+    return undefined;
+};
+
+const getTargetRealtyListingId = (
+    input: Record<string, unknown>,
+    context?: AssistantContextSnapshot,
+): string => {
+    const updates = requireObject(input, 'updates');
+    const listing = requireObject(input, 'listing');
+    const listingId = readString(input.listingId)
+        || readString(input.listing_id)
+        || readString(input.propertyId)
+        || readString(input.property_id)
+        || readString(input.targetId)
+        || readString(updates.listingId)
+        || readString(updates.propertyId)
+        || readString(listing.id)
+        || getContextRealtyListingId(context);
+    if (!listingId) throw new Error('listingId is required or the active context must point to a Realty listing.');
+    return listingId;
+};
+
+const normalizedEnum = (
+    value: unknown,
+    allowed: Set<string>,
+): string | undefined => {
+    const text = readString(value);
+    if (!text) return undefined;
+    const normalized = normalizeForSearch(text).replace(/\s+/g, '_');
+    return allowed.has(normalized) ? normalized : undefined;
+};
+
+const buildRealtyListingUpdatePatch = (
+    currentRow: Record<string, unknown>,
+    updates: Record<string, unknown>,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+): { patch: Record<string, unknown>; changedFields: string[] } => {
+    const patch: Record<string, unknown> = { updated_at: now };
+    const changedFields: string[] = [];
+    const setValue = (column: string, value: unknown) => {
+        patch[column] = value;
+        changedFields.push(column);
+    };
+
+    const title = readString(updates.title ?? updates.titulo ?? updates.name);
+    if (title !== undefined) setValue('title', title);
+    const slug = readString(updates.slug);
+    if (slug !== undefined) setValue('slug', slug ? toRealtySlug(slug) : toRealtySlug(title || readString(currentRow.title) || 'property'));
+    const description = readString(updates.description ?? updates.descripcion);
+    if (description !== undefined) {
+        setValue('description', description);
+        setValue('description_long', description);
+    }
+    const descriptionShort = readString(updates.descriptionShort ?? updates.description_short);
+    if (descriptionShort !== undefined) setValue('description_short', descriptionShort || null);
+    const descriptionLong = readString(updates.descriptionLong ?? updates.description_long);
+    if (descriptionLong !== undefined) {
+        setValue('description_long', descriptionLong);
+        setValue('description', descriptionLong);
+    }
+    const price = readNumber(updates.price ?? updates.precio);
+    if (price !== undefined) setValue('price', price);
+    const currency = readString(updates.currency ?? updates.moneda);
+    if (currency !== undefined) setValue('currency', (currency || readString(currentRow.currency) || 'USD').toUpperCase());
+    const transactionType = normalizedEnum(updates.transactionType ?? updates.transaction_type, realtyTransactionTypes);
+    if (transactionType) setValue('transaction_type', transactionType);
+    const propertyType = normalizedEnum(updates.propertyType ?? updates.property_type, realtyPropertyTypeValues);
+    if (propertyType) setValue('property_type', propertyType);
+    const status = normalizedEnum(updates.status ?? updates.estado, realtyListingStatuses);
+    if (status) setValue('status', status);
+    const address = readString(updates.address ?? updates.addressLine1 ?? updates.address_line_1 ?? updates.direccion);
+    if (address !== undefined) {
+        setValue('address', address);
+        setValue('address_line_1', address);
+    }
+    const addressLine2 = readString(updates.addressLine2 ?? updates.address_line_2);
+    if (addressLine2 !== undefined) setValue('address_line_2', addressLine2 || null);
+    const city = readString(updates.city ?? updates.ciudad);
+    if (city !== undefined) setValue('city', city);
+    const state = readString(updates.state ?? updates.estado_region);
+    if (state !== undefined) setValue('state', state || null);
+    const country = readString(updates.country ?? updates.pais);
+    if (country !== undefined) setValue('country', country || null);
+    const postalCode = readString(updates.postalCode ?? updates.postal_code ?? updates.zipCode ?? updates.zip_code);
+    if (postalCode !== undefined) {
+        setValue('zip_code', postalCode || null);
+        setValue('postal_code', postalCode || null);
+    }
+    const bedrooms = readNumber(updates.bedrooms ?? updates.habitaciones);
+    if (bedrooms !== undefined) setValue('bedrooms', bedrooms);
+    const bathrooms = readNumber(updates.bathrooms ?? updates.banos ?? updates.baños);
+    if (bathrooms !== undefined) setValue('bathrooms', bathrooms);
+    const halfBathrooms = readNumber(updates.halfBathrooms ?? updates.half_bathrooms);
+    if (halfBathrooms !== undefined) setValue('half_bathrooms', halfBathrooms);
+    const area = readNumber(updates.area ?? updates.square_feet ?? updates.areaSqft ?? updates.area_sqft);
+    if (area !== undefined) {
+        setValue('square_feet', area);
+        setValue('area_sqft', area);
+    }
+    const lotSize = readNumber(updates.lotSize ?? updates.lot_size ?? updates.lotSqft ?? updates.lot_sqft);
+    if (lotSize !== undefined) {
+        setValue('lot_size', lotSize);
+        setValue('lot_sqft', lotSize);
+    }
+    const parkingSpaces = readNumber(updates.parkingSpaces ?? updates.parking_spaces);
+    if (parkingSpaces !== undefined) setValue('parking_spaces', parkingSpaces);
+    const yearBuilt = readNumber(updates.yearBuilt ?? updates.year_built);
+    if (yearBuilt !== undefined) setValue('year_built', yearBuilt);
+    const hoaFee = readNumber(updates.hoaFee ?? updates.hoa_fee);
+    if (hoaFee !== undefined) setValue('hoa_fee', hoaFee);
+    const taxes = readNumber(updates.taxes);
+    if (taxes !== undefined) setValue('taxes', taxes);
+    if (Array.isArray(updates.amenities)) setValue('amenities', normalizeStringArray(updates.amenities));
+    if (Array.isArray(updates.features)) setValue('features', normalizeStringArray(updates.features));
+    if (Array.isArray(updates.highlights)) setValue('highlights', normalizeStringArray(updates.highlights));
+    if (Array.isArray(updates.images)) setValue('images', updates.images);
+    const mainImageUrl = readString(updates.mainImageUrl ?? updates.main_image_url ?? updates.imageUrl ?? updates.image_url);
+    if (mainImageUrl !== undefined) setValue('main_image_url', mainImageUrl || null);
+    const videoUrl = readString(updates.videoUrl ?? updates.video_url);
+    if (videoUrl !== undefined) setValue('video_url', videoUrl || null);
+    const virtualTourUrl = readString(updates.virtualTourUrl ?? updates.virtual_tour_url);
+    if (virtualTourUrl !== undefined) setValue('virtual_tour_url', virtualTourUrl || null);
+    const seoTitle = readString(updates.seoTitle ?? updates.seo_title);
+    if (seoTitle !== undefined) setValue('seo_title', seoTitle || null);
+    const seoDescription = readString(updates.seoDescription ?? updates.seo_description);
+    if (seoDescription !== undefined) setValue('seo_description', seoDescription || null);
+    const isFeatured = readBoolean(updates.isFeatured ?? updates.is_featured);
+    if (isFeatured !== undefined) setValue('is_featured', isFeatured);
+    const publicEnabled = readBoolean(updates.publicEnabled ?? updates.public_enabled);
+    if (publicEnabled !== undefined) setValue('public_enabled', publicEnabled);
+
+    const metadata = mergeAssistantMetadata(currentRow.metadata, input, action, context);
+    const assistantDrafts = asRecord(metadata.assistantDrafts);
+    metadata.assistantDrafts = {
+        ...assistantDrafts,
+        realtyListingUpdate: {
+            ...asRecord(assistantDrafts.realtyListingUpdate),
+            prompt: readString(input.request) || 'AI Realty listing update',
+            status: 'needs_review',
+            generatedAt: now,
+            generatedByAI: true,
+            needsReview: true,
+            noAutoPublish: true,
+        },
+    };
+    setValue('metadata', metadata);
+
+    return { patch, changedFields: Array.from(new Set(changedFields.filter(field => field !== 'updated_at'))) };
+};
+
+const editRealtyListingHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const listingId = readString(input.listingId)
+            || readString(input.listing_id)
+            || readString(input.propertyId)
+            || readString(input.property_id)
+            || readString(input.targetId);
+        return {
+            valid: Boolean(listingId),
+            errors: listingId ? [] : ['listingId is required before editing a Realty listing.'],
+        };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const listingId = getTargetRealtyListingId(input, context);
+        const now = getNow(deps);
+        const currentRow = await loadProjectScopedRow(client, 'properties', projectId, listingId);
+        const previousRow = cloneRecord(currentRow);
+        const updates = {
+            ...requireObject(input, 'updates'),
+            ...requireObject(input, 'listing'),
+        };
+        const { patch, changedFields } = buildRealtyListingUpdatePatch(currentRow, updates, input, action, context, now);
+        const row = await updateProjectScopedRow(client, 'properties', projectId, listingId, patch);
+        return {
+            beforeSnapshot: { table: 'properties', id: listingId, projectId, row: previousRow },
+            afterSnapshot: { table: 'properties', id: listingId, projectId, row },
+            diff: {
+                updated: changedFields.map(field => `properties.${listingId}.${field}`),
+                reviewRequired: true,
+                noAutoPublish: true,
+                rollback: 'restore_previous_realty_listing_snapshot',
+            },
+        };
+    },
+    rollback: rollbackUpdatedProjectScopedRow('properties', deps),
+});
+
+const realtyShowingAvailabilitySources = new Set(['manual', 'appointments', 'calendar', 'unset']);
+const realtyConfirmationModes = new Set(['manual', 'auto']);
+
+const updateRealtyShowingFlowInBlueprint = (
+    businessBlueprint: BusinessBlueprint,
+    flow: Record<string, unknown>,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+): BusinessBlueprint => {
+    const realty = businessBlueprint.realEstateBlueprint;
+    if (!realty) {
+        throw new Error('RealEstateBlueprint is required before configuring a Realty showing request flow.');
+    }
+    const existing = realty.showingRequests;
+    const leadFunnels = realty.leadFunnels;
+    const propertyPages = realty.propertyPages;
+    const integrations = realty.integrations;
+    const realtyMetadata = asRecord(realty.metadata);
+    const enabled = readBoolean(flow.enabled ?? flow.showingRequestEnabled ?? flow.showing_request_enabled);
+    const appointmentIntegrationEnabled = readBoolean(flow.appointmentIntegrationEnabled ?? flow.appointment_integration_enabled);
+    const availabilitySource = normalizedEnum(flow.availabilitySource ?? flow.availability_source, realtyShowingAvailabilitySources);
+    const confirmationMode = normalizedEnum(flow.confirmationMode ?? flow.confirmation_mode, realtyConfirmationModes);
+    const buyerQualificationFields = normalizeStringArray(flow.buyerQualificationFields ?? flow.buyer_qualification_fields);
+    const unique = (values: string[]) => Array.from(new Set(values.filter(Boolean)));
+    const sourceMap = {
+        ...(realty.sourceMap || {}),
+        ...assistantSourceMap(input, action, context),
+        showingRequests: 'globalAssistant.realty.showingRequestFlow',
+    };
+
+    return {
+        ...businessBlueprint,
+        realEstateBlueprint: {
+            ...realty,
+            status: 'needs_review',
+            needsReview: true,
+            readiness: {
+                ...realty.readiness,
+                isReady: false,
+                warnings: unique([
+                    ...(realty.readiness?.warnings || []),
+                    'Realty showing request flow was updated by Global Assistant and needs review.',
+                ]),
+            },
+            metadata: {
+                ...realtyMetadata,
+                userModified: true,
+                lockedFromRegeneration: true,
+                lastEditedAt: now,
+                lastEditedBy: action.userId || context?.actor.userId || readString(realtyMetadata.lastEditedBy),
+                updatedAt: now,
+            },
+            sourceMap,
+            showingRequests: {
+                ...existing,
+                enabled: enabled ?? true,
+                status: 'needs_review',
+                availabilitySource: availabilitySource as any || existing.availabilitySource || 'manual',
+                preferredDateEnabled: readBoolean(flow.preferredDateEnabled ?? flow.preferred_date_enabled) ?? true,
+                preferredTimeEnabled: readBoolean(flow.preferredTimeEnabled ?? flow.preferred_time_enabled) ?? true,
+                buyerQualificationFields: buyerQualificationFields.length > 0
+                    ? buyerQualificationFields
+                    : unique([...(existing.buyerQualificationFields || []), 'name', 'email', 'phone']),
+                financingStatusField: readBoolean(flow.financingStatusField ?? flow.financing_status_field) ?? existing.financingStatusField ?? true,
+                budgetField: readBoolean(flow.budgetField ?? flow.budget_field) ?? existing.budgetField ?? true,
+                assignedAgentStrategy: readString(flow.assignedAgentStrategy ?? flow.assigned_agent_strategy) || existing.assignedAgentStrategy || 'owner',
+                confirmationMode: confirmationMode as any || existing.confirmationMode || 'manual',
+                remindersEnabled: readBoolean(flow.remindersEnabled ?? flow.reminders_enabled) ?? existing.remindersEnabled ?? false,
+                appointmentIntegrationEnabled: appointmentIntegrationEnabled ?? existing.appointmentIntegrationEnabled ?? false,
+                needsReview: true,
+                readiness: {
+                    isReady: false,
+                    blockers: [],
+                    warnings: ['Review showing request copy, availability source, and appointment handoff before enabling automation.'],
+                },
+            },
+            leadFunnels: {
+                ...leadFunnels,
+                showingRequestEnabled: true,
+                needsReview: true,
+                leadTags: unique([...(leadFunnels.leadTags || []), 'realty', 'showing-request']),
+                leadSources: unique([...(leadFunnels.leadSources || []), 'property_detail', 'realty-website']),
+            },
+            propertyPages: {
+                ...propertyPages,
+                showingRequestEnabled: true,
+                status: 'needs_review',
+                needsReview: true,
+            },
+            chatbot: {
+                ...realty.chatbot,
+                intents: unique([...(realty.chatbot?.intents || []), 'showing_request']) as any,
+            },
+            emailMarketing: {
+                ...realty.emailMarketing,
+                flows: unique([...(realty.emailMarketing?.flows || []), 'showing_request_confirmation']) as any,
+            },
+            analytics: {
+                ...realty.analytics,
+                events: unique([...(realty.analytics?.events || []), 'showing_requested']) as any,
+            },
+            integrations: {
+                ...integrations,
+                appointmentIntegration: appointmentIntegrationEnabled ?? integrations.appointmentIntegration ?? false,
+                crmTags: unique([...(integrations.crmTags || []), 'realty', 'showing-request']),
+                crmLeadSources: unique([...(integrations.crmLeadSources || []), 'property_detail', 'realty-website']),
+                emailFlows: unique([...(integrations.emailFlows || []), 'showing_request_confirmation']),
+                chatbotKnowledgeSources: unique([...(integrations.chatbotKnowledgeSources || []), 'realty_listings']),
+                analyticsEvents: unique([...(integrations.analyticsEvents || []), 'showing_requested']),
+                automationFlows: unique([...(integrations.automationFlows || []), 'showing_request_review']),
+            },
+        },
+    };
+};
+
+const createRealtyShowingRequestFlowHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const now = getNow(deps);
+        const projectData = await loadProjectData(client, projectId);
+        const businessBlueprint = migrateBusinessBlueprint(
+            projectData.businessBlueprint || asRecord(projectData.data).businessBlueprint,
+        );
+        if (!businessBlueprint) {
+            throw new Error('BusinessBlueprint is required before configuring a Realty showing request flow.');
+        }
+        const nextBlueprint = updateRealtyShowingFlowInBlueprint(
+            businessBlueprint,
+            requireObject(input, 'flow'),
+            input,
+            action,
+            context,
+            now,
+        );
+        const nextData = applyBusinessBlueprintToProjectData(projectData, nextBlueprint);
+        await updateProjectData(client, projectId, nextData, now);
+        return {
+            beforeSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                projectData,
+            },
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                showingRequests: nextBlueprint.realEstateBlueprint.showingRequests,
+            },
+            diff: {
+                updated: [
+                    `projects.${projectId}.data.businessBlueprint.realEstateBlueprint.showingRequests`,
+                    `projects.${projectId}.data.businessBlueprint.realEstateBlueprint.leadFunnels`,
+                    `projects.${projectId}.data.businessBlueprint.realEstateBlueprint.propertyPages`,
+                    `projects.${projectId}.data.businessBlueprint.realEstateBlueprint.integrations`,
+                ],
+                reviewRequired: true,
+                noAutoPublish: true,
+                rollback: 'restore_previous_project_data',
+            },
+        };
+    },
+    rollback: rollbackProjectDataSnapshot(deps, 'Realty showing request flow'),
 });
 
 const createRealtyCampaignHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
@@ -6006,6 +6729,8 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     create_finance_record: createFinanceRecordHandler,
     update_finance_record: updateFinanceRecordHandler,
     create_menu_item: createRestaurantMenuItemHandler,
+    update_menu: updateRestaurantMenuHandler,
+    create_reservation_flow: createRestaurantReservationFlowHandler,
     create_catering_offer: deps => createRestaurantMarketingOutputHandler(deps, {
         actionType: 'create_catering_offer',
         outputType: 'weeklyPromotion',
@@ -6017,7 +6742,9 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
         fallbackTitle: 'AI restaurant campaign draft',
     }),
     create_listing: createRealtyListingHandler,
+    edit_listing: editRealtyListingHandler,
     create_open_house: createRealtyOpenHouseHandler,
+    create_showing_request_flow: createRealtyShowingRequestFlowHandler,
     generate_realty_campaign: createRealtyCampaignHandler,
     run_project_report: deps => createAnalyticsHandler(deps, 'report'),
     summarize_analytics: deps => createAnalyticsHandler(deps, 'summary'),

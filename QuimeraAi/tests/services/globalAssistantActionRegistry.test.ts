@@ -120,6 +120,16 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('create_finance_record')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_finance_record')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_finance_record')?.rollback).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_menu_item')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_menu')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_menu')?.rollback).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_reservation_flow')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_reservation_flow')?.rollback).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_listing')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('edit_listing')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('edit_listing')?.rollback).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_showing_request_flow')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_showing_request_flow')?.rollback).toBe('function');
     });
 
     it('blocks admin actions outside owner or super admin mode', () => {

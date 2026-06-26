@@ -4,8 +4,8 @@ import { buildGlobalAssistantCapabilityCatalog } from '../../services/globalAssi
 describe('globalAssistantCapabilityCatalog', () => {
     it('summarizes executable tools separately from preview-only declarations', () => {
         const catalog = buildGlobalAssistantCapabilityCatalog({
-            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments', 'finance', 'chatbot'],
-            enabledFeatures: ['emailMarketing', 'ecommerceEnabled', 'chatbotEnabled'],
+            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments', 'finance', 'chatbot', 'restaurants', 'realEstate'],
+            enabledFeatures: ['emailMarketing', 'ecommerceEnabled', 'chatbotEnabled', 'realEstateModule'],
         });
 
         const analytics = catalog.modules.find(module => module.module === 'analytics');
@@ -21,6 +21,8 @@ describe('globalAssistantCapabilityCatalog', () => {
         const finance = catalog.modules.find(module => module.module === 'finance');
         const bioPage = catalog.modules.find(module => module.module === 'bioPage');
         const chatbot = catalog.modules.find(module => module.module === 'chatbot');
+        const restaurants = catalog.modules.find(module => module.module === 'restaurants');
+        const realEstate = catalog.modules.find(module => module.module === 'realEstate');
         const createEmail = catalog.actions.find(action => action.actionType === 'create_email_campaign');
         const sendEmail = catalog.actions.find(action => action.actionType === 'send_email_campaign');
         const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
@@ -114,6 +116,20 @@ describe('globalAssistantCapabilityCatalog', () => {
             'sync_chatbot_knowledge',
             'test_chatbot',
             'deploy_chatbot_to_surface',
+        ]));
+        expect(restaurants?.executableActionTypes).toEqual(expect.arrayContaining([
+            'create_menu_item',
+            'update_menu',
+            'create_reservation_flow',
+            'create_catering_offer',
+            'generate_restaurant_campaign',
+        ]));
+        expect(realEstate?.executableActionTypes).toEqual(expect.arrayContaining([
+            'create_listing',
+            'edit_listing',
+            'create_open_house',
+            'create_showing_request_flow',
+            'generate_realty_campaign',
         ]));
         expect(createEmail).toMatchObject({
             executable: true,

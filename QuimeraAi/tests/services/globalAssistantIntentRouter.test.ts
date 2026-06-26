@@ -120,9 +120,21 @@ describe('globalAssistantIntentRouter', () => {
             actionCandidates: ['create_reservation_flow'],
         });
 
+        expect(routeAssistantIntent('Actualiza este plato del menu como no disponible', context)).toMatchObject({
+            module: 'restaurants',
+            intent: 'edit',
+            actionCandidates: ['update_menu'],
+        });
+
         expect(routeAssistantIntent('Agenda una visita para esta propiedad de realty', context)).toMatchObject({
             module: 'realEstate',
             actionCandidates: ['create_showing_request_flow'],
+        });
+
+        expect(routeAssistantIntent('Actualiza este listing de realty con mejor descripcion', context)).toMatchObject({
+            module: 'realEstate',
+            intent: 'edit',
+            actionCandidates: ['edit_listing'],
         });
     });
 
@@ -242,6 +254,12 @@ describe('globalAssistantIntentRouter', () => {
             module: 'crm',
             intent: 'create',
             actionCandidates: ['create_follow_up_task'],
+        });
+
+        expect(routeAssistantIntent('Crea un lead para Maria que quiere informacion de precios', context)).toMatchObject({
+            module: 'crm',
+            intent: 'create',
+            actionCandidates: ['create_lead'],
         });
     });
 

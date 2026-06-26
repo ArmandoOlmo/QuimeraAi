@@ -574,6 +574,143 @@ export function enrichAssistantExecutionPreview(
         };
     }
 
+    if (action.actionType === 'update_menu') {
+        const itemId = asText(action.input.itemId) || asText(action.input.menuItemId) || '$active_menu_item';
+        return {
+            ...preview,
+            before: {
+                table: 'restaurant_menu_items',
+                id: itemId,
+                projectId: action.projectId,
+            },
+            after: {
+                operation: 'update_restaurant_menu_item',
+                table: 'restaurant_menu_items',
+                id: itemId,
+                projectId: action.projectId,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+                needsReview: true,
+            },
+            diff: {
+                updated: [`restaurant_menu_items.${itemId}`],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_restaurant_menu_item_snapshot' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'This updates an existing restaurant menu item after confirmation.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous menu item row snapshot.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'create_reservation_flow') {
+        return {
+            ...preview,
+            before: {
+                table: 'restaurants',
+                projectId: action.projectId,
+                path: 'reservation settings',
+            },
+            after: {
+                operation: 'update_restaurant_reservation_flow',
+                table: 'restaurants',
+                projectId: action.projectId,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+                needsReview: true,
+                noAutoConfirm: true,
+            },
+            diff: {
+                updated: ['restaurants.$current.reservation_enabled', 'restaurants.$current.reservation_interval', 'restaurants.$current.max_party_size'],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_restaurant_settings_snapshot' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Reservation settings change only after confirmation; confirmation mode remains manual by default.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous restaurant settings row snapshot.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'edit_listing') {
+        const listingId = asText(action.input.listingId) || asText(action.input.propertyId) || '$active_listing';
+        return {
+            ...preview,
+            before: {
+                table: 'properties',
+                id: listingId,
+                projectId: action.projectId,
+            },
+            after: {
+                operation: 'update_realty_listing',
+                table: 'properties',
+                id: listingId,
+                projectId: action.projectId,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+                needsReview: true,
+                noAutoPublish: true,
+            },
+            diff: {
+                updated: [`properties.${listingId}`],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_realty_listing_snapshot' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Realty listing edits carry Global Assistant review metadata and do not auto-publish.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous Realty listing row snapshot.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'create_showing_request_flow') {
+        return {
+            ...preview,
+            before: {
+                table: 'projects',
+                id: action.projectId,
+                path: 'data.businessBlueprint.realEstateBlueprint.showingRequests',
+            },
+            after: {
+                operation: 'update_realty_showing_request_flow',
+                table: 'projects',
+                id: action.projectId,
+                projectId: action.projectId,
+                path: 'data.businessBlueprint.realEstateBlueprint.showingRequests',
+                status: 'needs_review',
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+                noAutoPublish: true,
+            },
+            diff: {
+                updated: [
+                    `projects.${action.projectId}.data.businessBlueprint.realEstateBlueprint.showingRequests`,
+                    `projects.${action.projectId}.data.businessBlueprint.realEstateBlueprint.leadFunnels`,
+                    `projects.${action.projectId}.data.businessBlueprint.realEstateBlueprint.propertyPages`,
+                ],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_project_data' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Showing request flow remains review-gated in the Realty BusinessBlueprint before public automation.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous project blueprint snapshot.'] : []),
+            ],
+        };
+    }
+
     if (action.actionType === 'create_chatbot_knowledge' || action.actionType === 'sync_chatbot_knowledge') {
         return {
             ...preview,

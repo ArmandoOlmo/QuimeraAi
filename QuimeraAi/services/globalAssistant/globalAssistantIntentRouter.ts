@@ -33,8 +33,8 @@ const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['video'])) return 'generate_video';
     if (includesAny(text, ['sincroniza', 'sync', 'entrena', 'entrenar', 'train', 'training'])) return 'sync';
     if (includesAny(text, ['genera', 'generar', 'generate', 'copy', 'contenido'])) return 'generate_content';
-    if (includesAny(text, ['crea', 'crear', 'create', 'nuevo', 'nueva', 'add', 'agrega'])) return 'create';
     if (includesAny(text, ['edita', 'editar', 'update', 'actualiza', 'modifica', 'cambia', 'confirma', 'confirmar', 'cancela', 'cancelar', 'completa', 'completar', 'reprograma', 'reprogramar', 'marca', 'marcar', 'pagada', 'pagado', 'paid', 'vencida', 'vencido'])) return 'edit';
+    if (includesAny(text, ['crea', 'crear', 'create', 'nuevo', 'nueva', 'add', 'agrega'])) return 'create';
     if (includesAny(text, ['configura', 'configurar', 'configure', 'availability', 'disponibilidad', 'horario'])) return 'edit';
     if (includesAny(text, ['cita', 'appointment', 'agenda', 'reserva'])) return 'schedule';
     if (includesAny(text, ['rollback', 'deshacer', 'undo'])) return 'rollback';
@@ -48,9 +48,9 @@ const inferModule = (text: string, context: AssistantContextSnapshot): Assistant
     if (includesAny(text, ['chatcore', 'chatbot', 'knowledge', 'entrena', 'train bot'])) return 'chatbot';
     if (includesAny(text, ['business blueprint', 'blueprint'])) return 'businessBlueprint';
     if (includesAny(text, ['storefront', 'escaparate'])) return 'storefront';
+    if (includesAny(text, ['lead', 'crm', 'prospecto', 'follow up', 'follow-up', 'seguimiento', 'tarea de seguimiento'])) return 'crm';
     if (includesAny(text, ['ecommerce', 'producto', 'product', 'products', 'pedido', 'order', 'precio', 'inventario', 'discount'])) return 'ecommerce';
     if (includesAny(text, ['email', 'audiencia', 'audience', 'automation', 'automatizacion', 'automacion'])) return 'emailMarketing';
-    if (includesAny(text, ['lead', 'crm', 'prospecto', 'follow up', 'follow-up', 'seguimiento', 'tarea de seguimiento'])) return 'crm';
     if (includesAny(text, ['restaurant', 'restaurante', 'menu', 'dish', 'catering'])) return 'restaurants';
     if (includesAny(text, ['realty', 'real estate', 'propiedad', 'listing', 'open house'])) return 'realEstate';
     if (includesAny(text, ['bio page', 'biopage', 'bio link', 'biolink', 'link in bio', 'link de bio'])) return 'bioPage';
@@ -131,14 +131,22 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
         return ['create_bio_page'];
     }
 
-    if (module === 'restaurants' && ['create', 'schedule'].includes(intent)) {
+    if (module === 'restaurants' && ['create', 'schedule', 'edit'].includes(intent)) {
+        if (intent === 'edit') {
+            if (includesAny(text, ['reserva', 'reservation', 'booking', 'flow', 'flujo'])) return ['create_reservation_flow'];
+            return ['update_menu'];
+        }
         if (includesAny(text, ['catering', 'evento privado', 'private event', 'banquete'])) return ['create_catering_offer'];
         if (includesAny(text, ['campaign', 'campana', 'promo', 'marketing', 'instagram'])) return ['generate_restaurant_campaign'];
         if (includesAny(text, ['reserva', 'reservation', 'booking', 'flow', 'flujo'])) return ['create_reservation_flow'];
         return ['create_menu_item'];
     }
 
-    if (module === 'realEstate' && ['create', 'schedule'].includes(intent)) {
+    if (module === 'realEstate' && ['create', 'schedule', 'edit'].includes(intent)) {
+        if (intent === 'edit') {
+            if (includesAny(text, ['showing', 'visita', 'tour', 'flow', 'flujo'])) return ['create_showing_request_flow'];
+            return ['edit_listing'];
+        }
         if (includesAny(text, ['open house', 'casa abierta'])) return ['create_open_house'];
         if (includesAny(text, ['campaign', 'campana', 'marketing', 'social', 'ads', 'anuncio'])) return ['generate_realty_campaign'];
         if (includesAny(text, ['showing', 'visita', 'tour'])) return ['create_showing_request_flow'];

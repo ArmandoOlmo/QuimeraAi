@@ -189,6 +189,55 @@ const isBioPageEntityType = (entityType: string | null | undefined): boolean => 
     ].includes(normalized);
 };
 
+const isRestaurantMenuItemEntityType = (entityType: string | null | undefined): boolean => {
+    const normalized = normalizeContextToken(entityType);
+    return [
+        'restaurant_menu_item',
+        'menu_item',
+        'restaurant_dish',
+        'dish',
+    ].includes(normalized);
+};
+
+const inferRestaurantMenuAvailabilityFromRequest = (request: string): boolean | undefined => {
+    const normalized = request.toLowerCase();
+    if (/\b(no disponible|unavailable|oculta|hide|desactiva|agotado)\b/.test(normalized)) return false;
+    if (/\b(disponible|available|mostrar|show|activa)\b/.test(normalized)) return true;
+    return undefined;
+};
+
+const inferRestaurantReservationFlowFromRequest = (request: string): Record<string, unknown> => {
+    const normalized = normalizeContextToken(request);
+    return {
+        enabled: true,
+        confirmationMode: 'manual',
+        ...(normalized.includes('vip') ? { tablePreferences: ['vip'] } : {}),
+    };
+};
+
+const isRealtyListingEntityType = (entityType: string | null | undefined): boolean => {
+    const normalized = normalizeContextToken(entityType);
+    return [
+        'realty_property',
+        'real_estate_property',
+        'property',
+        'listing',
+        'realty_listing',
+    ].includes(normalized);
+};
+
+const inferRealtyShowingFlowFromRequest = (request: string): Record<string, unknown> => {
+    const normalized = normalizeContextToken(request);
+    return {
+        enabled: true,
+        appointmentIntegrationEnabled: false,
+        confirmationMode: 'manual',
+        preferredDateEnabled: true,
+        preferredTimeEnabled: true,
+        ...(normalized.includes('preaprob') || normalized.includes('financing') ? { financingStatusField: true } : {}),
+    };
+};
+
 const inferChatbotSurfaceFromRequest = (request: string): string | undefined => {
     const normalized = normalizeContextToken(request);
     if (normalized.includes('embed')) return 'embeddedWidget';
@@ -305,6 +354,49 @@ const buildActionInput = (
             'targetStatus',
         ]) || inferChatbotDeploymentStatusFromRequest(request);
         if (status) actionInput.status = status;
+    }
+
+    if (definition.actionType === 'update_menu') {
+        const activeMenuItemId = isRestaurantMenuItemEntityType(context.activeEntityType)
+            ? context.activeEntityId
+            : null;
+        const itemId = activeMenuItemId
+            || readSnapshotText(context, [
+                'activeRestaurantMenuItemId',
+                'selectedRestaurantMenuItemId',
+                'menuItemId',
+                'restaurantMenuItemId',
+                'dishId',
+            ]);
+        if (itemId) actionInput.itemId = itemId;
+        const availability = inferRestaurantMenuAvailabilityFromRequest(request);
+        actionInput.updates = {
+            ...(availability !== undefined ? { isAvailable: availability } : {}),
+        };
+    }
+
+    if (definition.actionType === 'create_reservation_flow') {
+        actionInput.flow = inferRestaurantReservationFlowFromRequest(request);
+    }
+
+    if (definition.actionType === 'edit_listing') {
+        const activeListingId = isRealtyListingEntityType(context.activeEntityType)
+            ? context.activeEntityId
+            : null;
+        const listingId = activeListingId
+            || readSnapshotText(context, [
+                'activeRealtyListingId',
+                'selectedRealtyListingId',
+                'realtyListingId',
+                'listingId',
+                'propertyId',
+            ]);
+        if (listingId) actionInput.listingId = listingId;
+        actionInput.updates = {};
+    }
+
+    if (definition.actionType === 'create_showing_request_flow') {
+        actionInput.flow = inferRealtyShowingFlowFromRequest(request);
     }
 
     return actionInput;

@@ -208,6 +208,38 @@ const buildBusinessBlueprint = () => createBusinessBlueprintFromWebsitePlan(buil
     tenantId: 'tenant-1',
 });
 
+const buildRealtyBusinessBlueprint = () => createBusinessBlueprintFromWebsitePlan({
+    ...buildWebsitePlan(),
+    businessProfile: {
+        ...buildWebsitePlan().businessProfile,
+        businessName: 'Costa Realty',
+        industry: 'real estate',
+        description: 'Real estate brokerage with listings, showing requests, and buyer leads.',
+        services: [{ name: 'Private showing', description: 'Reviewed showing request flow.' }],
+        hasEcommerce: false,
+    },
+    contentMap: {
+        pages: [],
+        products: [],
+        properties: [{
+            title: 'Ocean View Condo',
+            description: 'Draft property for showing requests.',
+            price: 750000,
+            city: 'San Juan',
+            propertyType: 'condo',
+        }],
+    },
+    componentPlan: [
+        { component: 'realEstateListings', reason: 'Listings', confidence: 0.95 },
+        { component: 'leads', reason: 'Property leads', confidence: 0.85 },
+    ],
+    qualityGoals: ['reviewed realty engine'],
+}, {
+    now: '2026-06-26T00:00:00.000Z',
+    projectId: 'project-1',
+    tenantId: 'tenant-1',
+});
+
 const websiteTheme = {
     globalColors: {
         primary: '#0f766e',
@@ -554,6 +586,32 @@ describe('Global Assistant default action handlers', () => {
         });
         expect(fakeSupabase.rowsByTable.leads).toHaveLength(3);
         expect(fakeSupabase.rowsByTable.lead_tasks).toHaveLength(2);
+    });
+
+    it('creates a CRM lead with customer request notes and summary metadata', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['crm'], []);
+        const request = 'Crea un lead CRM para Maria interesada en una cita VIP';
+        const planned = await runtime.planRequest({
+            context,
+            request,
+            enabledServices: ['crm'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['create_lead']);
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const lead = fakeSupabase.rowsByTable.leads[0];
+
+        expect(applied.task.status).toBe('completed');
+        expect(lead.notes).toContain('Customer request / Solicitud del cliente:');
+        expect(lead.notes).toContain(request);
+        expect(lead.custom_data).toMatchObject({
+            customerRequest: request,
+            needsReview: true,
+        });
+        expect(lead.custom_data.customerRequestSummary).toContain(request);
     });
 
     it('updates an active CRM lead with confirmation and rollback', async () => {
@@ -1865,6 +1923,9 @@ describe('Global Assistant default action handlers', () => {
             actionType: 'create_appointment',
             needsReview: true,
         });
+        expect(appointments[0].notes[0].content).toContain('Customer request / Solicitud del cliente:');
+        expect(appointments[0].notes[0].content).toContain('Crea una cita para Ana');
+        expect(appointments[0].metadata.customerRequestSummary).toContain('Crea una cita para Ana');
 
         await runtime.rollbackAction({
             taskId: planned.task.id,
@@ -2624,6 +2685,131 @@ describe('Global Assistant default action handlers', () => {
         expect(fakeSupabase.rowsByTable.restaurant_menu_items).toHaveLength(0);
     });
 
+    it('updates and rolls back an active restaurant menu item through the Action Registry', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['restaurants'], []);
+        fakeSupabase.rowsByTable.restaurants = [{
+            id: 'restaurant-1',
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            currency: 'USD',
+        }];
+        fakeSupabase.rowsByTable.restaurant_menu_items = [{
+            id: 'item-1',
+            restaurant_id: 'restaurant-1',
+            name: 'Tacos VIP',
+            description: 'Original description',
+            category: 'Specials',
+            price: 14,
+            currency: 'USD',
+            is_available: true,
+            ai_generated: false,
+        }];
+        const menuContext = {
+            ...context,
+            activeEntityType: 'restaurant_menu_item',
+            activeEntityId: 'item-1',
+        };
+
+        const planned = await runtime.planRequest({
+            context: menuContext,
+            request: 'Actualiza este plato del menu como no disponible',
+            enabledServices: ['restaurants'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['update_menu']);
+        expect(planned.plan.actions[0].input).toMatchObject({
+            projectId: 'project-1',
+            itemId: 'item-1',
+            updates: { isAvailable: false },
+        });
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: menuContext });
+        expect(applied.task.status).toBe('completed');
+        expect(fakeSupabase.rowsByTable.restaurant_menu_items[0]).toMatchObject({
+            id: 'item-1',
+            is_available: false,
+            ai_generated: true,
+            updated_at: '2026-06-26T13:30:00.000Z',
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context: menuContext,
+        });
+
+        expect(fakeSupabase.rowsByTable.restaurant_menu_items[0]).toMatchObject({
+            id: 'item-1',
+            is_available: true,
+            ai_generated: false,
+        });
+    });
+
+    it('configures and rolls back a restaurant reservation flow as a review-gated draft', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['restaurants'], []);
+        fakeSupabase.rowsByTable.restaurants = [{
+            id: 'restaurant-1',
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            currency: 'USD',
+            reservation_enabled: false,
+            settings: {},
+        }];
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Crea un flujo de reserva VIP para el restaurante',
+            enabledServices: ['restaurants'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['create_reservation_flow']);
+        expect(planned.plan.actions[0].input).toMatchObject({
+            projectId: 'project-1',
+            flow: {
+                enabled: true,
+                confirmationMode: 'manual',
+                tablePreferences: ['vip'],
+            },
+        });
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const restaurant = fakeSupabase.rowsByTable.restaurants[0];
+
+        expect(applied.task.status).toBe('completed');
+        expect(restaurant).toMatchObject({
+            reservation_enabled: true,
+            max_party_size: 8,
+            reservation_interval: 30,
+            average_table_duration: 90,
+            updated_at: '2026-06-26T13:30:00.000Z',
+        });
+        expect(restaurant.settings).toMatchObject({
+            reservationFlowDraft: {
+                status: 'needs_review',
+                generatedByAI: true,
+                needsReview: true,
+                noAutoConfirm: true,
+                confirmationMode: 'manual',
+                tablePreferences: ['vip'],
+            },
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.restaurants[0]).toMatchObject({
+            reservation_enabled: false,
+            settings: {},
+        });
+    });
+
     it('creates Realty listing and campaign drafts without publishing listings', async () => {
         const { fakeSupabase, runtime, context } = buildRuntime(['realEstate'], ['realEstateModule']);
         const listingPlan = await runtime.planRequest({
@@ -2682,5 +2868,121 @@ describe('Global Assistant default action handlers', () => {
             generatedByAI: true,
             needsReview: true,
         });
+    });
+
+    it('edits and rolls back a Realty listing without auto-publishing it', async () => {
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime(['realEstate'], ['realEstateModule']);
+        const realtyContext = {
+            ...context,
+            activeEntityType: 'realty_property',
+            activeEntityId: 'property-1',
+        };
+        fakeSupabase.rowsByTable.properties = [{
+            id: 'property-1',
+            project_id: 'project-1',
+            tenant_id: 'tenant-1',
+            user_id: 'user-1',
+            title: 'Ocean View Condo',
+            description: 'Original description',
+            description_long: 'Original description',
+            price: 750000,
+            currency: 'USD',
+            status: 'draft',
+            public_enabled: false,
+            metadata: { existing: true },
+            updated_at: '2026-06-01T00:00:00.000Z',
+        }];
+
+        const planned = await runtime.planRequest({
+            context: realtyContext,
+            request: 'Actualiza este listing de realty con una descripcion nueva',
+            enabledServices: ['realEstate'],
+            enabledFeatures: ['realEstateModule'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['edit_listing']);
+        expect(planned.plan.actions[0].input).toMatchObject({
+            listingId: 'property-1',
+        });
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: realtyContext });
+        const property = fakeSupabase.rowsByTable.properties[0];
+
+        expect(applied.task.status).toBe('completed');
+        expect(property).toMatchObject({
+            public_enabled: false,
+            updated_at: '2026-06-26T13:30:00.000Z',
+        });
+        expect(property.metadata).toMatchObject({
+            existing: true,
+            assistantDrafts: {
+                realtyListingUpdate: {
+                    status: 'needs_review',
+                    generatedByAI: true,
+                    needsReview: true,
+                    noAutoPublish: true,
+                },
+            },
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context: realtyContext,
+        });
+
+        expect(fakeSupabase.rowsByTable.properties[0]).toMatchObject({
+            metadata: { existing: true },
+            updated_at: '2026-06-01T00:00:00.000Z',
+        });
+        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
+    });
+
+    it('creates a Realty showing request flow in BusinessBlueprint and rolls it back', async () => {
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime(['realEstate'], ['realEstateModule']);
+        const businessBlueprint = buildRealtyBusinessBlueprint();
+        fakeSupabase.rowsByTable.projects = [{
+            id: 'project-1',
+            data: { businessBlueprint },
+        }];
+        const originalStatus = businessBlueprint.realEstateBlueprint.showingRequests.status;
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Crea un flujo de showing para realty con confirmacion manual',
+            enabledServices: ['realEstate'],
+            enabledFeatures: ['realEstateModule'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['create_showing_request_flow']);
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const realtyBlueprint = fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.realEstateBlueprint;
+
+        expect(applied.task.status).toBe('completed');
+        expect(realtyBlueprint.showingRequests).toMatchObject({
+            enabled: true,
+            status: 'needs_review',
+            confirmationMode: 'manual',
+            needsReview: true,
+            readiness: {
+                isReady: false,
+                blockers: [],
+            },
+        });
+        expect(realtyBlueprint.leadFunnels.showingRequestEnabled).toBe(true);
+        expect(realtyBlueprint.propertyPages.showingRequestEnabled).toBe(true);
+        expect(realtyBlueprint.integrations.crmTags).toEqual(expect.arrayContaining(['realty', 'showing-request']));
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.realEstateBlueprint.showingRequests.status).toBe(originalStatus);
+        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
     });
 });
