@@ -806,6 +806,23 @@ const ChatbotEngineDashboard: React.FC<ChatbotEngineDashboardProps> = ({
                     title={t('aiAssistant.chatbotEngine.deploySettings')}
                     action={<InlineTag>{tokenLabel('deploymentStatuses', summary.deployment.status)}</InlineTag>}
                 />
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                    <MetricTile
+                        label={t('aiAssistant.chatbotEngine.metrics.canonicalCoverage')}
+                        value={`${summary.deployment.surfaceCoverage.deployedRequired}/${summary.deployment.surfaceCoverage.required}`}
+                        hint={statusLabel(summary.deployment.surfaceCoverage.status)}
+                    />
+                    <MetricTile
+                        label={t('aiAssistant.chatbotEngine.metrics.publicCoverage')}
+                        value={`${summary.deployment.surfaceCoverage.deployedPublic}/${summary.deployment.surfaceCoverage.public}`}
+                        hint={`${summary.deployment.surfaceCoverage.missingRequired.length} ${t('aiAssistant.chatbotEngine.metrics.needReview')}`}
+                    />
+                    <MetricTile
+                        label={t('aiAssistant.chatbotEngine.metrics.surfaces')}
+                        value={summary.surfaces.length}
+                        hint={summary.deployment.surfaceCoverage.missingRequired.map(surfaceId => t(`aiAssistant.chatbotEngine.surfaces.${surfaceId}`, toTitle(surfaceId))).slice(0, 2).join(', ') || t('aiAssistant.chatbotEngine.ready')}
+                    />
+                </div>
                 <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     {summary.surfaces.map((surface: ChatbotEngineSurfaceSummary) => {
                         const isMutating = mutatingSurfaceId === surface.id;
@@ -817,14 +834,31 @@ const ChatbotEngineDashboard: React.FC<ChatbotEngineDashboardProps> = ({
                                         <div className="truncate text-sm font-semibold text-foreground">
                                             {t(`aiAssistant.chatbotEngine.surfaces.${surface.id}`, toTitle(surface.id))}
                                         </div>
-                                        <div className="mt-1 text-xs text-q-text-muted">{surface.routePattern || tokenLabel('surfaceValues', surface.surface)}</div>
+                                        <div className="mt-1 text-xs text-q-text-muted">{surface.routePattern || tokenLabel('surfaceValues', surface.sourceSurface)}</div>
                                     </div>
                                     <ReadinessPill status={surface.readinessStatus} label={statusLabel(surface.readinessStatus)} />
                                 </div>
                                 <div className="mt-3 flex flex-wrap gap-1.5">
                                     <InlineTag muted>{enabledLabel(surface.enabled)}</InlineTag>
                                     <InlineTag muted>{tokenLabel('deploymentStatuses', surface.status)}</InlineTag>
+                                    <InlineTag muted>{tokenLabel('ownerModules', surface.sourceModule)}</InlineTag>
+                                    <InlineTag muted>
+                                        {surface.requiredForCanonicalDeployment
+                                            ? t('aiAssistant.chatbotEngine.fields.requiredSurface')
+                                            : t('aiAssistant.chatbotEngine.fields.optionalSurface')}
+                                    </InlineTag>
+                                    {surface.publicSurface && <InlineTag>{t('aiAssistant.chatbotEngine.fields.public')}</InlineTag>}
                                     {surface.contextKeys.slice(0, 3).map(key => <InlineTag key={key} muted>{tokenLabel('contextKeys', key)}</InlineTag>)}
+                                </div>
+                                <div className="mt-3 grid gap-2">
+                                    <RowText
+                                        label={t('aiAssistant.chatbotEngine.fields.target')}
+                                        value={t(`aiAssistant.chatbotEngine.deploymentTargets.${surface.id}`, surface.defaultRoutePattern)}
+                                    />
+                                    <RowText
+                                        label={t('aiAssistant.chatbotEngine.fields.evidence')}
+                                        value={surface.runtimeEvidence.slice(0, 2).join(' · ')}
+                                    />
                                 </div>
                                 <div className="mt-3">
                                     <button

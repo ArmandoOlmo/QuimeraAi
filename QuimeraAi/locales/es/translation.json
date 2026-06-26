@@ -364,6 +364,8 @@
         "knowledge": "Conocimiento",
         "actions": "Acciones",
         "surfaces": "Superficies",
+        "canonicalCoverage": "Cobertura canónica",
+        "publicCoverage": "Cobertura pública",
         "events": "Eventos",
         "metrics": "métricas",
         "total": "total",
@@ -400,6 +402,8 @@
         "confidence": "Confianza",
         "audit": "auditoría",
         "public": "Público",
+        "requiredSurface": "Superficie requerida",
+        "optionalSurface": "Superficie opcional",
         "confirmation": "Confirmación",
         "auth": "Autenticación",
         "consent": "Consentimiento",
@@ -415,6 +419,8 @@
         "privateSources": "Fuentes privadas",
         "lockedActions": "Acciones bloqueadas",
         "source": "Fuente",
+        "target": "Destino",
+        "evidence": "Evidencia",
         "correlation": "Correlación",
         "unread": "Sin leer",
         "unknownVisitor": "Visitante desconocido",
@@ -463,6 +469,18 @@
         "realtyPropertyPage": "Ficha inmobiliaria",
         "adminPreview": "Vista previa admin",
         "voice": "Voz"
+      },
+      "deploymentTargets": {
+        "webWidget": "Website Builder y sitio público",
+        "embeddedWidget": "Widget embebible externo",
+        "bioPage": "Página bio pública",
+        "storefront": "Catálogo de tienda",
+        "checkout": "Flujo de pago",
+        "bookingPage": "Páginas de reservas y citas",
+        "restaurantMenu": "Menú de restaurante y reservas",
+        "realtyPropertyPage": "Ficha inmobiliaria",
+        "adminPreview": "Simulador del panel",
+        "voice": "Sesión de voz"
       },
       "capabilities": {
         "leadCapture": "Captura de clientes potenciales",
@@ -17362,6 +17380,112 @@
     },
     "footer": {
       "madeWith": "Creado con Quimera.ai"
+    }
+  },
+  "globalCommandPalette": {
+    "placeholder": "Buscar, abrir o preguntar a Quimera",
+    "ariaLabel": "Paleta global de comandos",
+    "close": "Cerrar",
+    "emptyTitle": "No se encontró ningún comando",
+    "emptyDescription": "Prueba con un proyecto, módulo o solicitud.",
+    "untitledCommand": "Comando sin título",
+    "untitledProject": "Proyecto sin título",
+    "askLabel": "Preguntar a Quimera: {{query}}",
+    "askDescription": "Envía esta solicitud a la capa operativa del Asistente Global.",
+    "activeProject": "Proyecto activo",
+    "openProject": "Abrir proyecto{{status}}",
+    "types": {
+      "assistant": "Asistente",
+      "navigation": "Navegación",
+      "project": "Proyecto",
+      "module": "Módulo",
+      "action": "Acción",
+      "admin": "Admin"
+    },
+    "commands": {
+      "action": {
+        "create-website": {
+          "label": "Crear sitio web",
+          "description": "Inicia una solicitud de sitio web o negocio con el Asistente Global.",
+          "prompt": "Crea un sitio web nuevo. Pregúntame cualquier dato faltante del negocio antes de generar."
+        },
+        "edit-website": {
+          "label": "Editar sección web",
+          "description": "Planifica una edición del Website Builder para el proyecto activo.",
+          "prompt": "Ayúdame a editar una sección del sitio web en el proyecto activo. Pregunta qué sección si no está claro."
+        },
+        "generate-image": {
+          "label": "Generar imagen",
+          "description": "Crea un asset de imagen en borrador para el proyecto activo.",
+          "prompt": "Genera un asset de imagen en borrador para el proyecto activo. Pregunta estilo, tema y ubicación si faltan."
+        },
+        "create-video": {
+          "label": "Crear video",
+          "description": "Crea un prompt de video o tarea de asset de video.",
+          "prompt": "Crea un borrador de asset de video o prompt de generación de video para el proyecto activo."
+        },
+        "create-email": {
+          "label": "Crear campaña de email",
+          "description": "Redacta una campaña de email para revisión.",
+          "prompt": "Crea un borrador de campaña de email para revisión. No lo envíes sin confirmación explícita."
+        },
+        "create-product": {
+          "label": "Crear producto",
+          "description": "Prepara el borrador de un producto de ecommerce.",
+          "prompt": "Crea un borrador de producto de ecommerce para el proyecto activo. Pregunta los detalles faltantes del producto."
+        },
+        "create-appointment": {
+          "label": "Crear cita",
+          "description": "Planifica una cita o reserva nueva.",
+          "prompt": "Crea un borrador de cita para el proyecto activo. Pregunta fecha, hora, contacto y servicio si faltan."
+        },
+        "review-leads": {
+          "label": "Revisar leads",
+          "description": "Resume y prioriza leads del CRM.",
+          "prompt": "Revisa los leads del proyecto activo, resume prioridades y sugiere acciones de seguimiento."
+        },
+        "create-bio-page": {
+          "label": "Crear página Bio",
+          "description": "Crea o mejora un borrador de página Bio.",
+          "prompt": "Crea un borrador de página Bio para el proyecto activo con enlaces, CTA, reservas, captura de leads y contexto de ChatCore."
+        },
+        "train-chatcore": {
+          "label": "Entrenar ChatCore",
+          "description": "Crea o sincroniza conocimiento del proyecto para ChatCore.",
+          "prompt": "Entrena ChatCore para el proyecto activo creando o sincronizando conocimiento. Mantén separada la memoria de chats de visitantes."
+        },
+        "analyze-project": {
+          "label": "Analizar proyecto",
+          "description": "Revisa preparación, analytics y bloqueos del proyecto.",
+          "prompt": "Analiza la preparación del proyecto activo, analytics, bloqueos y próximas mejores acciones."
+        }
+      },
+      "nav": {
+        "dashboard": { "label": "Panel de Control" },
+        "websites": { "label": "Sitios web" },
+        "editor": { "label": "Website Builder" },
+        "assets": { "label": "Media AI" },
+        "cms": { "label": "CMS" },
+        "navigation": { "label": "Navegación" },
+        "chatcore": { "label": "ChatCore" },
+        "leads": { "label": "CRM / Leads" },
+        "appointments": { "label": "Citas" },
+        "domains": { "label": "Dominios" },
+        "seo": { "label": "SEO" },
+        "finance": { "label": "Finanzas" },
+        "ecommerce": { "label": "Ecommerce" },
+        "restaurants": { "label": "Restaurantes" },
+        "email": { "label": "Email Marketing" },
+        "biopage": { "label": "Página Bio" },
+        "real-estate": { "label": "Realty" },
+        "templates": { "label": "Plantillas" },
+        "settings": { "label": "Configuración" }
+      },
+      "admin": {
+        "superadmin": { "label": "Super Admin" },
+        "global-assistant": { "label": "Configuración del Asistente Global" },
+        "service-availability": { "label": "Disponibilidad de servicios" }
+      }
     }
   },
   "visualKit": {

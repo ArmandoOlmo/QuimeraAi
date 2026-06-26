@@ -10,6 +10,7 @@ import { lazyWithRetry } from '../../utils/lazyWithRetry';
 import { AdminView, View } from '../../types/ui';
 
 const GlobalAiAssistant = lazyWithRetry(() => import('../ui/GlobalAiAssistant'));
+const GlobalCommandPalette = lazyWithRetry(() => import('../global-assistant/GlobalCommandPalette'));
 const OnboardingModal = lazyWithRetry(() => import('../onboarding/OnboardingModal'));
 const AIWebsiteStudio = lazyWithRetry(() => import('../onboarding/AIWebsiteStudio'));
 const ViewRouter = lazyWithRetry(() => import('../ViewRouter'));
@@ -80,6 +81,9 @@ const AuthenticatedAppContent: React.FC<AuthenticatedAppContentProps> = ({
       </Suspense>
       <Suspense fallback={null}>
         <GlobalAiAssistant />
+      </Suspense>
+      <Suspense fallback={null}>
+        <GlobalCommandPalette />
       </Suspense>
       <Suspense fallback={null}>
         <OnboardingModal />

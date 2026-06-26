@@ -2,12 +2,15 @@ import type {
     BlueprintReadiness,
     ChatbotActionBlueprint,
     ChatbotBlueprint,
-    ChatbotChannelBlueprint,
     ChatbotKnowledgeSourceBlueprint,
-    ChatbotSurfaceChannelBlueprint,
 } from '../../types/businessBlueprint';
 import type { Project } from '../../types/project';
 import { migrateBusinessBlueprint } from '../businessBlueprint';
+import {
+    buildChatbotEngineSurfaceDeploymentManifest,
+    type ChatbotEngineDeploymentSurfaceId,
+    type ChatbotEngineDeploymentSurfaceStatus,
+} from './surfaceDeploymentManifest';
 
 export type ChatbotEngineReadinessStatus = 'ready' | 'review' | 'blocked';
 
@@ -33,20 +36,7 @@ export interface ChatbotEngineKnowledgeSummary extends ChatbotEngineCountSummary
     internalSources: number;
 }
 
-export interface ChatbotEngineSurfaceSummary {
-    id: keyof Pick<
-        ChatbotChannelBlueprint,
-        'webWidget' | 'embeddedWidget' | 'bioPage' | 'storefront' | 'checkout' | 'bookingPage' | 'restaurantMenu' | 'realtyPropertyPage' | 'adminPreview' | 'voice'
-    >;
-    surface: ChatbotSurfaceChannelBlueprint['sourceSurface'];
-    enabled: boolean;
-    status: ChatbotSurfaceChannelBlueprint['status'];
-    routePattern?: string;
-    contextKeys: string[];
-    readinessStatus: ChatbotEngineReadinessStatus;
-    blockers: string[];
-    warnings: string[];
-}
+export type ChatbotEngineSurfaceSummary = ChatbotEngineDeploymentSurfaceStatus;
 
 export interface ChatbotEngineCapabilitySummary {
     id: 'leadCapture' | 'handoff' | 'appointments' | 'ecommerce' | 'restaurants' | 'realEstate' | 'bioPage' | 'finance' | 'voice';
@@ -97,21 +87,18 @@ export interface ChatbotEngineDashboardSummary {
         voiceAgentConfigured: boolean;
         requireActionRegistry: boolean;
         requireKnowledgeReview: boolean;
+        surfaceCoverage: {
+            required: number;
+            deployedRequired: number;
+            public: number;
+            deployedPublic: number;
+            missingRequired: ChatbotEngineDeploymentSurfaceId[];
+            blocked: ChatbotEngineDeploymentSurfaceId[];
+            review: ChatbotEngineDeploymentSurfaceId[];
+            status: ChatbotEngineReadinessStatus;
+        };
     };
 }
-
-const SURFACE_KEYS: ChatbotEngineSurfaceSummary['id'][] = [
-    'webWidget',
-    'embeddedWidget',
-    'bioPage',
-    'storefront',
-    'checkout',
-    'bookingPage',
-    'restaurantMenu',
-    'realtyPropertyPage',
-    'adminPreview',
-    'voice',
-];
 
 const emptyCounts = (): ChatbotEngineCountSummary => ({
     total: 0,
@@ -175,23 +162,6 @@ function summarizeActions(actions: ChatbotActionBlueprint[]): ChatbotEngineActio
     });
 
     return counts;
-}
-
-function summarizeSurfaces(channels: ChatbotChannelBlueprint): ChatbotEngineSurfaceSummary[] {
-    return SURFACE_KEYS.map(id => {
-        const surface = channels[id];
-        return {
-            id,
-            surface: surface.sourceSurface,
-            enabled: surface.enabled,
-            status: surface.status,
-            routePattern: surface.routePattern,
-            contextKeys: surface.contextKeys,
-            readinessStatus: readinessStatus(surface.readiness, surface.needsReview || surface.status !== 'deployed'),
-            blockers: surface.readiness.blockers,
-            warnings: surface.readiness.warnings,
-        };
-    });
 }
 
 function buildCapabilitySummary(blueprint: ChatbotBlueprint): ChatbotEngineCapabilitySummary[] {
@@ -357,11 +327,22 @@ export function buildChatbotEngineDashboardSummary(blueprint: ChatbotBlueprint |
                 voiceAgentConfigured: false,
                 requireActionRegistry: true,
                 requireKnowledgeReview: true,
+                surfaceCoverage: {
+                    required: 0,
+                    deployedRequired: 0,
+                    public: 0,
+                    deployedPublic: 0,
+                    missingRequired: [],
+                    blocked: [],
+                    review: [],
+                    status: 'blocked',
+                },
             },
         };
     }
 
-    const surfaces = summarizeSurfaces(blueprint.channels);
+    const surfaceManifest = buildChatbotEngineSurfaceDeploymentManifest(blueprint.channels);
+    const surfaces = surfaceManifest.surfaces;
     const readiness = collectReadiness(blueprint, surfaces);
     const safetySettings = isPlainRecord(blueprint.deployment.safetySettings) ? blueprint.deployment.safetySettings : {};
     const trainingSections = [
@@ -412,6 +393,16 @@ export function buildChatbotEngineDashboardSummary(blueprint: ChatbotBlueprint |
             voiceAgentConfigured: Boolean(blueprint.deployment.voiceSettings.agentId),
             requireActionRegistry: safetySettings.requireActionRegistry !== false,
             requireKnowledgeReview: safetySettings.requireKnowledgeReview !== false,
+            surfaceCoverage: {
+                required: surfaceManifest.requiredSurfaceCount,
+                deployedRequired: surfaceManifest.deployedRequiredSurfaceCount,
+                public: surfaceManifest.publicSurfaceCount,
+                deployedPublic: surfaceManifest.deployedPublicSurfaceCount,
+                missingRequired: surfaceManifest.missingRequiredSurfaceIds,
+                blocked: surfaceManifest.blockedSurfaceIds,
+                review: surfaceManifest.reviewSurfaceIds,
+                status: surfaceManifest.coverageStatus,
+            },
         },
     };
 }

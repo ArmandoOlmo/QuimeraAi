@@ -12,3 +12,4 @@ export * from './globalAssistantProjectResolver';
 export * from './globalAssistantRuntime';
 export * from './globalAssistantSupabaseStore';
 export * from './globalAssistantTaskService';
+export * from './globalCommandSearch';

@@ -114,7 +114,31 @@ describe('chatbotEngine blueprint dashboard summary', () => {
             'checkout',
             'bookingPage',
             'bioPage',
+            'restaurantMenu',
+            'realtyPropertyPage',
             'voice',
+        ]));
+        expect(summary.surfaces.find(surface => surface.id === 'webWidget')).toMatchObject({
+            sourceModule: 'website-builder',
+            publicSurface: true,
+            requiredForCanonicalDeployment: true,
+        });
+        expect(summary.surfaces.find(surface => surface.id === 'restaurantMenu')?.runtimeEvidence).toContain('components/PublicRestaurantMenuPage.tsx');
+        expect(summary.deployment.surfaceCoverage).toMatchObject({
+            required: 7,
+            deployedRequired: 0,
+            public: 9,
+            deployedPublic: 0,
+            status: 'blocked',
+        });
+        expect(summary.deployment.surfaceCoverage.missingRequired).toEqual(expect.arrayContaining([
+            'webWidget',
+            'storefront',
+            'checkout',
+            'bioPage',
+            'bookingPage',
+            'restaurantMenu',
+            'realtyPropertyPage',
         ]));
         expect(summary.capabilities.map(capability => capability.id)).toEqual(expect.arrayContaining([
             'leadCapture',

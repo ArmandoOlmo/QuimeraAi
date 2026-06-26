@@ -58,6 +58,7 @@ Coverage:
 - Dashboard prompts route to the Global Assistant by default, including website creation, image generation, and CRM/lead requests.
 - Explicit AI Studio open/create requests stay on the AI Studio surface.
 - Dashboard entry payloads are typed, trimmed, source-tagged, and auto-submit by default.
+- Command palette search returns project, module, admin, action, and freeform assistant-request commands with service/admin/project filters.
 - The Global Assistant no longer fast-paths website creation with empty arguments.
 - Command Center context includes the active project, dashboard surface, enabled services, feature flags, and a bounded project list.
 - Mutating or confirmation-required dashboard requests produce an Operating Layer preview and do not continue into legacy execution.
@@ -102,6 +103,8 @@ When GA4-GA10 land, manually verify:
 - Dashboard request: "crea un website para X".
 - Dashboard request: "genera una imagen para el hero".
 - Dashboard request opens the Global Assistant drawer instead of only opening AI Studio.
+- Cmd/Ctrl+K opens the global command palette from dashboard, editor, and module pages.
+- Command palette can open modules, open a project, and send freeform/action requests to the Global Assistant drawer.
 - Mutating dashboard request displays an Operating Layer plan and does not apply changes without confirmation.
 - Explicit "Abre AI Studio" still opens AI Studio.
 - Requests that mention "chat" resolve the correct owner surface before planning: Global Assistant, ChatCore public runtime, Chatbot Engine config/test, landing chatbot, module assistant, or human support chat.

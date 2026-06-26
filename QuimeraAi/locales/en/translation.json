@@ -364,6 +364,8 @@
         "knowledge": "Knowledge",
         "actions": "Actions",
         "surfaces": "Surfaces",
+        "canonicalCoverage": "Canonical coverage",
+        "publicCoverage": "Public coverage",
         "events": "Events",
         "metrics": "metrics",
         "total": "total",
@@ -400,6 +402,8 @@
         "confidence": "Confidence",
         "audit": "audit",
         "public": "Public",
+        "requiredSurface": "Required surface",
+        "optionalSurface": "Optional surface",
         "confirmation": "Confirmation",
         "auth": "Auth",
         "consent": "Consent",
@@ -415,6 +419,8 @@
         "privateSources": "Private sources",
         "lockedActions": "Locked actions",
         "source": "Source",
+        "target": "Target",
+        "evidence": "Evidence",
         "correlation": "Correlation",
         "unread": "Unread",
         "unknownVisitor": "Unknown visitor",
@@ -463,6 +469,18 @@
         "realtyPropertyPage": "Realty Property",
         "adminPreview": "Admin Preview",
         "voice": "Voice"
+      },
+      "deploymentTargets": {
+        "webWidget": "Website Builder and public website",
+        "embeddedWidget": "External embeddable widget",
+        "bioPage": "Public Bio Page",
+        "storefront": "Storefront catalog",
+        "checkout": "Checkout flow",
+        "bookingPage": "Booking and appointment pages",
+        "restaurantMenu": "Restaurant menu and reservation page",
+        "realtyPropertyPage": "Realty property page",
+        "adminPreview": "Dashboard simulator",
+        "voice": "Voice session"
       },
       "capabilities": {
         "leadCapture": "Lead capture",
@@ -17348,6 +17366,112 @@
     },
     "footer": {
       "madeWith": "Made with Quimera.ai"
+    }
+  },
+  "globalCommandPalette": {
+    "placeholder": "Search, open, or ask Quimera",
+    "ariaLabel": "Global command palette",
+    "close": "Close",
+    "emptyTitle": "No command found",
+    "emptyDescription": "Try a project, module, or request.",
+    "untitledCommand": "Untitled command",
+    "untitledProject": "Untitled project",
+    "askLabel": "Ask Quimera: {{query}}",
+    "askDescription": "Send this request to the Global Assistant Operating Layer.",
+    "activeProject": "Active project",
+    "openProject": "Open project{{status}}",
+    "types": {
+      "assistant": "Assistant",
+      "navigation": "Navigation",
+      "project": "Project",
+      "module": "Module",
+      "action": "Action",
+      "admin": "Admin"
+    },
+    "commands": {
+      "action": {
+        "create-website": {
+          "label": "Create website",
+          "description": "Start a website or business build request with the Global Assistant.",
+          "prompt": "Create a new website. Ask me for any missing business details before generating."
+        },
+        "edit-website": {
+          "label": "Edit website section",
+          "description": "Plan a Website Builder edit for the active project.",
+          "prompt": "Help me edit a website section in the active project. Ask which section if it is not clear."
+        },
+        "generate-image": {
+          "label": "Generate image",
+          "description": "Create a draft image asset for the active project.",
+          "prompt": "Generate a draft image asset for the active project. Ask for style, subject, and placement if missing."
+        },
+        "create-video": {
+          "label": "Create video",
+          "description": "Create a video prompt or video asset task.",
+          "prompt": "Create a video asset draft or video generation prompt for the active project."
+        },
+        "create-email": {
+          "label": "Create email campaign",
+          "description": "Draft an email campaign for review.",
+          "prompt": "Create an email campaign draft for review. Do not send it without explicit confirmation."
+        },
+        "create-product": {
+          "label": "Create product",
+          "description": "Draft a new ecommerce product.",
+          "prompt": "Create an ecommerce product draft for the active project. Ask for missing product details."
+        },
+        "create-appointment": {
+          "label": "Create appointment",
+          "description": "Plan a new appointment or booking.",
+          "prompt": "Create an appointment draft for the active project. Ask for date, time, contact, and service if missing."
+        },
+        "review-leads": {
+          "label": "Review leads",
+          "description": "Summarize and prioritize CRM leads.",
+          "prompt": "Review the active project leads, summarize priorities, and suggest follow-up actions."
+        },
+        "create-bio-page": {
+          "label": "Create Bio Page",
+          "description": "Create or improve a Bio Page draft.",
+          "prompt": "Create a Bio Page draft for the active project with links, CTA, booking, lead capture, and ChatCore context."
+        },
+        "train-chatcore": {
+          "label": "Train ChatCore",
+          "description": "Create or sync project knowledge for ChatCore.",
+          "prompt": "Train ChatCore for the active project by creating or syncing knowledge. Keep visitor chat memory separate."
+        },
+        "analyze-project": {
+          "label": "Analyze project",
+          "description": "Review project readiness, analytics, and blockers.",
+          "prompt": "Analyze the active project readiness, analytics, blockers, and next best actions."
+        }
+      },
+      "nav": {
+        "dashboard": { "label": "Dashboard" },
+        "websites": { "label": "Websites" },
+        "editor": { "label": "Website Builder" },
+        "assets": { "label": "Media AI" },
+        "cms": { "label": "CMS" },
+        "navigation": { "label": "Navigation" },
+        "chatcore": { "label": "ChatCore" },
+        "leads": { "label": "CRM / Leads" },
+        "appointments": { "label": "Appointments" },
+        "domains": { "label": "Domains" },
+        "seo": { "label": "SEO" },
+        "finance": { "label": "Finance" },
+        "ecommerce": { "label": "Ecommerce" },
+        "restaurants": { "label": "Restaurants" },
+        "email": { "label": "Email Marketing" },
+        "biopage": { "label": "Bio Page" },
+        "real-estate": { "label": "Realty" },
+        "templates": { "label": "Templates" },
+        "settings": { "label": "Settings" }
+      },
+      "admin": {
+        "superadmin": { "label": "Super Admin" },
+        "global-assistant": { "label": "Global Assistant settings" },
+        "service-availability": { "label": "Service availability" }
+      }
     }
   },
   "visualKit": {

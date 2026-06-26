@@ -11,6 +11,7 @@ The current PR-level scope adds:
 - `types/globalAssistant.ts` as the shared TypeScript contract.
 - `services/globalAssistant/*` for context resolution, memory, intent routing, action registry, permission checks, execution planning, audit events, task tracking, project resolution, and OpenRouter model metadata.
 - `services/globalAssistant/globalAssistantEntryBridge.ts` for dashboard-to-assistant entry routing and lazy-load-safe request handoff.
+- `services/globalAssistant/globalCommandSearch.ts`, `hooks/useGlobalCommandPalette.ts`, and `components/global-assistant/GlobalCommandPalette.tsx` for the first global command palette surface.
 - `services/globalAssistant/globalAssistantCommandCenter.ts` for app-context resolution, enabled-service projection, plan formatting, and preview-vs-continue decisions.
 - `services/globalAssistant/globalAssistantSupabaseStore.ts` for injectable Supabase persistence repositories.
 - `supabase/migrations/20260626120743_global_assistant_memory_store.sql` for `assistant_*` tables, RLS, grants, triggers, and helper functions.
@@ -99,6 +100,14 @@ Execution lifecycle:
 3. `applyTask` executes only actions whose registry definitions include an explicit `execute` handler. If a module connector has not registered execution yet, the action fails safely and records `assistant_action_failed`.
 4. Successful applies update the action log, record `assistant_action_applied`, store a task-scoped memory summary, and create a rollback snapshot when the action supports rollback.
 5. `rollbackAction` requires `rollbackSupported`, a stored snapshot, and an explicit rollback handler before marking an action as `rolled_back`.
+
+Global command palette flow:
+
+1. `Cmd/Ctrl+K` opens `GlobalCommandPalette` from any authenticated app surface.
+2. `globalCommandSearch` returns project, module, admin, action, and freeform assistant-request commands, filtered by service availability, active project, and admin permission.
+3. Project commands call `loadProject(projectId, false, true)` so the existing project switch/autosave guards remain authoritative.
+4. Module commands use `setView` plus route navigation; `ViewRouter` continues to enforce service availability.
+5. Action/freeform commands dispatch a `command_palette` Global Assistant entry payload. They do not mutate data directly.
 
 ## OpenRouter notes
 
