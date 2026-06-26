@@ -16,10 +16,12 @@ describe('globalAssistantCapabilityCatalog', () => {
         const media = catalog.modules.find(module => module.module === 'media');
         const website = catalog.modules.find(module => module.module === 'website');
         const storefront = catalog.modules.find(module => module.module === 'storefront');
+        const project = catalog.modules.find(module => module.module === 'project');
         const createEmail = catalog.actions.find(action => action.actionType === 'create_email_campaign');
         const sendEmail = catalog.actions.find(action => action.actionType === 'send_email_campaign');
         const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
         const generateImage = catalog.actions.find(action => action.actionType === 'generate_image');
+        const updateProjectMetadata = catalog.actions.find(action => action.actionType === 'update_project_metadata');
 
         expect(catalog.actionCount).toBeGreaterThan(40);
         expect(catalog.executableActionCount).toBeGreaterThan(10);
@@ -73,6 +75,12 @@ describe('globalAssistantCapabilityCatalog', () => {
             'edit_storefront_theme',
             'update_product_card_style',
         ]));
+        expect(project?.executableActionTypes).toEqual(expect.arrayContaining([
+            'open_project',
+            'switch_project',
+            'search_projects',
+            'update_project_metadata',
+        ]));
         expect(createEmail).toMatchObject({
             executable: true,
             availableInContext: true,
@@ -92,6 +100,13 @@ describe('globalAssistantCapabilityCatalog', () => {
             executable: true,
             availableInContext: true,
             requiredService: 'aiFeatures',
+        });
+        expect(updateProjectMetadata).toMatchObject({
+            executable: true,
+            rollbackExecutable: true,
+            requiresConfirmation: true,
+            previewSupported: true,
+            rollbackSupported: true,
         });
     });
 

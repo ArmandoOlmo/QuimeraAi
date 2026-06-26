@@ -165,6 +165,42 @@ export function enrichAssistantExecutionPreview(
     action: AssistantAction,
     definition: AssistantActionDefinition,
 ): AssistantExecutionPreview {
+    if (action.actionType === 'update_project_metadata') {
+        return {
+            ...preview,
+            before: {
+                table: 'projects',
+                id: action.projectId,
+                path: 'metadata',
+            },
+            after: {
+                operation: 'update_project_metadata',
+                table: 'projects',
+                id: action.projectId,
+                projectId: action.projectId,
+                request: compactRequestTitle(action.input.request, 'Project metadata update'),
+                generatedByAI: true,
+                needsReview: true,
+                noAutoPublish: true,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                updated: [`projects.${action.projectId}.metadata`],
+                mirrored: ['projects.$current.data.name/status/description/category/tags'],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_project_metadata' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Project metadata is updated in the projects row and mirrored into projects.data for renderer compatibility.',
+                ...(definition.rollbackSupported ? ['Rollback restores previous project metadata columns.'] : []),
+            ],
+        };
+    }
+
     if (['edit_website_section', 'update_section_copy', 'reorder_sections', 'toggle_section_visibility'].includes(action.actionType)) {
         const sectionId = asText(action.input.sectionId) || '$selected_section';
         const path = asText(action.input.path);

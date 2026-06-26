@@ -67,6 +67,9 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('add_storefront_section')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('edit_storefront_theme')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_product_card_style')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('search_projects')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_project_metadata')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_project_metadata')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_email_campaign')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('generate_email_copy')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_product')?.execute).toBe('function');

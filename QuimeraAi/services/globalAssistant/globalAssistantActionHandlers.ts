@@ -361,6 +361,387 @@ const createNavigationHandler = (
     },
 });
 
+type ProjectMetadataUpdateDraft = {
+    name?: string;
+    status?: 'Published' | 'Draft' | 'Template';
+    description?: string;
+    category?: string;
+    tags?: string[];
+};
+
+const PROJECT_SEARCH_STOP_WORDS = new Set([
+    'abre',
+    'abrir',
+    'busca',
+    'buscar',
+    'cambia',
+    'cambiar',
+    'encuentra',
+    'find',
+    'open',
+    'project',
+    'projects',
+    'proyecto',
+    'proyectos',
+    'search',
+    'switch',
+]);
+
+const hasOwn = (record: Record<string, unknown>, key: string): boolean =>
+    Object.prototype.hasOwnProperty.call(record, key);
+
+const cleanInferredProjectValue = (value: string | undefined): string | undefined => {
+    const text = titleFromRequest(value, '')
+        .replace(/^["'“”]+/, '')
+        .replace(/["'“”.,;:]+$/, '')
+        .trim();
+    return text || undefined;
+};
+
+const inferProjectNameFromRequest = (request: unknown): string | undefined => {
+    const text = readString(request);
+    if (!text) return undefined;
+
+    const patterns = [
+        /(?:renombra|renombrar|rename)\s+(?:el\s+)?(?:proyecto|project)?\s*(?:a|to)\s+(.+)$/i,
+        /(?:cambia|cambiar|change)\s+(?:el\s+)?nombre(?:\s+del\s+proyecto|\s+project)?\s+(?:a|to)\s+(.+)$/i,
+        /(?:nombre\s+del\s+proyecto|project\s+name)\s*(?:a|to|=|:)\s+(.+)$/i,
+    ];
+
+    for (const pattern of patterns) {
+        const match = text.match(pattern);
+        const next = cleanInferredProjectValue(match?.[1]);
+        if (next) return next;
+    }
+    return undefined;
+};
+
+const normalizeProjectStatus = (value: unknown): ProjectMetadataUpdateDraft['status'] => {
+    const text = normalizeForSearch(readString(value) || '');
+    if (!text) return undefined;
+    if (['published', 'publish', 'publicado', 'publicada', 'publicar', 'live'].includes(text)) return 'Published';
+    if (['draft', 'borrador', 'privado', 'privada'].includes(text)) return 'Draft';
+    if (['template', 'plantilla'].includes(text)) return 'Template';
+    return undefined;
+};
+
+const readProjectTags = (value: unknown): string[] | undefined => {
+    if (Array.isArray(value)) return uniqueStringList(readStringList(value));
+    const text = readString(value);
+    if (!text) return undefined;
+    return uniqueStringList(text.split(/[,;\n]/).map(tag => tag.trim()).filter(Boolean));
+};
+
+const deriveProjectMetadataUpdateDraft = (input: Record<string, unknown>): ProjectMetadataUpdateDraft => {
+    const updates = asRecord(input.updates);
+    const draft: ProjectMetadataUpdateDraft = {};
+
+    const name = readDisplayText(input.name) || readDisplayText(updates.name) || inferProjectNameFromRequest(input.request);
+    if (name) draft.name = name;
+
+    const status = normalizeProjectStatus(input.status) || normalizeProjectStatus(updates.status);
+    if (status) draft.status = status;
+
+    const description = readDisplayText(input.description) || readDisplayText(updates.description);
+    if (description) draft.description = description;
+
+    const category = readDisplayText(input.category) || readDisplayText(updates.category);
+    if (category) draft.category = category;
+
+    const tagsSource = hasOwn(input, 'tags') ? input.tags : hasOwn(updates, 'tags') ? updates.tags : undefined;
+    const tags = readProjectTags(tagsSource);
+    if (tags) draft.tags = tags;
+
+    return draft;
+};
+
+const cloneProjectMetadataColumns = (row: Record<string, unknown>): Record<string, unknown> => {
+    const snapshot: Record<string, unknown> = {};
+    ['name', 'status', 'description', 'category', 'tags', 'data', 'last_updated', 'updated_at', 'thumbnail_url'].forEach(key => {
+        if (hasOwn(row, key)) snapshot[key] = cloneValue(row[key]);
+    });
+    return snapshot;
+};
+
+const readProjectTenantId = (row: Record<string, unknown>): string | undefined =>
+    readString(row.tenant_id) || readString(row.tenantId);
+
+const readProjectUserId = (row: Record<string, unknown>): string | undefined =>
+    readString(row.user_id) || readString(row.userId);
+
+const assertProjectRowInAssistantScope = (
+    row: Record<string, unknown>,
+    action: AssistantAction,
+    context?: AssistantContextSnapshot,
+) => {
+    const rowTenantId = readProjectTenantId(row);
+    const contextTenantId = getTenantId(action, context);
+    const isSuperAdmin = context?.actor.isSuperAdmin || context?.actor.mode === 'super_admin';
+    if (rowTenantId && contextTenantId && rowTenantId !== contextTenantId && !isSuperAdmin) {
+        throw new Error(`Project ${readString(row.id) || 'unknown'} is outside the active tenant/workspace scope.`);
+    }
+
+    const rowUserId = readProjectUserId(row);
+    const contextUserId = action.userId || context?.actor.userId || null;
+    if (!rowTenantId && rowUserId && contextUserId && rowUserId !== contextUserId && !isSuperAdmin) {
+        throw new Error(`Project ${readString(row.id) || 'unknown'} is outside the active user scope.`);
+    }
+};
+
+const loadProjectMetadataRow = async (
+    client: SupabaseClientLike,
+    projectId: string,
+    action: AssistantAction,
+    context?: AssistantContextSnapshot,
+): Promise<Record<string, unknown>> => {
+    const result = await selectSingle(client.from('projects').select('*').eq('id', projectId));
+    if (result?.error) throw result.error;
+    const row = asRecord(result?.data);
+    if (!readString(row.id)) throw new Error(`Project ${projectId} was not found before updating metadata.`);
+    assertProjectRowInAssistantScope(row, action, context);
+    return cloneRecord(row);
+};
+
+const valuesDiffer = (left: unknown, right: unknown): boolean =>
+    JSON.stringify(left ?? null) !== JSON.stringify(right ?? null);
+
+const deriveProjectMetadataPatch = (
+    draft: ProjectMetadataUpdateDraft,
+    currentRow: Record<string, unknown>,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+): { patch: Record<string, unknown>; changedKeys: string[] } => {
+    const currentData = cloneRecord(asRecord(currentRow.data));
+    const nextData = cloneRecord(currentData);
+    const patch: Record<string, unknown> = {};
+    const changedKeys: string[] = [];
+
+    const applyValue = (key: keyof ProjectMetadataUpdateDraft, columnKey: string, value: unknown, currentValue: unknown) => {
+        if (value === undefined || !valuesDiffer(currentValue, value)) return;
+        patch[columnKey] = value;
+        nextData[key] = cloneValue(value);
+        changedKeys.push(String(key));
+    };
+
+    applyValue('name', 'name', draft.name, readDisplayText(currentRow.name) || readDisplayText(currentData.name));
+    applyValue('status', 'status', draft.status, normalizeProjectStatus(currentRow.status) || normalizeProjectStatus(currentData.status));
+    applyValue('description', 'description', draft.description, readDisplayText(currentRow.description) || readDisplayText(currentData.description));
+    applyValue('category', 'category', draft.category, readDisplayText(currentRow.category) || readDisplayText(currentData.category));
+    applyValue('tags', 'tags', draft.tags, readProjectTags(currentRow.tags) || readProjectTags(currentData.tags) || []);
+
+    if (changedKeys.length === 0) return { patch: {}, changedKeys };
+
+    nextData.lastUpdated = now;
+    nextData.assistantDrafts = {
+        ...asRecord(nextData.assistantDrafts),
+        projectMetadata: {
+            generatedByAI: true,
+            needsReview: true,
+            safeToEdit: true,
+            sourceModule: 'global-assistant',
+            sourceComponent: 'OperatingLayer',
+            sourceEntityType: 'assistant_action',
+            sourceEntityId: action.id,
+            changedKeys,
+            updatedAt: now,
+            metadata: buildBaseMetadata(input, action, context),
+        },
+    };
+
+    patch.data = nextData;
+    patch.last_updated = now;
+    return { patch, changedKeys };
+};
+
+const createProjectMetadataBeforeSnapshot = (
+    projectId: string,
+    row: Record<string, unknown>,
+): Record<string, unknown> => ({
+    table: 'projects',
+    id: projectId,
+    projectId,
+    row: cloneProjectMetadataColumns(row),
+});
+
+const rollbackProjectMetadataColumns = (
+    deps: GlobalAssistantActionHandlerDependencies,
+): HandlerPatch['rollback'] => async (_input, { snapshot }) => {
+    const before = asRecord(snapshot.beforeSnapshot);
+    const projectId = readString(before.projectId) || readString(before.id);
+    const row = asRecord(before.row);
+    if (!projectId || !Object.keys(row).length) {
+        throw new Error('Cannot rollback project metadata: previous project metadata snapshot was not recorded.');
+    }
+    const result = await selectSingle(getClient(deps).from('projects').update(row).eq('id', projectId));
+    if (result?.error) throw result.error;
+    const restored = asRecord(result?.data);
+    if (!readString(restored.id)) throw new Error(`Project ${projectId} metadata could not be restored.`);
+
+    return {
+        afterSnapshot: {
+            table: 'projects',
+            id: projectId,
+            projectId,
+            row: restored,
+            restored: true,
+        },
+        diff: {
+            restored: [`projects.${projectId}.metadata`],
+        },
+    };
+};
+
+const normalizeProjectSearchQuery = (input: Record<string, unknown>): string => (
+    readString(input.query)
+    || readString(input.search)
+    || readString(input.request)
+    || ''
+);
+
+const projectSearchTerms = (query: string): string[] =>
+    normalizeForSearch(query)
+        .split(/\s+/)
+        .map(term => term.trim())
+        .filter(term => term.length > 1 && !PROJECT_SEARCH_STOP_WORDS.has(term));
+
+const projectRowSearchText = (row: Record<string, unknown>): string => {
+    const data = asRecord(row.data);
+    return normalizeForSearch([
+        readString(row.id),
+        readDisplayText(row.name),
+        readString(row.status),
+        readDisplayText(row.description) || readDisplayText(data.description),
+        readDisplayText(row.category) || readDisplayText(data.category),
+        ...readStringList(row.tags),
+        ...readStringList(data.tags),
+    ].filter(Boolean).join(' '));
+};
+
+const projectRowSearchScore = (row: Record<string, unknown>, terms: string[]): number => {
+    if (terms.length === 0) return 1;
+    const haystack = projectRowSearchText(row);
+    return terms.reduce((score, term) => score + (haystack.includes(term) ? 1 : 0), 0);
+};
+
+const readProjectRowsForSearch = async (
+    client: SupabaseClientLike,
+    context?: AssistantContextSnapshot,
+): Promise<Record<string, unknown>[]> => {
+    const snapshotProjects = asArray(context?.snapshot?.availableProjects)
+        .map(project => asRecord(project))
+        .filter(project => readString(project.id));
+    if (snapshotProjects.length > 0) return snapshotProjects.map(project => cloneRecord(project));
+
+    let builder = client.from('projects').select('*');
+    if (context?.tenant.tenantId) {
+        builder = builder.eq('tenant_id', context.tenant.tenantId);
+    } else if (context?.actor.userId) {
+        builder = builder.eq('user_id', context.actor.userId);
+    }
+    const result = await builder;
+    if (result?.error) throw result.error;
+    return asArray(result?.data).map(row => cloneRecord(asRecord(row))).filter(row => readString(row.id));
+};
+
+const projectSearchMatch = (row: Record<string, unknown>): Record<string, unknown> => {
+    const data = asRecord(row.data);
+    return {
+        id: readString(row.id),
+        name: readDisplayText(row.name) || readDisplayText(data.name) || readString(row.id),
+        status: readString(row.status) || readString(data.status) || null,
+        tenantId: readProjectTenantId(row) || null,
+        userId: readProjectUserId(row) || null,
+        description: readDisplayText(row.description) || readDisplayText(data.description) || null,
+        category: readDisplayText(row.category) || readDisplayText(data.category) || null,
+        tags: readProjectTags(row.tags) || readProjectTags(data.tags) || [],
+        thumbnailUrl: readString(row.thumbnail_url) || readString(row.thumbnailUrl) || null,
+        lastUpdated: readString(row.last_updated) || readString(row.lastUpdated) || null,
+    };
+};
+
+const createSearchProjectsHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const query = normalizeProjectSearchQuery(input);
+        const terms = projectSearchTerms(query);
+        const rows = await readProjectRowsForSearch(client, context);
+        const matches = rows
+            .map(row => ({ row, score: projectRowSearchScore(row, terms) }))
+            .filter(entry => terms.length === 0 || entry.score > 0)
+            .sort((left, right) => right.score - left.score || String(readDisplayText(left.row.name) || '').localeCompare(String(readDisplayText(right.row.name) || '')))
+            .slice(0, 12)
+            .map(entry => projectSearchMatch(entry.row));
+
+        return {
+            afterSnapshot: {
+                kind: 'project_search',
+                query,
+                tenantId: context?.tenant.tenantId || null,
+                userId: context?.actor.userId || null,
+                matchCount: matches.length,
+                matches,
+                source: asArray(context?.snapshot?.availableProjects).length > 0 ? 'context_snapshot' : 'supabase.projects',
+            },
+            diff: {
+                searched: ['projects'],
+                mutatesData: false,
+                actionType: action.actionType,
+            },
+        };
+    },
+});
+
+const createUpdateProjectMetadataHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const errors: string[] = [];
+        if (!readString(input.projectId)) errors.push('projectId is required before updating project metadata.');
+        const draft = deriveProjectMetadataUpdateDraft(input);
+        if (Object.keys(draft).length === 0) {
+            errors.push('At least one supported project metadata update is required: name, status, description, category, or tags.');
+        }
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const currentRow = await loadProjectMetadataRow(client, projectId, action, context);
+        const draft = deriveProjectMetadataUpdateDraft(input);
+        const now = getNow(deps);
+        const { patch, changedKeys } = deriveProjectMetadataPatch(draft, currentRow, input, action, context, now);
+        if (changedKeys.length === 0) {
+            throw new Error('Project metadata update did not change any supported fields.');
+        }
+
+        const result = await selectSingle(client.from('projects').update(patch).eq('id', projectId));
+        if (result?.error) throw result.error;
+        const row = asRecord(result?.data);
+        if (!readString(row.id)) throw new Error(`Project ${projectId} metadata could not be updated.`);
+
+        return {
+            beforeSnapshot: createProjectMetadataBeforeSnapshot(projectId, currentRow),
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                row,
+                changedKeys,
+                reviewRequired: true,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+            },
+            diff: {
+                updated: changedKeys.map(key => `projects.${projectId}.${key}`),
+                reviewRequired: true,
+                rollback: 'restore_previous_project_metadata',
+            },
+        };
+    },
+    rollback: rollbackProjectMetadataColumns(deps),
+});
+
 const getAssistantUserId = (
     action: AssistantAction,
     context?: AssistantContextSnapshot,
@@ -4223,6 +4604,8 @@ const createAnalyticsHandler = (
 const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDependencies) => HandlerPatch> = {
     open_project: () => createNavigationHandler('editor', { label: 'Open project in Website Builder.', requiresProject: true }),
     switch_project: () => createNavigationHandler('dashboard', { label: 'Switch active project context.', requiresProject: true }),
+    search_projects: createSearchProjectsHandler,
+    update_project_metadata: createUpdateProjectMetadataHandler,
     open_website_builder: () => createNavigationHandler('editor', { label: 'Open Website Builder.', requiresProject: true }),
     open_storefront_builder: () => createNavigationHandler('ecommerce', { label: 'Open Storefront Builder.', requiresProject: true, moduleItem: 'storefront' }),
     open_orders: () => createNavigationHandler('ecommerce', { label: 'Open ecommerce orders.', requiresProject: true, moduleItem: 'orders' }),

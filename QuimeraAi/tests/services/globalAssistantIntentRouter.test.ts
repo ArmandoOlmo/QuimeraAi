@@ -266,4 +266,18 @@ describe('globalAssistantIntentRouter', () => {
             },
         });
     });
+
+    it('routes project search and metadata edits to project actions only', () => {
+        expect(routeAssistantIntent('Busca proyectos Casa', context)).toMatchObject({
+            module: 'project',
+            intent: 'search',
+            actionCandidates: ['search_projects'],
+        });
+
+        expect(routeAssistantIntent('Cambia el nombre del proyecto a Casa Sol', context)).toMatchObject({
+            module: 'project',
+            intent: 'edit',
+            actionCandidates: ['update_project_metadata'],
+        });
+    });
 });

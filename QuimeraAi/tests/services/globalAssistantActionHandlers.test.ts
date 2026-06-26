@@ -1285,6 +1285,162 @@ describe('Global Assistant default action handlers', () => {
         });
     });
 
+    it('searches projects from the Operating Layer context without mutating rows', async () => {
+        const { runtime, context } = buildRuntime([], []);
+        const projectAwareContext = {
+            ...context,
+            activeModule: 'project' as const,
+            snapshot: {
+                ...context.snapshot,
+                availableProjects: [
+                    activeProject,
+                    {
+                        id: 'project-2',
+                        name: 'Sol Realty',
+                        status: 'Published',
+                        tenantId: 'tenant-1',
+                        userId: 'user-1',
+                        description: 'Luxury real estate portfolio',
+                    },
+                ],
+            },
+        };
+        const planned = await runtime.planRequest({
+            context: projectAwareContext,
+            request: 'Busca proyectos Sol',
+            enabledServices: [],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['search_projects']);
+        expect(planned.plan.requiresConfirmation).toBe(false);
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: projectAwareContext });
+
+        expect(applied.task.status).toBe('completed');
+        expect(applied.actions[0].afterSnapshot).toMatchObject({
+            kind: 'project_search',
+            query: 'Busca proyectos Sol',
+            matchCount: 1,
+            matches: [
+                expect.objectContaining({
+                    id: 'project-2',
+                    name: 'Sol Realty',
+                    status: 'Published',
+                    tenantId: 'tenant-1',
+                }),
+            ],
+            source: 'context_snapshot',
+        });
+        expect(applied.actions[0].diff).toMatchObject({
+            searched: ['projects'],
+            mutatesData: false,
+        });
+    });
+
+    it('updates project metadata with confirmation and rollback', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime([], []);
+        const projectRow = buildWebsiteProjectRow();
+        projectRow.status = 'Draft';
+        projectRow.description = 'Old description';
+        projectRow.category = 'Hospitality';
+        projectRow.tags = ['old'];
+        projectRow.data = {
+            ...projectRow.data,
+            name: 'Casa Luna',
+            status: 'Draft',
+            description: 'Old description',
+            category: 'Hospitality',
+            tags: ['old'],
+        };
+        fakeSupabase.rowsByTable.projects = [projectRow];
+        const projectContext = {
+            ...context,
+            activeModule: 'project' as const,
+        };
+
+        const planned = await runtime.planRequest({
+            context: projectContext,
+            request: 'Cambia el nombre del proyecto a Casa Sol',
+            enabledServices: [],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['update_project_metadata']);
+        expect(planned.plan.requiresConfirmation).toBe(true);
+        expect(planned.task.status).toBe('waiting_for_confirmation');
+        expect(planned.plan.previews[0]).toMatchObject({
+            after: {
+                operation: 'update_project_metadata',
+                table: 'projects',
+                id: 'project-1',
+                noAutoPublish: true,
+            },
+            diff: {
+                rollback: 'restore_previous_project_metadata',
+            },
+        });
+
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: projectContext });
+
+        expect(applied.task.status).toBe('completed');
+        expect(fakeSupabase.rowsByTable.projects[0]).toMatchObject({
+            name: 'Casa Sol',
+            status: 'Draft',
+            last_updated: '2026-06-26T13:30:00.000Z',
+        });
+        expect(fakeSupabase.rowsByTable.projects[0].data).toMatchObject({
+            name: 'Casa Sol',
+            description: 'Old description',
+            category: 'Hospitality',
+            tags: ['old'],
+            lastUpdated: '2026-06-26T13:30:00.000Z',
+            assistantDrafts: {
+                projectMetadata: {
+                    generatedByAI: true,
+                    needsReview: true,
+                    sourceComponent: 'OperatingLayer',
+                    changedKeys: ['name'],
+                },
+            },
+        });
+        expect(applied.actions[0].beforeSnapshot).toMatchObject({
+            table: 'projects',
+            id: 'project-1',
+            row: {
+                name: 'Casa Luna',
+                description: 'Old description',
+                tags: ['old'],
+            },
+        });
+        expect(applied.actions[0].diff).toMatchObject({
+            updated: ['projects.project-1.name'],
+            rollback: 'restore_previous_project_metadata',
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context: projectContext,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0]).toMatchObject({
+            name: 'Casa Luna',
+            description: 'Old description',
+            category: 'Hospitality',
+            tags: ['old'],
+            last_updated: '2026-06-26T12:00:00.000Z',
+        });
+        expect(fakeSupabase.rowsByTable.projects[0].data).toMatchObject({
+            name: 'Casa Luna',
+            status: 'Draft',
+            description: 'Old description',
+            category: 'Hospitality',
+            tags: ['old'],
+        });
+    });
+
     it('blocks appointment plans until required schedule fields are structured', async () => {
         const { runtime, context } = buildRuntime(['appointments'], []);
         const planned = await runtime.planRequest({
