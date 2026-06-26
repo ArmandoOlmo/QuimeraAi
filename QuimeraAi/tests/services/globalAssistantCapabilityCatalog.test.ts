@@ -11,6 +11,7 @@ describe('globalAssistantCapabilityCatalog', () => {
         const analytics = catalog.modules.find(module => module.module === 'analytics');
         const email = catalog.modules.find(module => module.module === 'emailMarketing');
         const ecommerce = catalog.modules.find(module => module.module === 'ecommerce');
+        const crm = catalog.modules.find(module => module.module === 'crm');
         const media = catalog.modules.find(module => module.module === 'media');
         const createEmail = catalog.actions.find(action => action.actionType === 'create_email_campaign');
         const sendEmail = catalog.actions.find(action => action.actionType === 'send_email_campaign');
@@ -39,6 +40,13 @@ describe('globalAssistantCapabilityCatalog', () => {
             'update_inventory',
             'create_discount',
             'generate_product_copy',
+        ]));
+        expect(crm?.executableActionTypes).toEqual(expect.arrayContaining([
+            'search_leads',
+            'create_lead',
+            'update_lead',
+            'summarize_leads',
+            'create_follow_up_task',
         ]));
         expect(media?.executableActionTypes).toEqual(expect.arrayContaining([
             'generate_image',

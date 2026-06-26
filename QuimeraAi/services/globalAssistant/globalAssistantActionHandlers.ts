@@ -555,6 +555,382 @@ const createLeadHandler = (deps: GlobalAssistantActionHandlerDependencies): Hand
     rollback: rollbackCreatedRow('leads', deps),
 });
 
+const leadStatuses = new Set(['new', 'contacted', 'qualified', 'negotiation', 'won', 'lost']);
+
+const normalizeLeadStatus = (value: unknown): string | undefined => {
+    const status = readString(value);
+    if (!status) return undefined;
+    if (leadStatuses.has(status)) return status;
+    if (status === 'converted' || status === 'closed') return 'won';
+    if (status === 'showing_scheduled') return 'qualified';
+    if (status === 'offer_made') return 'negotiation';
+    return 'new';
+};
+
+const getContextLeadId = (context?: AssistantContextSnapshot): string | undefined => {
+    const entityType = normalizeForSearch(context?.activeEntityType || '');
+    if (!context?.activeEntityId) return undefined;
+    if (['lead', 'crm_lead', 'crm-lead'].includes(entityType)) {
+        return context.activeEntityId;
+    }
+    return undefined;
+};
+
+const getTargetLeadId = (
+    input: Record<string, unknown>,
+    context?: AssistantContextSnapshot,
+): string => {
+    const updates = requireObject(input, 'updates');
+    const task = requireObject(input, 'task');
+    const lead = requireObject(input, 'lead');
+    const leadId = readString(input.leadId)
+        || readString(input.lead_id)
+        || readString(input.targetId)
+        || readString(updates.leadId)
+        || readString(updates.lead_id)
+        || readString(task.leadId)
+        || readString(task.lead_id)
+        || readString(lead.id)
+        || getContextLeadId(context);
+    if (!leadId) throw new Error('leadId is required or the active context must point to a CRM lead.');
+    return leadId;
+};
+
+const readLeadRows = async (
+    client: SupabaseClientLike,
+    projectId: string,
+): Promise<Record<string, unknown>[]> => {
+    let query = client.from('leads').select('*').eq('project_id', projectId);
+    if (typeof query.limit === 'function') query = query.limit(100);
+    const result = await query;
+    if (result?.error) throw result.error;
+    return asArray(result?.data).map(asRecord).map(cloneRecord);
+};
+
+const readLeadRelatedRows = async (
+    client: SupabaseClientLike,
+    table: 'lead_tasks' | 'lead_activities',
+    projectId: string,
+): Promise<Record<string, unknown>[]> => {
+    let query = client.from(table).select('*').eq('project_id', projectId);
+    if (typeof query.limit === 'function') query = query.limit(100);
+    const result = await query;
+    if (result?.error) throw result.error;
+    return asArray(result?.data).map(asRecord).map(cloneRecord);
+};
+
+const leadSearchText = (lead: Record<string, unknown>): string => [
+    readString(lead.name),
+    readString(lead.email),
+    readString(lead.phone),
+    readString(lead.company),
+    readString(lead.source),
+    readString(lead.status),
+    readString(lead.notes),
+    ...asArray(lead.tags).map(String),
+].filter(Boolean).join(' ');
+
+const deriveLeadSearchQuery = (input: Record<string, unknown>): string => {
+    const explicit = readString(input.query);
+    if (explicit) return explicit;
+    const request = readString(input.request) || '';
+    return request
+        .replace(/\b(busca|buscar|search|encuentra|find|lead|leads|crm|prospecto|prospectos|en|el|la|los|las|de|del|por|para)\b/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim() || request;
+};
+
+const countLeadRowsBy = (
+    rows: Record<string, unknown>[],
+    field: string,
+): Record<string, number> => rows.reduce<Record<string, number>>((acc, row) => {
+    const value = readString(row[field]) || 'unknown';
+    acc[value] = (acc[value] || 0) + 1;
+    return acc;
+}, {});
+
+const searchLeadsHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const query = deriveLeadSearchQuery(input);
+        const normalizedQuery = normalizeForSearch(query);
+        const leads = await readLeadRows(client, projectId);
+        const matches = normalizedQuery
+            ? leads.filter(lead => normalizeForSearch(leadSearchText(lead)).includes(normalizedQuery))
+            : leads;
+        const sample = matches.slice(0, 10).map(lead => ({
+            id: readString(lead.id),
+            name: readString(lead.name),
+            email: readString(lead.email),
+            phone: readString(lead.phone),
+            company: readString(lead.company),
+            status: readString(lead.status),
+            source: readString(lead.source),
+            value: readNumber(lead.value) ?? 0,
+            tags: asArray(lead.tags).map(String),
+        }));
+
+        return {
+            afterSnapshot: {
+                kind: 'lead_search',
+                table: 'leads',
+                projectId,
+                query,
+                totalScanned: leads.length,
+                matchCount: matches.length,
+                matches: sample,
+                generatedAt: getNow(deps),
+            },
+            diff: {
+                searched: [`leads.${projectId}`],
+                mutatesData: false,
+            },
+        };
+    },
+});
+
+const summarizeLeadsHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const [leads, tasks, activities] = await Promise.all([
+            readLeadRows(client, projectId),
+            readLeadRelatedRows(client, 'lead_tasks', projectId),
+            readLeadRelatedRows(client, 'lead_activities', projectId),
+        ]);
+        const totalValue = leads.reduce((sum, lead) => sum + (readNumber(lead.value) ?? 0), 0);
+        const openTasks = tasks.filter(task => {
+            const status = readString(task.status);
+            return task.is_completed !== true && status !== 'completed' && status !== 'done';
+        });
+
+        return {
+            afterSnapshot: {
+                kind: 'lead_summary',
+                projectId,
+                generatedAt: getNow(deps),
+                summary: {
+                    totalLeads: leads.length,
+                    totalValue,
+                    openTasks: openTasks.length,
+                    activityCount: activities.length,
+                    byStatus: countLeadRowsBy(leads, 'status'),
+                    bySource: countLeadRowsBy(leads, 'source'),
+                    sampleLeadIds: leads.slice(0, 10).map(lead => readString(lead.id)).filter(Boolean),
+                },
+                modules: {
+                    leads: { table: 'leads', count: leads.length },
+                    tasks: { table: 'lead_tasks', count: tasks.length, openCount: openTasks.length },
+                    activities: { table: 'lead_activities', count: activities.length },
+                },
+            },
+            diff: {
+                summarized: [`leads.${projectId}`],
+                mutatesData: false,
+            },
+        };
+    },
+});
+
+const readLeadTextUpdate = (updates: Record<string, unknown>, keys: string[]): string | undefined => {
+    for (const key of keys) {
+        const value = readString(updates[key]);
+        if (value !== undefined) return value;
+    }
+    return undefined;
+};
+
+const readLeadNumberUpdate = (updates: Record<string, unknown>, keys: string[]): number | undefined => {
+    for (const key of keys) {
+        const value = readNumber(updates[key]);
+        if (value !== undefined) return value;
+    }
+    return undefined;
+};
+
+const buildLeadUpdatePatch = (
+    currentRow: Record<string, unknown>,
+    updates: Record<string, unknown>,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+): { patch: Record<string, unknown>; changedFields: string[] } => {
+    const customData = asRecord(currentRow.custom_data);
+    const nextCustomData: Record<string, unknown> = {
+        ...customData,
+        metadata: mergeAssistantMetadata(asRecord(customData.metadata), input, action, context),
+        globalAssistant: {
+            ...asRecord(customData.globalAssistant),
+            ...asRecord(buildBaseMetadata(input, action, context).globalAssistant),
+        },
+    };
+    const patch: Record<string, unknown> = {
+        updated_at: now,
+    };
+    const changedFields: string[] = [];
+    const setValue = (column: string, value: unknown) => {
+        patch[column] = value;
+        changedFields.push(column);
+    };
+    const setCustomValue = (key: string, value: unknown) => {
+        nextCustomData[key] = value;
+        changedFields.push(`custom_data.${key}`);
+    };
+
+    const name = readLeadTextUpdate(updates, ['name', 'nombre']);
+    if (name !== undefined) setValue('name', name);
+    const email = readLeadTextUpdate(updates, ['email', 'correo']);
+    if (email !== undefined) setValue('email', email);
+    const phone = readLeadTextUpdate(updates, ['phone', 'telefono', 'teléfono']);
+    if (phone !== undefined) setValue('phone', phone || null);
+    const company = readLeadTextUpdate(updates, ['company', 'empresa']);
+    if (company !== undefined) setValue('company', company || null);
+    const source = readLeadTextUpdate(updates, ['source', 'fuente']);
+    if (source !== undefined) setValue('source', source || 'manual');
+    const status = normalizeLeadStatus(updates.status ?? updates.estado);
+    if (status !== undefined) setValue('status', status);
+    const value = readLeadNumberUpdate(updates, ['value', 'valor']);
+    if (value !== undefined) setValue('value', value);
+    const notes = readLeadTextUpdate(updates, ['notes', 'notas']);
+    if (notes !== undefined) setValue('notes', notes);
+    if (Array.isArray(updates.tags)) setValue('tags', updates.tags.map(String));
+
+    const customStringKeys = [
+        'jobTitle',
+        'industry',
+        'website',
+        'linkedIn',
+        'message',
+        'aiSummary',
+        'aiAnalysis',
+        'recommendedAction',
+    ];
+    customStringKeys.forEach(key => {
+        const value = readString(updates[key]);
+        if (value !== undefined) setCustomValue(key, value);
+    });
+    const probability = readNumber(updates.probability);
+    if (probability !== undefined) setCustomValue('probability', probability);
+    const leadScore = readNumber(updates.leadScore);
+    if (leadScore !== undefined) setCustomValue('leadScore', leadScore);
+    const aiScore = readNumber(updates.aiScore);
+    if (aiScore !== undefined) setCustomValue('aiScore', aiScore);
+    if (updates.customFields !== undefined) setCustomValue('customFields', asArray(updates.customFields));
+
+    patch.custom_data = nextCustomData;
+    return { patch, changedFields: Array.from(new Set(changedFields)) };
+};
+
+const deriveLeadUpdatesFromRequest = (request: unknown): Record<string, unknown> => {
+    const text = normalizeForSearch(readString(request) || '');
+    const updates: Record<string, unknown> = {};
+    if (!text) return updates;
+    if (/\b(contacted|contactado|contactada)\b/.test(text)) updates.status = 'contacted';
+    if (/\b(qualified|calificado|calificada|cualificado|cualificada)\b/.test(text)) updates.status = 'qualified';
+    if (/\b(negotiation|negociacion|negociación)\b/.test(text)) updates.status = 'negotiation';
+    if (/\b(won|ganado|ganada|convertido|convertida|closed)\b/.test(text)) updates.status = 'won';
+    if (/\b(lost|perdido|perdida)\b/.test(text)) updates.status = 'lost';
+    const value = readRequestNumberNear(request, ['valor', 'value']);
+    if (value !== undefined) updates.value = value;
+    return updates;
+};
+
+const updateLeadHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const leadId = getTargetLeadId(input, context);
+        const now = getNow(deps);
+        const currentRow = await loadProjectScopedRow(client, 'leads', projectId, leadId);
+        const previousRow = cloneRecord(currentRow);
+        const updates = {
+            ...deriveLeadUpdatesFromRequest(input.request),
+            ...requireObject(input, 'updates'),
+            ...requireObject(input, 'leadUpdates'),
+        };
+        const { patch, changedFields } = buildLeadUpdatePatch(currentRow, updates, input, action, context, now);
+        if (changedFields.length === 0) {
+            const currentCustomData = asRecord(currentRow.custom_data);
+            patch.custom_data = {
+                ...currentCustomData,
+                assistantDrafts: {
+                    ...asRecord(currentCustomData.assistantDrafts),
+                    leadUpdate: {
+                        prompt: readString(input.request) || 'AI lead update draft',
+                        status: 'needs_review',
+                        generatedAt: now,
+                        generatedByAI: true,
+                        needsReview: true,
+                    },
+                },
+                globalAssistant: {
+                    ...asRecord(currentCustomData.globalAssistant),
+                    ...asRecord(buildBaseMetadata(input, action, context).globalAssistant),
+                },
+            };
+            changedFields.push('custom_data.assistantDrafts.leadUpdate');
+        }
+        const row = await updateProjectScopedRow(client, 'leads', projectId, leadId, patch);
+        return {
+            beforeSnapshot: { table: 'leads', id: leadId, projectId, row: previousRow },
+            afterSnapshot: { table: 'leads', id: leadId, projectId, row },
+            diff: {
+                updated: changedFields.map(field => `leads.${leadId}.${field}`),
+                reviewRequired: true,
+                rollback: 'restore_previous_lead_snapshot',
+            },
+        };
+    },
+    rollback: rollbackUpdatedProjectScopedRow('leads', deps),
+});
+
+const createFollowUpTaskHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const tenantId = getRequiredTenantId(action, context);
+        const leadId = getTargetLeadId(input, context);
+        await loadProjectScopedRow(client, 'leads', projectId, leadId);
+        const task = requireObject(input, 'task');
+        const request = readString(input.request);
+        const now = getNow(deps);
+        const dueDate = readString(task.dueDate ?? task.due_date) || null;
+        const title = readString(task.title) || titleFromRequest(request, 'AI follow-up task');
+        const row = await insertRow(client, 'lead_tasks', {
+            tenant_id: tenantId,
+            project_id: projectId,
+            lead_id: leadId,
+            title,
+            description: readString(task.description) || request || '',
+            due_date: dueDate,
+            status: readString(task.status) || 'open',
+            is_completed: false,
+            metadata: {
+                ...asRecord(task.metadata),
+                ...buildBaseMetadata(input, action, context),
+                assignedTo: readString(task.assignedTo ?? task.assigned_to) || action.userId || context?.actor.userId || null,
+                priority: readString(task.priority) || 'medium',
+                generatedByAI: true,
+                needsReview: true,
+            },
+            created_at: now,
+            updated_at: now,
+        });
+        const id = readString((row as Record<string, unknown>).id) || action.id;
+        return {
+            afterSnapshot: { table: 'lead_tasks', id, leadId, row },
+            diff: { created: [`lead_tasks.${id}`], reviewRequired: true },
+        };
+    },
+    rollback: rollbackCreatedRow('lead_tasks', deps),
+});
+
 const readRequestNumberNear = (request: unknown, terms: string[]): number | undefined => {
     const text = normalizeForSearch(readString(request) || '');
     if (!text) return undefined;
@@ -2156,7 +2532,11 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     create_email_campaign: createEmailCampaignHandler,
     create_audience: createEmailAudienceHandler,
     create_email_automation: createEmailAutomationHandler,
+    search_leads: searchLeadsHandler,
     create_lead: createLeadHandler,
+    update_lead: updateLeadHandler,
+    summarize_leads: summarizeLeadsHandler,
+    create_follow_up_task: createFollowUpTaskHandler,
     create_product: createProductHandler,
     edit_product: editProductHandler,
     create_category: createCategoryHandler,

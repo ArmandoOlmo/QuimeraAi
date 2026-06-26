@@ -46,7 +46,7 @@ const inferModule = (text: string, context: AssistantContextSnapshot): Assistant
     if (includesAny(text, ['storefront', 'escaparate'])) return 'storefront';
     if (includesAny(text, ['ecommerce', 'producto', 'product', 'products', 'pedido', 'order', 'precio', 'inventario', 'discount'])) return 'ecommerce';
     if (includesAny(text, ['email', 'audiencia', 'audience', 'automation', 'automatizacion', 'automacion'])) return 'emailMarketing';
-    if (includesAny(text, ['lead', 'crm', 'prospecto', 'follow up'])) return 'crm';
+    if (includesAny(text, ['lead', 'crm', 'prospecto', 'follow up', 'follow-up', 'seguimiento', 'tarea de seguimiento'])) return 'crm';
     if (includesAny(text, ['restaurant', 'restaurante', 'menu', 'dish', 'catering'])) return 'restaurants';
     if (includesAny(text, ['realty', 'real estate', 'propiedad', 'listing', 'open house'])) return 'realEstate';
     if (includesAny(text, ['bio page', 'biopage', 'link in bio'])) return 'bioPage';
@@ -118,6 +118,16 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
         if (includesAny(text, ['campaign', 'campana', 'marketing', 'social', 'ads', 'anuncio'])) return ['generate_realty_campaign'];
         if (includesAny(text, ['showing', 'visita', 'tour'])) return ['create_showing_request_flow'];
         return ['create_listing'];
+    }
+
+    if (module === 'crm') {
+        if (intent === 'search') return ['search_leads'];
+        if (intent === 'analyze') return ['summarize_leads'];
+        if (intent === 'create') {
+            if (includesAny(text, ['follow up', 'follow-up', 'seguimiento', 'tarea', 'task'])) return ['create_follow_up_task'];
+            return ['create_lead'];
+        }
+        if (intent === 'edit') return ['update_lead'];
     }
 
     if (module === 'analytics') {

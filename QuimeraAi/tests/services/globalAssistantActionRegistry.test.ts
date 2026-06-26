@@ -67,6 +67,10 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('update_inventory')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_discount')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_lead')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('search_leads')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_lead')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('summarize_leads')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_follow_up_task')?.execute).toBe('function');
     });
 
     it('blocks admin actions outside owner or super admin mode', () => {

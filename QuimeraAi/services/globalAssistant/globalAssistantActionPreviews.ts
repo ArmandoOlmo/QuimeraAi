@@ -62,6 +62,12 @@ const DRAFT_PREVIEW_BY_ACTION: Record<string, {
         fallbackName: 'AI lead draft',
         createdLabel: 'CRM lead draft',
     },
+    create_follow_up_task: {
+        table: 'lead_tasks',
+        fallbackName: 'AI lead follow-up task',
+        createdLabel: 'CRM follow-up task',
+        risks: ['Task remains reviewable in CRM before being treated as an operator-approved follow-up.'],
+    },
     create_product: {
         table: 'store_products',
         fallbackName: 'AI product draft',
@@ -159,6 +165,39 @@ export function enrichAssistantExecutionPreview(
     action: AssistantAction,
     definition: AssistantActionDefinition,
 ): AssistantExecutionPreview {
+    if (action.actionType === 'update_lead') {
+        const leadId = asText(action.input.leadId) || asText(action.input.lead_id) || '$active_lead';
+        return {
+            ...preview,
+            before: {
+                table: 'leads',
+                id: leadId,
+                projectId: action.projectId,
+            },
+            after: {
+                operation: 'update_project_scoped_row',
+                table: 'leads',
+                id: leadId,
+                projectId: action.projectId,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+                needsReview: true,
+            },
+            diff: {
+                updated: [`leads.${leadId}`],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_lead_snapshot' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Updates one project-scoped CRM lead and records Global Assistant metadata.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous lead row snapshot.'] : []),
+            ],
+        };
+    }
+
     if (['edit_product', 'update_price', 'update_inventory', 'generate_product_copy'].includes(action.actionType)) {
         const productId = asText(action.input.productId) || asText(action.input.product_id) || '$active_product';
         const operation = action.actionType === 'generate_product_copy'

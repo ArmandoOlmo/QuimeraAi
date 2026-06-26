@@ -128,6 +128,32 @@ describe('globalAssistantIntentRouter', () => {
         });
     });
 
+    it('routes CRM search, summaries, lead updates, and follow-up tasks to CRM actions', () => {
+        expect(routeAssistantIntent('Busca Maria en CRM', context)).toMatchObject({
+            module: 'crm',
+            intent: 'search',
+            actionCandidates: ['search_leads'],
+        });
+
+        expect(routeAssistantIntent('Analiza los leads del CRM', context)).toMatchObject({
+            module: 'crm',
+            intent: 'analyze',
+            actionCandidates: ['summarize_leads'],
+        });
+
+        expect(routeAssistantIntent('Actualiza este lead a qualified', context)).toMatchObject({
+            module: 'crm',
+            intent: 'edit',
+            actionCandidates: ['update_lead'],
+        });
+
+        expect(routeAssistantIntent('Crea una tarea de seguimiento para este lead', context)).toMatchObject({
+            module: 'crm',
+            intent: 'create',
+            actionCandidates: ['create_follow_up_task'],
+        });
+    });
+
     it('routes analytics summaries, blockers, reports, and exports to explicit read actions', () => {
         expect(routeAssistantIntent('Revisa analytics del proyecto', context)).toMatchObject({
             module: 'analytics',

@@ -273,6 +273,192 @@ describe('Global Assistant default action handlers', () => {
         expect(products[0].data.metadata.globalAssistant.actionType).toBe('create_product');
     });
 
+    it('searches and summarizes CRM leads without mutating rows', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['crm'], []);
+        fakeSupabase.rowsByTable.leads = [
+            { id: 'lead-1', tenant_id: 'tenant-1', project_id: 'project-1', name: 'Maria Torres', email: 'maria@test.com', status: 'new', source: 'bio_page', value: 250, tags: ['vip'] },
+            { id: 'lead-2', tenant_id: 'tenant-1', project_id: 'project-1', name: 'Luis Rivera', email: 'luis@test.com', status: 'qualified', source: 'chatbot', value: 500, tags: [] },
+            { id: 'lead-other', tenant_id: 'tenant-1', project_id: 'project-2', name: 'Maria Other', email: 'other@test.com', status: 'new', source: 'manual', value: 100 },
+        ];
+        fakeSupabase.rowsByTable.lead_tasks = [
+            { id: 'task-1', tenant_id: 'tenant-1', project_id: 'project-1', lead_id: 'lead-1', title: 'Call Maria', status: 'open', is_completed: false },
+            { id: 'task-2', tenant_id: 'tenant-1', project_id: 'project-1', lead_id: 'lead-2', title: 'Done', status: 'completed', is_completed: true },
+        ];
+        fakeSupabase.rowsByTable.lead_activities = [
+            { id: 'activity-1', tenant_id: 'tenant-1', project_id: 'project-1', lead_id: 'lead-1', type: 'note' },
+        ];
+
+        const searchPlan = await runtime.planRequest({
+            context,
+            request: 'Busca Maria en CRM',
+            enabledServices: ['crm'],
+            enabledFeatures: [],
+        });
+
+        expect(searchPlan.plan.actions.map(action => action.actionType)).toEqual(['search_leads']);
+        expect(searchPlan.plan.requiresConfirmation).toBe(false);
+        const searchApplied = await runtime.applyTask({ taskId: searchPlan.task.id, context });
+
+        expect(searchApplied.task.status).toBe('completed');
+        expect(searchApplied.actions[0].afterSnapshot).toMatchObject({
+            kind: 'lead_search',
+            projectId: 'project-1',
+            query: 'Maria',
+            matchCount: 1,
+            matches: [
+                expect.objectContaining({ id: 'lead-1', name: 'Maria Torres' }),
+            ],
+        });
+
+        const summaryPlan = await runtime.planRequest({
+            context,
+            request: 'Analiza los leads del CRM',
+            enabledServices: ['crm'],
+            enabledFeatures: [],
+        });
+
+        expect(summaryPlan.plan.actions.map(action => action.actionType)).toEqual(['summarize_leads']);
+        const summaryApplied = await runtime.applyTask({ taskId: summaryPlan.task.id, context });
+
+        expect(summaryApplied.task.status).toBe('completed');
+        expect(summaryApplied.actions[0].afterSnapshot).toMatchObject({
+            kind: 'lead_summary',
+            summary: {
+                totalLeads: 2,
+                totalValue: 750,
+                openTasks: 1,
+                activityCount: 1,
+                byStatus: {
+                    new: 1,
+                    qualified: 1,
+                },
+                bySource: {
+                    bio_page: 1,
+                    chatbot: 1,
+                },
+            },
+        });
+        expect(fakeSupabase.rowsByTable.leads).toHaveLength(3);
+        expect(fakeSupabase.rowsByTable.lead_tasks).toHaveLength(2);
+    });
+
+    it('updates an active CRM lead with confirmation and rollback', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['crm'], []);
+        fakeSupabase.rowsByTable.leads = [{
+            id: 'lead-1',
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            name: 'Maria Torres',
+            email: 'maria@test.com',
+            status: 'new',
+            source: 'manual',
+            value: 100,
+            tags: ['vip'],
+            notes: '',
+            custom_data: { leadScore: 20 },
+            created_at: '2026-06-26T12:00:00.000Z',
+            updated_at: '2026-06-26T12:00:00.000Z',
+        }];
+        const leadContext = {
+            ...context,
+            activeEntityType: 'crm_lead',
+            activeEntityId: 'lead-1',
+        };
+        const planned = await runtime.planRequest({
+            context: leadContext,
+            request: 'Actualiza este lead a qualified con valor 750',
+            enabledServices: ['crm'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['update_lead']);
+        expect(planned.plan.requiresConfirmation).toBe(true);
+        expect(planned.task.status).toBe('waiting_for_confirmation');
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: leadContext });
+
+        expect(applied.task.status).toBe('completed');
+        expect(fakeSupabase.rowsByTable.leads[0]).toMatchObject({
+            status: 'qualified',
+            value: 750,
+            updated_at: '2026-06-26T13:30:00.000Z',
+        });
+        expect(fakeSupabase.rowsByTable.leads[0].custom_data).toMatchObject({
+            leadScore: 20,
+            globalAssistant: {
+                actionType: 'update_lead',
+                needsReview: true,
+            },
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context: leadContext,
+        });
+
+        expect(fakeSupabase.rowsByTable.leads[0]).toMatchObject({
+            status: 'new',
+            value: 100,
+            updated_at: '2026-06-26T12:00:00.000Z',
+        });
+    });
+
+    it('creates and rolls back a CRM follow-up task for the active lead', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['crm'], []);
+        fakeSupabase.rowsByTable.leads = [{
+            id: 'lead-1',
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            name: 'Maria Torres',
+            status: 'qualified',
+        }];
+        const leadContext = {
+            ...context,
+            activeEntityType: 'lead',
+            activeEntityId: 'lead-1',
+        };
+        const planned = await runtime.planRequest({
+            context: leadContext,
+            request: 'Crea una tarea de seguimiento para llamar a Maria manana',
+            enabledServices: ['crm'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['create_follow_up_task']);
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: leadContext });
+        const tasks = fakeSupabase.rowsByTable.lead_tasks;
+
+        expect(applied.task.status).toBe('completed');
+        expect(tasks).toHaveLength(1);
+        expect(tasks[0]).toMatchObject({
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            lead_id: 'lead-1',
+            status: 'open',
+            is_completed: false,
+        });
+        expect(tasks[0].metadata).toMatchObject({
+            generatedByAI: true,
+            needsReview: true,
+            priority: 'medium',
+            globalAssistant: {
+                actionType: 'create_follow_up_task',
+            },
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context: leadContext,
+        });
+
+        expect(fakeSupabase.rowsByTable.lead_tasks).toHaveLength(0);
+    });
+
     it('updates ecommerce product pricing with confirmation and rollback', async () => {
         const { fakeSupabase, runtime, context } = buildRuntime(['ecommerce'], ['ecommerceEnabled']);
         fakeSupabase.rowsByTable.store_products = [{
