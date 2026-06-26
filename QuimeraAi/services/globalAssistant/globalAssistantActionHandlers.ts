@@ -37,6 +37,9 @@ const asRecord = (value: unknown): Record<string, unknown> =>
 
 const asArray = (value: unknown): unknown[] => Array.isArray(value) ? value : [];
 
+const cloneRecord = (value: Record<string, unknown>): Record<string, unknown> =>
+    JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
+
 const readString = (value: unknown): string | undefined => {
     const text = typeof value === 'string' ? value.trim() : '';
     return text || undefined;
@@ -54,6 +57,16 @@ const readNumber = (value: unknown): number | undefined => {
     if (typeof value === 'string' && value.trim()) {
         const parsed = Number(value);
         return Number.isFinite(parsed) ? parsed : undefined;
+    }
+    return undefined;
+};
+
+const readBoolean = (value: unknown): boolean | undefined => {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (['true', 'yes', 'si', 'sí', '1'].includes(normalized)) return true;
+        if (['false', 'no', '0'].includes(normalized)) return false;
     }
     return undefined;
 };
@@ -87,6 +100,15 @@ const slugify = (value: string): string =>
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '') || 'draft';
+
+const normalizeForSearch = (value: string): string =>
+    value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+const isUuid = (value: string | undefined): value is string =>
+    Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
 
 const createId = (prefix: string): string => {
     const randomId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -168,6 +190,37 @@ const insertRow = async (
     return result?.data || row;
 };
 
+const loadProjectScopedRow = async (
+    client: SupabaseClientLike,
+    table: string,
+    projectId: string,
+    id: string,
+): Promise<Record<string, unknown>> => {
+    const result = await selectSingle(client.from(table).select('*').eq('id', id).eq('project_id', projectId));
+    if (result?.error) throw result.error;
+    const row = asRecord(result?.data);
+    if (!readString(row.id)) {
+        throw new Error(`${table}.${id} was not found for project ${projectId}.`);
+    }
+    return cloneRecord(row);
+};
+
+const updateProjectScopedRow = async (
+    client: SupabaseClientLike,
+    table: string,
+    projectId: string,
+    id: string,
+    patch: Record<string, unknown>,
+): Promise<Record<string, unknown>> => {
+    const result = await selectSingle(client.from(table).update(patch).eq('id', id).eq('project_id', projectId));
+    if (result?.error) throw result.error;
+    const row = asRecord(result?.data);
+    if (!readString(row.id)) {
+        throw new Error(`${table}.${id} could not be updated for project ${projectId}.`);
+    }
+    return row;
+};
+
 const deleteRowById = async (
     client: SupabaseClientLike,
     table: string,
@@ -210,6 +263,33 @@ const rollbackCreatedRow = (
         },
         diff: {
             deleted: [`${table}.${id}`],
+        },
+    };
+};
+
+const rollbackUpdatedProjectScopedRow = (
+    table: string,
+    deps: GlobalAssistantActionHandlerDependencies,
+): HandlerPatch['rollback'] => async (_input, { snapshot }) => {
+    const before = asRecord(snapshot.beforeSnapshot);
+    const row = asRecord(before.row);
+    const id = readString(before.id) || readString(row.id);
+    const projectId = readString(before.projectId) || readString(row.project_id);
+    if (!id || !projectId || !Object.keys(row).length) {
+        throw new Error(`Cannot rollback ${table}: previous row snapshot was not recorded.`);
+    }
+    const { id: _id, ...restorePatch } = row;
+    const restored = await updateProjectScopedRow(getClient(deps), table, projectId, id, restorePatch);
+    return {
+        afterSnapshot: {
+            table,
+            id,
+            projectId,
+            row: restored,
+            restored: true,
+        },
+        diff: {
+            restored: [`${table}.${id}`],
         },
     };
 };
@@ -475,6 +555,224 @@ const createLeadHandler = (deps: GlobalAssistantActionHandlerDependencies): Hand
     rollback: rollbackCreatedRow('leads', deps),
 });
 
+const readRequestNumberNear = (request: unknown, terms: string[]): number | undefined => {
+    const text = normalizeForSearch(readString(request) || '');
+    if (!text) return undefined;
+    const findNumber = (source: string): number | undefined => {
+        const match = source.match(/\$?\s*(-?\d+(?:[.,]\d+)?)/);
+        if (!match) return undefined;
+        return readNumber(match[1].replace(',', '.'));
+    };
+
+    for (const term of terms) {
+        const index = text.indexOf(term);
+        if (index === -1) continue;
+        const parsed = findNumber(text.slice(index + term.length));
+        if (parsed !== undefined) return parsed;
+    }
+
+    return findNumber(text);
+};
+
+const getContextProductId = (context?: AssistantContextSnapshot): string | undefined => {
+    const entityType = normalizeForSearch(context?.activeEntityType || '');
+    if (!context?.activeEntityId) return undefined;
+    if (['product', 'store_product', 'ecommerce_product', 'store-products'].includes(entityType)) {
+        return context.activeEntityId;
+    }
+    return undefined;
+};
+
+const getTargetProductId = (
+    input: Record<string, unknown>,
+    context?: AssistantContextSnapshot,
+): string => {
+    const updates = requireObject(input, 'updates');
+    const product = requireObject(input, 'product');
+    const productId = readString(input.productId)
+        || readString(input.product_id)
+        || readString(input.targetId)
+        || readString(updates.productId)
+        || readString(updates.product_id)
+        || readString(product.id)
+        || getContextProductId(context);
+    if (!productId) throw new Error('productId is required or the active context must point to an ecommerce product.');
+    return productId;
+};
+
+const mergeAssistantMetadata = (
+    existing: unknown,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context?: AssistantContextSnapshot,
+): Record<string, unknown> => {
+    const current = asRecord(existing);
+    const currentGlobal = asRecord(current.globalAssistant);
+    const base = buildBaseMetadata(input, action, context);
+    return {
+        ...current,
+        ...base,
+        globalAssistant: {
+            ...currentGlobal,
+            ...asRecord(base.globalAssistant),
+        },
+    };
+};
+
+const readProductTextUpdate = (updates: Record<string, unknown>, keys: string[]): string | undefined => {
+    for (const key of keys) {
+        const value = readString(updates[key]);
+        if (value !== undefined) return value;
+    }
+    return undefined;
+};
+
+const readProductNumberUpdate = (updates: Record<string, unknown>, keys: string[]): number | undefined => {
+    for (const key of keys) {
+        const value = readNumber(updates[key]);
+        if (value !== undefined) return value;
+    }
+    return undefined;
+};
+
+const readProductBooleanUpdate = (updates: Record<string, unknown>, keys: string[]): boolean | undefined => {
+    for (const key of keys) {
+        const value = readBoolean(updates[key]);
+        if (value !== undefined) return value;
+    }
+    return undefined;
+};
+
+const buildProductUpdatePatch = (
+    currentRow: Record<string, unknown>,
+    updates: Record<string, unknown>,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+): { patch: Record<string, unknown>; changedFields: string[] } => {
+    const currentData = asRecord(currentRow.data);
+    const nextData: Record<string, unknown> = {
+        ...currentData,
+        updatedAt: now,
+        updated_at: now,
+        metadata: mergeAssistantMetadata(currentData.metadata, input, action, context),
+    };
+    const patch: Record<string, unknown> = {
+        updated_at: now,
+    };
+    const changedFields: string[] = [];
+    const setValue = (column: string, dataKey: string, value: unknown) => {
+        patch[column] = value;
+        nextData[dataKey] = value;
+        changedFields.push(column);
+    };
+
+    const name = readProductTextUpdate(updates, ['name', 'nombre', 'title', 'titulo']);
+    if (name !== undefined) {
+        setValue('name', 'name', name);
+        setValue('slug', 'slug', readString(updates.slug) || slugify(name));
+    }
+
+    const description = readProductTextUpdate(updates, ['description', 'descripcion']);
+    if (description !== undefined) setValue('description', 'description', description);
+
+    const shortDescription = readProductTextUpdate(updates, ['shortDescription', 'short_description', 'resumen']);
+    if (shortDescription !== undefined) {
+        setValue('short_description', 'shortDescription', shortDescription);
+        nextData.short_description = shortDescription;
+    }
+
+    const price = readProductNumberUpdate(updates, ['price', 'precio']);
+    if (price !== undefined) setValue('price', 'price', price);
+
+    const compareAtPrice = readProductNumberUpdate(updates, ['compareAtPrice', 'compare_at_price', 'precioComparacion']);
+    if (compareAtPrice !== undefined) {
+        setValue('compare_at_price', 'compareAtPrice', compareAtPrice);
+        nextData.compare_at_price = compareAtPrice;
+    }
+
+    const costPrice = readProductNumberUpdate(updates, ['costPrice', 'cost_price', 'cost']);
+    if (costPrice !== undefined) {
+        setValue('cost_price', 'costPrice', costPrice);
+        nextData.cost_price = costPrice;
+    }
+
+    const currency = readProductTextUpdate(updates, ['currency', 'moneda']);
+    if (currency !== undefined) setValue('currency', 'currency', currency.toUpperCase());
+
+    const sku = readProductTextUpdate(updates, ['sku']);
+    if (sku !== undefined) setValue('sku', 'sku', sku);
+
+    const barcode = readProductTextUpdate(updates, ['barcode', 'codigoBarras']);
+    if (barcode !== undefined) setValue('barcode', 'barcode', barcode);
+
+    const quantity = readProductNumberUpdate(updates, ['quantity', 'inventory_quantity', 'inventoryQuantity', 'inventario', 'stock']);
+    if (quantity !== undefined) {
+        setValue('quantity', 'quantity', quantity);
+        patch.inventory_quantity = quantity;
+        nextData.inventory_quantity = quantity;
+        nextData.inventoryQuantity = quantity;
+        changedFields.push('inventory_quantity');
+    }
+
+    const trackInventory = readProductBooleanUpdate(updates, ['trackInventory', 'track_inventory']);
+    if (trackInventory !== undefined) {
+        setValue('track_inventory', 'trackInventory', trackInventory);
+        nextData.track_inventory = trackInventory;
+    }
+
+    const lowStockThreshold = readProductNumberUpdate(updates, ['lowStockThreshold', 'low_stock_threshold']);
+    if (lowStockThreshold !== undefined) {
+        setValue('low_stock_threshold', 'lowStockThreshold', lowStockThreshold);
+        nextData.low_stock_threshold = lowStockThreshold;
+    }
+
+    if (Array.isArray(updates.images)) setValue('images', 'images', updates.images);
+    if (Array.isArray(updates.tags)) setValue('tags', 'tags', updates.tags.map(String));
+    if (Array.isArray(updates.variants)) setValue('variants', 'variants', updates.variants);
+    if (Array.isArray(updates.options)) setValue('options', 'options', updates.options);
+
+    const hasVariants = readProductBooleanUpdate(updates, ['hasVariants', 'has_variants']);
+    if (hasVariants !== undefined) {
+        setValue('has_variants', 'hasVariants', hasVariants);
+        nextData.has_variants = hasVariants;
+    }
+
+    const isDigital = readProductBooleanUpdate(updates, ['isDigital', 'is_digital']);
+    if (isDigital !== undefined) {
+        setValue('is_digital', 'isDigital', isDigital);
+        nextData.is_digital = isDigital;
+    }
+
+    const isFeatured = readProductBooleanUpdate(updates, ['isFeatured', 'is_featured']);
+    if (isFeatured !== undefined) {
+        setValue('is_featured', 'isFeatured', isFeatured);
+        nextData.is_featured = isFeatured;
+    }
+
+    const weight = readProductNumberUpdate(updates, ['weight', 'peso']);
+    if (weight !== undefined) setValue('weight', 'weight', weight);
+
+    const weightUnit = readProductTextUpdate(updates, ['weightUnit', 'weight_unit']);
+    if (weightUnit !== undefined) {
+        setValue('weight_unit', 'weightUnit', weightUnit);
+        nextData.weight_unit = weightUnit;
+    }
+
+    const categoryId = readProductTextUpdate(updates, ['categoryId', 'category_id', 'categoriaId']);
+    if (categoryId !== undefined) {
+        setValue('category_id', 'categoryId', categoryId || null);
+        nextData.category_id = categoryId || null;
+    }
+
+    const status = readProductTextUpdate(updates, ['status', 'estado']);
+    if (status && ['active', 'draft', 'archived'].includes(status)) setValue('status', 'status', status);
+
+    patch.data = nextData;
+    return { patch, changedFields: Array.from(new Set(changedFields)) };
+};
+
 const createProductHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
     validate: noValidationErrors,
     execute: async (input, { action, context }) => {
@@ -484,18 +782,29 @@ const createProductHandler = (deps: GlobalAssistantActionHandlerDependencies): H
         const request = readString(input.request);
         const now = getNow(deps);
         const name = readString(product.name) || titleFromRequest(request, 'AI product draft');
-        const id = readString(product.id) || (deps.createId || createId)('prod');
+        const explicitId = readString(product.id);
+        const generatedDraftId = explicitId || (deps.createId || createId)('prod');
+        const slug = readString(product.slug) || slugify(name);
+        const price = readNumber(product.price) ?? readRequestNumberNear(request, ['precio', 'price']) ?? 0;
+        const quantity = readNumber(product.quantity) ?? readNumber(product.inventory_quantity) ?? 0;
+        const currency = readString(product.currency) || 'USD';
         const data = {
             ...product,
-            id,
+            id: explicitId || generatedDraftId,
             project_id: projectId,
+            projectId,
             store_id: projectId,
+            storeId: projectId,
             name,
-            slug: readString(product.slug) || slugify(name),
+            slug,
             description: readString(product.description) || request || '',
-            price: readNumber(product.price) ?? 0,
-            quantity: readNumber(product.quantity) ?? 0,
+            price,
+            currency,
+            quantity,
+            inventory_quantity: quantity,
+            inventoryQuantity: quantity,
             trackInventory: product.trackInventory !== false,
+            track_inventory: product.trackInventory !== false,
             images: asArray(product.images),
             status: 'draft',
             generatedByAI: true,
@@ -506,19 +815,297 @@ const createProductHandler = (deps: GlobalAssistantActionHandlerDependencies): H
             updatedAt: now,
         };
         const row = await insertRow(client, 'store_products', {
-            id,
+            ...(isUuid(explicitId) ? { id: explicitId } : {}),
             store_id: projectId,
             project_id: projectId,
+            name,
+            slug,
+            description: data.description,
+            price,
+            currency,
+            quantity,
+            inventory_quantity: quantity,
+            track_inventory: data.track_inventory,
+            images: data.images,
+            status: 'draft',
             data,
             created_at: now,
             updated_at: now,
         });
+        const id = readString((row as Record<string, unknown>).id) || explicitId || generatedDraftId;
         return {
             afterSnapshot: { table: 'store_products', id, row },
             diff: { created: [`store_products.${id}`], reviewRequired: true },
         };
     },
     rollback: rollbackCreatedRow('store_products', deps),
+});
+
+const editProductHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const productId = getTargetProductId(input, context);
+        const now = getNow(deps);
+        const currentRow = await loadProjectScopedRow(client, 'store_products', projectId, productId);
+        const previousRow = cloneRecord(currentRow);
+        const updates = {
+            ...requireObject(input, 'updates'),
+            ...requireObject(input, 'productUpdates'),
+        };
+        const { patch, changedFields } = buildProductUpdatePatch(currentRow, updates, input, action, context, now);
+
+        if (changedFields.length === 0) {
+            const currentData = asRecord(currentRow.data);
+            patch.data = {
+                ...currentData,
+                assistantDrafts: {
+                    ...asRecord(currentData.assistantDrafts),
+                    productEdit: {
+                        prompt: readString(input.request) || 'AI product edit draft',
+                        status: 'needs_review',
+                        generatedAt: now,
+                        generatedByAI: true,
+                        needsReview: true,
+                        noAutoPublish: true,
+                    },
+                },
+                metadata: mergeAssistantMetadata(currentData.metadata, input, action, context),
+                updatedAt: now,
+                updated_at: now,
+            };
+            changedFields.push('data.assistantDrafts.productEdit');
+        }
+
+        const row = await updateProjectScopedRow(client, 'store_products', projectId, productId, patch);
+        return {
+            beforeSnapshot: { table: 'store_products', id: productId, projectId, row: previousRow },
+            afterSnapshot: { table: 'store_products', id: productId, projectId, row },
+            diff: { updated: changedFields.map(field => `store_products.${productId}.${field}`), reviewRequired: true },
+        };
+    },
+    rollback: rollbackUpdatedProjectScopedRow('store_products', deps),
+});
+
+const createCategoryHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const category = {
+            ...requireObject(input, 'category'),
+            ...requireObject(input, 'data'),
+        };
+        const request = readString(input.request);
+        const now = getNow(deps);
+        const name = readString(input.name) || readString(category.name) || titleFromRequest(request, 'AI category draft');
+        const slug = readString(input.slug) || readString(category.slug) || slugify(name);
+        const position = readNumber(input.position ?? category.position) ?? 0;
+        const row = await insertRow(client, 'store_categories', {
+            ...(isUuid(readString(category.id)) ? { id: readString(category.id) } : {}),
+            project_id: projectId,
+            store_id: projectId,
+            name,
+            slug,
+            description: readString(input.description) || readString(category.description) || request || null,
+            image_url: readString(category.imageUrl ?? category.image_url) || null,
+            parent_id: readString(category.parentId ?? category.parent_id) || null,
+            position,
+            data: {
+                ...category,
+                project_id: projectId,
+                store_id: projectId,
+                name,
+                slug,
+                position,
+                generatedByAI: true,
+                needsReview: true,
+                safeToEdit: true,
+                metadata: buildBaseMetadata(input, action, context),
+            },
+            created_at: now,
+            updated_at: now,
+        });
+        const id = readString((row as Record<string, unknown>).id) || action.id;
+        return {
+            afterSnapshot: { table: 'store_categories', id, row },
+            diff: { created: [`store_categories.${id}`], reviewRequired: true },
+        };
+    },
+    rollback: rollbackCreatedRow('store_categories', deps),
+});
+
+const updateProductPriceHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const price = readNumber(input.price) ?? readRequestNumberNear(input.request, ['precio', 'price']);
+        return {
+            valid: price !== undefined && price >= 0,
+            errors: price !== undefined && price >= 0 ? [] : ['A non-negative price is required before updating product pricing.'],
+        };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const productId = getTargetProductId(input, context);
+        const price = readNumber(input.price) ?? readRequestNumberNear(input.request, ['precio', 'price']);
+        if (price === undefined || price < 0) throw new Error('A non-negative price is required before updating product pricing.');
+        const now = getNow(deps);
+        const currentRow = await loadProjectScopedRow(client, 'store_products', projectId, productId);
+        const previousRow = cloneRecord(currentRow);
+        const currency = (readString(input.currency) || readString(asRecord(currentRow.data).currency) || readString(currentRow.currency) || 'USD').toUpperCase();
+        const { patch, changedFields } = buildProductUpdatePatch(currentRow, { price, currency }, input, action, context, now);
+        const row = await updateProjectScopedRow(client, 'store_products', projectId, productId, patch);
+        return {
+            beforeSnapshot: { table: 'store_products', id: productId, projectId, row: previousRow },
+            afterSnapshot: { table: 'store_products', id: productId, projectId, row },
+            diff: {
+                updated: changedFields.map(field => `store_products.${productId}.${field}`),
+                critical: true,
+                rollback: 'restore_previous_product_snapshot',
+            },
+        };
+    },
+    rollback: rollbackUpdatedProjectScopedRow('store_products', deps),
+});
+
+const updateProductInventoryHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const quantity = readNumber(input.quantity) ?? readRequestNumberNear(input.request, ['inventario', 'inventory', 'stock', 'cantidad']);
+        return {
+            valid: quantity !== undefined && quantity >= 0,
+            errors: quantity !== undefined && quantity >= 0 ? [] : ['A non-negative quantity is required before updating product inventory.'],
+        };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const productId = getTargetProductId(input, context);
+        const quantity = readNumber(input.quantity) ?? readRequestNumberNear(input.request, ['inventario', 'inventory', 'stock', 'cantidad']);
+        if (quantity === undefined || quantity < 0) throw new Error('A non-negative quantity is required before updating product inventory.');
+        const now = getNow(deps);
+        const currentRow = await loadProjectScopedRow(client, 'store_products', projectId, productId);
+        const previousRow = cloneRecord(currentRow);
+        const { patch, changedFields } = buildProductUpdatePatch(currentRow, { quantity }, input, action, context, now);
+        const row = await updateProjectScopedRow(client, 'store_products', projectId, productId, patch);
+        return {
+            beforeSnapshot: { table: 'store_products', id: productId, projectId, row: previousRow },
+            afterSnapshot: { table: 'store_products', id: productId, projectId, row },
+            diff: {
+                updated: changedFields.map(field => `store_products.${productId}.${field}`),
+                critical: true,
+                rollback: 'restore_previous_product_snapshot',
+            },
+        };
+    },
+    rollback: rollbackUpdatedProjectScopedRow('store_products', deps),
+});
+
+const createDiscountHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const discount = requireObject(input, 'discount');
+        const request = readString(input.request);
+        const now = getNow(deps);
+        const code = (readString(discount.code) || readString(input.code) || slugify(titleFromRequest(request, 'AI discount')).replace(/-/g, '').slice(0, 12) || 'AIDRAFT').toUpperCase();
+        const type = readString(discount.type) || (request?.includes('%') ? 'percentage' : 'fixed_amount');
+        const value = readNumber(discount.value ?? input.value)
+            ?? readRequestNumberNear(request, ['descuento', 'discount', 'coupon', 'cupon', 'codigo'])
+            ?? 0;
+        const row = await insertRow(client, 'store_discounts', {
+            ...(isUuid(readString(discount.id)) ? { id: readString(discount.id) } : {}),
+            project_id: projectId,
+            code,
+            type,
+            value,
+            applies_to: readString(discount.appliesTo ?? discount.applies_to) || 'all',
+            product_ids: asArray(discount.productIds ?? discount.product_ids).map(String),
+            category_ids: asArray(discount.categoryIds ?? discount.category_ids).map(String),
+            minimum_purchase: readNumber(discount.minimumPurchase ?? discount.minimum_purchase) ?? null,
+            minimum_quantity: readNumber(discount.minimumQuantity ?? discount.minimum_quantity) ?? null,
+            max_uses: readNumber(discount.maxUses ?? discount.max_uses) ?? null,
+            max_uses_per_customer: readNumber(discount.maxUsesPerCustomer ?? discount.max_uses_per_customer) ?? null,
+            used_count: 0,
+            customer_eligibility: readString(discount.customerEligibility ?? discount.customer_eligibility) || 'everyone',
+            starts_at: readString(discount.startsAt ?? discount.starts_at) || now,
+            ends_at: readString(discount.endsAt ?? discount.ends_at) || null,
+            is_active: false,
+            can_combine: readBoolean(discount.canCombine ?? discount.can_combine) ?? false,
+            is_automatic: false,
+            data: {
+                ...discount,
+                code,
+                type,
+                value,
+                status: 'draft',
+                isActive: false,
+                is_active: false,
+                generatedByAI: true,
+                needsReview: true,
+                noAutoPublish: true,
+                metadata: buildBaseMetadata(input, action, context),
+            },
+            created_at: now,
+            updated_at: now,
+        });
+        const id = readString((row as Record<string, unknown>).id) || action.id;
+        return {
+            afterSnapshot: { table: 'store_discounts', id, row },
+            diff: { created: [`store_discounts.${id}`], reviewRequired: true, noAutoPublish: true },
+        };
+    },
+    rollback: rollbackCreatedRow('store_discounts', deps),
+});
+
+const generateProductCopyHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const productId = getTargetProductId(input, context);
+        const prompt = readString(input.prompt) || readString(input.request) || 'Generate product copy';
+        const now = getNow(deps);
+        const currentRow = await loadProjectScopedRow(client, 'store_products', projectId, productId);
+        const previousRow = cloneRecord(currentRow);
+        const currentData = asRecord(currentRow.data);
+        const productName = readString(currentRow.name) || readString(currentData.name) || 'Product';
+        const draft = {
+            prompt,
+            title: readString(input.title) || productName,
+            shortDescription: readString(input.shortDescription) || readString(input.short_description) || titleFromRequest(prompt, `${productName} product copy`),
+            description: readString(input.description) || `${productName}\n\n${prompt}`,
+            status: 'needs_review',
+            generatedAt: now,
+            generatedByAI: true,
+            needsReview: true,
+            noAutoPublish: true,
+        };
+        const row = await updateProjectScopedRow(client, 'store_products', projectId, productId, {
+            data: {
+                ...currentData,
+                assistantDrafts: {
+                    ...asRecord(currentData.assistantDrafts),
+                    productCopy: draft,
+                },
+                metadata: mergeAssistantMetadata(currentData.metadata, input, action, context),
+                updatedAt: now,
+                updated_at: now,
+            },
+            updated_at: now,
+        });
+        return {
+            beforeSnapshot: { table: 'store_products', id: productId, projectId, row: previousRow },
+            afterSnapshot: { table: 'store_products', id: productId, projectId, row },
+            diff: {
+                updated: [`store_products.${productId}.data.assistantDrafts.productCopy`],
+                reviewRequired: true,
+                noAutoPublish: true,
+            },
+        };
+    },
+    rollback: rollbackUpdatedProjectScopedRow('store_products', deps),
 });
 
 const readMediaCategory = (value: unknown): string => {
@@ -1571,6 +2158,12 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     create_email_automation: createEmailAutomationHandler,
     create_lead: createLeadHandler,
     create_product: createProductHandler,
+    edit_product: editProductHandler,
+    create_category: createCategoryHandler,
+    update_price: updateProductPriceHandler,
+    update_inventory: updateProductInventoryHandler,
+    create_discount: createDiscountHandler,
+    generate_product_copy: generateProductCopyHandler,
     generate_image: deps => createMediaDraftAssetHandler(deps, 'image'),
     edit_image: deps => createMediaDraftAssetHandler(deps, 'image_edit'),
     generate_video: deps => createMediaDraftAssetHandler(deps, 'video'),

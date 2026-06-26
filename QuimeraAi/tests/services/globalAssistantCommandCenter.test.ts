@@ -48,6 +48,9 @@ describe('globalAssistantCommandCenter', () => {
                 { id: 'project-1', name: 'Tienda Demo', status: 'Draft' },
             ] as any,
             activeRoute: '/dashboard',
+            activeModule: 'ecommerce',
+            activeEntityType: 'ecommerce_product',
+            activeEntityId: 'product-1',
             currentSurface: 'dashboard',
             locale: 'es',
             view: 'home',
@@ -63,6 +66,11 @@ describe('globalAssistantCommandCenter', () => {
         expect(context.project).toMatchObject({
             projectId: 'project-1',
             projectName: 'Tienda Demo',
+        });
+        expect(context).toMatchObject({
+            activeModule: 'ecommerce',
+            activeEntityType: 'ecommerce_product',
+            activeEntityId: 'product-1',
         });
         expect(context.snapshot.availableProjects).toEqual([
             { id: 'project-1', name: 'Tienda Demo', status: 'Draft' },

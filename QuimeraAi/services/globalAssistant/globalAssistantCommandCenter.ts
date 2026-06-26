@@ -30,6 +30,10 @@ export interface ResolveGlobalAssistantAppContextInput {
     featureFlags?: string[];
     activeProject?: Pick<Project, 'id' | 'name' | 'status' | 'tenantId' | 'userId'> | null;
     activeRoute?: string | null;
+    activeModule?: AssistantContextSnapshot['activeModule'];
+    selectedSection?: string | null;
+    activeEntityType?: string | null;
+    activeEntityId?: string | null;
     currentSurface?: string | null;
     locale?: string | null;
     view?: string | null;
@@ -98,6 +102,10 @@ export function resolveGlobalAssistantAppContext(input: ResolveGlobalAssistantAp
         featureFlags: input.featureFlags,
         activeProject: input.activeProject,
         activeRoute: input.activeRoute,
+        activeModule: input.activeModule,
+        selectedSection: input.selectedSection,
+        activeEntityType: input.activeEntityType,
+        activeEntityId: input.activeEntityId,
         currentSurface: input.currentSurface,
         locale: input.locale,
         snapshot: {

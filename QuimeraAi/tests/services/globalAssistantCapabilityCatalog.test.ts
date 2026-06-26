@@ -31,7 +31,15 @@ describe('globalAssistantCapabilityCatalog', () => {
             'create_audience',
         ]));
         expect(email?.previewOnlyActionTypes).toContain('send_email_campaign');
-        expect(ecommerce?.executableActionTypes).toContain('create_product');
+        expect(ecommerce?.executableActionTypes).toEqual(expect.arrayContaining([
+            'create_product',
+            'edit_product',
+            'create_category',
+            'update_price',
+            'update_inventory',
+            'create_discount',
+            'generate_product_copy',
+        ]));
         expect(media?.executableActionTypes).toEqual(expect.arrayContaining([
             'generate_image',
             'edit_image',

@@ -62,6 +62,10 @@ describe('GlobalAssistantActionRegistry', () => {
         });
         expect(typeof globalAssistantActionRegistry.get('create_email_campaign')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_product')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('edit_product')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_price')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_inventory')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_discount')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_lead')?.execute).toBe('function');
     });
 

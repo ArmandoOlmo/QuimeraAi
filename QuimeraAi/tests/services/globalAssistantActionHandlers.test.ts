@@ -273,6 +273,218 @@ describe('Global Assistant default action handlers', () => {
         expect(products[0].data.metadata.globalAssistant.actionType).toBe('create_product');
     });
 
+    it('updates ecommerce product pricing with confirmation and rollback', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['ecommerce'], ['ecommerceEnabled']);
+        fakeSupabase.rowsByTable.store_products = [{
+            id: 'product-1',
+            project_id: 'project-1',
+            name: 'Cafe Premium',
+            price: 12,
+            currency: 'USD',
+            quantity: 5,
+            data: {
+                name: 'Cafe Premium',
+                price: 12,
+                currency: 'USD',
+            },
+            created_at: '2026-06-26T12:00:00.000Z',
+            updated_at: '2026-06-26T12:00:00.000Z',
+        }];
+        const productContext = {
+            ...context,
+            activeEntityType: 'ecommerce_product',
+            activeEntityId: 'product-1',
+        };
+        const planned = await runtime.planRequest({
+            context: productContext,
+            request: 'Actualiza el precio del producto a 18.50',
+            enabledServices: ['ecommerce'],
+            enabledFeatures: ['ecommerceEnabled'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['update_price']);
+        expect(planned.plan.requiresConfirmation).toBe(true);
+        expect(planned.task.status).toBe('waiting_for_confirmation');
+
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: productContext });
+        const product = fakeSupabase.rowsByTable.store_products[0];
+
+        expect(applied.task.status).toBe('completed');
+        expect(product).toMatchObject({
+            price: 18.5,
+            currency: 'USD',
+            updated_at: '2026-06-26T13:30:00.000Z',
+        });
+        expect(product.data).toMatchObject({
+            price: 18.5,
+            currency: 'USD',
+            metadata: {
+                globalAssistant: {
+                    actionType: 'update_price',
+                    needsReview: true,
+                },
+            },
+        });
+        expect(applied.actions[0].beforeSnapshot).toMatchObject({
+            table: 'store_products',
+            id: 'product-1',
+            row: {
+                price: 12,
+            },
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context: productContext,
+        });
+
+        expect(fakeSupabase.rowsByTable.store_products[0]).toMatchObject({
+            price: 12,
+            currency: 'USD',
+            updated_at: '2026-06-26T12:00:00.000Z',
+        });
+    });
+
+    it('updates ecommerce inventory on the active product context', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['ecommerce'], ['ecommerceEnabled']);
+        fakeSupabase.rowsByTable.store_products = [{
+            id: 'product-1',
+            project_id: 'project-1',
+            name: 'Cafe Premium',
+            price: 12,
+            quantity: 5,
+            inventory_quantity: 5,
+            data: {
+                name: 'Cafe Premium',
+                quantity: 5,
+                inventory_quantity: 5,
+            },
+            created_at: '2026-06-26T12:00:00.000Z',
+            updated_at: '2026-06-26T12:00:00.000Z',
+        }];
+        const productContext = {
+            ...context,
+            activeEntityType: 'store_product',
+            activeEntityId: 'product-1',
+        };
+        const planned = await runtime.planRequest({
+            context: productContext,
+            request: 'Actualiza el inventario a 9',
+            enabledServices: ['ecommerce'],
+            enabledFeatures: ['ecommerceEnabled'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['update_inventory']);
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: productContext });
+
+        expect(applied.task.status).toBe('completed');
+        expect(fakeSupabase.rowsByTable.store_products[0]).toMatchObject({
+            quantity: 9,
+            inventory_quantity: 9,
+        });
+        expect(fakeSupabase.rowsByTable.store_products[0].data).toMatchObject({
+            quantity: 9,
+            inventory_quantity: 9,
+            inventoryQuantity: 9,
+        });
+    });
+
+    it('creates ecommerce category and inactive discount drafts', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['ecommerce'], ['ecommerceEnabled']);
+        const categoryPlan = await runtime.planRequest({
+            context,
+            request: 'Crea una categoria ecommerce llamada Cafes Especiales',
+            enabledServices: ['ecommerce'],
+            enabledFeatures: ['ecommerceEnabled'],
+        });
+
+        expect(categoryPlan.plan.actions.map(action => action.actionType)).toEqual(['create_category']);
+        runtime.confirmPlan({ taskId: categoryPlan.task.id, confirmedBy: 'user-1' });
+        const categoryApplied = await runtime.applyTask({ taskId: categoryPlan.task.id, context });
+
+        expect(categoryApplied.task.status).toBe('completed');
+        expect(fakeSupabase.rowsByTable.store_categories).toHaveLength(1);
+        expect(fakeSupabase.rowsByTable.store_categories[0]).toMatchObject({
+            project_id: 'project-1',
+            store_id: 'project-1',
+            position: 0,
+        });
+        expect(fakeSupabase.rowsByTable.store_categories[0].data).toMatchObject({
+            generatedByAI: true,
+            needsReview: true,
+            safeToEdit: true,
+        });
+
+        const discountPlan = await runtime.planRequest({
+            context,
+            request: 'Crea un descuento de 15% para ecommerce',
+            enabledServices: ['ecommerce'],
+            enabledFeatures: ['ecommerceEnabled'],
+        });
+
+        expect(discountPlan.plan.actions.map(action => action.actionType)).toEqual(['create_discount']);
+        runtime.confirmPlan({ taskId: discountPlan.task.id, confirmedBy: 'user-1' });
+        const discountApplied = await runtime.applyTask({ taskId: discountPlan.task.id, context });
+
+        expect(discountApplied.task.status).toBe('completed');
+        expect(fakeSupabase.rowsByTable.store_discounts).toHaveLength(1);
+        expect(fakeSupabase.rowsByTable.store_discounts[0]).toMatchObject({
+            project_id: 'project-1',
+            type: 'percentage',
+            value: 15,
+            is_active: false,
+            is_automatic: false,
+        });
+        expect(fakeSupabase.rowsByTable.store_discounts[0].data).toMatchObject({
+            status: 'draft',
+            generatedByAI: true,
+            needsReview: true,
+            noAutoPublish: true,
+        });
+    });
+
+    it('stores generated product copy as a review-gated draft on the active product', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['ecommerce'], ['ecommerceEnabled']);
+        fakeSupabase.rowsByTable.store_products = [{
+            id: 'product-1',
+            project_id: 'project-1',
+            name: 'Cafe Premium',
+            data: { name: 'Cafe Premium' },
+            created_at: '2026-06-26T12:00:00.000Z',
+            updated_at: '2026-06-26T12:00:00.000Z',
+        }];
+        const productContext = {
+            ...context,
+            activeModule: 'ecommerce' as const,
+            activeEntityType: 'product',
+            activeEntityId: 'product-1',
+        };
+        const planned = await runtime.planRequest({
+            context: productContext,
+            request: 'Genera product copy premium para este producto',
+            enabledServices: ['ecommerce'],
+            enabledFeatures: ['ecommerceEnabled'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['generate_product_copy']);
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: productContext });
+
+        expect(applied.task.status).toBe('completed');
+        expect(fakeSupabase.rowsByTable.store_products[0].data.assistantDrafts.productCopy).toMatchObject({
+            status: 'needs_review',
+            generatedByAI: true,
+            needsReview: true,
+            noAutoPublish: true,
+        });
+        expect(fakeSupabase.rowsByTable.store_products[0].description).toBeUndefined();
+    });
+
     it('creates and rolls back a Media AI image generation draft asset', async () => {
         const { fakeSupabase, runtime, context } = buildRuntime(['aiFeatures'], []);
         const planned = await runtime.planRequest({

@@ -67,6 +67,17 @@ const DRAFT_PREVIEW_BY_ACTION: Record<string, {
         fallbackName: 'AI product draft',
         createdLabel: 'ecommerce product draft',
     },
+    create_category: {
+        table: 'store_categories',
+        fallbackName: 'AI category draft',
+        createdLabel: 'ecommerce category draft',
+    },
+    create_discount: {
+        table: 'store_discounts',
+        fallbackName: 'AI discount draft',
+        createdLabel: 'ecommerce discount draft',
+        risks: ['Discount remains inactive until reviewed and manually activated.'],
+    },
     generate_image: {
         table: 'media_assets',
         fallbackName: 'AI image generation draft',
@@ -148,6 +159,45 @@ export function enrichAssistantExecutionPreview(
     action: AssistantAction,
     definition: AssistantActionDefinition,
 ): AssistantExecutionPreview {
+    if (['edit_product', 'update_price', 'update_inventory', 'generate_product_copy'].includes(action.actionType)) {
+        const productId = asText(action.input.productId) || asText(action.input.product_id) || '$active_product';
+        const operation = action.actionType === 'generate_product_copy'
+            ? 'create_review_draft'
+            : 'update_project_scoped_row';
+        return {
+            ...preview,
+            before: {
+                table: 'store_products',
+                id: productId,
+                projectId: action.projectId,
+            },
+            after: {
+                operation,
+                table: 'store_products',
+                id: productId,
+                projectId: action.projectId,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+                generatedByAI: action.actionType === 'generate_product_copy',
+                needsReview: true,
+            },
+            diff: {
+                updated: [`store_products.${productId}`],
+                reviewRequired: action.actionType !== 'update_price' && action.actionType !== 'update_inventory',
+                rollback: definition.rollbackSupported ? 'restore_previous_product_snapshot' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                ...(action.actionType === 'update_price' || action.actionType === 'update_inventory'
+                    ? ['This changes live ecommerce data after confirmation.']
+                    : ['Changes remain traceable to the Global Assistant action and can be rolled back.']),
+                ...(definition.rollbackSupported ? ['Rollback restores the previous product row snapshot.'] : []),
+            ],
+        };
+    }
+
     if (action.actionType === 'create_chatbot_knowledge' || action.actionType === 'sync_chatbot_knowledge') {
         return {
             ...preview,

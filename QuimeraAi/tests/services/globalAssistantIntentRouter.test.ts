@@ -120,6 +120,12 @@ describe('globalAssistantIntentRouter', () => {
             module: 'ecommerce',
             actionCandidates: ['create_product'],
         });
+
+        expect(routeAssistantIntent('Genera product copy premium para este producto', context)).toMatchObject({
+            module: 'ecommerce',
+            intent: 'generate_content',
+            actionCandidates: ['generate_product_copy'],
+        });
     });
 
     it('routes analytics summaries, blockers, reports, and exports to explicit read actions', () => {

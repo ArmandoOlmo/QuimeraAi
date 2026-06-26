@@ -3560,6 +3560,7 @@ const GlobalAiAssistant: React.FC = () => {
             ? listEnabledPlatformServices(() => true)
             : listEnabledPlatformServices(canAccessService);
         const featureFlags = defaultGlobalAssistantFeatureFlags();
+        const entryMetadata = entry.metadata || {};
         const context = resolveGlobalAssistantAppContext({
             userId: user?.id || userDoc?.id || null,
             email: user?.email || userDoc?.email || null,
@@ -3575,6 +3576,10 @@ const GlobalAiAssistant: React.FC = () => {
             conversationId: assistantConversationIdRef.current,
             activeRoute: path,
             currentSurface: entry.surface,
+            activeModule: typeof entryMetadata.activeModule === 'string' ? entryMetadata.activeModule as any : undefined,
+            selectedSection: typeof entryMetadata.selectedSection === 'string' ? entryMetadata.selectedSection : null,
+            activeEntityType: typeof entryMetadata.activeEntityType === 'string' ? entryMetadata.activeEntityType : null,
+            activeEntityId: typeof entryMetadata.activeEntityId === 'string' ? entryMetadata.activeEntityId : null,
             locale: i18n.language,
             view: viewRef.current || 'dashboard',
             activeServices: enabledServices,
@@ -3582,7 +3587,7 @@ const GlobalAiAssistant: React.FC = () => {
             availableProjects: projectsRef.current,
             snapshot: {
                 entrySource: entry.source,
-                entryMetadata: entry.metadata || {},
+                entryMetadata,
                 activeProjectId: project?.id || null,
             },
         });

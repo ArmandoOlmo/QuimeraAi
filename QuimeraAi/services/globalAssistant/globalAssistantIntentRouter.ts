@@ -29,6 +29,7 @@ const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['imagen', 'image', 'foto', 'hero image'])) return 'generate_image';
     if (includesAny(text, ['video'])) return 'generate_video';
     if (includesAny(text, ['sincroniza', 'sync', 'entrena', 'entrenar', 'train', 'training'])) return 'sync';
+    if (includesAny(text, ['genera', 'generar', 'generate', 'copy', 'contenido'])) return 'generate_content';
     if (includesAny(text, ['cita', 'appointment', 'agenda', 'reserva'])) return 'schedule';
     if (includesAny(text, ['crea', 'crear', 'create', 'nuevo', 'nueva', 'add', 'agrega'])) return 'create';
     if (includesAny(text, ['edita', 'editar', 'update', 'actualiza', 'modifica', 'cambia'])) return 'edit';
@@ -43,7 +44,7 @@ const inferModule = (text: string, context: AssistantContextSnapshot): Assistant
     if (includesAny(text, ['chatcore', 'chatbot', 'knowledge', 'entrena', 'train bot'])) return 'chatbot';
     if (includesAny(text, ['business blueprint', 'blueprint'])) return 'businessBlueprint';
     if (includesAny(text, ['storefront', 'escaparate'])) return 'storefront';
-    if (includesAny(text, ['ecommerce', 'producto', 'products', 'pedido', 'order', 'precio', 'inventario', 'discount'])) return 'ecommerce';
+    if (includesAny(text, ['ecommerce', 'producto', 'product', 'products', 'pedido', 'order', 'precio', 'inventario', 'discount'])) return 'ecommerce';
     if (includesAny(text, ['email', 'audiencia', 'audience', 'automation', 'automatizacion', 'automacion'])) return 'emailMarketing';
     if (includesAny(text, ['lead', 'crm', 'prospecto', 'follow up'])) return 'crm';
     if (includesAny(text, ['restaurant', 'restaurante', 'menu', 'dish', 'catering'])) return 'restaurants';
@@ -80,6 +81,10 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
     }
 
     if (module === 'ecommerce') {
+        if (intent === 'generate_content') {
+            if (includesAny(text, ['copy', 'descripcion', 'description', 'contenido', 'product copy'])) return ['generate_product_copy'];
+            return ['edit_product'];
+        }
         if (intent === 'create') {
             if (includesAny(text, ['categoria', 'category', 'collection', 'coleccion'])) return ['create_category'];
             if (includesAny(text, ['descuento', 'discount', 'coupon', 'cupon'])) return ['create_discount'];
