@@ -21,6 +21,8 @@ The current PR-level scope adds:
 
 Quimera currently has several chat or assistant surfaces. They must remain conceptually separate so Global Assistant memory does not leak into visitor, module, or admin contexts.
 
+The detailed inventory lives in `docs/CHAT_SURFACES_INVENTORY.md`. Treat that file as the boundary map before adding new Operating Layer actions that touch ChatCore, AI Studio, Email Studio, CMS, support chat, or public widgets.
+
 | Surface | Current role | Global Assistant relationship |
 | --- | --- | --- |
 | `components/ui/GlobalAiAssistant.tsx` | Authenticated app assistant with app/project/admin context and tool execution. | Closest existing surface; GA1 formalizes the platform contract underneath it. |
@@ -38,6 +40,17 @@ Quimera currently has several chat or assistant surfaces. They must remain conce
 | `hooks/useSupportChat.ts` | Human agency/client support chat backed by support tables. | Not an AI operating assistant. |
 
 Rule: Global Assistant can orchestrate these surfaces, open them, or create drafts through their canonical services. It must not merge their raw conversation state into global memory without an explicit scoped summary.
+
+Implementation rule: when a request mentions "chat", first identify which surface owns the request:
+
+- Operating/app command: `GlobalAiAssistant`.
+- Project visitor/customer chatbot: `ChatCore`, `ChatbotWidget`, or `EmbedWidget`.
+- Project chatbot configuration/test: `AiAssistantDashboard`, `ChatbotEngineDashboard`, or `ChatSimulator`.
+- Initial website/business creation: AI Website Studio.
+- Email, SEO, CMS, restaurants, or admin content: the module assistant/service.
+- Agency/client conversation: `useSupportChat`.
+
+Only after the owner surface is identified should the Global Assistant plan an action.
 
 ## Runtime layers
 

@@ -68,6 +68,7 @@ Coverage:
 - Confirm existing AI Studio still receives dashboard initial prompts.
 - Confirm ChatCore, ChatbotWidget, SocialChatInbox, LandingChatbotWidget, and Email AI Studio are not replaced or merged.
 - Confirm `docs/GLOBAL_ASSISTANT_ARCHITECTURE.md` describes each existing chat surface.
+- Confirm `docs/CHAT_SURFACES_INVENTORY.md` is updated when a new chat, assistant, simulator, inbox, or module AI surface is added.
 - Confirm no Supabase migration was added in GA1.
 - Confirm no module connector applies changes yet.
 
@@ -102,6 +103,7 @@ When GA4-GA10 land, manually verify:
 - Dashboard request opens the Global Assistant drawer instead of only opening AI Studio.
 - Mutating dashboard request displays an Operating Layer plan and does not apply changes without confirmation.
 - Explicit "Abre AI Studio" still opens AI Studio.
+- Requests that mention "chat" resolve the correct owner surface before planning: Global Assistant, ChatCore public runtime, Chatbot Engine config/test, landing chatbot, module assistant, or human support chat.
 - Switch project by chat.
 - Edit website section by chat.
 - Create product by chat.
