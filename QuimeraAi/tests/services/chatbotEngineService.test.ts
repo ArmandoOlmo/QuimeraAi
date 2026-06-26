@@ -4,10 +4,14 @@ import type { WebsitePlan } from '../../types/websitePlan';
 import {
     executeChatbotAction,
     getChatbotReadiness,
+    getOrCreateConversation,
     getKnowledgeSources,
+    linkConversationToLead,
     recordChatbotEvent,
     runChatbotTestScenario,
+    saveConversationMessage,
     syncKnowledgeSource,
+    updateConversationParticipant,
 } from '../../services/chatbot/chatbotEngineService';
 import {
     reviewChatbotActionInBlueprint,
@@ -57,56 +61,133 @@ function buildBusinessBlueprint() {
     });
 }
 
-function createProjectClient(initialProjectData: Record<string, unknown>) {
-    let projectData = initialProjectData;
-    const events: Record<string, unknown>[] = [];
+type Tables = Record<string, any[]>;
 
-    class Query {
-        private insertPayload: Record<string, unknown> | null = null;
-        private updatePayload: Record<string, unknown> | null = null;
+class Query {
+    private filters: Array<{ field: string; op: 'eq' | 'contains'; value: any }> = [];
+    private insertRows: any[] | null = null;
+    private updatePayload: Record<string, any> | null = null;
+    private limitCount: number | null = null;
+    private orderField: string | null = null;
+    private orderAscending = true;
 
-        constructor(private table: string) { }
+    constructor(private table: string, private tables: Tables) { }
 
-        select() {
-            return this;
-        }
-
-        insert(payload: Record<string, unknown>) {
-            this.insertPayload = payload;
-            if (this.table === 'chatbot_engine_events') {
-                events.push(payload);
-            }
-            return this;
-        }
-
-        update(payload: Record<string, unknown>) {
-            this.updatePayload = payload;
-            return this;
-        }
-
-        eq() {
-            if (this.table === 'projects' && this.updatePayload) {
-                projectData = this.updatePayload.data as Record<string, unknown>;
-                return Promise.resolve({ error: null });
-            }
-            return this;
-        }
-
-        async maybeSingle() {
-            if (this.table === 'projects') {
-                return { data: { data: projectData }, error: null };
-            }
-            if (this.table === 'chatbot_engine_events' && this.insertPayload) {
-                return { data: { id: `event-${events.length}` }, error: null };
-            }
-            return { data: null, error: null };
-        }
+    select() {
+        return this;
     }
 
+    eq(field: string, value: any) {
+        this.filters.push({ field, op: 'eq', value });
+        return this;
+    }
+
+    contains(field: string, value: Record<string, unknown>) {
+        this.filters.push({ field, op: 'contains', value });
+        return this;
+    }
+
+    order(field: string, options: { ascending?: boolean } = {}) {
+        this.orderField = field;
+        this.orderAscending = options.ascending !== false;
+        return this;
+    }
+
+    limit(count: number) {
+        this.limitCount = count;
+        return this;
+    }
+
+    insert(payload: any) {
+        const rows = Array.isArray(payload) ? payload : [payload];
+        this.insertRows = rows.map((row) => ({
+            id: row.id || `${this.table}_${this.tables[this.table].length + 1}`,
+            ...row,
+        }));
+        this.tables[this.table].push(...this.insertRows);
+        return this;
+    }
+
+    update(payload: Record<string, any>) {
+        this.updatePayload = payload;
+        return this;
+    }
+
+    async maybeSingle() {
+        const result = await this.execute();
+        return { data: Array.isArray(result.data) ? result.data[0] || null : result.data, error: result.error };
+    }
+
+    async single() {
+        return this.maybeSingle();
+    }
+
+    then(resolve: (value: any) => unknown, reject?: (error: unknown) => unknown) {
+        return this.execute().then(resolve, reject);
+    }
+
+    private async execute() {
+        if (!this.tables[this.table]) this.tables[this.table] = [];
+
+        if (this.insertRows) {
+            return { data: this.limitCount === 1 ? this.insertRows.slice(0, 1) : this.insertRows, error: null };
+        }
+
+        let matches = this.tables[this.table].filter((row) => this.matches(row));
+        if (this.orderField) {
+            matches = [...matches].sort((a, b) => {
+                const left = a[this.orderField || ''];
+                const right = b[this.orderField || ''];
+                if (left === right) return 0;
+                const result = left > right ? 1 : -1;
+                return this.orderAscending ? result : -result;
+            });
+        }
+
+        if (this.updatePayload) {
+            for (const row of matches) Object.assign(row, this.updatePayload);
+            return { data: matches, error: null };
+        }
+
+        return {
+            data: this.limitCount ? matches.slice(0, this.limitCount) : matches,
+            error: null,
+        };
+    }
+
+    private matches(row: Record<string, any>) {
+        return this.filters.every((filter) => {
+            if (filter.op === 'eq') return row[filter.field] === filter.value;
+            if (filter.op === 'contains') {
+                const source = row[filter.field] || {};
+                return Object.entries(filter.value).every(([key, value]) => source[key] === value);
+            }
+            return true;
+        });
+    }
+}
+
+function createProjectClient(initialProjectData: Record<string, unknown>, extraTables: Partial<Tables> = {}) {
+    const tables: Tables = {
+        projects: [{
+            id: 'project_chatbot',
+            tenant_id: 'tenant_chatbot',
+            data: initialProjectData,
+        }],
+        chatbot_engine_events: [],
+        social_conversations: [],
+        social_messages: [],
+        ...extraTables,
+    };
+
     return {
-        from: vi.fn((table: string) => new Query(table)),
-        getProjectData: () => projectData,
-        getEvents: () => events,
+        tables,
+        from: vi.fn((table: string) => {
+            if (!tables[table]) tables[table] = [];
+            return new Query(table, tables);
+        }),
+        getProjectData: () => tables.projects[0]?.data,
+        getEvents: () => tables.chatbot_engine_events,
     };
 }
 
@@ -162,7 +243,7 @@ describe('canonical chatbotEngineService facade', () => {
             now: '2026-06-26T14:10:00.000Z',
         }, client as any);
 
-        expect(result.id).toBe('event-1');
+        expect(result.id).toBe('chatbot_engine_events_1');
         expect(client.getEvents()[0]).toMatchObject({
             project_id: 'project_chatbot',
             event_type: 'chatbot_custom_observed',
@@ -176,6 +257,236 @@ describe('canonical chatbotEngineService facade', () => {
             projectScoped: true,
             canonicalService: true,
         });
+    });
+
+    it('reuses or creates project-scoped conversations through the canonical Inbox contract', async () => {
+        const client = createProjectClient({ businessBlueprint: buildBusinessBlueprint() }, {
+            social_conversations: [
+                {
+                    id: 'conversation_other_project',
+                    tenant_id: 'tenant_other',
+                    project_id: 'project_other',
+                    channel: 'web',
+                    participant_id: 'session-1',
+                    status: 'active',
+                    message_count: 9,
+                    last_message_at: '2026-06-26T13:59:00.000Z',
+                },
+                {
+                    id: 'conversation_existing',
+                    tenant_id: 'tenant_chatbot',
+                    project_id: 'project_chatbot',
+                    channel: 'web',
+                    participant_id: 'session-1',
+                    status: 'active',
+                    message_count: 2,
+                    last_message_at: '2026-06-26T14:00:00.000Z',
+                },
+            ],
+        });
+
+        const reused = await getOrCreateConversation({
+            tenantId: 'tenant_chatbot',
+            projectId: 'project_chatbot',
+            sessionId: 'session-1',
+            participantInfo: { name: 'Ana Cliente', email: 'ana@example.com' },
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            now: '2026-06-26T15:00:00.000Z',
+        }, client as any);
+        const created = await getOrCreateConversation({
+            tenantId: 'tenant_chatbot',
+            projectId: 'project_chatbot',
+            sessionId: 'session-2',
+            participantInfo: { name: 'Luis Cliente', phone: '+17875550100' },
+            sourceSurface: 'bio_page',
+            sourceModule: 'bio-page-engine',
+            now: '2026-06-26T15:01:00.000Z',
+        }, client as any);
+
+        expect(reused).toMatchObject({
+            conversationId: 'conversation_existing',
+            messageCount: 2,
+            reused: true,
+        });
+        expect(created).toMatchObject({
+            conversationId: 'social_conversations_3',
+            sessionId: 'session-2',
+            reused: false,
+        });
+        expect(client.tables.social_conversations.find(row => row.id === 'social_conversations_3')).toMatchObject({
+            tenant_id: 'tenant_chatbot',
+            project_id: 'project_chatbot',
+            participant_name: 'Luis Cliente',
+            participant_phone: '+17875550100',
+            tags: ['web-chat', 'surface:bio_page', 'module:bio-page-engine'],
+            metadata: expect.objectContaining({
+                sessionId: 'session-2',
+                canonicalService: true,
+                projectScoped: true,
+            }),
+        });
+        expect(client.getEvents().map(event => event.event_type)).toEqual([
+            'chatbot_conversation_reused',
+            'chatbot_conversation_created',
+        ]);
+        expect(client.getEvents()).toEqual(expect.arrayContaining([
+            expect.objectContaining({ project_id: 'project_chatbot', action_type: 'save_conversation' }),
+        ]));
+    });
+
+    it('saves messages with intent metadata, updates Inbox counters, and records the Event Log', async () => {
+        const client = createProjectClient({ businessBlueprint: buildBusinessBlueprint() }, {
+            social_conversations: [{
+                id: 'conversation_1',
+                tenant_id: 'tenant_chatbot',
+                project_id: 'project_chatbot',
+                channel: 'web',
+                participant_id: 'session-1',
+                participant_name: 'Visitante Web',
+                status: 'active',
+                message_count: 1,
+                unread_count: 0,
+                tags: ['web-chat'],
+                metadata: { existing: true },
+            }],
+        });
+
+        const result = await saveConversationMessage({
+            tenantId: 'tenant_chatbot',
+            projectId: 'project_chatbot',
+            conversationId: 'conversation_1',
+            role: 'user',
+            text: 'Hola, quiero reservar una cita para el paquete premium esta semana.',
+            sourceSurface: 'booking_page',
+            sourceModule: 'appointments',
+            idempotencyKey: 'message-key-1',
+            now: '2026-06-26T15:10:00.000Z',
+        }, client as any);
+        const duplicate = await saveConversationMessage({
+            tenantId: 'tenant_chatbot',
+            projectId: 'project_chatbot',
+            conversationId: 'conversation_1',
+            role: 'user',
+            text: 'Hola, quiero reservar una cita para el paquete premium esta semana.',
+            sourceSurface: 'booking_page',
+            sourceModule: 'appointments',
+            idempotencyKey: 'message-key-1',
+            now: '2026-06-26T15:10:01.000Z',
+        }, client as any);
+
+        expect(result).toMatchObject({
+            conversationId: 'conversation_1',
+            messageId: 'social_messages_1',
+            messageCount: 2,
+            unreadCount: 1,
+            duplicate: false,
+        });
+        expect(result.intent?.actionType).toBe('create_appointment');
+        expect(duplicate).toMatchObject({
+            messageId: 'social_messages_1',
+            duplicate: true,
+        });
+        expect(client.tables.social_messages).toHaveLength(1);
+        expect(client.tables.social_messages[0]).toMatchObject({
+            tenant_id: 'tenant_chatbot',
+            project_id: 'project_chatbot',
+            conversation_id: 'conversation_1',
+            direction: 'inbound',
+            sender_id: 'session-1',
+            metadata: expect.objectContaining({
+                idempotencyKey: 'message-key-1',
+                canonicalService: true,
+                projectScoped: true,
+                intent: expect.objectContaining({
+                    actionType: 'create_appointment',
+                }),
+            }),
+        });
+        expect(client.tables.social_conversations[0]).toMatchObject({
+            message_count: 2,
+            unread_count: 1,
+            tags: expect.arrayContaining(['intent:appointment_request', 'action:create_appointment', 'surface:booking_page', 'module:appointments']),
+            metadata: expect.objectContaining({
+                existing: true,
+                lastIntentActionType: 'create_appointment',
+                canonicalService: true,
+                projectScoped: true,
+            }),
+        });
+        expect(client.getEvents().map(event => event.event_type)).toEqual([
+            'chatbot_message_saved',
+            'chatbot_intent_analyzed',
+        ]);
+    });
+
+    it('updates participant details and links conversations to CRM leads without crossing project scope', async () => {
+        const client = createProjectClient({ businessBlueprint: buildBusinessBlueprint() }, {
+            social_conversations: [{
+                id: 'conversation_1',
+                tenant_id: 'tenant_chatbot',
+                project_id: 'project_chatbot',
+                channel: 'web',
+                participant_id: 'session-1',
+                participant_name: 'Visitante Web',
+                status: 'active',
+                message_count: 2,
+                unread_count: 1,
+                tags: ['web-chat'],
+                metadata: { existing: true },
+            }],
+        });
+
+        await expect(updateConversationParticipant({
+            projectId: 'project_other',
+            conversationId: 'conversation_1',
+            participantInfo: { name: 'Should not update' },
+        }, client as any)).rejects.toMatchObject({
+            code: 'CHATBOT_CONVERSATION_NOT_FOUND',
+        });
+
+        const participant = await updateConversationParticipant({
+            tenantId: 'tenant_chatbot',
+            projectId: 'project_chatbot',
+            conversationId: 'conversation_1',
+            participantInfo: { name: 'Ana Cliente', email: 'ana@example.com' },
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            now: '2026-06-26T15:20:00.000Z',
+        }, client as any);
+        const linked = await linkConversationToLead({
+            tenantId: 'tenant_chatbot',
+            projectId: 'project_chatbot',
+            conversationId: 'conversation_1',
+            leadId: 'lead_1',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            now: '2026-06-26T15:21:00.000Z',
+        }, client as any);
+
+        expect(participant).toMatchObject({
+            conversationId: 'conversation_1',
+            reused: true,
+        });
+        expect(linked).toMatchObject({
+            conversationId: 'conversation_1',
+            leadId: 'lead_1',
+        });
+        expect(client.tables.social_conversations[0]).toMatchObject({
+            participant_name: 'Ana Cliente',
+            participant_email: 'ana@example.com',
+            lead_id: 'lead_1',
+            tags: expect.arrayContaining(['lead-linked', 'surface:website', 'module:chatcore']),
+            metadata: expect.objectContaining({
+                linkedLeadId: 'lead_1',
+                canonicalService: true,
+                projectScoped: true,
+            }),
+        });
+        expect(client.getEvents().map(event => event.event_type)).toEqual([
+            'chatbot_participant_updated',
+            'chatbot_conversation_linked_to_lead',
+        ]);
     });
 
     it('blocks runtime execution before mutations when Action Registry is not configured', async () => {

@@ -12,6 +12,7 @@ export * from './globalAssistantExecutionEngine';
 export * from './globalAssistantIntentRouter';
 export * from './globalAssistantMemoryService';
 export * from './globalAssistantModelRouter';
+export * from './globalAssistantNavigation';
 export * from './globalAssistantPermissionService';
 export * from './globalAssistantProjectResolver';
 export * from './globalAssistantRuntime';

@@ -29,6 +29,10 @@ import type {
 } from '../../types/globalAssistant.ts';
 
 type TableData = Record<string, any[]>;
+type QueryOperation = {
+    table: string;
+    type: 'insert' | 'upsert' | 'update' | 'delete';
+};
 
 class FakeQuery {
     private selected = false;
@@ -50,21 +54,25 @@ class FakeQuery {
 
     upsert(value: any) {
         this.pendingUpsert = Array.isArray(value) ? value : [value];
+        this.db.operations.push({ table: this.table, type: 'upsert' });
         return this;
     }
 
     insert(value: any) {
         this.pendingInsert = Array.isArray(value) ? value : [value];
+        this.db.operations.push({ table: this.table, type: 'insert' });
         return this;
     }
 
     update(value: any) {
         this.pendingUpdate = value;
+        this.db.operations.push({ table: this.table, type: 'update' });
         return this;
     }
 
     delete() {
         this.deleteMode = true;
+        this.db.operations.push({ table: this.table, type: 'delete' });
         return this;
     }
 
@@ -157,6 +165,8 @@ class FakeQuery {
 }
 
 class FakeSupabase {
+    readonly operations: QueryOperation[] = [];
+
     constructor(readonly tables: TableData = {}) {}
 
     from(table: string) {
@@ -404,6 +414,9 @@ describe('globalAssistantSupabaseStore', () => {
             ...toAssistantContextSnapshotRow(context),
             conversation_id: conversation.id,
         });
+        expect(fake.operations.filter(operation => operation.table === 'assistant_context_snapshots')).toEqual([
+            { table: 'assistant_context_snapshots', type: 'insert' },
+        ]);
         expect(fake.tables.assistant_tasks[0]).toMatchObject({ id: task.id, project_id: task.projectId });
         expect(fake.tables.assistant_actions[0]).toMatchObject({ id: action.id, action_type: action.actionType });
         await expect(persistence.getRollbackSnapshot!(action.id)).resolves.toMatchObject({

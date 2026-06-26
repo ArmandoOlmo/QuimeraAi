@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useUI } from '../../contexts/core/UIContext';
 import { useSafeTenant } from '../../contexts/tenant/TenantContext';
+import { useProject } from '../../contexts/project';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { usePlans } from '../../contexts/PlansContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
@@ -39,6 +40,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
     const { t } = useTranslation();
     const { userDocument, canAccessSuperAdmin } = useAuth();
     const { setIsOnboardingOpen, setOnboardingMode } = useUI();
+    const { activeProjectId, activeProject } = useProject();
     const tenantContext = useSafeTenant();
     const upgradeContext = useSafeUpgrade();
     const { plansArray, getPlan } = usePlans();
@@ -115,6 +117,11 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     entryPoint: 'dashboard_input',
                     projectCount: allUserProjectsCount,
                     routingReason: route.reason,
+                    activeModule: route.activeModule,
+                    activeProjectId,
+                    activeProjectName: typeof activeProject?.name === 'string' ? activeProject.name : null,
+                    activeTenantId: tenantContext?.currentTenant?.id || activeProject?.tenantId || null,
+                    activeTenantName: tenantContext?.currentTenant?.name || null,
                 }),
             }));
         }
@@ -141,6 +148,11 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                 entryPoint: 'dashboard_quick_action',
                 projectCount: allUserProjectsCount,
                 routingReason: 'dashboard_quick_action_routes_to_global_operating_layer',
+                activeModule: action.module,
+                activeProjectId,
+                activeProjectName: typeof activeProject?.name === 'string' ? activeProject.name : null,
+                activeTenantId: tenantContext?.currentTenant?.id || activeProject?.tenantId || null,
+                activeTenantName: tenantContext?.currentTenant?.name || null,
                 quickAction: action,
             }),
         }));

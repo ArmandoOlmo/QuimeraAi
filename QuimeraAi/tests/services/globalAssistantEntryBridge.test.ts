@@ -5,6 +5,7 @@ import {
     buildDashboardAssistantEntryMetadata,
     createGlobalAssistantEntryPayload,
     getDashboardAssistantQuickActions,
+    inferDashboardAssistantModule,
     routeDashboardAssistantEntry,
 } from '../../services/globalAssistant/globalAssistantEntryBridge.ts';
 
@@ -20,19 +21,23 @@ describe('globalAssistantEntryBridge', () => {
             destination: 'none',
             reason: 'empty_dashboard_request_ignored',
             forwardPromptToAiStudio: false,
+            activeModule: null,
         });
     });
 
-    it('routes dashboard requests to the Global Assistant by default', () => {
+    it('routes dashboard requests to the Global Assistant by default with inferred module context', () => {
         expect(routeDashboardAssistantEntry('Crea un website para un restaurante con menu y citas')).toMatchObject({
             destination: 'global_assistant',
             reason: 'dashboard_request_routes_to_global_operating_layer',
+            activeModule: 'aiStudio',
         });
         expect(routeDashboardAssistantEntry('Genera una imagen para el hero de mi proyecto')).toMatchObject({
             destination: 'global_assistant',
+            activeModule: 'media',
         });
         expect(routeDashboardAssistantEntry('Revisa mis leads y prepara follow ups')).toMatchObject({
             destination: 'global_assistant',
+            activeModule: 'crm',
         });
     });
 
@@ -41,12 +46,22 @@ describe('globalAssistantEntryBridge', () => {
             destination: 'ai_studio',
             reason: 'explicit_ai_studio_open_request',
             forwardPromptToAiStudio: false,
+            activeModule: 'aiStudio',
         });
         expect(routeDashboardAssistantEntry('Usa AI Studio para crear una landing')).toEqual({
             destination: 'ai_studio',
             reason: 'explicit_ai_studio_creation_request',
             forwardPromptToAiStudio: true,
+            activeModule: 'aiStudio',
         });
+    });
+
+    it('infers dashboard command-center modules without mixing ChatCore and Global Assistant', () => {
+        expect(inferDashboardAssistantModule('Entrena ChatCore con el conocimiento del proyecto')).toBe('chatbot');
+        expect(inferDashboardAssistantModule('Crea una campaña de email para leads nuevos')).toBe('emailMarketing');
+        expect(inferDashboardAssistantModule('Abre ecommerce y revisa inventario')).toBe('ecommerce');
+        expect(inferDashboardAssistantModule('Revisa platform errors en owner mode')).toBe('admin');
+        expect(inferDashboardAssistantModule('Solo dime que puedes hacer')).toBe(null);
     });
 
     it('builds a typed dashboard payload for the assistant drawer', () => {
@@ -54,6 +69,11 @@ describe('globalAssistantEntryBridge', () => {
             entryPoint: 'dashboard_input',
             projectCount: 3,
             routingReason: 'dashboard_request_routes_to_global_operating_layer',
+            activeModule: 'ecommerce',
+            activeProjectId: 'project-1',
+            activeProjectName: 'Casa Luna',
+            activeTenantId: 'tenant-1',
+            activeTenantName: 'Workspace One',
         });
         const payload = createGlobalAssistantEntryPayload('  Abre ecommerce  ', {
             source: 'dashboard_quick_action',
@@ -69,9 +89,18 @@ describe('globalAssistantEntryBridge', () => {
             metadata: {
                 route: 'dashboard',
                 entryPoint: 'dashboard_input',
+                sourceComponent: 'DashboardWelcome',
+                assistantLayer: 'global_operating_layer',
+                commandCenter: true,
+                memoryScopeHint: 'user_tenant_project_module_session_task',
                 projectCount: 3,
                 hasProjects: true,
                 requestedMode: 'user',
+                activeModule: 'ecommerce',
+                activeProjectId: 'project-1',
+                activeProjectName: 'Casa Luna',
+                activeTenantId: 'tenant-1',
+                activeTenantName: 'Workspace One',
                 routingReason: 'dashboard_request_routes_to_global_operating_layer',
             },
         });

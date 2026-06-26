@@ -619,7 +619,7 @@ export class SupabaseGlobalAssistantContextRepository {
     async recordContextSnapshot(context: AssistantContextSnapshot): Promise<void> {
         const { error } = await this.client
             .from('assistant_context_snapshots')
-            .upsert(toAssistantContextSnapshotRow(context));
+            .insert(toAssistantContextSnapshotRow(context));
         if (error) throw error;
     }
 }

@@ -53,6 +53,12 @@ import {
 } from '../../services/globalAssistant/globalAssistantConfirmation';
 import { globalAssistantConversationService } from '../../services/globalAssistant/globalAssistantConversationService';
 import {
+    buildOperatingLayerProjectLoadRequest,
+    findOperatingLayerNavigation,
+    formatOperatingLayerNavigationMessage,
+    readOperatingLayerNavigationTargets,
+} from '../../services/globalAssistant/globalAssistantNavigation';
+import {
     globalAssistantRuntime,
     type AssistantLifecycleResult,
     type GlobalAssistantRuntimeResult,
@@ -82,35 +88,6 @@ interface PendingOperatingLayerTask {
     context: AssistantContextSnapshot;
     actionLabels: string[];
 }
-
-interface OperatingLayerNavigation {
-    type?: string;
-    view?: string | null;
-    adminView?: string | null;
-    moduleItem?: string | null;
-    projectId?: string | null;
-    projectName?: string | null;
-    message?: string | null;
-}
-
-const asRecord = (value: unknown): Record<string, unknown> =>
-    value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
-
-const readString = (value: unknown): string | null => {
-    const text = typeof value === 'string' ? value.trim() : '';
-    return text || null;
-};
-
-const findOperatingLayerNavigation = (result: AssistantLifecycleResult): OperatingLayerNavigation | null => {
-    let latestNavigation: OperatingLayerNavigation | null = null;
-    for (const action of result.actions) {
-        const lifecycleResult = asRecord(action.metadata?.result);
-        const afterSnapshot = asRecord(lifecycleResult.afterSnapshot ?? action.afterSnapshot);
-        const navigation = asRecord(afterSnapshot.navigation);
-        if (readString(navigation.view)) latestNavigation = navigation as OperatingLayerNavigation;
-    }
-    return latestNavigation;
-};
 
 const isSpanishLocale = (locale?: string | null) => (locale || '').toLowerCase().startsWith('es');
 
@@ -3690,15 +3667,22 @@ const GlobalAiAssistant: React.FC = () => {
         const navigation = findOperatingLayerNavigation(result);
         if (!navigation) return null;
 
-        const targetProjectId = readString(navigation.projectId);
-        const targetView = readString(navigation.view) as View | null;
-        const adminView = readString(navigation.adminView) as AdminView | null;
-        const projectName = readString(navigation.projectName);
-        const moduleItem = readString(navigation.moduleItem);
+        const {
+            targetProjectId,
+            targetView,
+            adminView,
+        } = readOperatingLayerNavigationTargets(navigation);
 
         if (targetProjectId && activeProjectRef.current?.id !== targetProjectId) {
             const project = projectsRef.current.find(entry => entry.id === targetProjectId);
-            await Promise.resolve(loadProjectRef.current(targetProjectId));
+            const loadRequest = buildOperatingLayerProjectLoadRequest(navigation);
+            if (loadRequest) {
+                await Promise.resolve(loadProjectRef.current(
+                    loadRequest.projectId,
+                    loadRequest.fromAdmin,
+                    loadRequest.navigateToEditor,
+                ));
+            }
             if (project) {
                 activeProjectRef.current = project;
                 dataRef.current = project.data;
@@ -3712,16 +3696,13 @@ const GlobalAiAssistant: React.FC = () => {
             navigateToEditorRef.current(projectId);
         } else if (targetView) {
             if (targetView === 'superadmin' && adminView) {
-                setAdminViewRef.current(adminView);
+                setAdminViewRef.current(adminView as AdminView);
             }
-            setViewRef.current(targetView);
-            navigateToViewRef.current(targetView, adminView || undefined);
+            setViewRef.current(targetView as View);
+            navigateToViewRef.current(targetView as View, adminView as AdminView || undefined);
         }
 
-        const baseMessage = readString(navigation.message) || `Opened ${targetView || 'requested view'}.`;
-        const projectSuffix = projectName ? ` Project: ${projectName}.` : '';
-        const itemSuffix = moduleItem ? ` Target: ${moduleItem}.` : '';
-        return `${baseMessage}${projectSuffix}${itemSuffix}`;
+        return formatOperatingLayerNavigationMessage(navigation);
     };
 
     const processTextRequest = async (request: string, entry?: GlobalAssistantEntryPayload) => {

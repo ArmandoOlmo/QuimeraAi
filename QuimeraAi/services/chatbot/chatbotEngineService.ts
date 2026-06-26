@@ -57,8 +57,18 @@ import {
     runChatbotTestScenarioInBlueprint,
     runProjectChatbotTestLab,
 } from '../chatbotEngine/chatbotEngineTestLabService';
+import {
+    buildChatbotMessageIntentMetadata,
+    type ChatbotMessageIntentMetadataResult,
+} from '../../utils/chatbotEngine/messageIntentMetadata';
+import type {
+    ChatbotEngineSurfaceContext,
+    ChatbotEngineSurfaceContextInput,
+} from '../../utils/chatbotEngine/surfaceContext';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
+type ConversationStatus = 'active' | 'closed' | 'pending' | 'escalated';
+type ConversationMessageRole = 'user' | 'model';
 
 export interface ChatbotEngineReadinessSummary {
     projectId: string;
@@ -191,13 +201,170 @@ export interface ExecuteChatbotActionResult<T = unknown> {
     warnings: string[];
 }
 
+export interface ChatbotConversationParticipantInfo {
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    avatarUrl?: string | null;
+}
+
+export interface ChatbotConversationContextInput {
+    tenantId?: string | null;
+    projectId: string;
+    channel?: string | null;
+    sessionId?: string | null;
+    participantId?: string | null;
+    participantInfo?: ChatbotConversationParticipantInfo | null;
+    sourceSurface?: ChatbotSurface | string | null;
+    sourceModule?: string | null;
+    chatbotEngineContext?: ChatbotEngineSurfaceContextInput | ChatbotEngineSurfaceContext | null;
+    metadata?: Record<string, unknown>;
+    tags?: string[];
+    correlationId?: string | null;
+    actorType?: ChatbotEngineActorType;
+    actorId?: string | null;
+    idempotencyKey?: string | null;
+    now?: string;
+}
+
+export interface ChatbotConversationResult {
+    projectId: string;
+    tenantId?: string | null;
+    conversationId: string;
+    sessionId: string;
+    messageCount: number;
+    reused: boolean;
+    eventId?: string;
+    duplicate?: boolean;
+    warning?: string;
+}
+
+export interface ChatbotConversationMessageInput {
+    tenantId?: string | null;
+    projectId: string;
+    conversationId: string;
+    role: ConversationMessageRole;
+    text: string;
+    channel?: string | null;
+    isVoiceMessage?: boolean;
+    messageType?: string | null;
+    mediaUrl?: string | null;
+    senderId?: string | null;
+    senderName?: string | null;
+    recipientId?: string | null;
+    sourceSurface?: ChatbotSurface | string | null;
+    sourceModule?: string | null;
+    chatbotEngineContext?: ChatbotEngineSurfaceContextInput | ChatbotEngineSurfaceContext | null;
+    metadata?: Record<string, unknown>;
+    correlationId?: string | null;
+    actorType?: ChatbotEngineActorType;
+    actorId?: string | null;
+    idempotencyKey?: string | null;
+    now?: string;
+}
+
+export interface ChatbotConversationMessageResult {
+    projectId: string;
+    tenantId?: string | null;
+    conversationId: string;
+    messageId: string;
+    messageCount: number;
+    unreadCount: number;
+    duplicate: boolean;
+    intent: ChatbotMessageIntentMetadataResult['intent'];
+    eventIds: string[];
+    warnings: string[];
+}
+
+export interface ChatbotConversationUpdateInput {
+    tenantId?: string | null;
+    projectId: string;
+    conversationId: string;
+    participantInfo?: ChatbotConversationParticipantInfo | null;
+    status?: ConversationStatus | null;
+    sourceSurface?: ChatbotSurface | string | null;
+    sourceModule?: string | null;
+    chatbotEngineContext?: ChatbotEngineSurfaceContextInput | ChatbotEngineSurfaceContext | null;
+    metadata?: Record<string, unknown>;
+    tags?: string[];
+    correlationId?: string | null;
+    actorType?: ChatbotEngineActorType;
+    actorId?: string | null;
+    idempotencyKey?: string | null;
+    now?: string;
+}
+
+export interface ChatbotConversationLeadLinkInput extends ChatbotConversationUpdateInput {
+    leadId: string;
+}
+
 const unsupportedActionMessage = [
     'ES: Esta accion aun no tiene ejecutor canónico en Chatbot Engine Service.',
     'EN: This action does not yet have a canonical executor in Chatbot Engine Service.',
 ].join('\n');
 
+const conversationNotFoundMessage = [
+    'ES: La conversacion no existe o no pertenece a este proyecto.',
+    'EN: The conversation does not exist or does not belong to this project.',
+].join('\n');
+
 function uniqueStrings(values: string[]): string[] {
     return Array.from(new Set(values.filter(Boolean)));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function cleanString(value: unknown, maxLength = 240): string | undefined {
+    if (typeof value !== 'string') return undefined;
+    const trimmed = value.trim();
+    return trimmed ? trimmed.slice(0, maxLength) : undefined;
+}
+
+function cleanKeyPart(value: unknown): string {
+    if (value === null || value === undefined || value === '') return 'none';
+    return String(value)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9._-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 80) || 'none';
+}
+
+function cleanTags(values: unknown): string[] {
+    if (!Array.isArray(values)) return [];
+    return Array.from(new Set(
+        values
+            .filter((item): item is string => typeof item === 'string')
+            .map(item => item.trim())
+            .filter(Boolean),
+    )).slice(0, 40);
+}
+
+function compactMetadata(value: unknown): Record<string, unknown> {
+    if (!isRecord(value)) return {};
+    return Object.fromEntries(
+        Object.entries(value)
+            .filter(([key, entry]) => key.length <= 80 && entry !== undefined)
+            .slice(0, 60),
+    );
+}
+
+function serviceIdempotencyKey(parts: unknown[]): string {
+    return ['chatbot-engine-service', ...parts].map(cleanKeyPart).join(':').slice(0, 240);
+}
+
+function surfaceTags(input: {
+    sourceSurface?: ChatbotSurface | string | null;
+    sourceModule?: string | null;
+    extra?: string[];
+}): string[] {
+    return uniqueStrings([
+        ...(input.extra || []),
+        input.sourceSurface ? `surface:${input.sourceSurface}` : '',
+        input.sourceModule ? `module:${input.sourceModule}` : '',
+    ]).slice(0, 40);
 }
 
 function combineReadiness(readiness: BlueprintReadiness[]): BlueprintReadiness {
@@ -485,6 +652,563 @@ export async function runChatbotTestScenario(
         chatbotBlueprint: persisted.chatbotBlueprint,
         eventId: event.id,
         warnings: event.warning ? [event.warning] : [],
+    };
+}
+
+async function loadProjectConversation(
+    client: SupabaseLike,
+    projectId: string,
+    conversationId: string,
+): Promise<Record<string, any>> {
+    const { data, error } = await client
+        .from('social_conversations')
+        .select('id,tenant_id,project_id,channel,participant_id,participant_name,participant_email,participant_phone,status,message_count,unread_count,tags,metadata,lead_id,notes')
+        .eq('id', conversationId)
+        .eq('project_id', projectId)
+        .maybeSingle();
+
+    if (error) throw error;
+    if (!data?.id) {
+        throw Object.assign(new Error(conversationNotFoundMessage), {
+            code: 'CHATBOT_CONVERSATION_NOT_FOUND',
+            status: 404,
+        });
+    }
+
+    return data as Record<string, any>;
+}
+
+function buildConversationMetadataPatch(input: {
+    sourceSurface?: ChatbotSurface | string | null;
+    sourceModule?: string | null;
+    chatbotEngineContext?: ChatbotEngineSurfaceContextInput | ChatbotEngineSurfaceContext | null;
+    metadata?: Record<string, unknown>;
+    now?: string;
+}) {
+    return {
+        sourceSurface: cleanString(input.sourceSurface, 120) || 'website',
+        sourceModule: cleanString(input.sourceModule, 120) || 'chatcore',
+        chatbotEngineContext: input.chatbotEngineContext || null,
+        ...compactMetadata(input.metadata),
+        lastCanonicalServiceUpdateAt: input.now,
+    };
+}
+
+export async function getOrCreateConversation(
+    input: ChatbotConversationContextInput,
+    client: SupabaseLike = supabase,
+): Promise<ChatbotConversationResult> {
+    const now = input.now || new Date().toISOString();
+    const projectId = cleanString(input.projectId, 120);
+    if (!projectId) {
+        throw Object.assign(new Error('ES: projectId es requerido.\nEN: projectId is required.'), {
+            code: 'CHATBOT_PROJECT_ID_REQUIRED',
+            status: 400,
+        });
+    }
+
+    const sessionId = cleanString(input.sessionId || input.participantId, 120) || `session_${Date.now()}`;
+    const channel = cleanString(input.channel, 40) || 'web';
+    const sourceSurface = cleanString(input.sourceSurface, 120) || 'website';
+    const sourceModule = cleanString(input.sourceModule, 120) || 'chatcore';
+    const participant = input.participantInfo || {};
+    const participantName = cleanString(participant.name, 200) || 'Visitante Web';
+    const metadata = {
+        ...buildConversationMetadataPatch({
+            sourceSurface,
+            sourceModule,
+            chatbotEngineContext: input.chatbotEngineContext,
+            metadata: input.metadata,
+            now,
+        }),
+        sessionId,
+        canonicalService: true,
+        projectScoped: true,
+    };
+
+    const existing = await client
+        .from('social_conversations')
+        .select('id,message_count')
+        .eq('project_id', projectId)
+        .eq('channel', channel)
+        .eq('participant_id', sessionId)
+        .eq('status', 'active')
+        .order('last_message_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (existing.error) throw existing.error;
+    if (existing.data?.id) {
+        const event = await recordChatbotEvent({
+            tenantId: input.tenantId,
+            projectId,
+            eventType: 'chatbot_conversation_reused',
+            actionType: 'save_conversation',
+            actionStatus: 'observed',
+            sourceSurface,
+            sourceModule,
+            conversationId: existing.data.id,
+            actorType: input.actorType || 'visitor',
+            actorId: input.actorId,
+            idempotencyKey: input.idempotencyKey || serviceIdempotencyKey([projectId, 'conversation-reused', sessionId]),
+            correlationId: input.correlationId,
+            metadata: {
+                ...metadata,
+                messageCount: Number(existing.data.message_count || 0),
+            },
+            now,
+        }, client);
+
+        return {
+            projectId,
+            tenantId: input.tenantId,
+            conversationId: String(existing.data.id),
+            sessionId,
+            messageCount: Number(existing.data.message_count || 0),
+            reused: true,
+            eventId: event.id,
+            duplicate: event.duplicate,
+            warning: event.warning,
+        };
+    }
+
+    const created = await client
+        .from('social_conversations')
+        .insert({
+            tenant_id: input.tenantId || null,
+            project_id: projectId,
+            channel,
+            participant_id: sessionId,
+            participant_name: participantName,
+            participant_avatar: cleanString(participant.avatarUrl, 1000) || null,
+            participant_email: cleanString(participant.email, 320) || null,
+            participant_phone: cleanString(participant.phone, 80) || null,
+            status: 'active',
+            started_at: now,
+            last_message_at: now,
+            message_count: 0,
+            unread_count: 0,
+            tags: surfaceTags({
+                sourceSurface,
+                sourceModule,
+                extra: ['web-chat', ...cleanTags(input.tags)],
+            }),
+            metadata,
+            created_at: now,
+            updated_at: now,
+        })
+        .select('id')
+        .single();
+
+    if (created.error) throw created.error;
+    const conversationId = String(created.data.id);
+    const event = await recordChatbotEvent({
+        tenantId: input.tenantId,
+        projectId,
+        eventType: 'chatbot_conversation_created',
+        actionType: 'save_conversation',
+        actionStatus: 'observed',
+        sourceSurface,
+        sourceModule,
+        conversationId,
+        actorType: input.actorType || 'visitor',
+        actorId: input.actorId,
+        idempotencyKey: input.idempotencyKey || serviceIdempotencyKey([projectId, 'conversation-created', sessionId]),
+        correlationId: input.correlationId,
+        metadata: {
+            ...metadata,
+            participantCaptured: Boolean(participant.name || participant.email || participant.phone),
+        },
+        now,
+    }, client);
+
+    return {
+        projectId,
+        tenantId: input.tenantId,
+        conversationId,
+        sessionId,
+        messageCount: 0,
+        reused: false,
+        eventId: event.id,
+        duplicate: event.duplicate,
+        warning: event.warning,
+    };
+}
+
+async function findIdempotentMessage(
+    input: ChatbotConversationMessageInput,
+    client: SupabaseLike,
+): Promise<Record<string, any> | null> {
+    const idempotencyKey = cleanString(input.idempotencyKey, 240);
+    if (!idempotencyKey) return null;
+
+    const { data, error } = await client
+        .from('social_messages')
+        .select('id,metadata')
+        .eq('project_id', input.projectId)
+        .eq('conversation_id', input.conversationId)
+        .contains('metadata', { idempotencyKey })
+        .order('timestamp', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (error) throw error;
+    return data?.id ? data as Record<string, any> : null;
+}
+
+export async function saveConversationMessage(
+    input: ChatbotConversationMessageInput,
+    client: SupabaseLike = supabase,
+): Promise<ChatbotConversationMessageResult> {
+    const now = input.now || new Date().toISOString();
+    const text = cleanString(input.text, 12000);
+    if (!text) {
+        throw Object.assign(new Error('ES: El texto del mensaje es requerido.\nEN: Message text is required.'), {
+            code: 'CHATBOT_MESSAGE_TEXT_REQUIRED',
+            status: 400,
+        });
+    }
+
+    const conversation = await loadProjectConversation(client, input.projectId, input.conversationId);
+    const duplicateMessage = await findIdempotentMessage(input, client);
+    if (duplicateMessage) {
+        return {
+            projectId: input.projectId,
+            tenantId: input.tenantId || conversation.tenant_id || null,
+            conversationId: input.conversationId,
+            messageId: String(duplicateMessage.id),
+            messageCount: Number(conversation.message_count || 0),
+            unreadCount: Number(conversation.unread_count || 0),
+            duplicate: true,
+            intent: null,
+            eventIds: [],
+            warnings: [],
+        };
+    }
+
+    const sourceSurface = cleanString(input.sourceSurface, 120) || 'website';
+    const sourceModule = cleanString(input.sourceModule, 120) || 'chatcore';
+    const isUser = input.role === 'user';
+    const idempotencyKey = cleanString(input.idempotencyKey, 240)
+        || serviceIdempotencyKey([input.projectId, input.conversationId, input.role, Number(conversation.message_count || 0) + 1]);
+    const intentMetadata = buildChatbotMessageIntentMetadata({
+        role: input.role,
+        text,
+        isVoiceMessage: input.isVoiceMessage,
+        sourceSurface,
+        sourceModule,
+        chatbotEngineContext: input.chatbotEngineContext,
+        previousConversationMetadata: conversation.metadata,
+        previousConversationTags: conversation.tags,
+        now,
+    });
+    const messageMetadata = {
+        ...intentMetadata.messageMetadata,
+        ...compactMetadata(input.metadata),
+        idempotencyKey,
+        canonicalService: true,
+        projectScoped: true,
+    };
+
+    const message = await client
+        .from('social_messages')
+        .insert({
+            tenant_id: input.tenantId || conversation.tenant_id || null,
+            project_id: input.projectId,
+            conversation_id: input.conversationId,
+            channel: cleanString(input.channel, 40) || conversation.channel || 'web',
+            direction: isUser ? 'inbound' : 'outbound',
+            sender_id: cleanString(input.senderId, 120) || (isUser ? conversation.participant_id : 'ai-assistant'),
+            sender_name: cleanString(input.senderName, 200) || (isUser ? 'Visitante' : 'Asistente AI'),
+            recipient_id: cleanString(input.recipientId, 120) || (isUser ? 'ai-assistant' : conversation.participant_id),
+            message: text,
+            message_type: cleanString(input.messageType, 40) || (input.isVoiceMessage ? 'audio' : 'text'),
+            media_url: cleanString(input.mediaUrl, 1000) || null,
+            timestamp: now,
+            status: 'delivered',
+            processed_by_ai: !isUser,
+            metadata: messageMetadata,
+            created_at: now,
+            updated_at: now,
+        })
+        .select('id')
+        .single();
+
+    if (message.error) throw message.error;
+    const nextMessageCount = Number(conversation.message_count || 0) + 1;
+    const nextUnreadCount = isUser ? Number(conversation.unread_count || 0) + 1 : Number(conversation.unread_count || 0);
+    const conversationMetadata = {
+        ...(isRecord(conversation.metadata) ? conversation.metadata : {}),
+        ...buildConversationMetadataPatch({
+            sourceSurface,
+            sourceModule,
+            chatbotEngineContext: input.chatbotEngineContext,
+            metadata: input.metadata,
+            now,
+        }),
+        ...(intentMetadata.conversationMetadata || {}),
+        canonicalService: true,
+        projectScoped: true,
+    };
+    const conversationTags = surfaceTags({
+        sourceSurface,
+        sourceModule,
+        extra: [
+            ...cleanTags(conversation.tags),
+            ...cleanTags(intentMetadata.conversationTags),
+        ],
+    });
+
+    const updated = await client
+        .from('social_conversations')
+        .update({
+            last_message_at: now,
+            message_count: nextMessageCount,
+            unread_count: nextUnreadCount,
+            metadata: conversationMetadata,
+            tags: conversationTags,
+            updated_at: now,
+        })
+        .eq('id', input.conversationId)
+        .eq('project_id', input.projectId);
+
+    if (updated.error) throw updated.error;
+
+    const eventIds: string[] = [];
+    const warnings: string[] = [];
+    const savedEvent = await recordChatbotEvent({
+        tenantId: input.tenantId || conversation.tenant_id || null,
+        projectId: input.projectId,
+        eventType: 'chatbot_message_saved',
+        actionType: 'save_message',
+        actionStatus: 'observed',
+        sourceSurface,
+        sourceModule,
+        conversationId: input.conversationId,
+        messageId: String(message.data.id),
+        actorType: input.actorType || (isUser ? 'visitor' : 'system'),
+        actorId: input.actorId,
+        idempotencyKey,
+        correlationId: input.correlationId,
+        metadata: {
+            role: input.role,
+            direction: isUser ? 'inbound' : 'outbound',
+            messageLength: text.length,
+            isVoiceMessage: input.isVoiceMessage === true,
+            intent: intentMetadata.intent,
+        },
+        now,
+    }, client);
+    if (savedEvent.id) eventIds.push(savedEvent.id);
+    if (savedEvent.warning) warnings.push(savedEvent.warning);
+
+    if (intentMetadata.intent) {
+        const intentEvent = await recordChatbotEvent({
+            tenantId: input.tenantId || conversation.tenant_id || null,
+            projectId: input.projectId,
+            eventType: 'chatbot_intent_analyzed',
+            actionType: 'analyze_intent',
+            actionStatus: 'observed',
+            sourceSurface,
+            sourceModule,
+            conversationId: input.conversationId,
+            messageId: String(message.data.id),
+            actorType: input.actorType || 'visitor',
+            actorId: input.actorId,
+            idempotencyKey: serviceIdempotencyKey([input.projectId, 'intent', input.conversationId, message.data.id, intentMetadata.intent.primaryIntent]),
+            correlationId: input.correlationId,
+            metadata: {
+                intent: intentMetadata.intent,
+                customerRequestSignal: true,
+            },
+            now,
+        }, client);
+        if (intentEvent.id) eventIds.push(intentEvent.id);
+        if (intentEvent.warning) warnings.push(intentEvent.warning);
+    }
+
+    return {
+        projectId: input.projectId,
+        tenantId: input.tenantId || conversation.tenant_id || null,
+        conversationId: input.conversationId,
+        messageId: String(message.data.id),
+        messageCount: nextMessageCount,
+        unreadCount: nextUnreadCount,
+        duplicate: false,
+        intent: intentMetadata.intent,
+        eventIds,
+        warnings,
+    };
+}
+
+export async function updateConversationParticipant(
+    input: ChatbotConversationUpdateInput,
+    client: SupabaseLike = supabase,
+): Promise<ChatbotConversationResult> {
+    const now = input.now || new Date().toISOString();
+    const conversation = await loadProjectConversation(client, input.projectId, input.conversationId);
+    const sourceSurface = cleanString(input.sourceSurface, 120) || 'website';
+    const sourceModule = cleanString(input.sourceModule, 120) || 'chatcore';
+    const participant = input.participantInfo || {};
+    const updates: Record<string, unknown> = {
+        metadata: {
+            ...(isRecord(conversation.metadata) ? conversation.metadata : {}),
+            ...buildConversationMetadataPatch({
+                sourceSurface,
+                sourceModule,
+                chatbotEngineContext: input.chatbotEngineContext,
+                metadata: input.metadata,
+                now,
+            }),
+            canonicalService: true,
+            projectScoped: true,
+        },
+        tags: surfaceTags({
+            sourceSurface,
+            sourceModule,
+            extra: [
+                ...cleanTags(conversation.tags),
+                ...cleanTags(input.tags),
+            ],
+        }),
+        updated_at: now,
+    };
+
+    const name = cleanString(participant.name, 200);
+    const email = cleanString(participant.email, 320);
+    const phone = cleanString(participant.phone, 80);
+    const avatar = cleanString(participant.avatarUrl, 1000);
+    if (name) updates.participant_name = name;
+    if (email) updates.participant_email = email;
+    if (phone) updates.participant_phone = phone;
+    if (avatar) updates.participant_avatar = avatar;
+    if (input.status && ['active', 'closed', 'pending', 'escalated'].includes(input.status)) updates.status = input.status;
+
+    const updated = await client
+        .from('social_conversations')
+        .update(updates)
+        .eq('id', input.conversationId)
+        .eq('project_id', input.projectId);
+
+    if (updated.error) throw updated.error;
+
+    const event = await recordChatbotEvent({
+        tenantId: input.tenantId || conversation.tenant_id || null,
+        projectId: input.projectId,
+        eventType: 'chatbot_participant_updated',
+        actionType: 'save_conversation',
+        actionStatus: 'observed',
+        sourceSurface,
+        sourceModule,
+        conversationId: input.conversationId,
+        actorType: input.actorType || 'visitor',
+        actorId: input.actorId,
+        idempotencyKey: input.idempotencyKey || serviceIdempotencyKey([input.projectId, 'participant', input.conversationId, now]),
+        correlationId: input.correlationId,
+        metadata: {
+            participantUpdated: Boolean(name || email || phone || avatar),
+            status: updates.status || conversation.status || null,
+        },
+        now,
+    }, client);
+
+    return {
+        projectId: input.projectId,
+        tenantId: input.tenantId || conversation.tenant_id || null,
+        conversationId: input.conversationId,
+        sessionId: String(conversation.participant_id || ''),
+        messageCount: Number(conversation.message_count || 0),
+        reused: true,
+        eventId: event.id,
+        duplicate: event.duplicate,
+        warning: event.warning,
+    };
+}
+
+export async function linkConversationToLead(
+    input: ChatbotConversationLeadLinkInput,
+    client: SupabaseLike = supabase,
+): Promise<ChatbotConversationResult & { leadId: string }> {
+    const leadId = cleanString(input.leadId, 120);
+    if (!leadId) {
+        throw Object.assign(new Error('ES: leadId es requerido.\nEN: leadId is required.'), {
+            code: 'CHATBOT_LEAD_ID_REQUIRED',
+            status: 400,
+        });
+    }
+
+    const now = input.now || new Date().toISOString();
+    const conversation = await loadProjectConversation(client, input.projectId, input.conversationId);
+    const sourceSurface = cleanString(input.sourceSurface, 120) || 'website';
+    const sourceModule = cleanString(input.sourceModule, 120) || 'chatcore';
+    const metadata = {
+        ...(isRecord(conversation.metadata) ? conversation.metadata : {}),
+        ...buildConversationMetadataPatch({
+            sourceSurface,
+            sourceModule,
+            chatbotEngineContext: input.chatbotEngineContext,
+            metadata: input.metadata,
+            now,
+        }),
+        linkedLeadId: leadId,
+        leadLinkedAt: now,
+        canonicalService: true,
+        projectScoped: true,
+    };
+
+    const updated = await client
+        .from('social_conversations')
+        .update({
+            lead_id: leadId,
+            metadata,
+            tags: surfaceTags({
+                sourceSurface,
+                sourceModule,
+                extra: [
+                    ...cleanTags(conversation.tags),
+                    'lead-linked',
+                    ...cleanTags(input.tags),
+                ],
+            }),
+            updated_at: now,
+        })
+        .eq('id', input.conversationId)
+        .eq('project_id', input.projectId);
+
+    if (updated.error) throw updated.error;
+
+    const event = await recordChatbotEvent({
+        tenantId: input.tenantId || conversation.tenant_id || null,
+        projectId: input.projectId,
+        eventType: 'chatbot_conversation_linked_to_lead',
+        actionType: 'link_conversation_to_lead',
+        actionStatus: 'observed',
+        sourceSurface,
+        sourceModule,
+        conversationId: input.conversationId,
+        leadId,
+        actorType: input.actorType || 'visitor',
+        actorId: input.actorId,
+        idempotencyKey: input.idempotencyKey || serviceIdempotencyKey([input.projectId, 'lead-link', input.conversationId, leadId]),
+        correlationId: input.correlationId,
+        metadata: {
+            previousLeadId: conversation.lead_id || null,
+            leadLinked: true,
+        },
+        now,
+    }, client);
+
+    return {
+        projectId: input.projectId,
+        tenantId: input.tenantId || conversation.tenant_id || null,
+        conversationId: input.conversationId,
+        sessionId: String(conversation.participant_id || ''),
+        messageCount: Number(conversation.message_count || 0),
+        reused: true,
+        leadId,
+        eventId: event.id,
+        duplicate: event.duplicate,
+        warning: event.warning,
     };
 }
 

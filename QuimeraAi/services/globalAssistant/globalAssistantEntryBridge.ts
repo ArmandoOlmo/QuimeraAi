@@ -23,6 +23,7 @@ export interface DashboardAssistantEntryRoute {
     destination: 'global_assistant' | 'ai_studio' | 'none';
     reason: string;
     forwardPromptToAiStudio: boolean;
+    activeModule: AssistantModuleTarget | null;
 }
 
 export interface DashboardAssistantQuickAction {
@@ -42,6 +43,10 @@ export interface DashboardAssistantEntryMetadataInput {
     routingReason: string;
     entryPoint: 'dashboard_input' | 'dashboard_quick_action';
     activeModule?: AssistantModuleTarget | null;
+    activeProjectId?: string | null;
+    activeProjectName?: string | null;
+    activeTenantId?: string | null;
+    activeTenantName?: string | null;
     quickAction?: Pick<DashboardAssistantQuickAction, 'id' | 'category' | 'module'> | null;
 }
 
@@ -78,6 +83,152 @@ const AI_STUDIO_CREATION_TERMS = [
     'usa ai studio',
     'use ai studio',
 ];
+
+const NEW_WEBSITE_CREATION_TERMS = [
+    'crea',
+    'crear',
+    'create',
+    'genera',
+    'generar',
+    'build',
+    'construye',
+    'nuevo',
+    'nueva',
+    'new',
+];
+
+const WEBSITE_TARGET_TERMS = [
+    'website',
+    'sitio web',
+    'pagina web',
+    'web para',
+    'landing',
+    'landing page',
+    'site',
+];
+
+const EXISTING_WEBSITE_EDIT_TERMS = [
+    'seccion',
+    'section',
+    'bloque',
+    'block',
+    'hero',
+    'footer',
+    'headline',
+    'copy',
+    'texto',
+    'editor',
+    'editar',
+    'edita',
+    'edit',
+    'actualiza',
+    'modifica',
+    'reordena',
+    'oculta',
+    'visibilidad',
+];
+
+const BUSINESS_CREATION_TARGET_TERMS = [
+    'para un',
+    'para una',
+    'para mi',
+    'for a',
+    'for my',
+    'negocio',
+    'business',
+    'restaurante',
+    'clinica',
+    'clinic',
+    'realty',
+    'tienda',
+    'servicio',
+    'empresa',
+    'marca',
+];
+
+const DASHBOARD_MODULE_TERMS: Array<{ module: AssistantModuleTarget; terms: string[] }> = [
+    {
+        module: 'admin',
+        terms: ['admin', 'owner mode', 'super admin', 'platform error', 'errores plataforma', 'service availability', 'feature flag', 'ai log', 'api log'],
+    },
+    {
+        module: 'chatbot',
+        terms: ['chatcore', 'chatbot', 'knowledge', 'entrena', 'entrenar', 'train bot', 'visitor chat'],
+    },
+    {
+        module: 'businessBlueprint',
+        terms: ['business blueprint', 'blueprint', 'business map', 'mapa de negocio'],
+    },
+    {
+        module: 'storefront',
+        terms: ['storefront', 'escaparate', 'storefront builder', 'product card', 'catalog section'],
+    },
+    {
+        module: 'ecommerce',
+        terms: ['ecommerce', 'producto', 'product', 'products', 'pedido', 'order', 'precio', 'inventario', 'discount', 'cupon', 'categoria'],
+    },
+    {
+        module: 'emailMarketing',
+        terms: ['email', 'correo', 'campana', 'campaign', 'audiencia', 'audience', 'automation', 'automatizacion', 'newsletter'],
+    },
+    {
+        module: 'appointments',
+        terms: ['cita', 'appointment', 'agenda', 'reserva', 'booking', 'calendar', 'availability', 'disponibilidad'],
+    },
+    {
+        module: 'restaurants',
+        terms: ['restaurant', 'restaurante', 'menu', 'dish', 'catering', 'reservation flow'],
+    },
+    {
+        module: 'realEstate',
+        terms: ['realty', 'real estate', 'propiedad', 'listing', 'open house', 'inmobiliaria'],
+    },
+    {
+        module: 'bioPage',
+        terms: ['bio page', 'biopage', 'bio link', 'biolink', 'link in bio', 'link de bio'],
+    },
+    {
+        module: 'crm',
+        terms: ['lead', 'crm', 'prospecto', 'follow up', 'follow-up', 'seguimiento', 'clientes potenciales'],
+    },
+    {
+        module: 'analytics',
+        terms: ['analytics', 'metricas', 'analiticas', 'reporte', 'report', 'readiness'],
+    },
+    {
+        module: 'finance',
+        terms: ['finance', 'finanzas', 'invoice', 'factura', 'gasto', 'accounting'],
+    },
+    {
+        module: 'media',
+        terms: ['imagen', 'image', 'foto', 'video', 'asset', 'media', 'hero image'],
+    },
+    {
+        module: 'website',
+        terms: ['website', 'web', 'pagina', 'editor', 'hero', 'seccion', 'section', 'website builder'],
+    },
+    {
+        module: 'project',
+        terms: ['proyecto', 'proyectos', 'project', 'projects', 'cambia de proyecto', 'switch project'],
+    },
+];
+
+const isNewWebsiteCreationRequest = (text: string): boolean =>
+    includesAny(text, NEW_WEBSITE_CREATION_TERMS)
+    && includesAny(text, WEBSITE_TARGET_TERMS)
+    && includesAny(text, BUSINESS_CREATION_TARGET_TERMS)
+    && !includesAny(text, EXISTING_WEBSITE_EDIT_TERMS);
+
+export function inferDashboardAssistantModule(request: string): AssistantModuleTarget | null {
+    const text = normalize(request);
+    if (!text) return null;
+    if (includesAny(text, AI_STUDIO_OPEN_TERMS) || includesAny(text, AI_STUDIO_CREATION_TERMS) || isNewWebsiteCreationRequest(text)) {
+        return 'aiStudio';
+    }
+
+    const match = DASHBOARD_MODULE_TERMS.find(({ terms }) => includesAny(text, terms));
+    return match?.module || null;
+}
 
 const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
     {
@@ -157,12 +308,14 @@ export function getDashboardAssistantQuickActions(input: {
 
 export function routeDashboardAssistantEntry(request: string): DashboardAssistantEntryRoute {
     const text = normalize(request);
+    const activeModule = inferDashboardAssistantModule(request);
 
     if (!text) {
         return {
             destination: 'none',
             reason: 'empty_dashboard_request_ignored',
             forwardPromptToAiStudio: false,
+            activeModule: null,
         };
     }
 
@@ -171,6 +324,7 @@ export function routeDashboardAssistantEntry(request: string): DashboardAssistan
             destination: 'ai_studio',
             reason: 'explicit_ai_studio_creation_request',
             forwardPromptToAiStudio: true,
+            activeModule: 'aiStudio',
         };
     }
 
@@ -179,6 +333,7 @@ export function routeDashboardAssistantEntry(request: string): DashboardAssistan
             destination: 'ai_studio',
             reason: 'explicit_ai_studio_open_request',
             forwardPromptToAiStudio: false,
+            activeModule: 'aiStudio',
         };
     }
 
@@ -186,6 +341,7 @@ export function routeDashboardAssistantEntry(request: string): DashboardAssistan
         destination: 'global_assistant',
         reason: 'dashboard_request_routes_to_global_operating_layer',
         forwardPromptToAiStudio: false,
+        activeModule,
     };
 }
 
@@ -193,6 +349,10 @@ export function buildDashboardAssistantEntryMetadata(input: DashboardAssistantEn
     const metadata: Record<string, unknown> = {
         route: 'dashboard',
         entryPoint: input.entryPoint,
+        sourceComponent: 'DashboardWelcome',
+        assistantLayer: 'global_operating_layer',
+        commandCenter: true,
+        memoryScopeHint: 'user_tenant_project_module_session_task',
         projectCount: input.projectCount,
         hasProjects: input.projectCount > 0,
         routingReason: input.routingReason,
@@ -203,6 +363,10 @@ export function buildDashboardAssistantEntryMetadata(input: DashboardAssistantEn
 
     const activeModule = input.activeModule || input.quickAction?.module || null;
     if (activeModule) metadata.activeModule = activeModule;
+    if (input.activeProjectId) metadata.activeProjectId = input.activeProjectId;
+    if (input.activeProjectName) metadata.activeProjectName = input.activeProjectName;
+    if (input.activeTenantId) metadata.activeTenantId = input.activeTenantId;
+    if (input.activeTenantName) metadata.activeTenantName = input.activeTenantName;
     if (input.quickAction) {
         metadata.quickActionId = input.quickAction.id;
         metadata.quickActionCategory = input.quickAction.category;
