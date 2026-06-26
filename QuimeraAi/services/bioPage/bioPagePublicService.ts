@@ -31,6 +31,45 @@ function isDuplicateLeadError(error: unknown): boolean {
         || /leads_bio_page_project_email_source_unique_idx|duplicate key|unique constraint/i.test(candidate?.message || '');
 }
 
+const BIO_PAGE_ANALYTICS_METADATA_ALLOWED_KEYS = new Set([
+    'bioPageId',
+    'bioSlug',
+    'blockId',
+    'linkId',
+    'source',
+    'sourceModule',
+    'sourceComponent',
+    'sourceEvent',
+    'emailMarketingSource',
+    'audienceId',
+    'audienceSync',
+    'crmWrite',
+    'duplicate',
+    'consentRequired',
+]);
+
+const BIO_PAGE_ANALYTICS_METADATA_BLOCKED_KEY_RE = /(email|phone|name|message|note|address|recipient|dedupe|canonical|sourceEntity|subscriberId|leadId|audienceError|leadForm)/i;
+
+function sanitizeBioPageAnalyticsValue(value: unknown): unknown {
+    if (value === null || typeof value === 'boolean') return value;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+    if (typeof value === 'string') return value.trim().slice(0, 160);
+    return undefined;
+}
+
+export function sanitizeBioPageAnalyticsMetadata(metadata: Record<string, unknown> = {}): Record<string, unknown> {
+    const sanitized: Record<string, unknown> = {};
+
+    Object.entries(metadata).forEach(([key, value]) => {
+        if (!BIO_PAGE_ANALYTICS_METADATA_ALLOWED_KEYS.has(key)) return;
+        if (key !== 'emailMarketingSource' && BIO_PAGE_ANALYTICS_METADATA_BLOCKED_KEY_RE.test(key)) return;
+        const sanitizedValue = sanitizeBioPageAnalyticsValue(value);
+        if (sanitizedValue !== undefined) sanitized[key] = sanitizedValue;
+    });
+
+    return sanitized;
+}
+
 export function getPublicRenderableBioPage(page: BioPageData): BioPageData | null {
     if (page.status !== 'published' || page.isPublished !== true) return null;
 
@@ -271,6 +310,7 @@ export async function submitBioPageLead(input: {
         notes: input.lead.message || input.lead.notes || null,
         custom_data: leadMetadata,
     };
+    const analyticsMetadata = sanitizeBioPageAnalyticsMetadata(leadMetadata);
 
     const { data, error } = await client.from('leads').insert(payload).select('id').single();
     if (error) {
@@ -280,7 +320,7 @@ export async function submitBioPageLead(input: {
                 eventType: 'bio_lead_submitted',
                 blockId: input.blockId,
                 source,
-                metadata: { crmWrite: 'duplicate', duplicate: true, email, ...leadMetadata },
+                metadata: { ...analyticsMetadata, crmWrite: 'duplicate', duplicate: true },
             }, client);
             return null;
         }
@@ -290,7 +330,7 @@ export async function submitBioPageLead(input: {
             eventType: 'bio_lead_submitted',
             blockId: input.blockId,
             source,
-            metadata: { crmWrite: 'blocked', reason: error.message, ...leadMetadata },
+            metadata: { ...analyticsMetadata, crmWrite: 'blocked' },
         }, client);
         return null;
     }
@@ -300,7 +340,7 @@ export async function submitBioPageLead(input: {
         eventType: 'bio_lead_submitted',
         blockId: input.blockId,
         source,
-        metadata: { leadId: data.id, ...leadMetadata },
+        metadata: { ...analyticsMetadata, crmWrite: 'created' },
     }, client);
 
     return data.id;
@@ -363,11 +403,11 @@ export async function subscribeBioPageEmail(input: {
         eventType: 'bio_email_subscribed',
         blockId: input.blockId,
         source: 'email_subscribe',
-        metadata: {
+        metadata: sanitizeBioPageAnalyticsMetadata({
             audienceId,
             audienceSync: audienceId ? 'deferred' : 'not_configured',
             ...metadata,
-        },
+        }),
     }, client);
 
     return { ok: true };

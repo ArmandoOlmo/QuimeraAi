@@ -24,6 +24,45 @@ const supabase = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } },
 );
 
+const BIO_PAGE_ANALYTICS_METADATA_ALLOWED_KEYS = new Set([
+  "bioPageId",
+  "bioSlug",
+  "blockId",
+  "linkId",
+  "source",
+  "sourceModule",
+  "sourceComponent",
+  "sourceEvent",
+  "emailMarketingSource",
+  "audienceId",
+  "audienceSync",
+  "crmWrite",
+  "duplicate",
+  "consentRequired",
+]);
+
+const BIO_PAGE_ANALYTICS_METADATA_BLOCKED_KEY_RE = /(email|phone|name|message|note|address|recipient|dedupe|canonical|sourceEntity|subscriberId|leadId|audienceError|leadForm)/i;
+
+function sanitizeBioPageAnalyticsValue(value: unknown): unknown {
+  if (value === null || typeof value === "boolean") return value;
+  if (typeof value === "number") return Number.isFinite(value) ? value : undefined;
+  if (typeof value === "string") return value.trim().slice(0, 160);
+  return undefined;
+}
+
+function sanitizeBioPageAnalyticsMetadata(metadata: Record<string, unknown> = {}): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {};
+
+  Object.entries(metadata).forEach(([key, value]) => {
+    if (!BIO_PAGE_ANALYTICS_METADATA_ALLOWED_KEYS.has(key)) return;
+    if (key !== "emailMarketingSource" && BIO_PAGE_ANALYTICS_METADATA_BLOCKED_KEY_RE.test(key)) return;
+    const sanitizedValue = sanitizeBioPageAnalyticsValue(value);
+    if (sanitizedValue !== undefined) sanitized[key] = sanitizedValue;
+  });
+
+  return sanitized;
+}
+
 const provider = createResendEmailProvider(RESEND_API_KEY);
 const providers = createEmailProviderRegistry({
   resendApiKey: RESEND_API_KEY,
@@ -547,14 +586,12 @@ async function subscribeBioPageEmail(payload: Record<string, unknown>) {
       block_id: block?.id || blockId || null,
       event_type: "bio_email_subscribed",
       source: "email_subscribe",
-      metadata: {
+      metadata: sanitizeBioPageAnalyticsMetadata({
         ...metadata,
         audienceId,
         audienceSync,
-        audienceError,
         duplicate: Boolean(existingSubscriber?.id),
-        subscriberId: subscriber?.id || existingSubscriber?.id || null,
-      },
+      }),
     });
   if (eventError) console.warn("[email-api] Bio Page subscribe event was not recorded:", eventError.message);
 

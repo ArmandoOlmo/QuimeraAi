@@ -31,6 +31,7 @@ import {
     recordBioPageClick,
     recordBioPageView,
     sanitizeBioMediaUrl,
+    sanitizeBioPageAnalyticsMetadata,
     sanitizeBioUrl,
     subscribeBioPageEmail,
     submitBioPageLead,
@@ -321,6 +322,48 @@ describe('bioPageEngineService', () => {
         expect(sanitizeBioMediaUrl('/uploads/bio/hero.jpg')).toBe('/uploads/bio/hero.jpg');
         expect(sanitizeBioMediaUrl('cdn.creator.test/hero.jpg')).toBe('https://cdn.creator.test/hero.jpg');
         expect(getSafeBioBlockMediaUrl({ data: { url: 'sms:+15555555555' } })).toBe('');
+    });
+
+    it('redacts contact and workflow PII from public Bio Page analytics metadata', () => {
+        expect(sanitizeBioPageAnalyticsMetadata({
+            bioPageId: 'bio-1',
+            bioSlug: 'creator-shop',
+            blockId: 'block-lead',
+            sourceModule: 'bio-page-engine',
+            sourceComponent: 'BioPageLeadFormBlock',
+            sourceEvent: 'bio_page_lead_capture',
+            emailMarketingSource: 'bio_page',
+            audienceId: 'audience-1',
+            audienceSync: 'synced',
+            crmWrite: 'duplicate',
+            duplicate: true,
+            consentRequired: true,
+            email: 'ana@example.com',
+            recipientEmail: 'ana@example.com',
+            phone: '+1 787 555 0100',
+            name: 'Ana',
+            message: 'I need help',
+            bioPageDedupeKey: 'email:ana@example.com',
+            canonicalEmail: { recipientEmail: 'ana@example.com' },
+            sourceEntityId: 'ana@example.com',
+            leadForm: { values: { email: 'ana@example.com' } },
+            subscriberId: 'subscriber-1',
+            leadId: 'lead-1',
+            audienceError: 'blocked for ana@example.com',
+        })).toEqual({
+            bioPageId: 'bio-1',
+            bioSlug: 'creator-shop',
+            blockId: 'block-lead',
+            sourceModule: 'bio-page-engine',
+            sourceComponent: 'BioPageLeadFormBlock',
+            sourceEvent: 'bio_page_lead_capture',
+            emailMarketingSource: 'bio_page',
+            audienceId: 'audience-1',
+            audienceSync: 'synced',
+            crmWrite: 'duplicate',
+            duplicate: true,
+            consentRequired: true,
+        });
     });
 
     it('builds channel-specific tracked Bio Page URLs with sanitized UTM settings', () => {
@@ -1486,10 +1529,19 @@ describe('bioPageEngineService', () => {
                 block_id: null,
                 source: 'bio_page',
                 metadata: {
+                    bioPageId: 'bio-1',
+                    bioSlug: 'creator-shop',
                     blockId: 'block-lead',
+                    source: 'bio_page',
+                    sourceModule: 'bio-page-engine',
+                    crmWrite: 'created',
                 },
             },
         });
+        expect(JSON.stringify(inserts[1].row.metadata)).not.toContain('ana@example.com');
+        expect(inserts[1].row.metadata).not.toHaveProperty('bioPageDedupeKey');
+        expect(inserts[1].row.metadata).not.toHaveProperty('canonicalEmail');
+        expect(inserts[1].row.metadata).not.toHaveProperty('leadId');
     });
 
     it('treats repeated Bio Page lead submissions as idempotent CRM duplicates', async () => {
@@ -1548,14 +1600,20 @@ describe('bioPageEngineService', () => {
                 block_id: null,
                 source: 'bio_page',
                 metadata: {
+                    bioPageId: 'bio-1',
+                    bioSlug: 'creator-shop',
                     blockId: 'block-lead',
+                    source: 'bio_page',
+                    sourceModule: 'bio-page-engine',
                     crmWrite: 'duplicate',
                     duplicate: true,
-                    email: 'ana@example.com',
-                    bioPageDedupeKey: 'email:ana@example.com',
                 },
             },
         });
+        expect(JSON.stringify(inserts[1].row.metadata)).not.toContain('ana@example.com');
+        expect(inserts[1].row.metadata).not.toHaveProperty('email');
+        expect(inserts[1].row.metadata).not.toHaveProperty('bioPageDedupeKey');
+        expect(inserts[1].row.metadata).not.toHaveProperty('canonicalEmail');
     });
 
     it('routes public email subscribers through the Email API when available', async () => {
@@ -1629,6 +1687,16 @@ describe('bioPageEngineService', () => {
             consent: true,
             audienceId: 'audience-1',
             blockId: 'block-email',
+            metadata: {
+                sourceComponent: 'BioPageEmailSubscribeBlock',
+                sourceEvent: 'bio_page_email_subscribe',
+                consentRequired: true,
+                email: 'leak@example.com',
+                recipientEmail: 'leak@example.com',
+                canonicalEmail: { recipientEmail: 'leak@example.com' },
+                subscriberId: 'subscriber-private',
+                audienceError: 'blocked for leak@example.com',
+            },
         }, client as any);
 
         expect(result).toEqual({ ok: true });
@@ -1652,10 +1720,19 @@ describe('bioPageEngineService', () => {
                 metadata: {
                     audienceId: 'audience-1',
                     audienceSync: 'deferred',
+                    sourceComponent: 'BioPageEmailSubscribeBlock',
+                    sourceEvent: 'bio_page_email_subscribe',
+                    consentRequired: true,
                     blockId: 'block-email',
                 },
             },
         });
+        expect(JSON.stringify(inserts[1].row.metadata)).not.toContain('leak@example.com');
+        expect(inserts[1].row.metadata).not.toHaveProperty('email');
+        expect(inserts[1].row.metadata).not.toHaveProperty('recipientEmail');
+        expect(inserts[1].row.metadata).not.toHaveProperty('canonicalEmail');
+        expect(inserts[1].row.metadata).not.toHaveProperty('subscriberId');
+        expect(inserts[1].row.metadata).not.toHaveProperty('audienceError');
     });
 
     it('summarizes Bio Page analytics by source, block, and link', async () => {
