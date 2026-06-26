@@ -694,6 +694,141 @@ const createSearchProjectsHandler = (deps: GlobalAssistantActionHandlerDependenc
     },
 });
 
+const TENANT_SEARCH_STOP_WORDS = new Set([
+    'admin',
+    'busca',
+    'buscar',
+    'encuentra',
+    'find',
+    'search',
+    'super',
+    'tenant',
+    'tenants',
+    'workspace',
+    'workspaces',
+]);
+
+const normalizeTenantSearchQuery = (input: Record<string, unknown>): string => (
+    readString(input.query)
+    || readString(input.search)
+    || readString(input.request)
+    || ''
+);
+
+const tenantSearchTerms = (query: string): string[] =>
+    normalizeForSearch(query)
+        .split(/\s+/)
+        .map(term => term.trim())
+        .filter(term => term.length > 1 && !TENANT_SEARCH_STOP_WORDS.has(term));
+
+const isSuperAdminContext = (context?: AssistantContextSnapshot): boolean =>
+    context?.actor.isSuperAdmin === true || context?.actor.mode === 'super_admin' || context?.actor.mode === 'system';
+
+const readTenantRowsForSearch = async (
+    client: SupabaseClientLike,
+    context?: AssistantContextSnapshot,
+): Promise<Record<string, unknown>[]> => {
+    const snapshotTenants = asArray(context?.snapshot?.availableTenants)
+        .map(tenant => asRecord(tenant))
+        .filter(tenant => readString(tenant.id));
+    if (snapshotTenants.length > 0) return snapshotTenants.map(tenant => cloneRecord(tenant));
+
+    let builder = client.from('tenants').select('*');
+    if (!isSuperAdminContext(context)) {
+        if (context?.tenant.tenantId) {
+            builder = builder.eq('id', context.tenant.tenantId);
+        } else if (context?.actor.userId) {
+            builder = builder.eq('owner_user_id', context.actor.userId);
+        }
+    }
+
+    const result = await builder;
+    if (result?.error) throw result.error;
+    return asArray(result?.data).map(row => cloneRecord(asRecord(row))).filter(row => readString(row.id));
+};
+
+const tenantRowSearchText = (row: Record<string, unknown>): string => normalizeForSearch([
+    readString(row.id),
+    readDisplayText(row.name),
+    readString(row.email),
+    readString(row.company_name) || readString(row.companyName),
+    readString(row.status),
+    readString(row.type),
+    readString(row.subscription_plan) || readString(row.subscriptionPlan),
+    readString(row.owner_user_id) || readString(row.ownerUserId),
+].filter(Boolean).join(' '));
+
+const tenantRowSearchScore = (row: Record<string, unknown>, terms: string[]): number => {
+    if (terms.length === 0) return 1;
+    const haystack = tenantRowSearchText(row);
+    return terms.reduce((score, term) => score + (haystack.includes(term) ? 1 : 0), 0);
+};
+
+const tenantSearchMatch = (row: Record<string, unknown>): Record<string, unknown> => {
+    const limits = asRecord(row.limits);
+    const usage = asRecord(row.usage);
+    return {
+        id: readString(row.id),
+        name: readDisplayText(row.name) || readString(row.id),
+        email: readString(row.email) || null,
+        companyName: readString(row.company_name) || readString(row.companyName) || null,
+        type: readString(row.type) || null,
+        status: readString(row.status) || null,
+        subscriptionPlan: readString(row.subscription_plan) || readString(row.subscriptionPlan) || null,
+        ownerUserId: readString(row.owner_user_id) || readString(row.ownerUserId) || null,
+        ownerTenantId: readString(row.owner_tenant_id) || readString(row.ownerTenantId) || null,
+        usage: {
+            projectCount: readNumber(usage.projectCount) ?? readNumber(usage.project_count) ?? null,
+            userCount: readNumber(usage.userCount) ?? readNumber(usage.user_count) ?? null,
+            storageUsedGB: readNumber(usage.storageUsedGB) ?? readNumber(usage.storage_used_gb) ?? null,
+            aiCreditsUsed: readNumber(usage.aiCreditsUsed) ?? readNumber(usage.ai_credits_used) ?? null,
+        },
+        limits: {
+            maxProjects: readNumber(limits.maxProjects) ?? readNumber(limits.max_projects) ?? null,
+            maxUsers: readNumber(limits.maxUsers) ?? readNumber(limits.max_users) ?? null,
+            maxStorageGB: readNumber(limits.maxStorageGB) ?? readNumber(limits.max_storage_gb) ?? null,
+            maxAiCredits: readNumber(limits.maxAiCredits) ?? readNumber(limits.max_ai_credits) ?? null,
+        },
+        createdAt: readString(row.created_at) || readString(row.createdAt) || null,
+        updatedAt: readString(row.updated_at) || readString(row.updatedAt) || null,
+    };
+};
+
+const createSearchTenantsHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const query = normalizeTenantSearchQuery(input);
+        const terms = tenantSearchTerms(query);
+        const rows = await readTenantRowsForSearch(client, context);
+        const matches = rows
+            .map(row => ({ row, score: tenantRowSearchScore(row, terms) }))
+            .filter(entry => terms.length === 0 || entry.score > 0)
+            .sort((left, right) => right.score - left.score || String(readDisplayText(left.row.name) || '').localeCompare(String(readDisplayText(right.row.name) || '')))
+            .slice(0, 12)
+            .map(entry => tenantSearchMatch(entry.row));
+
+        return {
+            afterSnapshot: {
+                kind: 'tenant_search',
+                query,
+                mode: context?.actor.mode || action.mode || null,
+                tenantId: context?.tenant.tenantId || null,
+                userId: context?.actor.userId || null,
+                matchCount: matches.length,
+                matches,
+                source: asArray(context?.snapshot?.availableTenants).length > 0 ? 'context_snapshot' : 'supabase.tenants',
+                scope: isSuperAdminContext(context) ? 'all_tenants' : 'current_tenant_or_owner',
+            },
+            diff: {
+                searched: ['tenants'],
+                mutatesData: false,
+                actionType: action.actionType,
+            },
+        };
+    },
+});
+
 const createUpdateProjectMetadataHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
     validate: input => {
         const errors: string[] = [];
@@ -3284,6 +3419,156 @@ const createMediaDraftAssetHandler = (
     rollback: rollbackCreatedRow('media_assets', deps),
 });
 
+const readMediaAssetProjectId = (asset: Record<string, unknown>): string | undefined => {
+    const metadata = asRecord(asset.metadata);
+    return readString(asset.project_id)
+        || readString(asset.projectId)
+        || readString(metadata.projectId)
+        || readString(metadata.project_id);
+};
+
+const readMediaAssetTenantId = (asset: Record<string, unknown>): string | undefined => {
+    const metadata = asRecord(asset.metadata);
+    return readString(asset.tenant_id)
+        || readString(asset.tenantId)
+        || readString(metadata.tenantId)
+        || readString(metadata.tenant_id);
+};
+
+const readMediaAssetUrl = (asset: Record<string, unknown>): string | undefined => {
+    const metadata = asRecord(asset.metadata);
+    return readString(asset.url)
+        || readString(asset.public_url)
+        || readString(asset.publicUrl)
+        || readString(asset.image_url)
+        || readString(asset.imageUrl)
+        || readString(asset.src)
+        || readString(metadata.url)
+        || readString(metadata.publicUrl)
+        || readString(metadata.previewUrl);
+};
+
+const loadMediaAssetForAttachment = async (
+    client: SupabaseClientLike,
+    assetId: string,
+    projectId: string,
+    action: AssistantAction,
+    context?: AssistantContextSnapshot,
+): Promise<Record<string, unknown>> => {
+    const result = await selectSingle(client.from('media_assets').select('*').eq('id', assetId));
+    if (result?.error) throw result.error;
+    const row = asRecord(result?.data);
+    if (!readString(row.id)) throw new Error(`Media asset ${assetId} was not found before attaching it to a section.`);
+
+    const assetProjectId = readMediaAssetProjectId(row);
+    if (assetProjectId && assetProjectId !== projectId) {
+        throw new Error('Media asset belongs to a different project and cannot be attached to the active website.');
+    }
+
+    const tenantId = getTenantId(action, context);
+    const assetTenantId = readMediaAssetTenantId(row);
+    const canCrossTenant = context?.actor.isSuperAdmin === true || context?.actor.mode === 'super_admin';
+    if (assetTenantId && tenantId && assetTenantId !== tenantId && !canCrossTenant) {
+        throw new Error('Media asset belongs to a different tenant and cannot be attached in the current context.');
+    }
+
+    return cloneRecord(row);
+};
+
+const inferAttachmentPath = (input: Record<string, unknown>): string[] => {
+    const explicitPath = parseSafePath(input.path);
+    if (explicitPath.length > 0) return explicitPath;
+    const request = normalizeForSearch(readString(input.request) || '');
+    if (request.includes('background') || request.includes('fondo')) return ['backgroundImageUrl'];
+    return ['imageUrl'];
+};
+
+const createAttachAssetToSectionHandler = (
+    deps: GlobalAssistantActionHandlerDependencies,
+): HandlerPatch => ({
+    validate: input => {
+        const path = inferAttachmentPath(input);
+        const errors = [
+            ...(!readString(input.projectId) ? ['projectId is required before attaching a media asset to a section.'] : []),
+            ...(!readString(input.sectionId) ? ['sectionId is required before attaching a media asset to a section.'] : []),
+            ...(!readString(input.assetId) ? ['assetId is required before attaching a media asset to a section.'] : []),
+            ...(path.length === 0 ? ['path is required before attaching a media asset to a section.'] : []),
+        ];
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const sectionId = readString(input.sectionId) || '';
+        const assetId = readString(input.assetId) || '';
+        const path = inferAttachmentPath(input);
+        const pathKey = path.join('.');
+        const now = getNow(deps);
+        const state = await loadProjectWebsiteState(client, projectId, context);
+        const asset = await loadMediaAssetForAttachment(client, assetId, projectId, action, context);
+        const assetUrl = readMediaAssetUrl(asset);
+        if (!assetUrl) throw new Error(`Media asset ${assetId} does not have a usable URL.`);
+
+        const pageData = cloneRecord(state.pageData);
+        const currentSection = cloneRecord(asRecord(pageData[sectionId]));
+        const nextSection = setDeepValue(currentSection, path, assetUrl);
+        const attachmentAudit = {
+            assetId,
+            assetUrl,
+            assetName: readDisplayText(asset.name) || assetId,
+            path: pathKey,
+            attachedAt: now,
+            generatedByAI: true,
+            needsReview: true,
+            noAutoPublish: true,
+            sourceModule: 'global-assistant',
+            sourceComponent: 'OperatingLayer',
+            sourceEntityType: 'assistant_action',
+            sourceEntityId: action.id,
+        };
+        nextSection.assistantMediaAttachments = {
+            ...asRecord(nextSection.assistantMediaAttachments),
+            [pathKey]: attachmentAudit,
+        };
+        pageData[sectionId] = nextSection;
+        const pages = updatePageSectionData(state.pages, sectionId, nextSection, now);
+        const persisted = await writeProjectWebsiteState(client, state, {
+            pageData,
+            componentOrder: state.componentOrder,
+            sectionVisibility: state.sectionVisibility,
+            pages,
+        }, input, action, context, {
+            now,
+            touchedSection: sectionId,
+            syncAction: 'section_settings',
+        });
+
+        return {
+            beforeSnapshot: createProjectWebsiteBeforeSnapshot(state),
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                row: persisted.row,
+                sectionId,
+                assetId,
+                assetUrl,
+                path: pathKey,
+                attachment: attachmentAudit,
+            },
+            diff: {
+                updated: [`projects.${projectId}.data.${sectionId}.${pathKey}`],
+                attached: [`media_assets.${assetId}`],
+                synced: ['projects.$current.data.businessBlueprint.websiteBlueprint'],
+                reviewRequired: true,
+                noAutoPublish: true,
+                rollback: 'restore_previous_project_website_columns',
+            },
+        };
+    },
+    rollback: rollbackProjectWebsiteColumns(deps),
+});
+
 const appointmentStatuses = new Set(['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show', 'rescheduled']);
 
 const getContextAppointmentId = (context?: AssistantContextSnapshot): string | undefined => {
@@ -4163,6 +4448,221 @@ const createFinanceRecordHandler = (deps: GlobalAssistantActionHandlerDependenci
     rollback: rollbackCreatedRow('accounting_invoices', deps),
 });
 
+const financeInvoiceStatuses = new Set(['draft', 'sent', 'paid', 'overdue', 'cancelled']);
+
+const normalizeFinanceInvoiceStatus = (value: unknown): string | undefined => {
+    const status = readString(value);
+    if (!status) return undefined;
+    const normalized = normalizeForSearch(status).replace(/\s+/g, '_');
+    if (financeInvoiceStatuses.has(normalized)) return normalized;
+    if (['canceled', 'cancelada', 'cancelado', 'cancelar', 'cancela'].includes(normalized)) return 'cancelled';
+    if (['pagada', 'pagado', 'cobrada', 'cobrado'].includes(normalized)) return 'paid';
+    if (['enviada', 'enviado', 'mandada', 'mandado'].includes(normalized)) return 'sent';
+    if (['vencida', 'vencido', 'late'].includes(normalized)) return 'overdue';
+    if (['borrador', 'draft_only'].includes(normalized)) return 'draft';
+    return undefined;
+};
+
+const getContextFinanceRecordId = (context?: AssistantContextSnapshot): string | undefined => {
+    const entityType = normalizeForSearch(context?.activeEntityType || '').replace(/\s+/g, '_');
+    if (!context?.activeEntityId) return undefined;
+    if (['finance_record', 'finance_invoice', 'invoice', 'accounting_invoice', 'accounting_invoices'].includes(entityType)) {
+        return context.activeEntityId;
+    }
+    return undefined;
+};
+
+const getTargetFinanceRecordId = (
+    input: Record<string, unknown>,
+    context?: AssistantContextSnapshot,
+): string => {
+    const updates = requireObject(input, 'updates');
+    const record = requireObject(input, 'record');
+    const recordId = readString(input.recordId)
+        || readString(input.record_id)
+        || readString(input.invoiceId)
+        || readString(input.invoice_id)
+        || readString(input.targetId)
+        || readString(updates.recordId)
+        || readString(updates.record_id)
+        || readString(updates.invoiceId)
+        || readString(updates.invoice_id)
+        || readString(record.id)
+        || getContextFinanceRecordId(context);
+    if (!recordId) throw new Error('recordId is required or the active context must point to a finance invoice.');
+    return recordId;
+};
+
+const deriveFinanceInvoiceUpdatesFromRequest = (
+    request: unknown,
+    now: string,
+): Record<string, unknown> => {
+    const text = normalizeForSearch(readString(request) || '');
+    const updates: Record<string, unknown> = {};
+    if (!text) return updates;
+
+    if (/\b(pagada|pagado|paid|cobrada|cobrado)\b/.test(text)) {
+        updates.status = 'paid';
+        updates.paidDate = now.slice(0, 10);
+    } else if (/\b(enviada|enviado|sent|mandada|mandado)\b/.test(text)) {
+        updates.status = 'sent';
+    } else if (/\b(vencida|vencido|overdue|late)\b/.test(text)) {
+        updates.status = 'overdue';
+    } else if (/\b(cancelada|cancelado|cancelar|cancela|cancelled|canceled)\b/.test(text)) {
+        updates.status = 'cancelled';
+    } else if (/\b(borrador|draft)\b/.test(text)) {
+        updates.status = 'draft';
+    }
+
+    const amount = readRequestNumberNear(request, ['total', 'monto', 'amount', 'importe', 'por']);
+    if (amount !== undefined && /\b(total|monto|amount|importe|por)\b/.test(text)) updates.total = amount;
+
+    const dateMatch = text.match(/\b(\d{4}-\d{2}-\d{2})\b/);
+    if (dateMatch) {
+        if (/\b(vencimiento|vence|due)\b/.test(text)) updates.dueDate = dateMatch[1];
+        if (/\b(pago|pagada|paid|cobrada)\b/.test(text)) updates.paidDate = dateMatch[1];
+    }
+
+    return updates;
+};
+
+const buildFinanceInvoiceUpdatePatch = (
+    currentRow: Record<string, unknown>,
+    updates: Record<string, unknown>,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+): { patch: Record<string, unknown>; changedFields: string[] } => {
+    const patch: Record<string, unknown> = { updated_at: now };
+    const changedFields: string[] = [];
+    const setValue = (column: string, value: unknown) => {
+        patch[column] = value;
+        changedFields.push(column);
+    };
+
+    const status = normalizeFinanceInvoiceStatus(updates.status ?? updates.estado);
+    if (status) {
+        setValue('status', status);
+        if (status === 'paid') {
+            setValue('paid_date', readDate(updates.paidDate ?? updates.paid_date, now.slice(0, 10)));
+        }
+    }
+
+    const issueDate = readString(updates.issueDate ?? updates.issue_date);
+    if (issueDate !== undefined) setValue('issue_date', readDate(issueDate, now.slice(0, 10)));
+    const dueDate = readString(updates.dueDate ?? updates.due_date);
+    if (dueDate !== undefined) setValue('due_date', readDate(dueDate, now.slice(0, 10)));
+    const paidDate = readString(updates.paidDate ?? updates.paid_date);
+    if (paidDate !== undefined) setValue('paid_date', paidDate ? readDate(paidDate, now.slice(0, 10)) : null);
+
+    const customerName = readString(updates.customerName ?? updates.customer_name ?? updates.clientName ?? updates.name);
+    if (customerName !== undefined) setValue('customer_name', customerName);
+    const customerEmail = readString(updates.customerEmail ?? updates.customer_email ?? updates.clientEmail ?? updates.email);
+    if (customerEmail !== undefined) setValue('customer_email', customerEmail || null);
+    const customerAddress = readString(updates.customerAddress ?? updates.customer_address ?? updates.clientAddress ?? updates.address);
+    if (customerAddress !== undefined) setValue('customer_address', customerAddress || null);
+    const paymentTerms = readString(updates.paymentTerms ?? updates.payment_terms);
+    if (paymentTerms !== undefined) setValue('payment_terms', paymentTerms);
+    const reminderNote = readString(updates.reminderNote ?? updates.reminder_note);
+    if (reminderNote !== undefined) setValue('reminder_note', reminderNote || null);
+    const notes = readString(updates.notes ?? updates.nota ?? updates.notas);
+    if (notes !== undefined) setValue('notes', notes);
+    const currency = readString(updates.currency ?? updates.moneda);
+    if (currency !== undefined) setValue('currency', (currency || 'USD').toUpperCase());
+    const aiOptimizedTerms = readString(updates.aiOptimizedTerms ?? updates.ai_optimized_terms);
+    if (aiOptimizedTerms !== undefined) setValue('ai_optimized_terms', aiOptimizedTerms || null);
+    const aiOptimizedReminder = readString(updates.aiOptimizedReminder ?? updates.ai_optimized_reminder);
+    if (aiOptimizedReminder !== undefined) setValue('ai_optimized_reminder', aiOptimizedReminder || null);
+
+    if (Array.isArray(updates.items)) {
+        const items = normalizeInvoiceItems(updates.items, readString(input.request));
+        setValue('items', items);
+        if (updates.subtotal === undefined) {
+            setValue('subtotal', items.reduce((sum, item) => sum + (readNumber(item.total) ?? 0), 0));
+        }
+    }
+
+    const subtotal = readNumber(updates.subtotal);
+    if (subtotal !== undefined) setValue('subtotal', subtotal);
+    const taxTotal = readNumber(updates.taxTotal ?? updates.tax_total);
+    if (taxTotal !== undefined) setValue('tax_total', taxTotal);
+    const discountTotal = readNumber(updates.discountTotal ?? updates.discount_total);
+    if (discountTotal !== undefined) setValue('discount_total', discountTotal);
+    const total = readNumber(updates.total ?? updates.amount ?? updates.monto);
+    if (total !== undefined) setValue('total', total);
+
+    const metadata = mergeAssistantMetadata(currentRow.metadata, input, action, context);
+    const assistantDrafts = asRecord(metadata.assistantDrafts);
+    metadata.assistantDrafts = {
+        ...assistantDrafts,
+        financeUpdate: {
+            ...asRecord(assistantDrafts.financeUpdate),
+            prompt: readString(input.request) || 'AI finance invoice update',
+            status: 'needs_review',
+            generatedAt: now,
+            generatedByAI: true,
+            needsReview: true,
+            noAutoCharge: true,
+            noLedgerEntry: true,
+        },
+    };
+    patch.metadata = metadata;
+    changedFields.push(changedFields.length === 0
+        ? 'metadata.assistantDrafts.financeUpdate'
+        : 'metadata.globalAssistant');
+
+    return { patch, changedFields: Array.from(new Set(changedFields)) };
+};
+
+const updateFinanceRecordHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const recordId = readString(input.recordId)
+            || readString(input.record_id)
+            || readString(input.invoiceId)
+            || readString(input.invoice_id)
+            || readString(input.targetId);
+        const hasUpdates = Object.keys({
+            ...deriveFinanceInvoiceUpdatesFromRequest(input.request, getNow(deps)),
+            ...requireObject(input, 'updates'),
+            ...requireObject(input, 'record'),
+        }).length > 0;
+        const errors = [
+            ...(!recordId ? ['recordId is required before updating a finance invoice.'] : []),
+            ...(!hasUpdates ? ['At least one supported finance invoice update is required.'] : []),
+        ];
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const recordId = getTargetFinanceRecordId(input, context);
+        const now = getNow(deps);
+        const currentRow = await loadProjectScopedRow(client, 'accounting_invoices', projectId, recordId);
+        const previousRow = cloneRecord(currentRow);
+        const updates = {
+            ...deriveFinanceInvoiceUpdatesFromRequest(input.request, now),
+            ...requireObject(input, 'updates'),
+            ...requireObject(input, 'record'),
+        };
+        const { patch, changedFields } = buildFinanceInvoiceUpdatePatch(currentRow, updates, input, action, context, now);
+        const row = await updateProjectScopedRow(client, 'accounting_invoices', projectId, recordId, patch);
+        return {
+            beforeSnapshot: { table: 'accounting_invoices', id: recordId, projectId, row: previousRow },
+            afterSnapshot: { table: 'accounting_invoices', id: recordId, projectId, row },
+            diff: {
+                updated: changedFields.map(field => `accounting_invoices.${recordId}.${field}`),
+                critical: true,
+                reviewRequired: true,
+                noAutoCharge: true,
+                noLedgerEntry: true,
+                rollback: 'restore_previous_finance_invoice_snapshot',
+            },
+        };
+    },
+    rollback: rollbackUpdatedProjectScopedRow('accounting_invoices', deps),
+});
+
 const resolveRestaurant = async (
     client: SupabaseClientLike,
     input: Record<string, unknown>,
@@ -4613,6 +5113,7 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     open_calendar: () => createNavigationHandler('appointments', { label: 'Open appointments calendar.', requiresProject: true }),
     open_chatbot_dashboard: () => createNavigationHandler('ai-assistant', { label: 'Open ChatCore dashboard.', requiresProject: true }),
     open_tenant: () => createNavigationHandler('superadmin', { label: 'Open tenant in Super Admin.', adminView: 'tenants' }),
+    search_tenants: createSearchTenantsHandler,
     edit_website_section: deps => createWebsiteSectionPatchHandler(deps, 'merge'),
     update_section_copy: deps => createWebsiteSectionPatchHandler(deps, 'copy'),
     reorder_sections: createReorderWebsiteSectionsHandler,
@@ -4639,6 +5140,8 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     generate_image: deps => createMediaDraftAssetHandler(deps, 'image'),
     edit_image: deps => createMediaDraftAssetHandler(deps, 'image_edit'),
     generate_video: deps => createMediaDraftAssetHandler(deps, 'video'),
+    update_section_image: createAttachAssetToSectionHandler,
+    attach_asset_to_section: createAttachAssetToSectionHandler,
     create_appointment: createAppointmentHandler,
     update_appointment: updateAppointmentHandler,
     configure_availability: configureAvailabilityHandler,
@@ -4647,6 +5150,7 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     create_chatbot_knowledge: deps => createChatbotKnowledgeHandler(deps, { sync: false }),
     sync_chatbot_knowledge: deps => createChatbotKnowledgeHandler(deps, { sync: true }),
     create_finance_record: createFinanceRecordHandler,
+    update_finance_record: updateFinanceRecordHandler,
     create_menu_item: createRestaurantMenuItemHandler,
     create_catering_offer: deps => createRestaurantMarketingOutputHandler(deps, {
         actionType: 'create_catering_offer',

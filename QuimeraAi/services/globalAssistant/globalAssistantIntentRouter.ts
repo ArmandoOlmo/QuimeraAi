@@ -22,6 +22,7 @@ const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['publica', 'publish'])) return 'publish';
     if (includesAny(text, ['despublica', 'unpublish'])) return 'unpublish';
     if (includesAny(text, ['oculta', 'esconde', 'hide', 'mostrar', 'show', 'visibilidad', 'visible', 'invisible', 'reordena', 'reorder', 'orden de secciones', 'move section'])) return 'edit';
+    if (includesAny(text, ['adjunta', 'adjuntar', 'attach', 'coloca', 'pon la imagen', 'poner imagen', 'usa este asset', 'usar este asset', 'replace image', 'reemplaza imagen', 'actualiza imagen', 'actualiza la imagen'])) return 'edit';
     if (includesAny(text, ['exporta', 'export', 'descarga', 'download'])) return 'report';
     if (includesAny(text, ['abre', 'abrir', 'open', 've a', 'go to', 'muestra'])) return 'open';
     if (includesAny(text, ['busca', 'search', 'encuentra', 'find'])) return 'search';
@@ -32,7 +33,7 @@ const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['sincroniza', 'sync', 'entrena', 'entrenar', 'train', 'training'])) return 'sync';
     if (includesAny(text, ['genera', 'generar', 'generate', 'copy', 'contenido'])) return 'generate_content';
     if (includesAny(text, ['crea', 'crear', 'create', 'nuevo', 'nueva', 'add', 'agrega'])) return 'create';
-    if (includesAny(text, ['edita', 'editar', 'update', 'actualiza', 'modifica', 'cambia', 'confirma', 'confirmar', 'cancela', 'cancelar', 'completa', 'completar', 'reprograma', 'reprogramar'])) return 'edit';
+    if (includesAny(text, ['edita', 'editar', 'update', 'actualiza', 'modifica', 'cambia', 'confirma', 'confirmar', 'cancela', 'cancelar', 'completa', 'completar', 'reprograma', 'reprogramar', 'marca', 'marcar', 'pagada', 'pagado', 'paid', 'vencida', 'vencido'])) return 'edit';
     if (includesAny(text, ['configura', 'configurar', 'configure', 'availability', 'disponibilidad', 'horario'])) return 'edit';
     if (includesAny(text, ['cita', 'appointment', 'agenda', 'reserva'])) return 'schedule';
     if (includesAny(text, ['rollback', 'deshacer', 'undo'])) return 'rollback';
@@ -55,6 +56,7 @@ const inferModule = (text: string, context: AssistantContextSnapshot): Assistant
     if (includesAny(text, ['cita', 'appointment', 'agenda', 'reserva', 'calendar'])) return 'appointments';
     if (includesAny(text, ['analytics', 'metricas', 'reporte', 'report'])) return 'analytics';
     if (includesAny(text, ['finance', 'finanzas', 'invoice', 'factura', 'gasto'])) return 'finance';
+    if (includesAny(text, ['website', 'web', 'pagina', 'editor']) && includesAny(text, ['adjunta', 'attach', 'asset', 'replace image', 'reemplaza imagen', 'actualiza imagen', 'actualiza la imagen'])) return 'website';
     if (includesAny(text, ['imagen', 'image', 'video', 'asset', 'media'])) return 'media';
     if (includesAny(text, ['website', 'web', 'pagina', 'hero', 'seccion', 'section', 'editor'])) return 'website';
     if (includesAny(text, ['proyecto', 'proyectos', 'project', 'projects'])) return 'project';
@@ -62,6 +64,8 @@ const inferModule = (text: string, context: AssistantContextSnapshot): Assistant
 };
 
 const inferSafety = (intent: AssistantIntentCategory, module: AssistantModuleTarget, text: string): AssistantSafetyLevel => {
+    if (module === 'admin' && ['search', 'open', 'analyze', 'report', 'explain'].includes(intent)) return 'low';
+    if (module === 'finance' && intent === 'edit') return 'critical';
     if (
         intent === 'delete' ||
         intent === 'publish' ||
@@ -168,9 +172,17 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
         if (includesAny(text, ['reordena', 'reorder', 'orden de secciones', 'move section'])) return ['reorder_sections'];
         if (includesAny(text, ['oculta', 'esconde', 'hide', 'mostrar seccion', 'mostrar section', 'show section', 'visibilidad', 'visible', 'invisible'])) return ['toggle_section_visibility'];
         if (intent === 'edit') {
+            if (includesAny(text, ['imagen', 'image', 'foto', 'asset', 'media', 'background', 'fondo'])) return ['update_section_image'];
             if (includesAny(text, ['copy', 'texto', 'headline', 'titulo', 'subtitulo', 'descripcion', 'description'])) return ['update_section_copy'];
             return ['edit_website_section', 'update_section_copy'];
         }
+    }
+
+    if (module === 'media' && intent === 'edit') {
+        if (includesAny(text, ['adjunta', 'adjuntar', 'attach', 'coloca', 'pon', 'asset', 'seccion', 'section', 'hero', 'background', 'fondo'])) {
+            return ['attach_asset_to_section'];
+        }
+        return ['edit_image', 'attach_asset_to_section'];
     }
 
     if (module === 'project' && ['open', 'edit'].includes(intent)) {

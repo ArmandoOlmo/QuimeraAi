@@ -13,45 +13,7 @@ import {
     buildGlobalCommandItems,
     type GlobalCommandItem,
 } from '../services/globalAssistant/globalCommandSearch';
-
-type CommandTranslationParams = Record<string, string | number | boolean | null | undefined>;
-
-const safeTranslationParams = (params?: CommandTranslationParams): CommandTranslationParams => {
-    if (!params) return {};
-
-    return Object.entries(params).reduce<CommandTranslationParams>((safeParams, [key, value]) => {
-        if (key === 'defaultValue' || key === 'interpolation' || key === 'nest') return safeParams;
-        if (
-            typeof value === 'string'
-            || typeof value === 'number'
-            || typeof value === 'boolean'
-            || value == null
-        ) {
-            safeParams[key] = value;
-        }
-        return safeParams;
-    }, {});
-};
-
-const translatePromptSafe = (
-    translate: ReturnType<typeof useTranslation>['t'],
-    key: string | undefined,
-    fallback: string,
-    params?: CommandTranslationParams,
-): string => {
-    if (!key) return fallback;
-    try {
-        const translated = translate(key, {
-            ...safeTranslationParams(params),
-            defaultValue: fallback,
-            interpolation: { skipOnVariables: true },
-            nest: false,
-        } as any);
-        return typeof translated === 'string' ? translated : fallback;
-    } catch {
-        return fallback;
-    }
-};
+import { translateCommandTextSafe } from '../services/globalAssistant/globalCommandTranslations';
 
 export function useGlobalCommandPalette() {
     const { t } = useTranslation();
@@ -118,7 +80,7 @@ export function useGlobalCommandPalette() {
         if (item.disabledReason) return;
 
         if (item.type === 'assistant_request' || item.type === 'action') {
-            const prompt = translatePromptSafe(t, item.promptKey, item.prompt || query.trim(), item.promptParams);
+            const prompt = translateCommandTextSafe(t, item.promptKey, item.prompt || query.trim(), item.promptParams);
             if (!prompt) return;
             dispatchGlobalAssistantEntryRequest(createGlobalAssistantEntryPayload(prompt, {
                 source: 'command_palette',

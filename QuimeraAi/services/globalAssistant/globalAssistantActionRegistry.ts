@@ -105,8 +105,8 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         projectId: stringSchema(),
         sectionId: stringSchema(),
         assetId: stringSchema(),
-        path: stringSchema(),
-    }, ['projectId', 'sectionId', 'assetId', 'path']), 'high', { requiredService: 'aiFeatures' }),
+        path: stringSchema('Dot-path inside the section. Defaults to imageUrl.'),
+    }, ['projectId', 'sectionId', 'assetId']), 'high', { requiredService: 'aiFeatures' }),
     action('website', 'reorder_sections', 'Change website section order.', objectSchema({
         projectId: stringSchema(),
         newOrder: { type: 'array', items: stringSchema() },

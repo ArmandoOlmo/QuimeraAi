@@ -123,6 +123,92 @@ const getToolReadinessBlockers = (definition: AssistantActionDefinition): string
     ];
 };
 
+const normalizeContextToken = (value: string | null | undefined): string =>
+    (value || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+
+const readSnapshotText = (context: AssistantContextSnapshot, keys: string[]): string | undefined => {
+    for (const key of keys) {
+        const value = context.snapshot?.[key];
+        if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    return undefined;
+};
+
+const isMediaAssetEntityType = (entityType: string | null | undefined): boolean => {
+    const normalized = normalizeContextToken(entityType);
+    return [
+        'asset',
+        'media_asset',
+        'media_assets',
+        'image_asset',
+        'video_asset',
+        'media',
+    ].includes(normalized);
+};
+
+const inferSectionImagePathFromRequest = (request: string): string => {
+    const normalized = request.toLowerCase();
+    if (normalized.includes('background') || normalized.includes('fondo')) return 'backgroundImageUrl';
+    return 'imageUrl';
+};
+
+const isFinanceRecordEntityType = (entityType: string | null | undefined): boolean => {
+    const normalized = normalizeContextToken(entityType);
+    return [
+        'finance_record',
+        'finance_invoice',
+        'invoice',
+        'accounting_invoice',
+        'accounting_invoices',
+    ].includes(normalized);
+};
+
+const buildActionInput = (
+    definition: AssistantActionDefinition,
+    context: AssistantContextSnapshot,
+    request: string,
+    projectId?: string | null,
+): Record<string, unknown> => {
+    const actionInput: Record<string, unknown> = {
+        request,
+        ...(projectId ? { projectId } : {}),
+    };
+
+    if (['attach_asset_to_section', 'update_section_image'].includes(definition.actionType)) {
+        const selectedSection = context.selectedSection
+            || readSnapshotText(context, ['selectedSection', 'sectionId', 'activeSectionId']);
+        if (selectedSection) actionInput.sectionId = selectedSection;
+
+        const activeAssetId = isMediaAssetEntityType(context.activeEntityType)
+            ? context.activeEntityId
+            : null;
+        const assetId = activeAssetId
+            || readSnapshotText(context, ['activeAssetId', 'assetId', 'selectedAssetId', 'mediaAssetId']);
+        if (assetId) actionInput.assetId = assetId;
+
+        actionInput.path = readSnapshotText(context, ['selectedImagePath', 'assetTargetPath', 'sectionImagePath'])
+            || inferSectionImagePathFromRequest(request);
+        if (definition.actionType === 'attach_asset_to_section') actionInput.module = 'website';
+    }
+
+    if (definition.actionType === 'update_finance_record') {
+        const activeFinanceRecordId = isFinanceRecordEntityType(context.activeEntityType)
+            ? context.activeEntityId
+            : null;
+        const recordId = activeFinanceRecordId
+            || readSnapshotText(context, [
+                'activeInvoiceId',
+                'selectedInvoiceId',
+                'invoiceId',
+                'financeRecordId',
+                'selectedFinanceRecordId',
+            ]);
+        if (recordId) actionInput.recordId = recordId;
+    }
+
+    return actionInput;
+};
+
 export function buildExecutionPlan(input: BuildExecutionPlanInput): AssistantExecutionPlan {
     const { context, intent } = input;
     const actions: AssistantAction[] = [];
@@ -137,10 +223,7 @@ export function buildExecutionPlan(input: BuildExecutionPlanInput): AssistantExe
         const projectId = definition.module === 'project'
             ? input.intent.projectResolution.projectId || context.project.projectId
             : context.project.projectId;
-        const actionInput: Record<string, unknown> = {
-            request: input.request,
-            ...(projectId ? { projectId } : {}),
-        };
+        const actionInput = buildActionInput(definition, context, input.request, projectId);
         const permission = checkActionPermission({
             definition,
             context,

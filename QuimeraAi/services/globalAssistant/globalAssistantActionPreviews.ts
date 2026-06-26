@@ -244,6 +244,51 @@ export function enrichAssistantExecutionPreview(
         };
     }
 
+    if (['update_section_image', 'attach_asset_to_section'].includes(action.actionType)) {
+        const sectionId = asText(action.input.sectionId) || '$selected_section';
+        const path = asText(action.input.path) || 'imageUrl';
+        const assetId = asText(action.input.assetId) || '$selected_media_asset';
+        const target = `data.${sectionId}.${path}`;
+
+        return {
+            ...preview,
+            before: {
+                table: 'projects',
+                id: action.projectId,
+                path: target,
+                currentAsset: 'preserve_until_apply',
+            },
+            after: {
+                operation: 'attach_media_asset_to_section',
+                table: 'projects',
+                id: action.projectId,
+                projectId: action.projectId,
+                sectionId,
+                assetId,
+                path: target,
+                generatedByAI: true,
+                needsReview: true,
+                noAutoPublish: true,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                updated: [`projects.${action.projectId}.${target}`],
+                attached: [`media_assets.${assetId}`],
+                synced: ['projects.$current.data.businessBlueprint.websiteBlueprint'],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_project_website_columns' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Attaches an existing Media AI asset to a Website Builder section; it does not publish the website automatically.',
+                ...(definition.rollbackSupported ? ['Rollback restores previous website project columns.'] : []),
+            ],
+        };
+    }
+
     if (['add_storefront_section', 'edit_storefront_theme', 'update_product_card_style'].includes(action.actionType)) {
         const sectionType = asText(action.input.sectionType) || asText(action.input.section_type);
         const target = action.actionType === 'edit_storefront_theme'
@@ -516,6 +561,49 @@ export function enrichAssistantExecutionPreview(
                 ...preview.risks,
                 'ChatCore knowledge remains review-gated before it is used for training or deployment.',
                 ...(definition.rollbackSupported ? ['Rollback restores the previous project blueprint snapshot.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'update_finance_record') {
+        const recordId = asText(action.input.recordId)
+            || asText(action.input.invoiceId)
+            || '$selected_invoice';
+        return {
+            ...preview,
+            before: {
+                table: 'accounting_invoices',
+                id: recordId,
+                projectId: action.projectId,
+            },
+            after: {
+                operation: 'update_finance_invoice',
+                table: 'accounting_invoices',
+                id: recordId,
+                projectId: action.projectId,
+                request: compactRequestTitle(action.input.request, 'Finance invoice update'),
+                generatedByAI: true,
+                needsReview: true,
+                noAutoCharge: true,
+                noLedgerEntry: true,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                updated: [`accounting_invoices.${recordId}`],
+                critical: true,
+                reviewRequired: true,
+                noAutoCharge: true,
+                noLedgerEntry: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_finance_invoice_snapshot' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Finance invoice update changes accounting data only after confirmation.',
+                'This action does not create Stripe payment intents, payments, or ledger entries automatically.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous invoice row snapshot.'] : []),
             ],
         };
     }

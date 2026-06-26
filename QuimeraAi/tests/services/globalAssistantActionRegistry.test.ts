@@ -62,14 +62,17 @@ describe('GlobalAssistantActionRegistry', () => {
         });
         expect(typeof globalAssistantActionRegistry.get('edit_website_section')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_section_copy')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_section_image')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('reorder_sections')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('toggle_section_visibility')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('attach_asset_to_section')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('add_storefront_section')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('edit_storefront_theme')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_product_card_style')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('search_projects')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_project_metadata')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_project_metadata')?.rollback).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('search_tenants')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_email_campaign')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('generate_email_copy')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_product')?.execute).toBe('function');
@@ -85,11 +88,16 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('create_appointment')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_appointment')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('configure_availability')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_finance_record')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_finance_record')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_finance_record')?.rollback).toBe('function');
     });
 
     it('blocks admin actions outside owner or super admin mode', () => {
         const definition = globalAssistantActionRegistry.get('update_feature_flag');
+        const searchTenants = globalAssistantActionRegistry.get('search_tenants');
         expect(definition).toBeDefined();
+        expect(searchTenants).toBeDefined();
 
         const userPermission = checkActionPermission({
             definition: definition!,
@@ -104,6 +112,18 @@ describe('GlobalAssistantActionRegistry', () => {
             context: makeContext('owner', 'owner'),
         });
         expect(ownerPermission.allowed).toBe(true);
+
+        expect(checkActionPermission({
+            definition: searchTenants!,
+            context: makeContext(),
+        })).toMatchObject({
+            allowed: false,
+            missingPermissions: ['assistant:admin:use'],
+        });
+        expect(checkActionPermission({
+            definition: searchTenants!,
+            context: makeContext('owner', 'owner'),
+        })).toMatchObject({ allowed: true });
     });
 
     it('builds preview and approval requests for mutating actions', () => {

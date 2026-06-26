@@ -152,6 +152,20 @@ describe('globalAssistantIntentRouter', () => {
             intent: 'edit',
             actionCandidates: ['update_section_copy'],
         });
+
+        expect(routeAssistantIntent('Actualiza la imagen del website con este asset', context)).toMatchObject({
+            module: 'website',
+            intent: 'edit',
+            actionCandidates: ['update_section_image'],
+        });
+    });
+
+    it('routes Media AI asset attachments without generating a new image', () => {
+        expect(routeAssistantIntent('Adjunta este asset a la seccion hero', context)).toMatchObject({
+            module: 'media',
+            intent: 'edit',
+            actionCandidates: ['attach_asset_to_section'],
+        });
     });
 
     it('routes Storefront Builder requests to structured storefront actions', () => {
@@ -278,6 +292,24 @@ describe('globalAssistantIntentRouter', () => {
             module: 'project',
             intent: 'edit',
             actionCandidates: ['update_project_metadata'],
+        });
+    });
+
+    it('routes Super Admin tenant search as a read-only admin action', () => {
+        expect(routeAssistantIntent('Busca tenants Casa Luna en Super Admin', context)).toMatchObject({
+            module: 'admin',
+            intent: 'search',
+            actionCandidates: ['search_tenants'],
+            safetyLevel: 'low',
+        });
+    });
+
+    it('routes finance invoice status changes to update_finance_record', () => {
+        expect(routeAssistantIntent('Marca esta factura como pagada', context)).toMatchObject({
+            module: 'finance',
+            intent: 'edit',
+            actionCandidates: ['update_finance_record'],
+            safetyLevel: 'critical',
         });
     });
 });

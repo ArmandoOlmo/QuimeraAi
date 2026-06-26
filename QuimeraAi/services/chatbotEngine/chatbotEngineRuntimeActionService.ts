@@ -4,6 +4,7 @@ import { buildCanonicalEmailDraftMetadata } from '../email/emailModuleIntentServ
 import { isSuppressed } from '../email/emailSuppressionService.js';
 import type { ChatbotActionType } from '../../types/businessBlueprint';
 import { getSafeProductPrice, isRenderableStorefrontProduct } from '../../utils/ecommerce/productDisplayGuards.js';
+import { buildWidgetCustomerRequestNotes } from '../../utils/chatbotEngine/widgetCustomerRequestNotes.js';
 
 type SupabaseLike = any;
 
@@ -262,6 +263,31 @@ function uniqueStrings(values: unknown[]): string[] {
 function cleanStringList(value: unknown, maxItems = 12, maxLength = 240): string[] {
     if (!Array.isArray(value)) return [];
     return uniqueStrings(value.map(item => cleanString(item, maxLength))).slice(0, maxItems);
+}
+
+function buildRuntimeCustomerRequestNotes(input: {
+    body: Record<string, unknown>;
+    sourceSurface?: string | null;
+    sourceModule?: string | null;
+    customerProvidedNotes?: string | null;
+    appointmentTitle?: string | null;
+    appointmentDateTime?: string | null;
+    conversationId?: string | null;
+    leadId?: string | null;
+    generatedAt?: Date;
+}): string {
+    return buildWidgetCustomerRequestNotes({
+        body: input.body,
+        agentName: 'ChatCore',
+        sourceSurface: cleanString(input.sourceSurface, 120) || cleanString(input.body.sourceSurface, 120) || null,
+        sourceModule: cleanString(input.sourceModule, 120) || cleanString(input.body.sourceModule, 120) || 'chatcore',
+        customerProvidedNotes: cleanString(input.customerProvidedNotes, 1800) || null,
+        appointmentTitle: cleanString(input.appointmentTitle, 250) || null,
+        appointmentDateTime: cleanString(input.appointmentDateTime, 250) || null,
+        conversationId: cleanString(input.conversationId, 120) || null,
+        leadId: cleanString(input.leadId, 120) || null,
+        generatedAt: input.generatedAt,
+    });
 }
 
 function assertValidDateAndTime(date: string, time: string, now = new Date()): void {
@@ -725,6 +751,37 @@ export async function createChatbotEcommerceProductInquiry(input: ChatbotEcommer
 
     const quantity = cleanNumber(input.quantity);
     const message = cleanString(input.message, 5000);
+    const sourceSurface = cleanString(input.sourceSurface, 120) || 'storefront';
+    const sourceModule = cleanString(input.sourceModule, 120) || 'ecommerce';
+    const productInquiryNotes = buildRuntimeCustomerRequestNotes({
+        body: {
+            name,
+            email,
+            phone,
+            message: message || `ES: Consulta sobre ${product.name}. EN: Inquiry about ${product.name}.`,
+            productName: product.name,
+            productUrl: product.productUrl,
+            quantity: quantity || null,
+            aiAnalysis: `ES: Consulta de ecommerce para ${product.name}. EN: Ecommerce product inquiry for ${product.name}.`,
+            recommendedAction: 'ES: Revisar disponibilidad y responder la pregunta del cliente. EN: Review availability and answer the customer question.',
+            sourceSurface,
+            sourceModule,
+            metadata: {
+                productId: product.id,
+                productSlug: product.slug,
+                productName: product.name,
+                quantity: quantity || null,
+                sourceConversationId: cleanString(input.conversationId, 120) || null,
+                sourceSurface,
+                sourceModule,
+                ...compactMetadata(input.metadata),
+            },
+        },
+        sourceSurface,
+        sourceModule,
+        customerProvidedNotes: message || null,
+        conversationId: input.conversationId,
+    });
     const { data, error } = await input.supabase
         .from('leads')
         .insert({
@@ -737,7 +794,7 @@ export async function createChatbotEcommerceProductInquiry(input: ChatbotEcommer
             source: 'product-inquiry',
             value: product.price * Math.max(quantity || 1, 1),
             tags: uniqueStrings(['ecommerce', 'product-inquiry', 'chatbot-widget', `product:${product.id}`, product.categoryName]),
-            notes: message || null,
+            notes: productInquiryNotes,
             custom_data: {
                 productId: product.id,
                 productSlug: product.slug,
@@ -745,10 +802,11 @@ export async function createChatbotEcommerceProductInquiry(input: ChatbotEcommer
                 productUrl: product.productUrl,
                 quantity: quantity || null,
                 sourceConversationId: cleanString(input.conversationId, 120) || null,
-                sourceSurface: cleanString(input.sourceSurface, 120) || null,
-                sourceModule: cleanString(input.sourceModule, 120) || 'chatcore',
+                sourceSurface,
+                sourceModule,
                 chatbotEngine: true,
                 actionType: 'create_product_inquiry',
+                customerRequestSummary: productInquiryNotes,
                 idempotencyKey,
                 ...compactMetadata(input.metadata),
             },
@@ -816,6 +874,34 @@ export async function createChatbotEcommerceBackInStockRequest(input: ChatbotEco
 
     let leadId = existingLeadId || null;
     if (!leadId) {
+        const sourceSurface = cleanString(input.sourceSurface, 120) || 'storefront';
+        const sourceModule = cleanString(input.sourceModule, 120) || 'ecommerce';
+        const backInStockNotes = buildRuntimeCustomerRequestNotes({
+            body: {
+                name: cleanString(input.name, 200) || email,
+                email,
+                message: `ES: Quiere recibir aviso cuando ${product.name} vuelva a estar disponible. EN: Wants to be notified when ${product.name} is back in stock.`,
+                productName: product.name,
+                productUrl: product.productUrl,
+                aiAnalysis: `ES: Solicitud de inventario para ${product.name}. EN: Back-in-stock request for ${product.name}.`,
+                recommendedAction: 'ES: Mantener la solicitud en la lista de avisos y notificar al reponer inventario. EN: Keep the request in the notification list and notify when inventory is replenished.',
+                sourceSurface,
+                sourceModule,
+                metadata: {
+                    productId: product.id,
+                    productSlug: product.slug,
+                    productName: product.name,
+                    stockNotificationId: notificationId || null,
+                    sourceConversationId: cleanString(input.conversationId, 120) || null,
+                    sourceSurface,
+                    sourceModule,
+                    ...compactMetadata(input.metadata),
+                },
+            },
+            sourceSurface,
+            sourceModule,
+            conversationId: input.conversationId,
+        });
         const { data: lead, error: leadError } = await input.supabase
             .from('leads')
             .insert({
@@ -827,7 +913,7 @@ export async function createChatbotEcommerceBackInStockRequest(input: ChatbotEco
                 source: 'back-in-stock-request',
                 value: product.price,
                 tags: uniqueStrings(['ecommerce', 'back-in-stock', 'chatbot-widget', `product:${product.id}`, product.categoryName]),
-                notes: null,
+                notes: backInStockNotes,
                 custom_data: {
                     productId: product.id,
                     productSlug: product.slug,
@@ -835,10 +921,11 @@ export async function createChatbotEcommerceBackInStockRequest(input: ChatbotEco
                     productUrl: product.productUrl,
                     stockNotificationId: notificationId || null,
                     sourceConversationId: cleanString(input.conversationId, 120) || null,
-                    sourceSurface: cleanString(input.sourceSurface, 120) || null,
-                    sourceModule: cleanString(input.sourceModule, 120) || 'chatcore',
+                    sourceSurface,
+                    sourceModule,
                     chatbotEngine: true,
                     actionType: 'back_in_stock_request',
+                    customerRequestSummary: backInStockNotes,
                     idempotencyKey,
                     ...compactMetadata(input.metadata),
                 },
@@ -1085,7 +1172,42 @@ export async function requestChatbotRestaurantReservation(input: ChatbotRestaura
         };
     }
 
+    const sourceSurface = cleanString(input.sourceSurface, 120) || 'restaurant_menu';
+    const sourceModule = cleanString(input.sourceModule, 120) || 'restaurants';
     const metadata = compactMetadata(input.metadata);
+    const customerNotes = cleanString(input.notes, 5000);
+    const reservationNotes = buildRuntimeCustomerRequestNotes({
+        body: {
+            customerName,
+            customerEmail,
+            customerPhone: input.customerPhone,
+            message: customerNotes || `ES: Solicita una reserva para ${partySize} personas. EN: Requests a reservation for ${partySize} guests.`,
+            notes: customerNotes,
+            restaurantName: restaurant.name || null,
+            tablePreference: input.tablePreference,
+            partySize,
+            date,
+            time,
+            sourceSurface,
+            sourceModule,
+            metadata: {
+                ...metadata,
+                restaurantId,
+                restaurantName: restaurant.name || null,
+                partySize,
+                date,
+                time,
+                sourceConversationId: cleanString(input.conversationId, 120) || null,
+            },
+        },
+        sourceSurface,
+        sourceModule,
+        customerProvidedNotes: customerNotes || null,
+        appointmentTitle: `Restaurant reservation: ${restaurant.name || restaurantId}`,
+        appointmentDateTime: `${date}T${time}:00`,
+        conversationId: input.conversationId,
+        generatedAt: input.now,
+    });
     const { data: reservation, error: reservationError } = await input.supabase
         .from('restaurant_reservations')
         .insert({
@@ -1100,7 +1222,7 @@ export async function requestChatbotRestaurantReservation(input: ChatbotRestaura
             party_size: partySize,
             table_preference: cleanString(input.tablePreference, 200) || null,
             status: 'pending',
-            notes: cleanString(input.notes, 5000) || null,
+            notes: reservationNotes,
             source,
         })
         .select('id,status')
@@ -1121,12 +1243,13 @@ export async function requestChatbotRestaurantReservation(input: ChatbotRestaura
             partySize,
             date,
             time,
-            notes: input.notes,
+            notes: reservationNotes,
             conversationId: input.conversationId,
             metadata: {
                 ...metadata,
-                sourceSurface: input.sourceSurface,
-                sourceModule: input.sourceModule,
+                sourceSurface,
+                sourceModule,
+                customerRequestSummary: reservationNotes,
                 idempotencyKey,
             },
         })
@@ -1215,13 +1338,54 @@ export async function requestChatbotRealtyLead(input: ChatbotRealtyLeadInput) {
 
     const preferredDate = cleanString(input.preferredDate, 120);
     const budget = cleanNumber(input.budget);
+    const sourceSurface = cleanString(input.sourceSurface, 120) || 'realty_property';
+    const sourceModule = cleanString(input.sourceModule, 120) || 'realty';
+    const rawMessage = cleanString(input.message, 5000);
+    const realtyNotes = buildRuntimeCustomerRequestNotes({
+        body: {
+            name,
+            email,
+            phone: input.phone,
+            message: rawMessage || `ES: Solicita informacion sobre ${property.title || 'la propiedad'}. EN: Requests information about ${property.title || 'the property'}.`,
+            propertyTitle: property.title || null,
+            preferredDate,
+            budget,
+            aiAnalysis: input.actionType === 'register_open_house'
+                ? `ES: Registro de open house para ${property.title || propertyId}. EN: Open house registration for ${property.title || propertyId}.`
+                : `ES: Solicitud de visita inmobiliaria para ${property.title || propertyId}. EN: Realty showing request for ${property.title || propertyId}.`,
+            recommendedAction: 'ES: Contactar al cliente, confirmar disponibilidad y registrar seguimiento en CRM. EN: Contact the customer, confirm availability, and log CRM follow-up.',
+            sourceSurface,
+            sourceModule,
+            metadata: {
+                propertyId,
+                propertyTitle: property.title || null,
+                openHouseId: openHouse?.id || null,
+                openHouseStartsAt: openHouse?.starts_at || null,
+                sourceConversationId: cleanString(input.conversationId, 120) || null,
+                sourceSurface,
+                sourceModule,
+                rawMessage: rawMessage || null,
+                ...compactMetadata(input.metadata),
+            },
+        },
+        sourceSurface,
+        sourceModule,
+        customerProvidedNotes: rawMessage || null,
+        appointmentTitle: input.actionType === 'register_open_house'
+            ? `Open house registration: ${property.title || propertyId}`
+            : `Realty showing request: ${property.title || propertyId}`,
+        appointmentDateTime: preferredDate || null,
+        conversationId: input.conversationId,
+    });
     const metadata = {
         propertyTitle: property.title || null,
         openHouseId: openHouse?.id || null,
         openHouseStartsAt: openHouse?.starts_at || null,
         sourceConversationId: cleanString(input.conversationId, 120) || null,
-        sourceSurface: cleanString(input.sourceSurface, 120) || null,
-        sourceModule: cleanString(input.sourceModule, 120) || 'chatcore',
+        sourceSurface,
+        sourceModule,
+        rawMessage: rawMessage || null,
+        customerRequestSummary: realtyNotes,
         chatbotEngine: true,
         actionType: input.actionType,
         idempotencyKey,
@@ -1238,7 +1402,7 @@ export async function requestChatbotRealtyLead(input: ChatbotRealtyLeadInput) {
             name,
             email,
             phone: cleanString(input.phone, 80) || null,
-            message: cleanString(input.message, 5000) || null,
+            message: realtyNotes,
             stage: 'new',
             lead_type: 'buyer',
             preferred_date: preferredDate || null,

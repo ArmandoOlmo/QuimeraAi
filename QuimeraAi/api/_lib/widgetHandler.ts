@@ -401,6 +401,18 @@ function eventWithResult(
   };
 }
 
+function customerRequestAuditMetadata(
+  target: string,
+  status: 'stored' | 'existing_record' | 'not_applicable' = 'stored',
+): Record<string, unknown> {
+  return {
+    customerRequestSummaryStatus: status,
+    customerRequestSummaryStored: status === 'stored',
+    customerRequestSummaryTarget: target,
+    customerRequestSummaryRedactedFromEvent: true,
+  };
+}
+
 function getActionErrorMetadata(error: unknown): Record<string, unknown> {
   const record = error && typeof error === 'object' ? error as Record<string, unknown> : {};
   const status = Number(record.status || record.statusCode || 500);
@@ -815,6 +827,7 @@ async function handleCreateLead(req: IncomingMessage, res: ServerResponse, parse
     lead_id: String(data.id),
   }, 'executed', {
     leadId: data.id,
+    ...customerRequestAuditMetadata('leads.notes'),
   }));
   send(res, 201, { leadId: data.id });
 }
@@ -969,6 +982,10 @@ async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse
       leadId: result.leadId || null,
       duplicate: result.duplicate,
       paymentStatus: result.appointment.paymentStatus || null,
+      ...customerRequestAuditMetadata(
+        result.leadId ? 'project_appointments.notes,leads.notes' : 'project_appointments.notes',
+        result.duplicate ? 'existing_record' : 'stored',
+      ),
     }));
   }
 
@@ -1427,6 +1444,10 @@ async function handleRequestRestaurantReservation(req: IncomingMessage, res: Ser
     restaurantReservationId: result.reservationId || null,
     reservationStatus: result.status,
     duplicate: result.duplicate,
+    ...customerRequestAuditMetadata(
+      result.leadId ? 'restaurant_reservations.notes,leads.notes' : 'restaurant_reservations.notes',
+      result.duplicate ? 'existing_record' : 'stored',
+    ),
   }));
 
   send(res, result.duplicate ? 200 : 201, {
@@ -1500,6 +1521,10 @@ async function handleRequestRealtyLead(
     crmLeadId: result.crmLeadId || null,
     pipelineEventType: result.pipelineEventType,
     duplicate: result.duplicate,
+    ...customerRequestAuditMetadata(
+      result.crmLeadId ? 'property_leads.message,leads.notes' : 'property_leads.message',
+      result.duplicate ? 'existing_record' : 'stored',
+    ),
   }));
 
   send(res, result.duplicate ? 200 : 201, {
@@ -1940,6 +1965,7 @@ async function handleCreateProductInquiry(req: IncomingMessage, res: ServerRespo
     productId: result.product.id,
     productSlug: result.product.slug,
     duplicate: result.duplicate,
+    ...customerRequestAuditMetadata('leads.notes', result.duplicate ? 'existing_record' : 'stored'),
   }));
 
   send(res, result.duplicate ? 200 : 201, {
@@ -2001,6 +2027,7 @@ async function handleBackInStockRequest(req: IncomingMessage, res: ServerRespons
     productId: result.product.id,
     productSlug: result.product.slug,
     duplicate: result.duplicate,
+    ...customerRequestAuditMetadata('leads.notes', result.duplicate ? 'existing_record' : 'stored'),
   }));
 
   send(res, result.duplicate ? 200 : 201, {

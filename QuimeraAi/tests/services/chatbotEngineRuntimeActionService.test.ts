@@ -220,11 +220,16 @@ describe('chatbotEngineRuntimeActionService', () => {
             customer_email: 'ana@example.com',
             source: 'aiAssistant',
         });
+        expect(client.tables.restaurant_reservations[0].notes).toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(client.tables.restaurant_reservations[0].notes).toContain('Lo que desea el cliente / What the customer wants: Window table');
+        expect(client.tables.restaurant_reservations[0].notes).toContain('Cita / Appointment: Restaurant reservation');
         expect(client.tables.leads[0]).toMatchObject({
             project_id: 'project-1',
             source: 'restaurant-reservation',
             email: 'ana@example.com',
         });
+        expect(client.tables.leads[0].notes).toContain('Lo que desea el cliente / What the customer wants: Window table');
+        expect(client.tables.leads[0].custom_data.customerRequestSummary).toContain('Customer request summary');
     });
 
     it('creates property leads for realty showing requests and keeps pipeline idempotency', async () => {
@@ -260,6 +265,9 @@ describe('chatbotEngineRuntimeActionService', () => {
             pipeline_idempotency_key: 'realty-key-1',
             pipeline_source: 'chatbot-engine',
         });
+        expect(client.tables.property_leads[0].message).toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(client.tables.property_leads[0].message).toContain('Cita / Appointment: Realty showing request: Ocean View');
+        expect(client.tables.property_leads[0].metadata.customerRequestSummary).toContain('What the customer wants');
 
         const duplicate = await requestChatbotRealtyLead({
             supabase: client,
@@ -597,6 +605,9 @@ describe('chatbotEngineRuntimeActionService', () => {
             sourceConversationId: 'conversation-1',
             actionType: 'create_product_inquiry',
         });
+        expect(client.tables.leads[0].notes).toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(client.tables.leads[0].notes).toContain('Lo que desea el cliente / What the customer wants: Is this safe for sensitive skin?');
+        expect(client.tables.leads[0].custom_data.customerRequestSummary).toContain('Ecommerce product inquiry for Radiant Serum');
     });
 
     it('explains shipping and returns only from configured ecommerce settings', async () => {
@@ -747,11 +758,14 @@ describe('chatbotEngineRuntimeActionService', () => {
             email: 'buyer@example.com',
             value: 48,
         });
+        expect(client.tables.leads[0].notes).toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(client.tables.leads[0].notes).toContain('Wants to be notified when Radiant Serum is back in stock');
         expect(client.tables.leads[0].custom_data).toMatchObject({
             actionType: 'back_in_stock_request',
             productId: 'product-1',
             stockNotificationId: 'store_stock_notifications_1',
         });
+        expect(client.tables.leads[0].custom_data.customerRequestSummary).toContain('Back-in-stock request for Radiant Serum');
     });
 
     it('returns order status only after customer email verification', async () => {

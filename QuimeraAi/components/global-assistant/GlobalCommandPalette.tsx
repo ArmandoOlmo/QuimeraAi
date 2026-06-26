@@ -28,6 +28,7 @@ import { Input } from '../ui/input';
 import { AppButton } from '../ui/system/AppButton';
 import { useGlobalCommandPalette } from '../../hooks/useGlobalCommandPalette';
 import type { GlobalCommandItem } from '../../services/globalAssistant/globalCommandSearch';
+import { translateCommandTextSafe } from '../../services/globalAssistant/globalCommandTranslations';
 
 const iconForCommand = (item: GlobalCommandItem) => {
     if (item.type === 'assistant_request' || item.type === 'action') return Sparkles;
@@ -72,45 +73,6 @@ const typeFallback: Record<GlobalCommandItem['type'], string> = {
     module: 'Module',
     action: 'Action',
     admin: 'Admin',
-};
-
-type CommandTranslationParams = Record<string, string | number | boolean | null | undefined>;
-
-const safeTranslationParams = (params?: CommandTranslationParams): CommandTranslationParams => {
-    if (!params) return {};
-
-    return Object.entries(params).reduce<CommandTranslationParams>((safeParams, [key, value]) => {
-        if (key === 'defaultValue' || key === 'interpolation' || key === 'nest') return safeParams;
-        if (
-            typeof value === 'string'
-            || typeof value === 'number'
-            || typeof value === 'boolean'
-            || value == null
-        ) {
-            safeParams[key] = value;
-        }
-        return safeParams;
-    }, {});
-};
-
-const translateSafe = (
-    translate: ReturnType<typeof useTranslation>['t'],
-    key: string | undefined,
-    fallback: string,
-    params?: CommandTranslationParams,
-): string => {
-    if (!key) return fallback;
-    try {
-        const translated = translate(key, {
-            ...safeTranslationParams(params),
-            defaultValue: fallback,
-            interpolation: { skipOnVariables: true },
-            nest: false,
-        } as any);
-        return typeof translated === 'string' ? translated : fallback;
-    } catch {
-        return fallback;
-    }
 };
 
 function GlobalCommandPalette(): React.ReactElement {
@@ -161,15 +123,15 @@ function GlobalCommandPalette(): React.ReactElement {
                         value={query}
                         onChange={event => setQuery(event.target.value)}
                         onKeyDown={handleInputKeyDown}
-                        placeholder={translateSafe(t, 'globalCommandPalette.placeholder', 'Search, open, or ask Quimera')}
-                        aria-label={translateSafe(t, 'globalCommandPalette.ariaLabel', 'Global command palette')}
+                        placeholder={translateCommandTextSafe(t, 'globalCommandPalette.placeholder', 'Search, open, or ask Quimera')}
+                        aria-label={translateCommandTextSafe(t, 'globalCommandPalette.ariaLabel', 'Global command palette')}
                         className="h-11 flex-1 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
                     />
                     <AppButton
                         variant="icon"
                         size="icon-sm"
                         onClick={close}
-                        aria-label={translateSafe(t, 'globalCommandPalette.close', 'Close')}
+                        aria-label={translateCommandTextSafe(t, 'globalCommandPalette.close', 'Close')}
                     >
                         <X size={16} />
                     </AppButton>
@@ -180,10 +142,10 @@ function GlobalCommandPalette(): React.ReactElement {
                 {items.length === 0 ? (
                     <div className="px-4 py-10 text-center">
                         <p className="text-sm font-medium text-q-text">
-                            {translateSafe(t, 'globalCommandPalette.emptyTitle', 'No command found')}
+                            {translateCommandTextSafe(t, 'globalCommandPalette.emptyTitle', 'No command found')}
                         </p>
                         <p className="mt-1 text-xs text-q-text-muted">
-                            {translateSafe(t, 'globalCommandPalette.emptyDescription', 'Try a project, module, or request.')}
+                            {translateCommandTextSafe(t, 'globalCommandPalette.emptyDescription', 'Try a project, module, or request.')}
                         </p>
                     </div>
                 ) : (
@@ -193,13 +155,13 @@ function GlobalCommandPalette(): React.ReactElement {
                             const isSelected = index === selectedIndex;
                             const typeKey = typeLabelKey[item.type] || typeLabelKey.action;
                             const fallbackType = typeFallback[item.type] || typeFallback.action;
-                            const label = translateSafe(
+                            const label = translateCommandTextSafe(
                                 t,
                                 item.labelKey,
-                                item.label || translateSafe(t, 'globalCommandPalette.untitledCommand', 'Untitled command'),
+                                item.label || translateCommandTextSafe(t, 'globalCommandPalette.untitledCommand', 'Untitled command'),
                                 item.labelParams,
                             );
-                            const description = translateSafe(
+                            const description = translateCommandTextSafe(
                                 t,
                                 item.descriptionKey,
                                 item.description || '',
@@ -225,7 +187,7 @@ function GlobalCommandPalette(): React.ReactElement {
                                         <span className="flex items-center gap-2">
                                             <span className="truncate text-sm font-semibold">{label}</span>
                                             <span className="shrink-0 rounded-full border border-border-subtle px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-q-text-muted">
-                                                {translateSafe(t, typeKey, fallbackType)}
+                                                {translateCommandTextSafe(t, typeKey, fallbackType)}
                                             </span>
                                         </span>
                                         {description && (

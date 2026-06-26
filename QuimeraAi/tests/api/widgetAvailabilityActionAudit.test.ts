@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockState = vi.hoisted(() => ({
     getAvailableAppointmentSlots: vi.fn(),
+    requestChatbotRestaurantReservation: vi.fn(),
+    createChatbotEcommerceProductInquiry: vi.fn(),
     recordedEvents: [] as Record<string, any>[],
     projectRow: null as Record<string, any> | null,
 }));
@@ -12,6 +14,15 @@ vi.mock('../../services/appointments/appointmentEngineService.js', () => ({
     getAppointmentsByProject: vi.fn(),
     getAvailableAppointmentSlots: (...args: any[]) => mockState.getAvailableAppointmentSlots(...args),
 }));
+
+vi.mock('../../services/chatbotEngine/chatbotEngineRuntimeActionService.js', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('../../services/chatbotEngine/chatbotEngineRuntimeActionService.js')>();
+    return {
+        ...actual,
+        requestChatbotRestaurantReservation: (...args: any[]) => mockState.requestChatbotRestaurantReservation(...args),
+        createChatbotEcommerceProductInquiry: (...args: any[]) => mockState.createChatbotEcommerceProductInquiry(...args),
+    };
+});
 
 vi.mock('../../api/_lib/supabaseAdmin.js', () => ({
     getSupabaseAdmin: () => ({
@@ -149,10 +160,11 @@ function createSupabaseTableQuery(table: string) {
     return query;
 }
 
-function createReq(url: string) {
+function createReq(url: string, method = 'GET', body?: Record<string, any>) {
     return {
-        method: 'GET',
+        method,
         url,
+        body,
         headers: {
             'user-agent': 'vitest',
             'x-forwarded-for': '127.0.0.1',
@@ -192,11 +204,24 @@ async function callAvailability(url: string) {
     };
 }
 
+async function callWidgetPost(url: string, body: Record<string, any>) {
+    const { default: handler } = await import('../../api/_lib/widgetHandler');
+    const req = createReq(url, 'POST', body);
+    const res = createRes();
+    await handler(req, res);
+    return {
+        status: res.statusCode,
+        body: JSON.parse(res.body || '{}'),
+    };
+}
+
 describe('widget availability action audit', () => {
     beforeEach(() => {
         mockState.recordedEvents.length = 0;
         mockState.projectRow = createProject();
         mockState.getAvailableAppointmentSlots.mockReset();
+        mockState.requestChatbotRestaurantReservation.mockReset();
+        mockState.createChatbotEcommerceProductInquiry.mockReset();
         mockState.getAvailableAppointmentSlots.mockResolvedValue([
             {
                 startDate: '2026-07-01T14:00:00.000Z',
@@ -204,6 +229,21 @@ describe('widget availability action audit', () => {
                 available: true,
             },
         ]);
+        mockState.requestChatbotRestaurantReservation.mockResolvedValue({
+            reservationId: 'reservation-1',
+            duplicate: false,
+            leadId: 'lead-restaurant-1',
+            status: 'pending',
+        });
+        mockState.createChatbotEcommerceProductInquiry.mockResolvedValue({
+            leadId: 'lead-product-1',
+            duplicate: false,
+            product: {
+                id: 'product-1',
+                slug: 'radiant-serum',
+                name: 'Radiant Serum',
+            },
+        });
     });
 
     it('checks appointment availability through Action Registry and records an executed event', async () => {
@@ -285,5 +325,93 @@ describe('widget availability action audit', () => {
             errorCode: 'SLOTS_DOWN',
             errorMessage: 'availability backend unavailable',
         });
+    });
+
+    it('records restaurant reservation execution without copying customer request notes into the event', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-request_restaurant_reservation',
+            actionType: 'request_restaurant_reservation',
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/restaurant-reservations', {
+            restaurantId: 'restaurant-1',
+            customerName: 'Ana Rivera',
+            customerEmail: 'ana@example.com',
+            date: '2026-07-10',
+            time: '19:00',
+            partySize: 4,
+            notes: 'Window table',
+            sourceSurface: 'restaurant_menu',
+            sourceModule: 'restaurants',
+        });
+
+        expect(response.status).toBe(201);
+        expect(mockState.requestChatbotRestaurantReservation).toHaveBeenCalledWith(expect.objectContaining({
+            restaurantId: 'restaurant-1',
+            notes: 'Window table',
+            idempotencyKey: expect.any(String),
+        }));
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_executed',
+            action_type: 'request_restaurant_reservation',
+            action_status: 'executed',
+            lead_id: 'lead-restaurant-1',
+            source_surface: 'restaurant_menu',
+            source_module: 'restaurants',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            restaurantReservationId: 'reservation-1',
+            customerRequestSummaryStatus: 'stored',
+            customerRequestSummaryStored: true,
+            customerRequestSummaryTarget: 'restaurant_reservations.notes,leads.notes',
+            customerRequestSummaryRedactedFromEvent: true,
+        });
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('Window table');
+    });
+
+    it('records ecommerce product inquiry execution with redacted customer request audit metadata', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-create_product_inquiry',
+            actionType: 'create_product_inquiry',
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/products/inquiries', {
+            productId: 'product-1',
+            name: 'Marta Cruz',
+            email: 'marta@example.com',
+            message: 'Is this safe for sensitive skin?',
+            quantity: 2,
+            sourceSurface: 'storefront',
+            sourceModule: 'ecommerce',
+        });
+
+        expect(response.status).toBe(201);
+        expect(mockState.createChatbotEcommerceProductInquiry).toHaveBeenCalledWith(expect.objectContaining({
+            productId: 'product-1',
+            message: 'Is this safe for sensitive skin?',
+            idempotencyKey: expect.any(String),
+        }));
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_executed',
+            action_type: 'create_product_inquiry',
+            action_status: 'executed',
+            lead_id: 'lead-product-1',
+            source_surface: 'storefront',
+            source_module: 'ecommerce',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            leadId: 'lead-product-1',
+            productId: 'product-1',
+            productSlug: 'radiant-serum',
+            customerRequestSummaryStatus: 'stored',
+            customerRequestSummaryStored: true,
+            customerRequestSummaryTarget: 'leads.notes',
+            customerRequestSummaryRedactedFromEvent: true,
+        });
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('sensitive skin');
     });
 });

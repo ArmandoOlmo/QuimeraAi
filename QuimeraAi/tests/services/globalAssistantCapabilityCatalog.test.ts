@@ -4,7 +4,7 @@ import { buildGlobalAssistantCapabilityCatalog } from '../../services/globalAssi
 describe('globalAssistantCapabilityCatalog', () => {
     it('summarizes executable tools separately from preview-only declarations', () => {
         const catalog = buildGlobalAssistantCapabilityCatalog({
-            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments'],
+            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments', 'finance'],
             enabledFeatures: ['emailMarketing', 'ecommerceEnabled'],
         });
 
@@ -17,11 +17,15 @@ describe('globalAssistantCapabilityCatalog', () => {
         const website = catalog.modules.find(module => module.module === 'website');
         const storefront = catalog.modules.find(module => module.module === 'storefront');
         const project = catalog.modules.find(module => module.module === 'project');
+        const admin = catalog.modules.find(module => module.module === 'admin');
+        const finance = catalog.modules.find(module => module.module === 'finance');
         const createEmail = catalog.actions.find(action => action.actionType === 'create_email_campaign');
         const sendEmail = catalog.actions.find(action => action.actionType === 'send_email_campaign');
         const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
         const generateImage = catalog.actions.find(action => action.actionType === 'generate_image');
         const updateProjectMetadata = catalog.actions.find(action => action.actionType === 'update_project_metadata');
+        const searchTenants = catalog.actions.find(action => action.actionType === 'search_tenants');
+        const updateFinanceRecord = catalog.actions.find(action => action.actionType === 'update_finance_record');
 
         expect(catalog.actionCount).toBeGreaterThan(40);
         expect(catalog.executableActionCount).toBeGreaterThan(10);
@@ -63,10 +67,12 @@ describe('globalAssistantCapabilityCatalog', () => {
             'generate_image',
             'edit_image',
             'generate_video',
+            'attach_asset_to_section',
         ]));
         expect(website?.executableActionTypes).toEqual(expect.arrayContaining([
             'edit_website_section',
             'update_section_copy',
+            'update_section_image',
             'reorder_sections',
             'toggle_section_visibility',
         ]));
@@ -80,6 +86,14 @@ describe('globalAssistantCapabilityCatalog', () => {
             'switch_project',
             'search_projects',
             'update_project_metadata',
+        ]));
+        expect(admin?.executableActionTypes).toEqual(expect.arrayContaining([
+            'open_tenant',
+            'search_tenants',
+        ]));
+        expect(finance?.executableActionTypes).toEqual(expect.arrayContaining([
+            'create_finance_record',
+            'update_finance_record',
         ]));
         expect(createEmail).toMatchObject({
             executable: true,
@@ -107,6 +121,21 @@ describe('globalAssistantCapabilityCatalog', () => {
             requiresConfirmation: true,
             previewSupported: true,
             rollbackSupported: true,
+        });
+        expect(searchTenants).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            mutatesData: false,
+            safeNavigation: true,
+            requiredPermissions: ['assistant:admin:use'],
+        });
+        expect(updateFinanceRecord).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            safetyLevel: 'critical',
+            requiresConfirmation: true,
+            rollbackExecutable: true,
+            requiredService: 'finance',
         });
     });
 

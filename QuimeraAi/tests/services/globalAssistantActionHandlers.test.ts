@@ -957,6 +957,88 @@ describe('Global Assistant default action handlers', () => {
         expect(fakeSupabase.rowsByTable.video_generation_jobs || []).toHaveLength(0);
     });
 
+    it('attaches an active Media AI asset to a selected website section and rolls it back', async () => {
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime(['aiFeatures'], ['websiteBuilder']);
+        fakeSupabase.rowsByTable.projects = [buildWebsiteProjectRow()];
+        fakeSupabase.rowsByTable.media_assets = [{
+            id: 'asset-hero',
+            name: 'Hero Image',
+            url: 'https://cdn.quimera.test/hero.jpg',
+            type: 'image/jpeg',
+            project_id: 'project-1',
+            tenant_id: 'tenant-1',
+            metadata: {
+                projectId: 'project-1',
+                tenantId: 'tenant-1',
+            },
+        }];
+        const mediaContext = {
+            ...context,
+            activeModule: 'media' as const,
+            selectedSection: 'hero',
+            activeEntityType: 'media_asset',
+            activeEntityId: 'asset-hero',
+        };
+
+        const planned = await runtime.planRequest({
+            context: mediaContext,
+            request: 'Adjunta este asset a la seccion hero',
+            enabledServices: ['aiFeatures'],
+            enabledFeatures: ['websiteBuilder'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['attach_asset_to_section']);
+        expect(planned.plan.blockers).toEqual([]);
+        expect(planned.plan.status).toBe('preview');
+        expect(planned.plan.previews[0]).toMatchObject({
+            after: {
+                operation: 'attach_media_asset_to_section',
+                sectionId: 'hero',
+                assetId: 'asset-hero',
+                needsReview: true,
+                noAutoPublish: true,
+            },
+            diff: {
+                attached: ['media_assets.asset-hero'],
+                reviewRequired: true,
+                rollback: 'restore_previous_project_website_columns',
+            },
+        });
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: mediaContext });
+        const project = fakeSupabase.rowsByTable.projects[0];
+
+        expect(applied.task.status).toBe('completed');
+        expect(project.data.data.hero.imageUrl).toBe('https://cdn.quimera.test/hero.jpg');
+        expect(project.pages[0].sectionData.hero.imageUrl).toBe('https://cdn.quimera.test/hero.jpg');
+        expect(project.data.data.hero.assistantMediaAttachments.imageUrl).toMatchObject({
+            assetId: 'asset-hero',
+            assetUrl: 'https://cdn.quimera.test/hero.jpg',
+            generatedByAI: true,
+            needsReview: true,
+            noAutoPublish: true,
+            sourceModule: 'global-assistant',
+            sourceComponent: 'OperatingLayer',
+        });
+        expect(project.data.assistantDrafts.website).toMatchObject({
+            lastActionType: 'attach_asset_to_section',
+            generatedByAI: true,
+            needsReview: true,
+        });
+        expect(fakeSupabase.rowsByTable.media_assets).toHaveLength(1);
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context: mediaContext,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0].data.data.hero.imageUrl).toBeUndefined();
+        expect(fakeSupabase.rowsByTable.projects[0].pages[0].sectionData.hero.imageUrl).toBeUndefined();
+        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
+    });
+
     it('runs analytics snapshots from project-scoped module data without writing rows', async () => {
         const { fakeSupabase, runtime, context } = buildRuntime(['analytics', 'crm', 'ecommerce'], []);
         fakeSupabase.rowsByTable.leads = [
@@ -1336,6 +1418,93 @@ describe('Global Assistant default action handlers', () => {
             searched: ['projects'],
             mutatesData: false,
         });
+    });
+
+    it('searches tenants in Super Admin mode without mutating tenant rows', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime([], []);
+        fakeSupabase.rowsByTable.tenants = [
+            {
+                id: 'tenant-casa',
+                name: 'Casa Luna Workspace',
+                email: 'owner@casaluna.test',
+                company_name: 'Casa Luna LLC',
+                type: 'agency',
+                status: 'active',
+                subscription_plan: 'agency_pro',
+                owner_user_id: 'owner-1',
+                limits: { maxProjects: 50, maxUsers: 20, maxStorageGB: 100, maxAiCredits: 5000 },
+                usage: { projectCount: 12, userCount: 6, storageUsedGB: 22.5, aiCreditsUsed: 1440 },
+                created_at: '2026-06-01T00:00:00.000Z',
+                updated_at: '2026-06-26T00:00:00.000Z',
+            },
+            {
+                id: 'tenant-ocean',
+                name: 'Ocean Clinic',
+                email: 'owner@ocean.test',
+                company_name: 'Ocean Health',
+                type: 'individual',
+                status: 'trial',
+                subscription_plan: 'pro',
+                owner_user_id: 'owner-2',
+            },
+        ];
+        const superAdminContext = {
+            ...context,
+            actor: {
+                ...context.actor,
+                role: 'super_admin',
+                mode: 'super_admin' as const,
+                isSuperAdmin: true,
+            },
+            admin: {
+                ...context.admin,
+                enabled: true,
+                adminView: 'tenants',
+            },
+            activeModule: 'admin' as const,
+        };
+
+        const planned = await runtime.planRequest({
+            context: superAdminContext,
+            request: 'Busca tenants Casa',
+            userPermissions: ['assistant:admin:use'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['search_tenants']);
+        expect(planned.plan.status).toBe('draft');
+        expect(planned.plan.requiresConfirmation).toBe(false);
+        expect(planned.plan.blockers).toEqual([]);
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: superAdminContext });
+
+        expect(applied.task.status).toBe('completed');
+        expect(applied.actions[0].afterSnapshot).toMatchObject({
+            kind: 'tenant_search',
+            query: 'Busca tenants Casa',
+            matchCount: 1,
+            source: 'supabase.tenants',
+            scope: 'all_tenants',
+            matches: [{
+                id: 'tenant-casa',
+                name: 'Casa Luna Workspace',
+                email: 'owner@casaluna.test',
+                companyName: 'Casa Luna LLC',
+                status: 'active',
+                subscriptionPlan: 'agency_pro',
+                usage: {
+                    projectCount: 12,
+                    userCount: 6,
+                    storageUsedGB: 22.5,
+                    aiCreditsUsed: 1440,
+                },
+            }],
+        });
+        expect(applied.actions[0].diff).toMatchObject({
+            searched: ['tenants'],
+            mutatesData: false,
+            actionType: 'search_tenants',
+        });
+        expect(fakeSupabase.rowsByTable.tenants).toHaveLength(2);
     });
 
     it('updates project metadata with confirmation and rollback', async () => {
@@ -1721,6 +1890,106 @@ describe('Global Assistant default action handlers', () => {
         });
         expect(fakeSupabase.rowsByTable.payment_intents || []).toHaveLength(0);
         expect(fakeSupabase.rowsByTable.accounting_transactions || []).toHaveLength(0);
+    });
+
+    it('updates and rolls back a selected finance invoice without creating payments or ledger entries', async () => {
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime(['finance'], []);
+        fakeSupabase.rowsByTable.accounting_invoices = [{
+            id: 'invoice-1',
+            project_id: 'project-1',
+            invoice_number: 'INV-0001',
+            status: 'sent',
+            issue_date: '2026-06-01',
+            due_date: '2026-06-30',
+            paid_date: null,
+            customer_name: 'Cliente VIP',
+            customer_email: 'vip@example.com',
+            items: [{ id: 'item-1', description: 'Consulting', quantity: 1, unitPrice: 500, total: 500 }],
+            subtotal: 500,
+            tax_total: 0,
+            discount_total: 0,
+            total: 500,
+            currency: 'USD',
+            payment_terms: 'Net 30',
+            notes: 'Original notes',
+            metadata: { source: 'manual' },
+            created_at: '2026-06-01T00:00:00.000Z',
+            updated_at: '2026-06-01T00:00:00.000Z',
+        }];
+        const financeContext = {
+            ...context,
+            activeModule: 'finance' as const,
+            activeEntityType: 'finance_invoice',
+            activeEntityId: 'invoice-1',
+        };
+
+        const planned = await runtime.planRequest({
+            context: financeContext,
+            request: 'Marca esta factura como pagada',
+            enabledServices: ['finance'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['update_finance_record']);
+        expect(planned.plan.status).toBe('preview');
+        expect(planned.plan.requiresConfirmation).toBe(true);
+        expect(planned.plan.previews[0]).toMatchObject({
+            after: {
+                operation: 'update_finance_invoice',
+                table: 'accounting_invoices',
+                id: 'invoice-1',
+                noAutoCharge: true,
+                noLedgerEntry: true,
+            },
+            diff: {
+                critical: true,
+                reviewRequired: true,
+                rollback: 'restore_previous_finance_invoice_snapshot',
+            },
+        });
+
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: financeContext });
+        const invoice = fakeSupabase.rowsByTable.accounting_invoices[0];
+
+        expect(applied.task.status).toBe('completed');
+        expect(invoice).toMatchObject({
+            status: 'paid',
+            paid_date: '2026-06-26',
+            updated_at: '2026-06-26T13:30:00.000Z',
+        });
+        expect(invoice.metadata).toMatchObject({
+            source: 'manual',
+            assistantDrafts: {
+                financeUpdate: {
+                    status: 'needs_review',
+                    generatedByAI: true,
+                    needsReview: true,
+                    noAutoCharge: true,
+                    noLedgerEntry: true,
+                },
+            },
+            globalAssistant: {
+                actionType: 'update_finance_record',
+                module: 'finance',
+            },
+        });
+        expect(fakeSupabase.rowsByTable.payment_intents || []).toHaveLength(0);
+        expect(fakeSupabase.rowsByTable.accounting_transactions || []).toHaveLength(0);
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context: financeContext,
+        });
+
+        expect(fakeSupabase.rowsByTable.accounting_invoices[0]).toMatchObject({
+            status: 'sent',
+            paid_date: null,
+            updated_at: '2026-06-01T00:00:00.000Z',
+            metadata: { source: 'manual' },
+        });
+        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
     });
 
     it('runs a read-only project analytics report across module tables', async () => {
