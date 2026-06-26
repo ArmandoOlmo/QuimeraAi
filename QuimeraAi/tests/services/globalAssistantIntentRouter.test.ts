@@ -231,6 +231,20 @@ describe('globalAssistantIntentRouter', () => {
         });
     });
 
+    it('routes generic Media AI asset creation to the draft asset action', () => {
+        expect(routeAssistantIntent('Crea un asset visual para la campana de Casa Luna', context)).toMatchObject({
+            module: 'media',
+            intent: 'create',
+            actionCandidates: ['create_asset_from_prompt'],
+        });
+
+        expect(routeAssistantIntent('Genera un asset de marca para redes sociales', context)).toMatchObject({
+            module: 'media',
+            intent: 'generate_content',
+            actionCandidates: ['create_asset_from_prompt'],
+        });
+    });
+
     it('routes Storefront Builder requests to structured storefront actions', () => {
         expect(routeAssistantIntent('Edita el theme del storefront', context)).toMatchObject({
             module: 'storefront',

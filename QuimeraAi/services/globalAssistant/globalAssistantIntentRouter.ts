@@ -313,6 +313,10 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
         return ['edit_image', 'attach_asset_to_section'];
     }
 
+    if (module === 'media' && (intent === 'create' || intent === 'generate_content')) {
+        return ['create_asset_from_prompt'];
+    }
+
     if (module === 'project' && ['open', 'edit'].includes(intent)) {
         if (includesAny(text, ['cambia proyecto', 'cambia al proyecto', 'cambiar proyecto', 'switch project', 'switch to project'])) {
             return ['switch_project'];
@@ -331,6 +335,8 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
         media: {
             generate_image: ['generate_image'],
             generate_video: ['generate_video'],
+            create: ['create_asset_from_prompt'],
+            generate_content: ['create_asset_from_prompt'],
             edit: ['edit_image', 'attach_asset_to_section'],
         },
         ecommerce: {

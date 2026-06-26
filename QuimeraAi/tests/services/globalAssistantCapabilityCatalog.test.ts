@@ -27,6 +27,7 @@ describe('globalAssistantCapabilityCatalog', () => {
         const sendEmail = catalog.actions.find(action => action.actionType === 'send_email_campaign');
         const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
         const generateImage = catalog.actions.find(action => action.actionType === 'generate_image');
+        const createAsset = catalog.actions.find(action => action.actionType === 'create_asset_from_prompt');
         const updateProjectMetadata = catalog.actions.find(action => action.actionType === 'update_project_metadata');
         const searchTenants = catalog.actions.find(action => action.actionType === 'search_tenants');
         const updateFinanceRecord = catalog.actions.find(action => action.actionType === 'update_finance_record');
@@ -79,6 +80,7 @@ describe('globalAssistantCapabilityCatalog', () => {
             'generate_image',
             'edit_image',
             'generate_video',
+            'create_asset_from_prompt',
             'attach_asset_to_section',
         ]));
         expect(website?.executableActionTypes).toEqual(expect.arrayContaining([
@@ -161,6 +163,12 @@ describe('globalAssistantCapabilityCatalog', () => {
             executable: true,
             availableInContext: true,
             requiredService: 'aiFeatures',
+        });
+        expect(createAsset).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            requiredService: 'aiFeatures',
+            rollbackExecutable: true,
         });
         expect(updateProjectMetadata).toMatchObject({
             executable: true,

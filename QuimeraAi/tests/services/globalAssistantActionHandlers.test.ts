@@ -1018,6 +1018,38 @@ describe('Global Assistant default action handlers', () => {
         expect(fakeSupabase.rowsByTable.video_generation_jobs || []).toHaveLength(0);
     });
 
+    it('creates a generic Media AI asset draft from a prompt', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['aiFeatures'], []);
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Crea un asset visual para la campana de Casa Luna',
+            enabledServices: ['aiFeatures'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['create_asset_from_prompt']);
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const assets = fakeSupabase.rowsByTable.media_assets;
+
+        expect(applied.task.status).toBe('completed');
+        expect(assets).toHaveLength(1);
+        expect(assets[0]).toMatchObject({
+            category: 'ai_generated',
+            is_ai_generated: true,
+            is_system_asset: false,
+        });
+        expect(assets[0].metadata).toMatchObject({
+            mediaKind: 'asset',
+            generationStatus: 'draft_prompt',
+            generatedByAI: true,
+            needsReview: true,
+            readyForMediaAI: true,
+            noAutoPublish: true,
+        });
+        expect(fakeSupabase.rowsByTable.video_generation_jobs || []).toHaveLength(0);
+    });
+
     it('attaches an active Media AI asset to a selected website section and rolls it back', async () => {
         const { fakeSupabase, runtime, context, auditService } = buildRuntime(['aiFeatures'], ['websiteBuilder']);
         fakeSupabase.rowsByTable.projects = [buildWebsiteProjectRow()];

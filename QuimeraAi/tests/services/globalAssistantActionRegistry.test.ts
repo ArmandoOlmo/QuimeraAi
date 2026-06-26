@@ -85,6 +85,7 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('publish_website')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('unpublish_website')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('unpublish_website')?.rollback).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_asset_from_prompt')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('attach_asset_to_section')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('add_storefront_section')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('edit_storefront_theme')?.execute).toBe('function');

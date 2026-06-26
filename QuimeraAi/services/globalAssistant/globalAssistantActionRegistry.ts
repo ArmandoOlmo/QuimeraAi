@@ -139,6 +139,13 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         prompt: stringSchema(),
         mode: stringSchema(undefined, ['draft_prompt', 'generate_if_available']),
     }, ['prompt']), 'medium', { requiredService: 'aiFeatures' }),
+    action('media', 'create_asset_from_prompt', 'Create a generic Media AI draft asset from a prompt.', objectSchema({
+        projectId: stringSchema(),
+        prompt: stringSchema(),
+        category: stringSchema(),
+        aspectRatio: stringSchema(undefined, ['1:1', '16:9', '9:16', '4:3', '3:4']),
+        style: stringSchema(),
+    }, ['prompt']), 'medium', { requiredService: 'aiFeatures' }),
     action('media', 'attach_asset_to_section', 'Attach a media asset to a website or Bio Page section.', objectSchema({
         projectId: stringSchema(),
         module: stringSchema(),

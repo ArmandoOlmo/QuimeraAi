@@ -5,6 +5,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { SocialConversation, SocialMessage } from '../../../types/socialChat';
+import { buildChatbotMessageIntentMetadata } from '../../../utils/chatbotEngine/messageIntentMetadata';
 import type { ChatbotEngineSurfaceContext } from '../../../utils/chatbotEngine/surfaceContext';
 
 // =============================================================================
@@ -255,8 +256,30 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
                 return true;
             }
 
-            const { db, collection, doc, addDoc, updateDoc, Timestamp } = await getDataHelpers();
+            const { db, collection, doc, addDoc, updateDoc, getDoc, Timestamp } = await getDataHelpers();
             const now = Timestamp.now();
+            const conversationRef = doc(db, 'socialConversations', targetConvId);
+            let previousConversationData: Partial<SocialConversation> = {};
+
+            try {
+                const conversationSnapshot = await getDoc(conversationRef);
+                previousConversationData = conversationSnapshot.exists()
+                    ? conversationSnapshot.data()
+                    : {};
+            } catch (snapshotError) {
+                console.warn('[useWebChatConversation] Could not load conversation metadata before saving message:', snapshotError);
+            }
+
+            const intentMetadata = buildChatbotMessageIntentMetadata({
+                role: message.role,
+                text: message.text,
+                isVoiceMessage: message.isVoiceMessage,
+                sourceSurface,
+                sourceModule,
+                chatbotEngineContext,
+                previousConversationMetadata: previousConversationData.metadata,
+                previousConversationTags: previousConversationData.tags,
+            });
             
             // Create the message document
             const messageData: Omit<SocialMessage, 'id'> = {
@@ -272,12 +295,7 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
                 timestamp: now,
                 status: 'delivered',
                 processedByAI: message.role === 'model',
-                metadata: {
-                    sourceSurface,
-                    sourceModule,
-                    chatbotEngineContext,
-                    isVoiceMessage: message.isVoiceMessage === true,
-                },
+                metadata: intentMetadata.messageMetadata,
             };
 
             // Save message to socialMessages collection
@@ -286,12 +304,13 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
 
             // Update conversation's lastMessageAt and messageCount
             messageCountRef.current += 1;
-            const conversationRef = doc(db, 'socialConversations', targetConvId);
             await updateDoc(conversationRef, {
                 lastMessageAt: now,
                 messageCount: messageCountRef.current,
                 // Increment unread count for user messages
                 ...(message.role === 'user' ? { unreadCount: messageCountRef.current } : {}),
+                ...(intentMetadata.conversationMetadata ? { metadata: intentMetadata.conversationMetadata } : {}),
+                ...(intentMetadata.conversationTags ? { tags: intentMetadata.conversationTags } : {}),
             });
 
             return true;

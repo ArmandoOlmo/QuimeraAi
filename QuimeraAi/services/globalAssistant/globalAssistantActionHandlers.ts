@@ -4251,12 +4251,14 @@ const readMediaCategory = (value: unknown): string => {
     return category && allowed.has(category) ? category : 'ai_generated';
 };
 
-const buildMediaDraftPlaceholderUrl = (kind: 'image' | 'video' | 'image_edit', title: string): string => {
+const buildMediaDraftPlaceholderUrl = (kind: 'image' | 'video' | 'image_edit' | 'asset', title: string): string => {
     const label = kind === 'video'
         ? 'AI video draft'
         : kind === 'image_edit'
             ? 'AI image edit draft'
-            : 'AI image draft';
+            : kind === 'asset'
+                ? 'AI asset draft'
+                : 'AI image draft';
     const safeTitle = escapeHtml(title);
     const svg = [
         '<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">',
@@ -4278,7 +4280,7 @@ const buildMediaDraftPlaceholderUrl = (kind: 'image' | 'video' | 'image_edit', t
 
 const createMediaDraftAssetHandler = (
     deps: GlobalAssistantActionHandlerDependencies,
-    kind: 'image' | 'video' | 'image_edit',
+    kind: 'image' | 'video' | 'image_edit' | 'asset',
 ): HandlerPatch => ({
     validate: noValidationErrors,
     execute: async (input, { action, context }) => {
@@ -4286,7 +4288,14 @@ const createMediaDraftAssetHandler = (
         const projectId = getProjectId(input, action, context);
         const prompt = readString(input.prompt) || readString(input.request) || 'AI media generation draft';
         const now = getNow(deps);
-        const title = titleFromRequest(prompt, kind === 'video' ? 'AI video generation draft' : 'AI image generation draft');
+        const title = titleFromRequest(
+            prompt,
+            kind === 'video'
+                ? 'AI video generation draft'
+                : kind === 'asset'
+                    ? 'AI media asset draft'
+                    : 'AI image generation draft',
+        );
         const category = readMediaCategory(input.category);
         const aspectRatio = readString(input.aspectRatio) || (kind === 'video' ? '16:9' : '1:1');
         const tags = Array.from(new Set([
@@ -7264,6 +7273,7 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     generate_image: deps => createMediaDraftAssetHandler(deps, 'image'),
     edit_image: deps => createMediaDraftAssetHandler(deps, 'image_edit'),
     generate_video: deps => createMediaDraftAssetHandler(deps, 'video'),
+    create_asset_from_prompt: deps => createMediaDraftAssetHandler(deps, 'asset'),
     update_section_image: createAttachAssetToSectionHandler,
     attach_asset_to_section: createAttachAssetToSectionHandler,
     create_appointment: createAppointmentHandler,
