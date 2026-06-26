@@ -12,6 +12,7 @@ import { useAppLogo } from '../../hooks/useAppLogo';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import {
+    buildDashboardAssistantEntryMetadata,
     createGlobalAssistantEntryPayload,
     dispatchGlobalAssistantEntryRequest,
     getDashboardAssistantQuickActions,
@@ -110,11 +111,11 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
             dispatchGlobalAssistantEntryRequest(createGlobalAssistantEntryPayload(request, {
                 source: 'dashboard_welcome',
                 surface: 'dashboard',
-                metadata: {
-                    route: 'dashboard',
+                metadata: buildDashboardAssistantEntryMetadata({
+                    entryPoint: 'dashboard_input',
                     projectCount: allUserProjectsCount,
                     routingReason: route.reason,
-                },
+                }),
             }));
         }
 
@@ -136,14 +137,12 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         dispatchGlobalAssistantEntryRequest(createGlobalAssistantEntryPayload(request, {
             source: 'dashboard_quick_action',
             surface: action.module === 'admin' ? 'admin' : 'dashboard',
-            metadata: {
-                route: 'dashboard',
+            metadata: buildDashboardAssistantEntryMetadata({
+                entryPoint: 'dashboard_quick_action',
                 projectCount: allUserProjectsCount,
-                quickActionId: action.id,
-                quickActionCategory: action.category,
-                activeModule: action.module,
                 routingReason: 'dashboard_quick_action_routes_to_global_operating_layer',
-            },
+                quickAction: action,
+            }),
         }));
     };
 

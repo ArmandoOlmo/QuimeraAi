@@ -17,6 +17,71 @@ const normalize = (value: string): string =>
 
 const includesAny = (text: string, terms: string[]) => terms.some(term => text.includes(term));
 
+const isNewWebsiteCreationRequest = (text: string): boolean => {
+    const hasCreationIntent = includesAny(text, [
+        'crea',
+        'crear',
+        'create',
+        'genera',
+        'generar',
+        'build',
+        'construye',
+        'haz',
+        'hacer',
+        'nuevo',
+        'nueva',
+        'new',
+    ]);
+    const hasWebsiteTarget = includesAny(text, [
+        'website',
+        'sitio web',
+        'pagina web',
+        'web para',
+        'landing',
+        'landing page',
+        'site',
+    ]);
+    const isExistingWebsiteEdit = includesAny(text, [
+        'seccion',
+        'section',
+        'bloque',
+        'block',
+        'hero',
+        'footer',
+        'headline',
+        'copy',
+        'texto',
+        'editor',
+        'editar',
+        'edita',
+        'edit',
+        'actualiza',
+        'modifica',
+        'reordena',
+        'oculta',
+        'visibilidad',
+    ]);
+    const hasBusinessCreationTarget = includesAny(text, [
+        'para un',
+        'para una',
+        'para mi',
+        'for a',
+        'for my',
+        'negocio',
+        'business',
+        'restaurante',
+        'clinica',
+        'clinic',
+        'realty',
+        'tienda',
+        'servicio',
+        'empresa',
+        'marca',
+    ]);
+
+    return hasCreationIntent && hasWebsiteTarget && hasBusinessCreationTarget && !isExistingWebsiteEdit;
+};
+
 const PROJECT_SCOPED_MODULES = new Set<AssistantModuleTarget>([
     'businessBlueprint',
     'website',
@@ -78,7 +143,7 @@ const inferModule = (text: string, context: AssistantContextSnapshot): Assistant
         'chatbot prompts',
         'chatcore prompts',
     ])) return 'admin';
-    if (includesAny(text, ['ai studio', 'studio', 'website nuevo', 'sitio nuevo'])) return 'aiStudio';
+    if (includesAny(text, ['ai studio', 'studio', 'website nuevo', 'sitio nuevo']) || isNewWebsiteCreationRequest(text)) return 'aiStudio';
     if (includesAny(text, ['chatcore', 'chatbot', 'knowledge', 'entrena', 'train bot'])) return 'chatbot';
     if (includesAny(text, ['business blueprint', 'blueprint'])) return 'businessBlueprint';
     if (includesAny(text, ['storefront', 'escaparate'])) return 'storefront';

@@ -37,6 +37,14 @@ export interface DashboardAssistantQuickAction {
     adminOnly?: boolean;
 }
 
+export interface DashboardAssistantEntryMetadataInput {
+    projectCount: number;
+    routingReason: string;
+    entryPoint: 'dashboard_input' | 'dashboard_quick_action';
+    activeModule?: AssistantModuleTarget | null;
+    quickAction?: Pick<DashboardAssistantQuickAction, 'id' | 'category' | 'module'> | null;
+}
+
 const normalize = (value: string): string =>
     value
         .toLowerCase()
@@ -179,6 +187,28 @@ export function routeDashboardAssistantEntry(request: string): DashboardAssistan
         reason: 'dashboard_request_routes_to_global_operating_layer',
         forwardPromptToAiStudio: false,
     };
+}
+
+export function buildDashboardAssistantEntryMetadata(input: DashboardAssistantEntryMetadataInput): Record<string, unknown> {
+    const metadata: Record<string, unknown> = {
+        route: 'dashboard',
+        entryPoint: input.entryPoint,
+        projectCount: input.projectCount,
+        hasProjects: input.projectCount > 0,
+        routingReason: input.routingReason,
+        requestedMode: input.activeModule === 'admin' || input.quickAction?.module === 'admin'
+            ? 'admin'
+            : 'user',
+    };
+
+    const activeModule = input.activeModule || input.quickAction?.module || null;
+    if (activeModule) metadata.activeModule = activeModule;
+    if (input.quickAction) {
+        metadata.quickActionId = input.quickAction.id;
+        metadata.quickActionCategory = input.quickAction.category;
+    }
+
+    return metadata;
 }
 
 export function createGlobalAssistantEntryPayload(

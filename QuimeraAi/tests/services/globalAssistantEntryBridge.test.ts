@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+    buildDashboardAssistantEntryMetadata,
     createGlobalAssistantEntryPayload,
     getDashboardAssistantQuickActions,
     routeDashboardAssistantEntry,
@@ -49,10 +50,15 @@ describe('globalAssistantEntryBridge', () => {
     });
 
     it('builds a typed dashboard payload for the assistant drawer', () => {
+        const metadata = buildDashboardAssistantEntryMetadata({
+            entryPoint: 'dashboard_input',
+            projectCount: 3,
+            routingReason: 'dashboard_request_routes_to_global_operating_layer',
+        });
         const payload = createGlobalAssistantEntryPayload('  Abre ecommerce  ', {
             source: 'dashboard_quick_action',
             surface: 'dashboard',
-            metadata: { projectCount: 3, activeModule: 'ecommerce' },
+            metadata,
         });
 
         expect(payload).toMatchObject({
@@ -60,9 +66,53 @@ describe('globalAssistantEntryBridge', () => {
             source: 'dashboard_quick_action',
             surface: 'dashboard',
             autoSubmit: true,
-            metadata: { projectCount: 3, activeModule: 'ecommerce' },
+            metadata: {
+                route: 'dashboard',
+                entryPoint: 'dashboard_input',
+                projectCount: 3,
+                hasProjects: true,
+                requestedMode: 'user',
+                routingReason: 'dashboard_request_routes_to_global_operating_layer',
+            },
         });
         expect(new Date(payload.createdAt).toString()).not.toBe('Invalid Date');
+    });
+
+    it('builds dashboard quick-action metadata with module and admin mode context', () => {
+        expect(buildDashboardAssistantEntryMetadata({
+            entryPoint: 'dashboard_quick_action',
+            projectCount: 2,
+            routingReason: 'dashboard_quick_action_routes_to_global_operating_layer',
+            quickAction: {
+                id: 'open_ecommerce',
+                category: 'open',
+                module: 'ecommerce',
+            },
+        })).toMatchObject({
+            route: 'dashboard',
+            entryPoint: 'dashboard_quick_action',
+            projectCount: 2,
+            hasProjects: true,
+            requestedMode: 'user',
+            activeModule: 'ecommerce',
+            quickActionId: 'open_ecommerce',
+            quickActionCategory: 'open',
+        });
+
+        expect(buildDashboardAssistantEntryMetadata({
+            entryPoint: 'dashboard_quick_action',
+            projectCount: 0,
+            routingReason: 'dashboard_quick_action_routes_to_global_operating_layer',
+            quickAction: {
+                id: 'review_platform_errors',
+                category: 'admin',
+                module: 'admin',
+            },
+        })).toMatchObject({
+            hasProjects: false,
+            requestedMode: 'admin',
+            activeModule: 'admin',
+        });
     });
 
     it('exposes dashboard quick actions as Global Assistant command-center entries', () => {

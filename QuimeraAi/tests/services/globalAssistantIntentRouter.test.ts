@@ -91,6 +91,26 @@ describe('globalAssistantIntentRouter', () => {
         expect(intent.requiresClarification).toBe(false);
     });
 
+    it('routes dashboard-style website creation through AI Studio while keeping website edits in Website Builder', () => {
+        expect(routeAssistantIntent('Crea un website para un restaurante con menu y citas', context)).toMatchObject({
+            module: 'aiStudio',
+            intent: 'create',
+            actionCandidates: ['create_project_from_prompt'],
+        });
+
+        expect(routeAssistantIntent('Crea una landing page para una clinica dental', context)).toMatchObject({
+            module: 'aiStudio',
+            intent: 'create',
+            actionCandidates: ['create_project_from_prompt'],
+        });
+
+        expect(routeAssistantIntent('Agrega una seccion de testimonios al website', context)).toMatchObject({
+            module: 'website',
+            intent: 'create',
+            actionCandidates: ['create_website_from_prompt'],
+        });
+    });
+
     it('does not treat generic campaigns as email unless email terms are present', () => {
         expect(routeAssistantIntent('Crea una campana para restaurante en Instagram', context)).toMatchObject({
             module: 'restaurants',
