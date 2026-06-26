@@ -10,6 +10,7 @@ import type {
 import { recordAppointmentEngineEvent } from './appointmentEventService.js';
 import { createAppointmentFollowUpTask, createOrLinkLeadForAppointment } from './appointmentLeadPipelineService.js';
 import { createAppointmentPaymentDraft } from './appointmentPaymentService.js';
+import { buildReadableChatbotCustomerRequestNote } from '../../utils/chatbotEngine/customerRequestNotes.js';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
 
@@ -555,7 +556,8 @@ export async function createAppointmentCanonical(
     const source = input.source || 'dashboard';
     const linkedLeadIds = uniqueStrings(input.linkedLeadIds, [input.linkedLeadId, input.sourceLeadId]);
     const appointmentNotes = normalizeString(input.notes, 6000);
-    const initialNotes = buildInitialMeetingNotes(input, appointmentNotes, source);
+    const readableAppointmentNotes = buildReadableChatbotCustomerRequestNote(appointmentNotes, input.description);
+    const initialNotes = buildInitialMeetingNotes(input, readableAppointmentNotes, source);
     const metadata = {
         ...(input.metadata || {}),
         source,
@@ -570,6 +572,7 @@ export async function createAppointmentCanonical(
         locale: input.locale,
         conversationTranscript: normalizeString(input.conversationTranscript, 20000),
         customerRequestSummary: appointmentNotes,
+        customerRequestNote: readableAppointmentNotes,
     };
 
     const row = {
@@ -664,7 +667,7 @@ export async function createAppointmentCanonical(
             correlationId: appointment.correlationId,
             createdBy: input.createdBy,
             tags: row.tags,
-            notes: input.notes || appointment.description,
+            notes: appointmentNotes || appointment.description,
             metadata,
         });
         leadId = leadResult.leadId || leadId;

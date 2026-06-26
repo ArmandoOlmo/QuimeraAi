@@ -60,6 +60,10 @@ export interface UseMetaOAuthReturn extends MetaOAuthState {
 // HOOK
 // =============================================================================
 
+const isMetaOAuthEnabled = () => import.meta.env.VITE_META_OAUTH_ENABLED === 'true';
+
+const META_OAUTH_DISABLED_MESSAGE = 'Meta OAuth backend is not enabled for this environment.';
+
 export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
     const { user } = useAuth();
 
@@ -84,6 +88,23 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
     const loadConnection = useCallback(async () => {
         if (!projectId || !user) {
             setState(prev => ({ ...prev, isLoading: false, status: 'disconnected' }));
+            return;
+        }
+
+        if (!isMetaOAuthEnabled()) {
+            setState(prev => ({
+                ...prev,
+                status: 'disconnected',
+                isLoading: false,
+                error: null,
+                connection: null,
+                pages: [],
+                whatsappAccounts: [],
+                instagramAccounts: [],
+                selectedPageId: null,
+                selectedWhatsAppPhoneNumberId: null,
+                selectedInstagramAccountId: null,
+            }));
             return;
         }
 
@@ -165,6 +186,11 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
             return;
         }
 
+        if (!isMetaOAuthEnabled()) {
+            setState(prev => ({ ...prev, status: 'disconnected', error: META_OAUTH_DISABLED_MESSAGE }));
+            return;
+        }
+
         setState(prev => ({ ...prev, status: 'connecting', error: null }));
 
         try {
@@ -197,6 +223,22 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
 
     const disconnect = useCallback(async () => {
         if (!projectId || !user) return;
+
+        if (!isMetaOAuthEnabled()) {
+            setState({
+                status: 'disconnected',
+                isLoading: false,
+                error: null,
+                connection: null,
+                pages: [],
+                whatsappAccounts: [],
+                instagramAccounts: [],
+                selectedPageId: null,
+                selectedWhatsAppPhoneNumberId: null,
+                selectedInstagramAccountId: null,
+            });
+            return;
+        }
 
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
@@ -235,6 +277,11 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
     const refreshToken = useCallback(async () => {
         if (!projectId || !user) return;
 
+        if (!isMetaOAuthEnabled()) {
+            setState(prev => ({ ...prev, status: 'disconnected', error: META_OAUTH_DISABLED_MESSAGE }));
+            return;
+        }
+
         setState(prev => ({ ...prev, status: 'refreshing', error: null }));
 
         try {
@@ -265,6 +312,11 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
         instagramAccountId?: string;
     }) => {
         if (!projectId || !user) return;
+
+        if (!isMetaOAuthEnabled()) {
+            setState(prev => ({ ...prev, isLoading: false, error: META_OAUTH_DISABLED_MESSAGE }));
+            return;
+        }
 
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
@@ -323,7 +375,6 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
 };
 
 export default useMetaOAuth;
-
 
 
 

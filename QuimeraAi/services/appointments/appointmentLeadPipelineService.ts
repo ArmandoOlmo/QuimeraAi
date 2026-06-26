@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { buildReadableChatbotCustomerRequestNote } from '../../utils/chatbotEngine/customerRequestNotes.js';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
 
@@ -93,6 +94,7 @@ const buildLeadMetadata = (input: AppointmentLeadPipelineInput): Record<string, 
     sourceModule: input.sourceModule,
     conversationTranscript: normalizeString(input.conversationTranscript, 20000),
     customerRequestSummary: normalizeString(input.notes, 6000),
+    customerRequestNote: buildReadableChatbotCustomerRequestNote(input.notes),
     idempotencyKey: input.idempotencyKey,
     correlationId: input.correlationId,
 });
@@ -108,6 +110,7 @@ export async function createOrLinkLeadForAppointment(
     const source = resolveLeadSource(input.source);
     const metadata = buildLeadMetadata(input);
     const tags = uniqueStrings(['appointment', 'booked', input.source], resolveModuleTags(input, source), input.tags);
+    const readableLeadNotes = buildReadableChatbotCustomerRequestNote(input.notes);
 
     if (!input.linkedLeadId && !email && !phone && !name) {
         return {
@@ -146,7 +149,7 @@ export async function createOrLinkLeadForAppointment(
             ? lead.custom_data
             : {};
         const updatedTags = uniqueStrings(lead.tags || [], tags);
-        const updatedNotes = appendLeadNotes(lead.notes, input.notes);
+        const updatedNotes = appendLeadNotes(lead.notes, readableLeadNotes || input.notes);
         const update = await client
             .from('leads')
             .update({
@@ -191,7 +194,7 @@ export async function createOrLinkLeadForAppointment(
         source,
         value: 0,
         tags,
-        notes: input.notes || `Appointment booked${input.appointmentTitle ? `: ${input.appointmentTitle}` : ''}`,
+        notes: readableLeadNotes || input.notes || `Appointment booked${input.appointmentTitle ? `: ${input.appointmentTitle}` : ''}`,
         custom_data: metadata,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

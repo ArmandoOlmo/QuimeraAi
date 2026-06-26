@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockState = vi.hoisted(() => ({
+    createAppointmentFromChat: vi.fn(),
+    createAppointmentFromPublicBooking: vi.fn(),
     getAvailableAppointmentSlots: vi.fn(),
     requestChatbotRestaurantReservation: vi.fn(),
     createChatbotEcommerceProductInquiry: vi.fn(),
@@ -14,8 +16,8 @@ const mockState = vi.hoisted(() => ({
 }));
 
 vi.mock('../../services/appointments/appointmentEngineService.js', () => ({
-    createAppointmentFromChat: vi.fn(),
-    createAppointmentFromPublicBooking: vi.fn(),
+    createAppointmentFromChat: (...args: any[]) => mockState.createAppointmentFromChat(...args),
+    createAppointmentFromPublicBooking: (...args: any[]) => mockState.createAppointmentFromPublicBooking(...args),
     getAppointmentsByProject: vi.fn(),
     getAvailableAppointmentSlots: (...args: any[]) => mockState.getAvailableAppointmentSlots(...args),
 }));
@@ -243,6 +245,8 @@ describe('widget availability action audit', () => {
     beforeEach(() => {
         mockState.recordedEvents.length = 0;
         mockState.projectRow = createProject();
+        mockState.createAppointmentFromChat.mockReset();
+        mockState.createAppointmentFromPublicBooking.mockReset();
         mockState.getAvailableAppointmentSlots.mockReset();
         mockState.requestChatbotRestaurantReservation.mockReset();
         mockState.createChatbotEcommerceProductInquiry.mockReset();
@@ -258,6 +262,30 @@ describe('widget availability action audit', () => {
                 available: true,
             },
         ]);
+        mockState.createAppointmentFromChat.mockResolvedValue({
+            appointmentId: 'appointment-1',
+            leadId: 'lead-1',
+            duplicate: false,
+            warnings: [],
+            appointment: {
+                id: 'appointment-1',
+                paymentStatus: null,
+                ecommerceOrderId: null,
+                metadata: {},
+            },
+        });
+        mockState.createAppointmentFromPublicBooking.mockResolvedValue({
+            appointmentId: 'appointment-public-1',
+            leadId: 'lead-public-1',
+            duplicate: false,
+            warnings: [],
+            appointment: {
+                id: 'appointment-public-1',
+                paymentStatus: null,
+                ecommerceOrderId: null,
+                metadata: {},
+            },
+        });
         mockState.requestChatbotRestaurantReservation.mockResolvedValue({
             reservationId: 'reservation-1',
             duplicate: false,
@@ -531,6 +559,67 @@ describe('widget availability action audit', () => {
             errorCode: 'SLOTS_DOWN',
             errorMessage: 'availability backend unavailable',
         });
+    });
+
+    it('creates ChatCore appointments with a linked CRM lead when payload uses generic contact fields', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-create_appointment',
+            actionType: 'create_appointment',
+            ownerModule: 'appointments',
+            requiresConsent: true,
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/appointments', {
+            source: 'chatbot',
+            title: 'Consulta de ChatCore',
+            description: 'Quiere evaluar un paquete premium.',
+            startDate: '2026-07-10T14:00:00.000Z',
+            endDate: '2026-07-10T14:30:00.000Z',
+            name: 'Maria Gomez',
+            email: 'maria@example.com',
+            phone: '+1 787 555 0101',
+            leadId: 'lead-existing-1',
+            conversationId: 'conversation-1',
+            customerRequestSummary: 'Maria quiere una consulta para comparar el paquete premium.',
+            consent: true,
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+        });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+            appointmentId: 'appointment-1',
+            leadId: 'lead-1',
+        });
+        expect(mockState.createAppointmentFromChat).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({
+                participantName: 'Maria Gomez',
+                participantEmail: 'maria@example.com',
+                participantPhone: '+1 787 555 0101',
+                linkedLeadId: 'lead-existing-1',
+                sourceConversationId: 'conversation-1',
+                sourceModule: 'chatcore',
+                sourceComponent: 'ChatCore',
+                notes: expect.stringContaining('Maria quiere una consulta para comparar el paquete premium.'),
+            }),
+        );
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_executed',
+            action_type: 'create_appointment',
+            action_status: 'executed',
+            appointment_id: 'appointment-1',
+            lead_id: 'lead-1',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            appointmentId: 'appointment-1',
+            leadId: 'lead-1',
+            customerRequestSummaryTarget: 'project_appointments.notes,leads.notes',
+            customerRequestSummaryRedactedFromEvent: true,
+        });
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('paquete premium');
     });
 
     it('records restaurant reservation execution without copying customer request notes into the event', async () => {

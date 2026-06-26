@@ -86,6 +86,10 @@ function bi(es: string, en: string): string {
     return `ES: ${es}\nEN: ${en}`;
 }
 
+function uniqueStrings(values: string[]): string[] {
+    return Array.from(new Set(values.filter(Boolean)));
+}
+
 function metadata(now: string, generatedBy: BlueprintEditableMetadata['generatedBy'] = 'ai'): BlueprintEditableMetadata {
     return {
         generatedBy,
@@ -830,6 +834,29 @@ function createChatbotBlueprintFromInput(input: ChatbotBlueprintDraftInput): Cha
                     'Only published visible Bio Page blocks can be exposed publicly.',
                 )],
             }),
+            chatbotKnowledgeSource({
+                id: 'knowledge-crm-leads-private',
+                name: bi('Leads, historial de conversación y notas privadas de CRM', 'CRM leads, conversation history, and private notes'),
+                type: 'crm_leads_private',
+                ownerModule: 'crm',
+                visibility: 'private',
+                status: 'disabled',
+                blockers: [bi(
+                    'Los datos de leads son privados y solo pueden usarse para alimentar CRM, notas internas y handoff humano.',
+                    'Lead data is private and can only be used to feed CRM, internal notes, and human handoff.',
+                )],
+            }),
+            chatbotKnowledgeSource({
+                id: 'knowledge-email-marketing-flows',
+                name: bi('Audiencias, consentimiento y borradores de Email Marketing', 'Email Marketing audiences, consent, and draft flows'),
+                type: 'email_marketing_flows',
+                ownerModule: 'email-marketing',
+                visibility: 'internal',
+                warnings: [bi(
+                    'El chatbot puede crear borradores y suscripciones con consentimiento; no debe enviar campañas automaticamente.',
+                    'The chatbot can create consented subscriptions and drafts; it must not send campaigns automatically.',
+                )],
+            }),
         ],
         actions: [
             chatbotAction('answer_from_knowledge', 'chatbot-engine', { publicAllowed: true, requiresConfirmation: false, idempotencyRequired: false }),
@@ -985,8 +1012,8 @@ function createChatbotBlueprintFromInput(input: ChatbotBlueprintDraftInput): Cha
             smsReadiness: ready([], [bi('El canal SMS no está configurado.', 'SMS channel is not configured.')]),
             emailReadiness: ready([], [bi('El canal de handoff por email no está configurado.', 'Email handoff channel is not configured.')]),
         },
-        testing: {
-            testScenarios: [
+        testing: (() => {
+            const testScenarios: ChatbotBlueprint['testing']['testScenarios'] = [
                 {
                     id: 'chatbot-test-visitor-basic',
                     name: bi('Visitante anónimo pregunta sobre el negocio', 'Anonymous visitor asks about the business'),
@@ -1000,6 +1027,56 @@ function createChatbotBlueprintFromInput(input: ChatbotBlueprintDraftInput): Cha
                     status: 'draft',
                     needsReview: true,
                 },
+                {
+                    id: 'chatbot-test-intent-analytics',
+                    name: bi('Analiza intención y registra analytics', 'Analyzes intent and records analytics'),
+                    persona: 'returning_visitor',
+                    prompt: bi('Estoy comparando opciones y quiero saber si esto es para mí.', 'I am comparing options and want to know if this is right for me.'),
+                    expectedActions: ['save_conversation', 'save_message', 'analyze_intent', 'record_analytics_event'],
+                    expectedSources: ['business_blueprint'],
+                    status: 'draft',
+                    needsReview: true,
+                },
+                {
+                    id: 'chatbot-test-lead-crm',
+                    name: bi('Captura lead y alimenta CRM', 'Captures lead and feeds CRM'),
+                    persona: 'qualified_lead',
+                    prompt: bi('Quiero que me contacten. Mi email es lead@example.com y me interesa una cotización.', 'I want someone to contact me. My email is lead@example.com and I am interested in a quote.'),
+                    expectedActions: ['create_lead', 'score_lead', 'link_conversation_to_lead'],
+                    expectedSources: ['business_blueprint', 'crm_leads_private'],
+                    status: 'draft',
+                    needsReview: true,
+                },
+                {
+                    id: 'chatbot-test-human-handoff',
+                    name: bi('Escala a handoff humano con resumen', 'Escalates to human handoff with summary'),
+                    persona: 'visitor_needs_human',
+                    prompt: bi('Prefiero hablar con una persona y explicar mi caso.', 'I prefer to speak with a person and explain my case.'),
+                    expectedActions: ['handoff_to_human', 'save_conversation'],
+                    expectedSources: ['business_blueprint', 'crm_leads_private'],
+                    status: 'draft',
+                    needsReview: true,
+                },
+                {
+                    id: 'chatbot-test-email-marketing-draft',
+                    name: bi('Crea borrador de Email Marketing sin enviar', 'Creates Email Marketing draft without sending'),
+                    persona: 'marketing_opt_in_lead',
+                    prompt: bi('Sí, pueden enviarme seguimiento por email sobre esta solicitud.', 'Yes, you can send me email follow-up about this request.'),
+                    expectedActions: ['subscribe_email_audience', 'queue_email_follow_up'],
+                    expectedSources: ['email_marketing_flows', 'crm_leads_private'],
+                    status: 'draft',
+                    needsReview: true,
+                },
+                {
+                    id: 'chatbot-test-bio-page',
+                    name: bi('Responde desde Bio Page y captura intención', 'Answers from Bio Page and captures intent'),
+                    persona: 'bio_page_visitor',
+                    prompt: bi('Vi tu Bio Page. Qué enlace debo abrir para reservar o comprar?', 'I saw your Bio Page. Which link should I open to book or buy?'),
+                    expectedActions: ['answer_from_knowledge', 'create_lead'],
+                    expectedSources: ['bio_page', 'business_blueprint'],
+                    status: 'draft',
+                    needsReview: true,
+                },
                 ...(hasEcommerce ? [{
                     id: 'chatbot-test-product-search',
                     name: bi('Comprador ecommerce busca productos', 'Ecommerce buyer searches products'),
@@ -1009,11 +1086,64 @@ function createChatbotBlueprintFromInput(input: ChatbotBlueprintDraftInput): Cha
                     expectedSources: ['ecommerce_products'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedSources'],
                     status: 'draft' as const,
                     needsReview: true,
+                }, {
+                    id: 'chatbot-test-checkout-product-inquiry',
+                    name: bi('Asiste checkout y consulta de producto', 'Assists checkout and product inquiry'),
+                    persona: 'checkout_buyer',
+                    prompt: bi('Quiero comprar este producto, pero tengo una pregunta antes de pagar.', 'I want to buy this product, but I have a question before paying.'),
+                    expectedActions: ['start_checkout', 'create_product_inquiry'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedActions'],
+                    expectedSources: ['ecommerce_products', 'ecommerce_policies'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedSources'],
+                    status: 'draft' as const,
+                    needsReview: true,
                 }] : []),
-            ],
+                ...(wantsBooking ? [{
+                    id: 'chatbot-test-appointment-booking',
+                    name: bi('Consulta disponibilidad y prepara cita', 'Checks availability and prepares appointment'),
+                    persona: 'booking_lead',
+                    prompt: bi('Necesito una cita la próxima semana para una consulta.', 'I need an appointment next week for a consultation.'),
+                    expectedActions: ['check_availability', 'create_appointment'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedActions'],
+                    expectedSources: ['appointments_services', 'business_blueprint'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedSources'],
+                    status: 'draft' as const,
+                    needsReview: true,
+                }] : []),
+                ...(hasRestaurant ? [{
+                    id: 'chatbot-test-restaurant-reservation',
+                    name: bi('Maneja reserva de restaurante', 'Handles restaurant reservation'),
+                    persona: 'restaurant_guest',
+                    prompt: bi('Quiero reservar una mesa para cuatro personas este viernes.', 'I want to reserve a table for four people this Friday.'),
+                    expectedActions: ['request_restaurant_reservation'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedActions'],
+                    expectedSources: ['restaurant_menu'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedSources'],
+                    status: 'draft' as const,
+                    needsReview: true,
+                }] : []),
+                ...(hasRealEstate ? [{
+                    id: 'chatbot-test-realty-showing',
+                    name: bi('Atiende inquiry de real estate', 'Handles real estate inquiry'),
+                    persona: 'property_buyer',
+                    prompt: bi('Quiero ver esta propiedad y registrarme para el open house.', 'I want to see this property and register for the open house.'),
+                    expectedActions: ['request_realty_showing', 'register_open_house'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedActions'],
+                    expectedSources: ['realty_listings'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedSources'],
+                    status: 'draft' as const,
+                    needsReview: true,
+                }] : []),
+                ...(hasFinance ? [{
+                    id: 'chatbot-test-finance-quote',
+                    name: bi('Crea solicitud de cotización en Finance', 'Creates Finance quote request'),
+                    persona: 'quote_requester',
+                    prompt: bi('Necesito una cotización formal con detalles para revisión.', 'I need a formal quote with details for review.'),
+                    expectedActions: ['create_finance_quote_request'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedActions'],
+                    expectedSources: ['finance_invoices_private', 'business_blueprint'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedSources'],
+                    status: 'draft' as const,
+                    needsReview: true,
+                }] : []),
+            ];
+
+            return {
+                testScenarios,
             regressionQuestions: [
                 bi('En qué puedes ayudarme?', 'What can you help me with?'),
                 bi('Cómo puedo contactar al negocio?', 'How can I contact the business?'),
+                bi('Puedes agendar, recomendar productos o pasarme con un humano?', 'Can you book, recommend products, or hand me off to a human?'),
             ],
             blockedAnswerRules: [
                 bi(
@@ -1025,13 +1155,14 @@ function createChatbotBlueprintFromInput(input: ChatbotBlueprintDraftInput): Cha
                     'Do not execute public actions unless the Action Registry marks them enabled and ready.',
                 ),
             ],
-            expectedActions: ['answer_from_knowledge', 'create_lead', 'handoff_to_human'],
+                expectedActions: uniqueStrings(testScenarios.flatMap(scenario => scenario.expectedActions)) as ChatbotBlueprint['testing']['expectedActions'],
             evaluationStatus: 'not_run',
             readiness: ready([bi(
                 'Los escenarios de prueba son borradores hasta ejecutarse en Test Lab.',
                 'Test scenarios are drafts until run in Test Lab.',
             )]),
-        },
+            };
+        })(),
         analytics: {
             events: [
                 'chatbot_widget_viewed',

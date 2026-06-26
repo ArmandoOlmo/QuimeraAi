@@ -35,9 +35,9 @@ const FeatureProviders = lazy(() => import('./AppFeatureProviders'));
 const AuthGatedProviders: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user, loadingAuth } = useAuth();
 
-    // While loading auth or if not logged in, render without feature providers
-    // This makes the login screen and auth flow much faster
-    if (loadingAuth || !user) {
+    // If Supabase already has a user while auth is still settling, keep authenticated
+    // children inside the feature tree so route-level hooks never mount without providers.
+    if (!user) {
         return <>{children}</>;
     }
 

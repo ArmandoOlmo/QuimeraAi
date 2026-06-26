@@ -902,23 +902,46 @@ async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse
 
   const source = normalizeString(body.source, 80) === 'chatbot' ? 'chatbot' : 'public_booking';
   const bookingChannel = normalizeString(body.bookingChannel, 120);
-  const participantEmail = normalizeString(body.participantEmail, 320);
-  const participantName = normalizeString(body.participantName, 200);
-  const participantPhone = normalizeString(body.participantPhone, 80);
+  const appointmentMetadata = normalizeMetadata(body.metadata);
+  const participantEmail = normalizeString(body.participantEmail, 320)
+    || normalizeString(body.customerEmail, 320)
+    || normalizeString(body.email, 320)
+    || normalizeString(appointmentMetadata.participantEmail, 320)
+    || normalizeString(appointmentMetadata.customerEmail, 320)
+    || normalizeString(appointmentMetadata.email, 320);
+  const participantName = normalizeString(body.participantName, 200)
+    || normalizeString(body.customerName, 200)
+    || normalizeString(body.name, 200)
+    || normalizeString(appointmentMetadata.participantName, 200)
+    || normalizeString(appointmentMetadata.customerName, 200)
+    || normalizeString(appointmentMetadata.name, 200);
+  const participantPhone = normalizeString(body.participantPhone, 80)
+    || normalizeString(body.customerPhone, 80)
+    || normalizeString(body.phone, 80)
+    || normalizeString(appointmentMetadata.participantPhone, 80)
+    || normalizeString(appointmentMetadata.customerPhone, 80)
+    || normalizeString(appointmentMetadata.phone, 80);
   const providedSourceModule = normalizeString(body.sourceModule, 120)
     || normalizeString(normalizeMetadata(body.metadata).sourceModule, 120)
     || normalizeString(getWidgetContextRecord(body).sourceModule, 120);
   const appointmentSourceModule = providedSourceModule
     || (source === 'chatbot' ? getWidgetSourceModule(body) : 'website-builder');
   const appointmentSourceSurface = getWidgetSourceSurface(body);
-  const appointmentMetadata = normalizeMetadata(body.metadata);
   const rawAppointmentNotes = normalizeString(body.notes, 6000)
     || normalizeString(body.customerRequestSummary, 6000)
     || normalizeString(appointmentMetadata.customerRequestSummary, 6000)
     || normalizeString(body.description, 5000);
   const appointmentTitle = normalizeString(body.title, 250) || (source === 'chatbot' ? 'Cita desde Chatbot' : 'Reserva desde sitio web');
-  const linkedLeadId = normalizeString(body.linkedLeadId, 80);
-  const sourceConversationId = normalizeString(body.sourceConversationId, 120);
+  const linkedLeadId = normalizeString(body.linkedLeadId, 80)
+    || normalizeString(body.leadId, 80)
+    || normalizeString(body.sourceLeadId, 80)
+    || normalizeString(appointmentMetadata.linkedLeadId, 80)
+    || normalizeString(appointmentMetadata.leadId, 80)
+    || normalizeString(appointmentMetadata.sourceLeadId, 80);
+  const sourceConversationId = normalizeString(body.sourceConversationId, 120)
+    || normalizeString(body.conversationId, 120)
+    || normalizeString(appointmentMetadata.sourceConversationId, 120)
+    || normalizeString(appointmentMetadata.conversationId, 120);
   const appointmentNotes = appendWidgetCustomerRequestNotes(rawAppointmentNotes, {
     body,
     projectName: project.name,

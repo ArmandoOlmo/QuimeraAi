@@ -147,3 +147,60 @@ export const appendChatbotCustomerRequestNotes = (
     if (dedupeNeedle && existing.includes(dedupeNeedle)) return existing;
     return `${existing}\n\n${next}`.slice(0, MAX_NOTE_LENGTH);
 };
+
+const valueAfterAnyLabel = (lines: string[], labels: string[]): string => {
+    for (const line of lines) {
+        for (const label of labels) {
+            if (line.startsWith(label)) return cleanText(line.slice(label.length), 1400);
+        }
+    }
+    return '';
+};
+
+const conversationContextFromSummary = (lines: string[]): string => {
+    const index = lines.findIndex(line => line.startsWith('Resumen de conversacion / Conversation snapshot:'));
+    if (index < 0) return '';
+    return lines
+        .slice(index + 1)
+        .filter(line => line.startsWith('- '))
+        .map(line => line.replace(/^-+\s*/, ''))
+        .map(line => line.replace(/^Cliente \/ Customer:\s*/i, 'Cliente: '))
+        .map(line => line.replace(/^Asistente \/ Assistant:\s*/i, 'Asistente: '))
+        .slice(0, 3)
+        .join(' | ');
+};
+
+export const buildReadableChatbotCustomerRequestNote = (
+    customerRequestNotes?: string | null,
+    fallback?: string | null,
+): string => {
+    const raw = cleanNoteBlock(customerRequestNotes);
+    if (!raw) return cleanNoteBlock(fallback);
+    if (!raw.includes('Resumen de solicitud del cliente / Customer request summary')) return raw;
+
+    const lines = raw
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean);
+    const customer = valueAfterAnyLabel(lines, ['Cliente / Customer: ']);
+    const request = valueAfterAnyLabel(lines, ['Lo que desea el cliente / What the customer wants: ']);
+    const appointment = valueAfterAnyLabel(lines, ['Cita / Appointment: ']);
+    const requestedTime = valueAfterAnyLabel(lines, ['Fecha solicitada / Requested time: ']);
+    const urgency = valueAfterAnyLabel(lines, ['Urgencia / Urgency: ']);
+    const recommendedAction = valueAfterAnyLabel(lines, ['Accion recomendada / Recommended action: ']);
+    const latestMessage = valueAfterAnyLabel(lines, ['Ultimo mensaje del cliente / Latest customer message: ']);
+    const context = conversationContextFromSummary(lines) || latestMessage;
+
+    const readableLines = [
+        'Resumen para seguimiento / Follow-up summary',
+        customer ? `Cliente / Customer: ${customer}` : '',
+        request ? `Solicitud / Request: ${request}` : '',
+        appointment ? `Cita / Appointment: ${appointment}` : '',
+        requestedTime ? `Fecha solicitada / Requested time: ${requestedTime}` : '',
+        urgency && urgency !== 'unknown' ? `Prioridad / Priority: ${urgency}` : '',
+        recommendedAction ? `Siguiente paso sugerido / Suggested next step: ${recommendedAction}` : '',
+        context ? `Contexto / Context: ${context}` : '',
+    ].filter(Boolean);
+
+    return (readableLines.length > 1 ? readableLines.join('\n') : raw).slice(0, MAX_NOTE_LENGTH);
+};
