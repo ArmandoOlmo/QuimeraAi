@@ -57,6 +57,8 @@ export interface ProductRecommendationRequest {
     tags?: string[];
     inStockOnly?: boolean;
     limit?: number;
+    conversationId?: string | null;
+    metadata?: Record<string, unknown>;
 }
 
 export interface ProductRecommendationResult {
@@ -74,7 +76,9 @@ export interface ProductInquiryRequest {
     message?: string;
     quantity?: number;
     consent?: boolean;
+    conversationId?: string | null;
     idempotencyKey?: string;
+    metadata?: Record<string, unknown>;
 }
 
 export interface ProductInquiryResult {
@@ -92,7 +96,9 @@ export interface CheckoutIntentItem {
 
 export interface CheckoutIntentRequest {
     items: CheckoutIntentItem[];
+    conversationId?: string | null;
     idempotencyKey?: string;
+    metadata?: Record<string, unknown>;
 }
 
 export interface CheckoutIntent {
@@ -170,6 +176,8 @@ export interface EcommerceChatOptions {
 export interface OrderVerification {
     email?: string;
     orderAccessToken?: string;
+    conversationId?: string | null;
+    metadata?: Record<string, unknown>;
 }
 
 export interface BackInStockRequest {
@@ -178,6 +186,9 @@ export interface BackInStockRequest {
     email: string;
     name?: string;
     consent?: boolean;
+    marketingConsent?: boolean;
+    conversationId?: string | null;
+    metadata?: Record<string, unknown>;
 }
 
 const ORDER_STATUS_LABELS: Record<string, { es: string; en: string }> = {
@@ -273,9 +284,9 @@ export const useEcommerceChat = (
         ...payload,
         sourceSurface,
         sourceModule,
-        conversationId: options.conversationId || undefined,
-        consent: options.consent,
-        marketingConsent: options.marketingConsent,
+        conversationId: typeof payload.conversationId === 'string' ? payload.conversationId : options.conversationId || undefined,
+        consent: typeof payload.consent === 'boolean' ? payload.consent : options.consent,
+        marketingConsent: typeof payload.marketingConsent === 'boolean' ? payload.marketingConsent : options.marketingConsent,
         chatbotEngineContext: options.chatbotEngineContext,
         metadata: {
             sourceSurface,
@@ -332,6 +343,8 @@ export const useEcommerceChat = (
                 ...payload,
                 email: verification.email,
                 orderAccessToken: verification.orderAccessToken,
+                conversationId: verification.conversationId,
+                metadata: verification.metadata,
             });
 
             return mapOrder(order, isSpanish);
@@ -346,6 +359,7 @@ export const useEcommerceChat = (
     const getProductInfo = useCallback(async (
         searchTerm: string,
         searchType: 'id' | 'name' = 'name',
+        requestContext: { conversationId?: string | null; metadata?: Record<string, unknown> } = {},
     ): Promise<ProductInfo | ProductInfo[] | null> => {
         setIsLoading(true);
         setError(null);
@@ -354,6 +368,8 @@ export const useEcommerceChat = (
             const result = await callWidgetApi<{ products?: Record<string, any>[] }>('/products/search', {
                 query: searchTerm,
                 limit: searchType === 'id' ? 8 : 5,
+                conversationId: requestContext.conversationId,
+                metadata: requestContext.metadata,
             });
             const products = (result.products || []).map(mapProduct);
             if (searchType === 'id') {
@@ -387,6 +403,8 @@ export const useEcommerceChat = (
                 tags: input.tags,
                 inStockOnly: input.inStockOnly,
                 limit: input.limit,
+                conversationId: input.conversationId,
+                metadata: input.metadata,
             });
             return {
                 products: (result.products || []).map(mapProduct),
@@ -417,7 +435,9 @@ export const useEcommerceChat = (
                 message: input.message,
                 quantity: input.quantity,
                 consent: input.consent ?? options.consent,
+                conversationId: input.conversationId,
                 idempotencyKey: input.idempotencyKey,
+                metadata: input.metadata,
             });
 
             if (!result.product) {
@@ -446,7 +466,9 @@ export const useEcommerceChat = (
         try {
             return await callWidgetApi<CheckoutIntent>('/checkout/intent', {
                 items: input.items,
+                conversationId: input.conversationId,
                 idempotencyKey: input.idempotencyKey,
+                metadata: input.metadata,
             });
         } catch (err: any) {
             setError(err.message || (isSpanish ? 'Error al preparar el checkout.' : 'Error preparing checkout.'));
@@ -508,7 +530,9 @@ export const useEcommerceChat = (
                 email: input.email,
                 name: input.name,
                 consent: input.consent ?? options.consent,
-                marketingConsent: input.consent ?? options.marketingConsent,
+                marketingConsent: input.marketingConsent ?? input.consent ?? options.marketingConsent,
+                conversationId: input.conversationId,
+                metadata: input.metadata,
             });
         } catch (err: any) {
             setError(err.message || (isSpanish ? 'Error al registrar el aviso de inventario.' : 'Error registering stock notification.'));

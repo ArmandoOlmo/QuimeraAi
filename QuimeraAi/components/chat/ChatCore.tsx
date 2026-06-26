@@ -366,6 +366,10 @@ const HUMAN_HANDOFF_PHRASE_RE = /(hablar|conectar|conectame|conéctame|pasame|p�
 const HUMAN_HANDOFF_URGENT_RE = /\b(urgente|urgency|urgent|ahora|now|emergencia|emergency|molesto|enojado|queja|complaint|reclamo|problema|issue|error|fallo|fail)\b/i;
 const HUMAN_HANDOFF_ORDER_RE = /\b(pedido|orden|order|tracking|env[ií]o|shipping|pago|payment|checkout|refund|reembolso|devoluci[oó]n|return)\b/i;
 const HUMAN_HANDOFF_PRICING_RE = /\b(precio|pricing|cotizaci[oó]n|cotizar|quote|cost|costo|presupuesto|proposal)\b/i;
+const RESTAURANT_RESERVATION_INTENT_RE = /\b(reserva|reservar|reservaci[oó]n|booking|book|mesa|table|party|pax)\b/i;
+const REALTY_SHOWING_INTENT_RE = /\b(showing|visita|tour|ver propiedad|ver la propiedad|see property|property tour|open house|casa abierta)\b/i;
+const EMAIL_MARKETING_CONSENT_INTENT_RE = /\b(newsletter|suscrib|subscribe|promociones|promos|ofertas|marketing|acepto recibir|quiero recibir emails|send me emails)\b/i;
+const FINANCE_QUOTE_INTENT_RE = /\b(cotiz|quote|presupuesto|estimate|propuesta|invoice draft|borrador de factura)\b/i;
 
 const hasHumanHandoffIntent = (message: string): boolean => (
     HUMAN_HANDOFF_PHRASE_RE.test(message) || HUMAN_HANDOFF_INTENT_RE.test(message)
@@ -382,6 +386,92 @@ const resolveHumanHandoffPriority = (message: string): 'normal' | 'high' | 'urge
     if (/\b(urgente|urgent|emergencia|emergency|ahora|now)\b/i.test(message)) return 'urgent';
     if (HUMAN_HANDOFF_URGENT_RE.test(message)) return 'high';
     return 'normal';
+};
+
+const readSurfaceMetadataString = (
+    context: ChatbotEngineSurfaceContext | null | undefined,
+    keys: string[],
+): string | undefined => {
+    const metadata = context?.metadata || {};
+    for (const key of keys) {
+        const value = readContextString(metadata[key]);
+        if (value) return value;
+    }
+    return undefined;
+};
+
+const isRestaurantSurface = (context?: ChatbotEngineSurfaceContext | null): boolean => Boolean(
+    context?.sourceSurface === 'restaurant_menu'
+    || context?.sourceModule === 'restaurants'
+    || context?.entityType === 'restaurant'
+    || context?.contextKeys.includes('restaurant')
+);
+
+const resolveRestaurantId = (context?: ChatbotEngineSurfaceContext | null): string | undefined => (
+    readSurfaceMetadataString(context, ['restaurantId', 'activeRestaurantId', 'restaurant_id'])
+    || (context?.entityType === 'restaurant' ? readContextString(context.entityId) : undefined)
+);
+
+const isRealtySurface = (context?: ChatbotEngineSurfaceContext | null): boolean => Boolean(
+    context?.sourceSurface === 'realty_property_page'
+    || context?.sourceModule === 'realty'
+    || context?.entityType === 'property'
+    || context?.entityType === 'realty_property'
+    || context?.contextKeys.includes('realty')
+    || context?.contextKeys.includes('property')
+);
+
+const resolvePropertyId = (
+    context?: ChatbotEngineSurfaceContext | null,
+    activeProperty?: any,
+): string | undefined => (
+    readSurfaceMetadataString(context, ['propertyId', 'activePropertyId', 'listingId', 'realtyPropertyId'])
+    || (context?.entityType === 'property' || context?.entityType === 'realty_property' ? readContextString(context.entityId) : undefined)
+    || readContextString(activeProperty?.id)
+    || readContextString(activeProperty?.propertyId)
+);
+
+const resolveOpenHouseId = (context?: ChatbotEngineSurfaceContext | null): string | undefined => (
+    readSurfaceMetadataString(context, ['openHouseId', 'activeOpenHouseId', 'open_house_id'])
+);
+
+const resolveEmailAudienceId = (context?: ChatbotEngineSurfaceContext | null): string | undefined => (
+    readSurfaceMetadataString(context, ['emailAudienceId', 'audienceId', 'newsletterAudienceId', 'activeAudienceId'])
+);
+
+const extractDateFromMessage = (message: string): string | null => {
+    const match = message.match(/\b(20\d{2}-\d{2}-\d{2})\b/);
+    return match?.[1] || null;
+};
+
+const extractTimeFromMessage = (message: string): string | null => {
+    const hourMinuteMatch = message.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b/);
+    if (hourMinuteMatch) {
+        return `${hourMinuteMatch[1].padStart(2, '0')}:${hourMinuteMatch[2]}`;
+    }
+    const meridiemMatch = message.match(/\b(1[0-2]|0?[1-9])\s*(am|pm)\b/i);
+    if (!meridiemMatch) return null;
+    const hour = Number(meridiemMatch[1]);
+    const meridiem = meridiemMatch[2].toLowerCase();
+    const normalizedHour = meridiem === 'pm' && hour < 12
+        ? hour + 12
+        : meridiem === 'am' && hour === 12
+            ? 0
+            : hour;
+    return `${String(normalizedHour).padStart(2, '0')}:00`;
+};
+
+const extractPartySizeFromMessage = (message: string): number | null => {
+    const match = message.match(/\b(\d{1,2})\s*(personas|people|guests|invitados|pax|party)\b/i)
+        || message.match(/\b(?:para|for|party of)\s*(\d{1,2})\b/i);
+    const value = match?.[1] ? Number(match[1]) : null;
+    return value && Number.isFinite(value) && value > 0 ? value : null;
+};
+
+const extractCurrencyAmountFromMessage = (message: string): number | null => {
+    const match = message.match(/(?:\$|usd\s*|por\s+|for\s+|amount\s+|total\s+)(\d+(?:[.,]\d{1,2})?)/i);
+    const value = match?.[1] ? Number(match[1].replace(',', '.')) : null;
+    return value !== null && Number.isFinite(value) ? value : null;
 };
 
 // Detect visual intent - when user asks about what they see on screen
@@ -627,6 +717,12 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     });
     const {
         requestHumanHandoff,
+        requestRestaurantReservation,
+        requestRealtyShowing,
+        registerOpenHouse,
+        subscribeEmailAudience,
+        queueEmailFollowUpDraft,
+        createFinanceQuoteRequest,
         formatHumanHandoffResponse,
     } = useChatbotBusinessActions(projectIdForConversation, projectOwnerId, chatLanguage, {
         apiBaseUrl: WIDGET_API_BASE_URL,
@@ -1255,6 +1351,234 @@ ${suggestAvailableSlots()}
         return formatHumanHandoffResponse(result);
     };
 
+    const formatRestaurantReservationResponse = (result: Awaited<ReturnType<typeof requestRestaurantReservation>>): string => {
+        const isSpanish = chatLanguage === 'es';
+        if (!result) {
+            return isSpanish
+                ? 'No pude registrar la reserva ahora mismo. Compárteme email o teléfono y la dejo lista para seguimiento.'
+                : 'I could not register the reservation right now. Share your email or phone and I will prepare it for follow-up.';
+        }
+        if (result.duplicate) {
+            return isSpanish
+                ? 'Esta solicitud de reserva ya estaba registrada. El equipo la puede ver en la bandeja.'
+                : 'This reservation request was already registered. The team can see it in the inbox.';
+        }
+        return isSpanish
+            ? 'Listo, registre tu solicitud de reserva y deje los detalles en la conversacion para seguimiento.'
+            : 'Done. I registered your reservation request and saved the details in the conversation for follow-up.';
+    };
+
+    const formatRealtyLeadResponse = (result: Awaited<ReturnType<typeof requestRealtyShowing>>): string => {
+        const isSpanish = chatLanguage === 'es';
+        if (!result) {
+            return isSpanish
+                ? 'No pude registrar la solicitud de propiedad ahora mismo. Compárteme tu email y lo intento de nuevo.'
+                : 'I could not register the property request right now. Share your email and I will try again.';
+        }
+        if (result.duplicate) {
+            return isSpanish
+                ? 'Esta solicitud de propiedad ya estaba registrada. El equipo la puede ver en CRM y en la bandeja.'
+                : 'This property request was already registered. The team can see it in CRM and the inbox.';
+        }
+        return isSpanish
+            ? 'Listo, registre tu interes en la propiedad y guarde el resumen para que el equipo pueda dar seguimiento.'
+            : 'Done. I registered your property interest and saved the summary so the team can follow up.';
+    };
+
+    const formatEmailFollowUpDraftResponse = (
+        result: Awaited<ReturnType<typeof queueEmailFollowUpDraft>>,
+        subscribedToAudience: boolean,
+    ): string => {
+        const isSpanish = chatLanguage === 'es';
+        if (!result) {
+            return isSpanish
+                ? 'No pude preparar el seguimiento por email ahora mismo. Dejare la solicitud en esta conversacion.'
+                : 'I could not prepare the email follow-up right now. I will keep the request in this conversation.';
+        }
+        const reviewNote = result.reviewRequired
+            ? (isSpanish ? 'queda pendiente de revision antes de enviarse' : 'it stays pending review before sending')
+            : (isSpanish ? 'queda listo para seguimiento' : 'it is ready for follow-up');
+        if (subscribedToAudience) {
+            return isSpanish
+                ? `Listo, registre tu consentimiento de marketing y cree un borrador de email; ${reviewNote}.`
+                : `Done. I registered your marketing consent and created an email draft; ${reviewNote}.`;
+        }
+        return isSpanish
+            ? `Listo, cree un borrador de email para seguimiento; ${reviewNote}.`
+            : `Done. I created an email follow-up draft; ${reviewNote}.`;
+    };
+
+    const formatFinanceQuoteResponse = (result: Awaited<ReturnType<typeof createFinanceQuoteRequest>>): string => {
+        const isSpanish = chatLanguage === 'es';
+        if (!result) {
+            return isSpanish
+                ? 'No pude crear el borrador de cotizacion ahora mismo. Dejare la solicitud guardada en la conversacion.'
+                : 'I could not create the quote draft right now. I will keep the request saved in the conversation.';
+        }
+        const total = result.total ? ` ${result.currency || 'USD'} ${Number(result.total).toFixed(2)}` : '';
+        return isSpanish
+            ? `Listo, cree un borrador financiero${total} para revision interna antes de enviarlo.`
+            : `Done. I created a finance draft${total} for internal review before sending.`;
+    };
+
+    const runCanonicalBusinessAction = async (
+        userMessage: string,
+        contact: { email: string | null; phone: string | null },
+    ): Promise<string | null> => {
+        const isSpanish = chatLanguage === 'es';
+        const conversationId = conversationIdRef.current || undefined;
+        const customerEmail = contact.email || preChatData.email.trim() || undefined;
+        const customerPhone = contact.phone || preChatData.phone.trim() || undefined;
+        const customerName = preChatData.name.trim() || customerEmail?.split('@')[0]?.trim() || undefined;
+        const projectKey = projectIdForConversation || project?.id || 'project';
+        const metadata = {
+            leadId: capturedLeadIdRef.current,
+            sourceComponent: 'ChatCore',
+            detectedBy: 'chatcore-deterministic-business-action',
+            messageCount: messagesRef.current.length,
+            isEmbedded,
+        };
+
+        if (isRestaurantSurface(chatbotEngineContext) && RESTAURANT_RESERVATION_INTENT_RE.test(userMessage)) {
+            const restaurantId = resolveRestaurantId(chatbotEngineContext);
+            if (!restaurantId) return null;
+
+            const date = extractDateFromMessage(userMessage);
+            const time = extractTimeFromMessage(userMessage);
+            const partySize = extractPartySizeFromMessage(userMessage);
+            const missing = [
+                !date ? (isSpanish ? 'fecha en formato AAAA-MM-DD' : 'date in YYYY-MM-DD format') : '',
+                !time ? (isSpanish ? 'hora' : 'time') : '',
+                !partySize ? (isSpanish ? 'cantidad de personas' : 'party size') : '',
+                !customerEmail && !customerPhone ? (isSpanish ? 'email o telefono' : 'email or phone') : '',
+            ].filter(Boolean);
+
+            if (missing.length > 0 || !date || !time || !partySize || (!customerEmail && !customerPhone)) {
+                return isSpanish
+                    ? `Para registrar la reserva necesito: ${missing.join(', ')}.`
+                    : `To register the reservation I need: ${missing.join(', ')}.`;
+            }
+
+            const reservation = await requestRestaurantReservation({
+                restaurantId,
+                customerName,
+                customerEmail,
+                customerPhone,
+                date,
+                time,
+                partySize,
+                notes: userMessage,
+                conversationId,
+                consent: leadConfig.enabled,
+                idempotencyKey: `chatcore:${projectKey}:${restaurantId}:${conversationId || customerEmail || customerPhone}:reservation`,
+                metadata,
+            });
+            return formatRestaurantReservationResponse(reservation);
+        }
+
+        if (isRealtySurface(chatbotEngineContext) && REALTY_SHOWING_INTENT_RE.test(userMessage)) {
+            const propertyId = resolvePropertyId(chatbotEngineContext, activePropertyContext);
+            if (!propertyId) return null;
+            if (!customerEmail) {
+                return isSpanish
+                    ? 'Para registrar la solicitud de propiedad necesito tu email.'
+                    : 'To register the property request I need your email.';
+            }
+
+            const openHouseId = resolveOpenHouseId(chatbotEngineContext);
+            const basePayload = {
+                propertyId,
+                name: customerName,
+                email: customerEmail,
+                phone: customerPhone,
+                message: userMessage,
+                notes: userMessage,
+                preferredDate: extractDateFromMessage(userMessage) || undefined,
+                conversationId,
+                consent: leadConfig.enabled,
+                metadata,
+            };
+            const realtyLead = openHouseId && /\b(open house|casa abierta)\b/i.test(userMessage)
+                ? await registerOpenHouse({
+                    ...basePayload,
+                    openHouseId,
+                    idempotencyKey: `chatcore:${projectKey}:${propertyId}:${openHouseId}:${customerEmail}:open-house`,
+                })
+                : await requestRealtyShowing({
+                    ...basePayload,
+                    idempotencyKey: `chatcore:${projectKey}:${propertyId}:${customerEmail}:showing`,
+                });
+            return formatRealtyLeadResponse(realtyLead);
+        }
+
+        if (EMAIL_MARKETING_CONSENT_INTENT_RE.test(userMessage)) {
+            if (!customerEmail) {
+                return isSpanish
+                    ? 'Para activar el seguimiento por email necesito tu correo electronico.'
+                    : 'To enable email follow-up I need your email address.';
+            }
+
+            const audienceId = resolveEmailAudienceId(chatbotEngineContext);
+            const subscription = audienceId
+                ? await subscribeEmailAudience({
+                    audienceId,
+                    email: customerEmail,
+                    name: customerName,
+                    leadId: capturedLeadIdRef.current || undefined,
+                    marketingConsent: true,
+                    consentSource: 'chatcore-explicit-user-request',
+                    consent: true,
+                    idempotencyKey: `chatcore:${projectKey}:${audienceId}:${customerEmail}:subscription`,
+                    metadata: {
+                        ...metadata,
+                        conversationId,
+                    },
+                })
+                : null;
+            const draft = await queueEmailFollowUpDraft({
+                email: customerEmail,
+                name: customerName,
+                leadId: capturedLeadIdRef.current || undefined,
+                conversationId,
+                subject: isSpanish ? 'Seguimiento solicitado desde ChatCore' : 'Follow-up requested from ChatCore',
+                text: userMessage,
+                sourceEvent: 'chatcore_email_follow_up_requested',
+                marketingConsent: true,
+                consentSource: 'chatcore-explicit-user-request',
+                consent: true,
+                idempotencyKey: `chatcore:${projectKey}:${conversationId || customerEmail}:email-follow-up`,
+                metadata,
+            });
+            return formatEmailFollowUpDraftResponse(draft, Boolean(subscription));
+        }
+
+        const activeProduct = resolveActiveEcommerceProduct(chatbotEngineContext);
+        if (!activeProduct && FINANCE_QUOTE_INTENT_RE.test(userMessage)) {
+            if (!customerEmail) {
+                return isSpanish
+                    ? 'Para preparar una cotizacion necesito tu email.'
+                    : 'To prepare a quote I need your email.';
+            }
+            const quote = await createFinanceQuoteRequest({
+                customerName,
+                customerEmail,
+                description: userMessage,
+                message: userMessage,
+                amount: extractCurrencyAmountFromMessage(userMessage) || undefined,
+                currency: 'USD',
+                leadId: capturedLeadIdRef.current || undefined,
+                conversationId,
+                sourceEvent: 'chatcore_finance_quote_requested',
+                consent: leadConfig.enabled,
+                idempotencyKey: `chatcore:${projectKey}:${conversationId || customerEmail}:finance-quote`,
+                metadata,
+            });
+            return formatFinanceQuoteResponse(quote);
+        }
+
+        return null;
+    };
+
     const runCanonicalEcommerceAction = async (
         userMessage: string,
         contact: { email: string | null; phone: string | null },
@@ -1265,7 +1589,9 @@ ${suggestAvailableSlots()}
         const orderIdentifier = extractOrderIdentifier(userMessage);
 
         if (orderIdentifier && hasEcommerceIntent(userMessage, ECOMMERCE_ORDER_INTENT_RE)) {
-            const order = await checkOrderStatus(orderIdentifier, 'orderId');
+            const order = await checkOrderStatus(orderIdentifier, 'orderId', {
+                conversationId: conversationIdRef.current || undefined,
+            });
             return formatOrderResponse(order);
         }
 
@@ -1286,6 +1612,7 @@ ${suggestAvailableSlots()}
                     productSlug: activeProduct.productSlug,
                     quantity: 1,
                 }],
+                conversationId: conversationIdRef.current || undefined,
                 idempotencyKey: `chatcore:${projectIdForConversation || project?.id}:${activeProduct.productId || activeProduct.productSlug}:checkout`,
             });
             return formatCheckoutIntentResponse(checkoutIntent);
@@ -1304,6 +1631,7 @@ ${suggestAvailableSlots()}
                 phone: contact.phone || undefined,
                 message: userMessage,
                 consent: leadConfig.enabled,
+                conversationId: conversationIdRef.current || undefined,
                 idempotencyKey: `chatcore:${projectIdForConversation || project?.id}:${activeProduct.productId || activeProduct.productSlug}:${contact.email || contact.phone}:inquiry`,
             });
             return formatProductInquiryResponse(inquiry);
@@ -1316,12 +1644,15 @@ ${suggestAvailableSlots()}
                 activeProductSlug: activeProduct?.productSlug,
                 inStockOnly: true,
                 limit: 4,
+                conversationId: conversationIdRef.current || undefined,
             });
             return formatRecommendationsResponse(recommendations);
         }
 
         if (hasEcommerceIntent(userMessage, ECOMMERCE_PRODUCT_SEARCH_INTENT_RE)) {
-            const products = await getProductInfo(userMessage, 'name');
+            const products = await getProductInfo(userMessage, 'name', {
+                conversationId: conversationIdRef.current || undefined,
+            });
             return formatProductResponse(products);
         }
 
@@ -2015,6 +2346,13 @@ ${suggestAvailableSlots()}
             if (canonicalHumanHandoffResponse) {
                 setMessages(prev => [...prev, { role: 'model', text: canonicalHumanHandoffResponse }]);
                 await saveConversationMessage({ role: 'model', text: canonicalHumanHandoffResponse });
+                return;
+            }
+
+            const canonicalBusinessResponse = await runCanonicalBusinessAction(userMessage, extractedContact);
+            if (canonicalBusinessResponse) {
+                setMessages(prev => [...prev, { role: 'model', text: canonicalBusinessResponse }]);
+                await saveConversationMessage({ role: 'model', text: canonicalBusinessResponse });
                 return;
             }
 

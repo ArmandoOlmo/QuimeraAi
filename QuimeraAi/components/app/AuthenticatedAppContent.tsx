@@ -8,6 +8,7 @@ import GlobalSEO from '../GlobalSEO';
 import AdPixelsInjector from '../AdPixelsInjector';
 import { lazyWithRetry } from '../../utils/lazyWithRetry';
 import { AdminView, View } from '../../types/ui';
+import ErrorBoundary from '../ErrorBoundary';
 
 const GlobalAiAssistant = lazyWithRetry(() => import('../ui/GlobalAiAssistant'));
 const GlobalCommandPalette = lazyWithRetry(() => import('../global-assistant/GlobalCommandPalette'));
@@ -82,9 +83,11 @@ const AuthenticatedAppContent: React.FC<AuthenticatedAppContentProps> = ({
       <Suspense fallback={null}>
         <GlobalAiAssistant />
       </Suspense>
-      <Suspense fallback={null}>
-        <GlobalCommandPalette />
-      </Suspense>
+      <ErrorBoundary fallback={null}>
+        <Suspense fallback={null}>
+          <GlobalCommandPalette />
+        </Suspense>
+      </ErrorBoundary>
       <Suspense fallback={null}>
         <OnboardingModal />
       </Suspense>

@@ -3,6 +3,34 @@ export type CommandTranslationParams = Record<string, string | number | boolean 
 type TranslateFunction = (key: string, options?: Record<string, unknown>) => unknown;
 
 const reservedTranslationParamKeys = new Set(['defaultValue', 'interpolation', 'nest']);
+const i18nextNestingPrefixPattern = /\$t\(/g;
+
+const maskI18nextNestingSyntax = (
+    value: string,
+    masks: Array<[string, string]>,
+): string => value.replace(i18nextNestingPrefixPattern, match => {
+    const token = `__quimera_command_i18n_nest_${masks.length}__`;
+    masks.push([token, match]);
+    return token;
+});
+
+const restoreI18nextNestingSyntax = (
+    value: string,
+    masks: Array<[string, string]>,
+): string => masks.reduce(
+    (current, [token, original]) => current.split(token).join(original),
+    value,
+);
+
+const maskCommandTranslationParams = (
+    params: CommandTranslationParams,
+    masks: Array<[string, string]>,
+): CommandTranslationParams => Object.fromEntries(
+    Object.entries(params).map(([key, value]) => [
+        key,
+        typeof value === 'string' ? maskI18nextNestingSyntax(value, masks) : value,
+    ]),
+) as CommandTranslationParams;
 
 export const sanitizeCommandTranslationParams = (
     params?: CommandTranslationParams | null,
@@ -42,14 +70,18 @@ export const translateCommandTextSafe = (
     params?: CommandTranslationParams | null,
 ): string => {
     if (!key) return fallback;
+    const masks: Array<[string, string]> = [];
     try {
+        const safeParams = maskCommandTranslationParams(sanitizeCommandTranslationParams(params), masks);
+        const safeFallback = maskI18nextNestingSyntax(fallback, masks);
         const translated = translate(key, {
-            ...sanitizeCommandTranslationParams(params),
-            defaultValue: fallback,
+            ...safeParams,
+            defaultValue: safeFallback,
             interpolation: { skipOnVariables: true },
             nest: false,
         });
-        return typeof translated === 'string' ? translated : fallback;
+        const resolved = typeof translated === 'string' ? translated : safeFallback;
+        return restoreI18nextNestingSyntax(resolved, masks);
     } catch {
         return fallback;
     }

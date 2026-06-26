@@ -937,6 +937,176 @@ export function enrichAssistantExecutionPreview(
         };
     }
 
+    if (action.actionType === 'update_feature_flag') {
+        const tenantId = asText(action.input.tenantId) || asText(action.input.tenant_id) || '$target_tenant';
+        const featureFlag = asText(action.input.featureFlag) || asText(action.input.feature_flag) || '$feature_flag';
+        return {
+            ...preview,
+            before: {
+                table: 'tenants',
+                id: tenantId,
+                path: 'settings.enabledFeatures',
+            },
+            after: {
+                operation: 'update_tenant_feature_flag',
+                table: 'tenants',
+                id: tenantId,
+                featureFlag,
+                enabled: action.input.enabled !== false,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                updated: [`tenants.${tenantId}.settings.enabledFeatures`],
+                critical: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_tenant_settings' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Changes tenant feature access after confirmation.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous tenant settings row snapshot.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'update_service_availability') {
+        const serviceId = asText(action.input.serviceId) || asText(action.input.service_id) || '$service';
+        const status = asText(action.input.status) || asText(action.input.newStatus) || (action.input.enabled === false ? 'not_public' : 'public');
+        return {
+            ...preview,
+            before: {
+                table: 'settings',
+                id: 'serviceAvailability',
+                path: `config.services.${serviceId}`,
+            },
+            after: {
+                operation: 'update_service_availability',
+                table: 'settings',
+                id: 'serviceAvailability',
+                serviceId,
+                status,
+                auditTable: 'service_audit_logs',
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                updated: [`settings.serviceAvailability.config.services.${serviceId}.status`],
+                auditLogged: ['service_audit_logs.$pending'],
+                critical: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_service_availability' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Changes global platform service visibility after confirmation.',
+                'Audit log is append-only; rollback restores availability config but does not erase audit evidence.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous service availability settings row.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'update_plan') {
+        const tenantId = asText(action.input.tenantId) || asText(action.input.tenant_id) || '$target_tenant';
+        const planId = asText(action.input.planId) || asText(action.input.plan_id) || '$plan';
+        return {
+            ...preview,
+            before: {
+                table: 'tenants',
+                id: tenantId,
+                path: 'subscription_plan/limits/billing_info',
+            },
+            after: {
+                operation: 'update_tenant_plan_metadata',
+                table: 'tenants',
+                id: tenantId,
+                planId,
+                noStripeMutation: true,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                updated: [`tenants.${tenantId}.subscription_plan`, `tenants.${tenantId}.limits`, `tenants.${tenantId}.billing_info`],
+                critical: true,
+                noStripeMutation: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_tenant_plan' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Updates Quimera tenant plan metadata only; it does not create, cancel, or charge Stripe subscriptions.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous tenant plan row snapshot.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'manage_global_prompts') {
+        const promptId = asText(action.input.promptId) || asText(action.input.prompt_id) || 'global_assistant';
+        return {
+            ...preview,
+            before: {
+                table: 'settings',
+                id: promptId,
+                path: 'config',
+            },
+            after: {
+                operation: 'update_global_prompt_settings',
+                table: 'settings',
+                id: promptId,
+                updatedKeys: Object.keys(action.input.updates && typeof action.input.updates === 'object' ? action.input.updates : {}),
+                chatCoreVisitorMemoryAffected: false,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                updated: [`settings.${promptId}.config`],
+                critical: true,
+                chatCoreVisitorMemoryAffected: false,
+                rollback: definition.rollbackSupported ? 'restore_previous_global_prompt_settings' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Updates global prompt configuration only after confirmation.',
+                'ChatCore visitor conversations and visitor memory are not modified by this admin prompt action.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous settings row snapshot.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'review_ai_logs' || action.actionType === 'review_errors') {
+        const isErrors = action.actionType === 'review_errors';
+        return {
+            ...preview,
+            before: {
+                table: 'api_logs',
+                operation: 'read',
+            },
+            after: {
+                operation: isErrors ? 'review_platform_errors' : 'review_ai_logs',
+                table: 'api_logs',
+                query: compactRequestTitle(action.input.query || action.input.request, isErrors ? 'Error review' : 'AI log review'),
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                reviewed: ['api_logs'],
+                mutatesData: false,
+                rollback: 'not_required',
+            },
+            risks: [
+                ...preview.risks,
+                'Read-only review of API logs; no tenant, project, or billing data is mutated.',
+            ],
+        };
+    }
+
     const draft = DRAFT_PREVIEW_BY_ACTION[action.actionType];
     if (!draft) return preview;
 

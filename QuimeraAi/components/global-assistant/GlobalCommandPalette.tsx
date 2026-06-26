@@ -75,6 +75,12 @@ const typeFallback: Record<GlobalCommandItem['type'], string> = {
     admin: 'Admin',
 };
 
+const isRenderableCommandItem = (item: unknown): item is GlobalCommandItem =>
+    !!item
+    && typeof item === 'object'
+    && typeof (item as GlobalCommandItem).id === 'string'
+    && typeof (item as GlobalCommandItem).type === 'string';
+
 function GlobalCommandPalette(): React.ReactElement {
     const { t } = useTranslation();
     const inputRef = useRef<HTMLInputElement>(null);
@@ -96,6 +102,11 @@ function GlobalCommandPalette(): React.ReactElement {
         return () => cancelAnimationFrame(frame);
     }, [isOpen]);
 
+    const renderableItems = Array.isArray(items) ? items.filter(isRenderableCommandItem) : [];
+    const safeSelectedIndex = renderableItems.length > 0
+        ? Math.min(Math.max(selectedIndex, 0), renderableItems.length - 1)
+        : 0;
+
     const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'ArrowDown') {
             event.preventDefault();
@@ -105,7 +116,7 @@ function GlobalCommandPalette(): React.ReactElement {
             moveSelection(-1);
         } else if (event.key === 'Enter') {
             event.preventDefault();
-            const selected = items[selectedIndex];
+            const selected = renderableItems[safeSelectedIndex];
             if (selected) void executeCommand(selected);
         } else if (event.key === 'Escape') {
             event.preventDefault();
@@ -139,7 +150,7 @@ function GlobalCommandPalette(): React.ReactElement {
             </div>
 
             <div className="max-h-[62vh] overflow-y-auto p-2">
-                {items.length === 0 ? (
+                {renderableItems.length === 0 ? (
                     <div className="px-4 py-10 text-center">
                         <p className="text-sm font-medium text-q-text">
                             {translateCommandTextSafe(t, 'globalCommandPalette.emptyTitle', 'No command found')}
@@ -150,9 +161,9 @@ function GlobalCommandPalette(): React.ReactElement {
                     </div>
                 ) : (
                     <div className="space-y-1">
-                        {items.map((item, index) => {
+                        {renderableItems.map((item, index) => {
                             const Icon = iconForCommand(item);
-                            const isSelected = index === selectedIndex;
+                            const isSelected = index === safeSelectedIndex;
                             const typeKey = typeLabelKey[item.type] || typeLabelKey.action;
                             const fallbackType = typeFallback[item.type] || typeFallback.action;
                             const label = translateCommandTextSafe(

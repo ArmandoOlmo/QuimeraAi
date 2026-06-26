@@ -63,13 +63,18 @@ const readString = (value: unknown): string => {
 const isProjectRecord = (project: unknown): project is Project =>
     !!project && typeof project === 'object' && !!readString((project as Project).id);
 
+const readKeywords = (keywords: unknown): string[] =>
+    Array.isArray(keywords)
+        ? keywords.map(readString).filter(Boolean)
+        : [];
+
 const scoreItem = (item: GlobalCommandItem, query: string): number => {
     const normalizedQuery = normalize(query);
     if (!normalizedQuery) return item.type === 'assistant_request' ? -1 : 0;
 
     const label = normalize(item.label);
     const description = normalize(item.description || '');
-    const keywords = normalize(item.keywords.join(' '));
+    const keywords = normalize(readKeywords(item.keywords).join(' '));
     const haystack = `${label} ${description} ${keywords}`;
     const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
     if (tokens.length === 0) return 0;
@@ -311,7 +316,8 @@ export function buildGlobalCommandItems(input: BuildGlobalCommandItemsInput = {}
         });
     }
 
-    const projects = [...(input.projects || [])]
+    const sourceProjects = Array.isArray(input.projects) ? input.projects : [];
+    const projects = [...sourceProjects]
         .filter(isProjectRecord)
         .filter(project => readString(project.status) !== 'Template' && !(project as any).deletedAt)
         .sort((left, right) => {

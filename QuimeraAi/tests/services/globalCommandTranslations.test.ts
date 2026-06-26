@@ -48,4 +48,18 @@ describe('globalCommandTranslations', () => {
             { query: '$t(project.detail, {"id":"1"})' },
         )).toBe('Fallback action');
     });
+
+    it('masks i18next nesting syntax in params while preserving translated output', () => {
+        const translate = vi.fn((_key: string, options?: Record<string, unknown>) => {
+            expect(options?.query).not.toContain('$t(');
+            return `Preguntar: ${options?.query}`;
+        });
+
+        expect(translateCommandTextSafe(
+            translate,
+            'globalCommandPalette.askLabel',
+            'Ask Quimera: $t(project.detail, {"id":"1"})',
+            { query: '$t(project.detail, {"id":"1"})' },
+        )).toBe('Preguntar: $t(project.detail, {"id":"1"})');
+    });
 });

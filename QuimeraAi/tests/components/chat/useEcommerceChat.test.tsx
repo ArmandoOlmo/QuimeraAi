@@ -127,7 +127,12 @@ describe('useEcommerceChat canonical actions', () => {
                 email: 'ana@example.com',
                 message: 'Quiero mas informacion',
                 quantity: 1,
+                consent: false,
+                conversationId: 'conversation-action',
                 idempotencyKey: 'inquiry-key',
+                metadata: {
+                    sourceIntent: 'product_question',
+                },
             });
         });
 
@@ -139,10 +144,16 @@ describe('useEcommerceChat canonical actions', () => {
             email: 'ana@example.com',
             message: 'Quiero mas informacion',
             quantity: 1,
-            consent: true,
+            consent: false,
+            conversationId: 'conversation-action',
             idempotencyKey: 'inquiry-key',
             sourceSurface: 'storefront',
             sourceModule: 'ecommerce',
+        });
+        expect(body.metadata).toMatchObject({
+            sourceSurface: 'storefront',
+            sourceModule: 'ecommerce',
+            sourceIntent: 'product_question',
         });
         expect(inquiry).toMatchObject({
             leadId: 'lead-1',
@@ -184,7 +195,11 @@ describe('useEcommerceChat canonical actions', () => {
         await act(async () => {
             checkoutIntent = await result.current.startCheckoutIntent({
                 items: [{ productSlug: 'ribeye-prime', quantity: 1 }],
+                conversationId: 'conversation-checkout',
                 idempotencyKey: 'checkout-key',
+                metadata: {
+                    sourceIntent: 'checkout_request',
+                },
             });
         });
 
@@ -192,9 +207,13 @@ describe('useEcommerceChat canonical actions', () => {
         const body = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
         expect(body).toMatchObject({
             items: [{ productSlug: 'ribeye-prime', quantity: 1 }],
+            conversationId: 'conversation-checkout',
             idempotencyKey: 'checkout-key',
             sourceSurface: 'storefront',
             sourceModule: 'ecommerce',
+        });
+        expect(body.metadata).toMatchObject({
+            sourceIntent: 'checkout_request',
         });
         expect(checkoutIntent).toMatchObject({
             paymentCreated: false,

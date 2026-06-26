@@ -20,6 +20,8 @@ import type { BrandIdentity, PageData, PageSection, SitePage, ThemeData } from '
 import { DEFAULT_STOREFRONT_THEME } from '../../types/ecommerce';
 import type { ProductCardVariant } from '../../types/productCard';
 import type { StorefrontSectionKind } from '../../types/storefrontRenderer';
+import { SUBSCRIPTION_PLANS } from '../../types/subscription';
+import { PLATFORM_SERVICES, type PlatformServiceId, type ServiceStatus } from '../../types/serviceAvailability';
 import type {
     ChatbotBlueprint,
     ChatbotDeploymentStatus,
@@ -228,6 +230,35 @@ const loadProjectScopedRow = async (
     return cloneRecord(row);
 };
 
+const loadRowById = async (
+    client: SupabaseClientLike,
+    table: string,
+    id: string,
+): Promise<Record<string, unknown>> => {
+    const result = await selectSingle(client.from(table).select('*').eq('id', id));
+    if (result?.error) throw result.error;
+    const row = asRecord(result?.data);
+    if (!readString(row.id)) {
+        throw new Error(`${table}.${id} was not found.`);
+    }
+    return cloneRecord(row);
+};
+
+const updateRowById = async (
+    client: SupabaseClientLike,
+    table: string,
+    id: string,
+    patch: Record<string, unknown>,
+): Promise<Record<string, unknown>> => {
+    const result = await selectSingle(client.from(table).update(patch).eq('id', id));
+    if (result?.error) throw result.error;
+    const row = asRecord(result?.data);
+    if (!readString(row.id)) {
+        throw new Error(`${table}.${id} could not be updated.`);
+    }
+    return row;
+};
+
 const updateProjectScopedRow = async (
     client: SupabaseClientLike,
     table: string,
@@ -308,6 +339,31 @@ const rollbackUpdatedProjectScopedRow = (
             table,
             id,
             projectId,
+            row: restored,
+            restored: true,
+        },
+        diff: {
+            restored: [`${table}.${id}`],
+        },
+    };
+};
+
+const rollbackUpdatedRow = (
+    table: string,
+    deps: GlobalAssistantActionHandlerDependencies,
+): HandlerPatch['rollback'] => async (_input, { snapshot }) => {
+    const before = asRecord(snapshot.beforeSnapshot);
+    const row = asRecord(before.row);
+    const id = readString(before.id) || readString(row.id);
+    if (!id || !Object.keys(row).length) {
+        throw new Error(`Cannot rollback ${table}: previous row snapshot was not recorded.`);
+    }
+    const { id: _id, ...restorePatch } = row;
+    const restored = await updateRowById(getClient(deps), table, id, restorePatch);
+    return {
+        afterSnapshot: {
+            table,
+            id,
             row: restored,
             restored: true,
         },
@@ -838,6 +894,476 @@ const createSearchTenantsHandler = (deps: GlobalAssistantActionHandlerDependenci
             },
         };
     },
+});
+
+const ADMIN_SERVICE_IDS = new Set<PlatformServiceId>(PLATFORM_SERVICES.map(service => service.id));
+const ADMIN_SERVICE_STATUSES = new Set<ServiceStatus>(['public', 'not_public', 'development']);
+const ADMIN_PROMPT_SETTING_ALIASES: Record<string, string> = {
+    globalassistant: 'global_assistant',
+    global_assistant: 'global_assistant',
+    global_assistant_settings: 'global_assistant',
+    globalassistantsettings: 'global_assistant',
+    assistant: 'global_assistant',
+    chatbot: 'chatbotPrompts',
+    chatcore: 'chatbotPrompts',
+    chatbot_prompts: 'chatbotPrompts',
+    chatcore_prompts: 'chatbotPrompts',
+    chatbotprompts: 'chatbotPrompts',
+    chatcoreprompts: 'chatbotPrompts',
+};
+
+const normalizeAdminToken = (value: unknown): string =>
+    (readString(value) || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+
+const getAdminTargetTenantId = (
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context?: AssistantContextSnapshot,
+): string => {
+    const tenantId = readString(input.tenantId)
+        || readString(input.tenant_id)
+        || context?.admin.targetTenantId
+        || readString(context?.snapshot?.targetTenantId)
+        || readString(context?.snapshot?.tenantId)
+        || action.tenantId
+        || context?.tenant.tenantId
+        || context?.project.tenantId
+        || '';
+    if (!tenantId) throw new Error('tenantId is required before applying this admin action.');
+    return tenantId;
+};
+
+const normalizeFeatureList = (value: unknown): string[] =>
+    uniqueStringList(asArray(value).map(item => readString(item)).filter((item): item is string => Boolean(item)));
+
+const normalizeServiceId = (value: unknown): PlatformServiceId | undefined => {
+    const raw = readString(value);
+    if (!raw) return undefined;
+    const exact = PLATFORM_SERVICES.find(service => service.id === raw);
+    if (exact) return exact.id;
+    const normalized = normalizeAdminToken(raw);
+    return PLATFORM_SERVICES.find(service => normalizeAdminToken(service.id) === normalized)?.id;
+};
+
+const normalizeServiceStatus = (input: Record<string, unknown>): ServiceStatus | undefined => {
+    const raw = readString(input.status)
+        || readString(input.newStatus)
+        || readString(input.serviceStatus)
+        || readString(input.availabilityStatus);
+    const normalized = normalizeAdminToken(raw);
+    if (ADMIN_SERVICE_STATUSES.has(normalized as ServiceStatus)) return normalized as ServiceStatus;
+    if (['disabled', 'disable', 'hidden', 'off', 'private', 'notpublic', 'not_public'].includes(normalized)) return 'not_public';
+    if (['dev', 'development', 'testing'].includes(normalized)) return 'development';
+    if (['enabled', 'enable', 'active', 'on', 'public'].includes(normalized)) return 'public';
+
+    const enabled = readBoolean(input.enabled);
+    if (enabled !== undefined) return enabled ? 'public' : 'not_public';
+    return undefined;
+};
+
+const loadSettingRow = async (
+    client: SupabaseClientLike,
+    id: string,
+): Promise<{ exists: boolean; row: Record<string, unknown>; config: Record<string, unknown> }> => {
+    const result = await selectSingle(client.from('settings').select('*').eq('id', id));
+    if (result?.error) throw result.error;
+    const row = asRecord(result?.data);
+    return {
+        exists: Boolean(readString(row.id)),
+        row: readString(row.id) ? cloneRecord(row) : {},
+        config: cloneRecord(asRecord(row.config)),
+    };
+};
+
+const saveSettingConfig = async (
+    client: SupabaseClientLike,
+    id: string,
+    config: Record<string, unknown>,
+    options: { exists: boolean; actorId?: string | null; now: string },
+): Promise<Record<string, unknown>> => {
+    const patch = {
+        config,
+        updated_at: options.now,
+        updated_by: options.actorId || null,
+    };
+    return options.exists
+        ? updateRowById(client, 'settings', id, patch)
+        : asRecord(await insertRow(client, 'settings', { id, ...patch }));
+};
+
+const rollbackSettingRow = (
+    deps: GlobalAssistantActionHandlerDependencies,
+): HandlerPatch['rollback'] => async (_input, { snapshot }) => {
+    const before = asRecord(snapshot.beforeSnapshot);
+    const id = readString(before.id);
+    if (!id) throw new Error('Cannot rollback settings: setting id was not recorded.');
+    if (before.exists === false) {
+        const deleted = await deleteRowById(getClient(deps), 'settings', id);
+        return {
+            afterSnapshot: { table: 'settings', id, restoredMissingRow: true, rollback: deleted },
+            diff: { deleted: [`settings.${id}`] },
+        };
+    }
+    const row = asRecord(before.row);
+    if (!Object.keys(row).length) throw new Error(`Cannot rollback settings.${id}: previous row snapshot was not recorded.`);
+    const { id: _id, ...restorePatch } = row;
+    const restored = await updateRowById(getClient(deps), 'settings', id, restorePatch);
+    return {
+        afterSnapshot: { table: 'settings', id, row: restored, restored: true },
+        diff: { restored: [`settings.${id}`] },
+    };
+};
+
+const normalizePromptSettingId = (value: unknown): string | undefined => {
+    const raw = readString(value);
+    if (!raw) return undefined;
+    if (raw === 'global_assistant' || raw === 'chatbotPrompts') return raw;
+    return ADMIN_PROMPT_SETTING_ALIASES[normalizeAdminToken(raw)];
+};
+
+const summarizeApiLogRows = (rows: Record<string, unknown>[]) => {
+    const total = rows.length;
+    const failures = rows.filter(row => row.success === false || Boolean(readString(row.error))).length;
+    const byFeature = rows.reduce<Record<string, number>>((acc, row) => {
+        const key = readString(row.feature) || 'unknown';
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+    }, {});
+    const byModel = rows.reduce<Record<string, number>>((acc, row) => {
+        const key = readString(row.model) || 'unknown';
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+    }, {});
+
+    return { total, failures, success: total - failures, byFeature, byModel };
+};
+
+const apiLogSample = (row: Record<string, unknown>) => ({
+    id: readString(row.id) || null,
+    createdAt: readString(row.created_at) || readString(row.createdAt) || null,
+    userId: readString(row.user_id) || readString(row.userId) || null,
+    projectId: readString(row.project_id) || readString(row.projectId) || null,
+    feature: readString(row.feature) || null,
+    model: readString(row.model) || null,
+    endpoint: readString(row.endpoint) || null,
+    success: row.success !== false,
+    error: readString(row.error) || null,
+    totalTokens: readNumber(row.total_tokens) ?? readNumber(row.totalTokens) ?? null,
+    latencyMs: readNumber(row.latency_ms) ?? readNumber(row.latencyMs) ?? null,
+});
+
+const readApiLogs = async (client: SupabaseClientLike, input: Record<string, unknown>): Promise<Record<string, unknown>[]> => {
+    const result = await client.from('api_logs').select('*');
+    if (result?.error) throw result.error;
+    const query = normalizeForSearch(readString(input.query) || readString(input.request) || '');
+    const terms = query.split(/\s+/).map(term => term.trim()).filter(term => term.length > 2);
+    return asArray(result?.data)
+        .map(row => cloneRecord(asRecord(row)))
+        .filter(row => {
+            if (terms.length === 0) return true;
+            const haystack = normalizeForSearch([
+                readString(row.id),
+                readString(row.user_id),
+                readString(row.project_id),
+                readString(row.model),
+                readString(row.feature),
+                readString(row.endpoint),
+                readString(row.error),
+            ].filter(Boolean).join(' '));
+            return terms.some(term => haystack.includes(term));
+        })
+        .sort((left, right) => String(readString(right.created_at) || '').localeCompare(String(readString(left.created_at) || '')));
+};
+
+const createUpdateFeatureFlagHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const errors: string[] = [];
+        if (!readString(input.tenantId) && !readString(input.tenant_id)) errors.push('tenantId is required for feature flag updates.');
+        if (!readString(input.featureFlag) && !readString(input.feature_flag)) errors.push('featureFlag is required for feature flag updates.');
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const tenantId = getAdminTargetTenantId(input, action, context);
+        const featureFlag = readString(input.featureFlag) || readString(input.feature_flag) || '';
+        if (!featureFlag) throw new Error('featureFlag is required for feature flag updates.');
+        const enabled = readBoolean(input.enabled) ?? true;
+        const now = getNow(deps);
+        const currentRow = await loadRowById(client, 'tenants', tenantId);
+        const settings = asRecord(currentRow.settings);
+        const beforeFeatures = normalizeFeatureList(settings.enabledFeatures);
+        const afterFeatures = enabled
+            ? uniqueStringList([...beforeFeatures, featureFlag])
+            : beforeFeatures.filter(flag => flag !== featureFlag);
+        const patch = {
+            settings: {
+                ...settings,
+                enabledFeatures: afterFeatures,
+                globalAssistantLastFeatureFlagUpdate: {
+                    featureFlag,
+                    enabled,
+                    actionId: action.id,
+                    updatedAt: now,
+                    updatedBy: context?.actor.userId || action.userId || null,
+                },
+            },
+            updated_at: now,
+        };
+        const row = await updateRowById(client, 'tenants', tenantId, patch);
+        return {
+            beforeSnapshot: { table: 'tenants', id: tenantId, row: currentRow },
+            afterSnapshot: { table: 'tenants', id: tenantId, row, featureFlag, enabled, enabledFeatures: afterFeatures },
+            diff: {
+                updated: [`tenants.${tenantId}.settings.enabledFeatures`],
+                featureFlag,
+                enabled,
+                rollback: 'restore_previous_tenant_settings',
+            },
+        };
+    },
+    rollback: rollbackUpdatedRow('tenants', deps),
+});
+
+const createUpdateServiceAvailabilityHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const errors: string[] = [];
+        const serviceId = normalizeServiceId(input.serviceId ?? input.service_id);
+        if (!serviceId) errors.push('serviceId is required and must match a platform service.');
+        if (!normalizeServiceStatus(input)) errors.push('A service status or enabled boolean is required.');
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const serviceId = normalizeServiceId(input.serviceId ?? input.service_id);
+        if (!serviceId || !ADMIN_SERVICE_IDS.has(serviceId)) throw new Error('serviceId must match a platform service.');
+        const newStatus = normalizeServiceStatus(input);
+        if (!newStatus) throw new Error('A service status or enabled boolean is required.');
+        const now = getNow(deps);
+        const actorId = context?.actor.userId || action.userId || null;
+        const current = await loadSettingRow(client, 'serviceAvailability');
+        const currentServices = asRecord(current.config.services);
+        const previousConfig = asRecord(currentServices[serviceId]);
+        const previousStatus = (readString(previousConfig.status) || 'public') as ServiceStatus;
+        const statusReason = readString(input.reason) || readString(input.statusReason) || readString(input.request) || null;
+        const nextConfig = {
+            ...current.config,
+            services: {
+                ...currentServices,
+                [serviceId]: {
+                    ...previousConfig,
+                    status: newStatus,
+                    statusReason,
+                    updatedAt: now,
+                    updatedBy: actorId || 'global-assistant',
+                },
+            },
+            lastUpdated: now,
+            updatedBy: actorId || 'global-assistant',
+        };
+        const row = await saveSettingConfig(client, 'serviceAvailability', nextConfig, {
+            exists: current.exists,
+            actorId,
+            now,
+        });
+        let auditWarning: string | null = null;
+        try {
+            await insertRow(client, 'service_audit_logs', {
+                service_id: serviceId,
+                previous_status: previousStatus,
+                new_status: newStatus,
+                reason: statusReason,
+                user_id: actorId,
+                user_email: context?.actor.email || 'global-assistant',
+                timestamp: now,
+                source: 'global-assistant',
+                action_id: action.id,
+            });
+        } catch (error) {
+            auditWarning = error instanceof Error ? error.message : 'Service audit log write failed.';
+        }
+        return {
+            beforeSnapshot: { table: 'settings', id: 'serviceAvailability', exists: current.exists, row: current.row },
+            afterSnapshot: {
+                table: 'settings',
+                id: 'serviceAvailability',
+                row,
+                serviceId,
+                previousStatus,
+                newStatus,
+                auditWarning,
+            },
+            diff: {
+                updated: [`settings.serviceAvailability.services.${serviceId}.status`],
+                auditLogged: auditWarning ? false : true,
+                rollback: 'restore_previous_service_availability',
+            },
+        };
+    },
+    rollback: rollbackSettingRow(deps),
+});
+
+const createUpdatePlanHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const errors: string[] = [];
+        const planId = readString(input.planId) || readString(input.plan_id);
+        if (!readString(input.tenantId) && !readString(input.tenant_id)) errors.push('tenantId is required for tenant plan updates.');
+        if (!planId) errors.push('planId is required for tenant plan updates.');
+        if (planId && !(planId in SUBSCRIPTION_PLANS)) errors.push(`Unsupported subscription plan: ${planId}.`);
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const tenantId = getAdminTargetTenantId(input, action, context);
+        const planId = readString(input.planId) || readString(input.plan_id) || '';
+        const plan = SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS];
+        if (!plan) throw new Error(`Unsupported subscription plan: ${planId}.`);
+        const now = getNow(deps);
+        const currentRow = await loadRowById(client, 'tenants', tenantId);
+        const previousBillingInfo = asRecord(currentRow.billing_info);
+        const patch = {
+            subscription_plan: planId,
+            limits: cloneRecord(plan.limits as unknown as Record<string, unknown>),
+            billing_info: {
+                ...previousBillingInfo,
+                lastPlanChangeAt: now,
+                lastPlanChangeBy: context?.actor.userId || action.userId || null,
+                lastPlanChangeSource: 'global-assistant',
+                noStripeMutation: true,
+            },
+            updated_at: now,
+        };
+        const row = await updateRowById(client, 'tenants', tenantId, patch);
+        return {
+            beforeSnapshot: { table: 'tenants', id: tenantId, row: currentRow },
+            afterSnapshot: {
+                table: 'tenants',
+                id: tenantId,
+                row,
+                planId,
+                noStripeMutation: true,
+            },
+            diff: {
+                updated: [`tenants.${tenantId}.subscription_plan`, `tenants.${tenantId}.limits`, `tenants.${tenantId}.billing_info`],
+                noStripeMutation: true,
+                rollback: 'restore_previous_tenant_plan',
+            },
+        };
+    },
+    rollback: rollbackUpdatedRow('tenants', deps),
+});
+
+const createReviewAiLogsHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const rows = await readApiLogs(getClient(deps), input);
+        return {
+            afterSnapshot: {
+                kind: 'ai_log_review',
+                query: readString(input.query) || readString(input.request) || '',
+                generatedAt: getNow(deps),
+                tenantId: context?.tenant.tenantId || action.tenantId || null,
+                summary: summarizeApiLogRows(rows),
+                samples: rows.slice(0, 10).map(apiLogSample),
+            },
+            diff: {
+                reviewed: ['api_logs'],
+                mutatesData: false,
+            },
+        };
+    },
+});
+
+const createReviewErrorsHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const rows = (await readApiLogs(getClient(deps), input))
+            .filter(row => row.success === false || Boolean(readString(row.error)));
+        const byErrorFeature = rows.reduce<Record<string, number>>((acc, row) => {
+            const key = readString(row.feature) || readString(row.endpoint) || 'unknown';
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {});
+        return {
+            afterSnapshot: {
+                kind: 'platform_error_review',
+                query: readString(input.query) || readString(input.request) || '',
+                generatedAt: getNow(deps),
+                tenantId: context?.tenant.tenantId || action.tenantId || null,
+                summary: {
+                    ...summarizeApiLogRows(rows),
+                    byErrorFeature,
+                },
+                samples: rows.slice(0, 10).map(apiLogSample),
+            },
+            diff: {
+                reviewed: ['api_logs'],
+                mutatesData: false,
+            },
+        };
+    },
+});
+
+const createManageGlobalPromptsHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const errors: string[] = [];
+        const settingId = normalizePromptSettingId(input.promptId ?? input.prompt_id ?? input.settingId);
+        const updates = asRecord(input.updates);
+        const inlinePrompt = readString(input.prompt) || readString(input.instructions) || readString(input.content);
+        if (!settingId) errors.push('promptId must target global_assistant or chatbotPrompts.');
+        if (Object.keys(updates).length === 0 && !inlinePrompt) errors.push('updates or prompt/instructions are required for global prompt changes.');
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const settingId = normalizePromptSettingId(input.promptId ?? input.prompt_id ?? input.settingId);
+        if (!settingId) throw new Error('promptId must target global_assistant or chatbotPrompts.');
+        const explicitUpdates = asRecord(input.updates);
+        const inlinePrompt = readString(input.prompt) || readString(input.instructions) || readString(input.content);
+        const updates = Object.keys(explicitUpdates).length > 0
+            ? explicitUpdates
+            : { customInstructions: inlinePrompt };
+        const now = getNow(deps);
+        const actorId = context?.actor.userId || action.userId || null;
+        const current = await loadSettingRow(client, settingId);
+        const nextConfig = {
+            ...current.config,
+            ...updates,
+            updatedAt: now,
+            updatedBy: actorId,
+            globalAssistantLastPromptUpdate: {
+                actionId: action.id,
+                updatedAt: now,
+                updatedBy: actorId,
+                scope: settingId === 'chatbotPrompts' ? 'chatcore_global_prompts' : 'global_assistant',
+            },
+        };
+        const row = await saveSettingConfig(client, settingId, nextConfig, {
+            exists: current.exists,
+            actorId,
+            now,
+        });
+        return {
+            beforeSnapshot: { table: 'settings', id: settingId, exists: current.exists, row: current.row },
+            afterSnapshot: {
+                table: 'settings',
+                id: settingId,
+                row,
+                updatedKeys: Object.keys(updates),
+                chatCoreVisitorMemoryAffected: false,
+            },
+            diff: {
+                updated: Object.keys(updates).map(key => `settings.${settingId}.config.${key}`),
+                rollback: 'restore_previous_global_prompt_settings',
+                chatCoreVisitorMemoryAffected: false,
+            },
+        };
+    },
+    rollback: rollbackSettingRow(deps),
 });
 
 const createUpdateProjectMetadataHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
@@ -6685,6 +7211,12 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     open_chatbot_dashboard: () => createNavigationHandler('ai-assistant', { label: 'Open ChatCore dashboard.', requiresProject: true }),
     open_tenant: () => createNavigationHandler('superadmin', { label: 'Open tenant in Super Admin.', adminView: 'tenants' }),
     search_tenants: createSearchTenantsHandler,
+    update_feature_flag: createUpdateFeatureFlagHandler,
+    update_service_availability: createUpdateServiceAvailabilityHandler,
+    update_plan: createUpdatePlanHandler,
+    review_ai_logs: createReviewAiLogsHandler,
+    review_errors: createReviewErrorsHandler,
+    manage_global_prompts: createManageGlobalPromptsHandler,
     edit_website_section: deps => createWebsiteSectionPatchHandler(deps, 'merge'),
     update_section_copy: deps => createWebsiteSectionPatchHandler(deps, 'copy'),
     reorder_sections: createReorderWebsiteSectionsHandler,

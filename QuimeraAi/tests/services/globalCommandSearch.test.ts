@@ -111,6 +111,15 @@ describe('globalCommandSearch', () => {
         });
     });
 
+    it('ignores a malformed project collection instead of crashing the palette search', () => {
+        expect(() => buildGlobalCommandItems({
+            query: 'dashboard',
+            projects: { id: 'not-an-array' } as any,
+            canAccessAdmin: true,
+            canAccessService: () => true,
+        })).not.toThrow();
+    });
+
     it('omits project-required commands when no project is active', () => {
         const items = buildGlobalCommandItems({
             query: 'edit website',

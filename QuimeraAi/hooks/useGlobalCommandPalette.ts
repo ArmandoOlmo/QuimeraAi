@@ -57,13 +57,26 @@ export function useGlobalCommandPalette() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    const items = useMemo(() => buildGlobalCommandItems({
-        query,
-        projects,
-        activeProjectId,
-        canAccessAdmin: canAccessSuperAdmin,
-        canAccessService: serviceId => isLoadingServices || canAccessService(serviceId),
-    }), [activeProjectId, canAccessService, canAccessSuperAdmin, isLoadingServices, projects, query]);
+    const items = useMemo(() => {
+        try {
+            return buildGlobalCommandItems({
+                query,
+                projects: Array.isArray(projects) ? projects : [],
+                activeProjectId,
+                canAccessAdmin: canAccessSuperAdmin,
+                canAccessService: serviceId => isLoadingServices || canAccessService(serviceId),
+            });
+        } catch (error) {
+            console.error('[GlobalCommandPalette] Failed to build command items:', error);
+            return buildGlobalCommandItems({
+                query,
+                projects: [],
+                activeProjectId,
+                canAccessAdmin: false,
+                canAccessService: () => true,
+            });
+        }
+    }, [activeProjectId, canAccessService, canAccessSuperAdmin, isLoadingServices, projects, query]);
 
     useEffect(() => {
         setSelectedIndex(0);
