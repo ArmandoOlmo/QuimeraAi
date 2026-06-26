@@ -608,6 +608,84 @@ export function enrichAssistantExecutionPreview(
         };
     }
 
+    if (action.actionType === 'test_chatbot') {
+        return {
+            ...preview,
+            before: {
+                table: 'projects',
+                path: 'data.businessBlueprint.chatbotBlueprint.testing',
+                projectId: action.projectId,
+            },
+            after: {
+                operation: 'run_chatcore_test_lab',
+                table: 'projects',
+                path: 'data.businessBlueprint.chatbotBlueprint.testing',
+                projectId: action.projectId,
+                prompt: compactRequestTitle(action.input.prompt || action.input.request, 'ChatCore Test Lab run'),
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+                auditTable: 'chatbot_engine_events',
+            },
+            diff: {
+                updated: [
+                    'projects.$current.data.businessBlueprint.chatbotBlueprint.testing',
+                    'projects.$current.data.businessBlueprint.chatbotBlueprint.metadata',
+                    'chatbot_engine_events.$pending',
+                ],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_project_data' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'This runs the project-scoped ChatCore Test Lab and records audit evidence without creating visitor conversations.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous project blueprint snapshot.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'deploy_chatbot_to_surface') {
+        const surface = asText(action.input.surface) || '$surface';
+        const status = asText(action.input.status) || 'deployed';
+        return {
+            ...preview,
+            before: {
+                table: 'projects',
+                path: `data.businessBlueprint.chatbotBlueprint.channels.${surface}`,
+                projectId: action.projectId,
+            },
+            after: {
+                operation: 'update_chatcore_surface_deployment',
+                table: 'projects',
+                path: `data.businessBlueprint.chatbotBlueprint.channels.${surface}`,
+                projectId: action.projectId,
+                surface,
+                status,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+                auditTable: 'chatbot_engine_events',
+            },
+            diff: {
+                updated: [
+                    `projects.$current.data.businessBlueprint.chatbotBlueprint.channels.${surface}`,
+                    'projects.$current.data.businessBlueprint.chatbotBlueprint.deployment',
+                    'chatbot_engine_events.$pending',
+                ],
+                critical: status === 'deployed',
+                reviewRequired: status !== 'deployed',
+                rollback: definition.rollbackSupported ? 'restore_previous_project_data' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'This changes where the project ChatCore can run; public surfaces require explicit confirmation.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous project blueprint snapshot.'] : []),
+            ],
+        };
+    }
+
     if (action.actionType === 'edit_bio_link') {
         const linkId = asText(action.input.linkId) || '$selected_link';
         return {

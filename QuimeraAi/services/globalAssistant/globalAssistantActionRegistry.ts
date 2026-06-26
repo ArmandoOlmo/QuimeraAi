@@ -339,13 +339,14 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         projectId: stringSchema(),
         sources: { type: 'array', items: stringSchema() },
     }, ['projectId', 'sources']), 'high', { requiredService: 'chatbot', requiredFeature: 'chatbotEnabled' }),
-    action('chatbot', 'test_chatbot', 'Run a ChatCore test prompt.', objectSchema({
+    action('chatbot', 'test_chatbot', 'Run ChatCore Test Lab and persist project-scoped evaluation evidence.', objectSchema({
         projectId: stringSchema(),
         prompt: stringSchema(),
-    }, ['projectId', 'prompt']), 'low', { mutatesData: false, requiredService: 'chatbot', previewSupported: false, rollbackSupported: false }),
+    }, ['projectId', 'prompt']), 'high', { requiredService: 'chatbot', requiredFeature: 'chatbotEnabled' }),
     action('chatbot', 'deploy_chatbot_to_surface', 'Deploy ChatCore to a surface.', objectSchema({
         projectId: stringSchema(),
         surface: stringSchema(),
+        status: stringSchema(undefined, ['draft', 'test', 'deployed', 'paused', 'disabled']),
     }, ['projectId', 'surface']), 'critical', { requiredService: 'chatbot', requiredFeature: 'chatbotEnabled' }),
 
     action('analytics', 'run_project_report', 'Run a project report.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),

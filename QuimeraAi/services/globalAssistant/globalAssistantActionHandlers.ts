@@ -7,7 +7,12 @@ import type {
     AssistantRollbackSnapshot,
 } from '../../types/globalAssistant';
 import { createAppointmentCanonical, type CanonicalAppointmentInput } from '../appointments/appointmentEngineService';
-import { applyChatbotBlueprintToProjectData } from '../chatbotEngine/chatbotEngineConfigurationService';
+import {
+    applyChatbotBlueprintToProjectData,
+    updateProjectChatbotSurfaceDeployment,
+    type ChatbotSurfaceDeploymentKey,
+} from '../chatbotEngine/chatbotEngineConfigurationService';
+import { runProjectChatbotTestLab } from '../chatbotEngine/chatbotEngineTestLabService';
 import { createAudience } from '../email/emailAudienceService';
 import { createAutomationDraft } from '../email/emailAutomationService';
 import { createCampaignDraft, loadCampaign, updateCampaign } from '../email/emailCampaignService';
@@ -17,6 +22,7 @@ import type { ProductCardVariant } from '../../types/productCard';
 import type { StorefrontSectionKind } from '../../types/storefrontRenderer';
 import type {
     ChatbotBlueprint,
+    ChatbotDeploymentStatus,
     ChatbotKnowledgeSourceBlueprint,
     ChatbotKnowledgeSourceType,
     ChatbotKnowledgeVisibility,
@@ -119,6 +125,9 @@ const normalizeForSearch = (value: string): string =>
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
+
+const includesAny = (text: string, terms: string[]): boolean =>
+    terms.some(term => text.includes(term));
 
 const isUuid = (value: string | undefined): value is string =>
     Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
@@ -4821,6 +4830,30 @@ const updateProjectData = async (
     return result?.data || { projectId, data };
 };
 
+const rollbackChatbotProjectData = (
+    deps: GlobalAssistantActionHandlerDependencies,
+    label: string,
+): HandlerPatch['rollback'] => async (_input, { snapshot }) => {
+    const before = asRecord(snapshot.beforeSnapshot);
+    const projectId = readString(before.projectId) || readString(before.id);
+    const projectData = asRecord(before.projectData);
+    if (!projectId || !Object.keys(projectData).length) {
+        throw new Error(`Cannot rollback ${label}: previous project data was not recorded.`);
+    }
+    const result = await updateProjectData(getClient(deps), projectId, projectData, getNow(deps));
+    return {
+        afterSnapshot: {
+            table: 'projects',
+            id: projectId,
+            restored: true,
+            row: result,
+        },
+        diff: {
+            restored: [`projects.${projectId}.data`],
+        },
+    };
+};
+
 const buildChatbotKnowledgeSource = (
     input: Record<string, unknown>,
     action: AssistantAction,
@@ -4962,26 +4995,210 @@ const createChatbotKnowledgeHandler = (
             },
         };
     },
-    rollback: async (_input, { snapshot }) => {
-        const before = asRecord(snapshot.beforeSnapshot);
-        const projectId = readString(before.projectId) || readString(before.id);
-        const projectData = asRecord(before.projectData);
-        if (!projectId || !Object.keys(projectData).length) {
-            throw new Error('Cannot rollback ChatCore knowledge: previous project data was not recorded.');
-        }
-        const result = await updateProjectData(getClient(deps), projectId, projectData, getNow(deps));
+    rollback: rollbackChatbotProjectData(deps, 'ChatCore knowledge'),
+});
+
+const chatbotSurfaceDeploymentKeys: ChatbotSurfaceDeploymentKey[] = [
+    'webWidget',
+    'embeddedWidget',
+    'bioPage',
+    'storefront',
+    'checkout',
+    'bookingPage',
+    'restaurantMenu',
+    'realtyPropertyPage',
+    'adminPreview',
+    'voice',
+];
+
+const chatbotDeploymentStatuses = new Set<ChatbotDeploymentStatus>(['draft', 'test', 'deployed', 'paused', 'disabled']);
+
+const chatbotSurfaceAliases: Record<string, ChatbotSurfaceDeploymentKey> = {
+    webwidget: 'webWidget',
+    websitewidget: 'webWidget',
+    website: 'webWidget',
+    web: 'webWidget',
+    site: 'webWidget',
+    paginaweb: 'webWidget',
+    embeddedwidget: 'embeddedWidget',
+    embedwidget: 'embeddedWidget',
+    embedded: 'embeddedWidget',
+    embed: 'embeddedWidget',
+    biopage: 'bioPage',
+    biolink: 'bioPage',
+    bio: 'bioPage',
+    linkinbio: 'bioPage',
+    storefront: 'storefront',
+    store: 'storefront',
+    shop: 'storefront',
+    tienda: 'storefront',
+    checkout: 'checkout',
+    bookingpage: 'bookingPage',
+    booking: 'bookingPage',
+    appointments: 'bookingPage',
+    appointment: 'bookingPage',
+    calendar: 'bookingPage',
+    citas: 'bookingPage',
+    reservas: 'bookingPage',
+    restaurantmenu: 'restaurantMenu',
+    restaurant: 'restaurantMenu',
+    restaurante: 'restaurantMenu',
+    menu: 'restaurantMenu',
+    realtypropertypage: 'realtyPropertyPage',
+    realestatepropertypage: 'realtyPropertyPage',
+    realty: 'realtyPropertyPage',
+    realestate: 'realtyPropertyPage',
+    property: 'realtyPropertyPage',
+    propiedad: 'realtyPropertyPage',
+    listing: 'realtyPropertyPage',
+    adminpreview: 'adminPreview',
+    admin: 'adminPreview',
+    preview: 'adminPreview',
+    testlab: 'adminPreview',
+    voice: 'voice',
+    voz: 'voice',
+};
+
+const normalizeChatbotAlias = (value: string): string =>
+    normalizeForSearch(value).replace(/[^a-z0-9]+/g, '');
+
+const readChatbotSurfaceDeploymentKey = (
+    input: Record<string, unknown>,
+): ChatbotSurfaceDeploymentKey => {
+    const rawValue = readString(input.surface)
+        || readString(input.surfaceId)
+        || readString(input.channel)
+        || readString(input.targetSurface);
+    const normalized = rawValue ? normalizeChatbotAlias(rawValue) : '';
+    const direct = chatbotSurfaceDeploymentKeys.find(key => normalizeChatbotAlias(key) === normalized);
+    const surface = direct || chatbotSurfaceAliases[normalized];
+    if (!surface) {
+        throw new Error('A valid ChatCore deployment surface is required.');
+    }
+    return surface;
+};
+
+const readChatbotDeploymentStatus = (
+    input: Record<string, unknown>,
+): ChatbotDeploymentStatus => {
+    const explicitStatus = readString(input.status)
+        || readString(input.deploymentStatus)
+        || readString(input.targetStatus);
+    if (explicitStatus && chatbotDeploymentStatuses.has(explicitStatus as ChatbotDeploymentStatus)) {
+        return explicitStatus as ChatbotDeploymentStatus;
+    }
+
+    const request = normalizeForSearch(readString(input.request) || '');
+    if (includesAny(request, ['test', 'prueba', 'laboratorio'])) return 'test';
+    if (includesAny(request, ['pausa', 'pausar', 'pause'])) return 'paused';
+    if (includesAny(request, ['desactiva', 'desactivar', 'disable', 'apaga'])) return 'disabled';
+    if (includesAny(request, ['draft', 'borrador'])) return 'draft';
+    return 'deployed';
+};
+
+const createChatbotTestHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const now = getNow(deps);
+        const projectData = await loadProjectData(client, projectId);
+        const prompt = readString(input.prompt) || readString(input.request) || 'Global Assistant ChatCore test';
+        const runId = readString(input.runId) || `global-assistant-${action.id}-${slugify(prompt).slice(0, 48)}`;
+        const result = await runProjectChatbotTestLab(projectId, {
+            actorId: action.userId || context?.actor.userId || null,
+            sourceSurface: readString(input.sourceSurface) || 'admin_preview',
+            sourceModule: 'global-assistant-operating-layer',
+            idempotencyKey: readString(input.idempotencyKey) || `global-assistant:${projectId}:test-chatbot:${action.id}`,
+            runId,
+            now,
+        }, client as any);
+
         return {
+            beforeSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                projectData,
+            },
             afterSnapshot: {
                 table: 'projects',
                 id: projectId,
-                restored: true,
-                row: result,
+                projectId,
+                prompt,
+                runId: result.runId,
+                eventId: result.eventId || null,
+                status: result.status,
+                passed: result.passed,
+                scenarioCount: result.scenarioResults.length,
+                failedCount: result.scenarioResults.filter(scenario => !scenario.passed).length,
+                chatbotBlueprint: result.chatbotBlueprint,
+                warnings: result.warnings,
             },
             diff: {
-                restored: [`projects.${projectId}.data`],
+                updated: [
+                    `projects.${projectId}.data.businessBlueprint.chatbotBlueprint.testing`,
+                    `projects.${projectId}.data.businessBlueprint.chatbotBlueprint.metadata`,
+                    `chatbot_engine_events.${result.eventId || '$pending'}`,
+                ],
+                reviewRequired: result.status !== 'passing',
+                rollback: 'restore_previous_project_data',
             },
         };
     },
+    rollback: rollbackChatbotProjectData(deps, 'ChatCore Test Lab'),
+});
+
+const createDeployChatbotToSurfaceHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const now = getNow(deps);
+        const projectData = await loadProjectData(client, projectId);
+        const surfaceId = readChatbotSurfaceDeploymentKey(input);
+        const status = readChatbotDeploymentStatus(input);
+        const result = await updateProjectChatbotSurfaceDeployment(projectId, {
+            surfaceId,
+            status,
+            actorId: action.userId || context?.actor.userId || null,
+            now,
+        }, client as any);
+
+        return {
+            beforeSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                projectData,
+            },
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                surfaceId: result.surfaceId,
+                surface: result.surface,
+                status: result.surface.status,
+                deploymentStatus: result.chatbotBlueprint.deployment.status,
+                deployedSurfaces: result.chatbotBlueprint.deployment.deployedSurfaces,
+                auditEventId: result.auditEventId || null,
+                auditWarning: result.auditWarning || null,
+                auditDuplicate: result.auditDuplicate || false,
+                chatbotBlueprint: result.chatbotBlueprint,
+            },
+            diff: {
+                updated: [
+                    `projects.${projectId}.data.businessBlueprint.chatbotBlueprint.channels.${surfaceId}`,
+                    `projects.${projectId}.data.businessBlueprint.chatbotBlueprint.deployment`,
+                    ...(result.auditEventId ? [`chatbot_engine_events.${result.auditEventId}`] : []),
+                ],
+                critical: status === 'deployed',
+                reviewRequired: status !== 'deployed',
+                rollback: 'restore_previous_project_data',
+            },
+        };
+    },
+    rollback: rollbackChatbotProjectData(deps, 'ChatCore deployment'),
 });
 
 const normalizeInvoiceItems = (
@@ -5784,6 +6001,8 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     publish_bio_page: publishBioPageHandler,
     create_chatbot_knowledge: deps => createChatbotKnowledgeHandler(deps, { sync: false }),
     sync_chatbot_knowledge: deps => createChatbotKnowledgeHandler(deps, { sync: true }),
+    test_chatbot: createChatbotTestHandler,
+    deploy_chatbot_to_surface: createDeployChatbotToSurfaceHandler,
     create_finance_record: createFinanceRecordHandler,
     update_finance_record: updateFinanceRecordHandler,
     create_menu_item: createRestaurantMenuItemHandler,
