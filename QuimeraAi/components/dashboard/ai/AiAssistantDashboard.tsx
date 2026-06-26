@@ -7,6 +7,7 @@ import { useProject } from '../../../contexts/project/ProjectContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useCMS } from '../../../contexts/cms/CMSContext';
+import { useSafeTenant } from '../../../contexts/tenant/TenantContext';
 import DashboardSidebar from '../DashboardSidebar';
 import {
     Menu, Bot, MessageSquare, Settings, Sliders, FileText,
@@ -61,6 +62,7 @@ const AiAssistantDashboard: React.FC = () => {
     const { activeProject, projects, loadProject, updateProjectAiConfig } = useProject();
     const { setView } = useUI();
     const { user, userDocument, isUserOwner, currentTenantRole, canAccessSuperAdmin } = useAuth();
+    const tenantContext = useSafeTenant();
     const { cmsPosts, loadCMSPosts } = useCMS();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(true);
@@ -72,7 +74,12 @@ const AiAssistantDashboard: React.FC = () => {
 
     const canManageChatbotEngine = useMemo(() => {
         const userRole = String(userDocument?.role || '').toLowerCase();
-        const tenantRole = String(currentTenantRole || '').toLowerCase();
+        const tenantRole = String(
+            tenantContext?.currentMembership?.role
+            || tenantContext?.currentRole
+            || currentTenantRole
+            || '',
+        ).toLowerCase();
 
         return Boolean(
             isUserOwner ||
@@ -80,7 +87,14 @@ const AiAssistantDashboard: React.FC = () => {
             CHATBOT_ENGINE_MANAGER_ROLES.has(userRole) ||
             CHATBOT_ENGINE_MANAGER_TENANT_ROLES.has(tenantRole)
         );
-    }, [canAccessSuperAdmin, currentTenantRole, isUserOwner, userDocument?.role]);
+    }, [
+        canAccessSuperAdmin,
+        currentTenantRole,
+        isUserOwner,
+        tenantContext?.currentMembership?.role,
+        tenantContext?.currentRole,
+        userDocument?.role,
+    ]);
 
     const tabs = useMemo(() => [
         { id: 'overview', label: t('aiAssistant.dashboard.tabs.overview'), icon: <Activity size={18} />, description: t('aiAssistant.dashboard.tabDescriptions.overview') },

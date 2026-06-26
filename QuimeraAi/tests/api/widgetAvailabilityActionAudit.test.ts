@@ -4,6 +4,7 @@ const mockState = vi.hoisted(() => ({
     getAvailableAppointmentSlots: vi.fn(),
     requestChatbotRestaurantReservation: vi.fn(),
     createChatbotEcommerceProductInquiry: vi.fn(),
+    queueChatbotEmailFollowUpDraft: vi.fn(),
     getOrCreateConversation: vi.fn(),
     saveConversationMessage: vi.fn(),
     updateConversationParticipant: vi.fn(),
@@ -25,6 +26,7 @@ vi.mock('../../services/chatbotEngine/chatbotEngineRuntimeActionService.js', asy
         ...actual,
         requestChatbotRestaurantReservation: (...args: any[]) => mockState.requestChatbotRestaurantReservation(...args),
         createChatbotEcommerceProductInquiry: (...args: any[]) => mockState.createChatbotEcommerceProductInquiry(...args),
+        queueChatbotEmailFollowUpDraft: (...args: any[]) => mockState.queueChatbotEmailFollowUpDraft(...args),
     };
 });
 
@@ -244,6 +246,7 @@ describe('widget availability action audit', () => {
         mockState.getAvailableAppointmentSlots.mockReset();
         mockState.requestChatbotRestaurantReservation.mockReset();
         mockState.createChatbotEcommerceProductInquiry.mockReset();
+        mockState.queueChatbotEmailFollowUpDraft.mockReset();
         mockState.getOrCreateConversation.mockReset();
         mockState.saveConversationMessage.mockReset();
         mockState.updateConversationParticipant.mockReset();
@@ -269,6 +272,14 @@ describe('widget availability action audit', () => {
                 slug: 'radiant-serum',
                 name: 'Radiant Serum',
             },
+        });
+        mockState.queueChatbotEmailFollowUpDraft.mockResolvedValue({
+            emailLogId: 'email-log-1',
+            email: 'lead@example.com',
+            duplicate: false,
+            status: 'skipped',
+            reviewRequired: true,
+            reviewQueueUrl: '/email?projectId=project-1&tab=review',
         });
         mockState.getOrCreateConversation.mockResolvedValue({
             projectId: 'project-1',
@@ -608,6 +619,57 @@ describe('widget availability action audit', () => {
             customerRequestSummaryRedactedFromEvent: true,
         });
         expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('sensitive skin');
+    });
+
+    it('queues Email Marketing follow-up drafts with customer request context without exposing it in the audit event', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-queue_email_follow_up',
+            actionType: 'queue_email_follow_up',
+            ownerModule: 'emailMarketing',
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/email-follow-up-drafts', {
+            email: 'lead@example.com',
+            name: 'Lead Contact',
+            leadId: 'lead-1',
+            conversationId: 'conversation-1',
+            subject: 'Personal follow-up',
+            text: 'Reviewed follow-up draft.',
+            customerRequestSummary: 'Private quote request details',
+            conversationTranscript: 'Cliente: necesito precio premium.',
+            marketingConsent: true,
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+        });
+
+        expect(response.status).toBe(201);
+        expect(mockState.queueChatbotEmailFollowUpDraft).toHaveBeenCalledWith(expect.objectContaining({
+            email: 'lead@example.com',
+            name: 'Lead Contact',
+            leadId: 'lead-1',
+            conversationId: 'conversation-1',
+            customerRequestSummary: 'Private quote request details',
+            conversationTranscript: 'Cliente: necesito precio premium.',
+            marketingConsent: true,
+            idempotencyKey: expect.any(String),
+        }));
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_executed',
+            action_type: 'queue_email_follow_up',
+            action_status: 'executed',
+            lead_id: 'lead-1',
+            source_surface: 'website',
+            source_module: 'chatcore',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            emailLogId: 'email-log-1',
+            email: 'lead@example.com',
+            reviewRequired: true,
+        });
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('Private quote request details');
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('precio premium');
     });
 
     it('records sanitized ChatCore voice runtime events as analytics observations', async () => {

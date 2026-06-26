@@ -1580,6 +1580,11 @@ async function handleQueueEmailFollowUpDraft(req: IncomingMessage, res: ServerRe
     leadId,
     customerId: normalizeString(body.customerId, 120),
     conversationId,
+    customerRequestSummary: normalizeString(body.customerRequestSummary, 6000)
+      || normalizeString(normalizeMetadata(body.metadata).customerRequestSummary, 6000)
+      || normalizeString(body.message, 5000)
+      || normalizeString(body.notes, 5000),
+    conversationTranscript: normalizeString(body.conversationTranscript, 20000),
     subject: normalizeString(body.subject, 240),
     html: normalizeString(body.html, 12000) || normalizeString(body.bodyHtml, 12000),
     text: normalizeString(body.text, 12000) || normalizeString(body.bodyText, 12000),

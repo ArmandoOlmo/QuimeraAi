@@ -330,6 +330,8 @@ describe('chatbotEngineRuntimeActionService', () => {
             subject: 'Personal follow-up',
             html: '<p>Reviewed follow-up draft.</p>',
             text: 'Reviewed follow-up draft.',
+            customerRequestSummary: 'Customer asked for a premium package quote and wants a callback tomorrow.',
+            conversationTranscript: 'Cliente: Necesito precio del paquete premium.',
             marketingConsent: true,
             idempotencyKey: 'email-follow-up-key-1',
             sourceSurface: 'website',
@@ -368,6 +370,12 @@ describe('chatbotEngineRuntimeActionService', () => {
             conversationId: 'conversation-1',
             html: '<p>Reviewed follow-up draft.</p>',
             text: 'Reviewed follow-up draft.',
+            customerRequestSummary: expect.stringContaining('What the customer wants: Customer asked for a premium package quote and wants a callback tomorrow.'),
+            customerRequestSummaryTarget: 'email_logs.metadata.customerRequestSummary,canonicalEmail.extra.customerRequestSummary',
+        });
+        expect(client.tables.email_logs[0].metadata.canonicalEmail).toMatchObject({
+            customerRequestSummary: expect.stringContaining('What the customer wants: Customer asked for a premium package quote and wants a callback tomorrow.'),
+            customerRequestSummaryTarget: 'email_logs.metadata.customerRequestSummary',
         });
 
         const duplicate = await queueChatbotEmailFollowUpDraft({
@@ -426,6 +434,9 @@ describe('chatbotEngineRuntimeActionService', () => {
             source_entity_id: 'lead-1',
             idempotency_key: 'finance-quote-key-1',
         });
+        expect(client.tables.accounting_invoices[0].notes).toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(client.tables.accounting_invoices[0].notes).toContain('Lo que desea el cliente / What the customer wants: Formal quote for a consultation package.');
+        expect(client.tables.accounting_invoices[0].notes).toContain('Accion recomendada / Recommended action: ES: Revisar totales, impuestos y terminos antes de enviar o crear pago en Stripe.');
         expect(client.tables.accounting_invoices[0].metadata).toMatchObject({
             chatbotEngine: true,
             financeQuoteRequest: true,
@@ -437,6 +448,8 @@ describe('chatbotEngineRuntimeActionService', () => {
             ledgerEntryCreated: false,
             leadId: 'lead-1',
             conversationId: 'conversation-1',
+            customerRequestSummary: expect.stringContaining('What the customer wants: Formal quote for a consultation package.'),
+            customerRequestSummaryTarget: 'accounting_invoices.notes',
         });
 
         const duplicate = await createChatbotFinanceQuoteRequest({

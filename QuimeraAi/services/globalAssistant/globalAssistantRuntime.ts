@@ -188,6 +188,7 @@ const buildMemoryContextForIntent = (
 
 export class GlobalAssistantRuntime {
     private readonly pendingPersistence: Promise<void>[] = [];
+    private persistenceTail: Promise<void> = Promise.resolve();
 
     constructor(
         private readonly registry: GlobalAssistantActionRegistry = globalAssistantActionRegistry,
@@ -636,21 +637,21 @@ export class GlobalAssistantRuntime {
     }
 
     private recordContextSnapshot(context: AssistantContextSnapshot): void {
-        this.queuePersistence(this.persistence?.recordContextSnapshot?.(context));
+        this.queuePersistence(() => this.persistence?.recordContextSnapshot?.(context));
     }
 
     private recordTask(task: AssistantTask): void {
-        this.queuePersistence(this.persistence?.upsertTask?.(task));
+        this.queuePersistence(() => this.persistence?.upsertTask?.(task));
     }
 
     private recordAction(action: AssistantAction, metadata: Partial<AssistantActionLog> = {}): AssistantActionLog {
         const log = this.auditService.recordAction(action, metadata);
-        this.queuePersistence(this.persistence?.recordAction?.(log));
+        this.queuePersistence(() => this.persistence?.recordAction?.(log));
         return log;
     }
 
     private recordRollbackSnapshot(snapshot: AssistantRollbackSnapshot): void {
-        this.queuePersistence(this.persistence?.recordRollbackSnapshot?.(snapshot));
+        this.queuePersistence(() => this.persistence?.recordRollbackSnapshot?.(snapshot));
     }
 
     private async resolveRollbackSnapshot(action: AssistantAction): Promise<AssistantRollbackSnapshot | null> {
@@ -681,13 +682,15 @@ export class GlobalAssistantRuntime {
 
     private recordEvent(event: Omit<AssistantRuntimeEvent, 'id' | 'createdAt'>): AssistantRuntimeEvent {
         const nextEvent = this.auditService.recordEvent(event);
-        this.queuePersistence(this.persistence?.recordEvent?.(nextEvent));
+        this.queuePersistence(() => this.persistence?.recordEvent?.(nextEvent));
         return nextEvent;
     }
 
-    private queuePersistence(work: Promise<void> | void | undefined): void {
+    private queuePersistence(work: (() => Promise<void> | void | undefined) | undefined): void {
         if (!work) return;
-        this.pendingPersistence.push(Promise.resolve(work));
+        const queued = this.persistenceTail.then(() => work());
+        this.persistenceTail = queued.catch(() => undefined);
+        this.pendingPersistence.push(queued);
     }
 
     private async flushPersistence(): Promise<void> {

@@ -55,6 +55,9 @@ const TABLES = {
     LEGAL_PAGES: 'app_legal_pages',
 };
 
+const createRealtimeChannelName = (base: string): string =>
+    `${base}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+
 // =============================================================================
 // CONTEXT
 // =============================================================================
@@ -116,9 +119,10 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
 
         fetchInitialArticles();
 
-        // Subscribe to real-time changes
+        // Subscribe to real-time changes. Use a unique channel per mount so
+        // React remounts cannot reuse an already-subscribed channel instance.
         const channel = supabase
-            .channel('public:app_articles')
+            .channel(createRealtimeChannelName('public:app_articles'))
             .on('postgres_changes', { event: '*', schema: 'public', table: TABLES.ARTICLES }, (payload) => {
                 fetchInitialArticles(); // Simple refresh strategy for now
             })
@@ -320,7 +324,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
         fetchInitialNavigation();
 
         const channel = supabase
-            .channel('public:app_navigation')
+            .channel(createRealtimeChannelName('public:app_navigation'))
             .on('postgres_changes', { event: '*', schema: 'public', table: TABLES.NAVIGATION, filter: 'id=eq.main' }, (payload) => {
                 fetchInitialNavigation();
             })
@@ -406,7 +410,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
         fetchInitialConfig();
 
         const channel = supabase
-            .channel('public:app_landing_config')
+            .channel(createRealtimeChannelName('public:app_landing_config'))
             .on('postgres_changes', { event: '*', schema: 'public', table: TABLES.LANDING_CONFIG, filter: 'id=eq.landing' }, (payload) => {
                 fetchInitialConfig();
             })
@@ -505,7 +509,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
         fetchInitialPages();
 
         const channel = supabase
-            .channel('public:app_legal_pages')
+            .channel(createRealtimeChannelName('public:app_legal_pages'))
             .on('postgres_changes', { event: '*', schema: 'public', table: TABLES.LEGAL_PAGES }, (payload) => {
                 fetchInitialPages();
             })

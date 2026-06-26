@@ -298,12 +298,14 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
 
 export function getDashboardAssistantQuickActions(input: {
     hasProjects: boolean;
+    hasActiveProject?: boolean;
     canUseAdminMode?: boolean;
     limit?: number;
 }): DashboardAssistantQuickAction[] {
     const limit = input.limit ?? 6;
+    const hasProjectTarget = input.hasActiveProject ?? input.hasProjects;
     return DASHBOARD_ASSISTANT_QUICK_ACTIONS
-        .filter(action => !action.requiresProject || input.hasProjects)
+        .filter(action => !action.requiresProject || hasProjectTarget)
         .filter(action => !action.adminOnly || input.canUseAdminMode === true)
         .slice(0, limit);
 }

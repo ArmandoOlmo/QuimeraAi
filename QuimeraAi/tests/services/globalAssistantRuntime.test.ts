@@ -258,4 +258,51 @@ describe('GlobalAssistantRuntime', () => {
             'assistant_action_previewed',
         ]);
     });
+
+    it('persists the task before action logs even when storage is slow', async () => {
+        const registry = new GlobalAssistantActionRegistry();
+        const memoryService = new GlobalAssistantMemoryService();
+        const taskService = new GlobalAssistantTaskService();
+        const auditService = new GlobalAssistantAuditService();
+        const calls: string[] = [];
+        const persistence: GlobalAssistantRuntimePersistence = {
+            recordContextSnapshot: async () => {
+                calls.push('context');
+            },
+            recordEvent: async event => {
+                calls.push(`event:${event.type}`);
+            },
+            upsertTask: async task => {
+                calls.push(`task:start:${task.id}`);
+                await new Promise(resolve => setTimeout(resolve, 5));
+                calls.push(`task:end:${task.id}`);
+            },
+            recordAction: async action => {
+                calls.push(`action:${action.taskId}`);
+                expect(calls).toContain(`task:end:${action.taskId}`);
+            },
+        };
+        const runtime = new GlobalAssistantRuntime(registry, memoryService, taskService, auditService, persistence);
+        const context = resolveCurrentAssistantContext({
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            role: 'member',
+            activeProject,
+            activeRoute: '/dashboard/email',
+            activeServices: ['emailMarketing'],
+            featureFlags: ['emailMarketing'],
+        });
+
+        const result = await runtime.planRequest({
+            context,
+            request: 'Crea una campana de email para reservas',
+            enabledServices: ['emailMarketing'],
+            enabledFeatures: ['emailMarketing'],
+        });
+        const taskEndIndex = calls.indexOf(`task:end:${result.task.id}`);
+        const firstActionIndex = calls.findIndex(call => call === `action:${result.task.id}`);
+
+        expect(taskEndIndex).toBeGreaterThan(-1);
+        expect(firstActionIndex).toBeGreaterThan(taskEndIndex);
+    });
 });

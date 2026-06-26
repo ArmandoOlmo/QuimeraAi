@@ -436,23 +436,24 @@ function applyEqId(query: any, resolved: ResolvedPath) {
 
 function applyFilter(query: any, field: string, op: Operator, value: any) {
     const column = camelToSnake(field);
+    const normalizedValue = normalizeValue(value);
     switch (op) {
         case '==':
-            return query.eq(column, value);
+            return query.eq(column, normalizedValue);
         case '!=':
-            return query.neq(column, value);
+            return query.neq(column, normalizedValue);
         case '<':
-            return query.lt(column, value);
+            return query.lt(column, normalizedValue);
         case '<=':
-            return query.lte(column, value);
+            return query.lte(column, normalizedValue);
         case '>':
-            return query.gt(column, value);
+            return query.gt(column, normalizedValue);
         case '>=':
-            return query.gte(column, value);
+            return query.gte(column, normalizedValue);
         case 'in':
-            return query.in(column, Array.isArray(value) ? value : [value]);
+            return query.in(column, Array.isArray(normalizedValue) ? normalizedValue : [normalizedValue]);
         case 'array-contains':
-            return query.contains(column, [value]);
+            return query.contains(column, [normalizedValue]);
         default:
             return query;
     }

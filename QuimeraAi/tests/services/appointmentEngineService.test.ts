@@ -226,6 +226,66 @@ describe('appointmentEngineService', () => {
         ]));
     });
 
+    it('stores the ChatCore customer request summary in both appointment notes and the linked CRM lead', async () => {
+        const supabase = new FakeSupabase();
+        const customerRequestSummary = [
+            'Resumen de solicitud del cliente / Customer request summary',
+            'Proyecto / Project: Ganova',
+            'Lo que desea el cliente / What the customer wants: Maria wants a property showing after 3pm and needs parking details.',
+            'Resumen de conversacion / Conversation snapshot:',
+            '- Cliente / Customer: Quiero ver la propiedad despues de las 3pm.',
+        ].join('\n');
+
+        const result = await createAppointmentFromChat(supabase as any, {
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            title: 'Property showing with Maria',
+            startDate: '2026-07-03T19:00:00.000Z',
+            endDate: '2026-07-03T19:30:00.000Z',
+            participantName: 'Maria Gomez',
+            participantEmail: 'maria@example.com',
+            participantPhone: '+1 787 555 0123',
+            sourceModule: 'realty',
+            sourceConversationId: 'conversation-1',
+            notes: customerRequestSummary,
+            conversationTranscript: 'Cliente: Quiero ver la propiedad despues de las 3pm.',
+            allowConflicts: true,
+        });
+
+        const appointmentInsert = supabase.inserts.find(insert => insert.table === 'project_appointments');
+        const leadInsert = supabase.inserts.find(insert => insert.table === 'leads');
+
+        expect(result.leadId).toBe('leads-inserted-1');
+        expect(appointmentInsert?.row.notes).toEqual([
+            expect.objectContaining({
+                content: expect.stringContaining('What the customer wants: Maria wants a property showing after 3pm and needs parking details.'),
+                aiGenerated: true,
+                pinned: true,
+            }),
+        ]);
+        expect(appointmentInsert?.row.metadata).toMatchObject({
+            customerRequestSummary: expect.stringContaining('Maria wants a property showing after 3pm and needs parking details.'),
+            conversationTranscript: 'Cliente: Quiero ver la propiedad despues de las 3pm.',
+            sourceModule: 'realty',
+            sourceConversationId: 'conversation-1',
+        });
+        expect(leadInsert?.row).toMatchObject({
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            name: 'Maria Gomez',
+            email: 'maria@example.com',
+            source: 'chatbot-widget',
+            notes: expect.stringContaining('What the customer wants: Maria wants a property showing after 3pm and needs parking details.'),
+        });
+        expect(leadInsert?.row.custom_data).toMatchObject({
+            appointmentId: expect.any(String),
+            appointmentTitle: 'Property showing with Maria',
+            sourceModule: 'realty',
+            sourceConversationId: 'conversation-1',
+            customerRequestSummary: expect.stringContaining('Maria wants a property showing after 3pm and needs parking details.'),
+        });
+    });
+
     it('marks public booking submissions for review while using the same canonical table', async () => {
         const supabase = new FakeSupabase();
 

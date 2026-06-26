@@ -75,8 +75,9 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
     }, [plansArray, currentPlanId, currentPlan]);
     const quickActions = useMemo(() => getDashboardAssistantQuickActions({
         hasProjects: allUserProjectsCount > 0,
+        hasActiveProject: Boolean(activeProjectId),
         canUseAdminMode: canUseAdminQuickActions,
-    }), [allUserProjectsCount, canUseAdminQuickActions]);
+    }), [activeProjectId, allUserProjectsCount, canUseAdminQuickActions]);
 
     const handleUpgradeClick = () => {
         if (upgradeContext) {

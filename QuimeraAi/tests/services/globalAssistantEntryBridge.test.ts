@@ -167,8 +167,19 @@ describe('globalAssistantEntryBridge', () => {
             'review_platform_errors',
         ]);
 
+        const ownerWithoutActiveProject = getDashboardAssistantQuickActions({
+            hasProjects: true,
+            hasActiveProject: false,
+            canUseAdminMode: true,
+        });
+        expect(ownerWithoutActiveProject.map(action => action.id)).toEqual([
+            'create_website',
+            'review_platform_errors',
+        ]);
+
         const ownerActions = getDashboardAssistantQuickActions({
             hasProjects: true,
+            hasActiveProject: true,
             canUseAdminMode: true,
         });
 

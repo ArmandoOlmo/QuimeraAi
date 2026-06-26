@@ -87,7 +87,7 @@ export function useTenantMembers(): UseTenantMembersReturn {
                 .from('tenant_members')
                 .select(`
                     *,
-                    users (name, email, photo_url)
+                    user:users!tenant_members_user_id_fkey (name, email, photo_url)
                 `)
                 .eq('tenant_id', currentTenant.id);
 
@@ -121,9 +121,9 @@ export function useTenantMembers(): UseTenantMembersReturn {
                     joinedAt: d.joined_at,
                     lastAccessAt: d.last_access_at,
                     invitedBy: d.invited_by,
-                    userName: d.users?.name,
-                    userEmail: d.users?.email,
-                    userPhotoUrl: d.users?.photo_url,
+                    userName: d.user?.name || d.users?.name,
+                    userEmail: d.user?.email || d.users?.email,
+                    userPhotoUrl: d.user?.photo_url || d.users?.photo_url,
                     isCurrentUser,
                     isOwner,
                     canBeEdited,
@@ -306,7 +306,6 @@ export function useAvailableRoles(): AgencyRole[] {
     
     return [];
 }
-
 
 
 
