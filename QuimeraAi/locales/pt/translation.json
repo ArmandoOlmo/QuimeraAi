@@ -2437,5 +2437,111 @@
     "viewProduct": "Ver produto",
     "width": "Largura",
     "wysiwygHint": "Use o editor visual para formatação avançada"
+  },
+  "globalCommandPalette": {
+    "placeholder": "Pesquisar, abrir ou perguntar ao Quimera",
+    "ariaLabel": "Paleta global de comandos",
+    "close": "Fechar",
+    "emptyTitle": "Nenhum comando encontrado",
+    "emptyDescription": "Tente um projeto, módulo ou solicitação.",
+    "untitledCommand": "Comando sem título",
+    "untitledProject": "Projeto sem título",
+    "askLabel": "Perguntar ao Quimera: {{query}}",
+    "askDescription": "Enviar esta solicitação para a camada operacional do Global Assistant.",
+    "activeProject": "Projeto ativo",
+    "openProject": "Abrir projeto{{status}}",
+    "types": {
+      "assistant": "Assistente",
+      "navigation": "Navegação",
+      "project": "Projeto",
+      "module": "Módulo",
+      "action": "Ação",
+      "admin": "Admin"
+    },
+    "commands": {
+      "action": {
+        "create-website": {
+          "label": "Criar site",
+          "description": "Iniciar uma solicitação de site ou negócio com o Global Assistant.",
+          "prompt": "Crie um novo site. Pergunte pelos detalhes do negócio que estiverem faltando antes de gerar."
+        },
+        "edit-website": {
+          "label": "Editar seção do site",
+          "description": "Planejar uma edição do Website Builder para o projeto ativo.",
+          "prompt": "Ajude-me a editar uma seção do site no projeto ativo. Pergunte qual seção se não estiver claro."
+        },
+        "generate-image": {
+          "label": "Gerar imagem",
+          "description": "Criar um rascunho de asset de imagem para o projeto ativo.",
+          "prompt": "Gere um rascunho de asset de imagem para o projeto ativo. Pergunte estilo, tema e posicionamento se faltarem detalhes."
+        },
+        "create-video": {
+          "label": "Criar vídeo",
+          "description": "Criar um prompt de vídeo ou tarefa de asset de vídeo.",
+          "prompt": "Crie um rascunho de asset de vídeo ou prompt de geração de vídeo para o projeto ativo."
+        },
+        "create-email": {
+          "label": "Criar campanha de email",
+          "description": "Redigir uma campanha de email para revisão.",
+          "prompt": "Crie um rascunho de campanha de email para revisão. Não envie sem confirmação explícita."
+        },
+        "create-product": {
+          "label": "Criar produto",
+          "description": "Preparar o rascunho de um produto de ecommerce.",
+          "prompt": "Crie um rascunho de produto de ecommerce para o projeto ativo. Pergunte os detalhes do produto que estiverem faltando."
+        },
+        "create-appointment": {
+          "label": "Criar compromisso",
+          "description": "Planejar um novo compromisso ou reserva.",
+          "prompt": "Crie um rascunho de compromisso para o projeto ativo. Pergunte data, hora, contato e serviço se faltarem detalhes."
+        },
+        "review-leads": {
+          "label": "Revisar leads",
+          "description": "Resumir e priorizar leads do CRM.",
+          "prompt": "Revise os leads do projeto ativo, resuma prioridades e sugira ações de acompanhamento."
+        },
+        "create-bio-page": {
+          "label": "Criar Bio Page",
+          "description": "Criar ou melhorar um rascunho de Bio Page.",
+          "prompt": "Crie um rascunho de Bio Page para o projeto ativo com links, CTA, reservas, captura de leads e contexto do ChatCore."
+        },
+        "train-chatcore": {
+          "label": "Treinar ChatCore",
+          "description": "Criar ou sincronizar conhecimento do projeto para o ChatCore.",
+          "prompt": "Treine o ChatCore para o projeto ativo criando ou sincronizando conhecimento. Mantenha separada a memória dos chats de visitantes."
+        },
+        "analyze-project": {
+          "label": "Analisar projeto",
+          "description": "Revisar prontidão, analytics e bloqueios do projeto.",
+          "prompt": "Analise a prontidão do projeto ativo, analytics, bloqueios e próximas melhores ações."
+        }
+      },
+      "nav": {
+        "dashboard": { "label": "Dashboard" },
+        "websites": { "label": "Sites" },
+        "editor": { "label": "Website Builder" },
+        "assets": { "label": "Media AI" },
+        "cms": { "label": "CMS" },
+        "navigation": { "label": "Navegação" },
+        "chatcore": { "label": "ChatCore" },
+        "leads": { "label": "CRM / Leads" },
+        "appointments": { "label": "Compromissos" },
+        "domains": { "label": "Domínios" },
+        "seo": { "label": "SEO" },
+        "finance": { "label": "Finanças" },
+        "ecommerce": { "label": "Ecommerce" },
+        "restaurants": { "label": "Restaurantes" },
+        "email": { "label": "Email Marketing" },
+        "biopage": { "label": "Bio Page" },
+        "real-estate": { "label": "Realty" },
+        "templates": { "label": "Templates" },
+        "settings": { "label": "Configurações" }
+      },
+      "admin": {
+        "superadmin": { "label": "Super Admin" },
+        "global-assistant": { "label": "Configurações do Global Assistant" },
+        "service-availability": { "label": "Disponibilidade de serviços" }
+      }
+    }
   }
 }

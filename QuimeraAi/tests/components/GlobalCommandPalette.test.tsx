@@ -20,6 +20,16 @@ vi.mock('../../hooks/useGlobalCommandPalette', () => ({
                 descriptionKey: 'globalCommandPalette.commands.action.bad.description',
                 keywords: ['fallback'],
             },
+            {
+                id: 'assistant:request',
+                type: 'assistant_request',
+                label: 'Ask Quimera: $t(project.detail, {"id":"1"})',
+                labelKey: 'globalCommandPalette.askLabel',
+                labelParams: { query: '$t(project.detail, {"id":"1"})' },
+                description: 'Send this request to the Global Assistant Operating Layer.',
+                descriptionKey: 'globalCommandPalette.askDescription',
+                keywords: ['assistant'],
+            },
         ],
         moveSelection: vi.fn(),
         executeCommand: vi.fn(),
@@ -30,6 +40,9 @@ vi.mock('react-i18next', () => ({
     useTranslation: () => ({
         t: (key: string, options?: { defaultValue?: string }) => {
             if (key.includes('.bad.')) {
+                throw new TypeError("Cannot read properties of null (reading '1')");
+            }
+            if (key === 'globalCommandPalette.askLabel' && (options as any)?.nest !== false) {
                 throw new TypeError("Cannot read properties of null (reading '1')");
             }
             return options?.defaultValue || key;
@@ -51,5 +64,6 @@ describe('GlobalCommandPalette', () => {
 
         expect(screen.getByText('Fallback action')).toBeInTheDocument();
         expect(screen.getByText('Fallback description')).toBeInTheDocument();
+        expect(screen.getByText('Ask Quimera: $t(project.detail, {"id":"1"})')).toBeInTheDocument();
     });
 });

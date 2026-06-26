@@ -2762,5 +2762,111 @@
     "hideControls": "Masquer les contrôles",
     "showControls": "Afficher les contrôles",
     "closePanel": "Fermer le panneau"
+  },
+  "globalCommandPalette": {
+    "placeholder": "Rechercher, ouvrir ou demander à Quimera",
+    "ariaLabel": "Palette globale de commandes",
+    "close": "Fermer",
+    "emptyTitle": "Aucune commande trouvée",
+    "emptyDescription": "Essayez un projet, un module ou une demande.",
+    "untitledCommand": "Commande sans titre",
+    "untitledProject": "Projet sans titre",
+    "askLabel": "Demander à Quimera : {{query}}",
+    "askDescription": "Envoyer cette demande à la couche opérationnelle du Global Assistant.",
+    "activeProject": "Projet actif",
+    "openProject": "Ouvrir le projet{{status}}",
+    "types": {
+      "assistant": "Assistant",
+      "navigation": "Navigation",
+      "project": "Projet",
+      "module": "Module",
+      "action": "Action",
+      "admin": "Admin"
+    },
+    "commands": {
+      "action": {
+        "create-website": {
+          "label": "Créer un site web",
+          "description": "Lancer une demande de site web ou d'entreprise avec le Global Assistant.",
+          "prompt": "Crée un nouveau site web. Demande-moi les détails manquants de l'entreprise avant de générer."
+        },
+        "edit-website": {
+          "label": "Modifier une section web",
+          "description": "Planifier une modification du Website Builder pour le projet actif.",
+          "prompt": "Aide-moi à modifier une section du site web dans le projet actif. Demande quelle section si ce n'est pas clair."
+        },
+        "generate-image": {
+          "label": "Générer une image",
+          "description": "Créer un brouillon d'asset image pour le projet actif.",
+          "prompt": "Génère un brouillon d'asset image pour le projet actif. Demande le style, le sujet et l'emplacement si des détails manquent."
+        },
+        "create-video": {
+          "label": "Créer une vidéo",
+          "description": "Créer un prompt vidéo ou une tâche d'asset vidéo.",
+          "prompt": "Crée un brouillon d'asset vidéo ou un prompt de génération vidéo pour le projet actif."
+        },
+        "create-email": {
+          "label": "Créer une campagne email",
+          "description": "Rédiger une campagne email à réviser.",
+          "prompt": "Crée un brouillon de campagne email à réviser. Ne l'envoie pas sans confirmation explicite."
+        },
+        "create-product": {
+          "label": "Créer un produit",
+          "description": "Préparer le brouillon d'un produit ecommerce.",
+          "prompt": "Crée un brouillon de produit ecommerce pour le projet actif. Demande les détails manquants du produit."
+        },
+        "create-appointment": {
+          "label": "Créer un rendez-vous",
+          "description": "Planifier un nouveau rendez-vous ou une réservation.",
+          "prompt": "Crée un brouillon de rendez-vous pour le projet actif. Demande la date, l'heure, le contact et le service si des détails manquent."
+        },
+        "review-leads": {
+          "label": "Réviser les leads",
+          "description": "Résumer et prioriser les leads CRM.",
+          "prompt": "Révise les leads du projet actif, résume les priorités et suggère des actions de suivi."
+        },
+        "create-bio-page": {
+          "label": "Créer une Bio Page",
+          "description": "Créer ou améliorer un brouillon de Bio Page.",
+          "prompt": "Crée un brouillon de Bio Page pour le projet actif avec liens, CTA, réservation, capture de leads et contexte ChatCore."
+        },
+        "train-chatcore": {
+          "label": "Entraîner ChatCore",
+          "description": "Créer ou synchroniser les connaissances du projet pour ChatCore.",
+          "prompt": "Entraîne ChatCore pour le projet actif en créant ou synchronisant les connaissances. Garde la mémoire des chats visiteurs séparée."
+        },
+        "analyze-project": {
+          "label": "Analyser le projet",
+          "description": "Réviser la préparation, les analytics et les blocages du projet.",
+          "prompt": "Analyse la préparation du projet actif, les analytics, les blocages et les prochaines meilleures actions."
+        }
+      },
+      "nav": {
+        "dashboard": { "label": "Tableau de bord" },
+        "websites": { "label": "Sites web" },
+        "editor": { "label": "Website Builder" },
+        "assets": { "label": "Media AI" },
+        "cms": { "label": "CMS" },
+        "navigation": { "label": "Navigation" },
+        "chatcore": { "label": "ChatCore" },
+        "leads": { "label": "CRM / Leads" },
+        "appointments": { "label": "Rendez-vous" },
+        "domains": { "label": "Domaines" },
+        "seo": { "label": "SEO" },
+        "finance": { "label": "Finance" },
+        "ecommerce": { "label": "Ecommerce" },
+        "restaurants": { "label": "Restaurants" },
+        "email": { "label": "Email Marketing" },
+        "biopage": { "label": "Bio Page" },
+        "real-estate": { "label": "Realty" },
+        "templates": { "label": "Modèles" },
+        "settings": { "label": "Paramètres" }
+      },
+      "admin": {
+        "superadmin": { "label": "Super Admin" },
+        "global-assistant": { "label": "Paramètres du Global Assistant" },
+        "service-availability": { "label": "Disponibilité des services" }
+      }
+    }
   }
 }

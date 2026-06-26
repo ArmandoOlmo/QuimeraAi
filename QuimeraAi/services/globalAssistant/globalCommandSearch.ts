@@ -54,6 +54,15 @@ const normalize = (value: string): string =>
 
 const includesToken = (haystack: string, token: string): boolean => haystack.includes(token);
 
+const readString = (value: unknown): string => {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    return '';
+};
+
+const isProjectRecord = (project: unknown): project is Project =>
+    !!project && typeof project === 'object' && !!readString((project as Project).id);
+
 const scoreItem = (item: GlobalCommandItem, query: string): number => {
     const normalizedQuery = normalize(query);
     if (!normalizedQuery) return item.type === 'assistant_request' ? -1 : 0;
@@ -251,26 +260,29 @@ const resolveDisabledReason = (
 
 const projectToCommand = (project: Project, activeProjectId?: string | null): GlobalCommandItem => {
     const projectRecord = project as Project & Record<string, unknown>;
+    const projectId = readString(project.id);
+    const projectName = readString(project.name);
+    const projectStatus = readString(project.status);
 
     return {
-        id: `project:${project.id}`,
+        id: `project:${projectId}`,
         type: 'project',
-        label: project.name || 'Untitled project',
-        labelKey: project.name ? undefined : 'globalCommandPalette.untitledProject',
-        description: project.id === activeProjectId
+        label: projectName || 'Untitled project',
+        labelKey: projectName ? undefined : 'globalCommandPalette.untitledProject',
+        description: projectId === activeProjectId
             ? 'Active project'
-            : `Open project${project.status ? ` - ${project.status}` : ''}`,
-        descriptionKey: project.id === activeProjectId
+            : `Open project${projectStatus ? ` - ${projectStatus}` : ''}`,
+        descriptionKey: projectId === activeProjectId
             ? 'globalCommandPalette.activeProject'
             : 'globalCommandPalette.openProject',
         descriptionParams: {
-            status: project.status ? ` - ${project.status}` : '',
+            status: projectStatus ? ` - ${projectStatus}` : '',
         },
-        projectId: project.id,
-        isActiveProject: project.id === activeProjectId,
+        projectId,
+        isActiveProject: projectId === activeProjectId,
         keywords: [
-            project.name || '',
-            project.status || '',
+            projectName,
+            projectStatus,
             typeof projectRecord.industry === 'string' ? projectRecord.industry : '',
             typeof projectRecord.subdomain === 'string' ? projectRecord.subdomain : '',
             typeof projectRecord.slug === 'string' ? projectRecord.slug : '',
@@ -300,11 +312,12 @@ export function buildGlobalCommandItems(input: BuildGlobalCommandItemsInput = {}
     }
 
     const projects = [...(input.projects || [])]
-        .filter(project => project.status !== 'Template' && !(project as any).deletedAt)
+        .filter(isProjectRecord)
+        .filter(project => readString(project.status) !== 'Template' && !(project as any).deletedAt)
         .sort((left, right) => {
             if (left.id === input.activeProjectId) return -1;
             if (right.id === input.activeProjectId) return 1;
-            return (left.name || '').localeCompare(right.name || '');
+            return readString(left.name).localeCompare(readString(right.name));
         })
         .slice(0, input.maxProjects ?? 8)
         .map(project => projectToCommand(project, input.activeProjectId));

@@ -16,6 +16,23 @@ import {
 
 type CommandTranslationParams = Record<string, string | number | boolean | null | undefined>;
 
+const safeTranslationParams = (params?: CommandTranslationParams): CommandTranslationParams => {
+    if (!params) return {};
+
+    return Object.entries(params).reduce<CommandTranslationParams>((safeParams, [key, value]) => {
+        if (key === 'defaultValue' || key === 'interpolation' || key === 'nest') return safeParams;
+        if (
+            typeof value === 'string'
+            || typeof value === 'number'
+            || typeof value === 'boolean'
+            || value == null
+        ) {
+            safeParams[key] = value;
+        }
+        return safeParams;
+    }, {});
+};
+
 const translatePromptSafe = (
     translate: ReturnType<typeof useTranslation>['t'],
     key: string | undefined,
@@ -24,7 +41,12 @@ const translatePromptSafe = (
 ): string => {
     if (!key) return fallback;
     try {
-        const translated = translate(key, { defaultValue: fallback, ...(params || {}) });
+        const translated = translate(key, {
+            ...safeTranslationParams(params),
+            defaultValue: fallback,
+            interpolation: { skipOnVariables: true },
+            nest: false,
+        } as any);
         return typeof translated === 'string' ? translated : fallback;
     } catch {
         return fallback;

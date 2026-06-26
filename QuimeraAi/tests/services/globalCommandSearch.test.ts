@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { buildGlobalCommandItems } from '../../services/globalAssistant/globalCommandSearch.ts';
 import enTranslations from '../../locales/en/translation.json';
 import esTranslations from '../../locales/es/translation.json';
+import frTranslations from '../../locales/fr/translation.json';
+import ptTranslations from '../../locales/pt/translation.json';
 
 const projects = [
     {
@@ -27,7 +29,7 @@ const getTranslationValue = (translations: Record<string, any>, key: string): un
     }, translations);
 
 const expectTranslatedKey = (key: string) => {
-    for (const translations of [enTranslations, esTranslations] as Record<string, any>[]) {
+    for (const translations of [enTranslations, esTranslations, frTranslations, ptTranslations] as Record<string, any>[]) {
         const value = getTranslationValue(translations, key);
         expect(value, key).toEqual(expect.any(String));
         expect((value as string).trim(), key).not.toBe('');
@@ -84,6 +86,29 @@ describe('globalCommandSearch', () => {
         expect(projectItems[0]).toMatchObject({ id: 'project:project-1', label: 'Casa Luna' });
         expect(projectItems.map(item => item.id)).not.toContain('project:template-1');
         expect(projectItems.map(item => item.id)).not.toContain('project:deleted-1');
+    });
+
+    it('ignores malformed project entries instead of crashing the palette search', () => {
+        const items = buildGlobalCommandItems({
+            query: 'project',
+            projects: [
+                null,
+                undefined,
+                { name: 'Missing ID', status: 'Draft' },
+                { id: 'project-4', name: 42, status: 'Draft' },
+            ] as any[],
+            activeProjectId: 'project-4',
+            canAccessAdmin: true,
+            canAccessService: () => true,
+        });
+
+        const projectItems = items.filter(item => item.type === 'project');
+        expect(projectItems).toHaveLength(1);
+        expect(projectItems[0]).toMatchObject({
+            id: 'project:project-4',
+            label: '42',
+            projectId: 'project-4',
+        });
     });
 
     it('omits project-required commands when no project is active', () => {

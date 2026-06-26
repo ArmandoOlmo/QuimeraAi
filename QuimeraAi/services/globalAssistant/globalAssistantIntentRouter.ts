@@ -57,6 +57,7 @@ const inferModule = (text: string, context: AssistantContextSnapshot): Assistant
     if (includesAny(text, ['finance', 'finanzas', 'invoice', 'factura', 'gasto'])) return 'finance';
     if (includesAny(text, ['imagen', 'image', 'video', 'asset', 'media'])) return 'media';
     if (includesAny(text, ['website', 'web', 'pagina', 'hero', 'seccion', 'section', 'editor'])) return 'website';
+    if (includesAny(text, ['proyecto', 'proyectos', 'project', 'projects'])) return 'project';
     return context.activeModule || 'project';
 };
 
