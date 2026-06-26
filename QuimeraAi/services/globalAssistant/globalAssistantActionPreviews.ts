@@ -67,6 +67,24 @@ const DRAFT_PREVIEW_BY_ACTION: Record<string, {
         fallbackName: 'AI product draft',
         createdLabel: 'ecommerce product draft',
     },
+    generate_image: {
+        table: 'media_assets',
+        fallbackName: 'AI image generation draft',
+        createdLabel: 'Media AI image draft',
+        risks: ['Creates a reviewable Media AI generation request before the asset is used in a page or module.'],
+    },
+    edit_image: {
+        table: 'media_assets',
+        fallbackName: 'AI image edit draft',
+        createdLabel: 'Media AI image edit draft',
+        risks: ['Creates a reviewable Media AI edit request and does not replace the source asset automatically.'],
+    },
+    generate_video: {
+        table: 'media_assets',
+        fallbackName: 'AI video generation draft',
+        createdLabel: 'Media AI video draft',
+        risks: ['Creates a reviewable Media AI video request before any generated video is used or published.'],
+    },
     create_appointment: {
         table: 'project_appointments',
         fallbackName: 'AI appointment draft',

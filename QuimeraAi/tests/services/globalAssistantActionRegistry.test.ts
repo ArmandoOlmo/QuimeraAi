@@ -136,4 +136,31 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(permission.reasons).toContain('Required service is not available: ecommerce.');
         expect(permission.reasons).toContain('Required feature is not enabled: ecommerceEnabled.');
     });
+
+    it('blocks catalogued actions that are not wired to real execution handlers', () => {
+        const definition = globalAssistantActionRegistry.get('send_email_campaign');
+        expect(definition).toBeDefined();
+
+        const plan = buildExecutionPlan({
+            context: makeContext('owner', 'owner'),
+            intent: {
+                ...intent,
+                intent: 'publish',
+                module: 'emailMarketing',
+                actionCandidates: ['send_email_campaign'],
+                safetyLevel: 'critical',
+            },
+            actionDefinitions: [definition!],
+            request: 'Envia la campana de email ya',
+            userPermissions: ['assistant:emailMarketing:use'],
+            enabledServices: ['emailMarketing'],
+            enabledFeatures: ['emailMarketing'],
+        });
+
+        expect(plan.status).toBe('blocked');
+        expect(plan.blockers.join(' ')).toContain('No execute handler registered for send_email_campaign.');
+        expect(plan.actions[0].metadata).toMatchObject({ executable: false });
+        expect(plan.previews).toHaveLength(1);
+        expect(plan.approvals).toHaveLength(1);
+    });
 });

@@ -146,7 +146,7 @@ describe('GlobalAssistantRuntime execution lifecycle', () => {
         expect(auditService.listActionLogs({ status: 'rolled_back' })).toHaveLength(1);
     });
 
-    it('fails safely instead of applying when a module connector has no execute handler', async () => {
+    it('blocks catalogued actions without execute handlers before confirmation', async () => {
         const registry = new GlobalAssistantActionRegistry([emailCampaignDefinitionWithoutHandler]);
         const { runtime, auditService } = buildRuntime(registry);
 
@@ -157,20 +157,16 @@ describe('GlobalAssistantRuntime execution lifecycle', () => {
             enabledServices: ['emailMarketing'],
             enabledFeatures: ['emailMarketing'],
         });
-        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
 
-        const applied = await runtime.applyTask({
-            taskId: planned.task.id,
-            context,
-        });
-
-        expect(applied.task.status).toBe('failed');
-        expect(applied.plan.status).toBe('blocked');
-        expect(applied.actions[0].status).toBe('failed');
-        expect(applied.plan.blockers.join(' ')).toContain('No execute handler registered for create_email_campaign.');
-        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_failed');
-        expect(auditService.listActionLogs({ status: 'failed' }).map(action => action.actionType)).toEqual([
-            'create_email_campaign',
-        ]);
+        expect(planned.task.status).toBe('failed');
+        expect(planned.plan.status).toBe('blocked');
+        expect(planned.plan.blockers.join(' ')).toContain('No execute handler registered for create_email_campaign.');
+        expect(planned.plan.actions[0].status).toBe('planned');
+        expect(planned.plan.actions[0].metadata).toMatchObject({ executable: false });
+        expect(() => runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' })).toThrow(
+            'Cannot confirm a blocked assistant plan.',
+        );
+        expect(auditService.listEvents().map(event => event.type)).not.toContain('assistant_action_failed');
+        expect(auditService.listActionLogs({ status: 'failed' })).toHaveLength(0);
     });
 });
