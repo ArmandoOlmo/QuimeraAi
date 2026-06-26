@@ -38,6 +38,7 @@ import {
   buildChatbotEngineSurfaceContext,
   compactMetadata as compactSurfaceMetadata,
 } from '../../utils/chatbotEngine/surfaceContext.js';
+import { evaluateChatbotSurfaceDeployment } from '../../utils/chatbotEngine/deploymentGuard.js';
 import { classifyChatbotMessageIntent } from '../../utils/chatbotEngine/intentClassifier.js';
 import { resolveProjectAiAssistantConfig } from '../../utils/chatbotEngine/projectAiAssistantConfig.js';
 
@@ -339,6 +340,35 @@ async function assertWidgetChatbotActionAllowed(
       ...(options.metadata || {}),
     },
   });
+  const surfaceDeployment = evaluateChatbotSurfaceDeployment(
+    getProjectChatbotBlueprint(project),
+    getWidgetSourceSurface(body),
+    { isPreview: false },
+  );
+
+  if (!surfaceDeployment.allowed) {
+    await recordWidgetChatbotEngineEvent({
+      ...evaluation.auditEvent,
+      event_type: 'chatbot_surface_blocked',
+      action_status: 'blocked',
+      metadata: {
+        ...evaluation.auditEvent.metadata,
+        reason: surfaceDeployment.reason,
+        blockers: surfaceDeployment.blockers,
+        warnings: surfaceDeployment.warnings,
+        surfaceDeployment: {
+          surface: surfaceDeployment.surface,
+          surfaceKey: surfaceDeployment.surfaceKey,
+          status: surfaceDeployment.status,
+          strict: surfaceDeployment.strict,
+        },
+      },
+    });
+    throw Object.assign(new Error(CHATBOT_ACTION_BLOCKED_MESSAGE), {
+      status: 403,
+      code: 'CHATBOT_SURFACE_BLOCKED',
+    });
+  }
 
   if (!evaluation.allowed) {
     await recordWidgetChatbotEngineEvent(evaluation.auditEvent);

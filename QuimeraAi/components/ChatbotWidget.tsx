@@ -18,6 +18,7 @@ import {
     mergeChatbotEngineSurfaceContext,
     type ChatbotEngineSurfaceContext,
 } from '../utils/chatbotEngine/surfaceContext';
+import { canRenderChatbotSurface } from '../utils/chatbotEngine/deploymentGuard';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || '/api/widget').replace(/\/$/, '');
@@ -231,6 +232,17 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         standaloneProject,
         widgetApiProjectId,
     ]);
+    const chatbotSurfaceVisible = useMemo(() => canRenderChatbotSurface(
+        activeProject as any,
+        effectiveChatbotEngineContext.sourceSurface,
+        { isPreview: isPreview || isInEditor },
+    ), [activeProject, effectiveChatbotEngineContext.sourceSurface, isInEditor, isPreview]);
+
+    useEffect(() => {
+        if (!chatbotSurfaceVisible && isOpen) {
+            setIsOpen(false);
+        }
+    }, [chatbotSurfaceVisible, isOpen]);
 
     // We no longer return null here so that programmatic triggers (like open-quimera-chat) 
     // can always work. The floating button visibility is controlled below.
@@ -761,7 +773,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             </div>
 
             {/* Chat Button - hidden on mobile when chat is fullscreen open */}
-            {!(isMobileViewport && isOpen) && (aiAssistantConfig.isActive || isPreview) && (
+            {!(isMobileViewport && isOpen) && chatbotSurfaceVisible && (aiAssistantConfig.isActive || isPreview) && (
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className={`

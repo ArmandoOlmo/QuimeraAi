@@ -28,6 +28,13 @@ CC1 establece la base canónica del Chatbot Engine sin cambiar todavía el runti
 - El hook de ecommerce ya no usa rutas legacy; las acciones publicas siguen gobernadas por readiness del Action Registry.
 - Las solicitudes financieras públicas quedan limitadas a drafts idempotentes en `accounting_invoices`, con Event Log y `paymentCreated: false`.
 
+### Deploy Settings runtime guard
+
+- `utils/chatbotEngine/deploymentGuard.ts` centraliza la decisión de superficie para Website, Storefront, Checkout, Bio Page, Booking Page, Restaurant Menu, Realty Property Page, Admin Preview y Voice.
+- `ChatbotWidget` respeta superficies `paused` y `disabled` antes de mostrar el botón o mantener abierto el widget.
+- La API pública `api/widget/[project]/...` bloquea acciones de superficies pausadas/deshabilitadas y registra `chatbot_surface_blocked` en el Event Log.
+- Para compatibilidad, superficies generadas en `test` o `draft` siguen funcionando bajo política legacy, salvo que `deployment.safetySettings.requireSurfaceDeployment` o `requireExplicitSurfaceDeployment` esté activo. En modo estricto, sólo `deployed` ejecuta runtime público; `admin_preview` puede seguir usando `test`.
+
 ## EN
 
 CC1 establishes the canonical Chatbot Engine foundation without changing the public runtime of `ChatCore` or `ChatbotWidget` yet. This cut makes BusinessBlueprint, AI Studio, and ModuleRegistry understand ChatCore as a project-scoped, auditable AI Business Agent ready to evolve through services.
@@ -55,3 +62,10 @@ CC1 establishes the canonical Chatbot Engine foundation without changing the pub
 - Private data is not exposed.
 - The ecommerce hook no longer uses legacy paths; public actions remain governed by Action Registry readiness.
 - Public finance requests are limited to idempotent `accounting_invoices` drafts, with Event Log records and `paymentCreated: false`.
+
+### Deploy Settings Runtime Guard
+
+- `utils/chatbotEngine/deploymentGuard.ts` centralizes surface decisions for Website, Storefront, Checkout, Bio Page, Booking Page, Restaurant Menu, Realty Property Page, Admin Preview, and Voice.
+- `ChatbotWidget` respects `paused` and `disabled` surfaces before showing the launcher or keeping the widget open.
+- The public `api/widget/[project]/...` API blocks actions from paused/disabled surfaces and records `chatbot_surface_blocked` in the Event Log.
+- For compatibility, generated `test` or `draft` surfaces keep working under legacy policy unless `deployment.safetySettings.requireSurfaceDeployment` or `requireExplicitSurfaceDeployment` is enabled. In strict mode, only `deployed` surfaces execute public runtime; `admin_preview` may still use `test`.
