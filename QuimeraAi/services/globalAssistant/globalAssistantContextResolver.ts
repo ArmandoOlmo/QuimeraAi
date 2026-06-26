@@ -16,6 +16,7 @@ const createId = (prefix: string) => {
 };
 
 export interface ResolveAssistantContextInput {
+    conversationId?: string | null;
     userId?: string | null;
     email?: string | null;
     role?: string | null;
@@ -83,6 +84,7 @@ export function resolveCurrentAssistantContext(input: ResolveAssistantContextInp
 
     return {
         id: createId('asst_ctx'),
+        conversationId: input.conversationId ?? null,
         actor: {
             userId: input.userId ?? null,
             tenantId: input.tenantId ?? activeProject?.tenantId ?? null,

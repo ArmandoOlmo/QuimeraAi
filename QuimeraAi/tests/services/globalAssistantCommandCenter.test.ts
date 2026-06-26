@@ -27,6 +27,7 @@ describe('globalAssistantCommandCenter', () => {
 
     it('resolves an app context snapshot with active project and available project metadata', () => {
         const context = resolveGlobalAssistantAppContext({
+            conversationId: 'asst_conversation_1',
             userId: 'user-1',
             email: 'owner@example.com',
             role: 'owner',
@@ -57,6 +58,7 @@ describe('globalAssistantCommandCenter', () => {
             tenantId: 'tenant-1',
             mode: 'owner',
         });
+        expect(context.conversationId).toBe('asst_conversation_1');
         expect(context.tenant.activeServices).toEqual(['chatbot', 'finance']);
         expect(context.project).toMatchObject({
             projectId: 'project-1',

@@ -47,8 +47,18 @@ import {
     isAssistantPlanCancellation,
     isAssistantPlanConfirmation,
 } from '../../services/globalAssistant/globalAssistantConfirmation';
-import { globalAssistantRuntime, type AssistantLifecycleResult } from '../../services/globalAssistant/globalAssistantRuntime';
-import type { AssistantContextSnapshot } from '../../types/globalAssistant';
+import { globalAssistantConversationService } from '../../services/globalAssistant/globalAssistantConversationService';
+import {
+    globalAssistantRuntime,
+    type AssistantLifecycleResult,
+    type GlobalAssistantRuntimeResult,
+} from '../../services/globalAssistant/globalAssistantRuntime';
+import type {
+    AssistantContextSnapshot,
+    AssistantConversation,
+    AssistantMessageRole,
+    GlobalAssistantMode,
+} from '../../types/globalAssistant';
 import type { AdminView, View } from '../../types/ui';
 // ... existing imports ...
 
@@ -57,6 +67,10 @@ interface Message {
     role: 'user' | 'model';
     text: string;
     isToolOutput?: boolean;
+    contextSnapshotId?: string | null;
+    memoryIds?: string[];
+    actionIds?: string[];
+    metadata?: Record<string, unknown>;
 }
 
 interface PendingOperatingLayerTask {
@@ -1096,6 +1110,21 @@ const buildAiEmailCampaignPayload = (
 
 const LOGO_URL = "/logos/quimera-icon.svg";
 
+const buildConversationTitle = (request: string): string => {
+    const normalized = request.replace(/\s+/g, ' ').trim();
+    return normalized.length > 80 ? `${normalized.slice(0, 77)}...` : normalized;
+};
+
+const resolveAssistantModeFromRole = (role?: string | null): GlobalAssistantMode => {
+    if (role === 'superadmin' || role === 'super_admin') return 'super_admin';
+    if (role === 'owner') return 'owner';
+    if (role === 'support') return 'support';
+    return 'user';
+};
+
+const toStoredAssistantMessageRole = (role: Message['role']): AssistantMessageRole =>
+    role === 'user' ? 'user' : 'assistant';
+
 const GlobalAiAssistant: React.FC = () => {
     const { t, i18n } = useTranslation();
     const {
@@ -1158,6 +1187,9 @@ const GlobalAiAssistant: React.FC = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     const processTextRequestRef = useRef<((request: string, entry?: GlobalAssistantEntryPayload) => Promise<void>) | null>(null);
     const pendingOperatingLayerTaskRef = useRef<PendingOperatingLayerTask | null>(null);
+    const assistantConversationRef = useRef<AssistantConversation | null>(null);
+    const assistantConversationIdRef = useRef<string | null>(null);
+    const persistedMessageCountRef = useRef(1);
 
     // Audio Refs
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -1268,6 +1300,113 @@ const GlobalAiAssistant: React.FC = () => {
     useEffect(() => { duplicateTemplateRef.current = duplicateTemplate; }, [duplicateTemplate]);
     useEffect(() => { globalAssistantConfigRef.current = globalAssistantConfig; }, [globalAssistantConfig]);
     useEffect(() => { pendingOperatingLayerTaskRef.current = pendingOperatingLayerTask; }, [pendingOperatingLayerTask]);
+
+    useEffect(() => {
+        const conversationId = assistantConversationIdRef.current;
+        if (!conversationId) {
+            persistedMessageCountRef.current = messages.length;
+            return;
+        }
+
+        if (messages.length < persistedMessageCountRef.current) {
+            persistedMessageCountRef.current = messages.length;
+            return;
+        }
+
+        const nextMessages = messages.slice(persistedMessageCountRef.current);
+        if (nextMessages.length === 0) return;
+
+        persistedMessageCountRef.current = messages.length;
+        nextMessages
+            .filter(message => message.text.trim())
+            .forEach(message => {
+                void globalAssistantConversationService.recordMessage({
+                    conversationId,
+                    role: toStoredAssistantMessageRole(message.role),
+                    text: message.text,
+                    contextSnapshotId: message.contextSnapshotId ?? null,
+                    memoryIds: message.memoryIds || [],
+                    actionIds: message.actionIds || [],
+                    metadata: {
+                        source: 'global_assistant_ui',
+                        uiRole: message.role,
+                        isToolOutput: message.isToolOutput === true,
+                        activeRoute: path,
+                        activeView: viewRef.current || null,
+                        activeProjectId: activeProjectRef.current?.id || null,
+                        ...(message.metadata || {}),
+                    },
+                }).catch(error => {
+                    console.warn('[Global Assistant] Failed to persist assistant message:', error);
+                });
+            });
+    }, [messages, path]);
+
+    const ensureAssistantConversation = async (
+        request: string,
+        entry?: GlobalAssistantEntryPayload,
+    ): Promise<AssistantConversation | null> => {
+        if (assistantConversationRef.current) return assistantConversationRef.current;
+
+        const project = activeProjectRef.current;
+        const userDoc = userDocumentRef.current as any;
+        const role = userDoc?.role || null;
+
+        try {
+            const conversation = await globalAssistantConversationService.createConversation({
+                userId: user?.id || userDoc?.id || null,
+                tenantId: project?.tenantId || userDoc?.tenantId || null,
+                projectId: project?.id || null,
+                mode: resolveAssistantModeFromRole(role),
+                title: buildConversationTitle(request),
+                metadata: {
+                    source: entry?.source || 'global_assistant',
+                    surface: entry?.surface || 'authenticated_app',
+                    entryMetadata: entry?.metadata || {},
+                    activeRoute: path,
+                    activeView: viewRef.current || null,
+                    activeProjectId: project?.id || null,
+                    chatKind: 'global_assistant_operating_layer',
+                    separatedFrom: ['chatcore_visitor_chat', 'module_specific_chats'],
+                },
+            });
+            assistantConversationRef.current = conversation;
+            assistantConversationIdRef.current = conversation.id;
+            return conversation;
+        } catch (error) {
+            console.warn('[Global Assistant] Failed to create assistant conversation:', error);
+            return null;
+        }
+    };
+
+    const syncAssistantConversationTask = (result: GlobalAssistantRuntimeResult) => {
+        const conversation = assistantConversationRef.current;
+        if (!conversation) return;
+
+        const nextConversation: AssistantConversation = {
+            ...conversation,
+            tenantId: result.context.tenant.tenantId || conversation.tenantId,
+            projectId: result.context.project.projectId || conversation.projectId,
+            activeTaskId: result.task.id,
+            metadata: {
+                ...(conversation.metadata || {}),
+                lastTaskId: result.task.id,
+                lastContextSnapshotId: result.context.id,
+                lastModule: result.plan.intent.module,
+                lastIntent: result.plan.intent.intent,
+                lastPlanStatus: result.plan.status,
+            },
+        };
+        assistantConversationRef.current = nextConversation;
+        void globalAssistantConversationService.upsertConversation(nextConversation)
+            .then(saved => {
+                assistantConversationRef.current = saved;
+                assistantConversationIdRef.current = saved.id;
+            })
+            .catch(error => {
+                console.warn('[Global Assistant] Failed to sync assistant conversation task:', error);
+            });
+    };
 
     const isToolAllowed = (
         toolName: string,
@@ -3433,6 +3572,7 @@ const GlobalAiAssistant: React.FC = () => {
                 tenantId: project.tenantId,
                 userId: project.userId,
             } : null,
+            conversationId: assistantConversationIdRef.current,
             activeRoute: path,
             currentSurface: entry.surface,
             locale: i18n.language,
@@ -3518,8 +3658,18 @@ const GlobalAiAssistant: React.FC = () => {
         const userMsg = request.trim();
         if (!userMsg) return;
 
+        await ensureAssistantConversation(userMsg, entry);
         setInput('');
-        setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+        setMessages(prev => [...prev, {
+            role: 'user',
+            text: userMsg,
+            metadata: {
+                source: entry?.source || 'manual_global_assistant',
+                surface: entry?.surface || 'authenticated_app',
+                entryMetadata: entry?.metadata || {},
+                pendingTaskId: pendingOperatingLayerTaskRef.current?.taskId || null,
+            },
+        }]);
 
         if (!isLiveActive) {
             setIsThinking(true);
@@ -3538,6 +3688,12 @@ const GlobalAiAssistant: React.FC = () => {
                         text: isSpanishLocale(i18n.language)
                             ? `Plan cancelado: ${pendingOperatingLayer.actionLabels.join(', ')}`
                             : `Plan cancelled: ${pendingOperatingLayer.actionLabels.join(', ')}`,
+                        contextSnapshotId: pendingOperatingLayer.context.id,
+                        metadata: {
+                            source: 'operating_layer_cancel',
+                            taskId: pendingOperatingLayer.taskId,
+                            actionLabels: pendingOperatingLayer.actionLabels,
+                        },
                     }]);
                     setIsThinking(false);
                     return;
@@ -3557,6 +3713,14 @@ const GlobalAiAssistant: React.FC = () => {
                     setMessages(prev => [...prev, {
                         role: 'model',
                         text: navigationMessage || formatOperatingLayerApplyMessage(applied, i18n.language),
+                        contextSnapshotId: pendingOperatingLayer.context.id,
+                        actionIds: applied.actions.map(action => action.id),
+                        metadata: {
+                            source: 'operating_layer_apply',
+                            taskId: applied.task.id,
+                            planStatus: applied.plan.status,
+                            actionStatuses: applied.actions.map(action => action.status),
+                        },
                     }]);
                     setIsThinking(false);
                     return;
@@ -3564,10 +3728,22 @@ const GlobalAiAssistant: React.FC = () => {
 
                 if (shouldRouteEntryToOperatingLayer(entry)) {
                     const operatingLayerPlan = await planOperatingLayerRequest(userMsg, entry);
+                    syncAssistantConversationTask(operatingLayerPlan);
                     rememberPendingOperatingLayerTask(operatingLayerPlan);
                     setMessages(prev => [...prev, {
                         role: 'model',
                         text: formatGlobalAssistantPlanMessage(operatingLayerPlan, i18n.language),
+                        contextSnapshotId: operatingLayerPlan.context.id,
+                        memoryIds: operatingLayerPlan.memoryUsed.map(memory => memory.id),
+                        actionIds: operatingLayerPlan.plan.actions.map(action => action.id),
+                        metadata: {
+                            source: 'operating_layer_plan',
+                            taskId: operatingLayerPlan.task.id,
+                            module: operatingLayerPlan.plan.intent.module,
+                            intent: operatingLayerPlan.plan.intent.intent,
+                            planStatus: operatingLayerPlan.plan.status,
+                            requiresConfirmation: operatingLayerPlan.plan.requiresConfirmation,
+                        },
                     }]);
 
                     if (shouldAutoApplyOperatingLayerPlan(operatingLayerPlan)) {
@@ -3579,6 +3755,15 @@ const GlobalAiAssistant: React.FC = () => {
                         setMessages(prev => [...prev, {
                             role: 'model',
                             text: navigationMessage || formatOperatingLayerApplyMessage(applied, i18n.language),
+                            contextSnapshotId: operatingLayerPlan.context.id,
+                            actionIds: applied.actions.map(action => action.id),
+                            metadata: {
+                                source: 'operating_layer_apply',
+                                taskId: applied.task.id,
+                                planStatus: applied.plan.status,
+                                actionStatuses: applied.actions.map(action => action.status),
+                                autoApplied: true,
+                            },
                         }]);
                         setIsThinking(false);
                         return;
@@ -3773,6 +3958,14 @@ Usuario: ${userMsg}`;
 
     const handleTextSend = async () => {
         await processTextRequest(input);
+    };
+
+    const clearAssistantConversation = () => {
+        assistantConversationRef.current = null;
+        assistantConversationIdRef.current = null;
+        persistedMessageCountRef.current = 0;
+        setPendingOperatingLayerTask(null);
+        setMessages([]);
     };
 
     useEffect(() => {
@@ -4046,7 +4239,7 @@ Usuario: ${userMsg}`;
             {/* Input Area */}
             <div className="p-4 bg-q-surface border-t border-q-border shrink-0 safe-area-inset-bottom">
                 <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-full border border-q-border focus-within:ring-2 focus-within:ring-primary/50 transition-all">
-                    <button onClick={() => setMessages([])} className="p-2 text-q-text-muted hover:text-q-error hover:bg-secondary rounded-full transition-colors" title="Clear Chat">
+                    <button onClick={clearAssistantConversation} className="p-2 text-q-text-muted hover:text-q-error hover:bg-secondary rounded-full transition-colors" title="Clear Chat">
                         <Trash2 size={18} />
                     </button>
                     <input

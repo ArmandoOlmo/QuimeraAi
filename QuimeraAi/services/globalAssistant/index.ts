@@ -4,6 +4,7 @@ export * from './globalAssistantActionPreviews';
 export * from './globalAssistantAuditService';
 export * from './globalAssistantCommandCenter';
 export * from './globalAssistantConfirmation';
+export * from './globalAssistantConversationService';
 export * from './globalAssistantContextResolver';
 export * from './globalAssistantEntryBridge';
 export * from './globalAssistantExecutionEngine';

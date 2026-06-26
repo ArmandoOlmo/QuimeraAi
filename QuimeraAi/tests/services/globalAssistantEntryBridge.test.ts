@@ -65,4 +65,13 @@ describe('globalAssistantEntryBridge', () => {
         expect(source).toContain('Website creation request requires LLM argument extraction.');
         expect(source).toContain('I need businessName, industry, and description before creating a website draft.');
     });
+
+    it('wires dashboard global requests to persistent operating-layer conversations', () => {
+        const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
+
+        expect(source).toContain('globalAssistantConversationService.createConversation');
+        expect(source).toContain('conversationId: assistantConversationIdRef.current');
+        expect(source).toContain("source: 'operating_layer_plan'");
+        expect(source).toContain('clearAssistantConversation');
+    });
 });

@@ -212,6 +212,7 @@ export interface AssistantConversation {
     mode: GlobalAssistantMode;
     title?: string | null;
     activeTaskId?: string | null;
+    metadata?: Record<string, unknown>;
     createdAt: string;
     updatedAt: string;
 }

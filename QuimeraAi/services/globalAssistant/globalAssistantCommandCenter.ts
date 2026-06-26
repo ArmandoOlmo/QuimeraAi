@@ -16,6 +16,7 @@ export const GLOBAL_ASSISTANT_KNOWN_FEATURE_FLAGS = [
 ] as const;
 
 export interface ResolveGlobalAssistantAppContextInput {
+    conversationId?: string | null;
     userId?: string | null;
     email?: string | null;
     role?: string | null;
@@ -83,6 +84,7 @@ export function resolveGlobalAssistantAppContext(input: ResolveGlobalAssistantAp
     }));
 
     return resolveCurrentAssistantContext({
+        conversationId: input.conversationId,
         userId: input.userId,
         email: input.email,
         role: input.role,

@@ -1,19 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import {
     SupabaseGlobalAssistantAuditRepository,
+    SupabaseGlobalAssistantConversationRepository,
     SupabaseGlobalAssistantMemoryAdapter,
     SupabaseGlobalAssistantRuntimePersistence,
     SupabaseGlobalAssistantTaskRepository,
+    fromAssistantConversationRow,
     fromAssistantMemoryRow,
+    fromAssistantMessageRow,
     toAssistantActionRow,
+    toAssistantConversationRow,
     toAssistantContextSnapshotRow,
     toAssistantMemoryRow,
+    toAssistantMessageRow,
     toAssistantRuntimeEventRow,
     toAssistantTaskRow,
 } from '../../services/globalAssistant/globalAssistantSupabaseStore.ts';
 import { resolveCurrentAssistantContext } from '../../services/globalAssistant/globalAssistantContextResolver.ts';
 import type {
     AssistantAction,
+    AssistantConversation,
+    AssistantMessage,
     AssistantRuntimeEvent,
     AssistantTask,
     GlobalAssistantMemory,
@@ -189,6 +196,31 @@ const action: AssistantAction = {
     createdAt: memory.createdAt,
 };
 
+const conversation: AssistantConversation = {
+    id: 'asst_conversation_1',
+    userId: memory.userId,
+    tenantId: memory.tenantId,
+    projectId: memory.projectId,
+    mode: 'owner',
+    title: 'Draft email campaign',
+    activeTaskId: task.id,
+    metadata: { source: 'command_palette' },
+    createdAt: memory.createdAt,
+    updatedAt: memory.updatedAt,
+};
+
+const message: AssistantMessage = {
+    id: 'asst_msg_1',
+    conversationId: conversation.id,
+    role: 'assistant',
+    text: 'I prepared a review-gated draft.',
+    contextSnapshotId: 'asst_context_1',
+    memoryIds: [memory.id],
+    actionIds: [action.id],
+    metadata: { source: 'operating_layer_plan' },
+    createdAt: '2026-06-26T12:00:02.000Z',
+};
+
 describe('globalAssistantSupabaseStore', () => {
     it('maps Global Assistant memory to Supabase snake_case rows and back', () => {
         const row = toAssistantMemoryRow(memory);
@@ -225,6 +257,48 @@ describe('globalAssistantSupabaseStore', () => {
         expect(fake.tables.assistant_memories).toHaveLength(0);
     });
 
+    it('maps and persists assistant conversations and messages', async () => {
+        const fake = new FakeSupabase();
+        const repository = new SupabaseGlobalAssistantConversationRepository(fake as any);
+
+        expect(toAssistantConversationRow(conversation)).toMatchObject({
+            id: conversation.id,
+            tenant_id: conversation.tenantId,
+            active_task_id: task.id,
+            metadata: { source: 'command_palette' },
+        });
+        expect(fromAssistantConversationRow(toAssistantConversationRow(conversation))).toMatchObject({
+            id: conversation.id,
+            mode: 'owner',
+            activeTaskId: task.id,
+        });
+        expect(toAssistantMessageRow(message)).toMatchObject({
+            id: message.id,
+            conversation_id: conversation.id,
+            memory_ids: [memory.id],
+            action_ids: [action.id],
+        });
+        expect(fromAssistantMessageRow(toAssistantMessageRow(message))).toMatchObject({
+            id: message.id,
+            conversationId: conversation.id,
+            contextSnapshotId: 'asst_context_1',
+        });
+
+        await repository.upsertConversation(conversation);
+        await repository.recordMessage({
+            ...message,
+            id: 'asst_msg_2',
+            text: 'Second message.',
+            createdAt: '2026-06-26T12:00:03.000Z',
+        });
+        await repository.recordMessage(message);
+
+        const messages = await repository.listMessages(conversation.id);
+
+        expect(fake.tables.assistant_conversations[0]).toMatchObject({ id: conversation.id, mode: 'owner' });
+        expect(messages.map(entry => entry.id)).toEqual(['asst_msg_1', 'asst_msg_2']);
+    });
+
     it('maps tasks, action logs, and runtime events to GA2 tables', async () => {
         const fake = new FakeSupabase();
         const tasks = new SupabaseGlobalAssistantTaskRepository(fake as any);
@@ -255,6 +329,7 @@ describe('globalAssistantSupabaseStore', () => {
         const fake = new FakeSupabase();
         const persistence = new SupabaseGlobalAssistantRuntimePersistence(fake as any);
         const context = resolveCurrentAssistantContext({
+            conversationId: conversation.id,
             userId: memory.userId,
             tenantId: memory.tenantId,
             role: 'owner',
@@ -285,7 +360,10 @@ describe('globalAssistantSupabaseStore', () => {
         await persistence.recordAction!(action as any);
         await persistence.recordEvent!(runtimeEvent);
 
-        expect(fake.tables.assistant_context_snapshots[0]).toMatchObject(toAssistantContextSnapshotRow(context));
+        expect(fake.tables.assistant_context_snapshots[0]).toMatchObject({
+            ...toAssistantContextSnapshotRow(context),
+            conversation_id: conversation.id,
+        });
         expect(fake.tables.assistant_tasks[0]).toMatchObject({ id: task.id, project_id: task.projectId });
         expect(fake.tables.assistant_actions[0]).toMatchObject({ id: action.id, action_type: action.actionType });
         expect(fake.tables.assistant_runtime_events[0]).toMatchObject({

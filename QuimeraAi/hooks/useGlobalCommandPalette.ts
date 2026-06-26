@@ -14,6 +14,23 @@ import {
     type GlobalCommandItem,
 } from '../services/globalAssistant/globalCommandSearch';
 
+type CommandTranslationParams = Record<string, string | number | boolean | null | undefined>;
+
+const translatePromptSafe = (
+    translate: ReturnType<typeof useTranslation>['t'],
+    key: string | undefined,
+    fallback: string,
+    params?: CommandTranslationParams,
+): string => {
+    if (!key) return fallback;
+    try {
+        const translated = translate(key, { defaultValue: fallback, ...(params || {}) });
+        return typeof translated === 'string' ? translated : fallback;
+    } catch {
+        return fallback;
+    }
+};
+
 export function useGlobalCommandPalette() {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
@@ -79,9 +96,7 @@ export function useGlobalCommandPalette() {
         if (item.disabledReason) return;
 
         if (item.type === 'assistant_request' || item.type === 'action') {
-            const prompt = item.promptKey
-                ? t(item.promptKey, { defaultValue: item.prompt || query.trim(), ...(item.promptParams || {}) })
-                : item.prompt || query.trim();
+            const prompt = translatePromptSafe(t, item.promptKey, item.prompt || query.trim(), item.promptParams);
             if (!prompt) return;
             dispatchGlobalAssistantEntryRequest(createGlobalAssistantEntryPayload(prompt, {
                 source: 'command_palette',

@@ -2,7 +2,9 @@ import { supabase as defaultSupabase } from '../../supabase';
 import type {
     AssistantAction,
     AssistantActionLog,
+    AssistantConversation,
     AssistantContextSnapshot,
+    AssistantMessage,
     AssistantRuntimeEvent,
     AssistantTask,
     GlobalAssistantMemory,
@@ -122,6 +124,64 @@ export function fromAssistantMemoryItemRow(row: AnyRecord): NonNullable<GlobalAs
         expiresAt: row.expires_at ?? null,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+    };
+}
+
+export function toAssistantConversationRow(conversation: AssistantConversation): AnyRecord {
+    return {
+        id: conversation.id,
+        user_id: conversation.userId,
+        tenant_id: conversation.tenantId,
+        project_id: conversation.projectId,
+        mode: conversation.mode,
+        title: conversation.title,
+        active_task_id: conversation.activeTaskId,
+        metadata: conversation.metadata || {},
+        created_at: conversation.createdAt,
+        updated_at: conversation.updatedAt,
+    };
+}
+
+export function fromAssistantConversationRow(row: AnyRecord): AssistantConversation {
+    return {
+        id: row.id,
+        userId: row.user_id ?? null,
+        tenantId: row.tenant_id ?? null,
+        projectId: row.project_id ?? null,
+        mode: row.mode || 'user',
+        title: row.title ?? null,
+        activeTaskId: row.active_task_id ?? null,
+        metadata: asRecord(row.metadata),
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+    };
+}
+
+export function toAssistantMessageRow(message: AssistantMessage): AnyRecord {
+    return {
+        id: message.id,
+        conversation_id: message.conversationId,
+        role: message.role,
+        text: message.text,
+        context_snapshot_id: message.contextSnapshotId,
+        memory_ids: message.memoryIds || [],
+        action_ids: message.actionIds || [],
+        metadata: message.metadata || {},
+        created_at: message.createdAt,
+    };
+}
+
+export function fromAssistantMessageRow(row: AnyRecord): AssistantMessage {
+    return {
+        id: row.id,
+        conversationId: row.conversation_id,
+        role: row.role,
+        text: row.text || '',
+        contextSnapshotId: row.context_snapshot_id ?? null,
+        memoryIds: Array.isArray(row.memory_ids) ? row.memory_ids : [],
+        actionIds: Array.isArray(row.action_ids) ? row.action_ids : [],
+        metadata: asRecord(row.metadata),
+        createdAt: row.created_at,
     };
 }
 
@@ -373,6 +433,58 @@ export class SupabaseGlobalAssistantTaskRepository {
         const { data, error } = await query;
         if (error) throw error;
         return asArray(data).map(fromAssistantTaskRow);
+    }
+}
+
+export class SupabaseGlobalAssistantConversationRepository {
+    constructor(
+        private readonly client: SupabaseClientLike = defaultSupabase,
+        private readonly options: SupabaseGlobalAssistantStoreOptions = {},
+    ) {}
+
+    async upsertConversation(conversation: AssistantConversation): Promise<AssistantConversation> {
+        try {
+            const { data, error } = await this.client
+                .from('assistant_conversations')
+                .upsert(toAssistantConversationRow(conversation))
+                .select('*')
+                .single();
+            if (error) throw error;
+            return fromAssistantConversationRow(data);
+        } catch (error) {
+            handleStoreError(error, 'upsertConversation', this.options);
+            return conversation;
+        }
+    }
+
+    async recordMessage(message: AssistantMessage): Promise<AssistantMessage> {
+        try {
+            const { data, error } = await this.client
+                .from('assistant_messages')
+                .insert(toAssistantMessageRow(message))
+                .select('*')
+                .single();
+            if (error) throw error;
+            return fromAssistantMessageRow(data);
+        } catch (error) {
+            handleStoreError(error, 'recordMessage', this.options);
+            return message;
+        }
+    }
+
+    async listMessages(conversationId: string): Promise<AssistantMessage[]> {
+        try {
+            const { data, error } = await this.client
+                .from('assistant_messages')
+                .select('*')
+                .eq('conversation_id', conversationId)
+                .order('created_at', { ascending: true });
+            if (error) throw error;
+            return asArray(data).map(fromAssistantMessageRow);
+        } catch (error) {
+            handleStoreError(error, 'listMessages', this.options);
+            return [];
+        }
     }
 }
 
