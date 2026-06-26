@@ -6,6 +6,7 @@ import { GlobalAssistantMemoryService } from '../../services/globalAssistant/glo
 import { GlobalAssistantRuntime } from '../../services/globalAssistant/globalAssistantRuntime.ts';
 import { GlobalAssistantTaskService } from '../../services/globalAssistant/globalAssistantTaskService.ts';
 import type { AssistantActionDefinition } from '../../types/globalAssistant.ts';
+import type { AssistantRollbackSnapshot } from '../../types/globalAssistant.ts';
 
 const activeProject = {
     id: 'project-1',
@@ -85,7 +86,16 @@ const { execute: _execute, rollback: _rollback, ...emailCampaignDefinitionWithou
 describe('GlobalAssistantRuntime execution lifecycle', () => {
     it('confirms, applies, records memory, and rolls back actions with registered handlers', async () => {
         const registry = new GlobalAssistantActionRegistry([emailCampaignDefinition]);
-        const { runtime, memoryService, auditService } = buildRuntime(registry);
+        const memoryService = new GlobalAssistantMemoryService();
+        const taskService = new GlobalAssistantTaskService();
+        const auditService = new GlobalAssistantAuditService();
+        const persistedRollbackSnapshots: AssistantRollbackSnapshot[] = [];
+        const runtime = new GlobalAssistantRuntime(registry, memoryService, taskService, auditService, {
+            recordRollbackSnapshot: async snapshot => {
+                persistedRollbackSnapshots.push(snapshot);
+            },
+            getRollbackSnapshot: async actionId => persistedRollbackSnapshots.find(snapshot => snapshot.actionId === actionId) || null,
+        });
 
         const planned = await runtime.planRequest({
             context,
@@ -126,6 +136,7 @@ describe('GlobalAssistantRuntime execution lifecycle', () => {
             },
         });
         expect(auditService.listRollbackSnapshots({ actionId: applied.actions[0].id })).toHaveLength(1);
+        expect(persistedRollbackSnapshots).toHaveLength(1);
 
         const taskMemory = await memoryService.queryRelevantMemory({
             context,
@@ -134,7 +145,18 @@ describe('GlobalAssistantRuntime execution lifecycle', () => {
         });
         expect(taskMemory.map(memory => memory.title)).toContain('create_email_campaign applied');
 
-        const rolledBack = await runtime.rollbackAction({
+        const restartedAuditService = new GlobalAssistantAuditService();
+        const runtimeAfterAuditRestart = new GlobalAssistantRuntime(
+            registry,
+            memoryService,
+            taskService,
+            restartedAuditService,
+            {
+                getRollbackSnapshot: async actionId => persistedRollbackSnapshots.find(snapshot => snapshot.actionId === actionId) || null,
+            },
+        );
+
+        const rolledBack = await runtimeAfterAuditRestart.rollbackAction({
             taskId: planned.task.id,
             actionId: applied.actions[0].id,
             context,
@@ -142,8 +164,8 @@ describe('GlobalAssistantRuntime execution lifecycle', () => {
 
         expect(rolledBack.task.status).toBe('completed');
         expect(rolledBack.actions[0].status).toBe('rolled_back');
-        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
-        expect(auditService.listActionLogs({ status: 'rolled_back' })).toHaveLength(1);
+        expect(restartedAuditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
+        expect(restartedAuditService.listActionLogs({ status: 'rolled_back' })).toHaveLength(1);
     });
 
     it('blocks catalogued actions without execute handlers before confirmation', async () => {

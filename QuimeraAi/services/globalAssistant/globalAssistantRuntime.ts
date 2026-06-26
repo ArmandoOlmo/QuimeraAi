@@ -76,6 +76,8 @@ export interface GlobalAssistantRuntimePersistence {
     recordContextSnapshot?: (context: AssistantContextSnapshot) => Promise<void> | void;
     upsertTask?: (task: AssistantTask) => Promise<void> | void;
     recordAction?: (action: AssistantActionLog) => Promise<void> | void;
+    recordRollbackSnapshot?: (snapshot: AssistantRollbackSnapshot) => Promise<void> | void;
+    getRollbackSnapshot?: (actionId: string) => Promise<AssistantRollbackSnapshot | null | undefined> | AssistantRollbackSnapshot | null | undefined;
     recordEvent?: (event: AssistantRuntimeEvent) => Promise<void> | void;
 }
 
@@ -331,14 +333,16 @@ export class GlobalAssistantRuntime {
                 nextActions.push(nextAction);
                 this.recordAction(nextAction);
                 if (nextAction.metadata?.rollbackSupported === true || definition.rollbackSupported) {
-                    this.auditService.recordRollbackSnapshot({
+                    const rollbackSnapshot: AssistantRollbackSnapshot = {
                         id: createId('asst_rollback'),
                         actionId: nextAction.id,
                         beforeSnapshot,
                         afterSnapshot,
                         rollbackActionType: definition.rollback ? `${nextAction.actionType}:rollback` : undefined,
                         createdAt: timestamp,
-                    });
+                    };
+                    this.auditService.recordRollbackSnapshot(rollbackSnapshot);
+                    this.recordRollbackSnapshot(rollbackSnapshot);
                 }
                 this.recordEvent({
                     type: 'assistant_action_applied',
@@ -394,7 +398,7 @@ export class GlobalAssistantRuntime {
         if (!definition.rollback) {
             throw new Error(`No rollback handler registered for ${action.actionType}.`);
         }
-        const snapshot = this.auditService.getRollbackSnapshot(action.id);
+        const snapshot = await this.resolveRollbackSnapshot(action);
         if (!snapshot) {
             throw new Error(`Rollback snapshot not found for ${action.actionType}.`);
         }
@@ -548,6 +552,36 @@ export class GlobalAssistantRuntime {
         const log = this.auditService.recordAction(action, metadata);
         this.queuePersistence(this.persistence?.recordAction?.(log));
         return log;
+    }
+
+    private recordRollbackSnapshot(snapshot: AssistantRollbackSnapshot): void {
+        this.queuePersistence(this.persistence?.recordRollbackSnapshot?.(snapshot));
+    }
+
+    private async resolveRollbackSnapshot(action: AssistantAction): Promise<AssistantRollbackSnapshot | null> {
+        const localSnapshot = this.auditService.getRollbackSnapshot(action.id);
+        if (localSnapshot) return localSnapshot;
+
+        const persistedSnapshot = await this.persistence?.getRollbackSnapshot?.(action.id);
+        if (persistedSnapshot) {
+            this.auditService.recordRollbackSnapshot(persistedSnapshot);
+            return persistedSnapshot;
+        }
+
+        if (action.beforeSnapshot) {
+            const recoveredSnapshot: AssistantRollbackSnapshot = {
+                id: createId('asst_rollback_recovered'),
+                actionId: action.id,
+                beforeSnapshot: action.beforeSnapshot,
+                afterSnapshot: action.afterSnapshot || undefined,
+                rollbackActionType: `${action.actionType}:rollback`,
+                createdAt: action.updatedAt || action.createdAt,
+            };
+            this.auditService.recordRollbackSnapshot(recoveredSnapshot);
+            return recoveredSnapshot;
+        }
+
+        return null;
     }
 
     private recordEvent(event: Omit<AssistantRuntimeEvent, 'id' | 'createdAt'>): AssistantRuntimeEvent {

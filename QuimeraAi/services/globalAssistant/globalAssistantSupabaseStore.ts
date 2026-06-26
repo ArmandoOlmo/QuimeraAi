@@ -5,6 +5,7 @@ import type {
     AssistantConversation,
     AssistantContextSnapshot,
     AssistantMessage,
+    AssistantRollbackSnapshot,
     AssistantRuntimeEvent,
     AssistantTask,
     GlobalAssistantMemory,
@@ -281,6 +282,28 @@ export function fromAssistantActionRow(row: AnyRecord): AssistantActionLog {
     };
 }
 
+export function fromAssistantActionRowRollbackSnapshot(row: AnyRecord): AssistantRollbackSnapshot | null {
+    if (!row || row.before_snapshot === null || row.before_snapshot === undefined) return null;
+    const metadata = asRecord(row.metadata);
+    const rollbackMetadata = asRecord(metadata.rollbackSnapshot);
+    return {
+        id: typeof rollbackMetadata.id === 'string' && rollbackMetadata.id
+            ? rollbackMetadata.id
+            : `asst_rollback_${row.id}`,
+        actionId: row.id,
+        beforeSnapshot: asRecord(row.before_snapshot),
+        afterSnapshot: row.after_snapshot === null || row.after_snapshot === undefined
+            ? undefined
+            : asRecord(row.after_snapshot),
+        rollbackActionType: typeof rollbackMetadata.rollbackActionType === 'string'
+            ? rollbackMetadata.rollbackActionType
+            : `${row.action_type}:rollback`,
+        createdAt: typeof rollbackMetadata.createdAt === 'string' && rollbackMetadata.createdAt
+            ? rollbackMetadata.createdAt
+            : row.updated_at || row.created_at,
+    };
+}
+
 export function toAssistantRuntimeEventRow(event: AssistantRuntimeEvent | Omit<AssistantRuntimeEvent, 'id' | 'createdAt'>): AnyRecord {
     return {
         ...('id' in event ? { id: event.id } : {}),
@@ -519,6 +542,47 @@ export class SupabaseGlobalAssistantAuditRepository {
         return fromAssistantRuntimeEventRow(data);
     }
 
+    async recordRollbackSnapshot(snapshot: AssistantRollbackSnapshot): Promise<AssistantRollbackSnapshot> {
+        const { data: currentRow, error: readError } = await this.client
+            .from('assistant_actions')
+            .select('*')
+            .eq('id', snapshot.actionId)
+            .maybeSingle();
+        if (readError) throw readError;
+        if (!currentRow) throw new Error(`Assistant action not found for rollback snapshot: ${snapshot.actionId}`);
+
+        const metadata = {
+            ...asRecord(currentRow.metadata),
+            rollbackSnapshot: {
+                id: snapshot.id,
+                rollbackActionType: snapshot.rollbackActionType,
+                createdAt: snapshot.createdAt,
+            },
+        };
+        const { data, error } = await this.client
+            .from('assistant_actions')
+            .update({
+                before_snapshot: snapshot.beforeSnapshot,
+                after_snapshot: snapshot.afterSnapshot || null,
+                metadata,
+            })
+            .eq('id', snapshot.actionId)
+            .select('*')
+            .single();
+        if (error) throw error;
+        return fromAssistantActionRowRollbackSnapshot(data) || snapshot;
+    }
+
+    async getRollbackSnapshot(actionId: string): Promise<AssistantRollbackSnapshot | null> {
+        const { data, error } = await this.client
+            .from('assistant_actions')
+            .select('*')
+            .eq('id', actionId)
+            .maybeSingle();
+        if (error) throw error;
+        return data ? fromAssistantActionRowRollbackSnapshot(data) : null;
+    }
+
     async listActionLogs(filters: {
         userId?: string | null;
         tenantId?: string | null;
@@ -595,6 +659,23 @@ export class SupabaseGlobalAssistantRuntimePersistence implements GlobalAssistan
             await this.audit.recordAction(action);
         } catch (error) {
             handleStoreError(error, 'recordAction', this.options);
+        }
+    }
+
+    async recordRollbackSnapshot(snapshot: AssistantRollbackSnapshot): Promise<void> {
+        try {
+            await this.audit.recordRollbackSnapshot(snapshot);
+        } catch (error) {
+            handleStoreError(error, 'recordRollbackSnapshot', this.options);
+        }
+    }
+
+    async getRollbackSnapshot(actionId: string): Promise<AssistantRollbackSnapshot | null> {
+        try {
+            return await this.audit.getRollbackSnapshot(actionId);
+        } catch (error) {
+            handleStoreError(error, 'getRollbackSnapshot', this.options);
+            return null;
         }
     }
 

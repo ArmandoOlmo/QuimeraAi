@@ -8,6 +8,7 @@ import {
     fromAssistantConversationRow,
     fromAssistantMemoryRow,
     fromAssistantMessageRow,
+    fromAssistantActionRowRollbackSnapshot,
     toAssistantActionRow,
     toAssistantConversationRow,
     toAssistantContextSnapshotRow,
@@ -21,6 +22,7 @@ import type {
     AssistantAction,
     AssistantConversation,
     AssistantMessage,
+    AssistantRollbackSnapshot,
     AssistantRuntimeEvent,
     AssistantTask,
     GlobalAssistantMemory,
@@ -34,6 +36,7 @@ class FakeQuery {
     private filters: Array<{ op: 'eq' | 'in'; column: string; value: any }> = [];
     private pendingInsert: any[] | null = null;
     private pendingUpsert: any[] | null = null;
+    private pendingUpdate: any | null = null;
     private deleteMode = false;
     private orderColumn: string | null = null;
     private ascending = true;
@@ -52,6 +55,11 @@ class FakeQuery {
 
     insert(value: any) {
         this.pendingInsert = Array.isArray(value) ? value : [value];
+        return this;
+    }
+
+    update(value: any) {
+        this.pendingUpdate = value;
         return this;
     }
 
@@ -105,6 +113,18 @@ class FakeQuery {
             for (const row of this.pendingInsert) {
                 tableRows.push({ id: row.id || `${this.table}-${tableRows.length + 1}`, created_at: row.created_at || '2026-06-26T12:00:00.000Z', ...row });
             }
+        }
+
+        if (this.pendingUpdate) {
+            const updated: any[] = [];
+            for (let index = 0; index < tableRows.length; index += 1) {
+                const row = tableRows[index];
+                if (!this.matches(row)) continue;
+                tableRows[index] = { ...row, ...this.pendingUpdate };
+                updated.push(tableRows[index]);
+            }
+            if (this.singleMode) return { data: updated[0] || null, error: null };
+            return { data: this.selected ? updated : null, error: null };
         }
 
         if (this.deleteMode) {
@@ -194,6 +214,15 @@ const action: AssistantAction = {
     status: 'planned',
     metadata: { safetyLevel: 'high' },
     createdAt: memory.createdAt,
+};
+
+const rollbackSnapshot: AssistantRollbackSnapshot = {
+    id: 'asst_rollback_1',
+    actionId: action.id,
+    beforeSnapshot: { table: 'email_campaigns', id: 'campaign-1', existed: false },
+    afterSnapshot: { table: 'email_campaigns', id: 'campaign-1', status: 'draft' },
+    rollbackActionType: 'create_email_campaign:rollback',
+    createdAt: '2026-06-26T12:00:05.000Z',
 };
 
 const conversation: AssistantConversation = {
@@ -318,10 +347,20 @@ describe('globalAssistantSupabaseStore', () => {
 
         await tasks.upsertTask(task);
         await audit.recordAction(action);
+        await audit.recordRollbackSnapshot(rollbackSnapshot);
         await audit.recordEvent(runtimeEvent);
 
         expect(await tasks.getTask(task.id)).toMatchObject({ id: task.id, status: 'waiting_for_confirmation' });
         expect(await audit.listActionLogs({ projectId: memory.projectId })).toHaveLength(1);
+        expect(fromAssistantActionRowRollbackSnapshot(fake.tables.assistant_actions[0])).toMatchObject({
+            actionId: action.id,
+            beforeSnapshot: rollbackSnapshot.beforeSnapshot,
+            rollbackActionType: 'create_email_campaign:rollback',
+        });
+        expect(await audit.getRollbackSnapshot(action.id)).toMatchObject({
+            id: rollbackSnapshot.id,
+            afterSnapshot: rollbackSnapshot.afterSnapshot,
+        });
         expect(await audit.listEvents({ taskId: task.id })).toHaveLength(1);
     });
 
@@ -358,6 +397,7 @@ describe('globalAssistantSupabaseStore', () => {
         await persistence.recordContextSnapshot!(context);
         await persistence.upsertTask!(task);
         await persistence.recordAction!(action as any);
+        await persistence.recordRollbackSnapshot!(rollbackSnapshot);
         await persistence.recordEvent!(runtimeEvent);
 
         expect(fake.tables.assistant_context_snapshots[0]).toMatchObject({
@@ -366,6 +406,10 @@ describe('globalAssistantSupabaseStore', () => {
         });
         expect(fake.tables.assistant_tasks[0]).toMatchObject({ id: task.id, project_id: task.projectId });
         expect(fake.tables.assistant_actions[0]).toMatchObject({ id: action.id, action_type: action.actionType });
+        await expect(persistence.getRollbackSnapshot!(action.id)).resolves.toMatchObject({
+            id: rollbackSnapshot.id,
+            beforeSnapshot: rollbackSnapshot.beforeSnapshot,
+        });
         expect(fake.tables.assistant_runtime_events[0]).toMatchObject({
             id: runtimeEvent.id,
             type: runtimeEvent.type,

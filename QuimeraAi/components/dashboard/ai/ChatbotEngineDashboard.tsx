@@ -1014,6 +1014,40 @@ const ChatbotEngineDashboard: React.FC<ChatbotEngineDashboardProps> = ({
                             </div>
                         </div>
                     )}
+                    {(runtimeSnapshot.analytics.surfaceBreakdown.length > 0 || runtimeSnapshot.analytics.moduleBreakdown.length > 0) && (
+                        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                            <div className="rounded-lg border border-q-border/60 bg-q-surface/30 p-3">
+                                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-q-text-muted">
+                                    {t('aiAssistant.chatbotEngine.metrics.surfaceBreakdown')}
+                                </div>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {runtimeSnapshot.analytics.surfaceBreakdown.slice(0, 8).map(item => (
+                                        <InlineTag key={item.sourceSurface} muted>
+                                            {tokenLabel('surfaceValues', item.sourceSurface)}: {item.count}
+                                        </InlineTag>
+                                    ))}
+                                    {runtimeSnapshot.analytics.surfaceBreakdown.length === 0 && (
+                                        <span className="text-xs text-q-text-muted">{t('aiAssistant.chatbotEngine.runtime.noSurfaceEvents')}</span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="rounded-lg border border-q-border/60 bg-q-surface/30 p-3">
+                                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-q-text-muted">
+                                    {t('aiAssistant.chatbotEngine.metrics.moduleBreakdown')}
+                                </div>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {runtimeSnapshot.analytics.moduleBreakdown.slice(0, 8).map(item => (
+                                        <InlineTag key={item.sourceModule} muted>
+                                            {tokenLabel('ownerModules', item.sourceModule)}: {item.count}
+                                        </InlineTag>
+                                    ))}
+                                    {runtimeSnapshot.analytics.moduleBreakdown.length === 0 && (
+                                        <span className="text-xs text-q-text-muted">{t('aiAssistant.chatbotEngine.runtime.noModuleEvents')}</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </section>
             </div>
 

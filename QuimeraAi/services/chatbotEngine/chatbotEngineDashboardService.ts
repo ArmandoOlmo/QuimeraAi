@@ -80,6 +80,8 @@ export interface ChatbotEngineRuntimeSnapshot {
         lastEventAt?: string;
         actionBreakdown: Array<{ actionType: string; count: number }>;
         intentBreakdown: Array<{ intent: string; count: number }>;
+        surfaceBreakdown: Array<{ sourceSurface: string; count: number }>;
+        moduleBreakdown: Array<{ sourceModule: string; count: number }>;
     };
     inbox: {
         activeConversations: number;
@@ -130,6 +132,8 @@ const EMPTY_ANALYTICS: ChatbotEngineRuntimeSnapshot['analytics'] = {
     highIntentEvents: 0,
     actionBreakdown: [],
     intentBreakdown: [],
+    surfaceBreakdown: [],
+    moduleBreakdown: [],
 };
 
 const ECOMMERCE_ACTIONS = new Set([
@@ -324,12 +328,18 @@ export function buildChatbotEngineRuntimeSnapshot(input: {
         .sort((a, b) => String(b.requestedAt || b.lastMessageAt || '').localeCompare(String(a.requestedAt || a.lastMessageAt || '')));
     const actionCounts = new Map<string, number>();
     const intentCounts = new Map<string, number>();
+    const surfaceCounts = new Map<string, number>();
+    const moduleCounts = new Map<string, number>();
 
     events.forEach(event => {
         if (event.actionType) actionCounts.set(event.actionType, (actionCounts.get(event.actionType) || 0) + 1);
         const intent = normalizeRecord(event.metadata.intent);
         const primaryIntent = typeof intent.primaryIntent === 'string' ? intent.primaryIntent : '';
         if (primaryIntent) intentCounts.set(primaryIntent, (intentCounts.get(primaryIntent) || 0) + 1);
+        const sourceSurface = normalizeString(event.sourceSurface, '');
+        const sourceModule = normalizeString(event.sourceModule, '');
+        if (sourceSurface) surfaceCounts.set(sourceSurface, (surfaceCounts.get(sourceSurface) || 0) + 1);
+        if (sourceModule) moduleCounts.set(sourceModule, (moduleCounts.get(sourceModule) || 0) + 1);
     });
 
     return {
@@ -387,6 +397,12 @@ export function buildChatbotEngineRuntimeSnapshot(input: {
             intentBreakdown: Array.from(intentCounts.entries())
                 .map(([intent, count]) => ({ intent, count }))
                 .sort((a, b) => b.count - a.count),
+            surfaceBreakdown: Array.from(surfaceCounts.entries())
+                .map(([sourceSurface, count]) => ({ sourceSurface, count }))
+                .sort((a, b) => b.count - a.count || a.sourceSurface.localeCompare(b.sourceSurface)),
+            moduleBreakdown: Array.from(moduleCounts.entries())
+                .map(([sourceModule, count]) => ({ sourceModule, count }))
+                .sort((a, b) => b.count - a.count || a.sourceModule.localeCompare(b.sourceModule)),
         },
         inbox: {
             activeConversations: conversations.filter(conversation => conversation.status === 'active').length,
