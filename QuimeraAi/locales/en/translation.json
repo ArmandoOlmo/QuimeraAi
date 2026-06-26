@@ -765,6 +765,7 @@
     "downloadCalendar": "Download calendar (.ics)",
     "copyDetails": "Copy details to share",
     "appointments": "Appointments",
+    "filters": "Filters",
     "analyticsEngine": {
       "eyebrow": "Canonical Appointments Engine",
       "title": "Booking analytics",

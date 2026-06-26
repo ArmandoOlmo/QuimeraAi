@@ -766,6 +766,7 @@
     "downloadCalendar": "Descargar calendario (.ics)",
     "copyDetails": "Copiar detalles para compartir",
     "appointments": "Citas",
+    "filters": "Filtros",
     "analyticsEngine": {
       "eyebrow": "Appointments Engine canónico",
       "title": "Analíticas de reservas",
