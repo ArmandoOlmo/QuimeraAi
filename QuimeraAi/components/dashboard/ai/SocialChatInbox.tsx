@@ -9,7 +9,7 @@ import {
     MessageCircle, Phone, Instagram, Facebook, Search, Filter,
     Send, Loader2, MoreVertical, User, Clock, CheckCircle,
     AlertCircle, UserPlus, Tag, X, ChevronRight, Archive,
-    RefreshCw, Inbox, MessageSquare, Globe
+    RefreshCw, Inbox, MessageSquare, Globe, Mail
 } from 'lucide-react';
 import { useSocialChat, ConversationWithMessages } from '../../chat/hooks/useSocialChat';
 import HeaderBackButton from '../../ui/HeaderBackButton';
@@ -18,6 +18,7 @@ import type { FilterChipOption } from '../filters';
 import { SocialChannel } from '../../../types/socialChat';
 import { formatDistanceToNow } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
+import { buildEmailReviewQueueUrl } from '../../../services/email/emailReviewQueueLinkService.ts';
 
 interface SocialChatInboxProps {
     projectId: string;
@@ -375,6 +376,18 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
                             </button>
                             {showActions === activeConversation.id && (
                                 <div className="absolute right-0 top-full mt-1 w-48 bg-q-surface border border-q-border rounded-lg shadow-lg z-10 py-1 animate-fade-in-up">
+                                    <a
+                                        href={buildEmailReviewQueueUrl({
+                                            projectId,
+                                            sourceModule: 'chatcore',
+                                            sourceEntityId: activeConversation.id,
+                                        })}
+                                        onClick={() => setShowActions(null)}
+                                        className="w-full px-4 py-2 text-sm text-left hover:bg-secondary flex items-center gap-2"
+                                    >
+                                        <Mail size={14} />
+                                        Review email
+                                    </a>
                                     <button
                                         onClick={async () => {
                                             await convertToLead(activeConversation.id);

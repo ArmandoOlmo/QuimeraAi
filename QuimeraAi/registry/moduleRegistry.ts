@@ -20,6 +20,7 @@ export type ModuleOwnerSystem =
     | 'crm'
     | 'email-marketing'
     | 'media-ai'
+    | 'bio-page-engine'
     | 'appointments-engine'
     | 'restaurant-engine'
     | 'real-estate-engine'
@@ -37,6 +38,7 @@ export type CanonicalSystemId =
     | 'realEstate'
     | 'finance'
     | 'analytics'
+    | 'bioPage'
     | 'media';
 
 export interface ModuleRegistryItem {
@@ -107,6 +109,18 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         compatibleIndustries: ['all'],
         editableBy: ['website-builder', 'ai-studio'],
         readsFrom: ['ecommerce', 'crm', 'chatbot', 'appointments', 'restaurants', 'realEstate'],
+    },
+    {
+        id: 'bio-page-engine',
+        label: 'Bio Page Engine',
+        moduleKind: 'engine',
+        ownerSystem: 'bio-page-engine',
+        canonicalSystem: 'bioPage',
+        description: 'Mobile-first link-in-bio funnel engine for creator profiles, links, shop blocks, booking, leads, email subscribe, ChatCore, analytics, QR, SEO, and AI-generated drafts.',
+        compatibleIndustries: ['all', 'creator', 'portfolio', 'ecommerce', 'restaurant', 'real-estate', 'services', 'fitness', 'beauty', 'local_business'],
+        editableBy: ['bio-page-engine', 'ai-studio', 'website-builder'],
+        readsFrom: ['ecommerce', 'appointments', 'crm', 'emailMarketing', 'chatbot', 'media', 'analytics'],
+        writesTo: ['crm', 'emailMarketing', 'analytics', 'appointments'],
     },
     {
         id: 'storefront-builder',

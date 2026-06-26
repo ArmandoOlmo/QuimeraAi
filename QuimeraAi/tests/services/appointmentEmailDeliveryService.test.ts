@@ -4,25 +4,44 @@ import { processAppointmentEmailLogs } from '../../services/appointments/appoint
 type TableData = Record<string, any[]>;
 
 class FakeQuery {
-    private operation: 'select' | 'update' = 'select';
+    private operation: 'select' | 'update' | 'insert' | 'upsert' = 'select';
     private updateRow: Record<string, any> | null = null;
+    private insertRows: Record<string, any>[] = [];
     private filters: Array<{ column: string; value: any; op: string }> = [];
     private containsFilters: Array<{ column: string; value: Record<string, any> }> = [];
     private orFilters: Array<Array<{ column: string; value: string }>> = [];
     private limitCount: number | null = null;
+    private orderBy: { column: string; ascending: boolean } | null = null;
+    private upsertConflict: string[] = [];
 
     constructor(
         private readonly table: string,
         private readonly db: FakeSupabase,
     ) {}
 
-    select() {
+    select(_columns?: string, _options?: Record<string, any>) {
         return this;
     }
 
     update(row: Record<string, any>) {
         this.operation = 'update';
         this.updateRow = row;
+        return this;
+    }
+
+    insert(row: Record<string, any> | Record<string, any>[]) {
+        this.operation = 'insert';
+        this.insertRows = Array.isArray(row) ? row : [row];
+        return this;
+    }
+
+    upsert(row: Record<string, any> | Record<string, any>[], options: { onConflict?: string; ignoreDuplicates?: boolean } = {}) {
+        this.operation = 'upsert';
+        this.insertRows = Array.isArray(row) ? row : [row];
+        this.upsertConflict = String(options.onConflict || '')
+            .split(',')
+            .map(value => value.trim())
+            .filter(Boolean);
         return this;
     }
 
@@ -33,6 +52,11 @@ class FakeQuery {
 
     in(column: string, value: any[]) {
         this.filters.push({ column, value, op: 'in' });
+        return this;
+    }
+
+    lte(column: string, value: any) {
+        this.filters.push({ column, value, op: 'lte' });
         return this;
     }
 
@@ -56,8 +80,17 @@ class FakeQuery {
         return this;
     }
 
+    order(column: string, options: { ascending?: boolean } = {}) {
+        this.orderBy = { column, ascending: options.ascending !== false };
+        return this;
+    }
+
     maybeSingle() {
-        return Promise.resolve({ data: this.resolveRows()[0] || null, error: null });
+        return Promise.resolve(this.executeSingle());
+    }
+
+    single() {
+        return Promise.resolve(this.executeSingle());
     }
 
     then(resolve: (value: { data: any[]; error: null }) => void, reject?: (reason: unknown) => void) {
@@ -77,11 +110,51 @@ class FakeQuery {
             return { data: updated, error: null };
         }
 
+        if (this.operation === 'insert') {
+            const table = this.ensureTable();
+            const inserted = this.insertRows.map(row => this.withDefaults(row));
+            table.push(...inserted);
+            return { data: inserted, error: null };
+        }
+
+        if (this.operation === 'upsert') {
+            const table = this.ensureTable();
+            const rows: Record<string, any>[] = [];
+            for (const row of this.insertRows) {
+                const existingIndex = this.upsertConflict.length > 0
+                    ? table.findIndex(existing => this.upsertConflict.every(column => existing[column] === row[column]))
+                    : -1;
+                if (existingIndex >= 0) {
+                    table[existingIndex] = { ...table[existingIndex], ...row };
+                    rows.push(table[existingIndex]);
+                } else {
+                    const next = this.withDefaults(row);
+                    table.push(next);
+                    rows.push(next);
+                }
+            }
+            return { data: rows, error: null };
+        }
+
         return { data: this.resolveRows(), error: null };
     }
 
+    private executeSingle() {
+        const result = this.execute();
+        return { data: Array.isArray(result.data) ? result.data[0] || null : result.data, error: result.error };
+    }
+
     private resolveRows() {
-        const rows = (this.db.tables[this.table] || []).filter(row => this.matchesFilters(row));
+        let rows = (this.db.tables[this.table] || []).filter(row => this.matchesFilters(row));
+        if (this.orderBy) {
+            const { column, ascending } = this.orderBy;
+            rows = [...rows].sort((a, b) => {
+                const left = a[column] || '';
+                const right = b[column] || '';
+                if (left === right) return 0;
+                return (left > right ? 1 : -1) * (ascending ? 1 : -1);
+            });
+        }
         return this.limitCount ? rows.slice(0, this.limitCount) : rows;
     }
 
@@ -90,6 +163,7 @@ class FakeQuery {
             const value = row[filter.column];
             if (filter.op === 'eq') return value === filter.value;
             if (filter.op === 'in') return filter.value.includes(value);
+            if (filter.op === 'lte') return new Date(value).getTime() <= new Date(filter.value).getTime();
             return true;
         });
         const containsMatches = this.containsFilters.every(filter => objectContains(row[filter.column], filter.value));
@@ -97,6 +171,21 @@ class FakeQuery {
             group.length === 0 || group.some(filter => row[filter.column] === filter.value)
         ));
         return scalarMatches && containsMatches && orMatches;
+    }
+
+    private ensureTable() {
+        if (!this.db.tables[this.table]) this.db.tables[this.table] = [];
+        return this.db.tables[this.table];
+    }
+
+    private withDefaults(row: Record<string, any>) {
+        const now = new Date().toISOString();
+        return {
+            ...row,
+            id: row.id || `${this.table}-${this.ensureTable().length + 1}`,
+            created_at: row.created_at || now,
+            updated_at: row.updated_at || now,
+        };
     }
 }
 
@@ -244,6 +333,7 @@ describe('appointmentEmailDeliveryService', () => {
                 provider: 'resend',
                 api_key_configured: true,
                 from_email: 'appointments@example.com',
+                from_name: 'Quimera Studio',
                 transactional: {
                     appointments: true,
                     appointmentTemplates: {

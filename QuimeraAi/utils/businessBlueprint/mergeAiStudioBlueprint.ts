@@ -635,6 +635,7 @@ export function mergeAiStudioBlueprint(input: MergeAiStudioBlueprintInput): Busi
         leadBlueprint: mergeLeadBlueprint(base.leadBlueprint, existing?.leadBlueprint, input.leadBlueprint, now),
         emailMarketingBlueprint: mergeEmailMarketingBlueprint(base.emailMarketingBlueprint, existing?.emailMarketingBlueprint, input.emailMarketingBlueprint, now),
         mediaBlueprint: protectedOrMerged(existing?.mediaBlueprint, base.mediaBlueprint),
+        bioPageBlueprint: protectedOrMerged(existing?.bioPageBlueprint, base.bioPageBlueprint!),
         appointmentsBlueprint: protectedOrMerged(existing?.appointmentsBlueprint, base.appointmentsBlueprint),
         restaurantBlueprint: mergeRestaurantBlueprint(base.restaurantBlueprint, existing?.restaurantBlueprint, input.restaurantBlueprint, now),
         realEstateBlueprint: protectedOrMerged(existing?.realEstateBlueprint, base.realEstateBlueprint),

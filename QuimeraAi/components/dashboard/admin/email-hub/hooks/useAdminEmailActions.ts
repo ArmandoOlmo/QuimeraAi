@@ -11,7 +11,6 @@ import {
     db, collection, doc, addDoc, updateDoc, deleteDoc,
 } from '@/utils/compatData';
 import { serverTimestamp } from '@/utils/compatData';
-import { supabase } from '../../../../../supabase';
 import { generateEmailHtml } from '../../../../../utils/emailHtmlGenerator';
 import { DEFAULT_EMAIL_GLOBAL_STYLES } from '../../../../../types/email';
 import type { CampaignStatus, EmailDocument, EmailAutomation, AutomationStatus, AutomationWorkflowStep, AutomationCategory } from '../../../../../types/email';
@@ -23,6 +22,11 @@ import type {
 } from '../types';
 import type { AdminEmailDataReturn } from './useAdminEmailData';
 import { v4 as uuidv4 } from 'uuid';
+import {
+    ADMIN_EMAIL_PLATFORM_PROJECT_ID,
+    ADMIN_EMAIL_TEMPLATE_SEND_BLOCKED_MESSAGE,
+    buildAdminEmailTemplateFields,
+} from '../platformTemplateMode';
 
 export interface AdminEmailActionsReturn {
     // Campaign editor state
@@ -252,11 +256,15 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                     previewText: document.previewText || '',
                     htmlContent,
                     emailDocument: JSON.parse(JSON.stringify(document)),
+                    ...buildAdminEmailTemplateFields({
+                        generatedByAI: Boolean((selectedCampaign as any)?.generatedByAI),
+                        metadata: (selectedCampaign as any)?.metadata || {},
+                    }),
                     updatedAt: serverTimestamp(),
                 });
                 setCampaigns(prev => prev.map(c =>
                     c.id === editingCampaignId
-                        ? { ...c, name: document.name, subject: document.subject, previewText: document.previewText, htmlContent, emailDocument: document, updatedAt: new Date() } as any
+                        ? { ...c, name: document.name, subject: document.subject, previewText: document.previewText, htmlContent, emailDocument: document, ...buildAdminEmailTemplateFields({ generatedByAI: Boolean((c as any).generatedByAI), metadata: (c as any).metadata || {} }), updatedAt: new Date() } as any
                         : c
                 ));
             } else {
@@ -273,6 +281,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                     status: 'draft' as CampaignStatus,
                     stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                     tags: ['visual-editor'],
+                    ...buildAdminEmailTemplateFields({ metadata: { assetType: 'campaign' } }),
                     createdBy: user?.id || 'admin',
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
@@ -281,7 +290,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                 setCampaigns(prev => [{
                     id: docRef.id, ...newCampaign,
                     tenantId: 'admin', tenantName: 'Super Admin',
-                    userId: user?.id || 'admin', projectId: 'admin',
+                    userId: user?.id || 'admin', projectId: ADMIN_EMAIL_PLATFORM_PROJECT_ID,
                     createdAt: new Date(), updatedAt: new Date(),
                 } as unknown as CrossTenantCampaign, ...prev]);
             }
@@ -392,75 +401,8 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
         setTestSendSuccess(null);
 
         try {
-            const campaign = campaigns.find(c => c.id === campaignId);
-            const realUserId = campaign?.userId || user?.id || 'admin';
-            const realProjectId = campaign?.projectId || 'admin';
-
-            const payload: Record<string, any> = {
-                userId: realUserId,
-                storeId: realProjectId,
-                campaignId: campaignId || 'admin-test',
-                testEmail,
-            };
-
-            if (hasDocument) {
-                console.log('[Test Email] Editor mode — generating from open document, blocks:', emailDocument!.blocks?.length);
-                const fullDoc: EmailDocument = {
-                    id: emailDocument!.id || 'admin-test',
-                    name: emailDocument!.name || 'Test Email',
-                    subject: emailDocument!.subject || 'Test Email',
-                    previewText: emailDocument!.previewText || '',
-                    blocks: emailDocument!.blocks || [],
-                    globalStyles: emailDocument!.globalStyles || DEFAULT_EMAIL_GLOBAL_STYLES,
-                    createdAt: Date.now(),
-                    updatedAt: Date.now(),
-                };
-                payload.htmlContent = generateEmailHtml(fullDoc);
-                payload.subject = fullDoc.subject;
-            } else {
-                const storedDoc = (campaign as any)?.emailDocument;
-                console.log('[Test Email] Table mode — storedDoc exists:', !!storedDoc, 'blocks:', storedDoc?.blocks?.length);
-                
-                if (storedDoc && storedDoc.blocks && storedDoc.blocks.length > 0) {
-                    const logoBlocks = storedDoc.blocks.filter((b: any) => b.type === 'logo');
-                    console.log('[Test Email] Logo blocks found:', logoBlocks.length, logoBlocks.map((b: any) => ({ src: (b.content as any)?.src, visible: b.visible })));
-                    
-                    const fullDoc: EmailDocument = {
-                        id: storedDoc.id || campaign!.id,
-                        name: storedDoc.name || campaign!.name || 'Email',
-                        subject: storedDoc.subject || campaign!.subject || 'Email',
-                        previewText: storedDoc.previewText || '',
-                        blocks: storedDoc.blocks || [],
-                        globalStyles: storedDoc.globalStyles || DEFAULT_EMAIL_GLOBAL_STYLES,
-                        createdAt: Date.now(),
-                        updatedAt: Date.now(),
-                    };
-                    payload.htmlContent = generateEmailHtml(fullDoc);
-                    payload.subject = fullDoc.subject;
-                    console.log('[Test Email] Generated HTML length:', payload.htmlContent.length, 'contains logo img:', payload.htmlContent.includes('logo_quimera'));
-                } else {
-                    console.log('[Test Email] No stored blocks — CF will use campaign.htmlContent from Supabase');
-                }
-            }
-
-            const result = await supabase.functions.invoke('email-api', {
-                body: {
-                    action: 'sendTestEmail',
-                    ...payload
-                }
-            });
-            const resData = result.data?.data || result.data;
-            if (result.error) throw result.error;
-
-            if (resData.success) {
-                setTestSendSuccess(`Email de prueba enviado a ${testEmail}`);
-                setTimeout(() => {
-                    setShowTestEmailModal(false);
-                    setTestSendSuccess(null);
-                }, 3000);
-            } else {
-                throw new Error(resData.error || 'Error desconocido');
-            }
+            setTestSendError(ADMIN_EMAIL_TEMPLATE_SEND_BLOCKED_MESSAGE);
+            setTimeout(() => setTestSendError(null), 8000);
         } catch (err: any) {
             console.error('Error sending test email:', err);
             setTestSendError(err.message || 'Error al enviar email de prueba');
@@ -488,34 +430,9 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
         setShowSendConfirmModal(false);
         setSendCampaignError(null);
 
-        try {
-            const result = await supabase.functions.invoke('email-api', {
-                body: {
-                    action: 'sendCampaign',
-                    userId: campaign.userId || user?.id || 'admin',
-                    storeId: campaign.projectId || 'admin',
-                    campaignId: sendingCampaignId,
-                }
-            });
-
-            const resData = result.data?.data || result.data;
-            if (result.error) throw result.error;
-
-            if (resData.success && resData.sent > 0) {
-                setSendCampaignSuccess(`Campaña enviada exitosamente a ${resData.sent} destinatarios`);
-                setTimeout(() => setSendCampaignSuccess(null), 5000);
-            } else if (!resData.success || resData.sent === 0) {
-                const errorMsg = resData.error || `No se encontraron destinatarios. Verifica que la audiencia tenga contactos agregados.`;
-                setSendCampaignError(errorMsg);
-                setTimeout(() => setSendCampaignError(null), 8000);
-            }
-        } catch (err: any) {
-            console.error('Error sending campaign:', err);
-            setSendCampaignError(err.message || 'Error al enviar la campaña');
-            setTimeout(() => setSendCampaignError(null), 5000);
-        } finally {
-            setSendingCampaignId(null);
-        }
+        setSendCampaignError(ADMIN_EMAIL_TEMPLATE_SEND_BLOCKED_MESSAGE);
+        setTimeout(() => setSendCampaignError(null), 8000);
+        setSendingCampaignId(null);
     };
 
     // =============================================================================
@@ -559,6 +476,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                 status: 'draft' as CampaignStatus,
                 stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                 tags: ['duplicate'],
+                ...buildAdminEmailTemplateFields({ generatedByAI: Boolean((campaign as any).generatedByAI), metadata: { assetType: 'campaign', duplicatedFrom: campaign.id } }),
                 createdBy: user?.id || 'admin',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
@@ -567,7 +485,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
             setCampaigns(prev => [{
                 id: docRef.id, ...dupData,
                 tenantId: 'admin', tenantName: 'Super Admin',
-                userId: user?.id || 'admin', projectId: 'admin',
+                userId: user?.id || 'admin', projectId: ADMIN_EMAIL_PLATFORM_PROJECT_ID,
                 createdAt: new Date(), updatedAt: new Date(),
             } as unknown as CrossTenantCampaign, ...prev]);
         } catch (err) {
@@ -593,7 +511,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                 description: newAutomation.description || '',
                 type: automationType,
                 category: newAutomation.category || selectedTemplate?.category || 'lifecycle',
-                status: newAutomation.status,
+                status: 'draft' as AutomationStatus,
                 triggerConfig: {
                     type: 'event' as const,
                     event: triggerEvent,
@@ -604,6 +522,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                 subject: newAutomation.subject || `${selectedTemplate?.name || 'Automatización'} — Auto`,
                 delayMinutes: newAutomation.delayMinutes,
                 stats: { triggered: 0, sent: 0, opened: 0, clicked: 0, converted: 0 },
+                ...buildAdminEmailTemplateFields({ metadata: { assetType: 'automation' } }),
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
@@ -632,6 +551,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                 audienceId: newAutomation.audienceId || '',
                 steps: sanitizedSteps,
                 delayMinutes: newAutomation.delayMinutes,
+                ...buildAdminEmailTemplateFields({ metadata: { assetType: 'automation' } }),
                 updatedAt: serverTimestamp(),
             });
 
@@ -660,6 +580,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                 subject: automation.subject || '',
                 delayMinutes: automation.delayMinutes || 0,
                 stats: { triggered: 0, sent: 0, opened: 0, clicked: 0, converted: 0 },
+                ...buildAdminEmailTemplateFields({ generatedByAI: Boolean((automation as any).generatedByAI), metadata: { assetType: 'automation', duplicatedFrom: automation.id } }),
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
@@ -773,6 +694,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
             tags: ['automation-email'],
             automationId,
             automationStepId: stepId,
+            ...buildAdminEmailTemplateFields({ metadata: { assetType: 'campaign', automationId, automationStepId: stepId } }),
             createdBy: user?.id || 'admin',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
@@ -818,7 +740,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
             tenantId: 'admin',
             tenantName: 'Super Admin',
             userId: user?.id || 'admin',
-            projectId: 'admin',
+            projectId: ADMIN_EMAIL_PLATFORM_PROJECT_ID,
             createdAt: new Date(),
             updatedAt: new Date(),
         } as unknown as CrossTenantCampaign, ...prev]);

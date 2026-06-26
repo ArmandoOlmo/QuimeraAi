@@ -4,6 +4,8 @@ import {
     type EcommerceEmailProvider,
 } from '../../utils/ecommerce/ecommerceEmailService.ts';
 import type { AppointmentEmailFlowType } from './appointmentEventService';
+import type { EmailProvider } from '../email/emailProviderService.ts';
+import { dispatchCrossModuleTransactionalEmail } from '../email/emailCrossModuleDispatcher.ts';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
 type Locale = 'en' | 'es';
@@ -27,6 +29,14 @@ export interface AppointmentEmailLogRow {
     error_code?: string | null;
     order_id?: string | null;
     lead_id?: string | null;
+    email_kind?: string | null;
+    source_module?: string | null;
+    source_component?: string | null;
+    source_event?: string | null;
+    source_entity_type?: string | null;
+    source_entity_id?: string | null;
+    correlation_id?: string | null;
+    idempotency_key?: string | null;
     metadata?: Record<string, unknown> | null;
     sent_at?: string | null;
     created_at?: string | null;
@@ -344,33 +354,94 @@ async function processAppointmentEmailLog(
             defaultFromEmail: options.defaultFromEmail,
         });
 
-        const providerResult = await options.provider!.send({
-            from: resolveFrom(settings, options.defaultFromEmail),
-            replyTo: settings.replyTo,
-            to: [recipientEmail],
+        const idempotencyKey = stringOrUndefined(metadata.idempotencyKey)
+            || stringOrUndefined(row.idempotency_key)
+            || `appointments:${stringOrUndefined(metadata.appointmentId) || row.id}:${flowType}:${stringOrUndefined(metadata.eventId) || options.now}`;
+        await ensureCanonicalLogFields(client, row, metadata, flowType, idempotencyKey);
+
+        const delivery = await dispatchCrossModuleTransactionalEmail({
+            supabase: client,
+            provider: toCanonicalProvider(options.provider),
+            projectId: String(row.project_id || row.store_id || metadata.projectId || ''),
+            userId: row.user_id || null,
+            type: flowType,
+            recipientEmail,
+            recipientName: row.recipient_name || null,
             subject: rendered.subject,
             html: rendered.html,
             text: rendered.text,
-        });
-
-        await markEmailLog(client, row, {
-            status: 'sent',
-            subject: rendered.subject,
-            sent_at: options.now,
-            provider_message_id: providerResult.providerMessageId || null,
-            error_message: null,
-            error_code: null,
-            metadata: withDeliveryMetadata(metadata, options.now, 'sent', {
-                providerMessageId: providerResult.providerMessageId,
+            idempotencyKey,
+            scheduledAt: stringOrUndefined(metadata.sendAt) || options.now,
+            sourceModule: stringOrUndefined(row.source_module || metadata.sourceModule) || 'appointments',
+            sourceComponent: stringOrUndefined(row.source_component || metadata.sourceComponent),
+            sourceEvent: stringOrUndefined(row.source_event || metadata.eventType) || flowType,
+            sourceEntityType: 'appointment',
+            sourceEntityId: stringOrUndefined(row.source_entity_id || metadata.appointmentId) || row.lead_id || row.id || undefined,
+            metadata: withDeliveryMetadata(metadata, options.now, 'queued', {
                 bodyKey: `appointmentBooking.emailBodies.${flowType}`,
             }),
         });
 
-        return {
-            ...baseResult,
-            status: 'sent',
-            providerMessageId: providerResult.providerMessageId,
-        };
+        if (delivery.status === 'sent') {
+            await markEmailLog(client, row, {
+                status: 'sent',
+                subject: rendered.subject,
+                sent_at: options.now,
+                provider_message_id: delivery.providerMessageId || null,
+                error_message: null,
+                error_code: null,
+                metadata: withDeliveryMetadata(metadata, options.now, 'sent', {
+                    providerMessageId: delivery.providerMessageId,
+                    bodyKey: `appointmentBooking.emailBodies.${flowType}`,
+                    canonicalOutbox: true,
+                }),
+            });
+
+            return {
+                ...baseResult,
+                status: 'sent',
+                providerMessageId: delivery.providerMessageId,
+            };
+        }
+
+        if (delivery.status === 'skipped') {
+            await markEmailLog(client, row, {
+                status: 'skipped',
+                subject: rendered.subject,
+                error_message: delivery.reason || null,
+                error_code: 'canonical_email_skipped',
+                metadata: withDeliveryMetadata(metadata, options.now, 'skipped', {
+                    bodyKey: `appointmentBooking.emailBodies.${flowType}`,
+                    canonicalOutbox: true,
+                }),
+            });
+            return { ...baseResult, status: 'skipped', reason: delivery.reason };
+        }
+
+        if (delivery.status === 'failed') {
+            await markEmailLog(client, row, {
+                status: 'failed',
+                subject: rendered.subject,
+                error_message: delivery.reason || 'Canonical email delivery failed',
+                error_code: 'canonical_email_failed',
+                metadata: withDeliveryMetadata(metadata, options.now, 'failed', {
+                    bodyKey: `appointmentBooking.emailBodies.${flowType}`,
+                    canonicalOutbox: true,
+                }),
+            });
+            return { ...baseResult, status: 'failed', reason: delivery.reason };
+        }
+
+        await markEmailLog(client, row, {
+            subject: rendered.subject,
+            error_message: delivery.reason || null,
+            error_code: delivery.status === 'deferred' ? 'canonical_email_deferred' : null,
+            metadata: withDeliveryMetadata(metadata, options.now, 'deferred', {
+                bodyKey: `appointmentBooking.emailBodies.${flowType}`,
+                canonicalOutbox: true,
+            }),
+        });
+        return { ...baseResult, status: 'deferred', reason: delivery.reason || 'Queued in canonical email outbox' };
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         await markEmailLog(client, row, {
@@ -551,6 +622,30 @@ async function markEmailLog(
     if (error) throw error;
 }
 
+async function ensureCanonicalLogFields(
+    client: SupabaseLike,
+    row: AppointmentEmailLogRow,
+    metadata: Record<string, unknown>,
+    flowType: AppointmentEmailFlowType,
+    idempotencyKey: string,
+) {
+    if (!row.id) return;
+    const patch: Partial<AppointmentEmailLogRow> = {};
+    if (!row.idempotency_key) patch.idempotency_key = idempotencyKey;
+    if (!row.email_kind) patch.email_kind = 'transactional';
+    if (!row.source_module) patch.source_module = stringOrUndefined(metadata.sourceModule) || 'appointments';
+    if (!row.source_component && stringOrUndefined(metadata.sourceComponent)) {
+        patch.source_component = stringOrUndefined(metadata.sourceComponent);
+    }
+    if (!row.source_event) patch.source_event = stringOrUndefined(metadata.eventType) || flowType;
+    if (!row.source_entity_type) patch.source_entity_type = 'appointment';
+    if (!row.source_entity_id) patch.source_entity_id = stringOrUndefined(metadata.appointmentId) || row.id;
+    if (!row.correlation_id) patch.correlation_id = stringOrUndefined(metadata.correlationId) || idempotencyKey;
+    if (Object.keys(patch).length === 0) return;
+    await markEmailLog(client, row, patch);
+    Object.assign(row, patch);
+}
+
 function normalizeEmailSettings(row: Record<string, unknown> | null | undefined): AppointmentEmailSettings {
     const data = normalizeRecord(row);
     return {
@@ -572,6 +667,14 @@ function resolveFrom(settings: AppointmentEmailSettings, defaultFromEmail: strin
     const fromEmail = settings.fromEmail || defaultFromEmail;
     if (!settings.fromEmail) return defaultFromEmail;
     return settings.fromName ? `${settings.fromName} <${fromEmail}>` : fromEmail;
+}
+
+function toCanonicalProvider(provider?: EcommerceEmailProvider): EmailProvider | undefined {
+    if (!provider) return undefined;
+    return {
+        name: 'resend',
+        send: provider.send,
+    };
 }
 
 function isAppointmentEngineLog(metadata: Record<string, unknown>): boolean {

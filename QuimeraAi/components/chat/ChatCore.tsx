@@ -15,6 +15,7 @@ import { useWebChatConversation } from './hooks/useWebChatConversation';
 import { getGlobalChatbotPrompts, getDefaultPrompts, applyPromptTemplate } from '../../utils/globalChatbotPrompts';
 import type { GlobalChatbotPrompts } from '../../types';
 import { useCanAccessService } from '../../hooks/useServiceAvailability';
+import { buildCanonicalEmailDraftMetadata } from '../../services/email/emailModuleIntentService.ts';
 import { Conversation, Role } from '@elevenlabs/client';
 import AppSelect from '../ui/AppSelect';
 
@@ -889,6 +890,27 @@ ${suggestAvailableSlots()}
                     aiAnalysis: intentAnalysis?.customerInterest || undefined,
                     recommendedAction: intentAnalysis?.recommendedAction || undefined,
                     aiScore: intentAnalysis?.intentScore || undefined,
+                    metadata: {
+                        canonicalEmail: buildCanonicalEmailDraftMetadata({
+                            sourceModule: 'chatcore',
+                            sourceComponent: 'ChatCore',
+                            sourceEvent: 'pre_chat_lead_capture',
+                            sourceEntityType: 'lead',
+                            sourceEntityId: convId || preChatData.email,
+                            projectId: project?.id,
+                            recipientEmail: preChatData.email,
+                            needsReview: true,
+                            safeToEdit: true,
+                            generatedByAI: false,
+                            consentSource: 'chatcore-pre-chat-form',
+                            transactionalConsent: true,
+                            extra: {
+                                conversationId: convId,
+                                leadCaptureMode: 'pre_chat_form',
+                                messageCount: messages.length,
+                            },
+                        }),
+                    },
                 });
                 if (leadId) {
                     capturedLeadIdRef.current = leadId;
@@ -1356,6 +1378,28 @@ ${suggestAvailableSlots()}
                         aiAnalysis: intentAnalysis?.customerInterest || undefined,
                         recommendedAction: intentAnalysis?.recommendedAction || undefined,
                         aiScore: intentAnalysis?.intentScore || undefined,
+                        metadata: {
+                            canonicalEmail: buildCanonicalEmailDraftMetadata({
+                                sourceModule: 'chatcore',
+                                sourceComponent: 'ChatCore',
+                                sourceEvent: 'conversational_lead_capture',
+                                sourceEntityType: 'lead',
+                                sourceEntityId: conversationIdRef.current || extracted.email,
+                                projectId: project?.id,
+                                recipientEmail: extracted.email,
+                                needsReview: true,
+                                safeToEdit: true,
+                                generatedByAI: true,
+                                consentSource: 'chatcore-conversation',
+                                transactionalConsent: null,
+                                extra: {
+                                    conversationId: conversationIdRef.current,
+                                    leadCaptureMode: 'conversational_capture',
+                                    highIntentDetected: highIntentDetectedRef.current,
+                                    messageCount: newMessages.length,
+                                },
+                            }),
+                        },
                     });
                     if (leadId) {
                         capturedLeadIdRef.current = leadId;

@@ -37,6 +37,11 @@ import type {
 import { MODEL_TEXT, MODEL_VOICE } from '../types';
 import { base64ToBytes, bytesToBase64, decodeAudioData, floatTo16BitPCM, formatDelay } from '../helpers';
 import type { AdminEmailDataReturn } from './useAdminEmailData';
+import {
+    ADMIN_EMAIL_PLATFORM_PROJECT_ID,
+    buildAdminAudienceTemplateFields,
+    buildAdminEmailTemplateFields,
+} from '../platformTemplateMode';
 
 export interface AIEmailStudioReturn {
     // Chat state
@@ -666,6 +671,11 @@ RESPONDE SOLO CON EL JSON:`;
                 status: 'draft' as CampaignStatus,
                 stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                 tags: ['ai-generated'],
+                ...buildAdminEmailTemplateFields({
+                    generatedByAI: true,
+                    sourceComponent: 'admin-ai-email-studio',
+                    metadata: { assetType: 'campaign' },
+                }),
                 createdBy: user?.id || 'ai-studio',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
@@ -681,7 +691,7 @@ RESPONDE SOLO CON EL JSON:`;
                 tenantId: 'admin',
                 tenantName: 'Super Admin',
                 userId: user?.id || 'admin',
-                projectId: 'admin',
+                projectId: ADMIN_EMAIL_PLATFORM_PROJECT_ID,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             } as CrossTenantCampaign, ...prev]);
@@ -767,6 +777,11 @@ Conversación:\n${conversationSummary}`;
                 tags: audienceData.tags || ['ai-generated'],
                 estimatedCount: audienceData.estimatedCount || 0,
                 isDefault: false,
+                ...buildAdminAudienceTemplateFields({
+                    generatedByAI: true,
+                    sourceComponent: 'admin-ai-email-studio',
+                    metadata: { assetType: 'audience' },
+                }),
                 createdBy: user?.id || 'ai-studio',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
@@ -780,7 +795,7 @@ Conversación:\n${conversationSummary}`;
                 tenantId: 'admin',
                 tenantName: 'Super Admin',
                 userId: user?.id || 'admin',
-                projectId: 'admin',
+                projectId: ADMIN_EMAIL_PLATFORM_PROJECT_ID,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             } as CrossTenantAudience, ...prev]);
@@ -946,7 +961,7 @@ RESPONDE SOLO CON EL JSON:`;
                 description: autoData.description || '',
                 type: autoData.type || 'welcome',
                 category: autoData.category || 'lifecycle',
-                status: autoData.status || 'draft',
+                status: 'draft',
                 triggerConfig: {
                     type: 'event' as const,
                     event: autoData.triggerEvent || 'customer.created',
@@ -957,6 +972,11 @@ RESPONDE SOLO CON EL JSON:`;
                 subject: firstEmailSubject,
                 delayMinutes: sanitizedSteps.find((s: any) => s.type === 'delay')?.delayConfig?.delayMinutes || 60,
                 stats: { triggered: 0, sent: 0, opened: 0, clicked: 0, converted: 0 },
+                ...buildAdminEmailTemplateFields({
+                    generatedByAI: true,
+                    sourceComponent: 'admin-ai-email-studio',
+                    metadata: { assetType: 'automation' },
+                }),
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
@@ -1093,6 +1113,11 @@ RESPONDE SOLO CON EL JSON:`;
                         tags: ['ai-generated', 'automation-email'],
                         automationId,
                         automationStepId: emailStep.id,
+                        ...buildAdminEmailTemplateFields({
+                            generatedByAI: true,
+                            sourceComponent: 'admin-ai-email-studio',
+                            metadata: { assetType: 'campaign', automationId, automationStepId: emailStep.id },
+                        }),
                         createdBy: user?.id || 'ai-studio',
                         createdAt: serverTimestamp(),
                         updatedAt: serverTimestamp(),
@@ -1108,7 +1133,7 @@ RESPONDE SOLO CON EL JSON:`;
                         tenantId: 'admin',
                         tenantName: 'Super Admin',
                         userId: user?.id || 'admin',
-                        projectId: 'admin',
+                        projectId: ADMIN_EMAIL_PLATFORM_PROJECT_ID,
                         createdAt: new Date(),
                         updatedAt: new Date(),
                     } as CrossTenantCampaign, ...prev]);

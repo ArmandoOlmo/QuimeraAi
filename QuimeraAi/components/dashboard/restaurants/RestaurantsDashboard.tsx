@@ -42,6 +42,7 @@ import { useRestaurantMenu } from '../../../hooks/restaurants/useRestaurantMenu'
 import { useRestaurantReservations } from '../../../hooks/restaurants/useRestaurantReservations';
 import { generateReservationMessage, generateReviewTemplate, runDishAssistant } from '../../../services/restaurants/restaurantAiService';
 import { DIETARY_TAG_LABELS, DietaryTag, RestaurantMenuItem, RestaurantReservation, RESTAURANT_MENU_CATEGORIES } from '../../../types/restaurants';
+import { buildEmailReviewQueueUrl } from '../../../services/email/emailReviewQueueLinkService.ts';
 import AppSelect from '../../ui/AppSelect';
 
 type RestaurantView = 'overview' | 'menu' | 'digital-menu' | 'reservations' | 'reviews' | 'settings';
@@ -133,7 +134,7 @@ const RestaurantsDashboard: React.FC = () => {
       case 'digital-menu':
         return <DigitalMenuView restaurant={restaurantState.activeRestaurant} items={menu.availableItems} publicUrl={publicUrl} />;
       case 'reservations':
-        return <ReservationsManager reservationsState={reservations} scope={restaurantState.scope} restaurantId={restaurantState.activeRestaurantId} />;
+        return <ReservationsManager reservationsState={reservations} scope={restaurantState.scope} restaurantId={restaurantState.activeRestaurantId} projectId={restaurantState.activeRestaurant.projectId} />;
       case 'reviews':
         return <ReviewsAI scope={restaurantState.scope} restaurantId={restaurantState.activeRestaurantId} />;
       case 'settings':
@@ -445,8 +446,14 @@ const PublicMenuPreview = ({ restaurant, items }: { restaurant: any; items: Rest
   );
 };
 
-const ReservationCard = ({ item, onEdit, onUpdateStatus }: { item: RestaurantReservation; onEdit: () => void; onUpdateStatus: (status: string) => void }) => {
+const ReservationCard = ({ item, projectId, onEdit, onUpdateStatus }: { item: RestaurantReservation; projectId?: string | null; onEdit: () => void; onUpdateStatus: (status: string) => void }) => {
   const { t } = useTranslation();
+  const reviewUrl = buildEmailReviewQueueUrl({
+    projectId: item.projectId || projectId,
+    sourceModule: 'restaurants',
+    sourceEntityType: 'restaurant_reservation',
+    sourceEntityId: item.id,
+  });
 
   const statusColors: Record<string, string> = {
     pending: 'bg-q-accent/10 text-q-accent border-q-accent/20',
@@ -502,12 +509,15 @@ const ReservationCard = ({ item, onEdit, onUpdateStatus }: { item: RestaurantRes
         <button onClick={onEdit} className="p-2 rounded-lg bg-muted hover:bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] hover:text-[var(--quimera-status-accent-from)] transition-colors shrink-0">
           <Pencil size={16} />
         </button>
+        <a href={reviewUrl} className="p-2 rounded-lg bg-muted hover:bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] hover:text-[var(--quimera-status-accent-from)] transition-colors shrink-0" title="Review email">
+          <Mail size={16} />
+        </a>
       </div>
     </div>
   );
 };
 
-const ReservationsManager = ({ reservationsState, scope, restaurantId }: any) => {
+const ReservationsManager = ({ reservationsState, scope, restaurantId, projectId }: any) => {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Partial<RestaurantReservation> | null>(null);
   const [status, setStatus] = useState<'all' | RestaurantReservation['status']>('all');
@@ -552,12 +562,12 @@ const ReservationsManager = ({ reservationsState, scope, restaurantId }: any) =>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {filtered.map((item: RestaurantReservation) => (
-              <ReservationCard key={item.id} item={item} onEdit={() => setEditing(item)} onUpdateStatus={(s) => reservationsState.updateStatus(item.id, s)} />
+              <ReservationCard key={item.id} item={item} projectId={projectId} onEdit={() => setEditing(item)} onUpdateStatus={(s) => reservationsState.updateStatus(item.id, s)} />
             ))}
           </div>
         )}
       </div>
-      {editing && <ReservationForm initial={editing} onClose={() => setEditing(null)} onAi={async () => toast.success(await generateReservationMessage(scope, restaurantId, 'confirmation', JSON.stringify(editing)))} onSave={async (data) => { editing.id ? await reservationsState.updateReservation(editing.id, data) : await reservationsState.createReservation(data); setEditing(null); toast.success(t('common.saved', 'Saved')); }} />}
+      {editing && <ReservationForm initial={editing} onClose={() => setEditing(null)} onAi={async () => toast.success(await generateReservationMessage(scope, restaurantId, 'confirmation', JSON.stringify(editing)))} onSave={async (data) => { editing.id ? await reservationsState.updateReservation(editing.id, data) : await reservationsState.createReservation({ ...data, projectId }); setEditing(null); toast.success(t('common.saved', 'Saved')); }} />}
     </div>
   );
 };

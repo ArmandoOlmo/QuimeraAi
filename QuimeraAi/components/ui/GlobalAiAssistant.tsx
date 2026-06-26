@@ -24,6 +24,10 @@ import { supabase } from '../../supabase';
 import { dateToTimestamp } from '../dashboard/appointments/utils/appointmentHelpers';
 import { useTranslation } from 'react-i18next';
 import { useServiceAvailability } from '../../hooks/useServiceAvailability';
+import {
+    buildCanonicalEmailDraftMetadata,
+    createCanonicalEmailIdempotencyKey,
+} from '../../services/email/emailModuleIntentService.ts';
 import type { PlatformServiceId } from '../../types/serviceAvailability';
 // ... existing imports ...
 
@@ -868,6 +872,141 @@ function floatTo16BitPCM(float32Array: Float32Array): ArrayBuffer {
 const normalizeText = (str: string) => {
     if (!str) return '';
     return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+};
+
+const PROTECTED_EMAIL_SETTING_KEYS = new Set([
+    'api_key',
+    'apiKey',
+    'api_key_configured',
+    'apiKeyConfigured',
+    'provider_status',
+    'providerStatus',
+    'domain_status',
+    'domainStatus',
+    'dkim_status',
+    'dkimStatus',
+    'spf_status',
+    'spfStatus',
+    'dmarc_status',
+    'dmarcStatus',
+    'webhook_configured',
+    'webhookConfigured',
+    'test_email_sent_at',
+    'testEmailSentAt',
+    'readiness',
+]);
+
+const stripUndefinedValues = <T extends Record<string, any>>(value: T): T =>
+    Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined)) as T;
+
+const sanitizeEmailSettingsUpdates = (updates: any, projectId: string, userId: string) => {
+    const cleaned = Object.fromEntries(
+        Object.entries(updates || {}).filter(([key]) => !PROTECTED_EMAIL_SETTING_KEYS.has(key))
+    ) as Record<string, any>;
+
+    return stripUndefinedValues({
+        ...cleaned,
+        project_id: projectId,
+        store_id: projectId,
+        user_id: userId,
+        source_module: 'ai-studio',
+        source_component: 'GlobalAiAssistant',
+        source_event: 'email_settings_update',
+        updated_at: new Date().toISOString(),
+        metadata: {
+            ...(cleaned.metadata && typeof cleaned.metadata === 'object' ? cleaned.metadata : {}),
+            canonicalEmailSettings: true,
+            managedBy: 'GlobalAiAssistant',
+            secretsManagedServerSide: true,
+        },
+    });
+};
+
+const buildAiEmailCampaignPayload = (
+    campaign: any,
+    projectId: string,
+    userId: string,
+    mode: 'create' | 'update',
+    campaignId?: string,
+) => {
+    const now = new Date().toISOString();
+    const sourceEvent = mode === 'create' ? 'ai_campaign_create' : 'ai_campaign_update';
+    const subject = campaign?.subject || campaign?.title || (mode === 'create' ? 'AI email draft' : undefined);
+    const name = campaign?.name || campaign?.title || subject;
+    const idempotencyKey = createCanonicalEmailIdempotencyKey({
+        sourceModule: 'ai-studio',
+        sourceEvent,
+        sourceEntityType: 'email_campaign',
+        sourceEntityId: campaignId || name || subject || now,
+        projectId,
+    });
+
+    const payload = {
+        ...(mode === 'create' ? {
+            name: name || 'AI email draft',
+            subject: subject || 'AI email draft',
+            type: campaign?.type || 'module_generated',
+            preview_text: campaign?.previewText ?? campaign?.preview_text ?? '',
+            html_content: campaign?.htmlContent ?? campaign?.html_content ?? campaign?.content ?? '',
+            email_document: campaign?.emailDocument ?? campaign?.email_document,
+            audience_type: campaign?.audienceType ?? campaign?.audience_type ?? 'custom',
+            audience_segment_id: campaign?.audienceSegmentId ?? campaign?.audience_segment_id,
+            custom_recipient_emails: campaign?.customRecipientEmails ?? campaign?.custom_recipient_emails,
+            stats: campaign?.stats || {},
+            tags: campaign?.tags || ['ai-studio'],
+            created_by: userId,
+            created_at: now,
+        } : {
+            name: campaign?.name,
+            subject: campaign?.subject,
+            type: campaign?.type,
+            preview_text: campaign?.previewText ?? campaign?.preview_text,
+            html_content: campaign?.htmlContent ?? campaign?.html_content ?? campaign?.content,
+            email_document: campaign?.emailDocument ?? campaign?.email_document,
+            audience_type: campaign?.audienceType ?? campaign?.audience_type,
+            audience_segment_id: campaign?.audienceSegmentId ?? campaign?.audience_segment_id,
+            custom_recipient_emails: campaign?.customRecipientEmails ?? campaign?.custom_recipient_emails,
+            tags: campaign?.tags,
+        }),
+        project_id: projectId,
+        store_id: projectId,
+        user_id: userId,
+        status: 'draft',
+        generated_by_ai: true,
+        needs_review: true,
+        user_modified: false,
+        safe_to_edit: true,
+        send_mode: 'draft_only',
+        source_module: 'ai-studio',
+        source_component: 'GlobalAiAssistant',
+        source_event: sourceEvent,
+        source_entity_type: 'email_campaign',
+        source_entity_id: campaignId,
+        correlation_id: idempotencyKey,
+        idempotency_key: idempotencyKey,
+        updated_at: now,
+        metadata: {
+            ...(campaign?.metadata && typeof campaign.metadata === 'object' ? campaign.metadata : {}),
+            canonicalEmail: buildCanonicalEmailDraftMetadata({
+                sourceModule: 'ai-studio',
+                sourceComponent: 'GlobalAiAssistant',
+                sourceEvent,
+                sourceEntityType: 'email_campaign',
+                sourceEntityId: campaignId || idempotencyKey,
+                projectId,
+                generatedByAI: true,
+                needsReview: true,
+                safeToEdit: true,
+                consentSource: 'ai-studio',
+                extra: {
+                    action: mode,
+                    idempotencyKey,
+                },
+            }),
+        },
+    };
+
+    return stripUndefinedValues(payload);
 };
 
 const LOGO_URL = "/logos/quimera-icon.svg";
@@ -1793,9 +1932,27 @@ const GlobalAiAssistant: React.FC = () => {
             else if (name === 'manage_lead') {
                 const { action, id, name: leadName, email, status, notes, value } = args;
                 if (action === 'create') {
+                    const projectId = activeProjectRef.current?.id;
                     await addLeadRef.current({
                         name: leadName, email, company: '', value: value || 0,
-                        status: status || 'new', source: 'manual', notes: notes || ''
+                        status: status || 'new', source: 'manual', notes: notes || '',
+                        metadata: {
+                            canonicalEmail: buildCanonicalEmailDraftMetadata({
+                                sourceModule: 'crm',
+                                sourceComponent: 'GlobalAiAssistant',
+                                sourceEvent: 'lead_created',
+                                sourceEntityType: 'lead',
+                                sourceEntityId: email || leadName || 'manual-lead',
+                                projectId,
+                                recipientEmail: email,
+                                generatedByAI: true,
+                                needsReview: true,
+                                safeToEdit: true,
+                                consentSource: 'crm-manual-lead',
+                                transactionalConsent: null,
+                                marketingConsent: null,
+                            }),
+                        },
                     });
                     return { result: `Created lead: ${leadName}` };
                 } else if (action === 'update') {
@@ -1806,7 +1963,35 @@ const GlobalAiAssistant: React.FC = () => {
                     }
                     if (!targetId) return { error: "Lead not found." };
                     if (status) await updateLeadStatusRef.current(targetId, status);
-                    if (notes || value || email || leadName) await updateLeadRef.current(targetId, { notes, value, email, name: leadName });
+                    if (notes || value || email || leadName) {
+                        const existingLead = leadsRef.current.find(l => l.id === targetId);
+                        await updateLeadRef.current(targetId, {
+                            notes,
+                            value,
+                            email,
+                            name: leadName,
+                            ...(email ? {
+                                metadata: {
+                                    ...(existingLead?.metadata || {}),
+                                    canonicalEmail: buildCanonicalEmailDraftMetadata({
+                                        sourceModule: 'leads',
+                                        sourceComponent: 'GlobalAiAssistant',
+                                        sourceEvent: 'lead_contact_updated',
+                                        sourceEntityType: 'lead',
+                                        sourceEntityId: targetId,
+                                        projectId: activeProjectRef.current?.id,
+                                        recipientEmail: email,
+                                        generatedByAI: true,
+                                        needsReview: true,
+                                        safeToEdit: true,
+                                        consentSource: 'crm-lead-update',
+                                        transactionalConsent: null,
+                                        marketingConsent: null,
+                                    }),
+                                },
+                            } : {}),
+                        });
+                    }
                     return { result: "Lead updated." };
                 } else if (action === 'delete') {
                     if (!id) return { error: "Lead ID required." };
@@ -2097,9 +2282,11 @@ const GlobalAiAssistant: React.FC = () => {
                 if (!projectId) return { error: "No active project. Load a project first." };
                 const updates = args?.updates;
                 if (!updates || typeof updates !== 'object') return { error: "updates object required." };
-                const { error } = await supabase.from('email_settings').upsert({ id: projectId, ...updates });
+                const { error } = await supabase
+                    .from('email_settings')
+                    .upsert(sanitizeEmailSettingsUpdates(updates, projectId, user.id), { onConflict: 'project_id' });
                 if (error) return { error: `Failed to update email settings: ${error.message}` };
-                return { result: "Email settings updated." };
+                return { result: "Email settings updated. Provider secrets and readiness verification remain server-managed." };
             }
             else if (name === 'email_campaign') {
                 if (!user?.id) return { error: "Not authenticated." };
@@ -2109,23 +2296,20 @@ const GlobalAiAssistant: React.FC = () => {
 
                 if (action === 'create') {
                     const campaign = (args?.campaign || {}) as any;
-                    const payload = {
-                        ...campaign,
-                        project_id: projectId,
-                        status: campaign.status || 'draft',
-                    };
+                    const payload = buildAiEmailCampaignPayload(campaign, projectId, user.id, 'create');
                     const { data, error } = await supabase.from('email_campaigns').insert(payload).select('id').single();
                     if (error) return { error: `Failed to create campaign: ${error.message}` };
-                    return { result: `Campaign created: ${data.id}` };
+                    return { result: `Campaign draft created for review: ${data.id}` };
                 }
 
                 if (action === 'update') {
                     const campaignId = args?.campaignId as string | undefined;
                     if (!campaignId) return { error: "campaignId required for update." };
                     const campaign = (args?.campaign || {}) as any;
-                    const { error } = await supabase.from('email_campaigns').update(campaign).eq('id', campaignId);
+                    const payload = buildAiEmailCampaignPayload(campaign, projectId, user.id, 'update', campaignId);
+                    const { error } = await supabase.from('email_campaigns').update(payload).eq('id', campaignId);
                     if (error) return { error: `Failed to update campaign: ${error.message}` };
-                    return { result: "Campaign updated." };
+                    return { result: "Campaign updated as draft and marked needs_review." };
                 }
 
                 if (action === 'delete') {

@@ -129,8 +129,8 @@ const BioPageQuimera: React.FC<BioPageQuimeraProps> = ({
                                         }}
                                     >
                                         <div className="flex items-start gap-4">
-                                            <div className="mt-1 flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${accentColor}10` }}>
-                                                <IconComp className="w-5 h-5" style={{ color: accentColor }} />
+                                            <div className="mt-1 flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${accentColor}10`, color: accentColor }}>
+                                                <IconComp className="w-5 h-5" />
                                             </div>
                                             <div>
                                                 <h3 className="text-lg font-bold font-header heading-caps mb-1" style={{ color: textColor }}>

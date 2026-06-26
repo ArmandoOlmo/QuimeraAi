@@ -4,21 +4,16 @@
  * Reusable modal for adding contacts (from Leads, Appointments, etc.)
  * to an email audience in the Admin Email Hub.
  *
- * This component is self-contained — it reads/writes to Supabase directly
- * so it can be used from any module without needing the Email Hub context.
+ * This component is self-contained and routes writes through the canonical
+ * Email Engine API so it can be used from modules outside the Email Hub.
  */
 
 import React, { useState, useEffect } from 'react';
 import {
     X, Users, Plus, Search, CheckCircle2, Mail,
-    Loader2, ChevronRight, UserPlus, Sparkles,
+    Loader2, UserPlus, Sparkles,
 } from 'lucide-react';
-import {
-    db, collection, getDocs, doc, updateDoc, addDoc,
-} from '@/utils/compatData';
-import { serverTimestamp } from '@/utils/compatData';
-import { useAuth } from '../../../../../contexts/core/AuthContext';
-import { useTranslation } from 'react-i18next';
+import { supabase } from '@/supabase';
 
 // =============================================================================
 // TYPES
@@ -42,6 +37,7 @@ interface AddToAudienceModalProps {
     isOpen: boolean;
     onClose: () => void;
     contacts: AudienceContact[];
+    projectId?: string | null;
     title?: string;
     description?: string;
     onSuccess?: (audienceName: string, addedCount: number) => void;
@@ -55,13 +51,11 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
     isOpen,
     onClose,
     contacts,
+    projectId,
     title = 'Añadir a Audiencia de Email',
     description,
     onSuccess,
 }) => {
-    const { user } = useAuth();
-    const { t } = useTranslation();
-
     // State
     const [audiences, setAudiences] = useState<ExistingAudience[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -73,7 +67,7 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
     const [newDescription, setNewDescription] = useState('');
     const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
 
-    // Load audiences from Supabase
+    // Load project-scoped audiences through the canonical Email Engine API.
     useEffect(() => {
         if (!isOpen) return;
         setIsLoading(true);
@@ -83,27 +77,49 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
 
         const loadAudiences = async () => {
             try {
-                const snapshot = await getDocs(collection(db, 'adminEmailAudiences'));
-                const loaded: ExistingAudience[] = [];
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    loaded.push({
-                        id: docSnap.id,
-                        name: data.name || 'Sin nombre',
-                        description: data.description || '',
-                        memberCount: data.staticMemberCount || data.estimatedCount || (data.members?.length ?? 0),
-                        members: data.members || [],
+                if (!projectId) {
+                    setAudiences([]);
+                    setResult({
+                        success: false,
+                        message: 'Selecciona un proyecto para usar audiencias del Email Engine.',
                     });
+                    return;
+                }
+
+                const { data, error } = await supabase.functions.invoke('email-api', {
+                    body: {
+                        action: 'getAudiences',
+                        projectId,
+                    },
+                });
+                if (error) throw error;
+                if (data?.success === false) throw new Error(data.error || 'Error al cargar audiencias.');
+
+                const loaded: ExistingAudience[] = (data?.audiences || []).map((audience: any) => {
+                    const staticMembers = audience.static_members || audience.staticMembers || {};
+                    const members = Array.isArray(staticMembers.members)
+                        ? staticMembers.members
+                        : Array.isArray(audience.members)
+                            ? audience.members
+                            : [];
+                    return {
+                        id: audience.id,
+                        name: audience.name || 'Sin nombre',
+                        description: audience.description || '',
+                        memberCount: audience.static_member_count || audience.staticMemberCount || audience.estimated_count || audience.estimatedCount || members.length,
+                        members,
+                    };
                 });
                 setAudiences(loaded.sort((a, b) => a.name.localeCompare(b.name)));
             } catch (err) {
                 console.error('[AddToAudienceModal] Error loading audiences:', err);
+                setResult({ success: false, message: 'Error al cargar audiencias del Email Engine.' });
             } finally {
                 setIsLoading(false);
             }
         };
         loadAudiences();
-    }, [isOpen]);
+    }, [isOpen, projectId]);
 
     // Filter
     const filteredAudiences = audiences.filter(a =>
@@ -115,46 +131,35 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
 
     // Add to existing audience
     const handleAddToAudience = async () => {
-        if (!selectedAudienceId || validContacts.length === 0) return;
+        if (!projectId || !selectedAudienceId || validContacts.length === 0) return;
         setIsAdding(true);
         try {
             const audience = audiences.find(a => a.id === selectedAudienceId);
             if (!audience) throw new Error('Audience not found');
 
-            const existingMembers: any[] = audience.members || [];
-            const existingEmails = new Set(existingMembers.map((m: any) => m.email?.toLowerCase()));
+            const members = validContacts.map(c => ({
+                email: c.email,
+                name: c.name || '',
+                source: c.source || 'cross-module',
+                metadata: { sourceModule: c.source || 'cross-module' },
+            }));
 
-            const newMembers = validContacts
-                .filter(c => !existingEmails.has(c.email.toLowerCase()))
-                .map(c => ({
-                    email: c.email,
-                    name: c.name || '',
-                    source: c.source || 'cross-module',
-                    addedAt: new Date().toISOString(),
-                }));
-
-            if (newMembers.length === 0) {
-                setResult({
-                    success: true,
-                    message: `Todos los contactos ya están en "${audience.name}".`,
-                });
-                setIsAdding(false);
-                return;
-            }
-
-            const updatedMembers = [...existingMembers, ...newMembers];
-            await updateDoc(doc(db, 'adminEmailAudiences', selectedAudienceId), {
-                members: updatedMembers,
-                staticMemberCount: updatedMembers.length,
-                estimatedCount: updatedMembers.length,
-                updatedAt: serverTimestamp(),
+            const { data, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'addAudienceMembers',
+                    projectId,
+                    audienceId: selectedAudienceId,
+                    members,
+                },
             });
+            if (error) throw error;
+            if (data?.success === false) throw new Error(data.error || 'Error al añadir contactos.');
 
             setResult({
                 success: true,
-                message: `✅ ${newMembers.length} contacto${newMembers.length > 1 ? 's' : ''} añadido${newMembers.length > 1 ? 's' : ''} a "${audience.name}".`,
+                message: `${validContacts.length} contacto${validContacts.length > 1 ? 's' : ''} enviado${validContacts.length > 1 ? 's' : ''} a "${audience.name}".`,
             });
-            onSuccess?.(audience.name, newMembers.length);
+            onSuccess?.(audience.name, validContacts.length);
         } catch (err) {
             console.error('[AddToAudienceModal] Error:', err);
             setResult({ success: false, message: 'Error al añadir contactos.' });
@@ -164,33 +169,40 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
 
     // Create new audience with contacts
     const handleCreateAndAdd = async () => {
-        if (!newName.trim() || validContacts.length === 0) return;
+        if (!projectId || !newName.trim() || validContacts.length === 0) return;
         setIsAdding(true);
         try {
             const members = validContacts.map(c => ({
                 email: c.email,
                 name: c.name || '',
                 source: c.source || 'cross-module',
-                addedAt: new Date().toISOString(),
+                metadata: { sourceModule: c.source || 'cross-module' },
             }));
 
-            await addDoc(collection(db, 'adminEmailAudiences'), {
-                name: newName.trim(),
-                description: newDescription.trim(),
-                members,
-                staticMemberCount: members.length,
-                estimatedCount: members.length,
-                tags: [],
-                acceptsMarketing: true,
-                source: 'cross-module',
-                createdBy: user?.id || 'admin',
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
+            const { data, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'createAudience',
+                    projectId,
+                    audience: {
+                        name: newName.trim(),
+                        description: newDescription.trim(),
+                        members,
+                        staticMemberCount: members.length,
+                        estimatedCount: members.length,
+                        tags: [],
+                        acceptsMarketing: true,
+                        source: 'cross-module',
+                        sourceModule: 'cross-module',
+                        needsReview: false,
+                    },
+                },
             });
+            if (error) throw error;
+            if (data?.success === false) throw new Error(data.error || 'Error al crear la audiencia.');
 
             setResult({
                 success: true,
-                message: `✅ Audiencia "${newName.trim()}" creada con ${members.length} contacto${members.length > 1 ? 's' : ''}.`,
+                message: `Audiencia "${newName.trim()}" creada con ${members.length} contacto${members.length > 1 ? 's' : ''}.`,
             });
             onSuccess?.(newName.trim(), members.length);
         } catch (err) {
@@ -420,6 +432,8 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
                                 onClick={showCreateNew ? handleCreateAndAdd : handleAddToAudience}
                                 disabled={
                                     isAdding ||
+                                    !projectId ||
+                                    validContacts.length === 0 ||
                                     (showCreateNew ? !newName.trim() : !selectedAudienceId)
                                 }
                                 className="flex-1 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"

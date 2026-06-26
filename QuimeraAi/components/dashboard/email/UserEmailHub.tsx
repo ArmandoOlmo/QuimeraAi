@@ -8,12 +8,12 @@
  * It composes the modular hooks and views from the email-hub directory.
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
-    Mail, Send, Users, BarChart3, Zap, Sparkles,
+    Mail, Send, Users, BarChart3, Zap, Sparkles, Settings,
     Loader2, Plus, Search, X, Menu,
     Eye, Edit2, Copy, Trash2, Upload, Target, AlertTriangle,
-    TestTube,
+    TestTube, ListChecks,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -22,12 +22,21 @@ import { useUserEmailData } from './email-hub/hooks/useUserEmailData';
 import { useUserEmailActions } from './email-hub/hooks/useUserEmailActions';
 import { useUserAudienceActions } from './email-hub/hooks/useUserAudienceActions';
 import { useUserAIEmailStudio } from './email-hub/hooks/useUserAIEmailStudio';
+import { useEmailIntentReviewQueue } from './email-hub/hooks/useEmailIntentReviewQueue';
+import { useCanonicalEmailAnalytics } from '../../../hooks/useEmailSettings';
+import { useRouter } from '../../../hooks/useRouter';
+import {
+    buildEmailReviewQueueUrl,
+    type EmailReviewQueueFilter,
+} from '../../../services/email/emailReviewQueueLinkService.ts';
 
 // Views
 import OverviewTab from './email-hub/views/OverviewTab';
 import AnalyticsTab from './email-hub/views/AnalyticsTab';
 import AutomationsTab from './email-hub/views/AutomationsTab';
 import AIStudioTab from './email-hub/views/AIStudioTab';
+import SettingsTab from './email-hub/views/SettingsTab';
+import ReviewQueueTab from './email-hub/views/ReviewQueueTab';
 
 // Types
 import type { UserEmailTab, ConfirmModalState, UserEmailCampaign } from './email-hub/types';
@@ -46,16 +55,20 @@ interface UserEmailHubProps {
     userId: string;
     projectId: string;
     projectName: string;
+    initialTab?: UserEmailTab;
+    reviewQueueFilters?: EmailReviewQueueFilter;
+    hasReviewQueueFilter?: boolean;
     onBack: () => void;
 }
 
 const UserEmailHub: React.FC<UserEmailHubProps> = ({
-    userId, projectId, projectName, onBack,
+    userId, projectId, projectName, initialTab, reviewQueueFilters, hasReviewQueueFilter, onBack,
 }) => {
     const { t } = useTranslation();
+    const { navigate } = useRouter();
 
     // ── Tab & UI state ──────────────────────────────────────────────────────
-    const [activeTab, setActiveTab] = useState<UserEmailTab>('overview');
+    const [activeTab, setActiveTab] = useState<UserEmailTab>(initialTab || 'overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({ show: false, title: '', message: '', onConfirm: () => {} });
 
@@ -72,9 +85,13 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
     const actions = useUserEmailActions(data, userId, projectId);
     const audienceActions = useUserAudienceActions(data, userId, projectId);
     const aiStudio = useUserAIEmailStudio(data, activeTab, userId, projectId, projectName);
+    const reviewQueue = useEmailIntentReviewQueue(userId, projectId, reviewQueueFilters);
+    const canonicalAnalytics = useCanonicalEmailAnalytics(userId, projectId, {
+        timeRange: data.filters.analyticsTimeRange,
+    });
 
     const {
-        isLoading, stats, campaigns, audiences, logs, automations, monthlyData,
+        isLoading, stats, campaigns, audiences, automations, monthlyData,
     } = data;
 
     const {
@@ -91,6 +108,26 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
         deleteAutomation, openEditAutomation,
     } = actions;
 
+    const campaignReviewDrafts = useMemo(() => (
+        campaigns.filter(campaign => {
+            const raw = campaign as Record<string, any>;
+            return campaign.needsReview === true
+                || campaign.generatedByAI === true
+                || raw.needs_review === true
+                || raw.generated_by_ai === true
+                || raw.sendMode === 'draft_only'
+                || raw.send_mode === 'draft_only';
+        })
+    ), [campaigns]);
+
+    useEffect(() => {
+        if (initialTab) setActiveTab(initialTab);
+    }, [initialTab]);
+
+    const clearReviewQueueFilters = useCallback(() => {
+        navigate(buildEmailReviewQueueUrl({ projectId }));
+    }, [navigate, projectId]);
+
     // ── Tab definitions ─────────────────────────────────────────────────────
     const tabs: { id: UserEmailTab; label: string; icon: React.ReactNode; count?: number }[] = [
         { id: 'overview', label: t('email.hub.tabs.overview'), icon: <Mail size={16} /> },
@@ -98,7 +135,9 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
         { id: 'audiences', label: t('email.hub.tabs.audiences'), icon: <Users size={16} />, count: audiences.length },
         { id: 'analytics', label: t('email.hub.tabs.analytics'), icon: <BarChart3 size={16} /> },
         { id: 'automations', label: t('email.hub.tabs.automations'), icon: <Zap size={16} />, count: automations.length },
+        { id: 'review', label: t('email.hub.tabs.review', 'Review'), icon: <ListChecks size={16} />, count: reviewQueue.pendingCount + campaignReviewDrafts.length },
         { id: 'ai-studio', label: t('email.hub.tabs.aiStudio'), icon: <Sparkles size={16} /> },
+        { id: 'settings', label: t('email.hub.tabs.settings', 'Settings'), icon: <Settings size={16} /> },
     ];
 
     // ── Filtered lists ──────────────────────────────────────────────────────
@@ -584,7 +623,16 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                                     {activeTab === 'overview' && <OverviewTab stats={stats} campaigns={campaigns} setActiveTab={setActiveTab} />}
                                     {activeTab === 'campaigns' && renderCampaigns()}
                                     {activeTab === 'audiences' && renderAudiences()}
-                                    {activeTab === 'analytics' && <AnalyticsTab stats={stats} campaigns={campaigns} monthlyData={monthlyData} />}
+                                    {activeTab === 'analytics' && (
+                                        <AnalyticsTab
+                                            stats={stats}
+                                            campaigns={campaigns}
+                                            monthlyData={monthlyData}
+                                            canonicalAnalytics={canonicalAnalytics.analytics}
+                                            canonicalAnalyticsLoading={canonicalAnalytics.isLoading}
+                                            canonicalAnalyticsError={canonicalAnalytics.error}
+                                        />
+                                    )}
                                     {activeTab === 'automations' && (
                                         <AutomationsTab
                                             automations={automations}
@@ -608,6 +656,15 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                                             onDesignEmail={openEmailEditorForStep}
                                         />
                                     )}
+                                    {activeTab === 'review' && (
+                                        <ReviewQueueTab
+                                            reviewQueue={reviewQueue}
+                                            campaignDrafts={campaignReviewDrafts}
+                                            onEditCampaign={handleEditCampaignVisual}
+                                            hasActiveFilter={hasReviewQueueFilter === true}
+                                            onClearFilters={clearReviewQueueFilters}
+                                        />
+                                    )}
                                     {activeTab === 'ai-studio' && (
                                         <AIStudioTab
                                             aiMessages={aiStudio.aiMessages}
@@ -629,6 +686,9 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                                             aiCreateAudience={aiStudio.aiCreateAudience}
                                             aiCreateAutomation={aiStudio.aiCreateAutomation}
                                         />
+                                    )}
+                                    {activeTab === 'settings' && (
+                                        <SettingsTab userId={userId} projectId={projectId} />
                                     )}
                                 </>
                             )}

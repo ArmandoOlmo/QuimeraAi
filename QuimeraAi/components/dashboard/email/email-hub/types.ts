@@ -18,7 +18,7 @@ import type {
 // TYPES
 // =============================================================================
 
-export type UserEmailTab = 'overview' | 'campaigns' | 'audiences' | 'analytics' | 'automations' | 'ai-studio';
+export type UserEmailTab = 'overview' | 'campaigns' | 'audiences' | 'analytics' | 'automations' | 'review' | 'ai-studio' | 'settings';
 export type AutomationCategoryFilter = 'all' | AutomationCategory;
 
 /** User-scoped campaign (no cross-tenant fields) */
@@ -41,6 +41,12 @@ export interface UserEmailAudience {
     acceptsMarketing?: boolean;
     hasOrdered?: boolean;
     staticMemberCount?: number;
+    staticMembers?: {
+        emails?: string[];
+        leadIds?: string[];
+        customerIds?: string[];
+        members?: { email?: string; name?: string; source?: string; leadId?: string; customerId?: string }[];
+    };
     members?: { email: string; name?: string; source?: string }[];
 }
 

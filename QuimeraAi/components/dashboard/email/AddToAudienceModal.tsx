@@ -5,8 +5,9 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Users, Loader2, CheckCircle, AlertTriangle, ChevronDown, Search } from 'lucide-react';
+import { X, Users, Loader2, CheckCircle, AlertTriangle, Search } from 'lucide-react';
 import { useEmailAudiences } from '../../../hooks/useEmailSettings';
+import { supabase } from '../../../supabase';
 
 interface AddToAudienceModalProps {
     isOpen: boolean;
@@ -32,7 +33,7 @@ const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
     contactType,
 }) => {
     const { t } = useTranslation();
-    const { audiences, updateAudience, isLoading: loadingAudiences } = useEmailAudiences(userId, projectId);
+    const { audiences, isLoading: loadingAudiences } = useEmailAudiences(userId, projectId);
 
     const [selectedAudienceId, setSelectedAudienceId] = useState<string>('');
     const [isSaving, setIsSaving] = useState(false);
@@ -53,27 +54,21 @@ const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
         try {
             const targetAudience = audiences.find(a => a.id === selectedAudienceId);
             if (!targetAudience) throw new Error('Audiencia no encontrada');
+            if (leadIds.length === 0 && customerIds.length === 0) {
+                throw new Error('No hay contactos válidos para añadir');
+            }
 
-            // Merge existing static members with new ones
-            const existingLeadIds = targetAudience.staticMembers?.leadIds || [];
-            const existingCustomerIds = targetAudience.staticMembers?.customerIds || [];
-            const existingEmails = targetAudience.staticMembers?.emails || [];
-
-            const newLeadIds = [...new Set([...existingLeadIds, ...leadIds])];
-            const newCustomerIds = [...new Set([...existingCustomerIds, ...customerIds])];
-
-            const updatedStaticMembers = {
-                leadIds: newLeadIds,
-                customerIds: newCustomerIds,
-                emails: existingEmails,
-            };
-
-            const staticMemberCount = newLeadIds.length + newCustomerIds.length + existingEmails.length;
-
-            await updateAudience(selectedAudienceId, {
-                staticMembers: updatedStaticMembers,
-                staticMemberCount,
+            const { data, error: invokeError } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'addAudienceMembers',
+                    projectId,
+                    audienceId: selectedAudienceId,
+                    leadIds,
+                    customerIds,
+                },
             });
+            if (invokeError) throw invokeError;
+            if (data?.success === false) throw new Error(data.error || 'Error al agregar a la audiencia');
 
             setSuccess(true);
             setTimeout(() => {

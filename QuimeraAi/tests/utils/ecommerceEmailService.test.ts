@@ -26,6 +26,7 @@ function configuredEmailSettings(overrides: Record<string, unknown> = {}) {
             orderConfirmation: true,
             newOrderNotification: true,
             lowStockNotification: true,
+            paymentFailed: true,
         },
         ...overrides,
     };
@@ -158,7 +159,7 @@ describe('ecommerce email service', () => {
         });
     });
 
-    it('renders and logs an order confirmation email', async () => {
+    it('renders and queues an order confirmation when the canonical dispatcher is missing', async () => {
         const repo = createMemoryEcommerceEmailRepository({
             emailSettings: configuredEmailSettings(),
             storeSettings: configuredStoreSettings(),
@@ -180,20 +181,17 @@ describe('ecommerce email service', () => {
         expect(rendered.subject).toContain('ORD-1001');
         expect(rendered.text).toContain('Road Bike');
         expect(rendered.text).toContain('$120.00');
-        expect(result.status).toBe('sent');
-        expect(result.providerMessageId).toBe('msg_1');
-        expect(sent[0]).toMatchObject({
-            to: ['customer@example.com'],
-            subject: expect.stringContaining('ORD-1001'),
-        });
+        expect(result.status).toBe('queued');
+        expect(result.providerMessageId).toBeUndefined();
+        expect(sent).toHaveLength(0);
         expect(repo.logs[0]).toMatchObject({
-            status: 'sent',
+            status: 'queued',
             template_id: 'order_confirmation',
-            provider_message_id: 'msg_1',
+            provider_message_id: null,
         });
     });
 
-    it('renders merchant order alerts and uses the merchant email from store settings', async () => {
+    it('renders merchant order alerts and resolves the merchant email from store settings', async () => {
         const repo = createMemoryEcommerceEmailRepository({
             emailSettings: configuredEmailSettings(),
             storeSettings: configuredStoreSettings({ order_notification_email: 'ops@example.com' }),
@@ -208,12 +206,11 @@ describe('ecommerce email service', () => {
             now,
         });
 
-        expect(result.status).toBe('sent');
+        expect(result.status).toBe('queued');
         expect(result.recipientEmail).toBe('ops@example.com');
-        expect(sent[0].to).toEqual(['ops@example.com']);
-        expect(sent[0].html).toContain('New paid order');
+        expect(sent).toHaveLength(0);
         expect(repo.logs[0]).toMatchObject({
-            status: 'sent',
+            status: 'queued',
             template_id: 'merchant_new_order',
             recipient_email: 'ops@example.com',
         });
@@ -236,19 +233,19 @@ describe('ecommerce email service', () => {
         const first = await sendOrderConfirmation(input);
         const second = await sendOrderConfirmation(input);
 
-        expect(first.status).toBe('sent');
+        expect(first.status).toBe('queued');
         expect(second.status).toBe('skipped');
         expect(second.skippedReason).toContain('Duplicate');
-        expect(sent).toHaveLength(1);
+        expect(sent).toHaveLength(0);
         expect(repo.logs).toHaveLength(1);
     });
 
-    it('logs provider failures without throwing to webhook callers', async () => {
+    it('does not call the provider fallback without canonical dispatcher context', async () => {
         const repo = createMemoryEcommerceEmailRepository({
             emailSettings: configuredEmailSettings(),
             storeSettings: configuredStoreSettings(),
         });
-        const { provider } = createProvider({ fail: true });
+        const { provider, sent } = createProvider({ fail: true });
 
         const result = await sendOrderConfirmation({
             repository: repo,
@@ -258,15 +255,16 @@ describe('ecommerce email service', () => {
             now,
         });
 
-        expect(result.status).toBe('failed');
-        expect(result.error).toContain('Resend unavailable');
+        expect(result.status).toBe('queued');
+        expect(result.error).toBeUndefined();
+        expect(sent).toHaveLength(0);
         expect(repo.logs[0]).toMatchObject({
-            status: 'failed',
-            error_message: 'Resend unavailable',
+            status: 'queued',
+            error_message: null,
         });
     });
 
-    it('sends payment failed emails idempotently when customer email is valid', async () => {
+    it('queues payment failed emails idempotently when customer email is valid', async () => {
         const repo = createMemoryEcommerceEmailRepository({
             emailSettings: configuredEmailSettings(),
             storeSettings: configuredStoreSettings(),
@@ -299,14 +297,14 @@ describe('ecommerce email service', () => {
             now,
         });
 
-        expect(first.status).toBe('sent');
+        expect(first.status).toBe('queued');
         expect(second.status).toBe('skipped');
-        expect(sent).toHaveLength(1);
+        expect(sent).toHaveLength(0);
         expect(repo.logs).toHaveLength(1);
         expect(repo.logs[0].template_id).toBe('payment_failed');
     });
 
-    it('logs low stock alerts once for the same product and threshold event', async () => {
+    it('queues low stock alerts once for the same product and threshold event', async () => {
         const repo = createMemoryEcommerceEmailRepository({
             emailSettings: configuredEmailSettings(),
             storeSettings: configuredStoreSettings(),
@@ -343,9 +341,9 @@ describe('ecommerce email service', () => {
             now,
         });
 
-        expect(first.status).toBe('sent');
+        expect(first.status).toBe('queued');
         expect(second.status).toBe('skipped');
-        expect(sent).toHaveLength(1);
+        expect(sent).toHaveLength(0);
         expect(repo.logs).toHaveLength(1);
         expect(repo.logs[0]).toMatchObject({
             template_id: 'low_stock_alert',
@@ -384,8 +382,8 @@ describe('ecommerce email service', () => {
         });
 
         expect(customerResult.status).toBe('skipped');
-        expect(merchantResult.status).toBe('sent');
-        expect(sent).toHaveLength(1);
+        expect(merchantResult.status).toBe('queued');
+        expect(sent).toHaveLength(0);
         expect(repo.logs).toHaveLength(2);
         expect(repo.logs.map((log) => log.template_id)).toEqual(['order_confirmation', 'merchant_new_order']);
     });

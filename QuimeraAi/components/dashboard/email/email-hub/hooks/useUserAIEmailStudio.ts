@@ -3,16 +3,13 @@
  *
  * User-scoped version of useAIEmailStudio.
  * No dependency on useAdmin() — system prompt is project-scoped.
- * All created items go to user/project Supabase collections.
+ * Created email assets are project-scoped; canonical audience drafts go through email-api.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../../../contexts/core/AuthContext';
-import {
-    db, collection, addDoc, doc, updateDoc,
-} from '@/utils/compatData';
-import { serverTimestamp } from '@/utils/compatData';
+import { supabase } from '../../../../../supabase';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { getGoogleGenAI } from '../../../../../utils/genAiClient';
 import {
@@ -73,11 +70,7 @@ export function useUserAIEmailStudio(
 ): UserAIEmailStudioReturn {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
-    const { stats, campaigns, setCampaigns, audiences, setAudiences } = data;
-
-    const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
-    const audiencesPath = `users/${userId}/projects/${projectId}/emailAudiences`;
-    const automationsPath = `users/${userId}/projects/${projectId}/emailAutomations`;
+    const { stats, setCampaigns, setAudiences } = data;
 
     // Chat state
     const [aiMessages, setAiMessages] = useState<DisplayMessage[]>([]);
@@ -577,20 +570,34 @@ RESPONDE SOLO CON EL JSON:`;
                 status: 'draft' as CampaignStatus,
                 stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                 tags: ['ai-generated'],
+                generatedByAI: true,
+                needsReview: true,
+                userModified: false,
+                safeToEdit: true,
+                sourceModule: 'ai-studio',
+                sourceComponent: 'email-ai-studio',
+                sourceEvent: 'ai_campaign_draft_created',
+                sendMode: 'draft_only',
+                readiness: {
+                    blockers: ['AI-generated campaigns must be reviewed before sending.'],
+                },
                 createdBy: user?.id || userId,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
             };
 
-            const docRef = await addDoc(collection(db, campaignsPath), newCampaign);
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'createCampaignDraft',
+                    projectId,
+                    campaign: newCampaign,
+                },
+            });
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to create canonical campaign draft');
 
-            setCampaigns(prev => [{
-                id: docRef.id, ...newCampaign,
-                userId, projectId,
-                createdAt: new Date(), updatedAt: new Date(),
-            } as UserEmailCampaign, ...prev]);
+            const createdCampaign = mapUserCampaignFromCanonical(result?.campaign || {}, userId, projectId);
+            setCampaigns(prev => [createdCampaign, ...prev.filter(item => item.id !== createdCampaign.id)]);
 
-            setAiCreatedItems(prev => [...prev, { type: 'campaign', name: campaignData.name, id: docRef.id, timestamp: Date.now() }]);
+            setAiCreatedItems(prev => [...prev, { type: 'campaign', name: createdCampaign.name, id: createdCampaign.id, timestamp: Date.now() }]);
 
             const blockSummary = emailBlocks.map((b: any) => {
                 const labels: Record<string, string> = { hero: 'Hero', text: 'Texto', image: 'Imagen', button: 'Botón', divider: 'Divisor', spacer: 'Espaciador', social: 'Redes Sociales', footer: 'Pie de Email' };
@@ -599,7 +606,7 @@ RESPONDE SOLO CON EL JSON:`;
 
             const confirmMsg: DisplayMessage = {
                 role: 'model',
-                text: `✅ **Campaña creada exitosamente!**\n\n- **Nombre:** ${campaignData.name}\n- **Asunto:** ${campaignData.subject}\n- **Tipo:** ${campaignData.type}\n- **Bloques:** ${emailBlocks.length}\n${blockSummary}\n- **ID:** \`${docRef.id}\`\n\n📝 La campaña ya aparece en la pestaña de **Campañas**.`,
+                text: `✅ **Campaña creada como draft para revisión.**\n\n- **Nombre:** ${createdCampaign.name}\n- **Asunto:** ${createdCampaign.subject}\n- **Tipo:** ${createdCampaign.type}\n- **Bloques:** ${emailBlocks.length}\n${blockSummary}\n- **ID:** \`${createdCampaign.id}\`\n\nNo se envió ningún email. Revísala y apruébala antes de enviar.`,
                 timestamp: Date.now(),
             };
             setAiMessages(prev => [...prev, confirmMsg]);
@@ -670,24 +677,38 @@ Conversación:\n${conversationSummary}`;
                 tags: audienceData.tags || ['ai-generated'],
                 estimatedCount: audienceData.estimatedCount || 0,
                 isDefault: false,
+                generatedByAI: true,
+                needsReview: true,
+                userModified: false,
+                safeToEdit: true,
+                sourceModule: 'ai-studio',
+                sourceComponent: 'email-ai-studio',
+                sourceEvent: 'ai_audience_draft_created',
+                readiness: {
+                    blockers: ['AI-generated audiences must be reviewed before use.'],
+                },
                 createdBy: user?.id || userId,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
             };
 
-            const docRef = await addDoc(collection(db, audiencesPath), newAudience);
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'createAudience',
+                    projectId,
+                    audience: newAudience,
+                },
+            });
 
-            setAudiences(prev => [{
-                id: docRef.id, ...newAudience,
-                userId, projectId,
-                createdAt: new Date(), updatedAt: new Date(),
-            } as UserEmailAudience, ...prev]);
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to create canonical audience');
 
-            setAiCreatedItems(prev => [...prev, { type: 'audience', name: audienceData.name, id: docRef.id, timestamp: Date.now() }]);
+            const createdAudience = mapUserAudienceFromCanonical(result?.audience || {}, userId, projectId);
+            setAudiences(prev => [createdAudience, ...prev.filter(item => item.id !== createdAudience.id)]);
+
+            setAiCreatedItems(prev => [...prev, { type: 'audience', name: createdAudience.name, id: createdAudience.id, timestamp: Date.now() }]);
 
             const confirmMsg: DisplayMessage = {
                 role: 'model',
-                text: `✅ **Audiencia creada exitosamente!**\n\n- **Nombre:** ${audienceData.name}\n- **Descripción:** ${audienceData.description}\n- **ID:** \`${docRef.id}\`\n\nEl segmento ya aparece en la pestaña de **Audiencias**.`,
+                text: `✅ **Audiencia creada como draft para revisión.**\n\n- **Nombre:** ${createdAudience.name}\n- **Descripción:** ${createdAudience.description || ''}\n- **ID:** \`${createdAudience.id}\`\n\nNo se añadió ningún contacto automáticamente sin revisión.`,
                 timestamp: Date.now(),
             };
             setAiMessages(prev => [...prev, confirmMsg]);
@@ -785,7 +806,7 @@ RESPONDE SOLO CON EL JSON:`;
                 description: autoData.description || '',
                 type: autoData.type || 'welcome',
                 category: autoData.category || 'lifecycle',
-                status: autoData.status || 'draft',
+                status: 'draft',
                 triggerConfig: {
                     type: 'event' as const,
                     event: autoData.triggerEvent || 'customer.created',
@@ -796,12 +817,31 @@ RESPONDE SOLO CON EL JSON:`;
                 subject: firstEmailSubject,
                 delayMinutes: sanitizedSteps.find((s: any) => s.type === 'delay')?.delayConfig?.delayMinutes || 60,
                 stats: { triggered: 0, sent: 0, opened: 0, clicked: 0, converted: 0 },
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
+                generatedByAI: true,
+                needsReview: true,
+                userModified: false,
+                safeToEdit: true,
+                sourceModule: 'ai-studio',
+                sourceComponent: 'email-ai-studio',
+                sourceEvent: 'ai_automation_draft_created',
+                sendMode: 'draft_only',
+                readiness: {
+                    blockers: ['AI-generated automations remain inactive until reviewed and explicitly activated.'],
+                },
             };
 
-            const automationDocRef = await addDoc(collection(db, automationsPath), newAutomationData);
-            setAiCreatedItems(prev => [...prev, { type: 'automation', name: autoData.name, id: automationDocRef.id, timestamp: Date.now() }]);
+            const { data: automationResult, error: automationError } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'createAutomationDraft',
+                    projectId,
+                    automation: newAutomationData,
+                },
+            });
+            if (automationError) throw automationError;
+            if (automationResult?.success === false) throw new Error(automationResult.error || 'Unable to create automation draft');
+            const automationId = String(automationResult?.automation?.id || '');
+            if (!automationId) throw new Error('Automation draft was created without an id');
+            setAiCreatedItems(prev => [...prev, { type: 'automation', name: autoData.name, id: automationId, timestamp: Date.now() }]);
 
             // Generate email content for each email step
             const emailSteps = sanitizedSteps.filter((s: any) => s.type === 'email');
@@ -893,30 +933,44 @@ RESPONDE SOLO CON EL JSON:`;
                         status: 'draft' as CampaignStatus,
                         stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                         tags: ['ai-generated', 'automation-email'],
-                        automationId: automationDocRef.id,
+                        automationId,
                         automationStepId: emailStep.id,
+                        generatedByAI: true,
+                        needsReview: true,
+                        userModified: false,
+                        safeToEdit: true,
+                        sourceModule: 'ai-studio',
+                        sourceComponent: 'email-ai-studio',
+                        sourceEvent: 'ai_automation_email_draft_created',
+                        sendMode: 'draft_only',
+                        readiness: {
+                            blockers: ['Automation email drafts must be reviewed before use.'],
+                        },
                         createdBy: user?.id || userId,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp(),
                     };
 
-                    const campaignDocRef = await addDoc(collection(db, campaignsPath), campaignData);
+                    const { data: campaignResult, error: campaignError } = await supabase.functions.invoke('email-api', {
+                        body: {
+                            action: 'createCampaignDraft',
+                            projectId,
+                            campaign: campaignData,
+                        },
+                    });
+                    if (campaignError) throw campaignError;
+                    if (campaignResult?.success === false) throw new Error(campaignResult.error || 'Unable to create automation email draft');
 
-                    setCampaigns(prev => [{
-                        id: campaignDocRef.id, ...campaignData,
-                        userId, projectId,
-                        createdAt: new Date(), updatedAt: new Date(),
-                    } as UserEmailCampaign, ...prev]);
+                    const createdCampaign = mapUserCampaignFromCanonical(campaignResult?.campaign || {}, userId, projectId);
+                    setCampaigns(prev => [createdCampaign, ...prev.filter(item => item.id !== createdCampaign.id)]);
 
                     emailCreationResults.push({
                         stepId: emailStep.id, label: stepLabel, subject: stepSubject,
-                        campaignId: campaignDocRef.id, blockCount: emailBlocks.length,
+                        campaignId: createdCampaign.id, blockCount: emailBlocks.length,
                     });
 
                     emailStep.emailConfig = {
                         ...emailStep.emailConfig,
-                        campaignId: campaignDocRef.id,
-                        emailDocumentId: campaignDocRef.id,
+                        campaignId: createdCampaign.id,
+                        emailDocumentId: createdCampaign.id,
                         emailStatus: 'designed',
                     };
                 } catch (emailErr) {
@@ -936,10 +990,18 @@ RESPONDE SOLO CON EL JSON:`;
                 });
 
                 try {
-                    await updateDoc(doc(db, automationsPath, automationDocRef.id), {
-                        steps: updatedSteps.map((s: any) => JSON.parse(JSON.stringify(s))),
-                        updatedAt: serverTimestamp(),
+                    const { data: updateResult, error: updateError } = await supabase.functions.invoke('email-api', {
+                        body: {
+                            action: 'updateAutomation',
+                            projectId,
+                            automationId,
+                            updates: {
+                                steps: updatedSteps.map((s: any) => JSON.parse(JSON.stringify(s))),
+                            },
+                        },
                     });
+                    if (updateError) throw updateError;
+                    if (updateResult?.success === false) throw new Error(updateResult.error || 'Unable to update automation email links');
                 } catch (updateErr) {
                     console.warn('[UserAIEmailStudio] Could not update automation with email links:', updateErr);
                 }
@@ -965,7 +1027,7 @@ RESPONDE SOLO CON EL JSON:`;
                     `- **Tipo:** ${autoData.type} | **Categoría:** ${autoData.category}\n` +
                     `- **Pasos:** ${sanitizedSteps.length}\n` +
                     `- **Duración:** ${totalDelayMins > 0 ? formatDelay(totalDelayMins) : 'Instantáneo'}\n` +
-                    `- **ID:** \`${automationDocRef.id}\`\n\n` +
+                    `- **ID:** \`${automationId}\`\n\n` +
                     `**Flujo:**\n${stepsSummary}\n\n` +
                     `📝 Todo en estado borrador. Revisa en la pestaña de **Automatizaciones**.`,
                 timestamp: Date.now(),
@@ -1004,4 +1066,91 @@ RESPONDE SOLO CON EL JSON:`;
         aiCreateAutomation,
         initAIStudio,
     };
+}
+
+function mapUserCampaignFromCanonical(
+    campaign: Record<string, any>,
+    userId: string,
+    projectId: string,
+): UserEmailCampaign {
+    return {
+        ...campaign,
+        id: String(campaign.id || ''),
+        name: String(campaign.name || ''),
+        subject: String(campaign.subject || ''),
+        previewText: campaign.previewText ?? campaign.preview_text ?? '',
+        type: campaign.type || 'newsletter',
+        htmlContent: campaign.htmlContent ?? campaign.html_content ?? '',
+        emailDocument: campaign.emailDocument ?? campaign.email_document,
+        audienceType: campaign.audienceType ?? campaign.audience_type ?? 'all',
+        audienceSegmentId: campaign.audienceSegmentId ?? campaign.audience_segment_id,
+        customRecipientEmails: campaign.customRecipientEmails ?? campaign.custom_recipient_emails ?? [],
+        status: campaign.status || 'draft',
+        scheduledAt: campaign.scheduledAt ?? campaign.scheduled_at,
+        sentAt: campaign.sentAt ?? campaign.sent_at,
+        stats: {
+            totalRecipients: 0,
+            sent: 0,
+            delivered: 0,
+            opened: 0,
+            totalOpens: 0,
+            uniqueOpens: 0,
+            clicked: 0,
+            totalClicks: 0,
+            uniqueClicks: 0,
+            bounced: 0,
+            complained: 0,
+            unsubscribed: 0,
+            ...(campaign.stats || {}),
+        },
+        tags: Array.isArray(campaign.tags) ? campaign.tags : [],
+        generatedByAI: campaign.generatedByAI ?? campaign.generated_by_ai,
+        needsReview: campaign.needsReview ?? campaign.needs_review,
+        userModified: campaign.userModified ?? campaign.user_modified,
+        safeToEdit: campaign.safeToEdit ?? campaign.safe_to_edit,
+        sourceModule: campaign.sourceModule ?? campaign.source_module,
+        sourceComponent: campaign.sourceComponent ?? campaign.source_component,
+        sourceEvent: campaign.sourceEvent ?? campaign.source_event,
+        sourceEntityType: campaign.sourceEntityType ?? campaign.source_entity_type,
+        sourceEntityId: campaign.sourceEntityId ?? campaign.source_entity_id,
+        correlationId: campaign.correlationId ?? campaign.correlation_id,
+        idempotencyKey: campaign.idempotencyKey ?? campaign.idempotency_key,
+        readiness: campaign.readiness || {},
+        metadata: campaign.metadata || {},
+        createdBy: campaign.createdBy ?? campaign.created_by ?? userId,
+        userId,
+        projectId,
+        createdAt: campaign.createdAt ?? campaign.created_at ?? new Date().toISOString(),
+        updatedAt: campaign.updatedAt ?? campaign.updated_at ?? new Date().toISOString(),
+    } as UserEmailCampaign;
+}
+
+function mapUserAudienceFromCanonical(
+    audience: Record<string, any>,
+    userId: string,
+    projectId: string,
+): UserEmailAudience {
+    const staticMembers = audience.staticMembers || audience.static_members || {};
+    const members = Array.isArray(staticMembers.members)
+        ? staticMembers.members
+        : Array.isArray(audience.members)
+            ? audience.members
+            : [];
+
+    return {
+        id: String(audience.id || ''),
+        name: String(audience.name || ''),
+        description: audience.description || '',
+        estimatedCount: Number(audience.estimatedCount ?? audience.estimated_count ?? members.length ?? 0),
+        userId,
+        projectId,
+        createdAt: audience.createdAt || audience.created_at || new Date().toISOString(),
+        filters: Array.isArray(audience.filters) ? audience.filters : [],
+        tags: Array.isArray(audience.tags) ? audience.tags : [],
+        acceptsMarketing: audience.acceptsMarketing ?? audience.accepts_marketing,
+        hasOrdered: audience.hasOrdered ?? audience.has_ordered,
+        staticMemberCount: Number(audience.staticMemberCount ?? audience.static_member_count ?? members.length ?? 0),
+        members,
+        staticMembers,
+    } as UserEmailAudience;
 }

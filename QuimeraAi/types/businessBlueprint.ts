@@ -243,7 +243,155 @@ export interface LeadBlueprint extends BlueprintModuleState {
     activityTimelineEvents: string[];
 }
 
+export type EmailBlueprintReviewStatus = 'draft' | 'needs_review' | 'configured';
+export type EmailBlueprintRuntimeStatus = EmailBlueprintReviewStatus | 'approved' | 'scheduled' | 'sent' | 'active' | 'paused' | 'disabled';
+export type EmailBlueprintProvider = 'resend' | 'sendgrid' | 'unset';
+
+export interface EmailSenderBlueprint {
+    fromName?: string;
+    fromEmail?: string;
+    replyTo?: string;
+    domain?: string;
+    provider: EmailBlueprintProvider;
+    providerStatus: 'not_configured' | 'configured' | 'needs_review';
+    domainStatus: 'not_configured' | 'pending' | 'verified' | 'failed';
+    dkimStatus?: string;
+    spfStatus?: string;
+    dmarcStatus?: string;
+    readiness: BlueprintReadiness;
+    needsReview: boolean;
+}
+
+export interface EmailBrandingBlueprint {
+    logoUrl?: string;
+    primaryColor?: string;
+    footerText?: string;
+    socialLinks?: Record<string, string>;
+    defaultTemplateStyle?: string;
+    unsubscribeFooterEnabled: boolean;
+    needsReview: boolean;
+}
+
+export interface EmailConsentBlueprint {
+    requireMarketingConsent: boolean;
+    consentSources: string[];
+    unsubscribeEnabled: boolean;
+    suppressionEnabled: boolean;
+    doubleOptInEnabled: boolean;
+    privacyNotice?: string;
+    complianceRegion: 'us' | 'eu' | 'global' | 'unknown';
+    needsReview: boolean;
+}
+
+export interface EmailAudienceBlueprintItem {
+    id: string;
+    name: string;
+    description?: string;
+    type: 'static' | 'dynamic' | 'cross_module' | 'imported';
+    sourceModules: IntegrationEventModule[];
+    filters: Record<string, unknown>[];
+    tags?: string[];
+    estimatedCount?: number;
+    status: EmailBlueprintReviewStatus;
+    needsReview: boolean;
+    generatedByAI: boolean;
+    userModified: boolean;
+    sourceMap?: BlueprintSourceMap;
+}
+
+export interface EmailCampaignBlueprintItem {
+    id: string;
+    name: string;
+    type: 'newsletter' | 'promotion' | 'announcement' | 'lifecycle' | 'transactional' | 'module_generated';
+    subjectDraft?: string;
+    previewTextDraft?: string;
+    audienceId?: string;
+    blocks?: Record<string, unknown>[];
+    status: 'draft' | 'needs_review' | 'approved' | 'scheduled' | 'sent';
+    scheduleDraft?: string;
+    generatedByAI: boolean;
+    needsReview: boolean;
+    userModified: boolean;
+    lockedFromRegeneration?: boolean;
+    sourceMap?: BlueprintSourceMap;
+}
+
+export interface EmailAutomationBlueprintItem {
+    id: string;
+    name: string;
+    type: string;
+    category?: string;
+    triggerEvent?: IntegrationEventType;
+    sourceModule?: IntegrationEventModule;
+    audienceId?: string;
+    steps: Record<string, unknown>[];
+    status: EmailBlueprintRuntimeStatus;
+    readiness: BlueprintReadiness;
+    generatedByAI: boolean;
+    needsReview: boolean;
+    userModified: boolean;
+    sourceMap?: BlueprintSourceMap;
+}
+
+export interface EmailTransactionalFlowBlueprintItem {
+    id: string;
+    type: string;
+    sourceModule: IntegrationEventModule;
+    triggerEvent: IntegrationEventType;
+    subjectDraft?: string;
+    bodyOutlineDraft?: string;
+    variablesNeeded: string[];
+    templateKey?: string;
+    enabled: boolean;
+    status: EmailBlueprintRuntimeStatus;
+    sendMode: 'disabled' | 'draft_only' | 'manual_send' | 'automatic';
+    idempotencyRequired: boolean;
+    needsReview: boolean;
+    readiness: BlueprintReadiness;
+}
+
+export interface EmailProviderReadinessBlueprint {
+    providerConfigured: boolean;
+    senderConfigured: boolean;
+    domainVerified: boolean;
+    unsubscribeConfigured: boolean;
+    suppressionConfigured: boolean;
+    trackingConfigured: boolean;
+    webhookConfigured: boolean;
+    testEmailSent: boolean;
+    readinessBlockers: string[];
+    warnings: string[];
+}
+
+export interface EmailAnalyticsBlueprint {
+    trackedEvents: IntegrationEventType[];
+    webhookEvents: string[];
+    dashboardMetrics: string[];
+    attributionRules?: Record<string, unknown>;
+    utmDefaults?: Record<string, string>;
+    needsReview: boolean;
+}
+
+export interface EmailCrossModuleBlueprint {
+    eventSources: IntegrationEventModule[];
+    acceptedEvents: IntegrationEventType[];
+    flowMappings: Record<string, string>;
+    draftFlowMappings: Record<string, string>;
+    runtimeEnabled: boolean;
+    needsReview: boolean;
+}
+
 export interface EmailMarketingBlueprint extends BlueprintModuleState {
+    sender?: EmailSenderBlueprint;
+    branding?: EmailBrandingBlueprint;
+    consent?: EmailConsentBlueprint;
+    audiences?: EmailAudienceBlueprintItem[];
+    campaigns?: EmailCampaignBlueprintItem[];
+    automations?: EmailAutomationBlueprintItem[];
+    transactionalFlows?: EmailTransactionalFlowBlueprintItem[];
+    providerReadiness?: EmailProviderReadinessBlueprint;
+    analytics?: EmailAnalyticsBlueprint;
+    crossModule?: EmailCrossModuleBlueprint;
     flows: Array<{ type: string; status: 'draft' | 'needs_review' | 'configured'; triggerEvent?: IntegrationEventType }>;
     logEvents: IntegrationEventType[];
 }
@@ -252,6 +400,256 @@ export interface MediaBlueprint extends BlueprintModuleState {
     imageNeeds: string[];
     videoNeeds: string[];
     brandAssetNeeds: string[];
+}
+
+export type BioPageRouteStrategy = 'bio_slug' | 'project_subroute' | 'custom_domain';
+export type BioPageStatus = 'draft' | 'needs_review' | 'configured' | 'published' | 'disabled';
+export type BioPageBlockStatus = 'draft' | 'needs_review' | 'configured' | 'hidden';
+export type BioPageBlockType =
+    | 'profile'
+    | 'link'
+    | 'social_links'
+    | 'featured_banner'
+    | 'featured_media'
+    | 'product_grid'
+    | 'product_collection'
+    | 'booking'
+    | 'lead_form'
+    | 'email_subscribe'
+    | 'portfolio_grid'
+    | 'testimonials'
+    | 'faq'
+    | 'contact'
+    | 'chatbot_cta'
+    | 'divider'
+    | 'spacer'
+    | 'custom_html_placeholder';
+export type BioPageLinkType =
+    | 'external'
+    | 'internal'
+    | 'product'
+    | 'collection'
+    | 'booking'
+    | 'lead_form'
+    | 'email_subscribe'
+    | 'file'
+    | 'video'
+    | 'social';
+export type BioPageLayoutVariant =
+    | 'classic'
+    | 'creator'
+    | 'storefront'
+    | 'portfolio'
+    | 'business'
+    | 'restaurant'
+    | 'realty'
+    | 'minimal'
+    | 'editorial';
+export type BioPageBackgroundType = 'solid' | 'gradient' | 'image' | 'video' | 'pattern' | 'glass' | 'blur';
+export type BioPageButtonStyle = 'solid' | 'glass' | 'outline' | 'soft' | 'shadow';
+
+export interface BioPageCTA {
+    label: string;
+    url?: string;
+    blockId?: string;
+    linkType?: BioPageLinkType;
+    sourceModule?: IntegrationEventModule;
+}
+
+export interface BioPageProfileBlueprint {
+    displayName: string;
+    handle: string;
+    avatarUrl?: string;
+    coverImageUrl?: string;
+    bio: string;
+    category?: string;
+    location?: string;
+    verifiedBadgeEnabled: boolean;
+    socialProofEnabled: boolean;
+    followerCountSource: 'none' | 'manual' | 'imported';
+    primaryCTA?: BioPageCTA;
+    secondaryCTA?: BioPageCTA;
+    needsReview: boolean;
+    generatedByAI: boolean;
+    userModified: boolean;
+    lockedFromRegeneration?: boolean;
+}
+
+export interface BioPageBlockBlueprint {
+    id: string;
+    type: BioPageBlockType;
+    title: string;
+    description?: string;
+    order: number;
+    visible: boolean;
+    status: BioPageBlockStatus;
+    sourceModule?: IntegrationEventModule;
+    sourceEntityId?: string;
+    data: Record<string, unknown>;
+    settings?: Record<string, unknown>;
+    needsReview: boolean;
+    generatedByAI: boolean;
+    userModified: boolean;
+    lockedFromRegeneration?: boolean;
+    sourceMap?: BlueprintSourceMap;
+}
+
+export interface BioPageLinkBlueprint {
+    id: string;
+    title: string;
+    url: string;
+    description?: string;
+    icon?: string;
+    imageUrl?: string;
+    platform?: string;
+    linkType: BioPageLinkType;
+    openInNewTab: boolean;
+    priority: number;
+    visible: boolean;
+    clickTrackingEnabled: boolean;
+    status: BioPageBlockStatus;
+    needsReview: boolean;
+    generatedByAI: boolean;
+    userModified: boolean;
+    lockedFromRegeneration?: boolean;
+    sourceMap?: BlueprintSourceMap;
+}
+
+export interface BioPageThemeBlueprint {
+    layoutVariant: BioPageLayoutVariant;
+    backgroundType: BioPageBackgroundType;
+    colors: Record<string, string>;
+    typography: Record<string, string>;
+    buttonStyle: BioPageButtonStyle;
+    buttonRadius: number;
+    cardRadius: number;
+    spacing: 'compact' | 'balanced' | 'spacious';
+    profileAlignment: 'left' | 'center';
+    showQuimeraFooter: boolean;
+    customCssDisabled: boolean;
+    needsReview: boolean;
+}
+
+export interface BioPageShopBlueprint {
+    enabled: boolean;
+    source: 'ecommerce';
+    featuredProducts: string[];
+    collections: string[];
+    showPrices: boolean;
+    showProductImages: boolean;
+    productCardVariant: ProductCardVariant | 'compact' | 'creator';
+    shopTabEnabled: boolean;
+    needsReview: boolean;
+}
+
+export interface BioPageBookingBlueprint {
+    enabled: boolean;
+    source: 'appointments';
+    services: string[];
+    bookingCTA: string;
+    bookingBlockEnabled: boolean;
+    confirmationMode: AppointmentConfirmationMode;
+    needsReview: boolean;
+}
+
+export interface BioPageLeadCaptureBlueprint {
+    enabled: boolean;
+    source: 'crm';
+    formTitle: string;
+    fields: Array<{ id: string; label: string; type: 'text' | 'email' | 'phone' | 'textarea'; required: boolean }>;
+    consentRequired: boolean;
+    consentText?: string;
+    leadTags: string[];
+    leadSource: 'bio_page';
+    successMessage: string;
+    needsReview: boolean;
+}
+
+export interface BioPageEmailSubscribeBlueprint {
+    enabled: boolean;
+    source: 'emailMarketing';
+    audienceId?: string;
+    consentText: string;
+    placeholder: string;
+    buttonText: string;
+    successMessage: string;
+    doubleOptIn: boolean;
+    needsReview: boolean;
+}
+
+export interface BioPageChatbotBlueprint {
+    enabled: boolean;
+    source: 'chatbot';
+    floatingChatEnabled: boolean;
+    inlineCTAEnabled: boolean;
+    welcomePrompt: string;
+    leadCaptureEnabled: boolean;
+    needsReview: boolean;
+}
+
+export interface BioPageAnalyticsBlueprint {
+    trackViews: boolean;
+    trackClicks: boolean;
+    trackCTR: boolean;
+    trackSubscribers: boolean;
+    trackLeads: boolean;
+    trackBookings: boolean;
+    trackProductClicks: boolean;
+    trackSourceUTM: boolean;
+    events: IntegrationEventType[];
+    needsReview: boolean;
+}
+
+export interface BioPageSEOBlueprint {
+    title: string;
+    description: string;
+    ogImageUrl?: string;
+    canonicalUrl?: string;
+    noIndex: boolean;
+    schemaType: 'Person' | 'Organization' | 'LocalBusiness' | 'WebPage';
+    needsReview: boolean;
+}
+
+export interface BioPageQrCodeBlueprint {
+    enabled: boolean;
+    status: 'not_generated' | 'draft' | 'configured';
+    color?: string;
+    backgroundColor?: string;
+    logoUrl?: string;
+    needsReview: boolean;
+}
+
+export interface BioPageIntegrationsBlueprint {
+    ecommerce: boolean;
+    appointments: boolean;
+    crm: boolean;
+    emailMarketing: boolean;
+    chatbot: boolean;
+    media: boolean;
+    analytics: boolean;
+    websiteBuilder: boolean;
+}
+
+export interface BioPageBlueprint extends BlueprintModuleState {
+    routeStrategy: BioPageRouteStrategy;
+    defaultRoute: '/bio/:slug';
+    publicSlug: string;
+    title: string;
+    description: string;
+    profile: BioPageProfileBlueprint;
+    blocks: BioPageBlockBlueprint[];
+    links: BioPageLinkBlueprint[];
+    theme: BioPageThemeBlueprint;
+    socialLinks: BioPageLinkBlueprint[];
+    shop: BioPageShopBlueprint;
+    booking: BioPageBookingBlueprint;
+    leadCapture: BioPageLeadCaptureBlueprint;
+    emailSubscribe: BioPageEmailSubscribeBlueprint;
+    chatbot: BioPageChatbotBlueprint;
+    analytics: BioPageAnalyticsBlueprint;
+    seo: BioPageSEOBlueprint;
+    qrCode: BioPageQrCodeBlueprint;
+    integrations: BioPageIntegrationsBlueprint;
 }
 
 export type AppointmentBlueprintSource =
@@ -989,6 +1387,7 @@ export interface BusinessBlueprint {
     leadBlueprint: LeadBlueprint;
     emailMarketingBlueprint: EmailMarketingBlueprint;
     mediaBlueprint: MediaBlueprint;
+    bioPageBlueprint?: BioPageBlueprint;
     appointmentsBlueprint: AppointmentsBlueprint;
     restaurantBlueprint: RestaurantBlueprint;
     realEstateBlueprint: RealEstateBlueprint;
@@ -1008,6 +1407,7 @@ export type BusinessBlueprintModuleKey =
     | 'leadBlueprint'
     | 'emailMarketingBlueprint'
     | 'mediaBlueprint'
+    | 'bioPageBlueprint'
     | 'appointmentsBlueprint'
     | 'restaurantBlueprint'
     | 'realEstateBlueprint'

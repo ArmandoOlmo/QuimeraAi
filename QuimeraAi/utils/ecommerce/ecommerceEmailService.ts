@@ -7,6 +7,8 @@ import type {
     EcommerceTransactionalEmailStatus,
     EcommerceTransactionalEmailType,
 } from '../../types/ecommerceEmail.ts';
+import type { EmailProvider } from '../../services/email/emailProviderService.ts';
+import { dispatchCrossModuleTransactionalEmail } from '../../services/email/emailCrossModuleDispatcher.ts';
 
 type SupabaseClient = any;
 
@@ -66,6 +68,14 @@ export interface EcommerceEmailServiceInput {
     provider?: EcommerceEmailProvider;
     defaultFromEmail?: string;
     now?: string | Date;
+    canonical?: {
+        supabase: SupabaseClient;
+        sourceComponent?: string;
+        sourceEvent?: string;
+        sourceEntityType?: string;
+        sourceEntityId?: string;
+        scheduledAt?: string | Date | null;
+    };
 }
 
 export interface QueueOrSendEcommerceEmailInput extends EcommerceEmailServiceInput {
@@ -219,35 +229,36 @@ export function shouldSendTransactionalEmail(input: {
 
     const transactional = input.emailSettings.transactional || {};
     const disabled = (key: string) => transactional[key] === false;
+    const enabled = (key: string) => transactional[key] === true;
 
     switch (input.type) {
         case 'order_confirmation':
-            if (input.storeSettings.sendOrderConfirmation === false || disabled('orderConfirmation')) {
+            if (input.storeSettings.sendOrderConfirmation === false || !enabled('orderConfirmation')) {
                 return { shouldSend: false, reason: 'Order confirmation is disabled' };
             }
             break;
         case 'merchant_new_order':
-            if (input.storeSettings.notifyOnNewOrder === false || disabled('newOrderNotification')) {
+            if (input.storeSettings.notifyOnNewOrder === false || !enabled('newOrderNotification')) {
                 return { shouldSend: false, reason: 'Merchant order notification is disabled' };
             }
             break;
         case 'payment_failed':
-            if (disabled('paymentFailed')) {
+            if (!enabled('paymentFailed')) {
                 return { shouldSend: false, reason: 'Payment failed email is disabled' };
             }
             break;
         case 'low_stock_alert':
-            if (input.storeSettings.notifyOnLowStock === false || disabled('lowStockNotification')) {
+            if (input.storeSettings.notifyOnLowStock === false || !enabled('lowStockNotification')) {
                 return { shouldSend: false, reason: 'Low stock notification is disabled' };
             }
             break;
         case 'shipping_confirmation':
-            if (input.storeSettings.sendShippingNotification === false || disabled('orderShipped')) {
+            if (input.storeSettings.sendShippingNotification === false || !enabled('orderShipped')) {
                 return { shouldSend: false, reason: 'Shipping notification is disabled' };
             }
             break;
         default:
-            if (disabled(input.type)) {
+            if (disabled(input.type) || !enabled(input.type)) {
                 return { shouldSend: false, reason: `${input.type} is disabled` };
             }
             break;
@@ -334,7 +345,7 @@ export async function queueOrSendEcommerceEmail(input: QueueOrSendEcommerceEmail
     const idempotencyKey = input.idempotencyKey;
     const now = toIso(input.now);
     const existing = await safeFindExistingLog(input.repository, idempotencyKey);
-    if (existing) {
+    if (existing && (!input.canonical || isTerminalEcommerceEmailStatus(existing.status))) {
         return {
             type: input.type,
             status: 'skipped',
@@ -373,6 +384,28 @@ export async function queueOrSendEcommerceEmail(input: QueueOrSendEcommerceEmail
     });
 
     if (!sendDecision.shouldSend) {
+        if (input.canonical?.supabase && projectId) {
+            return mapCanonicalEcommerceResult(input.type, idempotencyKey, await dispatchCrossModuleTransactionalEmail({
+                supabase: input.canonical.supabase,
+                projectId,
+                type: input.type,
+                recipientEmail,
+                recipientName,
+                subject: rendered.subject,
+                html: rendered.html,
+                text: rendered.text,
+                idempotencyKey,
+                scheduledAt: input.canonical.scheduledAt || now,
+                sourceModule: 'ecommerce',
+                sourceComponent: input.canonical.sourceComponent,
+                sourceEvent: input.canonical.sourceEvent || input.type,
+                sourceEntityType: input.canonical.sourceEntityType || 'order',
+                sourceEntityId: input.canonical.sourceEntityId || readOrderId(input.context) || readCartId(input.context),
+                metadata: buildEcommerceCanonicalMetadata(input.context, input.type, input.metadata),
+                skipReason: sendDecision.reason || 'Ecommerce transactional email is disabled',
+            }), rendered.subject);
+        }
+
         return safeRecordAndReturn({
             repository: input.repository,
             context: input.context,
@@ -389,63 +422,101 @@ export async function queueOrSendEcommerceEmail(input: QueueOrSendEcommerceEmail
         });
     }
 
-    if (!input.provider) {
-        return safeRecordAndReturn({
-            repository: input.repository,
-            context: input.context,
+    if (input.canonical?.supabase && projectId) {
+        return mapCanonicalEcommerceResult(input.type, idempotencyKey, await dispatchCrossModuleTransactionalEmail({
+            supabase: input.canonical.supabase,
+            provider: toCanonicalProvider(input.provider),
+            projectId,
             type: input.type,
-            status: 'queued',
-            idempotencyKey,
             recipientEmail,
             recipientName,
-            subject: rendered.subject,
-            metadata: {
-                ...(input.metadata || {}),
-                queuedReason: 'Provider sender is not available in this runtime',
-            },
-            now,
-        });
-    }
-
-    try {
-        const providerResult = await input.provider.send({
-            from: resolveFrom(settings.email, input.defaultFromEmail || DEFAULT_FROM_EMAIL),
-            replyTo: settings.email.replyTo,
-            to: [recipientEmail],
             subject: rendered.subject,
             html: rendered.html,
             text: rendered.text,
-        });
-
-        return safeRecordAndReturn({
-            repository: input.repository,
-            context: input.context,
-            type: input.type,
-            status: 'sent',
             idempotencyKey,
-            recipientEmail,
-            recipientName,
-            subject: rendered.subject,
-            providerMessageId: providerResult.providerMessageId,
-            metadata: input.metadata,
-            now,
-        });
-    } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return safeRecordAndReturn({
-            repository: input.repository,
-            context: input.context,
-            type: input.type,
-            status: 'failed',
-            idempotencyKey,
-            recipientEmail,
-            recipientName,
-            subject: rendered.subject,
-            error: message,
-            metadata: input.metadata,
-            now,
-        });
+            scheduledAt: input.canonical.scheduledAt || now,
+            sourceModule: 'ecommerce',
+            sourceComponent: input.canonical.sourceComponent,
+            sourceEvent: input.canonical.sourceEvent || input.type,
+            sourceEntityType: input.canonical.sourceEntityType || 'order',
+            sourceEntityId: input.canonical.sourceEntityId || readOrderId(input.context) || readCartId(input.context),
+            metadata: buildEcommerceCanonicalMetadata(input.context, input.type, input.metadata),
+        }), rendered.subject);
     }
+
+    return safeRecordAndReturn({
+        repository: input.repository,
+        context: input.context,
+        type: input.type,
+        status: 'queued',
+        idempotencyKey,
+        recipientEmail,
+        recipientName,
+        subject: rendered.subject,
+        metadata: {
+            ...(input.metadata || {}),
+            queuedReason: 'Canonical email dispatcher is required for provider delivery',
+        },
+        now,
+    });
+}
+
+function toCanonicalProvider(provider?: EcommerceEmailProvider): EmailProvider | undefined {
+    if (!provider) return undefined;
+    return {
+        name: 'resend',
+        send: provider.send,
+    };
+}
+
+function mapCanonicalEcommerceResult(
+    type: EcommerceTransactionalEmailType,
+    idempotencyKey: string,
+    result: {
+        status: 'queued' | 'sent' | 'skipped' | 'failed' | 'deferred';
+        logId?: string;
+        existingLogId?: string;
+        providerMessageId?: string;
+        recipientEmail?: string;
+        reason?: string;
+    },
+    subject?: string,
+): EcommerceEmailDeliveryResult {
+    return {
+        type,
+        status: result.status === 'deferred' ? 'queued' : result.status,
+        recipientEmail: result.recipientEmail,
+        subject,
+        idempotencyKey,
+        providerMessageId: result.providerMessageId,
+        skippedReason: result.status === 'skipped' ? result.reason : undefined,
+        error: result.status === 'failed' || result.status === 'deferred' ? result.reason : undefined,
+        existingLogId: result.existingLogId,
+        logId: result.logId,
+    };
+}
+
+function isTerminalEcommerceEmailStatus(status?: string | null) {
+    return ['sent', 'delivered', 'opened', 'clicked', 'skipped', 'failed'].includes(String(status || ''));
+}
+
+function buildEcommerceCanonicalMetadata(
+    context: EcommerceEmailRenderContext,
+    type: EcommerceTransactionalEmailType,
+    metadata?: Record<string, unknown>,
+) {
+    return sanitizeMetadata({
+        ...(metadata || {}),
+        source: 'ecommerce',
+        ecommerceEmailType: type,
+        projectId: readProjectId(context),
+        storeId: readStoreId(context),
+        publicStoreId: readPublicStoreId(context),
+        cartId: readCartId(context),
+        orderId: readOrderId(context),
+        orderNumber: readOrderNumber(context),
+        paymentIntentId: readPaymentIntentId(context),
+    });
 }
 
 export async function sendOrderConfirmation(input: SendEcommerceEmailInput) {
@@ -645,12 +716,6 @@ function normalizeStoreEmailSettings(row: Record<string, unknown> | null | undef
         ),
         raw: row || null,
     };
-}
-
-function resolveFrom(settings: EcommerceEmailSettings, defaultFromEmail: string) {
-    const fromEmail = settings.fromEmail || defaultFromEmail;
-    if (!settings.fromEmail) return defaultFromEmail;
-    return settings.fromName ? `${settings.fromName} <${fromEmail}>` : fromEmail;
 }
 
 function renderOrderConfirmation(context: EcommerceEmailRenderContext): EcommerceEmailRenderResult {

@@ -14,13 +14,22 @@ import { StoredTimestamp } from './ecommerce';
  */
 export interface EmailSettings {
     // Provider config
-    provider: 'resend' | 'sendgrid';
+    provider: 'resend' | 'sendgrid' | 'unset';
     apiKeyConfigured: boolean; // Solo indica si está configurado, no guarda la key
+    providerStatus?: 'not_configured' | 'configured' | 'needs_review';
 
     // Sender info
     fromEmail: string;
     fromName: string;
     replyTo?: string;
+    sendingDomain?: string;
+    domainStatus?: 'not_configured' | 'pending' | 'verified' | 'failed';
+    dkimStatus?: string;
+    spfStatus?: string;
+    dmarcStatus?: string;
+    webhookConfigured?: boolean;
+    testEmailSentAt?: StoredTimestamp | string | null;
+    providerReadiness?: EmailProviderReadinessSnapshot;
 
     // Branding
     logoUrl?: string;
@@ -33,6 +42,10 @@ export interface EmailSettings {
 
     // Marketing email settings
     marketing: MarketingEmailSettings;
+    compliance?: EmailComplianceSettings;
+    tracking?: EmailTrackingSettings;
+    rateLimits?: EmailRateLimitSettings;
+    readiness?: EmailProviderReadiness;
 
     // Timestamps
     createdAt: StoredTimestamp;
@@ -54,6 +67,7 @@ export interface TransactionalEmailSettings {
     orderDelivered: boolean;
     orderCancelled: boolean;
     orderRefunded: boolean;
+    paymentFailed?: boolean;
 
     // Review request
     reviewRequest: boolean;
@@ -72,6 +86,25 @@ export interface TransactionalEmailSettings {
     appointmentFollowUp?: boolean;
     appointmentReminder?: boolean;
     appointmentTemplates?: Partial<Record<AppointmentEmailTemplateKey, AppointmentEmailTemplateOverride>>;
+
+    // Restaurants Engine transactional emails
+    restaurants?: boolean;
+    restaurantReservations?: boolean;
+    reservationReceived?: boolean;
+
+    // Cross-module reviewed transactional emails
+    crm?: boolean;
+    leadEmails?: boolean;
+    chatcore?: boolean;
+    chatLeadEmails?: boolean;
+    realty?: boolean;
+    realtyPropertyInquiry?: boolean;
+    realtyShowingRequest?: boolean;
+    realtyOpenHouseRegistration?: boolean;
+    websiteBuilder?: boolean;
+    websiteFormEmails?: boolean;
+    aiStudio?: boolean;
+    aiStudioReviewedEmails?: boolean;
 }
 
 export type AppointmentEmailTemplateKey =
@@ -107,12 +140,96 @@ export interface MarketingEmailSettings {
     winBackDelayDays: number;
 }
 
+export interface EmailComplianceSettings {
+    requireMarketingConsent: boolean;
+    consentSources?: string[];
+    unsubscribeFooterEnabled: boolean;
+    suppressionEnabled: boolean;
+    doubleOptInEnabled: boolean;
+    privacyNotice?: string;
+    complianceRegion: 'us' | 'eu' | 'global' | 'unknown';
+    physicalAddress?: string;
+}
+
+export interface EmailTrackingSettings {
+    openTracking: boolean;
+    clickTracking: boolean;
+    utmDefaults?: Record<string, string>;
+}
+
+export interface EmailRateLimitPolicy {
+    maxPerRun?: number;
+    maxPerMinute?: number;
+    retryAfterSeconds?: number;
+}
+
+export interface EmailRateLimitSettings {
+    default?: EmailRateLimitPolicy;
+    resend?: EmailRateLimitPolicy;
+    sendgrid?: EmailRateLimitPolicy;
+}
+
+export interface EmailProviderReadiness {
+    providerConfigured: boolean;
+    senderConfigured: boolean;
+    marketingEnabled?: boolean;
+    domainVerified: boolean;
+    unsubscribeConfigured: boolean;
+    suppressionConfigured: boolean;
+    trackingConfigured: boolean;
+    webhookConfigured: boolean;
+    testEmailSent: boolean;
+    canSendTest: boolean;
+    canSendMarketing: boolean;
+    canSendTransactional: boolean;
+    readinessBlockers: string[];
+    warnings: string[];
+}
+
+export interface EmailProviderDnsRecord {
+    label?: string;
+    type?: string;
+    host?: string;
+    value?: string;
+    status?: string;
+    priority?: string;
+    reason?: string;
+}
+
+export interface EmailProviderReadinessSnapshot {
+    provider?: 'resend' | 'sendgrid' | 'unset';
+    providerConfigured?: boolean;
+    providerStatus?: 'not_configured' | 'configured' | 'needs_review';
+    domainStatus?: 'not_configured' | 'pending' | 'verified' | 'failed';
+    dkimStatus?: string;
+    spfStatus?: string;
+    dmarcStatus?: string;
+    webhookConfigured?: boolean;
+    checkedAt?: string;
+    matchedDomain?: string;
+    providerError?: string;
+    warnings?: string[];
+    raw?: {
+        id?: unknown;
+        name?: unknown;
+        domain?: unknown;
+        subdomain?: unknown;
+        status?: unknown;
+        valid?: unknown;
+        default?: unknown;
+        capabilities?: unknown;
+        validationResults?: unknown;
+        verification?: unknown;
+        records?: EmailProviderDnsRecord[];
+    };
+}
+
 // =============================================================================
 // EMAIL CAMPAIGNS
 // =============================================================================
 
-export type CampaignStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'cancelled' | 'paused' | 'approved' | 'pending';
-export type CampaignType = 'newsletter' | 'promotion' | 'announcement' | 'automated';
+export type CampaignStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'cancelled' | 'paused' | 'approved' | 'pending' | 'failed';
+export type CampaignType = 'newsletter' | 'promotion' | 'announcement' | 'automated' | 'lifecycle' | 'transactional' | 'module_generated';
 export type AudienceType = 'all' | 'segment' | 'custom';
 
 /**
@@ -145,6 +262,19 @@ export interface EmailCampaign {
 
     // Metadata
     tags?: string[];
+    generatedByAI?: boolean;
+    needsReview?: boolean;
+    userModified?: boolean;
+    safeToEdit?: boolean;
+    sourceModule?: string;
+    sourceComponent?: string;
+    sourceEvent?: string;
+    sourceEntityType?: string;
+    sourceEntityId?: string;
+    correlationId?: string;
+    idempotencyKey?: string;
+    readiness?: Record<string, any>;
+    metadata?: Record<string, any>;
     createdBy: string;
     createdAt: StoredTimestamp;
     updatedAt: StoredTimestamp;
@@ -161,6 +291,7 @@ export interface CampaignStats {
     totalClicks: number;   // Total clicks (including re-clicks)
     uniqueClicks: number;  // Unique clicks (one per recipient)
     bounced: number;
+    failed?: number;
     bounceDetails?: {
         hard: number;      // Invalid email / permanent failure
         soft: number;      // Temporary failure (mailbox full, etc.)
@@ -178,7 +309,7 @@ export interface CampaignStats {
 // =============================================================================
 
 export type EmailType = 'transactional' | 'marketing';
-export type EmailStatus = 'queued' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'bounced' | 'failed' | 'complained';
+export type EmailStatus = 'queued' | 'sending' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'bounced' | 'failed' | 'complained' | 'unsubscribed' | 'skipped';
 
 /**
  * Registro de email enviado
@@ -226,6 +357,14 @@ export interface EmailLog {
     orderId?: string;
     leadId?: string;
     metadata?: Record<string, any>;
+    sourceModule?: string;
+    sourceComponent?: string;
+    sourceEvent?: string;
+    sourceEntityType?: string;
+    sourceEntityId?: string;
+    correlationId?: string;
+    idempotencyKey?: string;
+    skippedReason?: string;
 }
 
 // =============================================================================
@@ -958,13 +1097,4 @@ export const DEFAULT_BLOCK_STYLES: Record<EmailBlockType, EmailBlockStyles> = {
         fontSize: 'sm',
     },
 };
-
-
-
-
-
-
-
-
-
 

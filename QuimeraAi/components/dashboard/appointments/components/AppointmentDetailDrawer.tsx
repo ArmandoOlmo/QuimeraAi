@@ -59,6 +59,7 @@ import {
 } from '../utils/appointmentHelpers';
 import { AIPreparationPanel } from './AIPreparationPanel';
 import { AddToAudienceModal } from '../../admin/email-hub/components/AddToAudienceModal';
+import { buildEmailReviewQueueUrl } from '../../../../services/email/emailReviewQueueLinkService.ts';
 
 // =============================================================================
 // TYPES
@@ -167,6 +168,11 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
     const startDate = timestampToDate(appointment.startDate);
     const endDate = timestampToDate(appointment.endDate);
     const duration = calculateDuration(appointment.startDate, appointment.endDate);
+    const appointmentEmailReviewUrl = buildEmailReviewQueueUrl({
+        projectId: appointment.projectId || (appointment as any).project_id || null,
+        sourceEntityType: 'appointment',
+        sourceEntityId: appointment.id,
+    });
 
     const gradientClasses: Record<string, string> = {
         blue: 'from-q-accent to-q-accent',
@@ -360,6 +366,15 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                     <Download size={16} className="text-q-text-muted" />
                                     {t('appointments.downloadCalendar')}
                                 </button>
+
+                                <a
+                                    href={appointmentEmailReviewUrl}
+                                    onClick={() => setShowMoreMenu(false)}
+                                    className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-secondary transition-colors text-foreground"
+                                >
+                                    <Mail size={16} className="text-q-text-muted" />
+                                    Review email
+                                </a>
 
                                 {/* Share */}
                                 <button
@@ -777,6 +792,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                         ?.filter(p => p.email)
                         .map(p => ({ email: p.email, name: p.name, source: 'appointments' })) || []
                 }
+                projectId={appointment.projectId || (appointment as any).project_id || null}
                 title={t('appointments.drawer.addParticipantsToAudienceTitle', { count: appointment.participants?.filter(p => p.email).length || 0 })}
                 description={t('appointments.drawer.appointmentParticipants', { title: appointment.title })}
             />
@@ -785,4 +801,3 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
 };
 
 export default AppointmentDetailDrawer;
-

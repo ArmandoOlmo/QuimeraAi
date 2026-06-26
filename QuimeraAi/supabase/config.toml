@@ -27,7 +27,7 @@ entrypoint = "./functions/stripe-webhook/index.ts"
 
 [functions.email-api]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 entrypoint = "./functions/email-api/index.ts"
 
 [functions.create-public-restaurant-reservation]

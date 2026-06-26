@@ -130,6 +130,7 @@ import {
     REALTY_AI_MODELS,
     REALTY_AI_TONES,
 } from '../../../utils/realtyAiClient';
+import { buildEmailReviewQueueUrl } from '../../../services/email/emailReviewQueueLinkService.ts';
 
 type RealtyTab = 'engine' | 'overview' | 'properties' | 'leads' | 'campaigns' | 'openHouses' | 'ai' | 'settings';
 type RealtyTabArea = 'workspace' | 'control';
@@ -544,6 +545,25 @@ const RealtyDashboard: React.FC = () => {
         return ['timelineEvents', 'emailEvents', 'analyticsEvents']
             .reduce((total, key) => total + (Array.isArray(metadata[key]) ? metadata[key].length : 0), 0);
     };
+
+    const getLeadEmailReviewEntityId = (lead: RealtyLead) => {
+        const metadata = isPlainRecord(lead.metadata) ? lead.metadata : {};
+        if (typeof metadata.idempotencyKey === 'string' && metadata.idempotencyKey.trim()) return metadata.idempotencyKey;
+        const emailEvent = Array.isArray(metadata.emailEvents)
+            ? metadata.emailEvents.find((event): event is Record<string, unknown> => isPlainRecord(event))
+            : null;
+        const emailMetadata = isPlainRecord(emailEvent?.metadata) ? emailEvent.metadata : {};
+        return typeof emailMetadata.sourceEntityId === 'string' && emailMetadata.sourceEntityId.trim()
+            ? emailMetadata.sourceEntityId
+            : lead.id;
+    };
+
+    const getLeadEmailReviewUrl = (lead: RealtyLead) => buildEmailReviewQueueUrl({
+        projectId: lead.projectId || activeProjectId,
+        sourceModule: 'realty',
+        sourceEntityType: 'property_lead',
+        sourceEntityId: getLeadEmailReviewEntityId(lead),
+    });
 
     const hasLeadCrmSync = (lead: RealtyLead) =>
         Boolean(lead.crmLeadId || (isPlainRecord(lead.metadata) && typeof lead.metadata.sourceLeadId === 'string' && lead.metadata.sourceLeadId));
@@ -2557,15 +2577,13 @@ const RealtyDashboard: React.FC = () => {
                                             </div>
                                         )}
                                         <div className="grid grid-cols-2 gap-2">
-                                            <Button
-                                                type="button"
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => setLocalWarning(t('realty.leads.actions.emailDraftReady'))}
+                                            <a
+                                                href={getLeadEmailReviewUrl(lead)}
+                                                className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-q-text-secondary transition-colors hover:bg-q-surface-overlay hover:text-q-text"
                                             >
                                                 <Mail size={15} />
                                                 {t('realty.leads.actions.followUp')}
-                                            </Button>
+                                            </a>
                                             <Button
                                                 type="button"
                                                 size="sm"

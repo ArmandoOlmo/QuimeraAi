@@ -14,6 +14,10 @@ import {
 import { serverTimestamp } from '@/utils/compatData';
 import type { CrossTenantAudience, ConfirmModalState } from '../types';
 import type { AdminEmailDataReturn } from './useAdminEmailData';
+import {
+    ADMIN_EMAIL_PLATFORM_PROJECT_ID,
+    buildAdminAudienceTemplateFields,
+} from '../platformTemplateMode';
 
 export interface AudienceActionsReturn {
     // State
@@ -74,6 +78,7 @@ export function useAudienceActions(data: AdminEmailDataReturn): AudienceActionsR
                 tags: [],
                 acceptsMarketing: true,
                 source: 'manual',
+                ...buildAdminAudienceTemplateFields({ metadata: { assetType: 'audience' } }),
                 createdBy: user?.id || 'admin',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
@@ -88,13 +93,14 @@ export function useAudienceActions(data: AdminEmailDataReturn): AudienceActionsR
                 tags: [],
                 acceptsMarketing: true,
                 source: 'manual',
+                ...buildAdminAudienceTemplateFields({ metadata: { assetType: 'audience' } }),
                 createdBy: user?.id || 'admin',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 tenantId: 'admin',
                 tenantName: 'Super Admin',
                 userId: user?.id || 'admin',
-                projectId: 'admin',
+                projectId: ADMIN_EMAIL_PLATFORM_PROJECT_ID,
             } as CrossTenantAudience, ...prev]);
             setNewAudienceForm({ name: '', description: '' });
             setShowCreateAudience(false);

@@ -1,7 +1,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { ArrowLeft, Check, Copy, Loader2, RotateCcw, Save, ShoppingBag, Sparkles } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Link2, Loader2, RotateCcw, Save, ShoppingBag, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { PageSection, Project, SitePage } from '../../types';
+import type { BioPageBlockType, BioPageBlueprint } from '../../types/businessBlueprint';
 import PageRenderer from '../PageRenderer';
 import { AppButton, AppCard } from '../ui/system';
 import { isRetiredDesignSuiteSection } from '../../data/retiredSuites';
@@ -34,6 +35,38 @@ const SECTION_LABEL_KEYS: Partial<Record<PageSection, string>> = {
     map: 'aiWebsiteStudio.preview.sections.map',
     howItWorks: 'aiWebsiteStudio.preview.sections.howItWorks',
     team: 'aiWebsiteStudio.preview.sections.team',
+};
+
+const BIO_PAGE_BLOCK_LABELS: Partial<Record<BioPageBlockType, string>> = {
+    profile: 'Profile',
+    link: 'Links',
+    social_links: 'Social icons',
+    featured_banner: 'Banner',
+    featured_media: 'Media',
+    product_grid: 'Shop',
+    product_collection: 'Collections',
+    booking: 'Booking',
+    lead_form: 'Lead form',
+    email_subscribe: 'Email signup',
+    portfolio_grid: 'Portfolio',
+    testimonials: 'Proof',
+    faq: 'FAQ',
+    contact: 'Contact',
+    chatbot_cta: 'ChatCore',
+    divider: 'Divider',
+    spacer: 'Spacer',
+    custom_html_placeholder: 'Custom placeholder',
+};
+
+const BIO_PAGE_INTEGRATION_LABELS: Record<keyof BioPageBlueprint['integrations'], string> = {
+    ecommerce: 'Ecommerce',
+    appointments: 'Appointments',
+    crm: 'CRM',
+    emailMarketing: 'Email',
+    chatbot: 'ChatCore',
+    media: 'Media AI',
+    analytics: 'Analytics',
+    websiteBuilder: 'Builder',
 };
 
 function getHomePage(project: Project): SitePage {
@@ -105,6 +138,38 @@ function getEcommerceSummary(project: Project) {
     };
 }
 
+function formatBioPageBlockLabel(type: BioPageBlockType): string {
+    return BIO_PAGE_BLOCK_LABELS[type] || type.replace(/_/g, ' ').replace(/^./, char => char.toUpperCase());
+}
+
+function getBioPageSummary(project: Project) {
+    const blueprint = project.businessBlueprint?.bioPageBlueprint;
+    if (!blueprint?.enabled) return null;
+
+    const blocks = (blueprint.blocks || [])
+        .filter(block => block.visible !== false)
+        .sort((a, b) => a.order - b.order);
+    const links = [...(blueprint.links || []), ...(blueprint.socialLinks || [])]
+        .filter(link => link.visible !== false);
+    const enabledIntegrations = (Object.keys(BIO_PAGE_INTEGRATION_LABELS) as Array<keyof BioPageBlueprint['integrations']>)
+        .filter(key => blueprint.integrations?.[key])
+        .map(key => BIO_PAGE_INTEGRATION_LABELS[key]);
+
+    return {
+        title: blueprint.profile.displayName || blueprint.title,
+        handle: blueprint.profile.handle,
+        route: `/bio/${blueprint.publicSlug}`,
+        status: blueprint.status,
+        layout: blueprint.theme.layoutVariant,
+        blocks,
+        blockLabels: blocks.map(block => formatBioPageBlockLabel(block.type)),
+        linkCount: links.length,
+        enabledIntegrations,
+        needsReview: blueprint.needsReview || blueprint.status === 'needs_review',
+        noIndex: blueprint.seo.noIndex,
+    };
+}
+
 export function GeneratedWebsitePreview({
     project,
     isSaving,
@@ -120,6 +185,7 @@ export function GeneratedWebsitePreview({
     const hero = useMemo(() => getHeroData(project), [project]);
     const summary = useMemo(() => getProjectSummary(project, translate), [project, translate]);
     const ecommerceSummary = useMemo(() => getEcommerceSummary(project), [project]);
+    const bioPageSummary = useMemo(() => getBioPageSummary(project), [project]);
     const studioSummary = useMemo(() => getAiStudioSummary({ generatedProject: project, copy: getAiStudioSummaryCopy(translate) }), [project, translate]);
     const sectionLabels = useMemo(() => (
         project.componentOrder
@@ -282,6 +348,70 @@ export function GeneratedWebsitePreview({
                                 >
                                     {t('aiWebsiteStudio.preview.ecommerce.reviewInSuite')}
                                 </a>
+                            </AppCard>
+                        )}
+
+                        {bioPageSummary && (
+                            <AppCard variant="elevated" className="rounded-xl p-4">
+                                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-q-text">
+                                    <Link2 className="h-4 w-4 text-q-accent" />
+                                    Bio Page draft
+                                </div>
+                                <div className="space-y-2 text-xs text-q-text-secondary">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>Profile</span>
+                                        <span className="min-w-0 truncate font-semibold text-q-text">{bioPageSummary.title}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>Handle</span>
+                                        <span className="font-mono text-[11px] font-semibold text-q-text">@{bioPageSummary.handle}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>Public route</span>
+                                        <span className="font-mono text-[11px] font-semibold text-q-text">{bioPageSummary.route}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>Status</span>
+                                        <span className="font-semibold text-q-text">{bioPageSummary.status}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>Links</span>
+                                        <span className="font-semibold text-q-text">{bioPageSummary.linkCount}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>Blocks</span>
+                                        <span className="font-semibold text-q-text">{bioPageSummary.blocks.length}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>Layout</span>
+                                        <span className="font-semibold text-q-text">{bioPageSummary.layout}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>SEO</span>
+                                        <span className="font-semibold text-q-text">{bioPageSummary.noIndex ? 'noindex draft' : 'index ready'}</span>
+                                    </div>
+                                </div>
+                                {bioPageSummary.blockLabels.length > 0 && (
+                                    <div className="mt-3 flex flex-wrap gap-1.5">
+                                        {bioPageSummary.blockLabels.slice(0, 8).map((label, index) => (
+                                            <span key={`${label}-${index}`} className="rounded-full border border-q-border bg-q-surface px-2.5 py-1 text-xs text-q-text-secondary">
+                                                {label}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                                {bioPageSummary.enabledIntegrations.length > 0 && (
+                                    <div className="mt-3 flex flex-wrap gap-1.5">
+                                        {bioPageSummary.enabledIntegrations.slice(0, 8).map(label => (
+                                            <span key={label} className="rounded-md border border-q-accent/20 bg-q-accent/5 px-2 py-1 text-[10px] font-semibold text-q-accent">
+                                                {label}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                                <div className="mt-3 rounded-lg border border-q-border/70 bg-q-surface/60 px-3 py-2 text-[11px] leading-relaxed text-q-text-secondary">
+                                    {bioPageSummary.needsReview ? 'Needs review. ' : ''}Created as a private draft after save. Publishing still happens from the Bio Page editor.
+                                </div>
                             </AppCard>
                         )}
                     </div>

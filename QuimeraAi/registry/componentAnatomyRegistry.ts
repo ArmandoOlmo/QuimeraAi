@@ -379,6 +379,24 @@ export const componentAnatomyRegistry: Record<ComponentId, ComponentAnatomyEntry
             variant('serviceInquiry', 'Service Inquiry', 'Lead-form fallback for unavailable booking.', ['headline', 'description', 'cta'], ['service_landing']),
         ],
     }),
+    publicBookingForm: anatomy({
+        componentId: 'publicBookingForm',
+        family: 'appointment_block',
+        description: 'Public booking form with availability and canonical appointment request fields.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content', true),
+            slot('servicePicker', 'Service picker', 'form', true, 'appointmentsBlueprint.services'),
+            slot('availability', 'Availability slots', 'data', true, 'project_appointments.availability'),
+            slot('customerFields', 'Customer fields', 'form', true),
+            slot('submitCta', 'Submit CTA', 'cta', true),
+        ],
+        layoutVariants: [
+            variant('embeddedForm', 'Embedded Form', 'Availability picker embedded in the page flow.', ['headline', 'servicePicker', 'availability', 'customerFields', 'submitCta'], ['appointment_landing', 'service_landing'], ['services'], 'stackedMobile'),
+            variant('compactAvailability', 'Compact Availability', 'Compact booking card for local business pages.', ['servicePicker', 'availability', 'submitCta'], ['local_business_home'], ['services'], 'priorityContent'),
+        ],
+        mediaOptions: ['none'],
+        antiPatterns: ['Do not show unavailable time slots as confirmed bookings.'],
+    }),
     gallery: anatomy({
         componentId: 'gallery',
         family: 'website_content',
@@ -646,6 +664,152 @@ export const componentAnatomyRegistry: Record<ComponentId, ComponentAnatomyEntry
         layoutVariants: [
             variant('neighborhoodGrid', 'Neighborhood Grid', 'Market/neighborhood cards.', ['headline', 'items', 'cta'], ['real_estate_home']),
             variant('editorialAreas', 'Editorial Areas', 'Editorial area guide.', ['headline', 'items'], ['real_estate_home']),
+        ],
+    }),
+    bioProfile: anatomy({
+        componentId: 'bioProfile',
+        family: 'bio_page_block',
+        description: 'Bio Page profile header with avatar, handle, bio, and CTA.',
+        availableSlots: [
+            slot('avatar', 'Avatar', 'media'),
+            slot('displayName', 'Display name', 'content', true, 'bioPageBlueprint.profile.displayName'),
+            slot('handle', 'Handle', 'content', true, 'bioPageBlueprint.profile.handle'),
+            slot('bio', 'Bio', 'content', true, 'bioPageBlueprint.profile.bio'),
+            slot('primaryCta', 'Primary CTA', 'cta'),
+        ],
+        layoutVariants: [
+            variant('centeredCreator', 'Centered Creator', 'Centered avatar, handle, bio, and CTA.', ['avatar', 'displayName', 'handle', 'bio', 'primaryCta'], ['bio_page'], ['all'], 'stackedMobile'),
+            variant('coverProfile', 'Cover Profile', 'Cover image with profile card below.', ['avatar', 'displayName', 'handle', 'bio'], ['bio_page'], ['creator', 'portfolio'], 'priorityContent'),
+        ],
+        mediaOptions: ['none', 'singleImage'],
+        backgroundOptions: ['plain', 'surface', 'brandTint', 'image', 'gradient'],
+        antiPatterns: ['Do not show fake follower counts, verification, or social proof.'],
+    }),
+    bioLinks: anatomy({
+        componentId: 'bioLinks',
+        family: 'bio_page_block',
+        description: 'Stacked Bio Page link cards.',
+        availableSlots: [
+            slot('links', 'Links', 'data', true, 'bioPageBlueprint.links'),
+            slot('icons', 'Icons', 'media'),
+            slot('clickStats', 'Click stats', 'data'),
+        ],
+        layoutVariants: [
+            variant('buttonStack', 'Button Stack', 'Large tappable stacked links.', ['links', 'icons'], ['bio_page'], ['all'], 'stackedMobile'),
+            variant('cardStack', 'Card Stack', 'Richer cards with descriptions or thumbnails.', ['links', 'icons'], ['bio_page'], ['creator', 'ecommerce'], 'stackedMobile'),
+        ],
+        mediaOptions: ['none', 'iconSet', 'singleImage'],
+        contentDensityOptions: ['minimal', 'balanced', 'rich'],
+        antiPatterns: ['Do not render unsafe URLs or AI-invented external links as approved.'],
+    }),
+    bioSocialLinks: anatomy({
+        componentId: 'bioSocialLinks',
+        family: 'bio_page_block',
+        description: 'Compact social icon navigation.',
+        availableSlots: [
+            slot('socialLinks', 'Social links', 'navigation', true, 'bioPageBlueprint.socialLinks'),
+        ],
+        layoutVariants: [
+            variant('iconRow', 'Icon Row', 'Single compact row of social icons.', ['socialLinks'], ['bio_page'], ['all'], 'compactStrip'),
+        ],
+        mediaOptions: ['iconSet'],
+    }),
+    bioShop: anatomy({
+        componentId: 'bioShop',
+        family: 'bio_page_block',
+        description: 'Bio Page product grid from Ecommerce.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content'),
+            slot('products', 'Products', 'data', true, 'ecommerceEngine.store_products'),
+            slot('cta', 'CTA', 'cta'),
+        ],
+        layoutVariants: [
+            variant('compactProductGrid', 'Compact Product Grid', 'Two-column mobile product grid.', ['headline', 'products', 'cta'], ['bio_page'], ['ecommerce'], 'stackedMobile'),
+            variant('featuredProduct', 'Featured Product', 'One featured product with CTA.', ['headline', 'products', 'cta'], ['bio_page'], ['creator', 'ecommerce'], 'priorityContent'),
+        ],
+        mediaOptions: ['productMedia'],
+        antiPatterns: ['Do not render fake products, draft products, fake prices, or fake ratings.'],
+    }),
+    bioBooking: anatomy({
+        componentId: 'bioBooking',
+        family: 'bio_page_block',
+        description: 'Appointment booking CTA block.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content', true),
+            slot('services', 'Services', 'data', false, 'appointmentsBlueprint.services'),
+            slot('cta', 'Booking CTA', 'cta', true),
+        ],
+        layoutVariants: [
+            variant('bookingCard', 'Booking Card', 'Compact booking CTA card.', ['headline', 'services', 'cta'], ['bio_page', 'appointment_landing'], ['services', 'fitness', 'beauty'], 'stackedMobile'),
+        ],
+        antiPatterns: ['Do not imply live availability until Appointments is configured.'],
+    }),
+    bioLeadCapture: anatomy({
+        componentId: 'bioLeadCapture',
+        family: 'bio_page_block',
+        description: 'Bio Page lead form.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content', true),
+            slot('form', 'Lead form', 'form', true, 'bioPageBlueprint.leadCapture.fields'),
+            slot('consent', 'Consent', 'form'),
+        ],
+        layoutVariants: [
+            variant('compactForm', 'Compact Form', 'Small mobile lead capture form.', ['headline', 'form', 'consent'], ['bio_page', 'lead_capture'], ['all'], 'stackedMobile'),
+        ],
+    }),
+    bioEmailSubscribe: anatomy({
+        componentId: 'bioEmailSubscribe',
+        family: 'bio_page_block',
+        description: 'Consent-first email subscribe form.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content'),
+            slot('emailField', 'Email field', 'form', true),
+            slot('consent', 'Consent', 'form'),
+            slot('cta', 'Subscribe CTA', 'cta', true),
+        ],
+        layoutVariants: [
+            variant('inlineSubscribe', 'Inline Subscribe', 'Email input and CTA optimized for mobile.', ['headline', 'emailField', 'consent', 'cta'], ['bio_page'], ['all'], 'stackedMobile'),
+        ],
+        antiPatterns: ['Do not add subscribers without consent or expose audience membership.'],
+    }),
+    bioMediaGrid: anatomy({
+        componentId: 'bioMediaGrid',
+        family: 'bio_page_block',
+        description: 'Media grid for Bio Page assets.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content'),
+            slot('media', 'Media items', 'media', true),
+        ],
+        layoutVariants: [
+            variant('squareGrid', 'Square Grid', 'Compact square media grid.', ['headline', 'media'], ['bio_page'], ['creator', 'portfolio'], 'stackedMobile'),
+        ],
+        mediaOptions: ['imageGrid', 'video'],
+    }),
+    bioPortfolio: anatomy({
+        componentId: 'bioPortfolio',
+        family: 'bio_page_block',
+        description: 'Portfolio card grid for Bio Page.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content'),
+            slot('projects', 'Projects', 'data', true),
+            slot('cta', 'CTA', 'cta'),
+        ],
+        layoutVariants: [
+            variant('portfolioCards', 'Portfolio Cards', 'Image-led project cards.', ['headline', 'projects', 'cta'], ['bio_page', 'portfolio_home'], ['portfolio'], 'stackedMobile'),
+        ],
+        mediaOptions: ['imageGrid', 'singleImage'],
+        antiPatterns: ['Do not invent clients, awards, or fake project proof.'],
+    }),
+    bioChatCTA: anatomy({
+        componentId: 'bioChatCTA',
+        family: 'bio_page_block',
+        description: 'Inline CTA that opens ChatCore with Bio Page context.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content', true),
+            slot('cta', 'Chat CTA', 'cta', true),
+        ],
+        layoutVariants: [
+            variant('chatCard', 'Chat Card', 'Compact ChatCore CTA card.', ['headline', 'cta'], ['bio_page'], ['all'], 'compactStrip'),
         ],
     }),
     storefrontFeaturedProducts: anatomy({

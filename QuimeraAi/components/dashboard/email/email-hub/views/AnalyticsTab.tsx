@@ -7,18 +7,22 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Send, Eye, MousePointer, AlertCircle, TrendingUp,
-    BarChart3, Layers, Activity, CheckCircle,
+    BarChart3, Layers, Activity, CheckCircle, Inbox, Radio, GitBranch,
 } from 'lucide-react';
 import type { EmailStats, MonthlyDataPoint, UserEmailCampaign } from '../types';
+import type { CanonicalEmailAnalytics } from '../../../../../services/email/emailAnalyticsService.ts';
 
 interface AnalyticsTabProps {
     stats: EmailStats;
     campaigns: UserEmailCampaign[];
     monthlyData: MonthlyDataPoint[];
+    canonicalAnalytics?: CanonicalEmailAnalytics | null;
+    canonicalAnalyticsLoading?: boolean;
+    canonicalAnalyticsError?: string | null;
 }
 
 const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
-    stats, campaigns, monthlyData,
+    stats, campaigns, monthlyData, canonicalAnalytics, canonicalAnalyticsLoading, canonicalAnalyticsError,
 }) => {
     const { t } = useTranslation();
     return (
@@ -155,6 +159,181 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
             </div>
         </div>
 
+        <div className="bg-q-surface border border-q-border rounded-xl p-6">
+            <div className="flex items-center justify-between gap-4 mb-4">
+                <div>
+                    <h3 className="text-lg font-semibold text-q-text flex items-center gap-2">
+                        <Activity size={18} className="text-q-accent" />
+                        {t('email.hub.analytics.canonicalPipeline', 'Canonical pipeline')}
+                    </h3>
+                    <p className="text-sm text-q-text-secondary">
+                        {t('email.hub.analytics.canonicalPipelineSubtitle', 'Outbox, provider events and cross-module delivery health.')}
+                    </p>
+                </div>
+                {canonicalAnalyticsLoading && <span className="text-xs text-q-text-secondary">{t('common.loading', 'Loading...')}</span>}
+            </div>
+
+            {canonicalAnalyticsError ? (
+                <div className="border border-q-error/30 bg-q-error/10 rounded-lg px-4 py-3 text-sm text-q-error">
+                    {canonicalAnalyticsError}
+                </div>
+            ) : canonicalAnalytics ? (
+                <div className="space-y-5">
+                    <div className="grid md:grid-cols-4 gap-3">
+                        {[
+                            {
+                                label: t('email.hub.analytics.outboxQueued', 'Outbox queued'),
+                                value: canonicalAnalytics.outbox.queued,
+                                sub: t('email.hub.analytics.outboxDue', '{{count}} due', { count: canonicalAnalytics.outbox.due }),
+                                icon: <Inbox size={18} />,
+                            },
+                            {
+                                label: t('email.hub.analytics.outboxFailed', 'Outbox failed'),
+                                value: canonicalAnalytics.outbox.failed,
+                                sub: t('email.hub.analytics.outboxLocked', '{{count}} locked', { count: canonicalAnalytics.outbox.locked }),
+                                icon: <AlertCircle size={18} />,
+                            },
+                            {
+                                label: t('email.hub.analytics.providerEvents', 'Provider events'),
+                                value: canonicalAnalytics.events.total,
+                                sub: Object.keys(canonicalAnalytics.events.byType).slice(0, 2).join(', ') || t('email.hub.analytics.noEvents', 'No events'),
+                                icon: <Radio size={18} />,
+                            },
+                            {
+                                label: t('email.hub.analytics.crossModuleLogs', 'Cross-module logs'),
+                                value: canonicalAnalytics.summary.totalLogs,
+                                sub: t('email.hub.analytics.failedSkipped', '{{failed}} failed · {{skipped}} skipped', {
+                                    failed: canonicalAnalytics.summary.failed,
+                                    skipped: canonicalAnalytics.summary.skipped,
+                                }),
+                                icon: <GitBranch size={18} />,
+                            },
+                        ].map((item) => (
+                            <div key={item.label} className="border border-q-border bg-q-bg/30 rounded-lg p-4">
+                                <div className="flex items-center gap-2 text-q-accent mb-2">{item.icon}<span className="text-xs text-q-text-secondary">{item.label}</span></div>
+                                <p className="text-xl font-bold text-q-text">{item.value.toLocaleString()}</p>
+                                <p className="text-xs text-q-text-secondary truncate">{item.sub}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    {canonicalAnalytics.sourceModules.length > 0 && (
+                        <div className="grid md:grid-cols-2 gap-3">
+                            {canonicalAnalytics.sourceModules.slice(0, 6).map((source) => (
+                                <div key={source.sourceModule} className="flex items-center justify-between gap-3 border border-q-border rounded-lg px-4 py-3">
+                                    <div>
+                                        <p className="text-sm font-medium text-q-text">{source.sourceModule}</p>
+                                        <p className="text-xs text-q-text-secondary">
+                                            {t('email.hub.analytics.moduleDeliverySummary', '{{sent}} sent · {{failed}} failed · {{skipped}} skipped', {
+                                                sent: source.sent,
+                                                failed: source.failed,
+                                                skipped: source.skipped,
+                                            })}
+                                        </p>
+                                    </div>
+                                    <span className="text-sm font-semibold text-q-text">{source.total.toLocaleString()}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="grid gap-3 lg:grid-cols-[0.8fr_1.2fr]">
+                        <div className="border border-q-border bg-q-bg/30 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2 text-q-accent">
+                                <TrendingUp size={18} />
+                                <span className="text-sm font-semibold text-q-text">Revenue attribution</span>
+                            </div>
+                            <p className="text-2xl font-bold text-q-text">{formatCurrency(canonicalAnalytics.revenue.total)}</p>
+                            <p className="text-xs text-q-text-secondary">{canonicalAnalytics.revenue.orders.toLocaleString()} attributed order events</p>
+                            <div className="mt-3 space-y-2">
+                                {canonicalAnalytics.revenue.bySourceModule.slice(0, 4).map((item) => (
+                                    <div key={item.sourceModule} className="flex items-center justify-between gap-3 text-xs">
+                                        <span className="truncate text-q-text-secondary">{item.sourceModule}</span>
+                                        <span className="font-semibold text-q-text">{formatCurrency(item.revenue)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="border border-q-border bg-q-bg/30 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-3 text-q-accent">
+                                <GitBranch size={18} />
+                                <span className="text-sm font-semibold text-q-text">Journey attribution</span>
+                            </div>
+                            {canonicalAnalytics.journeys.length > 0 ? (
+                                <div className="space-y-3">
+                                    {canonicalAnalytics.journeys.slice(0, 4).map((journey) => (
+                                        <div key={journey.automationId} className="rounded-lg border border-q-border bg-q-surface px-3 py-2">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <p className="min-w-0 truncate text-sm font-medium text-q-text">{journey.automationId}</p>
+                                                <span className="text-xs font-semibold text-q-text">{journey.total.toLocaleString()}</span>
+                                            </div>
+                                            <p className="mt-1 text-xs text-q-text-secondary">
+                                                {journey.sent} sent · {journey.opened} opened · {journey.clicked} clicked · {formatCurrency(journey.revenue)}
+                                            </p>
+                                            {journey.paths[0] && <p className="mt-1 truncate text-[11px] text-q-text-secondary">{journey.paths[0]}</p>}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-q-text-secondary">No automation journey logs yet.</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {canonicalAnalytics.automationSteps.length > 0 && (
+                        <div className="border border-q-border bg-q-bg/30 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-3 text-q-accent">
+                                <Layers size={18} />
+                                <span className="text-sm font-semibold text-q-text">Automation steps</span>
+                            </div>
+                            <div className="grid gap-2 md:grid-cols-2">
+                                {canonicalAnalytics.automationSteps.slice(0, 6).map((step) => (
+                                    <div key={`${step.automationId}-${step.stepId}`} className="rounded-lg border border-q-border bg-q-surface px-3 py-2">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <p className="min-w-0 truncate text-sm font-medium text-q-text">{step.stepId}</p>
+                                            <span className="text-xs text-q-text-secondary">{step.averageDelayMinutes}m avg wait</span>
+                                        </div>
+                                        <p className="mt-1 text-xs text-q-text-secondary">
+                                            {step.sent} sent · {step.skipped} skipped · {step.failed} failed · {formatCurrency(step.revenue)}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {canonicalAnalytics.recipientTimelines.length > 0 && (
+                        <div className="border border-q-border bg-q-bg/30 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-3 text-q-accent">
+                                <Activity size={18} />
+                                <span className="text-sm font-semibold text-q-text">Recipient timelines</span>
+                            </div>
+                            <div className="grid gap-3 md:grid-cols-2">
+                                {canonicalAnalytics.recipientTimelines.slice(0, 4).map((timeline) => (
+                                    <div key={timeline.recipientEmail} className="rounded-lg border border-q-border bg-q-surface px-3 py-2">
+                                        <p className="truncate text-sm font-medium text-q-text">{timeline.recipientEmail}</p>
+                                        <div className="mt-2 space-y-1">
+                                            {timeline.events.slice(0, 3).map((event, index) => (
+                                                <div key={`${timeline.recipientEmail}-${event.type}-${event.logId || event.eventId || index}`} className="flex items-center justify-between gap-3 text-xs">
+                                                    <span className="truncate text-q-text-secondary">{event.eventType || event.status || event.subject || event.type}</span>
+                                                    <span className="shrink-0 text-q-text-secondary">{formatShortDate(event.at)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="text-sm text-q-text-secondary">
+                    {t('email.hub.analytics.noCanonicalAnalytics', 'No canonical email runtime data yet.')}
+                </div>
+            )}
+        </div>
+
         {/* Per-Campaign Performance Table */}
         <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
             <div className="p-6 border-b border-q-border">
@@ -255,5 +434,15 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
     </div>
     );
 };
+
+function formatCurrency(value: number) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(value || 0));
+}
+
+function formatShortDate(value?: string | null) {
+    if (!value) return 'n/a';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 'n/a' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
 
 export default AnalyticsTab;

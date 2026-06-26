@@ -2,13 +2,11 @@
  * useUserEmailData
  *
  * User-scoped version of useAdminEmailData.
- * All Supabase subscriptions are scoped to users/{userId}/projects/{projectId}/...
+ * User campaign/audience data comes from the canonical Email Engine.
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import {
-    db, collection, query, orderBy, onSnapshot,
-} from '@/utils/compatData';
+import { supabase } from '../../../../../supabase';
 import type { EmailAutomation } from '../../../../../types/email';
 import type { CampaignStatus } from '../../../../../types/email';
 import type {
@@ -64,11 +62,10 @@ export function useUserEmailData(userId: string, projectId: string): UserEmailDa
     const [audienceSearch, setAudienceSearch] = useState('');
     const [analyticsTimeRange, setAnalyticsTimeRange] = useState<'7d' | '30d' | '90d' | '12m'>('30d');
 
-    const basePath = `users/${userId}/projects/${projectId}`;
     const isValid = Boolean(userId && projectId && projectId !== 'default');
 
     // =========================================================================
-    // REALTIME: Campaigns
+    // REALTIME: Canonical campaigns
     // =========================================================================
     useEffect(() => {
         if (!isValid) {
@@ -78,96 +75,191 @@ export function useUserEmailData(userId: string, projectId: string): UserEmailDa
         }
 
         setIsLoading(true);
-        const campaignsRef = collection(db, `${basePath}/emailCampaigns`);
-        const q = query(campaignsRef, orderBy('createdAt', 'desc'));
+        let isMounted = true;
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data: UserEmailCampaign[] = snapshot.docs.map(d => ({
-                id: d.id,
-                ...d.data(),
-                userId,
-                projectId,
-            } as UserEmailCampaign));
-            setCampaigns(data);
-            setIsLoading(false);
-        }, (err) => {
-            console.warn('[UserEmailData] Campaigns snapshot error:', err);
-            setCampaigns([]);
-            setIsLoading(false);
-        });
+        const fetchCampaigns = async () => {
+            try {
+                const { data, error } = await supabase.functions.invoke('email-api', {
+                    body: {
+                        action: 'getCampaigns',
+                        projectId,
+                    },
+                });
+                if (!isMounted) return;
+                if (error) throw error;
+                if (data?.success === false) throw new Error(data.error || 'Unable to load canonical campaigns');
+                setCampaigns((data?.campaigns || []).map((campaign: Record<string, any>) => (
+                    mapUserCampaignFromCanonical(campaign, userId, projectId)
+                )));
+            } catch (err) {
+                if (!isMounted) return;
+                console.warn('[UserEmailData] Canonical campaigns error:', err);
+                setCampaigns([]);
+            } finally {
+                if (isMounted) setIsLoading(false);
+            }
+        };
 
-        return () => unsubscribe();
+        fetchCampaigns();
+
+        const channelId = `user_email_campaigns_${projectId}_${Math.random().toString(36).substring(2, 9)}`;
+        const subscription = supabase
+            .channel(channelId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'email_campaigns', filter: `project_id=eq.${projectId}` },
+                () => {
+                    if (isMounted) fetchCampaigns();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            isMounted = false;
+            supabase.removeChannel(subscription);
+        };
     }, [userId, projectId, isValid]);
 
     // =========================================================================
-    // REALTIME: Audiences
+    // REALTIME: Canonical audiences
     // =========================================================================
     useEffect(() => {
         if (!isValid) { setAudiences([]); return; }
 
-        const audiencesRef = collection(db, `${basePath}/emailAudiences`);
-        const q = query(audiencesRef, orderBy('createdAt', 'desc'));
+        let isMounted = true;
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data: UserEmailAudience[] = snapshot.docs.map(d => ({
-                id: d.id,
-                ...d.data(),
-                userId,
-                projectId,
-            } as UserEmailAudience));
-            setAudiences(data);
-        }, (err) => {
-            console.warn('[UserEmailData] Audiences snapshot error:', err);
-            setAudiences([]);
-        });
+        const fetchAudiences = async () => {
+            try {
+                const { data, error } = await supabase.functions.invoke('email-api', {
+                    body: {
+                        action: 'getAudiences',
+                        projectId,
+                    },
+                });
+                if (!isMounted) return;
+                if (error) throw error;
+                if (data?.success === false) throw new Error(data.error || 'Unable to load canonical audiences');
+                setAudiences((data?.audiences || []).map((audience: Record<string, any>) => (
+                    mapUserAudienceFromCanonical(audience, userId, projectId)
+                )));
+            } catch (err) {
+                if (!isMounted) return;
+                console.warn('[UserEmailData] Canonical audiences error:', err);
+                setAudiences([]);
+            }
+        };
 
-        return () => unsubscribe();
+        fetchAudiences();
+
+        const channelId = `user_email_audiences_${projectId}_${Math.random().toString(36).substring(2, 9)}`;
+        const subscription = supabase
+            .channel(channelId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'email_audiences', filter: `project_id=eq.${projectId}` },
+                () => {
+                    if (isMounted) fetchAudiences();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            isMounted = false;
+            supabase.removeChannel(subscription);
+        };
     }, [userId, projectId, isValid]);
 
     // =========================================================================
-    // REALTIME: Email Logs
+    // REALTIME: Canonical email logs
     // =========================================================================
     useEffect(() => {
         if (!isValid) { setEmailLogs([]); return; }
 
-        const logsRef = collection(db, `${basePath}/emailLogs`);
-        const q = query(logsRef, orderBy('sentAt', 'desc'));
+        let isMounted = true;
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data: UserEmailLog[] = snapshot.docs.map(d => ({
-                id: d.id,
-                ...d.data(),
-            } as UserEmailLog));
-            setEmailLogs(data);
-        }, (err) => {
-            console.warn('[UserEmailData] Logs snapshot error:', err);
-            setEmailLogs([]);
-        });
+        const fetchLogs = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('email_logs')
+                    .select('*')
+                    .or(`project_id.eq.${projectId},store_id.eq.${projectId}`)
+                    .order('sent_at', { ascending: false })
+                    .limit(500);
+                if (!isMounted) return;
+                if (error) throw error;
+                setEmailLogs((data || []).map(mapUserEmailLogFromCanonical));
+            } catch (err) {
+                if (!isMounted) return;
+                console.warn('[UserEmailData] Canonical logs error:', err);
+                setEmailLogs([]);
+            }
+        };
 
-        return () => unsubscribe();
+        fetchLogs();
+
+        const channelId = `user_email_logs_${projectId}_${Math.random().toString(36).substring(2, 9)}`;
+        const subscription = supabase
+            .channel(channelId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'email_logs', filter: `project_id=eq.${projectId}` },
+                () => {
+                    if (isMounted) fetchLogs();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            isMounted = false;
+            supabase.removeChannel(subscription);
+        };
     }, [userId, projectId, isValid]);
 
     // =========================================================================
-    // REALTIME: Automations
+    // REALTIME: Canonical automations
     // =========================================================================
     useEffect(() => {
         if (!isValid) { setAutomations([]); return; }
 
-        const automationsRef = collection(db, `${basePath}/emailAutomations`);
-        const q = query(automationsRef, orderBy('createdAt', 'desc'));
+        let isMounted = true;
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map(d => ({
-                id: d.id,
-                ...d.data(),
-            })) as EmailAutomation[];
-            setAutomations(data);
-        }, (err) => {
-            console.warn('[UserEmailData] Automations listener error:', err);
-            setAutomations([]);
-        });
+        const fetchAutomations = async () => {
+            try {
+                const { data, error } = await supabase.functions.invoke('email-api', {
+                    body: {
+                        action: 'getAutomations',
+                        projectId,
+                    },
+                });
+                if (!isMounted) return;
+                if (error) throw error;
+                if (data?.success === false) throw new Error(data.error || 'Unable to load canonical automations');
+                setAutomations((data?.automations || []).map(mapUserAutomationFromCanonical));
+            } catch (err) {
+                if (!isMounted) return;
+                console.warn('[UserEmailData] Canonical automations error:', err);
+                setAutomations([]);
+            }
+        };
 
-        return () => unsubscribe();
+        fetchAutomations();
+
+        const channelId = `user_email_automations_${projectId}_${Math.random().toString(36).substring(2, 9)}`;
+        const subscription = supabase
+            .channel(channelId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'email_automations', filter: `project_id=eq.${projectId}` },
+                () => {
+                    if (isMounted) fetchAutomations();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            isMounted = false;
+            supabase.removeChannel(subscription);
+        };
     }, [userId, projectId, isValid]);
 
     // =========================================================================
@@ -270,4 +362,147 @@ export function useUserEmailData(userId: string, projectId: string): UserEmailDa
         setAudienceSearch,
         setAnalyticsTimeRange,
     };
+}
+
+function mapUserCampaignFromCanonical(
+    campaign: Record<string, any>,
+    userId: string,
+    projectId: string,
+): UserEmailCampaign {
+    return {
+        ...campaign,
+        id: String(campaign.id || ''),
+        name: String(campaign.name || ''),
+        subject: String(campaign.subject || ''),
+        previewText: campaign.previewText ?? campaign.preview_text ?? '',
+        type: campaign.type || 'newsletter',
+        htmlContent: campaign.htmlContent ?? campaign.html_content ?? '',
+        emailDocument: campaign.emailDocument ?? campaign.email_document,
+        audienceType: campaign.audienceType ?? campaign.audience_type ?? 'all',
+        audienceSegmentId: campaign.audienceSegmentId ?? campaign.audience_segment_id,
+        customRecipientEmails: campaign.customRecipientEmails ?? campaign.custom_recipient_emails ?? [],
+        status: campaign.status || 'draft',
+        scheduledAt: campaign.scheduledAt ?? campaign.scheduled_at,
+        sentAt: campaign.sentAt ?? campaign.sent_at,
+        stats: {
+            totalRecipients: 0,
+            sent: 0,
+            delivered: 0,
+            opened: 0,
+            totalOpens: 0,
+            uniqueOpens: 0,
+            clicked: 0,
+            totalClicks: 0,
+            uniqueClicks: 0,
+            bounced: 0,
+            complained: 0,
+            unsubscribed: 0,
+            ...(campaign.stats || {}),
+        },
+        tags: Array.isArray(campaign.tags) ? campaign.tags : [],
+        generatedByAI: campaign.generatedByAI ?? campaign.generated_by_ai,
+        needsReview: campaign.needsReview ?? campaign.needs_review,
+        userModified: campaign.userModified ?? campaign.user_modified,
+        safeToEdit: campaign.safeToEdit ?? campaign.safe_to_edit,
+        sourceModule: campaign.sourceModule ?? campaign.source_module,
+        sourceComponent: campaign.sourceComponent ?? campaign.source_component,
+        sourceEvent: campaign.sourceEvent ?? campaign.source_event,
+        sourceEntityType: campaign.sourceEntityType ?? campaign.source_entity_type,
+        sourceEntityId: campaign.sourceEntityId ?? campaign.source_entity_id,
+        correlationId: campaign.correlationId ?? campaign.correlation_id,
+        idempotencyKey: campaign.idempotencyKey ?? campaign.idempotency_key,
+        readiness: campaign.readiness || {},
+        metadata: campaign.metadata || {},
+        createdBy: campaign.createdBy ?? campaign.created_by ?? userId,
+        userId,
+        projectId,
+        createdAt: campaign.createdAt ?? campaign.created_at ?? new Date().toISOString(),
+        updatedAt: campaign.updatedAt ?? campaign.updated_at ?? new Date().toISOString(),
+    } as UserEmailCampaign;
+}
+
+function mapUserAutomationFromCanonical(automation: Record<string, any>): EmailAutomation {
+    return {
+        ...automation,
+        id: String(automation.id || ''),
+        name: String(automation.name || ''),
+        description: automation.description || '',
+        type: automation.type || 'welcome',
+        category: automation.category || 'lifecycle',
+        status: automation.status || 'draft',
+        triggerConfig: automation.triggerConfig || automation.trigger_config || {},
+        audienceId: automation.audienceId ?? automation.audience_id ?? '',
+        steps: Array.isArray(automation.steps) ? automation.steps : [],
+        templateId: automation.templateId ?? automation.template_id ?? '',
+        subject: automation.subject || '',
+        delayMinutes: Number(automation.delayMinutes ?? automation.delay_minutes ?? 0),
+        stats: {
+            triggered: 0,
+            sent: 0,
+            opened: 0,
+            clicked: 0,
+            converted: 0,
+            ...(automation.stats || {}),
+        },
+        generatedByAI: automation.generatedByAI ?? automation.generated_by_ai,
+        needsReview: automation.needsReview ?? automation.needs_review,
+        userModified: automation.userModified ?? automation.user_modified,
+        safeToEdit: automation.safeToEdit ?? automation.safe_to_edit,
+        sendMode: automation.sendMode ?? automation.send_mode,
+        sourceModule: automation.sourceModule ?? automation.source_module,
+        sourceComponent: automation.sourceComponent ?? automation.source_component,
+        sourceEvent: automation.sourceEvent ?? automation.source_event,
+        sourceEntityType: automation.sourceEntityType ?? automation.source_entity_type,
+        sourceEntityId: automation.sourceEntityId ?? automation.source_entity_id,
+        correlationId: automation.correlationId ?? automation.correlation_id,
+        idempotencyKey: automation.idempotencyKey ?? automation.idempotency_key,
+        readiness: automation.readiness || {},
+        metadata: automation.metadata || {},
+        createdAt: automation.createdAt ?? automation.created_at ?? new Date().toISOString(),
+        updatedAt: automation.updatedAt ?? automation.updated_at ?? new Date().toISOString(),
+    } as EmailAutomation;
+}
+
+function mapUserEmailLogFromCanonical(log: Record<string, any>): UserEmailLog {
+    const status = String(log.status || 'queued');
+    return {
+        id: String(log.id || ''),
+        status,
+        sentAt: log.sentAt ?? log.sent_at ?? log.created_at ?? new Date().toISOString(),
+        opened: Boolean(log.opened || log.opened_at || status === 'opened'),
+        clicked: Boolean(log.clicked || log.clicked_at || status === 'clicked'),
+        recipientEmail: log.recipientEmail ?? log.recipient_email,
+        subject: log.subject || '',
+        type: log.type || log.email_kind || '',
+    };
+}
+
+function mapUserAudienceFromCanonical(
+    audience: Record<string, any>,
+    userId: string,
+    projectId: string,
+): UserEmailAudience {
+    const staticMembers = audience.staticMembers || audience.static_members || {};
+    const members = Array.isArray(staticMembers.members)
+        ? staticMembers.members
+        : Array.isArray(audience.members)
+            ? audience.members
+            : [];
+
+    return {
+        id: String(audience.id || ''),
+        name: String(audience.name || ''),
+        description: audience.description || '',
+        estimatedCount: Number(audience.estimatedCount ?? audience.estimated_count ?? members.length ?? 0),
+        userId,
+        projectId,
+        createdAt: audience.createdAt || audience.created_at || new Date().toISOString(),
+        filters: Array.isArray(audience.filters) ? audience.filters : [],
+        tags: Array.isArray(audience.tags) ? audience.tags : [],
+        acceptsMarketing: audience.acceptsMarketing ?? audience.accepts_marketing,
+        hasOrdered: audience.hasOrdered ?? audience.has_ordered,
+        staticMemberCount: Number(audience.staticMemberCount ?? audience.static_member_count ?? members.length ?? 0),
+        members,
+        ...(staticMembers ? { staticMembers } : {}),
+    } as UserEmailAudience;
 }

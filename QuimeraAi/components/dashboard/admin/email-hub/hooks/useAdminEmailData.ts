@@ -21,6 +21,10 @@ import type {
     MonthlyDataPoint,
     TenantPerformanceData,
 } from '../types';
+import {
+    ADMIN_EMAIL_PLATFORM_PROJECT_ID,
+    ADMIN_EMAIL_PLATFORM_SCOPE,
+} from '../platformTemplateMode';
 
 export interface AdminEmailDataFilters {
     campaignSearch: string;
@@ -88,14 +92,22 @@ export function useAdminEmailData(): AdminEmailDataReturn {
         const q = query(adminCampaignsRef, orderBy('createdAt', 'desc'));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const adminCampaigns: CrossTenantCampaign[] = snapshot.docs.map(d => ({
-                id: d.id,
-                ...d.data(),
-                tenantId: 'admin',
-                tenantName: 'Super Admin',
-                userId: d.data().createdBy || 'admin',
-                projectId: 'admin',
-            } as CrossTenantCampaign));
+            const adminCampaigns: CrossTenantCampaign[] = snapshot.docs.map(d => {
+                const raw = d.data();
+                return {
+                    id: d.id,
+                    ...raw,
+                    tenantId: 'admin',
+                    tenantName: 'Super Admin',
+                    userId: raw.createdBy || 'admin',
+                    projectId: ADMIN_EMAIL_PLATFORM_PROJECT_ID,
+                    platformTemplate: raw.platformTemplate ?? true,
+                    templateScope: raw.templateScope || ADMIN_EMAIL_PLATFORM_SCOPE,
+                    sendMode: 'template_only',
+                    needsReview: raw.needsReview ?? true,
+                    safeToEdit: raw.safeToEdit ?? true,
+                } as CrossTenantCampaign;
+            });
 
             setCampaigns(adminCampaigns);
             setIsLoading(false);
@@ -115,14 +127,21 @@ export function useAdminEmailData(): AdminEmailDataReturn {
         const q = query(adminAudiencesRef, orderBy('createdAt', 'desc'));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const adminAudiences: CrossTenantAudience[] = snapshot.docs.map(d => ({
-                id: d.id,
-                ...d.data(),
-                tenantId: 'admin',
-                tenantName: 'Super Admin',
-                userId: d.data().createdBy || 'admin',
-                projectId: 'admin',
-            } as CrossTenantAudience));
+            const adminAudiences: CrossTenantAudience[] = snapshot.docs.map(d => {
+                const raw = d.data();
+                return {
+                    id: d.id,
+                    ...raw,
+                    tenantId: 'admin',
+                    tenantName: 'Super Admin',
+                    userId: raw.createdBy || 'admin',
+                    projectId: ADMIN_EMAIL_PLATFORM_PROJECT_ID,
+                    platformTemplate: raw.platformTemplate ?? true,
+                    templateScope: raw.templateScope || ADMIN_EMAIL_PLATFORM_SCOPE,
+                    needsReview: raw.needsReview ?? true,
+                    safeToEdit: raw.safeToEdit ?? true,
+                } as CrossTenantAudience;
+            });
 
             setAudiences(adminAudiences);
         }, (err) => {
@@ -164,10 +183,19 @@ export function useAdminEmailData(): AdminEmailDataReturn {
         const q = query(automationsRef, orderBy('createdAt', 'desc'));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const automationsData = snapshot.docs.map(d => ({
-                id: d.id,
-                ...d.data(),
-            })) as EmailAutomation[];
+            const automationsData = snapshot.docs.map(d => {
+                const raw = d.data();
+                return {
+                    id: d.id,
+                    ...raw,
+                    projectId: ADMIN_EMAIL_PLATFORM_PROJECT_ID,
+                    platformTemplate: raw.platformTemplate ?? true,
+                    templateScope: raw.templateScope || ADMIN_EMAIL_PLATFORM_SCOPE,
+                    sendMode: 'template_only',
+                    needsReview: raw.needsReview ?? true,
+                    safeToEdit: raw.safeToEdit ?? true,
+                };
+            }) as EmailAutomation[];
             setAutomations(automationsData);
         }, (err) => {
             console.warn('[AdminEmailHub] Automations listener error:', err);
