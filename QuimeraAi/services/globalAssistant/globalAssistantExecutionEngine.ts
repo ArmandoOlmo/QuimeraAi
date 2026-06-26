@@ -8,6 +8,7 @@ import type {
     AssistantIntent,
 } from '../../types/globalAssistant';
 import { checkActionPermission, assertProjectActionContext } from './globalAssistantPermissionService';
+import { enrichAssistantExecutionPreview } from './globalAssistantActionPreviews';
 
 const nowIso = () => new Date().toISOString();
 const PROJECT_SCOPED_MODULES = new Set([
@@ -78,23 +79,27 @@ const createPreview = (
     action: AssistantAction,
     definition: AssistantActionDefinition,
     blockers: string[],
-): AssistantExecutionPreview => ({
-    actionId: action.id,
-    module: action.module,
-    actionType: action.actionType,
-    projectId: action.projectId,
-    target: action.target,
-    before: null,
-    after: null,
-    diff: null,
-    risks: [
-        ...(definition.safetyLevel === 'critical' ? ['Critical action: requires explicit confirmation.'] : []),
-        ...(definition.mutatesData ? ['Mutates project, tenant, user, or module data.'] : []),
-    ],
-    blockers,
-    requiresConfirmation: definition.requiresConfirmation,
-    rollbackSupported: definition.rollbackSupported,
-});
+): AssistantExecutionPreview => enrichAssistantExecutionPreview(
+    {
+        actionId: action.id,
+        module: action.module,
+        actionType: action.actionType,
+        projectId: action.projectId,
+        target: action.target,
+        before: null,
+        after: null,
+        diff: null,
+        risks: [
+            ...(definition.safetyLevel === 'critical' ? ['Critical action: requires explicit confirmation.'] : []),
+            ...(definition.mutatesData ? ['Mutates project, tenant, user, or module data.'] : []),
+        ],
+        blockers,
+        requiresConfirmation: definition.requiresConfirmation,
+        rollbackSupported: definition.rollbackSupported,
+    },
+    action,
+    definition,
+);
 
 const createApproval = (
     action: AssistantAction,
@@ -136,6 +141,7 @@ export function buildExecutionPlan(input: BuildExecutionPlanInput): AssistantExe
             ...(requiresProjectContext(definition)
                 ? assertProjectActionContext(context, actionInput.projectId as string | undefined)
                 : []),
+            ...(definition.validate?.(actionInput)?.errors || []),
         ];
 
         if (actionBlockers.length > 0) {

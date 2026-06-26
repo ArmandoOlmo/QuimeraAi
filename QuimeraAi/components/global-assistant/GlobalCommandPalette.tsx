@@ -74,14 +74,21 @@ const typeFallback: Record<GlobalCommandItem['type'], string> = {
     admin: 'Admin',
 };
 
-const translateCommandField = (
+type CommandTranslationParams = Record<string, string | number | boolean | null | undefined>;
+
+const translateSafe = (
     translate: ReturnType<typeof useTranslation>['t'],
     key: string | undefined,
     fallback: string,
-    params?: GlobalCommandItem['labelParams'],
+    params?: CommandTranslationParams,
 ): string => {
     if (!key) return fallback;
-    return translate(key, { defaultValue: fallback, ...(params || {}) });
+    try {
+        const translated = translate(key, { defaultValue: fallback, ...(params || {}) });
+        return typeof translated === 'string' ? translated : fallback;
+    } catch {
+        return fallback;
+    }
 };
 
 function GlobalCommandPalette(): React.ReactElement {
@@ -132,15 +139,15 @@ function GlobalCommandPalette(): React.ReactElement {
                         value={query}
                         onChange={event => setQuery(event.target.value)}
                         onKeyDown={handleInputKeyDown}
-                        placeholder={t('globalCommandPalette.placeholder', 'Search, open, or ask Quimera')}
-                        aria-label={t('globalCommandPalette.ariaLabel', 'Global command palette')}
+                        placeholder={translateSafe(t, 'globalCommandPalette.placeholder', 'Search, open, or ask Quimera')}
+                        aria-label={translateSafe(t, 'globalCommandPalette.ariaLabel', 'Global command palette')}
                         className="h-11 flex-1 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
                     />
                     <AppButton
                         variant="icon"
                         size="icon-sm"
                         onClick={close}
-                        aria-label={t('globalCommandPalette.close', 'Close')}
+                        aria-label={translateSafe(t, 'globalCommandPalette.close', 'Close')}
                     >
                         <X size={16} />
                     </AppButton>
@@ -151,10 +158,10 @@ function GlobalCommandPalette(): React.ReactElement {
                 {items.length === 0 ? (
                     <div className="px-4 py-10 text-center">
                         <p className="text-sm font-medium text-q-text">
-                            {t('globalCommandPalette.emptyTitle', 'No command found')}
+                            {translateSafe(t, 'globalCommandPalette.emptyTitle', 'No command found')}
                         </p>
                         <p className="mt-1 text-xs text-q-text-muted">
-                            {t('globalCommandPalette.emptyDescription', 'Try a project, module, or request.')}
+                            {translateSafe(t, 'globalCommandPalette.emptyDescription', 'Try a project, module, or request.')}
                         </p>
                     </div>
                 ) : (
@@ -164,13 +171,13 @@ function GlobalCommandPalette(): React.ReactElement {
                             const isSelected = index === selectedIndex;
                             const typeKey = typeLabelKey[item.type] || typeLabelKey.action;
                             const fallbackType = typeFallback[item.type] || typeFallback.action;
-                            const label = translateCommandField(
+                            const label = translateSafe(
                                 t,
                                 item.labelKey,
-                                item.label || t('globalCommandPalette.untitledCommand', 'Untitled command'),
+                                item.label || translateSafe(t, 'globalCommandPalette.untitledCommand', 'Untitled command'),
                                 item.labelParams,
                             );
-                            const description = translateCommandField(
+                            const description = translateSafe(
                                 t,
                                 item.descriptionKey,
                                 item.description || '',
@@ -196,7 +203,7 @@ function GlobalCommandPalette(): React.ReactElement {
                                         <span className="flex items-center gap-2">
                                             <span className="truncate text-sm font-semibold">{label}</span>
                                             <span className="shrink-0 rounded-full border border-border-subtle px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-q-text-muted">
-                                                {t(typeKey, fallbackType)}
+                                                {translateSafe(t, typeKey, fallbackType)}
                                             </span>
                                         </span>
                                         {description && (

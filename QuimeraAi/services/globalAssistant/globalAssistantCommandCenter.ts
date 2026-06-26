@@ -46,6 +46,25 @@ const asText = (value: unknown): string => {
     return value == null ? '' : String(value);
 };
 
+const asRecord = (value: unknown): Record<string, unknown> =>
+    value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+
+const previewLine = (preview: GlobalAssistantRuntimeResult['plan']['previews'][number], spanish: boolean): string => {
+    const diff = asRecord(preview.diff);
+    const after = asRecord(preview.after);
+    const label = asText(diff.createdLabel) || `${preview.module}.${preview.actionType}`;
+    const status = asText(after.status);
+    const reviewRequired = diff.reviewRequired === true;
+    const rollback = asText(diff.rollback);
+    const parts = [
+        label,
+        status ? `${spanish ? 'estado' : 'status'}: ${status}` : '',
+        reviewRequired ? (spanish ? 'requiere revision' : 'requires review') : '',
+        rollback ? `${spanish ? 'rollback' : 'rollback'}: ${rollback}` : '',
+    ].filter(Boolean);
+    return `- ${parts.join(' | ')}`;
+};
+
 export function listEnabledPlatformServices(canAccessService: (serviceId: PlatformServiceId) => boolean): PlatformServiceId[] {
     return PLATFORM_SERVICES
         .map(service => service.id)
@@ -124,6 +143,7 @@ export function formatGlobalAssistantPlanMessage(
         }
         if (previews > 0) {
             lines.push(`Previews: ${previews}`);
+            lines.push(...result.plan.previews.slice(0, 4).map(preview => previewLine(preview, true)));
         }
         if (approvals > 0) {
             lines.push(`Confirmaciones requeridas: ${approvals}`);
@@ -155,6 +175,7 @@ export function formatGlobalAssistantPlanMessage(
     }
     if (previews > 0) {
         lines.push(`Previews: ${previews}`);
+        lines.push(...result.plan.previews.slice(0, 4).map(preview => previewLine(preview, false)));
     }
     if (approvals > 0) {
         lines.push(`Confirmations required: ${approvals}`);

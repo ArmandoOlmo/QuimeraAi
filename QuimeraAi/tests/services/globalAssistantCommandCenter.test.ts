@@ -80,7 +80,11 @@ describe('globalAssistantCommandCenter', () => {
                 requiresConfirmation: true,
                 blockers: ['requires_owner_confirmation'],
                 approvals: [{ id: 'approval-1' }],
-                previews: [{ actionId: 'action-1' }],
+                previews: [{
+                    actionId: 'action-1',
+                    module: 'chatbot',
+                    actionType: 'train_chatbot_knowledge',
+                }],
                 intent: { module: 'chatbot', intent: 'edit' },
                 actions: [
                     {
@@ -93,6 +97,7 @@ describe('globalAssistantCommandCenter', () => {
 
         expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Plan del Operating Layer');
         expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Confirmaciones requeridas: 1');
+        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('chatbot.train_chatbot_knowledge');
         expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('No voy a aplicar cambios');
         expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Operating Layer plan');
         expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Confirmations required: 1');

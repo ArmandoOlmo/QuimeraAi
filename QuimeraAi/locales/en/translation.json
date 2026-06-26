@@ -12058,7 +12058,7 @@
       "saving": "Saving...",
       "searchIndustry": "Search industries...",
       "selectIndustry": "Select your industry",
-      "selectedCategories": "{{count} categories selected",
+      "selectedCategories": "{{count}} categories selected",
       "sellProductsOnline": "Do you sell products online?",
       "sellProductsOnlineDesc": "We'll include a store on your website",
       "serviceDescription": "Brief description (optional)",

@@ -216,7 +216,7 @@ describe('Global Assistant default action handlers', () => {
         expect(products[0].data.metadata.globalAssistant.actionType).toBe('create_product');
     });
 
-    it('blocks appointment apply until required schedule fields are structured', async () => {
+    it('blocks appointment plans until required schedule fields are structured', async () => {
         const { runtime, context } = buildRuntime(['appointments'], []);
         const planned = await runtime.planRequest({
             context,
@@ -226,13 +226,19 @@ describe('Global Assistant default action handlers', () => {
         });
 
         expect(planned.plan.actions.map(action => action.actionType)).toEqual(['create_appointment']);
-        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
-
-        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
-
-        expect(applied.task.status).toBe('failed');
-        expect(applied.plan.status).toBe('blocked');
-        expect(applied.plan.blockers.join(' ')).toContain('appointment.startDate is required before apply.');
-        expect(applied.actions[0].status).toBe('failed');
+        expect(planned.task.status).toBe('failed');
+        expect(planned.plan.status).toBe('blocked');
+        expect(planned.plan.blockers.join(' ')).toContain('create_appointment: appointment.startDate is required before apply.');
+        expect(planned.plan.previews[0]).toMatchObject({
+            after: {
+                table: 'project_appointments',
+                status: 'draft',
+                needsReview: true,
+            },
+            diff: {
+                created: ['project_appointments.$pending'],
+                reviewRequired: true,
+            },
+        });
     });
 });

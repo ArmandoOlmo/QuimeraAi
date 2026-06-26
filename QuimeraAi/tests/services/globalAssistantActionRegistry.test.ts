@@ -98,6 +98,20 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(plan.status).toBe('preview');
         expect(plan.requiresConfirmation).toBe(true);
         expect(plan.previews).toHaveLength(1);
+        expect(plan.previews[0]).toMatchObject({
+            before: { exists: false, table: 'email_campaigns' },
+            after: {
+                operation: 'create_review_draft',
+                table: 'email_campaigns',
+                status: 'draft',
+                needsReview: true,
+            },
+            diff: {
+                created: ['email_campaigns.$pending'],
+                reviewRequired: true,
+                rollback: 'delete_created_draft',
+            },
+        });
         expect(plan.approvals).toHaveLength(1);
         expect(assertPlanIsPreviewFirst(plan)).toEqual([]);
     });

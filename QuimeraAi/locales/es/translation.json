@@ -11729,7 +11729,7 @@
       "regenerateCategories": "Regenerar",
       "generatingCategories": "Generando categorías con IA...",
       "addCategoryPlaceholder": "Agregar categoría personalizada...",
-      "selectedCategories": "{{count} categorías seleccionadas",
+      "selectedCategories": "{{count}} categorías seleccionadas",
       "sellProductsOnline": "¿Vendes productos online?",
       "sellProductsOnlineDesc": "Incluiremos una tienda en tu sitio web",
       "suggestion": "Sugerencia",
