@@ -293,6 +293,95 @@ const formatMemoryContextSummary = (result: GlobalAssistantRuntimeResult): strin
     return scopes ? `${manifest.totalCount} (${scopes})` : String(manifest.totalCount);
 };
 
+const formatCountMap = (counts?: Record<string, number | undefined>): string =>
+    Object.entries(counts || {})
+        .filter(([, count]) => Number(count) > 0)
+        .map(([key, count]) => `${key}:${count}`)
+        .join(', ');
+
+const formatMemorySegments = (result: GlobalAssistantRuntimeResult): string => {
+    const segments = result.memoryContext?.segments || [];
+    if (segments.length === 0) return '';
+
+    return segments
+        .slice(0, 4)
+        .map(segment => `${segment.scope}${segment.module ? `.${segment.module}` : ''}:${segment.count}`)
+        .join(', ');
+};
+
+const formatMemoryContextDetailLines = (
+    result: GlobalAssistantRuntimeResult,
+    spanish: boolean,
+): string[] => {
+    const manifest = result.memoryContext;
+    if (!manifest) return [];
+
+    const targetProject = manifest.projectId || result.context.project.projectId || (spanish ? 'sin proyecto' : 'no project');
+    const targetTenant = manifest.tenantId || result.context.tenant?.tenantId || (spanish ? 'sin workspace' : 'no workspace');
+    const targetModule = manifest.activeModule || result.plan.intent.module;
+    const scopeSummary = formatCountMap(manifest.scopeCounts);
+    const segmentSummary = formatMemorySegments(result);
+    const adminVisibility = manifest.guardrails?.adminMemoryVisible
+        ? (spanish ? 'admin visible por modo Owner/Super Admin' : 'admin visible through Owner/Super Admin mode')
+        : (spanish ? 'admin oculto en modo usuario' : 'admin hidden in user mode');
+
+    const lines = [
+        spanish
+            ? `Contexto usado: workspace ${targetTenant}, proyecto ${targetProject}, modulo ${targetModule}, modo ${manifest.mode}.`
+            : `Context used: workspace ${targetTenant}, project ${targetProject}, module ${targetModule}, mode ${manifest.mode}.`,
+    ];
+
+    if (scopeSummary) {
+        lines.push(spanish
+            ? `Memoria segmentada: ${scopeSummary}.`
+            : `Segmented memory: ${scopeSummary}.`);
+    }
+    if (segmentSummary) {
+        lines.push(spanish
+            ? `Segmentos usados: ${segmentSummary}.`
+            : `Segments used: ${segmentSummary}.`);
+    }
+    lines.push(spanish
+        ? `Guardrails: ${adminVisibility}; ${manifest.guardrails.projectIsolation}`
+        : `Guardrails: ${adminVisibility}; ${manifest.guardrails.projectIsolation}`);
+
+    return lines;
+};
+
+export function buildGlobalAssistantPlanMemoryMetadata(result: GlobalAssistantRuntimeResult): Record<string, unknown> {
+    const manifest = result.memoryContext;
+    if (!manifest) {
+        return {
+            totalCount: result.memoryUsed.length,
+            memoryIds: result.memoryUsed.map(memory => memory.id),
+        };
+    }
+
+    return {
+        userId: manifest.userId,
+        tenantId: manifest.tenantId,
+        projectId: manifest.projectId,
+        mode: manifest.mode,
+        activeModule: manifest.activeModule,
+        sessionId: manifest.sessionId,
+        taskId: manifest.taskId,
+        totalCount: manifest.totalCount,
+        memoryIds: manifest.memoryIds,
+        scopeCounts: manifest.scopeCounts,
+        moduleCounts: manifest.moduleCounts,
+        segments: manifest.segments.map(segment => ({
+            scope: segment.scope,
+            module: segment.module,
+            count: segment.count,
+            memoryIds: segment.memoryIds,
+            titles: segment.titles,
+            sources: segment.sources,
+        })),
+        explanation: manifest.explanation,
+        guardrails: manifest.guardrails,
+    };
+}
+
 const getPlanProjectLabel = (result: GlobalAssistantRuntimeResult, fallback: string): string => {
     const contextProjectId = result.context.project.projectId || null;
     const targetProjectId = result.memoryContext?.projectId
@@ -339,6 +428,7 @@ export function formatGlobalAssistantPlanMessage(
     const approvals = result.plan.approvals.length;
     const previews = result.plan.previews.length;
     const memorySummary = formatMemoryContextSummary(result);
+    const memoryContextLines = formatMemoryContextDetailLines(result, spanish);
     const previewNeedsApplyConfirmation = !blocked
         && previews > 0
         && result.plan.status === 'preview'
@@ -354,6 +444,7 @@ export function formatGlobalAssistantPlanMessage(
             `Modelo planificado: ${result.modelId}`,
             `Tarea: ${result.task.id}`,
             `Memoria usada: ${memorySummary}`,
+            ...memoryContextLines,
         ];
 
         if (actionLabels.length > 0) {
@@ -389,6 +480,7 @@ export function formatGlobalAssistantPlanMessage(
         `Planned model: ${result.modelId}`,
         `Task: ${result.task.id}`,
         `Memory used: ${memorySummary}`,
+        ...memoryContextLines,
     ];
 
     if (actionLabels.length > 0) {

@@ -37,6 +37,7 @@ import {
     type GlobalAssistantEntryPayload,
 } from '../../services/globalAssistant/globalAssistantEntryBridge';
 import {
+    buildGlobalAssistantPlanMemoryMetadata,
     defaultGlobalAssistantFeatureFlags,
     formatGlobalAssistantPlanMessage,
     listEnabledPlatformServices,
@@ -3812,6 +3813,7 @@ const GlobalAiAssistant: React.FC = () => {
                             intent: operatingLayerPlan.plan.intent.intent,
                             planStatus: operatingLayerPlan.plan.status,
                             requiresConfirmation: operatingLayerPlan.plan.requiresConfirmation,
+                            memoryContext: buildGlobalAssistantPlanMemoryMetadata(operatingLayerPlan),
                         },
                     }]);
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { GlobalAssistantRuntimeResult } from '../../services/globalAssistant/globalAssistantRuntime.ts';
 import {
+    buildGlobalAssistantPlanMemoryMetadata,
     defaultGlobalAssistantFeatureFlags,
     formatGlobalAssistantPlanMessage,
     listEnabledPlatformServices,
@@ -238,9 +239,27 @@ describe('globalAssistantCommandCenter', () => {
             modelId: 'anthropic/claude-opus-4.7',
             memoryUsed: [],
             memoryContext: {
+                userId: 'user-1',
+                tenantId: 'tenant-1',
                 projectId: 'project-2',
+                mode: 'owner',
+                activeModule: 'ecommerce',
+                sessionId: 'conversation-1',
+                taskId: 'task-1',
                 totalCount: 0,
                 scopeCounts: {},
+                moduleCounts: {},
+                memoryIds: [],
+                segments: [],
+                explanation: [
+                    'Loaded 0 memory items for user user-1, tenant tenant-1, project project-2.',
+                ],
+                guardrails: {
+                    tenantIsolation: 'Only memories for tenant tenant-1 or permitted global/system scopes are eligible.',
+                    projectIsolation: 'Project/module memories require project project-2.',
+                    adminMemoryVisible: true,
+                    adminMemoryReason: 'Actor can use Owner/Super Admin memory gates.',
+                },
             },
             context: {
                 project: { projectId: 'project-1', projectName: 'Casa Luna' },
@@ -276,7 +295,85 @@ describe('globalAssistantCommandCenter', () => {
         } as unknown as GlobalAssistantRuntimeResult;
 
         expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Proyecto: Ocean Clinic');
+        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Contexto usado: workspace tenant-1, proyecto project-2, modulo ecommerce, modo owner.');
+        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Guardrails: admin visible por modo Owner/Super Admin; Project/module memories require project project-2.');
         expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Project: Ocean Clinic');
+        expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Context used: workspace tenant-1, project project-2, module ecommerce, mode owner.');
+    });
+
+    it('builds structured memory metadata for persisted Operating Layer messages', () => {
+        const result = {
+            memoryUsed: [{ id: 'memory-1' }],
+            memoryContext: {
+                userId: 'user-1',
+                tenantId: 'tenant-1',
+                projectId: 'project-2',
+                mode: 'owner',
+                activeModule: 'ecommerce',
+                sessionId: 'conversation-1',
+                taskId: 'task-1',
+                totalCount: 2,
+                memoryIds: ['memory-1', 'memory-2'],
+                scopeCounts: { project: 1, module: 1 },
+                moduleCounts: { ecommerce: 1 },
+                segments: [
+                    {
+                        scope: 'project',
+                        module: null,
+                        count: 1,
+                        memoryIds: ['memory-1'],
+                        titles: ['Project brand profile'],
+                        sources: ['test:project_summary'],
+                        highestImportance: 0.9,
+                    },
+                    {
+                        scope: 'module',
+                        module: 'ecommerce',
+                        count: 1,
+                        memoryIds: ['memory-2'],
+                        titles: ['Ecommerce rules'],
+                        sources: ['test:module_summary'],
+                        highestImportance: 0.8,
+                    },
+                ],
+                explanation: ['Loaded 2 memory items for user user-1, tenant tenant-1, project project-2.'],
+                guardrails: {
+                    tenantIsolation: 'Only memories for tenant tenant-1 or permitted global/system scopes are eligible.',
+                    projectIsolation: 'Project/module memories require project project-2.',
+                    adminMemoryVisible: true,
+                    adminMemoryReason: 'Actor can use Owner/Super Admin memory gates.',
+                },
+                createdAt: '2026-06-26T00:00:00.000Z',
+            },
+        } as unknown as GlobalAssistantRuntimeResult;
+
+        expect(buildGlobalAssistantPlanMemoryMetadata(result)).toMatchObject({
+            tenantId: 'tenant-1',
+            projectId: 'project-2',
+            activeModule: 'ecommerce',
+            totalCount: 2,
+            scopeCounts: { project: 1, module: 1 },
+            moduleCounts: { ecommerce: 1 },
+            memoryIds: ['memory-1', 'memory-2'],
+            guardrails: {
+                adminMemoryVisible: true,
+            },
+            segments: [
+                {
+                    scope: 'project',
+                    count: 1,
+                    memoryIds: ['memory-1'],
+                    titles: ['Project brand profile'],
+                },
+                {
+                    scope: 'module',
+                    module: 'ecommerce',
+                    count: 1,
+                    memoryIds: ['memory-2'],
+                    titles: ['Ecommerce rules'],
+                },
+            ],
+        });
     });
 
     it('tells users to confirm preview-first plans even without critical approvals', () => {
