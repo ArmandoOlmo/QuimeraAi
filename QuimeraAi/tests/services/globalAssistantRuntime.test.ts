@@ -104,11 +104,11 @@ describe('GlobalAssistantRuntime', () => {
         ]));
         expect(auditService.listEvents().map(event => event.type)).toEqual([
             'assistant_request_started',
-            'assistant_memory_loaded',
             'assistant_intent_classified',
+            'assistant_memory_loaded',
             'assistant_action_previewed',
         ]);
-        expect(auditService.listEvents()[1].metadata).toMatchObject({
+        expect(auditService.listEvents()[2].metadata).toMatchObject({
             count: 1,
             scopeCounts: { project: 1 },
             guardrails: {
@@ -138,6 +138,97 @@ describe('GlobalAssistantRuntime', () => {
         expect(result.plan.blockers.join(' ')).toContain('Project-scoped action requires a projectId');
     });
 
+    it('loads memory for the resolved target project and module before planning cross-project work', async () => {
+        const { runtime, memoryService, auditService } = buildRuntime();
+        const oceanProject = {
+            id: 'project-2',
+            name: 'Ocean Clinic',
+            status: 'Draft' as const,
+            tenantId: 'tenant-1',
+            userId: 'user-1',
+        };
+        const context = resolveCurrentAssistantContext({
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            role: 'owner',
+            activeProject,
+            activeRoute: '/dashboard/email',
+            activeServices: ['emailMarketing', 'ecommerce'],
+            featureFlags: ['emailMarketing', 'ecommerceEnabled'],
+            snapshot: {
+                availableProjects: [activeProject, oceanProject],
+            },
+        });
+        await memoryService.createMemory({
+            scope: 'module',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            module: 'ecommerce',
+            title: 'Casa ecommerce memory',
+            summary: 'Casa Luna ecommerce orders use gift bundles.',
+            source: 'test',
+            sourceEntityType: 'module_summary',
+            sourceEntityId: 'casa-ecommerce',
+            importance: 1,
+        });
+        await memoryService.createMemory({
+            scope: 'module',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            projectId: 'project-2',
+            module: 'ecommerce',
+            title: 'Ocean ecommerce memory',
+            summary: 'Ocean Clinic ecommerce orders require intake notes.',
+            source: 'test',
+            sourceEntityType: 'module_summary',
+            sourceEntityId: 'ocean-ecommerce',
+            importance: 0.9,
+        });
+        await memoryService.createMemory({
+            scope: 'module',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            projectId: 'project-2',
+            module: 'emailMarketing',
+            title: 'Ocean email memory',
+            summary: 'Ocean Clinic email campaigns use clinical follow-up copy.',
+            source: 'test',
+            sourceEntityType: 'module_summary',
+            sourceEntityId: 'ocean-email',
+            importance: 0.95,
+        });
+
+        const result = await runtime.planRequest({
+            context,
+            request: 'Abre ecommerce de Ocean Clinic',
+            enabledServices: ['ecommerce'],
+            enabledFeatures: ['ecommerceEnabled'],
+        });
+
+        expect(result.plan.intent).toMatchObject({
+            module: 'ecommerce',
+            projectResolution: {
+                projectId: 'project-2',
+                requiresProjectSwitch: true,
+            },
+        });
+        expect(result.plan.actions.map(action => action.actionType)).toEqual(['switch_project', 'open_orders']);
+        expect(result.memoryUsed.map(memory => memory.title)).toEqual(['Ocean ecommerce memory']);
+        expect(result.memoryContext).toMatchObject({
+            projectId: 'project-2',
+            activeModule: 'ecommerce',
+            moduleCounts: { ecommerce: 1 },
+        });
+        expect(auditService.listEvents().find(event => event.type === 'assistant_memory_loaded')?.metadata).toMatchObject({
+            count: 1,
+            targetProjectId: 'project-2',
+            targetModule: 'ecommerce',
+            requiresProjectSwitch: true,
+            moduleCounts: { ecommerce: 1 },
+        });
+    });
+
     it('flushes context, task, action, and event persistence before planRequest resolves', async () => {
         const { runtime, persisted } = buildRuntimeWithPersistence();
         const context = resolveCurrentAssistantContext({
@@ -162,8 +253,8 @@ describe('GlobalAssistantRuntime', () => {
         expect(persisted.actions.map(entry => entry.taskId)).toContain(result.task.id);
         expect(persisted.events.map(entry => entry.type)).toEqual([
             'assistant_request_started',
-            'assistant_memory_loaded',
             'assistant_intent_classified',
+            'assistant_memory_loaded',
             'assistant_action_previewed',
         ]);
     });

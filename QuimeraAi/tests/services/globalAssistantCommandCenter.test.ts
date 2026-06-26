@@ -233,6 +233,52 @@ describe('globalAssistantCommandCenter', () => {
         expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('I will not apply changes');
     });
 
+    it('formats cross-project plans with the resolved target project name', () => {
+        const result = {
+            modelId: 'anthropic/claude-opus-4.7',
+            memoryUsed: [],
+            memoryContext: {
+                projectId: 'project-2',
+                totalCount: 0,
+                scopeCounts: {},
+            },
+            context: {
+                project: { projectId: 'project-1', projectName: 'Casa Luna' },
+                snapshot: {
+                    availableProjects: [
+                        { id: 'project-1', name: 'Casa Luna' },
+                        { id: 'project-2', name: 'Ocean Clinic' },
+                    ],
+                },
+            },
+            task: { id: 'task-1' },
+            plan: {
+                status: 'preview',
+                safetyLevel: 'medium',
+                requiresConfirmation: true,
+                blockers: [],
+                approvals: [{ id: 'approval-1' }],
+                previews: [],
+                intent: { module: 'ecommerce', intent: 'open' },
+                actions: [
+                    {
+                        projectId: 'project-2',
+                        module: 'project',
+                        actionType: 'switch_project',
+                    },
+                    {
+                        projectId: 'project-2',
+                        module: 'ecommerce',
+                        actionType: 'open_orders',
+                    },
+                ],
+            },
+        } as unknown as GlobalAssistantRuntimeResult;
+
+        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Proyecto: Ocean Clinic');
+        expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Project: Ocean Clinic');
+    });
+
     it('tells users to confirm preview-first plans even without critical approvals', () => {
         const result = {
             modelId: 'google/gemini-3-pro-image',

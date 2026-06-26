@@ -293,6 +293,27 @@ const formatMemoryContextSummary = (result: GlobalAssistantRuntimeResult): strin
     return scopes ? `${manifest.totalCount} (${scopes})` : String(manifest.totalCount);
 };
 
+const getPlanProjectLabel = (result: GlobalAssistantRuntimeResult, fallback: string): string => {
+    const contextProjectId = result.context.project.projectId || null;
+    const targetProjectId = result.memoryContext?.projectId
+        || result.plan.actions.find(action => action.projectId)?.projectId
+        || contextProjectId;
+    if (!targetProjectId) return fallback;
+
+    if (targetProjectId === contextProjectId) {
+        return result.context.project.projectName || targetProjectId;
+    }
+
+    const availableProjects = Array.isArray(result.context.snapshot?.availableProjects)
+        ? result.context.snapshot.availableProjects
+        : [];
+    const targetProject = availableProjects
+        .map(asRecord)
+        .find(project => project.id === targetProjectId);
+
+    return asText(targetProject?.name) || targetProjectId;
+};
+
 export function shouldAutoApplyOperatingLayerPlan(result: GlobalAssistantRuntimeResult): boolean {
     if (result.plan.status === 'blocked' || result.plan.requiresConfirmation) return false;
     if (result.plan.actions.length === 0) return false;
@@ -312,7 +333,7 @@ export function formatGlobalAssistantPlanMessage(
     locale?: string | null,
 ): string {
     const spanish = isSpanish(locale);
-    const projectName = result.context.project.projectName || result.context.project.projectId || (spanish ? 'sin proyecto activo' : 'no active project');
+    const projectName = getPlanProjectLabel(result, spanish ? 'sin proyecto activo' : 'no active project');
     const actionLabels = result.plan.actions.map(action => `${action.module}.${action.actionType}`);
     const blocked = result.plan.blockers.length > 0;
     const approvals = result.plan.approvals.length;

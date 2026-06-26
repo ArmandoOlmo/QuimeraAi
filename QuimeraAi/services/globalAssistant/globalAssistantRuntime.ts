@@ -3,6 +3,7 @@ import type {
     AssistantActionLog,
     AssistantContextSnapshot,
     AssistantExecutionPlan,
+    AssistantIntent,
     AssistantMemoryContextManifest,
     AssistantRollbackSnapshot,
     AssistantRuntimeEvent,
@@ -106,6 +107,85 @@ const buildDefaultBeforeSnapshot = (action: AssistantAction): Record<string, unk
 
 const readResultRecord = (value: unknown): Record<string, unknown> => asRecord(value);
 
+const readProjectDisplayName = (value: unknown): string | null => {
+    if (typeof value === 'string' && value.trim()) return value.trim();
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const record = value as Record<string, unknown>;
+        return readProjectDisplayName(record.es)
+            || readProjectDisplayName(record.en)
+            || readProjectDisplayName(record.value)
+            || readProjectDisplayName(record.label);
+    }
+    return null;
+};
+
+const findProjectDisplayName = (
+    context: AssistantContextSnapshot,
+    projectId: string | null | undefined,
+): string | null => {
+    if (!projectId) return null;
+    const projects = Array.isArray(context.snapshot?.availableProjects)
+        ? context.snapshot.availableProjects
+        : [];
+    const project = projects
+        .map(asRecord)
+        .find(entry => entry.id === projectId);
+    return readProjectDisplayName(project?.name);
+};
+
+const projectScopedMemoryModules = new Set<string>([
+    'businessBlueprint',
+    'website',
+    'storefront',
+    'ecommerce',
+    'media',
+    'appointments',
+    'restaurants',
+    'realEstate',
+    'bioPage',
+    'crm',
+    'emailMarketing',
+    'chatbot',
+    'analytics',
+    'finance',
+]);
+
+const buildMemoryContextForIntent = (
+    context: AssistantContextSnapshot,
+    intent: AssistantIntent,
+): AssistantContextSnapshot => {
+    const targetProjectId = intent.projectResolution.projectId || context.project.projectId;
+    const shouldTargetResolvedProject = Boolean(
+        targetProjectId
+        && targetProjectId !== context.project.projectId
+        && projectScopedMemoryModules.has(intent.module),
+    );
+
+    return {
+        ...context,
+        project: shouldTargetResolvedProject
+            ? {
+                ...context.project,
+                projectId: targetProjectId,
+                projectName: findProjectDisplayName(context, targetProjectId),
+                activePageId: null,
+                sourceProject: null,
+            }
+            : context.project,
+        activeModule: intent.module,
+        snapshot: {
+            ...context.snapshot,
+            memoryTarget: {
+                sourceContextId: context.id,
+                activeProjectId: context.project.projectId,
+                targetProjectId,
+                targetModule: intent.module,
+                requiresProjectSwitch: intent.projectResolution.requiresProjectSwitch,
+            },
+        },
+    };
+};
+
 export class GlobalAssistantRuntime {
     private readonly pendingPersistence: Promise<void>[] = [];
 
@@ -127,8 +207,20 @@ export class GlobalAssistantRuntime {
             metadata: { request: input.request },
         });
 
+        const intent = routeAssistantIntent(input.request, input.context);
+        const model = selectModelForIntent(intent);
+        const memoryContextSnapshot = buildMemoryContextForIntent(input.context, intent);
+
+        this.recordEvent({
+            type: 'assistant_intent_classified',
+            userId: input.context.actor.userId,
+            tenantId: input.context.tenant.tenantId,
+            projectId: input.context.project.projectId,
+            metadata: { intent, modelId: model.modelId },
+        });
+
         const memoryContextResult = await this.memoryService.resolveMemoryContext({
-            context: input.context,
+            context: memoryContextSnapshot,
             text: input.request,
             limit: 12,
         });
@@ -138,26 +230,18 @@ export class GlobalAssistantRuntime {
         this.recordEvent({
             type: 'assistant_memory_loaded',
             userId: input.context.actor.userId,
-            tenantId: input.context.tenant.tenantId,
-            projectId: input.context.project.projectId,
+            tenantId: memoryContext.tenantId,
+            projectId: memoryContext.projectId,
             metadata: {
                 count: memoryUsed.length,
                 memoryIds: memoryContext.memoryIds,
                 scopeCounts: memoryContext.scopeCounts,
                 moduleCounts: memoryContext.moduleCounts,
                 guardrails: memoryContext.guardrails,
+                targetModule: memoryContext.activeModule,
+                targetProjectId: memoryContext.projectId,
+                requiresProjectSwitch: intent.projectResolution.requiresProjectSwitch,
             },
-        });
-
-        const intent = routeAssistantIntent(input.request, input.context);
-        const model = selectModelForIntent(intent);
-
-        this.recordEvent({
-            type: 'assistant_intent_classified',
-            userId: input.context.actor.userId,
-            tenantId: input.context.tenant.tenantId,
-            projectId: input.context.project.projectId,
-            metadata: { intent, modelId: model.modelId },
         });
 
         const definitions = intent.actionCandidates
