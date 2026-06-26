@@ -4,6 +4,7 @@ import {
     buildGlobalAssistantPlanMemoryMetadata,
     defaultGlobalAssistantFeatureFlags,
     formatGlobalAssistantPlanMessage,
+    formatOperatingLayerApplyMessage,
     listEnabledPlatformServices,
     resolveGlobalAssistantAppContext,
     resolveOperatingLayerAccessContext,
@@ -475,6 +476,18 @@ describe('globalAssistantCommandCenter', () => {
                 ...navigationResult.plan,
                 actions: [
                     {
+                        actionType: 'summarize_business_blueprint',
+                        metadata: { mutatesData: false, executable: true },
+                    },
+                ],
+            },
+        } as unknown as GlobalAssistantRuntimeResult)).toBe(true);
+        expect(shouldAutoApplyOperatingLayerPlan({
+            ...navigationResult,
+            plan: {
+                ...navigationResult.plan,
+                actions: [
+                    {
                         actionType: 'summarize_analytics',
                         metadata: { mutatesData: false, executable: true },
                     },
@@ -514,5 +527,91 @@ describe('globalAssistantCommandCenter', () => {
                 ],
             },
         } as unknown as GlobalAssistantRuntimeResult)).toBe(false);
+    });
+
+    it('formats auto-applied BusinessBlueprint diagnostics with actionable result details', () => {
+        const result = {
+            task: { status: 'completed' },
+            plan: { blockers: [] },
+            actions: [{
+                module: 'businessBlueprint',
+                actionType: 'summarize_business_blueprint',
+                status: 'applied',
+                metadata: { rollbackSupported: false },
+                afterSnapshot: {
+                    kind: 'business_blueprint_summary',
+                    projectId: 'project-1',
+                    projectName: 'Casa Luna',
+                    summary: {
+                        businessName: 'Casa Luna',
+                        selectedModuleCount: 16,
+                        enabledModuleCount: 14,
+                        readyModuleCount: 9,
+                        reviewModuleCount: 5,
+                        blockerCount: 2,
+                        warningCount: 3,
+                        reviewModules: ['websiteBlueprint', 'chatbotBlueprint'],
+                    },
+                    recommendations: ['Review AI-generated module drafts before they are exposed publicly or sent to customers.'],
+                },
+            }],
+        } as any;
+
+        expect(formatOperatingLayerApplyMessage(result, 'es')).toContain('BusinessBlueprint: Casa Luna');
+        expect(formatOperatingLayerApplyMessage(result, 'es')).toContain('Modulos evaluados: 16; habilitados: 14; listos: 9; en revision: 5.');
+        expect(formatOperatingLayerApplyMessage(result, 'es')).toContain('Requieren revision: websiteBlueprint, chatbotBlueprint.');
+        expect(formatOperatingLayerApplyMessage(result, 'en')).toContain('Modules evaluated: 16; enabled: 14; ready: 9; needs review: 5.');
+        expect(formatOperatingLayerApplyMessage(result, 'en')).toContain('Next step: Review AI-generated module drafts before they are exposed publicly or sent to customers.');
+    });
+
+    it('formats auto-applied analytics and lead summaries without losing module evidence', () => {
+        const result = {
+            task: { status: 'completed' },
+            plan: { blockers: [] },
+            actions: [
+                {
+                    module: 'analytics',
+                    actionType: 'identify_blockers',
+                    status: 'applied',
+                    metadata: { rollbackSupported: false },
+                    afterSnapshot: {
+                        kind: 'blockers',
+                        summary: {
+                            projectName: 'Casa Luna',
+                            totalSignals: 12,
+                            blockerCount: 2,
+                            warningCount: 1,
+                        },
+                        analytics: {
+                            blockers: ['crm_has_no_leads', 'ecommerce_has_no_orders'],
+                        },
+                    },
+                },
+                {
+                    module: 'crm',
+                    actionType: 'summarize_leads',
+                    status: 'applied',
+                    metadata: { rollbackSupported: false },
+                    afterSnapshot: {
+                        kind: 'lead_summary',
+                        summary: {
+                            totalLeads: 8,
+                            openTasks: 3,
+                            activityCount: 11,
+                            totalValue: 4500,
+                        },
+                    },
+                },
+            ],
+        } as any;
+
+        const spanish = formatOperatingLayerApplyMessage(result, 'es');
+        expect(spanish).toContain('Analytics: Casa Luna');
+        expect(spanish).toContain('Bloqueos detectados: crm_has_no_leads, ecommerce_has_no_orders.');
+        expect(spanish).toContain('CRM/Leads: 8 leads; tareas abiertas: 3; actividades: 11.');
+
+        const english = formatOperatingLayerApplyMessage(result, 'en');
+        expect(english).toContain('Signals: 12; blockers: 2; warnings: 1.');
+        expect(english).toContain('CRM/Leads: 8 leads; open tasks: 3; activities: 11.');
     });
 });

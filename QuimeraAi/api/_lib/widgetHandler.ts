@@ -8,6 +8,12 @@ import {
   getAppointmentsByProject,
   type CanonicalAppointmentInput,
 } from '../../services/appointments/appointmentEngineService.js';
+import {
+  getOrCreateConversation,
+  linkConversationToLead,
+  saveConversationMessage,
+  updateConversationParticipant,
+} from '../../services/chatbot/chatbotEngineService.js';
 import { recordChatbotEngineEvent } from '../../services/chatbotEngine/chatbotEngineEventService.js';
 import {
   checkChatbotEcommerceOrderStatus,
@@ -39,7 +45,6 @@ import {
   compactMetadata as compactSurfaceMetadata,
 } from '../../utils/chatbotEngine/surfaceContext.js';
 import { evaluateChatbotSurfaceDeployment } from '../../utils/chatbotEngine/deploymentGuard.js';
-import { classifyChatbotMessageIntent } from '../../utils/chatbotEngine/intentClassifier.js';
 import { resolveProjectAiAssistantConfig } from '../../utils/chatbotEngine/projectAiAssistantConfig.js';
 import { appendWidgetCustomerRequestNotes } from '../../utils/chatbotEngine/widgetCustomerRequestNotes.js';
 
@@ -1057,118 +1062,50 @@ async function handleCreateConversation(req: IncomingMessage, res: ServerRespons
   const widgetContextMetadata = getWidgetContextMetadata(body);
   const sourceSurface = getWidgetSourceSurface(body);
   const sourceModule = getWidgetSourceModule(body);
-
-  const existing = await getSupabaseAdmin()
-    .from('social_conversations')
-    .select('id, message_count')
-    .eq('project_id', project.id)
-    .eq('channel', 'web')
-    .eq('participant_id', sessionId)
-    .eq('status', 'active')
-    .order('last_message_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (existing.error) throw existing.error;
-  if (existing.data?.id) {
-    await recordWidgetChatbotEngineEvent(buildChatbotEngineObservedEvent({
-      tenantId: project.tenant_id,
-      projectId: project.id,
-      actionType: 'save_conversation',
-      eventType: 'chatbot_conversation_reused',
-      sourceSurface,
-      sourceModule,
-      conversationId: existing.data.id,
-      idempotencyParts: [sessionId],
-      correlationId: normalizeString(body.correlationId, 240),
-      requestFingerprint: getRequestFingerprint(req, project.id),
-      metadata: {
-        widgetApi: true,
-        sessionId,
-        messageCount: Number(existing.data.message_count || 0),
-        ...widgetContextMetadata,
-      },
-    }));
-    send(res, 200, {
-      conversationId: existing.data.id,
-      sessionId,
-      messageCount: Number(existing.data.message_count || 0),
-    });
-    return;
-  }
-
   const now = new Date().toISOString();
-  const created = await getSupabaseAdmin()
-    .from('social_conversations')
-    .insert({
-      project_id: project.id,
-      channel: 'web',
-      participant_id: sessionId,
-      participant_name: normalizeString(participantInfo.name, 200) || 'Visitante Web',
-      participant_email: normalizeString(participantInfo.email, 320) || null,
-      participant_phone: normalizeString(participantInfo.phone, 80) || null,
-      status: 'active',
-      started_at: now,
-      last_message_at: now,
-      message_count: 0,
-      unread_count: 0,
-      tags: uniqueTags(['web-chat', `surface:${sourceSurface}`, `module:${sourceModule}`]),
-      metadata: {
-        widgetApi: true,
-        sessionId,
-        ...widgetContextMetadata,
-      },
-    })
-    .select('id')
-    .single();
 
-  if (created.error) throw created.error;
-  await recordWidgetChatbotEngineEvent(buildChatbotEngineObservedEvent({
+  const result = await getOrCreateConversation({
     tenantId: project.tenant_id,
     projectId: project.id,
-    actionType: 'save_conversation',
-    eventType: 'chatbot_conversation_created',
+    channel: 'web',
+    sessionId,
+    participantId: sessionId,
+    participantInfo: {
+      name: normalizeString(participantInfo.name, 200) || null,
+      email: normalizeString(participantInfo.email, 320) || null,
+      phone: normalizeString(participantInfo.phone, 80) || null,
+      avatarUrl: normalizeString(participantInfo.avatarUrl, 1000) || normalizeString(participantInfo.avatar, 1000) || null,
+    },
     sourceSurface,
     sourceModule,
-    conversationId: created.data.id,
-    idempotencyParts: [sessionId],
-    correlationId: normalizeString(body.correlationId, 240),
-    requestFingerprint: getRequestFingerprint(req, project.id),
+    chatbotEngineContext: widgetContextMetadata.chatbotEngineContext as any,
     metadata: {
       widgetApi: true,
-      sessionId,
-      participantCaptured: Boolean(participantInfo.name || participantInfo.email || participantInfo.phone),
+      endpoint: 'api/widget',
+      requestFingerprint: getRequestFingerprint(req, project.id),
       ...widgetContextMetadata,
     },
-  }));
-  send(res, 201, { conversationId: created.data.id, sessionId, messageCount: 0 });
-}
+    tags: ['web-chat'],
+    correlationId: normalizeString(body.correlationId, 240),
+    actorType: 'visitor',
+    idempotencyKey: normalizeString(body.idempotencyKey, 240),
+    now,
+  }, getSupabaseAdmin());
 
-async function loadConversation(projectId: string, conversationId: string) {
-  const { data, error } = await getSupabaseAdmin()
-    .from('social_conversations')
-    .select('id, participant_id, message_count, unread_count, metadata, tags')
-    .eq('id', conversationId)
-    .eq('project_id', projectId)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!data) throw Object.assign(new Error('Conversation not found.'), { status: 404 });
-  return data as {
-    id: string;
-    participant_id: string;
-    message_count: number | null;
-    unread_count: number | null;
-    metadata?: Record<string, unknown> | null;
-    tags?: string[] | null;
-  };
+  send(res, result.reused ? 200 : 201, {
+    conversationId: result.conversationId,
+    sessionId: result.sessionId,
+    messageCount: result.messageCount,
+    reused: result.reused,
+    duplicate: result.duplicate === true,
+    warnings: result.warning ? [result.warning] : [],
+  });
 }
 
 async function handleCreateMessage(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam, conversationId: string): Promise<void> {
   const project = await loadProject(parsed, req);
   enforceWriteRateLimit(req, project.id);
   const body = await readJson(req);
-  const conversation = await loadConversation(project.id, conversationId);
   const widgetContextMetadata = getWidgetContextMetadata(body);
   const sourceSurface = getWidgetSourceSurface(body);
   const sourceModule = getWidgetSourceModule(body);
@@ -1178,130 +1115,42 @@ async function handleCreateMessage(req: IncomingMessage, res: ServerResponse, pa
   if (!text) throw Object.assign(new Error('Message text is required.'), { status: 400 });
 
   const now = new Date().toISOString();
-  const isUser = role === 'user';
-  const intentAnalysis = isUser
-    ? classifyChatbotMessageIntent({
-      text,
-      sourceSurface,
-      sourceModule,
-      context: widgetContextMetadata.chatbotEngineContext as any,
-    })
-    : null;
-  const messageMetadata = {
-    widgetApi: true,
-    role,
-    direction: isUser ? 'inbound' : 'outbound',
-    isVoiceMessage: body.isVoiceMessage === true,
-    ...(intentAnalysis ? { intent: intentAnalysis } : {}),
-    ...widgetContextMetadata,
-  };
-  const message = await getSupabaseAdmin()
-    .from('social_messages')
-    .insert({
-      conversation_id: conversation.id,
-      project_id: project.id,
-      channel: 'web',
-      direction: isUser ? 'inbound' : 'outbound',
-      sender_id: isUser ? conversation.participant_id : 'ai-assistant',
-      sender_name: isUser ? 'Visitante' : 'Asistente AI',
-      recipient_id: isUser ? 'ai-assistant' : conversation.participant_id,
-      message: text,
-      message_type: body.isVoiceMessage ? 'audio' : 'text',
-      timestamp: now,
-      status: 'delivered',
-      processed_by_ai: !isUser,
-      metadata: messageMetadata,
-    })
-    .select('id')
-    .single();
-
-  if (message.error) throw message.error;
-
-  const nextMessageCount = Number(conversation.message_count || 0) + 1;
-  const nextUnreadCount = isUser ? Number(conversation.unread_count || 0) + 1 : Number(conversation.unread_count || 0);
-  const previousMetadata = conversation.metadata && typeof conversation.metadata === 'object' ? conversation.metadata : {};
-  const previousIntentHistory = Array.isArray(previousMetadata.intentHistory) ? previousMetadata.intentHistory : [];
-  const conversationIntentPatch = intentAnalysis ? {
-    metadata: {
-      ...previousMetadata,
-      ...widgetContextMetadata,
-      lastIntent: intentAnalysis.primaryIntent,
-      lastIntentActionType: intentAnalysis.actionType || null,
-      lastIntentConfidence: intentAnalysis.confidence,
-      lastIntentUrgency: intentAnalysis.urgency,
-      lastIntentAt: now,
-      intentHistory: [
-        {
-          intent: intentAnalysis.primaryIntent,
-          actionType: intentAnalysis.actionType || null,
-          confidence: intentAnalysis.confidence,
-          urgency: intentAnalysis.urgency,
-          at: now,
-        },
-        ...previousIntentHistory.filter(item => item && typeof item === 'object'),
-      ].slice(0, 10),
-    },
-    tags: uniqueTags([
-      ...(Array.isArray(conversation.tags) ? conversation.tags : []),
-      `intent:${intentAnalysis.primaryIntent}`,
-      intentAnalysis.urgency === 'high' ? 'high-intent' : null,
-      intentAnalysis.actionType ? `action:${intentAnalysis.actionType}` : null,
-    ]),
-  } : {};
-  const updated = await getSupabaseAdmin()
-    .from('social_conversations')
-    .update({
-      last_message_at: now,
-      message_count: nextMessageCount,
-      unread_count: nextUnreadCount,
-      ...conversationIntentPatch,
-    })
-    .eq('id', conversation.id);
-
-  if (updated.error) throw updated.error;
-  await recordWidgetChatbotEngineEvent(buildChatbotEngineObservedEvent({
+  const result = await saveConversationMessage({
     tenantId: project.tenant_id,
     projectId: project.id,
-    actionType: 'save_message',
-    eventType: 'chatbot_message_saved',
+    conversationId,
+    role,
+    text,
+    channel: 'web',
+    isVoiceMessage: body.isVoiceMessage === true,
+    messageType: normalizeString(body.messageType, 40) || null,
+    mediaUrl: normalizeString(body.mediaUrl, 1000) || null,
+    senderId: normalizeString(body.senderId, 120) || null,
+    senderName: normalizeString(body.senderName, 200) || null,
+    recipientId: normalizeString(body.recipientId, 120) || null,
     sourceSurface,
     sourceModule,
-    conversationId: conversation.id,
-    messageId: message.data.id,
-    idempotencyParts: [conversation.id, role, nextMessageCount],
-    correlationId: normalizeString(body.correlationId, 240),
-    requestFingerprint: getRequestFingerprint(req, project.id),
+    chatbotEngineContext: widgetContextMetadata.chatbotEngineContext as any,
     metadata: {
       widgetApi: true,
-      role,
-      direction: isUser ? 'inbound' : 'outbound',
-      messageLength: text.length,
-      isVoiceMessage: body.isVoiceMessage === true,
-      ...(intentAnalysis ? { intent: intentAnalysis } : {}),
+      endpoint: 'api/widget',
+      requestFingerprint: getRequestFingerprint(req, project.id),
       ...widgetContextMetadata,
     },
-  }));
-  if (intentAnalysis) {
-    await recordWidgetChatbotEngineEvent(buildChatbotEngineObservedEvent({
-      tenantId: project.tenant_id,
-      projectId: project.id,
-      actionType: 'analyze_intent',
-      eventType: 'chatbot_intent_analyzed',
-      sourceSurface,
-      sourceModule,
-      conversationId: conversation.id,
-      messageId: message.data.id,
-      idempotencyParts: [conversation.id, message.data.id, intentAnalysis.primaryIntent],
-      correlationId: normalizeString(body.correlationId, 240),
-      requestFingerprint: getRequestFingerprint(req, project.id),
-      metadata: {
-        widgetApi: true,
-        intent: intentAnalysis,
-        ...widgetContextMetadata,
-      },
-    }));
-  }
-  send(res, 201, { messageId: message.data.id, messageCount: nextMessageCount });
+    correlationId: normalizeString(body.correlationId, 240),
+    actorType: role === 'user' ? 'visitor' : 'system',
+    idempotencyKey: normalizeString(body.idempotencyKey, 240),
+    now,
+  }, getSupabaseAdmin());
+
+  send(res, result.duplicate ? 200 : 201, {
+    messageId: result.messageId,
+    messageCount: result.messageCount,
+    unreadCount: result.unreadCount,
+    duplicate: result.duplicate,
+    intent: result.intent,
+    warnings: result.warnings,
+  });
 }
 
 async function handleRecordRuntimeEvent(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam): Promise<void> {
@@ -1361,70 +1210,75 @@ async function handleRecordRuntimeEvent(req: IncomingMessage, res: ServerRespons
 async function handleUpdateConversation(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam, conversationId: string): Promise<void> {
   const project = await loadProject(parsed, req);
   enforceWriteRateLimit(req, project.id);
-  const conversation = await loadConversation(project.id, conversationId);
   const body = await readJson(req);
   const participantInfo = body.participantInfo && typeof body.participantInfo === 'object' ? body.participantInfo : {};
   const widgetContextMetadata = getWidgetContextMetadata(body);
   const sourceSurface = getWidgetSourceSurface(body);
   const sourceModule = getWidgetSourceModule(body);
-  const updates: Record<string, any> = {};
 
   const name = normalizeString(participantInfo.name, 200);
   const email = normalizeString(participantInfo.email, 320);
   const phone = normalizeString(participantInfo.phone, 80);
-  const leadId = normalizeString(body.leadId, 80);
+  const avatarUrl = normalizeString(participantInfo.avatarUrl, 1000) || normalizeString(participantInfo.avatar, 1000);
+  const leadId = normalizeString(body.leadId, 120);
   const status = normalizeString(body.status, 40);
-
-  if (name) updates.participant_name = name;
-  if (email) updates.participant_email = email;
-  if (phone) updates.participant_phone = phone;
-  if (leadId) updates.lead_id = leadId;
-  if (status && ['active', 'closed', 'pending', 'escalated'].includes(status)) updates.status = status;
-  updates.metadata = {
-    ...(conversation.metadata && typeof conversation.metadata === 'object' ? conversation.metadata : {}),
+  const validStatus = status && ['active', 'closed', 'pending', 'escalated'].includes(status)
+    ? status as 'active' | 'closed' | 'pending' | 'escalated'
+    : null;
+  const now = new Date().toISOString();
+  const metadata = {
+    widgetApi: true,
+    endpoint: 'api/widget',
+    requestFingerprint: getRequestFingerprint(req, project.id),
     ...widgetContextMetadata,
-    lastWidgetUpdateAt: new Date().toISOString(),
   };
-  updates.tags = uniqueTags([
-    ...(Array.isArray(conversation.tags) ? conversation.tags : []),
-    `surface:${sourceSurface}`,
-    `module:${sourceModule}`,
-  ]);
+  const commonInput = {
+    tenantId: project.tenant_id,
+    projectId: project.id,
+    conversationId,
+    participantInfo: {
+      name: name || null,
+      email: email || null,
+      phone: phone || null,
+      avatarUrl: avatarUrl || null,
+    },
+    status: validStatus,
+    sourceSurface,
+    sourceModule,
+    chatbotEngineContext: widgetContextMetadata.chatbotEngineContext as any,
+    metadata,
+    tags: ['web-chat'],
+    correlationId: normalizeString(body.correlationId, 240),
+    actorType: 'visitor' as const,
+    now,
+  };
 
-  if (Object.keys(updates).length === 0) {
-    send(res, 200, { ok: true });
-    return;
-  }
-
-  const { error } = await getSupabaseAdmin()
-    .from('social_conversations')
-    .update(updates)
-    .eq('id', conversationId)
-    .eq('project_id', project.id);
-
-  if (error) throw error;
-  if (leadId) {
-    await recordWidgetChatbotEngineEvent(buildChatbotEngineObservedEvent({
-      tenantId: project.tenant_id,
-      projectId: project.id,
-      actionType: 'link_conversation_to_lead',
-      eventType: 'chatbot_conversation_linked_to_lead',
-      sourceSurface,
-      sourceModule,
-      conversationId,
+  const participantChanged = Boolean(name || email || phone || avatarUrl || validStatus || !leadId);
+  const participantResult = participantChanged
+    ? await updateConversationParticipant({
+      ...commonInput,
+      idempotencyKey: normalizeString(body.idempotencyKey, 240),
+    }, getSupabaseAdmin())
+    : null;
+  const leadResult = leadId
+    ? await linkConversationToLead({
+      ...commonInput,
       leadId,
-      idempotencyParts: [conversationId, leadId],
-      correlationId: normalizeString(body.correlationId, 240),
-      requestFingerprint: getRequestFingerprint(req, project.id),
-      metadata: {
-        widgetApi: true,
-        status: updates.status || null,
-        participantUpdated: Boolean(name || email || phone),
-        ...widgetContextMetadata,
-      },
-    }));
-  }
-  send(res, 200, { ok: true });
+      idempotencyKey: normalizeString(body.leadIdempotencyKey, 240)
+        || normalizeString(body.idempotencyKey, 240),
+    }, getSupabaseAdmin())
+    : null;
+
+  send(res, 200, {
+    ok: true,
+    conversationId,
+    leadId: leadResult?.leadId || leadId || null,
+    messageCount: leadResult?.messageCount ?? participantResult?.messageCount,
+    warnings: [
+      participantResult?.warning,
+      leadResult?.warning,
+    ].filter(Boolean),
+  });
 }
 
 async function handleRequestHumanHandoff(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam, conversationId: string): Promise<void> {

@@ -65,6 +65,16 @@ describe('globalAssistantIntentRouter', () => {
         });
     });
 
+    it('routes explicit BusinessBlueprint diagnostics to the BusinessBlueprint operating surface', () => {
+        const intent = routeAssistantIntent('Revisa el Business Blueprint y readiness por modulo', context);
+
+        expect(intent).toMatchObject({
+            module: 'businessBlueprint',
+            intent: 'analyze',
+            actionCandidates: ['summarize_business_blueprint'],
+        });
+    });
+
     it('routes ChatCore test and deployment commands to Chatbot Engine actions', () => {
         expect(routeAssistantIntent('Prueba ChatCore con un cliente que pregunta por reservas', context)).toMatchObject({
             module: 'chatbot',

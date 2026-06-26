@@ -410,6 +410,74 @@ describe('Global Assistant default action handlers', () => {
         expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
     });
 
+    it('summarizes the project BusinessBlueprint readiness without mutating project data', async () => {
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime([], []);
+        fakeSupabase.rowsByTable.projects = [buildWebsiteProjectRow()];
+        const originalBlueprint = JSON.stringify(fakeSupabase.rowsByTable.projects[0].data.businessBlueprint);
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Revisa el Business Blueprint y readiness por modulo',
+        });
+
+        expect(planned.plan.intent).toMatchObject({
+            module: 'businessBlueprint',
+            intent: 'analyze',
+            actionCandidates: ['summarize_business_blueprint'],
+        });
+        expect(planned.plan.status).toBe('draft');
+        expect(planned.task.status).toBe('planning');
+        expect(planned.plan.requiresConfirmation).toBe(false);
+        expect(planned.plan.previews).toEqual([]);
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const action = applied.actions[0];
+
+        expect(applied.task.status).toBe('completed');
+        expect(action.status).toBe('applied');
+        expect(action.afterSnapshot).toMatchObject({
+            kind: 'business_blueprint_summary',
+            projectId: 'project-1',
+            projectName: 'Casa Luna',
+            tenantId: 'tenant-1',
+            hasBusinessBlueprint: true,
+            summary: {
+                projectId: 'project-1',
+                businessName: 'Casa Luna',
+                selectedModuleCount: expect.any(Number),
+                enabledModuleCount: expect.any(Number),
+                reviewModuleCount: expect.any(Number),
+            },
+            modules: {
+                websiteBlueprint: {
+                    module: 'website',
+                    available: true,
+                    counts: {
+                        sections: expect.any(Number),
+                    },
+                },
+                chatbotBlueprint: {
+                    module: 'chatbot',
+                    available: true,
+                    counts: {
+                        knowledgeSources: expect.any(Number),
+                    },
+                },
+            },
+            sourceTables: ['projects'],
+        });
+        expect(action.diff).toMatchObject({
+            analyzed: ['projects.project-1.data.businessBlueprint'],
+            mutatesData: false,
+            hasBusinessBlueprint: true,
+        });
+        expect(JSON.stringify(fakeSupabase.rowsByTable.projects[0].data.businessBlueprint)).toBe(originalBlueprint);
+        expect(auditService.listEvents().map(event => event.type)).toEqual(expect.arrayContaining([
+            'assistant_action_applied',
+            'assistant_memory_updated',
+        ]));
+    });
+
     it('creates a review-gated Website Builder intake draft on the active project and rolls it back', async () => {
         const { fakeSupabase, runtime, context } = buildRuntime([], ['websiteBuilder']);
         fakeSupabase.rowsByTable.projects = [buildWebsiteProjectRow()];

@@ -81,6 +81,11 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         updates: objectSchema(),
     }, ['projectId', 'updates']), 'high'),
 
+    action('businessBlueprint', 'summarize_business_blueprint', 'Analyze the active project BusinessBlueprint readiness across modules without mutating data.', objectSchema({
+        projectId: stringSchema('Project id whose BusinessBlueprint should be summarized.'),
+        includeModules: { type: 'array', items: stringSchema('Optional BusinessBlueprint module keys to include.') },
+    }, ['projectId']), 'low', { mutatesData: false, previewSupported: false, rollbackSupported: false }),
+
     action('website', 'open_website_builder', 'Open the Website Builder for the active project.', objectSchema({
         projectId: stringSchema(),
     }, ['projectId']), 'low', { mutatesData: false, previewSupported: false, rollbackSupported: false }),

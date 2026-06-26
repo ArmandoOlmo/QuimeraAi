@@ -217,6 +217,10 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
         if (intent === 'edit') return ['edit_storefront_theme', 'update_product_card_style'];
     }
 
+    if (module === 'businessBlueprint') {
+        if (['open', 'analyze', 'report', 'explain', 'search'].includes(intent)) return ['summarize_business_blueprint'];
+    }
+
     if (module === 'appointments') {
         if (includesAny(text, ['availability', 'disponibilidad', 'horario'])) return ['configure_availability'];
         if (intent === 'open') return ['open_calendar'];
@@ -348,6 +352,13 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
             open: ['open_storefront_builder'],
             create: ['add_storefront_section'],
             edit: ['edit_storefront_theme', 'update_product_card_style'],
+        },
+        businessBlueprint: {
+            open: ['summarize_business_blueprint'],
+            analyze: ['summarize_business_blueprint'],
+            report: ['summarize_business_blueprint'],
+            explain: ['summarize_business_blueprint'],
+            search: ['summarize_business_blueprint'],
         },
         emailMarketing: {
             create: ['create_email_campaign', 'create_audience', 'create_email_automation'],

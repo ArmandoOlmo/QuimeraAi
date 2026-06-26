@@ -40,6 +40,7 @@ import {
     buildGlobalAssistantPlanMemoryMetadata,
     defaultGlobalAssistantFeatureFlags,
     formatGlobalAssistantPlanMessage,
+    formatOperatingLayerApplyMessage,
     listEnabledPlatformServices,
     resolveGlobalAssistantAppContext,
     resolveOperatingLayerAccessContext,
@@ -90,34 +91,6 @@ interface PendingOperatingLayerTask {
 }
 
 const isSpanishLocale = (locale?: string | null) => (locale || '').toLowerCase().startsWith('es');
-
-const formatOperatingLayerApplyMessage = (
-    result: AssistantLifecycleResult,
-    locale?: string | null,
-): string => {
-    const spanish = isSpanishLocale(locale);
-    const actionLabels = result.actions.map(action => `${action.module}.${action.actionType} (${action.status})`);
-    const rollbackCount = result.actions.filter(action => action.metadata?.rollbackSupported === true).length;
-    const blockers = result.plan.blockers || [];
-
-    if (spanish) {
-        return [
-            'Resultado del Operating Layer',
-            `Estado: ${result.task.status}`,
-            actionLabels.length ? `Acciones: ${actionLabels.join(', ')}` : 'Acciones: ninguna',
-            `Rollback disponible: ${rollbackCount}`,
-            ...(blockers.length ? [`Bloqueos: ${blockers.join(' | ')}`] : []),
-        ].join('\n');
-    }
-
-    return [
-        'Operating Layer result',
-        `Status: ${result.task.status}`,
-        actionLabels.length ? `Actions: ${actionLabels.join(', ')}` : 'Actions: none',
-        `Rollback available: ${rollbackCount}`,
-        ...(blockers.length ? [`Blockers: ${blockers.join(' | ')}`] : []),
-    ].join('\n');
-};
 
 // --- Tools Definition ---
 const EDITOR_SECTION_IDS = [

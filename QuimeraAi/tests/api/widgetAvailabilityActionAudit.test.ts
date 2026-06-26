@@ -4,6 +4,10 @@ const mockState = vi.hoisted(() => ({
     getAvailableAppointmentSlots: vi.fn(),
     requestChatbotRestaurantReservation: vi.fn(),
     createChatbotEcommerceProductInquiry: vi.fn(),
+    getOrCreateConversation: vi.fn(),
+    saveConversationMessage: vi.fn(),
+    updateConversationParticipant: vi.fn(),
+    linkConversationToLead: vi.fn(),
     recordedEvents: [] as Record<string, any>[],
     projectRow: null as Record<string, any> | null,
 }));
@@ -23,6 +27,13 @@ vi.mock('../../services/chatbotEngine/chatbotEngineRuntimeActionService.js', asy
         createChatbotEcommerceProductInquiry: (...args: any[]) => mockState.createChatbotEcommerceProductInquiry(...args),
     };
 });
+
+vi.mock('../../services/chatbot/chatbotEngineService.js', () => ({
+    getOrCreateConversation: (...args: any[]) => mockState.getOrCreateConversation(...args),
+    saveConversationMessage: (...args: any[]) => mockState.saveConversationMessage(...args),
+    updateConversationParticipant: (...args: any[]) => mockState.updateConversationParticipant(...args),
+    linkConversationToLead: (...args: any[]) => mockState.linkConversationToLead(...args),
+}));
 
 vi.mock('../../api/_lib/supabaseAdmin.js', () => ({
     getSupabaseAdmin: () => ({
@@ -215,6 +226,17 @@ async function callWidgetPost(url: string, body: Record<string, any>) {
     };
 }
 
+async function callWidgetPatch(url: string, body: Record<string, any>) {
+    const { default: handler } = await import('../../api/_lib/widgetHandler');
+    const req = createReq(url, 'PATCH', body);
+    const res = createRes();
+    await handler(req, res);
+    return {
+        status: res.statusCode,
+        body: JSON.parse(res.body || '{}'),
+    };
+}
+
 describe('widget availability action audit', () => {
     beforeEach(() => {
         mockState.recordedEvents.length = 0;
@@ -222,6 +244,10 @@ describe('widget availability action audit', () => {
         mockState.getAvailableAppointmentSlots.mockReset();
         mockState.requestChatbotRestaurantReservation.mockReset();
         mockState.createChatbotEcommerceProductInquiry.mockReset();
+        mockState.getOrCreateConversation.mockReset();
+        mockState.saveConversationMessage.mockReset();
+        mockState.updateConversationParticipant.mockReset();
+        mockState.linkConversationToLead.mockReset();
         mockState.getAvailableAppointmentSlots.mockResolvedValue([
             {
                 startDate: '2026-07-01T14:00:00.000Z',
@@ -244,6 +270,175 @@ describe('widget availability action audit', () => {
                 name: 'Radiant Serum',
             },
         });
+        mockState.getOrCreateConversation.mockResolvedValue({
+            projectId: 'project-1',
+            tenantId: 'tenant-1',
+            conversationId: 'conversation-1',
+            sessionId: 'session-1',
+            messageCount: 0,
+            reused: false,
+        });
+        mockState.saveConversationMessage.mockResolvedValue({
+            projectId: 'project-1',
+            tenantId: 'tenant-1',
+            conversationId: 'conversation-1',
+            messageId: 'message-1',
+            messageCount: 1,
+            unreadCount: 1,
+            duplicate: false,
+            intent: { primaryIntent: 'appointment_request', confidence: 0.86 },
+            warnings: [],
+        });
+        mockState.updateConversationParticipant.mockResolvedValue({
+            projectId: 'project-1',
+            tenantId: 'tenant-1',
+            conversationId: 'conversation-1',
+            sessionId: 'session-1',
+            messageCount: 1,
+            reused: true,
+        });
+        mockState.linkConversationToLead.mockResolvedValue({
+            projectId: 'project-1',
+            tenantId: 'tenant-1',
+            conversationId: 'conversation-1',
+            sessionId: 'session-1',
+            messageCount: 1,
+            reused: true,
+            leadId: 'lead-1',
+        });
+    });
+
+    it('creates widget conversations through the canonical Chatbot Engine service', async () => {
+        const response = await callWidgetPost('/api/widget/project-1/conversations', {
+            sessionId: 'session-1',
+            participantInfo: {
+                name: 'Ana Rivera',
+                email: 'ana@example.com',
+            },
+            sourceSurface: 'bio_page',
+            sourceModule: 'bio-page-engine',
+            metadata: {
+                pageSlug: 'links',
+            },
+            correlationId: 'corr-1',
+        });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+            conversationId: 'conversation-1',
+            sessionId: 'session-1',
+            messageCount: 0,
+            reused: false,
+        });
+        expect(mockState.getOrCreateConversation).toHaveBeenCalledWith(expect.objectContaining({
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            channel: 'web',
+            sessionId: 'session-1',
+            participantInfo: expect.objectContaining({
+                name: 'Ana Rivera',
+                email: 'ana@example.com',
+            }),
+            sourceSurface: 'bio_page',
+            sourceModule: 'bio-page-engine',
+            actorType: 'visitor',
+            correlationId: 'corr-1',
+            metadata: expect.objectContaining({
+                widgetApi: true,
+                endpoint: 'api/widget',
+                requestFingerprint: expect.any(String),
+                chatbotEngineContext: expect.objectContaining({
+                    sourceSurface: 'bio_page',
+                    sourceModule: 'bio-page-engine',
+                }),
+            }),
+        }), expect.anything());
+    });
+
+    it('saves widget messages through the canonical Chatbot Engine service and returns intent metadata', async () => {
+        const response = await callWidgetPost('/api/widget/project-1/conversations/conversation-1/messages', {
+            role: 'user',
+            text: 'Quiero una cita para el viernes',
+            sourceSurface: 'booking_page',
+            sourceModule: 'appointments',
+            idempotencyKey: 'msg-key-1',
+            isVoiceMessage: true,
+            correlationId: 'corr-message-1',
+        });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+            messageId: 'message-1',
+            messageCount: 1,
+            unreadCount: 1,
+            duplicate: false,
+            intent: { primaryIntent: 'appointment_request' },
+        });
+        expect(mockState.saveConversationMessage).toHaveBeenCalledWith(expect.objectContaining({
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            conversationId: 'conversation-1',
+            role: 'user',
+            text: 'Quiero una cita para el viernes',
+            isVoiceMessage: true,
+            sourceSurface: 'booking_page',
+            sourceModule: 'appointments',
+            actorType: 'visitor',
+            idempotencyKey: 'msg-key-1',
+            correlationId: 'corr-message-1',
+            metadata: expect.objectContaining({
+                widgetApi: true,
+                endpoint: 'api/widget',
+                requestFingerprint: expect.any(String),
+            }),
+        }), expect.anything());
+    });
+
+    it('updates widget conversations and links leads through the canonical Chatbot Engine service', async () => {
+        const response = await callWidgetPatch('/api/widget/project-1/conversations/conversation-1', {
+            participantInfo: {
+                name: 'Luis Cliente',
+                phone: '+17875550100',
+            },
+            leadId: 'lead-1',
+            status: 'pending',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            idempotencyKey: 'conversation-update-1',
+            leadIdempotencyKey: 'lead-link-1',
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toMatchObject({
+            ok: true,
+            conversationId: 'conversation-1',
+            leadId: 'lead-1',
+            messageCount: 1,
+        });
+        expect(mockState.updateConversationParticipant).toHaveBeenCalledWith(expect.objectContaining({
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            conversationId: 'conversation-1',
+            participantInfo: expect.objectContaining({
+                name: 'Luis Cliente',
+                phone: '+17875550100',
+            }),
+            status: 'pending',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            actorType: 'visitor',
+            idempotencyKey: 'conversation-update-1',
+        }), expect.anything());
+        expect(mockState.linkConversationToLead).toHaveBeenCalledWith(expect.objectContaining({
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            conversationId: 'conversation-1',
+            leadId: 'lead-1',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            actorType: 'visitor',
+            idempotencyKey: 'lead-link-1',
+        }), expect.anything());
     });
 
     it('checks appointment availability through Action Registry and records an executed event', async () => {

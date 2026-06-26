@@ -5,6 +5,7 @@ import type {
     AssistantAction,
     AssistantActionDefinition,
     AssistantContextSnapshot,
+    AssistantModuleTarget,
     AssistantRollbackSnapshot,
 } from '../../types/globalAssistant';
 import { createAppointmentCanonical, timestampFromIso, type CanonicalAppointmentInput } from '../appointments/appointmentEngineService';
@@ -558,19 +559,28 @@ const assertProjectRowInAssistantScope = (
     }
 };
 
+const loadProjectRowForAssistantScope = async (
+    client: SupabaseClientLike,
+    projectId: string,
+    action: AssistantAction,
+    context?: AssistantContextSnapshot,
+    purpose = 'assistant project action',
+): Promise<Record<string, unknown>> => {
+    const result = await selectSingle(client.from('projects').select('*').eq('id', projectId));
+    if (result?.error) throw result.error;
+    const row = asRecord(result?.data);
+    if (!readString(row.id)) throw new Error(`Project ${projectId} was not found before ${purpose}.`);
+    assertProjectRowInAssistantScope(row, action, context);
+    return cloneRecord(row);
+};
+
 const loadProjectMetadataRow = async (
     client: SupabaseClientLike,
     projectId: string,
     action: AssistantAction,
     context?: AssistantContextSnapshot,
-): Promise<Record<string, unknown>> => {
-    const result = await selectSingle(client.from('projects').select('*').eq('id', projectId));
-    if (result?.error) throw result.error;
-    const row = asRecord(result?.data);
-    if (!readString(row.id)) throw new Error(`Project ${projectId} was not found before updating metadata.`);
-    assertProjectRowInAssistantScope(row, action, context);
-    return cloneRecord(row);
-};
+): Promise<Record<string, unknown>> =>
+    loadProjectRowForAssistantScope(client, projectId, action, context, 'updating metadata');
 
 const valuesDiffer = (left: unknown, right: unknown): boolean =>
     JSON.stringify(left ?? null) !== JSON.stringify(right ?? null);
@@ -759,6 +769,240 @@ const createSearchProjectsHandler = (deps: GlobalAssistantActionHandlerDependenc
                 searched: ['projects'],
                 mutatesData: false,
                 actionType: action.actionType,
+            },
+        };
+    },
+});
+
+type BusinessBlueprintSummaryConfig = {
+    key: keyof BusinessBlueprint;
+    module: AssistantModuleTarget;
+    label: string;
+    countKeys: string[];
+};
+
+const BUSINESS_BLUEPRINT_SUMMARY_MODULES: BusinessBlueprintSummaryConfig[] = [
+    { key: 'businessProfile', module: 'businessBlueprint', label: 'Business profile', countKeys: ['services', 'goals', 'contactInfo'] },
+    { key: 'brandProfile', module: 'designSystem', label: 'Brand profile', countKeys: ['colors', 'fonts', 'colorCandidates'] },
+    { key: 'websiteBlueprint', module: 'website', label: 'Website Builder', countKeys: ['pages', 'sections', 'sectionBlueprints', 'ecommerceBlocks', 'leadForms'] },
+    { key: 'storefrontBlueprint', module: 'storefront', label: 'Storefront Builder', countKeys: ['sections', 'templates', 'themeFallbackChain'] },
+    { key: 'ecommerceBlueprint', module: 'ecommerce', label: 'Ecommerce', countKeys: ['categories', 'productCategories', 'starterProducts', 'discounts', 'recommendations'] },
+    { key: 'chatbotBlueprint', module: 'chatbot', label: 'ChatCore', countKeys: ['knowledgeSources', 'actions', 'businessKnowledge', 'productKnowledge', 'policyKnowledge', 'eventIntents'] },
+    { key: 'leadBlueprint', module: 'crm', label: 'CRM/Leads', countKeys: ['leadSources', 'leadTags', 'activityTimelineEvents'] },
+    { key: 'emailMarketingBlueprint', module: 'emailMarketing', label: 'Email Marketing', countKeys: ['audiences', 'campaigns', 'automations', 'transactionalFlows', 'flows', 'logEvents'] },
+    { key: 'mediaBlueprint', module: 'media', label: 'Media AI', countKeys: ['imageNeeds', 'videoNeeds', 'brandAssetNeeds'] },
+    { key: 'bioPageBlueprint', module: 'bioPage', label: 'Bio Page', countKeys: ['blocks', 'links', 'socialLinks', 'integrations'] },
+    { key: 'appointmentsBlueprint', module: 'appointments', label: 'Appointments', countKeys: ['serviceTypes', 'paidBookingTypes', 'services', 'websiteBuilderBlocks'] },
+    { key: 'restaurantBlueprint', module: 'restaurants', label: 'Restaurants', countKeys: ['menuSignals', 'reservationRules', 'legacyEcommerceOffers'] },
+    { key: 'realEstateBlueprint', module: 'realEstate', label: 'Realty', countKeys: ['listingDrafts', 'campaignTypes', 'chatbotKnowledge', 'emailAutomations', 'crmPipelineStages', 'analyticsEvents', 'digitalProducts', 'engineArtifacts'] },
+    { key: 'financeBlueprint', module: 'finance', label: 'Finance', countKeys: ['trackedMetrics', 'revenueSources', 'refundSources'] },
+    { key: 'analyticsBlueprint', module: 'analytics', label: 'Analytics', countKeys: ['events', 'dashboards'] },
+    { key: 'automationBlueprint', module: 'project', label: 'Automations', countKeys: ['flows'] },
+];
+
+const readBlueprintStringList = (value: unknown): string[] =>
+    uniqueStringList(asArray(value)
+        .map(item => readDisplayText(item))
+        .filter((item): item is string => Boolean(item)));
+
+const readBlueprintReadiness = (
+    value: unknown,
+    available: boolean,
+): { isReady: boolean; blockers: string[]; warnings: string[] } => {
+    const readiness = asRecord(value);
+    return {
+        isReady: available ? readBoolean(readiness.isReady) ?? false : false,
+        blockers: readBlueprintStringList(readiness.blockers),
+        warnings: readBlueprintStringList(readiness.warnings),
+    };
+};
+
+const countBlueprintDetail = (value: unknown): number => {
+    if (Array.isArray(value)) return value.length;
+    if (typeof value === 'string') return value.trim() ? 1 : 0;
+    if (typeof value === 'boolean') return value ? 1 : 0;
+    const record = asRecord(value);
+    return Object.keys(record).length;
+};
+
+const summarizeBlueprintCounts = (
+    moduleRecord: Record<string, unknown>,
+    countKeys: string[],
+): Record<string, number> =>
+    countKeys.reduce<Record<string, number>>((acc, key) => {
+        const count = countBlueprintDetail(moduleRecord[key]);
+        if (count > 0) acc[key] = count;
+        return acc;
+    }, {});
+
+const blueprintSummaryModuleRequested = (
+    config: BusinessBlueprintSummaryConfig,
+    requestedModules: string[],
+): boolean => {
+    if (requestedModules.length === 0) return true;
+    const normalized = requestedModules.map(item => normalizeForSearch(item).replace(/\s+/g, ''));
+    const candidates = [
+        String(config.key),
+        config.module,
+        config.label,
+    ].map(item => normalizeForSearch(item).replace(/\s+/g, ''));
+    return candidates.some(candidate => normalized.includes(candidate));
+};
+
+const summarizeBlueprintModule = (
+    blueprint: BusinessBlueprint,
+    config: BusinessBlueprintSummaryConfig,
+) => {
+    const moduleRecord = asRecord((blueprint as unknown as Record<string, unknown>)[config.key]);
+    const available = Object.keys(moduleRecord).length > 0;
+    const readiness = readBlueprintReadiness(moduleRecord.readiness, available);
+    const enabled = available ? readBoolean(moduleRecord.enabled) ?? true : false;
+    const needsReview = available ? readBoolean(moduleRecord.needsReview) ?? false : false;
+
+    return {
+        key: config.key,
+        module: config.module,
+        label: config.label,
+        available,
+        enabled,
+        status: available ? readString(moduleRecord.status) || 'unknown' : 'missing',
+        needsReview,
+        readiness,
+        counts: summarizeBlueprintCounts(moduleRecord, config.countKeys),
+        metadata: {
+            generatedBy: readString(asRecord(moduleRecord.metadata).generatedBy) || null,
+            updatedAt: readString(asRecord(moduleRecord.metadata).updatedAt)
+                || readString(asRecord(moduleRecord.metadata).lastEditedAt)
+                || readString(asRecord(moduleRecord.metadata).lastSyncedAt)
+                || null,
+            userModified: readBoolean(asRecord(moduleRecord.metadata).userModified) ?? null,
+            lockedFromRegeneration: readBoolean(asRecord(moduleRecord.metadata).lockedFromRegeneration) ?? null,
+        },
+    };
+};
+
+const buildBusinessBlueprintMissingSummary = (
+    projectId: string,
+    row: Record<string, unknown>,
+    generatedAt: string,
+) => ({
+    kind: 'business_blueprint_summary',
+    projectId,
+    projectName: readDisplayText(row.name) || projectId,
+    tenantId: readProjectTenantId(row) || null,
+    generatedAt,
+    hasBusinessBlueprint: false,
+    summary: {
+        projectId,
+        businessName: readDisplayText(row.name) || projectId,
+        status: 'missing',
+        blockerCount: 1,
+        warningCount: 0,
+        enabledModuleCount: 0,
+        reviewModuleCount: 0,
+        readyModuleCount: 0,
+    },
+    modules: {},
+    recommendations: [
+        'Generate or refresh the AI Studio BusinessBlueprint before running cross-module Operating Layer actions.',
+    ],
+    sourceTables: ['projects'],
+});
+
+const createBusinessBlueprintSummaryHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const row = await loadProjectRowForAssistantScope(client, projectId, action, context, 'summarizing BusinessBlueprint');
+        const projectData = asRecord(row.data);
+        const nestedData = asRecord(projectData.data);
+        const businessBlueprint = migrateBusinessBlueprint(projectData.businessBlueprint || nestedData.businessBlueprint);
+        const generatedAt = getNow(deps);
+
+        if (!businessBlueprint) {
+            const afterSnapshot = buildBusinessBlueprintMissingSummary(projectId, row, generatedAt);
+            return {
+                afterSnapshot,
+                diff: {
+                    analyzed: [`projects.${projectId}.data.businessBlueprint`],
+                    mutatesData: false,
+                    hasBusinessBlueprint: false,
+                },
+            };
+        }
+
+        const requestedModules = readBlueprintStringList(input.includeModules || input.modules);
+        const moduleSummaries = BUSINESS_BLUEPRINT_SUMMARY_MODULES
+            .filter(config => blueprintSummaryModuleRequested(config, requestedModules))
+            .map(config => summarizeBlueprintModule(businessBlueprint, config));
+        const modules = moduleSummaries.reduce<Record<string, unknown>>((acc, summary) => {
+            acc[String(summary.key)] = summary;
+            return acc;
+        }, {});
+        const enabledModules = moduleSummaries.filter(module => module.enabled).map(module => module.key);
+        const reviewModules = moduleSummaries.filter(module => module.needsReview).map(module => module.key);
+        const readyModules = moduleSummaries.filter(module => module.readiness.isReady).map(module => module.key);
+        const blockers = uniqueStringList(moduleSummaries.flatMap(module => module.readiness.blockers));
+        const warnings = uniqueStringList(moduleSummaries.flatMap(module => module.readiness.warnings));
+        const rootReadiness = readBlueprintReadiness(businessBlueprint.readiness, true);
+        const allBlockers = uniqueStringList([...rootReadiness.blockers, ...blockers]);
+        const allWarnings = uniqueStringList([...rootReadiness.warnings, ...warnings]);
+        const blueprintRecord = businessBlueprint as unknown as Record<string, unknown>;
+        const recommendations = uniqueStringList([
+            ...(allBlockers.length > 0 ? ['Resolve BusinessBlueprint readiness blockers before publishing or automating dependent modules.'] : []),
+            ...(reviewModules.length > 0 ? ['Review AI-generated module drafts before they are exposed publicly or sent to customers.'] : []),
+            ...(allBlockers.length === 0 && reviewModules.length === 0 ? ['BusinessBlueprint has no detected blockers in the selected module scope.'] : []),
+        ]);
+
+        const afterSnapshot = {
+            kind: 'business_blueprint_summary',
+            projectId,
+            projectName: readDisplayText(row.name) || businessBlueprint.businessProfile.businessName || projectId,
+            tenantId: readProjectTenantId(row) || businessBlueprint.tenantId || null,
+            generatedAt,
+            hasBusinessBlueprint: true,
+            blueprint: {
+                blueprintVersion: businessBlueprint.blueprintVersion,
+                schemaVersion: businessBlueprint.schemaVersion,
+                source: businessBlueprint.source,
+                status: businessBlueprint.status,
+                generatedAt: businessBlueprint.generatedAt,
+                updatedAt: businessBlueprint.updatedAt || null,
+                lastSyncedAt: businessBlueprint.lastSyncedAt || null,
+                rootNeedsReview: readBoolean(blueprintRecord.needsReview) ?? false,
+            },
+            summary: {
+                projectId,
+                businessName: businessBlueprint.businessProfile.businessName,
+                industry: businessBlueprint.businessProfile.industry,
+                rootStatus: businessBlueprint.status,
+                rootReady: rootReadiness.isReady,
+                blockerCount: allBlockers.length,
+                warningCount: allWarnings.length,
+                enabledModuleCount: enabledModules.length,
+                reviewModuleCount: reviewModules.length,
+                readyModuleCount: readyModules.length,
+                selectedModuleCount: moduleSummaries.length,
+                enabledModules,
+                reviewModules,
+                readyModules,
+            },
+            modules,
+            blockers: allBlockers,
+            warnings: allWarnings,
+            recommendations,
+            sourceTables: ['projects'],
+        };
+
+        return {
+            afterSnapshot,
+            diff: {
+                analyzed: [`projects.${projectId}.data.businessBlueprint`],
+                mutatesData: false,
+                hasBusinessBlueprint: true,
+                blockerCount: allBlockers.length,
+                warningCount: allWarnings.length,
             },
         };
     },
@@ -7588,6 +7832,7 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     search_projects: createSearchProjectsHandler,
     create_project_from_prompt: createProjectFromPromptHandler,
     update_project_metadata: createUpdateProjectMetadataHandler,
+    summarize_business_blueprint: createBusinessBlueprintSummaryHandler,
     open_website_builder: () => createNavigationHandler('editor', { label: 'Open Website Builder.', requiresProject: true }),
     create_website_from_prompt: createWebsiteFromPromptHandler,
     open_storefront_builder: () => createNavigationHandler('ecommerce', { label: 'Open Storefront Builder.', requiresProject: true, moduleItem: 'storefront' }),

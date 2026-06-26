@@ -6,7 +6,7 @@ import type {
     AssistantContextSnapshot,
     GlobalAssistantMode,
 } from '../../types/globalAssistant';
-import type { GlobalAssistantRuntimeResult } from './globalAssistantRuntime';
+import type { AssistantLifecycleResult, GlobalAssistantRuntimeResult } from './globalAssistantRuntime';
 import { resolveCurrentAssistantContext } from './globalAssistantContextResolver';
 import { buildGlobalAssistantCapabilityCatalog } from './globalAssistantCapabilityCatalog';
 
@@ -90,6 +90,17 @@ const asText = (value: unknown): string => {
 
 const asRecord = (value: unknown): Record<string, unknown> =>
     value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+
+const asArray = (value: unknown): unknown[] => Array.isArray(value) ? value : [];
+
+const asNumber = (value: unknown): number | null => {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string' && value.trim()) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+};
 
 const ALL_ASSISTANT_MODULES: AssistantModuleTarget[] = [
     'aiStudio',
@@ -347,6 +358,198 @@ const formatMemoryContextDetailLines = (
 
     return lines;
 };
+
+const formatValueList = (value: unknown, limit = 5): string => {
+    const values = asArray(value)
+        .map(item => asText(item).trim())
+        .filter(Boolean);
+    if (values.length === 0) return '';
+    const visible = values.slice(0, limit).join(', ');
+    const remaining = values.length - limit;
+    return remaining > 0 ? `${visible} +${remaining}` : visible;
+};
+
+const formatBusinessBlueprintResultLines = (
+    snapshot: Record<string, unknown>,
+    spanish: boolean,
+): string[] => {
+    const summary = asRecord(snapshot.summary);
+    const businessName = asText(summary.businessName) || asText(snapshot.projectName) || asText(snapshot.projectId);
+    const selectedModuleCount = asNumber(summary.selectedModuleCount) ?? 0;
+    const enabledModuleCount = asNumber(summary.enabledModuleCount) ?? 0;
+    const readyModuleCount = asNumber(summary.readyModuleCount) ?? 0;
+    const reviewModuleCount = asNumber(summary.reviewModuleCount) ?? 0;
+    const blockerCount = asNumber(summary.blockerCount) ?? asArray(snapshot.blockers).length;
+    const warningCount = asNumber(summary.warningCount) ?? asArray(snapshot.warnings).length;
+    const reviewModules = formatValueList(summary.reviewModules, 6);
+    const recommendation = formatValueList(snapshot.recommendations, 1);
+
+    const lines = [
+        spanish
+            ? `BusinessBlueprint: ${businessName || 'proyecto activo'}`
+            : `BusinessBlueprint: ${businessName || 'active project'}`,
+        spanish
+            ? `Modulos evaluados: ${selectedModuleCount}; habilitados: ${enabledModuleCount}; listos: ${readyModuleCount}; en revision: ${reviewModuleCount}.`
+            : `Modules evaluated: ${selectedModuleCount}; enabled: ${enabledModuleCount}; ready: ${readyModuleCount}; needs review: ${reviewModuleCount}.`,
+        spanish
+            ? `Blockers: ${blockerCount}; warnings: ${warningCount}.`
+            : `Blockers: ${blockerCount}; warnings: ${warningCount}.`,
+    ];
+
+    if (reviewModules) {
+        lines.push(spanish
+            ? `Requieren revision: ${reviewModules}.`
+            : `Need review: ${reviewModules}.`);
+    }
+    if (recommendation) {
+        lines.push(spanish
+            ? `Siguiente paso: ${recommendation}.`
+            : `Next step: ${recommendation}.`);
+    }
+
+    return lines;
+};
+
+const formatAnalyticsResultLines = (
+    snapshot: Record<string, unknown>,
+    spanish: boolean,
+): string[] => {
+    const summary = asRecord(snapshot.summary);
+    const analytics = asRecord(snapshot.analytics);
+    const projectName = asText(summary.projectName) || asText(analytics.projectName) || asText(summary.projectId);
+    const blockerCount = asNumber(summary.blockerCount) ?? asArray(analytics.blockers).length;
+    const warningCount = asNumber(summary.warningCount) ?? asArray(analytics.warnings).length;
+    const totalSignals = asNumber(summary.totalSignals) ?? 0;
+    const blockers = formatValueList(analytics.blockers, 4);
+    const exportInfo = asRecord(snapshot.export);
+    const fileName = asText(exportInfo.fileName);
+
+    const lines = [
+        spanish
+            ? `Analytics: ${projectName || 'proyecto activo'}`
+            : `Analytics: ${projectName || 'active project'}`,
+        spanish
+            ? `Senales: ${totalSignals}; bloqueos: ${blockerCount}; warnings: ${warningCount}.`
+            : `Signals: ${totalSignals}; blockers: ${blockerCount}; warnings: ${warningCount}.`,
+    ];
+
+    if (blockers) {
+        lines.push(spanish
+            ? `Bloqueos detectados: ${blockers}.`
+            : `Detected blockers: ${blockers}.`);
+    }
+    if (fileName) {
+        lines.push(spanish
+            ? `Export preparado: ${fileName}.`
+            : `Export prepared: ${fileName}.`);
+    }
+
+    return lines;
+};
+
+const formatLeadSummaryResultLines = (
+    snapshot: Record<string, unknown>,
+    spanish: boolean,
+): string[] => {
+    const summary = asRecord(snapshot.summary);
+    const totalLeads = asNumber(summary.totalLeads) ?? 0;
+    const openTasks = asNumber(summary.openTasks) ?? 0;
+    const activityCount = asNumber(summary.activityCount) ?? 0;
+    const totalValue = asNumber(summary.totalValue) ?? 0;
+
+    return [
+        spanish
+            ? `CRM/Leads: ${totalLeads} leads; tareas abiertas: ${openTasks}; actividades: ${activityCount}.`
+            : `CRM/Leads: ${totalLeads} leads; open tasks: ${openTasks}; activities: ${activityCount}.`,
+        totalValue > 0
+            ? (spanish ? `Valor estimado: ${totalValue}.` : `Estimated value: ${totalValue}.`)
+            : '',
+    ].filter(Boolean);
+};
+
+const formatSearchResultLines = (
+    snapshot: Record<string, unknown>,
+    spanish: boolean,
+): string[] => {
+    const kind = asText(snapshot.kind);
+    const matches = asArray(snapshot.matches).map(asRecord);
+    const matchCount = asNumber(snapshot.matchCount) ?? matches.length;
+    const names = matches
+        .map(match => asText(match.name) || asText(match.id))
+        .filter(Boolean)
+        .slice(0, 5)
+        .join(', ');
+
+    if (kind === 'project_search') {
+        return [
+            spanish ? `Proyectos encontrados: ${matchCount}.` : `Projects found: ${matchCount}.`,
+            names ? (spanish ? `Matches: ${names}.` : `Matches: ${names}.`) : '',
+        ].filter(Boolean);
+    }
+    if (kind === 'tenant_search') {
+        return [
+            spanish ? `Workspaces encontrados: ${matchCount}.` : `Workspaces found: ${matchCount}.`,
+            names ? (spanish ? `Matches: ${names}.` : `Matches: ${names}.`) : '',
+        ].filter(Boolean);
+    }
+
+    return [];
+};
+
+const formatAppliedActionResultLines = (
+    result: AssistantLifecycleResult,
+    spanish: boolean,
+): string[] => {
+    const lines: string[] = [];
+    for (const action of result.actions) {
+        const snapshot = asRecord(action.afterSnapshot);
+        const kind = asText(snapshot.kind);
+        if (!kind) continue;
+
+        if (kind === 'business_blueprint_summary') {
+            lines.push(...formatBusinessBlueprintResultLines(snapshot, spanish));
+        } else if (['summary', 'blockers', 'report', 'export'].includes(kind) && snapshot.analytics) {
+            lines.push(...formatAnalyticsResultLines(snapshot, spanish));
+        } else if (kind === 'lead_summary') {
+            lines.push(...formatLeadSummaryResultLines(snapshot, spanish));
+        } else if (kind === 'project_search' || kind === 'tenant_search') {
+            lines.push(...formatSearchResultLines(snapshot, spanish));
+        }
+    }
+
+    return lines.slice(0, 10);
+};
+
+export function formatOperatingLayerApplyMessage(
+    result: AssistantLifecycleResult,
+    locale?: string | null,
+): string {
+    const spanish = isSpanish(locale);
+    const actionLabels = result.actions.map(action => `${action.module}.${action.actionType} (${action.status})`);
+    const rollbackCount = result.actions.filter(action => action.metadata?.rollbackSupported === true).length;
+    const blockers = result.plan.blockers || [];
+    const resultLines = formatAppliedActionResultLines(result, spanish);
+
+    if (spanish) {
+        return [
+            'Resultado del Operating Layer',
+            `Estado: ${result.task.status}`,
+            actionLabels.length ? `Acciones: ${actionLabels.join(', ')}` : 'Acciones: ninguna',
+            ...(resultLines.length ? ['Resultados:', ...resultLines.map(line => `- ${line}`)] : []),
+            `Rollback disponible: ${rollbackCount}`,
+            ...(blockers.length ? [`Bloqueos: ${blockers.join(' | ')}`] : []),
+        ].join('\n');
+    }
+
+    return [
+        'Operating Layer result',
+        `Status: ${result.task.status}`,
+        actionLabels.length ? `Actions: ${actionLabels.join(', ')}` : 'Actions: none',
+        ...(resultLines.length ? ['Results:', ...resultLines.map(line => `- ${line}`)] : []),
+        `Rollback available: ${rollbackCount}`,
+        ...(blockers.length ? [`Blockers: ${blockers.join(' | ')}`] : []),
+    ].join('\n');
+}
 
 export function buildGlobalAssistantPlanMemoryMetadata(result: GlobalAssistantRuntimeResult): Record<string, unknown> {
     const manifest = result.memoryContext;

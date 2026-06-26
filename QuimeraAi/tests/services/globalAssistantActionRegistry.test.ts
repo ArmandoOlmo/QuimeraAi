@@ -91,6 +91,15 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('unpublish_website')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_asset_from_prompt')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('attach_asset_to_section')?.execute).toBe('function');
+        expect(globalAssistantActionRegistry.get('summarize_business_blueprint')).toMatchObject({
+            module: 'businessBlueprint',
+            safetyLevel: 'low',
+            requiresConfirmation: false,
+            previewSupported: false,
+            rollbackSupported: false,
+            mutatesData: false,
+        });
+        expect(typeof globalAssistantActionRegistry.get('summarize_business_blueprint')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('add_storefront_section')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('edit_storefront_theme')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_product_card_style')?.execute).toBe('function');
